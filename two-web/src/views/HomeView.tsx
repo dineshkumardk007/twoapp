@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -308,6 +308,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Mail className="w-5 h-5 text-rose-600 mb-2" />
             <h4 className="text-sm font-medium text-linen-primary">Wax-Sealed Letters</h4>
             <p className="text-xs text-linen-secondary mt-0.5">Delayed epistolary notes</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('scratch')}
+            className="text-left p-4 rounded-2xl border border-amber-300/80 bg-gradient-to-br from-amber-50/50 to-yellow-50/30 hover:bg-amber-100/50 transition-colors cursor-pointer group"
+          >
+            <Gift className="w-5 h-5 text-amber-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Scratch Surprises</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Gold foil love coupons</p>
           </button>
 
           <button

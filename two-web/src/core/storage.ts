@@ -20,7 +20,8 @@ import {
   ComfortBoxData,
   SecretRecipe,
   IntuitionGameRound,
-  TimeCapsuleItem
+  TimeCapsuleItem,
+  ScratchCardItem
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -51,6 +52,7 @@ export interface SpaceState {
   recipes: SecretRecipe[];
   intuitionRounds: IntuitionGameRound[];
   timeCapsules: TimeCapsuleItem[];
+  scratchCards: ScratchCardItem[];
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -648,6 +650,52 @@ const DEFAULT_STATE: SpaceState = {
       isOpened: true,
       openedAt: Date.now() - 1000 * 60 * 60 * 24 * 30
     }
+  ],
+  scratchCards: [
+    {
+      id: 'scratch-1',
+      title: 'Warm Scalp & Shoulder Massage Voucher',
+      category: 'coupon',
+      foilType: 'gold',
+      authorId: 'partner',
+      authorName: 'Partner',
+      recipientId: 'user',
+      createdAt: 'Today',
+      teaserHeadline: 'Scratch to reveal tonight’s pampering voucher',
+      revealedContent: 'Redeemable for one 30-minute uninterrupted warm scalp, neck, and shoulder massage with lavender oil. Valid anytime you feel exhausted or tender.',
+      isScratched: false,
+      isRedeemed: false
+    },
+    {
+      id: 'scratch-2',
+      title: 'Starlight Balcony Dessert Date',
+      category: 'date_invitation',
+      foilType: 'rose_gold',
+      authorId: 'user',
+      authorName: 'You',
+      recipientId: 'partner',
+      createdAt: 'Yesterday',
+      teaserHeadline: 'Scratch for tonight’s sweet surprise after dinner',
+      revealedContent: 'Meet me on the balcony at 10 PM. Warm cinnamon apple cider, melted dark chocolate dip with fresh strawberries, and two thick wool blankets.',
+      isScratched: false,
+      isRedeemed: false
+    },
+    {
+      id: 'scratch-3',
+      title: 'Immunity Pass: Movie Choice Without Veto',
+      category: 'coupon',
+      foilType: 'silver',
+      authorId: 'partner',
+      authorName: 'Partner',
+      recipientId: 'user',
+      createdAt: 'Last week',
+      teaserHeadline: 'Scratch for an unconditional couple privilege',
+      revealedContent: 'You pick whatever movie or show you want tonight, and I will happily watch with freshly popped salted popcorn and zero complaints or side comments.',
+      isScratched: true,
+      scratchedAt: 'Last Friday',
+      isRedeemed: true,
+      redeemedAt: 'Last Friday'
+    }
   ]
 };
 
@@ -670,6 +718,7 @@ export function loadState(): SpaceState {
       recipes: parsed.recipes || DEFAULT_STATE.recipes,
       intuitionRounds: parsed.intuitionRounds || DEFAULT_STATE.intuitionRounds,
       timeCapsules: parsed.timeCapsules || DEFAULT_STATE.timeCapsules,
+      scratchCards: parsed.scratchCards || DEFAULT_STATE.scratchCards,
     };
   } catch (e) {
     return DEFAULT_STATE;

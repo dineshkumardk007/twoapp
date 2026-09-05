@@ -304,6 +304,28 @@ export interface CoPresenceInteractionEvent {
   timestamp: number;
 }
 
+export type ScratchFoilType = 'gold' | 'rose_gold' | 'silver' | 'holographic';
+export type ScratchCardCategory = 'coupon' | 'secret_note' | 'date_invitation' | 'compliment';
+
+export interface ScratchCardItem {
+  id: string;
+  title: string;
+  category: ScratchCardCategory;
+  foilType: ScratchFoilType;
+  authorId: 'user' | 'partner';
+  authorName: string;
+  recipientId: 'user' | 'partner';
+  createdAt: string;
+  teaserHeadline: string;
+  revealedContent: string;
+  revealedPhotoUrl?: string;
+  isScratched: boolean;
+  scratchedAt?: string;
+  isRedeemed: boolean;
+  redeemedAt?: string;
+}
+
+
 
 
 

@@ -23,7 +23,8 @@ import {
   ComfortBoxData,
   SecretRecipe,
   IntuitionGameRound,
-  TimeCapsuleItem
+  TimeCapsuleItem,
+  ScratchCardItem
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -39,6 +40,7 @@ import { CareCompassView } from './views/CareCompassView';
 import { LettersView } from './views/LettersView';
 import { TimeCapsuleView } from './views/TimeCapsuleView';
 import { CoPresenceView } from './views/CoPresenceView';
+import { ScratchCardsView } from './views/ScratchCardsView';
 import { AdventuresView } from './views/AdventuresView';
 import { CookbookView } from './views/CookbookView';
 import { IntuitionGameView, CURATED_DILEMMAS } from './views/IntuitionGameView';
@@ -181,6 +183,11 @@ export const App: React.FC = () => {
               ...prev,
               timeCapsules: parsed
             }));
+          } else if (record.type === 'SCRATCH_CARD_UPDATE') {
+            setState(prev => ({
+              ...prev,
+              scratchCards: parsed
+            }));
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -250,6 +257,11 @@ export const App: React.FC = () => {
           setState(prev => ({
             ...prev,
             timeCapsules: packet.payload
+          }));
+        } else if (packet.subType === 'SCRATCH_CARD_UPDATE') {
+          setState(prev => ({
+            ...prev,
+            scratchCards: packet.payload
           }));
         }
       }
@@ -577,6 +589,46 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleAddScratchCard = (newCard: ScratchCardItem) => {
+    setState(prev => {
+      const updated = [newCard, ...prev.scratchCards];
+      wsRelay.broadcastUpdate('SCRATCH_CARD_UPDATE', updated);
+      localMesh.broadcastLocally('SCRATCH_CARD_UPDATE', updated, prev.activeUser);
+      return {
+        ...prev,
+        scratchCards: updated
+      };
+    });
+  };
+
+  const handleScratchCardComplete = (cardId: string) => {
+    setState(prev => {
+      const updated = prev.scratchCards.map(c =>
+        c.id === cardId ? { ...c, isScratched: true, scratchedAt: 'Just now' } : c
+      );
+      wsRelay.broadcastUpdate('SCRATCH_CARD_UPDATE', updated);
+      localMesh.broadcastLocally('SCRATCH_CARD_UPDATE', updated, prev.activeUser);
+      return {
+        ...prev,
+        scratchCards: updated
+      };
+    });
+  };
+
+  const handleRedeemScratchCard = (cardId: string) => {
+    setState(prev => {
+      const updated = prev.scratchCards.map(c =>
+        c.id === cardId ? { ...c, isRedeemed: true, redeemedAt: 'Just now' } : c
+      );
+      wsRelay.broadcastUpdate('SCRATCH_CARD_UPDATE', updated);
+      localMesh.broadcastLocally('SCRATCH_CARD_UPDATE', updated, prev.activeUser);
+      return {
+        ...prev,
+        scratchCards: updated
+      };
+    });
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -757,6 +809,17 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onSendLetter={handleSendLetter}
             onOpenLetter={handleOpenLetter}
+          />
+        )}
+
+        {currentTab === 'scratch' && (
+          <ScratchCardsView
+            cards={state.scratchCards}
+            activeUser={state.activeUser}
+            onScratchCard={handleScratchCardComplete}
+            onRedeemCard={handleRedeemScratchCard}
+            onAddCard={handleAddScratchCard}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
 
