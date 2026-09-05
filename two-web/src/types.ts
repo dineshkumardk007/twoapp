@@ -465,6 +465,30 @@ export interface MidnightRadioState {
   whispers: RadioWhisper[];
 }
 
+export interface PartnerCheckInContent {
+  appreciations: string[]; // 3 specific appreciations
+  whatWentWell: string;
+  pebbleInShoe?: string;
+  gentleNeed?: string;
+  upcomingWeekCapacity: number; // 1 to 5
+  upcomingWeekNote?: string;
+  dateNightIdea?: string;
+  isSubmitted: boolean;
+  submittedAt?: string;
+}
+
+export interface StateOfUnionSession {
+  id: string;
+  weekLabel: string;
+  createdAt: number;
+  isCompleted: boolean;
+  completedAt?: number;
+  userCheckIn: PartnerCheckInContent;
+  partnerCheckIn: PartnerCheckInContent;
+  agreedDateNight?: string;
+}
+
+
 
 
 

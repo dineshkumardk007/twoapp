@@ -31,7 +31,8 @@ import {
   NightstandState,
   MemoryCoordinatePin,
   MidnightRadioState,
-  RadioWhisper
+  RadioWhisper,
+  StateOfUnionSession
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -42,6 +43,7 @@ import { OnboardingView } from './views/OnboardingView';
 import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
 import { SoftLandingView } from './views/SoftLandingView';
+import { StateOfUnionView } from './views/StateOfUnionView';
 import { NightstandClockView } from './views/NightstandClockView';
 import { RitualsGardenView } from './views/RitualsGardenView';
 import { HearthGardenView } from './views/HearthGardenView';
@@ -346,6 +348,17 @@ export const App: React.FC = () => {
           if ('vibrate' in navigator) {
             navigator.vibrate([70, 40, 70]);
           }
+        } else if (packet.subType === 'STATE_OF_UNION_UPDATE') {
+          setState(prev => ({
+            ...prev,
+            activeStateOfUnion: packet.payload
+          }));
+        } else if (packet.subType === 'STATE_OF_UNION_SEAL') {
+          setState(prev => ({
+            ...prev,
+            activeStateOfUnion: null,
+            stateOfUnionHistory: [packet.payload, ...prev.stateOfUnionHistory]
+          }));
         }
       }
     });
@@ -849,6 +862,25 @@ export const App: React.FC = () => {
     localMesh.broadcastLocally('MIDNIGHT_RADIO_WHISPER', whisper, state.activeUser);
   };
 
+  const handleUpdateStateOfUnion = (session: StateOfUnionSession) => {
+    setState(prev => ({
+      ...prev,
+      activeStateOfUnion: session
+    }));
+    wsRelay.broadcastUpdate('STATE_OF_UNION_UPDATE', session);
+    localMesh.broadcastLocally('STATE_OF_UNION_UPDATE', session, state.activeUser);
+  };
+
+  const handleSealStateOfUnion = (session: StateOfUnionSession) => {
+    setState(prev => ({
+      ...prev,
+      activeStateOfUnion: null,
+      stateOfUnionHistory: [session, ...prev.stateOfUnionHistory]
+    }));
+    wsRelay.broadcastUpdate('STATE_OF_UNION_SEAL', session);
+    localMesh.broadcastLocally('STATE_OF_UNION_SEAL', session, state.activeUser);
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -1088,6 +1120,17 @@ export const App: React.FC = () => {
             state={state}
             onUpdateRadio={handleUpdateRadio}
             onSendRadioWhisper={handleSendRadioWhisper}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'stateofunion' && (
+          <StateOfUnionView
+            activeSession={state.activeStateOfUnion}
+            history={state.stateOfUnionHistory}
+            activeUser={state.activeUser}
+            onUpdateSession={handleUpdateStateOfUnion}
+            onSealSession={handleSealStateOfUnion}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}

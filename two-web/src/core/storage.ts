@@ -28,7 +28,8 @@ import {
   NightstandState,
   MemoryCoordinatePin,
   MidnightRadioState,
-  RadioWhisper
+  RadioWhisper,
+  StateOfUnionSession
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -67,6 +68,8 @@ export interface SpaceState {
   nightstand: NightstandState;
   coordinatePins: MemoryCoordinatePin[];
   midnightRadio: MidnightRadioState;
+  activeStateOfUnion: StateOfUnionSession | null;
+  stateOfUnionHistory: StateOfUnionSession[];
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -872,7 +875,45 @@ const DEFAULT_STATE: SpaceState = {
         timestamp: Date.now() - 12 * 60 * 1000
       }
     ]
-  }
+  },
+  activeStateOfUnion: {
+    id: 'sou-current',
+    weekLabel: 'Week of Sept 1 - Sept 7',
+    createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    isCompleted: false,
+    userCheckIn: {
+      appreciations: [
+        'Making fresh pour-over coffee on Thursday without asking.',
+        'Listening patiently while I vented about my project roadblock.',
+        'Leaving the heated blanket on my side of the bed.'
+      ],
+      whatWentWell: 'We navigated the chaotic dinner grocery run with complete teamwork and humor.',
+      pebbleInShoe: 'Felt a little lonely on Tuesday evening when we were both glued to our phones.',
+      gentleNeed: 'Could we have 30 minutes of screen-free couch tea time after dinner?',
+      upcomingWeekCapacity: 4,
+      upcomingWeekNote: 'Work looks manageable, excited for the weekend farmers market.',
+      dateNightIdea: 'Homemade pizza making night with jazz vinyl.',
+      isSubmitted: true,
+      submittedAt: 'Yesterday, 8:30 PM'
+    },
+    partnerCheckIn: {
+      appreciations: [
+        'How you held my hand during the turbulent plane landing last weekend.',
+        'Taking out the compost without a single word of grumbling.',
+        'Your warm hug right as I walked through the front door on Friday.'
+      ],
+      whatWentWell: 'Our deep conversation on the porch under the rain.',
+      pebbleInShoe: '',
+      gentleNeed: 'Just looking forward to sleeping in together this Sunday.',
+      upcomingWeekCapacity: 3,
+      upcomingWeekNote: 'Big presentation on Wednesday, might need gentle decompression time.',
+      dateNightIdea: 'Quiet walk through the botanical conservatory.',
+      isSubmitted: true,
+      submittedAt: 'Yesterday, 9:15 PM'
+    },
+    agreedDateNight: 'Sunday botanical conservatory walk + homemade pizza night'
+  },
+  stateOfUnionHistory: []
 };
 
 export function loadState(): SpaceState {
@@ -902,6 +943,8 @@ export function loadState(): SpaceState {
       nightstand: parsed.nightstand || DEFAULT_STATE.nightstand,
       coordinatePins: parsed.coordinatePins || DEFAULT_STATE.coordinatePins,
       midnightRadio: parsed.midnightRadio || DEFAULT_STATE.midnightRadio,
+      activeStateOfUnion: parsed.activeStateOfUnion !== undefined ? parsed.activeStateOfUnion : DEFAULT_STATE.activeStateOfUnion,
+      stateOfUnionHistory: parsed.stateOfUnionHistory || DEFAULT_STATE.stateOfUnionHistory,
     };
   } catch (e) {
     return DEFAULT_STATE;
