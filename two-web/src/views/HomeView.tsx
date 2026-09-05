@@ -383,6 +383,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </button>
 
           <button
+            onClick={() => onNavigate('kintsugi')}
+            className="text-left p-4 rounded-2xl border border-amber-300/90 bg-gradient-to-br from-amber-50/70 via-stone-50 to-amber-100/30 hover:bg-amber-100/50 transition-colors cursor-pointer group shadow-2xs"
+          >
+            <Sparkles className="w-5 h-5 text-amber-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Kintsugi Moments</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">{state.kintsugiMoments?.length || 0} golden scars honored</p>
+          </button>
+
+          <button
             onClick={() => onNavigate('letters')}
             className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
           >

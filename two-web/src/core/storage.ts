@@ -32,7 +32,8 @@ import {
   StateOfUnionSession,
   SharedDrawingCanvasState,
   DrawStroke,
-  RepairLetter
+  RepairLetter,
+  KintsugiVesselItem
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -75,6 +76,7 @@ export interface SpaceState {
   stateOfUnionHistory: StateOfUnionSession[];
   sharedCanvas: SharedDrawingCanvasState;
   repairLetters: RepairLetter[];
+  kintsugiMoments: KintsugiVesselItem[];
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -969,6 +971,51 @@ const DEFAULT_STATE: SpaceState = {
       recipientResponseNote: 'Thank you for owning this so cleanly. I felt seen and loved reading this. I forgive you.',
       resolvedAt: Date.now() - 30 * 60 * 60 * 1000
     }
+  ],
+  kintsugiMoments: [
+    {
+      id: 'kintsugi-1',
+      title: 'The 4-Month Long-Distance Summer',
+      themeTag: 'distance',
+      hardshipStory: 'Six hours time zone difference, spotty airport Wi-Fi, and constant tiredness made us snappy and distant for three difficult weeks.',
+      wisdomLearned: 'We learned that silence hurts more than admitting loneliness. We created our nightly 10-minute bedtime voice note ritual, which became our strongest emotional anchor.',
+      goldSeamIndex: 0,
+      overcomeDate: 'Summer 2024',
+      inscribedBy: 'partner',
+      inscribedByName: 'Partner',
+      inscribedAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
+      isCherished: true,
+      cherishedAt: Date.now() - 58 * 24 * 60 * 60 * 1000,
+      cherishedNote: 'This scar taught us how to love across oceans.'
+    },
+    {
+      id: 'kintsugi-2',
+      title: 'The First Apartment Lease Panic',
+      themeTag: 'growth',
+      hardshipStory: 'Our first application was rejected suddenly. We turned our anxiety on each other, arguing over neighborhood choices and emergency savings in a rainy parked car.',
+      wisdomLearned: 'We recognized that external fear was driving our defensiveness. We agreed: we are always a team against the problem, never against each other. The next place we found was ten times better.',
+      goldSeamIndex: 1,
+      overcomeDate: 'Autumn 2023',
+      inscribedBy: 'user',
+      inscribedByName: 'You',
+      inscribedAt: Date.now() - 90 * 24 * 60 * 60 * 1000,
+      isCherished: true,
+      cherishedAt: Date.now() - 89 * 24 * 60 * 60 * 1000,
+      cherishedNote: 'Best parked-car apology of our lives.'
+    },
+    {
+      id: 'kintsugi-3',
+      title: 'Navigating Family Expectations at the Holidays',
+      themeTag: 'family',
+      hardshipStory: 'Pulled in four different directions by extended relatives. We both felt exhausted, resentful, and unable to protect our quiet time together.',
+      wisdomLearned: 'We formulated our Two-Person Sanctuary boundary: we now agree on departure times before walking into family gatherings and hold a sacred 48-hour quiet buffer just for us.',
+      goldSeamIndex: 2,
+      overcomeDate: 'Winter 2024',
+      inscribedBy: 'partner',
+      inscribedByName: 'Partner',
+      inscribedAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
+      isCherished: false
+    }
   ]
 };
 
@@ -1003,6 +1050,7 @@ export function loadState(): SpaceState {
       stateOfUnionHistory: parsed.stateOfUnionHistory || DEFAULT_STATE.stateOfUnionHistory,
       sharedCanvas: parsed.sharedCanvas || DEFAULT_STATE.sharedCanvas,
       repairLetters: parsed.repairLetters || DEFAULT_STATE.repairLetters,
+      kintsugiMoments: parsed.kintsugiMoments || DEFAULT_STATE.kintsugiMoments,
     };
   } catch (e) {
     return DEFAULT_STATE;

@@ -537,6 +537,24 @@ export interface RepairLetter {
   resolvedAt?: number;
 }
 
+export type KintsugiThemeTag = 'distance' | 'finances' | 'family' | 'vulnerability' | 'grief' | 'communication' | 'growth';
+
+export interface KintsugiVesselItem {
+  id: string;
+  title: string;
+  themeTag: KintsugiThemeTag;
+  hardshipStory: string;
+  wisdomLearned: string;
+  goldSeamIndex: number;
+  overcomeDate: string;
+  inscribedBy: 'user' | 'partner';
+  inscribedByName: string;
+  inscribedAt: number;
+  isCherished: boolean;
+  cherishedAt?: number;
+  cherishedNote?: string;
+}
+
 
 
 

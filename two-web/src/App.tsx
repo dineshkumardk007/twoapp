@@ -37,7 +37,8 @@ import {
   CanvasSavedSketch,
   SharedDrawingCanvasState,
   RepairLetter,
-  RepairStatus
+  RepairStatus,
+  KintsugiVesselItem
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -50,6 +51,7 @@ import { ChatView } from './views/ChatView';
 import { SoftLandingView } from './views/SoftLandingView';
 import { StateOfUnionView } from './views/StateOfUnionView';
 import { RepairBridgeView } from './views/RepairBridgeView';
+import { KintsugiMomentsView } from './views/KintsugiMomentsView';
 import { NightstandClockView } from './views/NightstandClockView';
 import { CanvasOfUsView } from './views/CanvasOfUsView';
 import { RitualsGardenView } from './views/RitualsGardenView';
@@ -333,6 +335,28 @@ export const App: React.FC = () => {
             if (parsed.status === 'accepted' && 'vibrate' in navigator) {
               navigator.vibrate([100, 50, 100, 50, 200]);
             }
+          } else if (record.type === 'KINTSUGI_ADD') {
+            setState(prev => ({
+              ...prev,
+              kintsugiMoments: [parsed, ...prev.kintsugiMoments.filter(m => m.id !== parsed.id)]
+            }));
+          } else if (record.type === 'KINTSUGI_CHERISH') {
+            setState(prev => ({
+              ...prev,
+              kintsugiMoments: prev.kintsugiMoments.map(m =>
+                m.id === parsed.momentId
+                  ? {
+                      ...m,
+                      isCherished: true,
+                      cherishedAt: Date.now(),
+                      cherishedNote: parsed.note
+                    }
+                  : m
+              )
+            }));
+            if ('vibrate' in navigator) {
+              navigator.vibrate([60, 30, 60]);
+            }
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -529,6 +553,28 @@ export const App: React.FC = () => {
           }));
           if (packet.payload.status === 'accepted' && 'vibrate' in navigator) {
             navigator.vibrate([100, 50, 100, 50, 200]);
+          }
+        } else if (packet.subType === 'KINTSUGI_ADD') {
+          setState(prev => ({
+            ...prev,
+            kintsugiMoments: [packet.payload, ...prev.kintsugiMoments.filter(m => m.id !== packet.payload.id)]
+          }));
+        } else if (packet.subType === 'KINTSUGI_CHERISH') {
+          setState(prev => ({
+            ...prev,
+            kintsugiMoments: prev.kintsugiMoments.map(m =>
+              m.id === packet.payload.momentId
+                ? {
+                    ...m,
+                    isCherished: true,
+                    cherishedAt: Date.now(),
+                    cherishedNote: packet.payload.note
+                  }
+                : m
+            )
+          }));
+          if ('vibrate' in navigator) {
+            navigator.vibrate([60, 30, 60]);
           }
         }
       }
@@ -1131,6 +1177,34 @@ export const App: React.FC = () => {
     localMesh.broadcastLocally('REPAIR_BRIDGE_RESPOND', payload, state.activeUser);
   };
 
+  const handleAddKintsugiMoment = (moment: KintsugiVesselItem) => {
+    setState(prev => ({
+      ...prev,
+      kintsugiMoments: [moment, ...prev.kintsugiMoments.filter(m => m.id !== moment.id)]
+    }));
+    wsRelay.broadcastUpdate('KINTSUGI_ADD', moment);
+    localMesh.broadcastLocally('KINTSUGI_ADD', moment, state.activeUser);
+  };
+
+  const handleCherishKintsugiMoment = (momentId: string, note?: string) => {
+    const payload = { momentId, note };
+    setState(prev => ({
+      ...prev,
+      kintsugiMoments: prev.kintsugiMoments.map(m =>
+        m.id === momentId
+          ? {
+              ...m,
+              isCherished: true,
+              cherishedAt: Date.now(),
+              cherishedNote: note
+            }
+          : m
+      )
+    }));
+    wsRelay.broadcastUpdate('KINTSUGI_CHERISH', payload);
+    localMesh.broadcastLocally('KINTSUGI_CHERISH', payload, state.activeUser);
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -1403,6 +1477,16 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onSendRepair={handleSendRepair}
             onRespondRepair={handleRespondRepair}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'kintsugi' && (
+          <KintsugiMomentsView
+            moments={state.kintsugiMoments}
+            activeUser={state.activeUser}
+            onAddMoment={handleAddKintsugiMoment}
+            onCherishMoment={handleCherishKintsugiMoment}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
