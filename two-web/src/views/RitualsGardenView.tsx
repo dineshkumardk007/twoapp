@@ -26,7 +26,6 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
   const [newSubtitle, setNewSubtitle] = useState('');
   const [newDuration, setNewDuration] = useState('5 mins');
   const [newCategory, setNewCategory] = useState<'affection' | 'presence' | 'reflection' | 'play'>('presence');
-  const [hoveredStone, setHoveredStone] = useState<PebbleStone | null>(null);
 
   // 6-second kiss timer handler
   useEffect(() => {
@@ -169,34 +168,16 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
           {/* Ambient watercolor background circle */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-linen-accent/5 blur-2xl pointer-events-none" />
 
-          {/* Top Dynamic Stone Inspector (Always 100% visible on hover) */}
-          {hoveredStone ? (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 px-4 py-1.5 rounded-full bg-linen-primary text-linen-surface text-xs font-medium shadow-xl flex items-center space-x-2 border border-white/20 animate-fade-in pointer-events-none whitespace-nowrap">
-              <span className="w-2.5 h-2.5 rounded-full border border-white/60" style={{ backgroundColor: hoveredStone.color }} />
-              <span className="font-serif font-normal">{hoveredStone.ritualTitle}</span>
-              <span className="text-[10px] text-linen-surface/75">({hoveredStone.placedAt})</span>
-            </div>
-          ) : (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-3.5 py-1 rounded-full bg-linen-surface/80 backdrop-blur-xs border border-linen-border/70 text-[11px] text-linen-secondary font-medium pointer-events-none whitespace-nowrap shadow-xs">
-              Hover over any stone to inspect its ritual memory
-            </div>
-          )}
-
           {/* Stacked Stones (Top to Bottom rendering) */}
           <div className="flex flex-col-reverse items-center z-10 space-y-reverse space-y-1 mb-2">
             {sortedPebbles.map((stone) => {
               const width = Math.max(36, stone.size);
               const height = Math.max(14, stone.height);
-              const isHovered = hoveredStone?.id === stone.id;
 
               return (
                 <div
                   key={stone.id}
-                  onMouseEnter={() => setHoveredStone(stone)}
-                  onMouseLeave={() => setHoveredStone(null)}
-                  className={`transition-all duration-300 hover:scale-110 cursor-pointer shadow-sm relative group ${
-                    isHovered ? 'z-50 ring-2 ring-linen-primary/40' : 'z-10'
-                  }`}
+                  className="transition-all duration-300 hover:scale-110 cursor-pointer shadow-sm relative group hover:z-50 z-10"
                   style={{
                     width: `${width}px`,
                     height: `${height}px`,
@@ -206,8 +187,8 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
                     boxShadow: '0 2px 5px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.3)'
                   }}
                 >
-                  {/* On-Stone Floating Tooltip - forced to z-50 in front of everything */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 hidden group-hover:flex flex-col items-center whitespace-nowrap pointer-events-none z-50">
+                  {/* Single Floating Tooltip - elevated above all stones */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover:flex flex-col items-center whitespace-nowrap pointer-events-none z-50 animate-fade-in">
                     <div className="bg-linen-primary text-linen-surface text-[11px] px-3 py-1.5 rounded-xl shadow-2xl font-medium border border-white/20 flex items-center space-x-1.5">
                       <span className="font-serif">{stone.ritualTitle}</span>
                       <span className="text-[10px] text-linen-surface/75 font-normal">({stone.placedAt})</span>
