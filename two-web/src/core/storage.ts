@@ -14,7 +14,12 @@ import {
   PebbleStone,
   LoveLetter,
   AdventureItem,
-  RelationshipMilestone
+  RelationshipMilestone,
+  GratitudeStar,
+  CareCompassProfile,
+  ComfortBoxData,
+  SecretRecipe,
+  IntuitionGameRound
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -39,6 +44,11 @@ export interface SpaceState {
   letters: LoveLetter[];
   adventures: AdventureItem[];
   milestones: RelationshipMilestone[];
+  constellationStars: GratitudeStar[];
+  careCompass: { user: CareCompassProfile; partner: CareCompassProfile };
+  comfortBoxes: ComfortBoxData[];
+  recipes: SecretRecipe[];
+  intuitionRounds: IntuitionGameRound[];
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -413,6 +423,164 @@ const DEFAULT_STATE: SpaceState = {
       category: 'commitment',
       description: 'Four years of choosing each other every single morning with gentleness and humor.'
     }
+  ],
+  constellationStars: [
+    {
+      id: 'star-1',
+      authorId: 'user',
+      authorName: 'You',
+      note: 'The way you remembered to put oat milk in my travel mug before my big morning call.',
+      category: 'mornings',
+      x: 25,
+      y: 35,
+      magnitude: 2,
+      createdAt: '2026-09-01T08:30:00Z'
+    },
+    {
+      id: 'star-2',
+      authorId: 'partner',
+      authorName: 'Partner',
+      note: 'Holding my hand quietly under the table when my anxiety started rising at dinner.',
+      category: 'support',
+      x: 48,
+      y: 28,
+      magnitude: 3,
+      createdAt: '2026-09-02T20:15:00Z'
+    },
+    {
+      id: 'star-3',
+      authorId: 'user',
+      authorName: 'You',
+      note: 'Our uncontrollable laughing fit trying to fold that fitted sheet together.',
+      category: 'laughter',
+      x: 70,
+      y: 42,
+      magnitude: 2,
+      createdAt: '2026-09-03T16:45:00Z'
+    },
+    {
+      id: 'star-4',
+      authorId: 'partner',
+      authorName: 'Partner',
+      note: 'Waking up with your arm wrapped around me and breathing softly in my hair.',
+      category: 'affection',
+      x: 35,
+      y: 68,
+      magnitude: 3,
+      createdAt: '2026-09-04T07:10:00Z'
+    },
+    {
+      id: 'star-5',
+      authorId: 'user',
+      authorName: 'You',
+      note: 'Talking about growing old together in a house with a sunroom full of ferns and books.',
+      category: 'visions',
+      x: 62,
+      y: 72,
+      magnitude: 3,
+      createdAt: '2026-09-05T11:20:00Z'
+    }
+  ],
+  careCompass: {
+    user: {
+      wordsOfAffirmation: 85,
+      qualityTime: 90,
+      actsOfService: 65,
+      physicalTouch: 80,
+      thoughtfulSurprises: 50,
+      fuelTankPercent: 78,
+      currentCravingNote: 'Quiet evening together without screens, just vinyl and talking.',
+      updatedAt: 'Today'
+    },
+    partner: {
+      wordsOfAffirmation: 95,
+      qualityTime: 75,
+      actsOfService: 85,
+      physicalTouch: 60,
+      thoughtfulSurprises: 45,
+      fuelTankPercent: 42,
+      currentCravingNote: 'Feeling depleted from work; craving verbal reassurance and gentle presence.',
+      updatedAt: 'Today'
+    }
+  },
+  comfortBoxes: [
+    {
+      id: 'cb-1',
+      authorId: 'partner',
+      authorName: 'Partner',
+      reassuranceNote: 'Breathe, my love. You are more than enough. You don’t have to carry the whole world today. I am right here with you.',
+      photoUrls: [
+        'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80',
+        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80'
+      ],
+      calmingExercise: '4-7-8',
+      updatedAt: 'Yesterday'
+    }
+  ],
+  recipes: [
+    {
+      id: 'rcp-1',
+      title: 'Midnight Garlic Butter Ramen',
+      story: 'The comforting meal we cooked at 1 AM the night we got stranded in the winter thunderstorm.',
+      prepTime: '15 mins',
+      servings: '2 bowls',
+      comfortTag: 'quick_midnight',
+      favoriteWineOrDrink: 'Chilled Jasmine Green Tea or Crisp Pilsner',
+      ingredients: [
+        { id: 'i1', name: '2 packs wavy ramen noodles', checked: true },
+        { id: 'i2', name: '3 cloves garlic, finely grated', checked: true },
+        { id: 'i3', name: '2 tbsp salted French butter', checked: false },
+        { id: 'i4', name: '1 tbsp low-sodium soy sauce', checked: false },
+        { id: 'i5', name: '2 soft-boiled jammy eggs', checked: true },
+        { id: 'i6', name: 'Toasted sesame seeds & scallions', checked: false }
+      ],
+      steps: [
+        'Boil ramen noodles for 3 minutes until al dente. Reserve 1/4 cup cooking water.',
+        'Melt butter in skillet over low heat, gently fry grated garlic for 60 seconds until fragrant and golden.',
+        'Toss noodles in garlic butter with soy sauce and a splash of noodle water.',
+        'Top with halved jammy eggs, sesame seeds, and fresh scallions. Eat sitting on the rug.'
+      ]
+    },
+    {
+      id: 'rcp-2',
+      title: 'Sunday Brioche French Toast',
+      story: 'Our slow rainy morning tradition with vanilla, cinnamon, and espresso.',
+      prepTime: '20 mins',
+      servings: '2 plates',
+      comfortTag: 'rainy_day',
+      favoriteWineOrDrink: 'Fresh Oat Cappuccino with Nutmeg',
+      ingredients: [
+        { id: 'i7', name: '4 thick slices brioche bread', checked: true },
+        { id: 'i8', name: '3 fresh pasture eggs', checked: true },
+        { id: 'i9', name: '1/3 cup whole milk or cream', checked: false },
+        { id: 'i10', name: '1 tsp pure vanilla bean paste', checked: true },
+        { id: 'i11', name: 'Cinnamon & pure amber maple syrup', checked: false }
+      ],
+      steps: [
+        'Whisk eggs, cream, vanilla paste, and cinnamon in a shallow bowl.',
+        'Soak brioche slices for 40 seconds on each side.',
+        'Sear in bubbling butter on cast iron until caramelized golden on both sides.',
+        'Dust with powdered sugar and drizzle warm maple syrup.'
+      ]
+    }
+  ],
+  intuitionRounds: [
+    {
+      id: 'round-1',
+      date: 'Today',
+      authorId: 'partner',
+      authorChoice: 'A',
+      partnerGuess: undefined,
+      revealed: false,
+      dilemma: {
+        id: 'dil-1',
+        prompt: 'If we could drop everything and disappear together this Friday evening, what would we do?',
+        optionA: 'Cabin in misty woods with a crackling fire and warm cider',
+        optionB: 'Secret oceanside cottage listening to waves crash all night',
+        optionC: 'Boutique hotel in a walkable city with late-night jazz & pasta',
+        category: 'cozy'
+      }
+    }
   ]
 };
 
@@ -429,6 +597,11 @@ export function loadState(): SpaceState {
       letters: parsed.letters || DEFAULT_STATE.letters,
       adventures: parsed.adventures || DEFAULT_STATE.adventures,
       milestones: parsed.milestones || DEFAULT_STATE.milestones,
+      constellationStars: parsed.constellationStars || DEFAULT_STATE.constellationStars,
+      careCompass: parsed.careCompass || DEFAULT_STATE.careCompass,
+      comfortBoxes: parsed.comfortBoxes || DEFAULT_STATE.comfortBoxes,
+      recipes: parsed.recipes || DEFAULT_STATE.recipes,
+      intuitionRounds: parsed.intuitionRounds || DEFAULT_STATE.intuitionRounds,
     };
   } catch (e) {
     return DEFAULT_STATE;

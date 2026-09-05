@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { PairingModal } from './PairingModal';
 import { LocalMeshModal } from './LocalMeshModal';
-import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio } from 'lucide-react';
+import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
+import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile } from 'lucide-react';
 import { Locale, getTranslation } from '../core/i18n';
 
 interface NavigationProps {
@@ -29,14 +30,19 @@ export const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const [showPairingModal, setShowPairingModal] = useState(false);
   const [showMeshModal, setShowMeshModal] = useState(false);
+  const [showSoundscapeModal, setShowSoundscapeModal] = useState(false);
   const t = getTranslation(locale);
 
   const tabs = [
     { id: 'home', label: t.tabs.home, icon: Heart },
     { id: 'chat', label: t.tabs.chat, icon: MessageSquare },
     { id: 'rituals', label: t.tabs.rituals, icon: Flame },
+    { id: 'constellation', label: 'Constellation', icon: Star },
+    { id: 'compass', label: 'Care Compass', icon: Compass },
     { id: 'letters', label: t.tabs.letters, icon: Mail },
-    { id: 'adventures', label: t.tabs.adventures, icon: Compass },
+    { id: 'adventures', label: t.tabs.adventures, icon: MapPin },
+    { id: 'recipes', label: 'Cookbook', icon: Utensils },
+    { id: 'intuition', label: 'Intuition', icon: Smile },
     { id: 'decks', label: t.tabs.decks, icon: Sparkles },
     { id: 'cycle', label: t.tabs.cycle, icon: Moon },
     { id: 'journal', label: t.tabs.journal, icon: BookOpen },
@@ -92,6 +98,15 @@ export const Navigation: React.FC<NavigationProps> = ({
                 <Heart className="w-4 h-4 fill-rose-500" />
               </button>
             )}
+
+            {/* Synced Ambient Soundscape & Sleep Timer */}
+            <button
+              onClick={() => setShowSoundscapeModal(true)}
+              className="p-1.5 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-200"
+              title="Ambient Night Soundscapes: Fall Asleep Together"
+            >
+              <Moon className="w-4 h-4" />
+            </button>
 
             {/* Off-Grid Mesh Sync Status */}
             <button
@@ -169,6 +184,12 @@ export const Navigation: React.FC<NavigationProps> = ({
       <LocalMeshModal
         isOpen={showMeshModal}
         onClose={() => setShowMeshModal(false)}
+        activeUser={activeUser}
+      />
+
+      <AmbientSoundscapeModal
+        isOpen={showSoundscapeModal}
+        onClose={() => setShowSoundscapeModal(false)}
         activeUser={activeUser}
       />
     </header>

@@ -19,7 +19,9 @@ class WebSocketRelayClient {
 
     try {
       this.isConnecting = true;
-      this.ws = new WebSocket('ws://localhost:4000/relay');
+      const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
+      const wsUrl = `ws://${host}:4000/relay`;
+      this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
         this.isConnecting = false;

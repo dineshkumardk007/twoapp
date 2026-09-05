@@ -6,10 +6,11 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass } from 'lucide-react';
-
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile } from 'lucide-react';
+import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
+import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
-import { RelationshipMilestone } from '../types';
+import { RelationshipMilestone, ComfortBoxData } from '../types';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -19,6 +20,7 @@ interface HomeViewProps {
   onSendNeed: (need: NeedItem) => void;
   onOpenTour?: () => void;
   onAddMilestone?: (milestone: RelationshipMilestone) => void;
+  onSaveComfortBox?: (box: ComfortBoxData) => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -28,9 +30,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onNavigate,
   onSendNeed,
   onOpenTour,
-  onAddMilestone = () => {}
+  onAddMilestone = () => {},
+  onSaveComfortBox
 }) => {
   const [showNeedModal, setShowNeedModal] = useState(false);
+  const [showSoundscapes, setShowSoundscapes] = useState(false);
+  const [showComfortBox, setShowComfortBox] = useState(false);
   const [optInSpicy, setOptInSpicy] = useState(false);
   const [questionPromptToast, setQuestionPromptToast] = useState(false);
 
@@ -113,6 +118,27 @@ export const HomeView: React.FC<HomeViewProps> = ({
         isUserActive={isUserFlagActive}
         onToggleUserFlag={onToggleUserFlag}
       />
+
+      {/* 2b. Emergency Comfort Box Banner */}
+      {(state.userReport.capacity <= 2 || state.partnerReport.capacity <= 2 || isPartnerFlagActive) && (
+        <div className="rounded-2xl border border-rose-200/90 bg-gradient-to-r from-rose-50/90 via-linen-surface to-rose-50/60 p-4 flex items-center justify-between shadow-xs animate-fade-in">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 shadow-xs">
+              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-rose-700">Tender Sanctuary Ready</h4>
+              <p className="text-xs text-linen-primary font-serif">Holding heavy feelings? Your Emergency Comfort Box is waiting with zero demands.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowComfortBox(true)}
+            className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-medium hover:bg-rose-500 transition-colors shadow-xs cursor-pointer shrink-0 ml-3"
+          >
+            Open Comfort Box
+          </button>
+        </div>
+      )}
 
       {/* 3. Daily Question Engine */}
       <div className="rounded-3xl border border-linen-border bg-linen-surface p-5 sm:p-6 shadow-xs">
@@ -221,6 +247,60 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </button>
 
           <button
+            onClick={() => setShowSoundscapes(true)}
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+          >
+            <Moon className="w-5 h-5 text-indigo-500 mb-2" />
+            <h4 className="text-sm font-medium text-linen-primary">Night Soundscapes</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Fall asleep together</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('constellation')}
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+          >
+            <Star className="w-5 h-5 text-indigo-400 mb-2 fill-indigo-400/20" />
+            <h4 className="text-sm font-medium text-linen-primary">Star Constellation</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Shared gratitude night sky</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('compass')}
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+          >
+            <Compass className="w-5 h-5 text-amber-600 mb-2" />
+            <h4 className="text-sm font-medium text-linen-primary">Care Compass</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Love language resonance</p>
+          </button>
+
+          <button
+            onClick={() => setShowComfortBox(true)}
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+          >
+            <Heart className="w-5 h-5 text-rose-500 mb-2 fill-rose-500/20" />
+            <h4 className="text-sm font-medium text-linen-primary">Comfort Box</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Open when heavy</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('recipes')}
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+          >
+            <Utensils className="w-5 h-5 text-amber-700 mb-2" />
+            <h4 className="text-sm font-medium text-linen-primary">Couple Cookbook</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Cook together date mode</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('intuition')}
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+          >
+            <Smile className="w-5 h-5 text-indigo-600 mb-2" />
+            <h4 className="text-sm font-medium text-linen-primary">Guess My Mind</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Intuition dilemma game</p>
+          </button>
+
+          <button
             onClick={() => onNavigate('adventures')}
             className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
           >
@@ -302,6 +382,28 @@ export const HomeView: React.FC<HomeViewProps> = ({
           setShowNeedModal(false);
           onNavigate('chat');
         }}
+      />
+
+      <AmbientSoundscapeModal
+        isOpen={showSoundscapes}
+        onClose={() => setShowSoundscapes(false)}
+        activeUser={state.activeUser}
+      />
+
+      <ComfortBoxModal
+        isOpen={showComfortBox}
+        onClose={() => setShowComfortBox(false)}
+        boxData={state.comfortBoxes[0] || {
+          id: 'cb-1',
+          authorId: 'partner',
+          authorName: 'Partner',
+          reassuranceNote: 'Breathe, my love. You are more than enough. You do not have to carry everything alone today. I am right here with you.',
+          photoUrls: [],
+          calmingExercise: '4-7-8',
+          updatedAt: 'Today'
+        }}
+        activeUser={state.activeUser}
+        onSaveBox={(newBox) => onSaveComfortBox && onSaveComfortBox(newBox)}
       />
     </div>
   );

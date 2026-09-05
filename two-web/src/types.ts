@@ -168,3 +168,71 @@ export interface SensoryPulseEvent {
   note?: string;
 }
 
+export type StarCategory = 'mornings' | 'support' | 'laughter' | 'affection' | 'visions';
+
+export interface GratitudeStar {
+  id: string;
+  authorId: string;
+  authorName: string;
+  note: string;
+  category: StarCategory;
+  x: number; // percentage 8 to 92
+  y: number; // percentage 12 to 88
+  magnitude: number; // 1 to 3
+  createdAt: string;
+}
+
+export interface CareCompassProfile {
+  wordsOfAffirmation: number; // 0 to 100
+  qualityTime: number;        // 0 to 100
+  actsOfService: number;      // 0 to 100
+  physicalTouch: number;      // 0 to 100
+  thoughtfulSurprises: number;// 0 to 100
+  fuelTankPercent: number;    // 0 to 100
+  currentCravingNote: string;
+  updatedAt: string;
+}
+
+export interface ComfortBoxData {
+  id: string;
+  authorId: string;
+  authorName: string;
+  reassuranceNote: string;
+  whisperAudioUrl?: string;
+  photoUrls: string[];
+  calmingExercise: '4-7-8' | 'box_breathing' | 'grounding_54321';
+  updatedAt: string;
+}
+
+export interface SecretRecipe {
+  id: string;
+  title: string;
+  story: string;
+  prepTime: string;
+  servings: string;
+  ingredients: { id: string; name: string; checked: boolean }[];
+  steps: string[];
+  comfortTag: 'rainy_day' | 'celebration' | 'quick_midnight' | 'comfort_classic';
+  photoUrl?: string;
+  favoriteWineOrDrink?: string;
+}
+
+export interface IntuitionDilemma {
+  id: string;
+  prompt: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  category: 'spontaneous' | 'cozy' | 'dream' | 'quirky';
+}
+
+export interface IntuitionGameRound {
+  id: string;
+  date: string;
+  dilemma: IntuitionDilemma;
+  authorId: string;
+  authorChoice?: 'A' | 'B' | 'C';
+  partnerGuess?: 'A' | 'B' | 'C';
+  revealed: boolean;
+}
+

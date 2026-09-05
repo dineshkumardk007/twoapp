@@ -17,7 +17,12 @@ import {
   PebbleStone,
   LoveLetter,
   AdventureItem,
-  RelationshipMilestone
+  RelationshipMilestone,
+  GratitudeStar,
+  CareCompassProfile,
+  ComfortBoxData,
+  SecretRecipe,
+  IntuitionGameRound
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -28,8 +33,12 @@ import { OnboardingView } from './views/OnboardingView';
 import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
 import { RitualsGardenView } from './views/RitualsGardenView';
+import { ConstellationView } from './views/ConstellationView';
+import { CareCompassView } from './views/CareCompassView';
 import { LettersView } from './views/LettersView';
 import { AdventuresView } from './views/AdventuresView';
+import { CookbookView } from './views/CookbookView';
+import { IntuitionGameView, CURATED_DILEMMAS } from './views/IntuitionGameView';
 import { DecksView } from './views/DecksView';
 import { CycleView } from './views/CycleView';
 import { JournalView } from './views/JournalView';
@@ -114,6 +123,51 @@ export const App: React.FC = () => {
               });
               return { ...prev, rituals: updatedRituals };
             });
+          } else if (record.type === 'GRATITUDE_STAR') {
+            setState(prev => ({
+              ...prev,
+              constellationStars: [parsed, ...prev.constellationStars.filter(s => s.id !== parsed.id)]
+            }));
+          } else if (record.type === 'CARE_COMPASS') {
+            const author = parsed.authorId || record.authorId;
+            const target = author === 'user' ? 'user' : 'partner';
+            setState(prev => ({
+              ...prev,
+              careCompass: {
+                ...prev.careCompass,
+                [target]: parsed.profile
+              }
+            }));
+          } else if (record.type === 'COMFORT_BOX') {
+            setState(prev => ({
+              ...prev,
+              comfortBoxes: [parsed, ...prev.comfortBoxes.filter(b => b.id !== parsed.id)]
+            }));
+          } else if (record.type === 'RECIPE_ADD') {
+            setState(prev => ({
+              ...prev,
+              recipes: [parsed, ...prev.recipes.filter(r => r.id !== parsed.id)]
+            }));
+          } else if (record.type === 'INGREDIENT_TOGGLE') {
+            setState(prev => ({
+              ...prev,
+              recipes: prev.recipes.map(r => {
+                if (r.id === parsed.recipeId) {
+                  return {
+                    ...r,
+                    ingredients: r.ingredients.map(ing =>
+                      ing.id === parsed.ingredientId ? { ...ing, checked: !ing.checked } : ing
+                    )
+                  };
+                }
+                return r;
+              })
+            }));
+          } else if (record.type === 'INTUITION_ROUND') {
+            setState(prev => ({
+              ...prev,
+              intuitionRounds: [parsed, ...prev.intuitionRounds.filter(r => r.id !== parsed.id)]
+            }));
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -128,6 +182,51 @@ export const App: React.FC = () => {
           setState(prev => ({
             ...prev,
             letters: [packet.payload, ...prev.letters.filter(l => l.id !== packet.payload.id)]
+          }));
+        } else if (packet.subType === 'GRATITUDE_STAR') {
+          setState(prev => ({
+            ...prev,
+            constellationStars: [packet.payload, ...prev.constellationStars.filter(s => s.id !== packet.payload.id)]
+          }));
+        } else if (packet.subType === 'CARE_COMPASS') {
+          const author = packet.payload.authorId || packet.authorId;
+          const target = author === 'user' ? 'user' : 'partner';
+          setState(prev => ({
+            ...prev,
+            careCompass: {
+              ...prev.careCompass,
+              [target]: packet.payload.profile
+            }
+          }));
+        } else if (packet.subType === 'COMFORT_BOX') {
+          setState(prev => ({
+            ...prev,
+            comfortBoxes: [packet.payload, ...prev.comfortBoxes.filter(b => b.id !== packet.payload.id)]
+          }));
+        } else if (packet.subType === 'RECIPE_ADD') {
+          setState(prev => ({
+            ...prev,
+            recipes: [packet.payload, ...prev.recipes.filter(r => r.id !== packet.payload.id)]
+          }));
+        } else if (packet.subType === 'INGREDIENT_TOGGLE') {
+          setState(prev => ({
+            ...prev,
+            recipes: prev.recipes.map(r => {
+              if (r.id === packet.payload.recipeId) {
+                return {
+                  ...r,
+                  ingredients: r.ingredients.map(ing =>
+                    ing.id === packet.payload.ingredientId ? { ...ing, checked: !ing.checked } : ing
+                  )
+                };
+              }
+              return r;
+            })
+          }));
+        } else if (packet.subType === 'INTUITION_ROUND') {
+          setState(prev => ({
+            ...prev,
+            intuitionRounds: [packet.payload, ...prev.intuitionRounds.filter(r => r.id !== packet.payload.id)]
           }));
         }
       }
@@ -414,6 +513,89 @@ export const App: React.FC = () => {
     }));
   };
 
+  const handleAddStar = (newStar: GratitudeStar) => {
+    wsRelay.broadcastUpdate('GRATITUDE_STAR', newStar);
+    localMesh.broadcastLocally('GRATITUDE_STAR', newStar, state.activeUser);
+    setState(prev => ({
+      ...prev,
+      constellationStars: [newStar, ...prev.constellationStars]
+    }));
+  };
+
+  const handleUpdateCareCompass = (profile: CareCompassProfile) => {
+    const isUser = state.activeUser === 'user';
+    const updatedCompass = {
+      ...state.careCompass,
+      [isUser ? 'user' : 'partner']: profile
+    };
+    setState(prev => ({
+      ...prev,
+      careCompass: updatedCompass
+    }));
+    wsRelay.broadcastUpdate('CARE_COMPASS', { authorId: state.activeUser, profile });
+    localMesh.broadcastLocally('CARE_COMPASS', { authorId: state.activeUser, profile }, state.activeUser);
+  };
+
+  const handleSaveComfortBox = (newBox: ComfortBoxData) => {
+    setState(prev => ({
+      ...prev,
+      comfortBoxes: [newBox, ...prev.comfortBoxes.filter(b => b.id !== newBox.id)]
+    }));
+    wsRelay.broadcastUpdate('COMFORT_BOX', newBox);
+    localMesh.broadcastLocally('COMFORT_BOX', newBox, state.activeUser);
+  };
+
+  const handleAddRecipe = (newRecipe: SecretRecipe) => {
+    setState(prev => ({
+      ...prev,
+      recipes: [newRecipe, ...prev.recipes]
+    }));
+    wsRelay.broadcastUpdate('RECIPE_ADD', newRecipe);
+    localMesh.broadcastLocally('RECIPE_ADD', newRecipe, state.activeUser);
+  };
+
+  const handleToggleIngredient = (recipeId: string, ingredientId: string) => {
+    setState(prev => ({
+      ...prev,
+      recipes: prev.recipes.map(r => {
+        if (r.id === recipeId) {
+          return {
+            ...r,
+            ingredients: r.ingredients.map(ing =>
+              ing.id === ingredientId ? { ...ing, checked: !ing.checked } : ing
+            )
+          };
+        }
+        return r;
+      })
+    }));
+    wsRelay.broadcastUpdate('INGREDIENT_TOGGLE', { recipeId, ingredientId });
+    localMesh.broadcastLocally('INGREDIENT_TOGGLE', { recipeId, ingredientId }, state.activeUser);
+  };
+
+  const handleUpdateIntuitionRound = (updatedRound: IntuitionGameRound) => {
+    setState(prev => ({
+      ...prev,
+      intuitionRounds: [updatedRound, ...prev.intuitionRounds.filter(r => r.id !== updatedRound.id)]
+    }));
+    wsRelay.broadcastUpdate('INTUITION_ROUND', updatedRound);
+    localMesh.broadcastLocally('INTUITION_ROUND', updatedRound, state.activeUser);
+  };
+
+  const handleNewDilemma = () => {
+    const nextDilemma = CURATED_DILEMMAS[Math.floor(Math.random() * CURATED_DILEMMAS.length)];
+    const newRound: IntuitionGameRound = {
+      id: `round-${Date.now()}`,
+      date: 'Today',
+      dilemma: nextDilemma,
+      authorId: state.activeUser,
+      authorChoice: undefined,
+      partnerGuess: undefined,
+      revealed: false
+    };
+    handleUpdateIntuitionRound(newRound);
+  };
+
   const handleEmergencyExit = () => {
     clearState();
     window.location.reload();
@@ -458,6 +640,7 @@ export const App: React.FC = () => {
             onSendNeed={(need) => handleSendMessage(`I need: ${need.title} — ${need.description}`, true)}
             onOpenTour={() => setShowStoryTour(true)}
             onAddMilestone={handleAddMilestone}
+            onSaveComfortBox={handleSaveComfortBox}
           />
         )}
 
@@ -479,6 +662,24 @@ export const App: React.FC = () => {
           />
         )}
 
+        {currentTab === 'constellation' && (
+          <ConstellationView
+            stars={state.constellationStars}
+            onAddStar={handleAddStar}
+            activeUser={state.activeUser}
+          />
+        )}
+
+        {currentTab === 'compass' && (
+          <CareCompassView
+            userProfile={state.careCompass.user}
+            partnerProfile={state.careCompass.partner}
+            activeUser={state.activeUser}
+            onUpdateProfile={handleUpdateCareCompass}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
         {currentTab === 'letters' && (
           <LettersView
             letters={state.letters}
@@ -495,6 +696,32 @@ export const App: React.FC = () => {
             onAddAdventure={handleAddAdventure}
             onToggleComplete={handleToggleAdventureComplete}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'recipes' && (
+          <CookbookView
+            recipes={state.recipes}
+            onAddRecipe={handleAddRecipe}
+            onToggleIngredient={handleToggleIngredient}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+            activeUser={state.activeUser}
+          />
+        )}
+
+        {currentTab === 'intuition' && (
+          <IntuitionGameView
+            currentRound={state.intuitionRounds[0] || {
+              id: 'round-default',
+              date: 'Today',
+              dilemma: CURATED_DILEMMAS[0],
+              authorId: state.activeUser,
+              revealed: false
+            }}
+            onUpdateRound={handleUpdateIntuitionRound}
+            onNewDilemma={handleNewDilemma}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+            activeUser={state.activeUser}
           />
         )}
 
