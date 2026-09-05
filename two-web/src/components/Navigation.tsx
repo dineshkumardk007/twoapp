@@ -3,7 +3,7 @@ import { PairingModal } from './PairingModal';
 import { LocalMeshModal } from './LocalMeshModal';
 import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
 import { CoRegulationModal } from './CoRegulationModal';
-import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map } from 'lucide-react';
+import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Palette } from 'lucide-react';
 import { Locale, getTranslation } from '../core/i18n';
 
 interface NavigationProps {
@@ -45,6 +45,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'coordinates', label: 'Coordinates', icon: Map },
     { id: 'radio', label: 'Midnight Radio', icon: Radio },
     { id: 'stateofunion', label: 'State of Union', icon: Shield },
+    { id: 'canvas', label: 'Canvas of Us', icon: Palette },
     { id: 'rituals', label: t.tabs.rituals, icon: Flame },
     { id: 'constellation', label: 'Constellation', icon: Star },
     { id: 'compass', label: 'Care Compass', icon: Compass },

@@ -29,7 +29,9 @@ import {
   MemoryCoordinatePin,
   MidnightRadioState,
   RadioWhisper,
-  StateOfUnionSession
+  StateOfUnionSession,
+  SharedDrawingCanvasState,
+  DrawStroke
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -70,6 +72,7 @@ export interface SpaceState {
   midnightRadio: MidnightRadioState;
   activeStateOfUnion: StateOfUnionSession | null;
   stateOfUnionHistory: StateOfUnionSession[];
+  sharedCanvas: SharedDrawingCanvasState;
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -913,7 +916,38 @@ const DEFAULT_STATE: SpaceState = {
     },
     agreedDateNight: 'Sunday botanical conservatory walk + homemade pizza night'
   },
-  stateOfUnionHistory: []
+  stateOfUnionHistory: [],
+  sharedCanvas: {
+    id: 'canvas-1',
+    title: 'Our Parchment Doodles',
+    background: 'parchment',
+    strokes: [
+      {
+        id: 'stroke-1',
+        authorId: 'partner',
+        tool: 'pen',
+        color: '#f43f5e',
+        size: 4,
+        points: [
+          { x: 0.48, y: 0.42 },
+          { x: 0.46, y: 0.38 },
+          { x: 0.44, y: 0.36 },
+          { x: 0.41, y: 0.38 },
+          { x: 0.40, y: 0.42 },
+          { x: 0.43, y: 0.48 },
+          { x: 0.50, y: 0.56 },
+          { x: 0.57, y: 0.48 },
+          { x: 0.60, y: 0.42 },
+          { x: 0.59, y: 0.38 },
+          { x: 0.56, y: 0.36 },
+          { x: 0.54, y: 0.38 },
+          { x: 0.52, y: 0.42 }
+        ]
+      }
+    ],
+    lastUpdated: Date.now(),
+    savedSketches: []
+  }
 };
 
 export function loadState(): SpaceState {
@@ -945,6 +979,7 @@ export function loadState(): SpaceState {
       midnightRadio: parsed.midnightRadio || DEFAULT_STATE.midnightRadio,
       activeStateOfUnion: parsed.activeStateOfUnion !== undefined ? parsed.activeStateOfUnion : DEFAULT_STATE.activeStateOfUnion,
       stateOfUnionHistory: parsed.stateOfUnionHistory || DEFAULT_STATE.stateOfUnionHistory,
+      sharedCanvas: parsed.sharedCanvas || DEFAULT_STATE.sharedCanvas,
     };
   } catch (e) {
     return DEFAULT_STATE;

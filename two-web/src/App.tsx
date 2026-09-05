@@ -32,7 +32,10 @@ import {
   MemoryCoordinatePin,
   MidnightRadioState,
   RadioWhisper,
-  StateOfUnionSession
+  StateOfUnionSession,
+  DrawStroke,
+  CanvasSavedSketch,
+  SharedDrawingCanvasState
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -45,6 +48,7 @@ import { ChatView } from './views/ChatView';
 import { SoftLandingView } from './views/SoftLandingView';
 import { StateOfUnionView } from './views/StateOfUnionView';
 import { NightstandClockView } from './views/NightstandClockView';
+import { CanvasOfUsView } from './views/CanvasOfUsView';
 import { RitualsGardenView } from './views/RitualsGardenView';
 import { HearthGardenView } from './views/HearthGardenView';
 import { ConstellationView } from './views/ConstellationView';
@@ -358,6 +362,41 @@ export const App: React.FC = () => {
             ...prev,
             activeStateOfUnion: null,
             stateOfUnionHistory: [packet.payload, ...prev.stateOfUnionHistory]
+          }));
+        } else if (packet.subType === 'CANVAS_STROKE') {
+          setState(prev => ({
+            ...prev,
+            sharedCanvas: {
+              ...prev.sharedCanvas,
+              strokes: [...prev.sharedCanvas.strokes, packet.payload],
+              lastUpdated: Date.now()
+            }
+          }));
+        } else if (packet.subType === 'CANVAS_CLEAR') {
+          setState(prev => ({
+            ...prev,
+            sharedCanvas: {
+              ...prev.sharedCanvas,
+              strokes: [],
+              lastUpdated: Date.now()
+            }
+          }));
+        } else if (packet.subType === 'CANVAS_UNDO') {
+          setState(prev => ({
+            ...prev,
+            sharedCanvas: {
+              ...prev.sharedCanvas,
+              strokes: prev.sharedCanvas.strokes.slice(0, -1),
+              lastUpdated: Date.now()
+            }
+          }));
+        } else if (packet.subType === 'CANVAS_SAVE_SKETCH') {
+          setState(prev => ({
+            ...prev,
+            sharedCanvas: {
+              ...prev.sharedCanvas,
+              savedSketches: [packet.payload, ...(prev.sharedCanvas.savedSketches || [])]
+            }
           }));
         }
       }
@@ -881,6 +920,57 @@ export const App: React.FC = () => {
     localMesh.broadcastLocally('STATE_OF_UNION_SEAL', session, state.activeUser);
   };
 
+  const handleAddCanvasStroke = (stroke: DrawStroke) => {
+    setState(prev => ({
+      ...prev,
+      sharedCanvas: {
+        ...prev.sharedCanvas,
+        strokes: [...prev.sharedCanvas.strokes, stroke],
+        lastUpdated: Date.now()
+      }
+    }));
+    wsRelay.broadcastUpdate('CANVAS_STROKE', stroke);
+    localMesh.broadcastLocally('CANVAS_STROKE', stroke, state.activeUser);
+  };
+
+  const handleClearCanvas = () => {
+    setState(prev => ({
+      ...prev,
+      sharedCanvas: {
+        ...prev.sharedCanvas,
+        strokes: [],
+        lastUpdated: Date.now()
+      }
+    }));
+    wsRelay.broadcastUpdate('CANVAS_CLEAR', true);
+    localMesh.broadcastLocally('CANVAS_CLEAR', true, state.activeUser);
+  };
+
+  const handleUndoCanvasStroke = () => {
+    setState(prev => ({
+      ...prev,
+      sharedCanvas: {
+        ...prev.sharedCanvas,
+        strokes: prev.sharedCanvas.strokes.slice(0, -1),
+        lastUpdated: Date.now()
+      }
+    }));
+    wsRelay.broadcastUpdate('CANVAS_UNDO', true);
+    localMesh.broadcastLocally('CANVAS_UNDO', true, state.activeUser);
+  };
+
+  const handleSaveCanvasSketch = (sketch: CanvasSavedSketch) => {
+    setState(prev => ({
+      ...prev,
+      sharedCanvas: {
+        ...prev.sharedCanvas,
+        savedSketches: [sketch, ...(prev.sharedCanvas.savedSketches || [])]
+      }
+    }));
+    wsRelay.broadcastUpdate('CANVAS_SAVE_SKETCH', sketch);
+    localMesh.broadcastLocally('CANVAS_SAVE_SKETCH', sketch, state.activeUser);
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -1131,6 +1221,18 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onUpdateSession={handleUpdateStateOfUnion}
             onSealSession={handleSealStateOfUnion}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'canvas' && (
+          <CanvasOfUsView
+            canvasState={state.sharedCanvas}
+            activeUser={state.activeUser}
+            onAddStroke={handleAddCanvasStroke}
+            onClearCanvas={handleClearCanvas}
+            onUndoStroke={handleUndoCanvasStroke}
+            onSaveSketch={handleSaveCanvasSketch}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}

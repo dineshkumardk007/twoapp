@@ -488,6 +488,33 @@ export interface StateOfUnionSession {
   agreedDateNight?: string;
 }
 
+export interface DrawStroke {
+  id: string;
+  authorId: 'user' | 'partner';
+  tool: 'pen' | 'watercolor' | 'pencil' | 'eraser';
+  color: string;
+  size: number;
+  points: { x: number; y: number }[]; // 0 to 1 normalized
+}
+
+export interface CanvasSavedSketch {
+  id: string;
+  title: string;
+  date: string;
+  dataUrl: string;
+  authorName: string;
+}
+
+export interface SharedDrawingCanvasState {
+  id: string;
+  title: string;
+  background: 'parchment' | 'night_sky' | 'clean_linen';
+  strokes: DrawStroke[];
+  lastUpdated: number;
+  savedSketches: CanvasSavedSketch[];
+}
+
+
 
 
 

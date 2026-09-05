@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Radio, Shield } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Radio, Shield, Palette } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -362,6 +362,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Shield className="w-5 h-5 text-amber-700 mb-2 group-hover:scale-110 transition-transform" />
             <h4 className="text-sm font-medium text-linen-primary">State of Union</h4>
             <p className="text-xs text-linen-secondary mt-0.5">Weekly Gottman Sunday ritual</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('canvas')}
+            className="text-left p-4 rounded-2xl border border-rose-300/80 bg-gradient-to-br from-rose-50/60 to-pink-50/30 hover:bg-rose-100/50 transition-colors cursor-pointer group"
+          >
+            <Palette className="w-5 h-5 text-rose-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Canvas of Us</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">{state.sharedCanvas?.strokes?.length || 0} collaborative strokes</p>
           </button>
 
           <button
