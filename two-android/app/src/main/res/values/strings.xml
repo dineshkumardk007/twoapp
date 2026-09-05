@@ -1,0 +1,52 @@
+<resources>
+    <!-- Branding Config: Swappable in one place -->
+    <string name="app_name">Two</string>
+    <string name="space_default_title">Our Space</string>
+    <string name="space_partner_default">Partner</string>
+
+    <!-- General UI Copy -->
+    <string name="home_title">Today</string>
+    <string name="chat_tab">Chat</string>
+    <string name="journal_tab">Journal</string>
+    <string name="memories_tab">Memories</string>
+    <string name="tools_tab">Tools</string>
+    <string name="settings_title">Space Settings</string>
+
+    <!-- Emotional Weather & Capacity -->
+    <string name="weather_title">Emotional Weather</string>
+    <string name="capacity_label">Emotional Capacity</string>
+    <string name="not_about_you_button">It’s not about you</string>
+    <string name="not_about_you_active_desc">"I’m having a rough day, but it isn’t caused by you. Please don’t read into my tone."</string>
+
+    <!-- Conflict Repair Kit -->
+    <string name="repair_kit_title">Repair Kit</string>
+    <string name="cooldown_timer_title">Agreed Cool-Down</string>
+    <string name="reflection_prompt_1">What did I feel in that moment?</string>
+    <string name="reflection_prompt_2">What did I need that I wasn’t getting?</string>
+    <string name="reflection_prompt_3">What was my part in how things went?</string>
+    <string name="agreement_log_title">Agreement Log</string>
+
+    <!-- Ask For What You Need -->
+    <string name="need_menu_title">Ask for what you need</string>
+    <string name="need_listen">Listen without fixing</string>
+    <string name="need_solve">Help me solve this</string>
+    <string name="need_hug">Physical comfort or hug</string>
+    <string name="need_space">Space for two hours</string>
+    <string name="need_distract">Distract me with humor or fun</string>
+    <string name="need_sit">Just sit with me</string>
+
+    <!-- Security, Pairing & Recovery -->
+    <string name="safety_number_title">Safety Number</string>
+    <string name="safety_number_desc">Compare these words and symbols with your partner to verify your connection is completely private.</string>
+    <string name="recovery_phrase_title">12-Word Recovery Phrase</string>
+    <string name="recovery_phrase_warning">Write these 12 words down and keep them safe. If both of you lose your devices and phrases, your space cannot be recovered.</string>
+    <string name="partner_recovery_title">Partner-Assisted Recovery</string>
+
+    <!-- Widget Strings -->
+    <string name="widget_partner_mood_name">Partner Mood &amp; Capacity</string>
+    <string name="widget_partner_mood_desc">Shows your partner’s emotional weather, capacity, and unread note status on your home screen.</string>
+
+    <!-- Privacy & Emergency -->
+    <string name="emergency_quick_exit">Quick Exit</string>
+    <string name="emergency_exit_desc">Silently exit and clear this device.</string>
+</resources>

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: two_relay_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: two_admin
+      POSTGRES_PASSWORD: two_secure_password
+      POSTGRES_DB: two_space_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -1,0 +1,129 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                  String        @id @default(uuid())
+  authId              String        @unique
+  publicKey           Bytes
+  encryptedPrivateKey Bytes
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  memberships         SpaceMember[]
+  records             Record[]
+}
+
+model Space {
+  id              String        @id @default(uuid())
+  settingsPayload Bytes
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  members         SpaceMember[]
+  records         Record[]
+  privateRecords  PrivateRecord[]
+  media           Media[]
+  capsules        Capsule[]
+  consentEvents   ConsentEvent[]
+}
+
+model SpaceMember {
+  spaceId        String
+  userId         String
+  sealedSpaceKey Bytes
+  role           String   @default("member")
+  joinedAt       DateTime @default(now())
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([spaceId, userId])
+}
+
+enum RecordType {
+  CHAT
+  JOURNAL
+  MOOD
+  MEMORY
+  EVENT
+  LIST_ITEM
+  AGREEMENT
+  APPRECIATION
+  CAPSULE
+  QUOTE
+  EXPENSE
+  GOAL
+}
+
+model Record {
+  id           String     @id @default(uuid())
+  spaceId      String
+  authorId     String
+  type         RecordType
+  payload      Bytes      // Ciphertext blob
+  nonce        Bytes      // 192-bit / 96-bit nonce
+  lamportClock BigInt
+  clientTs     BigInt
+  createdAt    DateTime   @default(now())
+  deletedAt    DateTime?
+
+  space  Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([spaceId, lamportClock(sort: Desc)])
+  @@index([spaceId, authorId, type])
+}
+
+model PrivateRecord {
+  id        String    @id @default(uuid())
+  ownerId   String
+  spaceId   String
+  payload   Bytes
+  nonce     Bytes
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, spaceId])
+}
+
+model Media {
+  id          String   @id @default(uuid())
+  spaceId     String
+  storagePath String
+  sizeBucket  String
+  createdAt   DateTime @default(now())
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+}
+
+model Capsule {
+  id        String   @id @default(uuid())
+  spaceId   String
+  unlockAt  DateTime
+  payload   Bytes
+  nonce     Bytes
+  createdAt DateTime @default(now())
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId, unlockAt])
+}
+
+model ConsentEvent {
+  id        String   @id @default(uuid())
+  spaceId   String
+  actorId   String
+  kind      String   // "location", "cycle", "export", "ai_refinement"
+  action    String   // "grant", "revoke", "access"
+  createdAt DateTime @default(now())
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId, createdAt(sort: Desc)])
+}

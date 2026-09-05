@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Warm Linen Palette (Primary default) -->
+    <color name="linen_background">#FAF8F5</color>
+    <color name="linen_surface">#FFFFFF</color>
+    <color name="linen_surface_variant">#F2EFEB</color>
+    <color name="linen_primary">#2D312E</color>
+    <color name="linen_secondary">#72685F</color>
+    <color name="linen_accent">#B07D62</color>
+
+    <!-- Midnight Slate Palette -->
+    <color name="slate_background">#121518</color>
+    <color name="slate_surface">#1B1F24</color>
+    <color name="slate_surface_variant">#242930</color>
+    <color name="slate_primary">#E8ECEF</color>
+    <color name="slate_secondary">#8E98A4</color>
+    <color name="slate_accent">#7EA8BE</color>
+
+    <!-- Calming Status Colors -->
+    <color name="weather_sunny">#DDA15E</color>
+    <color name="weather_calm">#606C38</color>
+    <color name="weather_cloudy">#9C9C9C</color>
+    <color name="weather_stormy">#5E6472</color>
+    <color name="not_about_you_soft_gold">#E0A96D</color>
+</resources>

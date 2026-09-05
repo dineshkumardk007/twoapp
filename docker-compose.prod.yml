@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Ciphertext Store
+  two_db:
+    image: postgres:16-alpine
+    container_name: two_db_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: two_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-two_production_secure_pass_2026}
+      POSTGRES_DB: two_space_db
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    networks:
+      - two_internal
+
+  # 2. Zero-Knowledge Backend Relay Server
+  two_server:
+    build:
+      context: ./two-server
+      dockerfile: Dockerfile
+    container_name: two_server_prod
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://two_admin:${POSTGRES_PASSWORD:-two_production_secure_pass_2026}@two_db:5432/two_space_db?schema=public
+    depends_on:
+      - two_db
+    networks:
+      - two_internal
+
+  # 3. Web Client Frontend
+  two_web:
+    build:
+      context: ./two-web
+      dockerfile: Dockerfile
+    container_name: two_web_prod
+    restart: unless-stopped
+    networks:
+      - two_internal
+
+  # 4. Automated Reverse Proxy (Caddy with automatic HTTPS)
+  two_proxy:
+    image: caddy:2-alpine
+    container_name: two_proxy_prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    entrypoint: >
+      sh -c 'cat << "EOF" > /etc/caddy/Caddyfile
+      {$DOMAIN:localhost} {
+        handle /relay* {
+          reverse_proxy two_server:4000
+        }
+        handle /api* {
+          reverse_proxy two_server:4000
+        }
+        handle {
+          reverse_proxy two_web:80
+        }
+      }
+      EOF
+      caddy run --config /etc/caddy/Caddyfile --adapter caddyfile'
+    depends_on:
+      - two_server
+      - two_web
+    networks:
+      - two_internal
+
+networks:
+  two_internal:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
