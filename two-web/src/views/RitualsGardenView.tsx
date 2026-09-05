@@ -26,6 +26,7 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
   const [newSubtitle, setNewSubtitle] = useState('');
   const [newDuration, setNewDuration] = useState('5 mins');
   const [newCategory, setNewCategory] = useState<'affection' | 'presence' | 'reflection' | 'play'>('presence');
+  const [hoveredStone, setHoveredStone] = useState<PebbleStone | null>(null);
 
   // 6-second kiss timer handler
   useEffect(() => {
@@ -164,32 +165,55 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
         </div>
 
         {/* Visual Cairn Canvas */}
-        <div className="relative h-64 sm:h-72 w-full bg-gradient-to-b from-linen-variant/20 via-linen-variant/40 to-linen-variant/60 rounded-2xl flex flex-col items-center justify-end p-6 overflow-hidden border border-linen-border/40">
+        <div className="relative min-h-[280px] sm:min-h-[300px] w-full bg-gradient-to-b from-linen-variant/20 via-linen-variant/40 to-linen-variant/60 rounded-2xl flex flex-col items-center justify-end p-6 border border-linen-border/40">
           {/* Ambient watercolor background circle */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-linen-accent/5 blur-2xl pointer-events-none" />
 
+          {/* Top Dynamic Stone Inspector (Always 100% visible on hover) */}
+          {hoveredStone ? (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 px-4 py-1.5 rounded-full bg-linen-primary text-linen-surface text-xs font-medium shadow-xl flex items-center space-x-2 border border-white/20 animate-fade-in pointer-events-none whitespace-nowrap">
+              <span className="w-2.5 h-2.5 rounded-full border border-white/60" style={{ backgroundColor: hoveredStone.color }} />
+              <span className="font-serif font-normal">{hoveredStone.ritualTitle}</span>
+              <span className="text-[10px] text-linen-surface/75">({hoveredStone.placedAt})</span>
+            </div>
+          ) : (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-3.5 py-1 rounded-full bg-linen-surface/80 backdrop-blur-xs border border-linen-border/70 text-[11px] text-linen-secondary font-medium pointer-events-none whitespace-nowrap shadow-xs">
+              Hover over any stone to inspect its ritual memory
+            </div>
+          )}
+
           {/* Stacked Stones (Top to Bottom rendering) */}
-          <div className="flex flex-col-reverse items-center z-10 space-y-reverse space-y-1">
-            {sortedPebbles.map((stone, idx) => {
+          <div className="flex flex-col-reverse items-center z-10 space-y-reverse space-y-1 mb-2">
+            {sortedPebbles.map((stone) => {
               const width = Math.max(36, stone.size);
               const height = Math.max(14, stone.height);
+              const isHovered = hoveredStone?.id === stone.id;
+
               return (
                 <div
                   key={stone.id}
-                  title={`${stone.ritualTitle} • Placed ${stone.placedAt}`}
-                  className="transition-all duration-500 hover:scale-105 cursor-pointer shadow-sm relative group"
+                  onMouseEnter={() => setHoveredStone(stone)}
+                  onMouseLeave={() => setHoveredStone(null)}
+                  className={`transition-all duration-300 hover:scale-110 cursor-pointer shadow-sm relative group ${
+                    isHovered ? 'z-50 ring-2 ring-linen-primary/40' : 'z-10'
+                  }`}
                   style={{
                     width: `${width}px`,
                     height: `${height}px`,
                     backgroundColor: stone.color,
                     borderRadius: `${height}px`,
                     transform: `rotate(${stone.rotation}deg)`,
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.25)'
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.3)'
                   }}
                 >
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block whitespace-nowrap bg-linen-primary text-linen-surface text-[10px] px-2 py-1 rounded-md shadow-lg pointer-events-none z-30 font-medium">
-                    {stone.ritualTitle} ({stone.placedAt})
+                  {/* On-Stone Floating Tooltip - forced to z-50 in front of everything */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 hidden group-hover:flex flex-col items-center whitespace-nowrap pointer-events-none z-50">
+                    <div className="bg-linen-primary text-linen-surface text-[11px] px-3 py-1.5 rounded-xl shadow-2xl font-medium border border-white/20 flex items-center space-x-1.5">
+                      <span className="font-serif">{stone.ritualTitle}</span>
+                      <span className="text-[10px] text-linen-surface/75 font-normal">({stone.placedAt})</span>
+                    </div>
+                    {/* Tooltip downward arrowhead */}
+                    <div className="w-2 h-2 bg-linen-primary rotate-45 -mt-1 shadow-xs" />
                   </div>
                 </div>
               );
