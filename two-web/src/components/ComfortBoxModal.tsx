@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { ComfortBoxData } from '../types';
 import { triggerGlobalPulse } from './SensoryPulseOverlay';
+import { CoRegulationModal } from './CoRegulationModal';
 
 interface ComfortBoxModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [note, setNote] = useState(boxData.reassuranceNote);
   const [photoUrlInput, setPhotoUrlInput] = useState(boxData.photoUrls.join('\n'));
+  const [showCoRegulation, setShowCoRegulation] = useState(false);
   
   // 4-7-8 Somatic Breathing Engine State
   const [isBreathing, setIsBreathing] = useState(false);
@@ -249,7 +251,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-wrap items-center gap-2.5">
                   <button
                     onClick={handleStartBreathing}
                     className={`px-5 py-2 rounded-2xl text-xs font-semibold flex items-center space-x-2 transition-all shadow-xs ${
@@ -260,6 +262,14 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
                   >
                     {isBreathing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                     <span>{isBreathing ? 'Pause Breathing' : 'Start 4-7-8 Calm'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowCoRegulation(true)}
+                    className="px-4 py-2 rounded-2xl text-xs font-semibold flex items-center space-x-1.5 border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100 transition-colors shadow-2xs"
+                  >
+                    <Wind className="w-4 h-4 text-teal-600" />
+                    <span>Sync with Partner</span>
                   </button>
 
                   {cyclesCompleted > 0 && (
@@ -334,6 +344,12 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
           </button>
         </div>
       </div>
+
+      <CoRegulationModal
+        isOpen={showCoRegulation}
+        onClose={() => setShowCoRegulation(false)}
+        activeUser={activeUser}
+      />
     </div>
   );
 };

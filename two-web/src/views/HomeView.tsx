@@ -6,9 +6,10 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
+import { CoRegulationModal } from '../components/CoRegulationModal';
 import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
 import { RelationshipMilestone, ComfortBoxData } from '../types';
@@ -37,6 +38,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [showSoundscapes, setShowSoundscapes] = useState(false);
   const [showComfortBox, setShowComfortBox] = useState(false);
+  const [showCoRegulation, setShowCoRegulation] = useState(false);
   const [optInSpicy, setOptInSpicy] = useState(false);
   const [questionPromptToast, setQuestionPromptToast] = useState(false);
 
@@ -163,14 +165,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </p>
           </div>
         </div>
-        <button
-          onClick={() => triggerGlobalPulse('Thinking of you')}
-          className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-rose-600 text-white text-xs font-medium hover:bg-rose-500 active:scale-95 transition-all shadow-xs cursor-pointer shrink-0 ml-3"
-        >
-          <Heart className="w-3.5 h-3.5 fill-current" />
-          <span className="hidden sm:inline">Send Pulse</span>
-          <span className="sm:hidden">Pulse</span>
-        </button>
+        <div className="flex items-center space-x-2 shrink-0 ml-3">
+          <button
+            onClick={() => setShowCoRegulation(true)}
+            className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-linen-surface border border-teal-200 text-teal-800 text-xs font-medium hover:bg-teal-50 active:scale-95 transition-all shadow-2xs cursor-pointer"
+            title="Open synchronized 4-7-8 breathing sanctuary"
+          >
+            <Wind className="w-3.5 h-3.5 text-teal-600" />
+            <span className="hidden sm:inline">Breathe in Sync</span>
+            <span className="sm:hidden">Breathe</span>
+          </button>
+          <button
+            onClick={() => triggerGlobalPulse('Thinking of you')}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-rose-600 text-white text-xs font-medium hover:bg-rose-500 active:scale-95 transition-all shadow-xs cursor-pointer"
+          >
+            <Heart className="w-3.5 h-3.5 fill-current" />
+            <span className="hidden sm:inline">Send Pulse</span>
+            <span className="sm:hidden">Pulse</span>
+          </button>
+        </div>
       </div>
 
       {/* 3. Daily Question Engine */}
@@ -268,6 +281,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Heart className="w-5 h-5 text-rose-500 mb-2 fill-rose-500 group-hover:scale-110 transition-transform" />
             <h4 className="text-sm font-medium text-linen-primary">Thinking of You</h4>
             <p className="text-xs text-linen-secondary mt-0.5">528Hz Solfeggio touch pulse</p>
+          </button>
+
+          <button
+            onClick={() => setShowCoRegulation(true)}
+            className="text-left p-4 rounded-2xl border border-teal-200/80 bg-teal-50/30 hover:bg-teal-50/70 transition-colors cursor-pointer group"
+          >
+            <Wind className="w-5 h-5 text-teal-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Co-Regulation</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Synchronized 4-7-8 breath</p>
           </button>
 
           <button
@@ -446,6 +468,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
         }}
         activeUser={state.activeUser}
         onSaveBox={(newBox) => onSaveComfortBox && onSaveComfortBox(newBox)}
+      />
+
+      <CoRegulationModal
+        isOpen={showCoRegulation}
+        onClose={() => setShowCoRegulation(false)}
+        activeUser={state.activeUser}
       />
     </div>
   );

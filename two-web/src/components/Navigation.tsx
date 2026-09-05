@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { PairingModal } from './PairingModal';
 import { LocalMeshModal } from './LocalMeshModal';
 import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
-import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile } from 'lucide-react';
+import { CoRegulationModal } from './CoRegulationModal';
+import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind } from 'lucide-react';
 import { Locale, getTranslation } from '../core/i18n';
 
 interface NavigationProps {
@@ -31,6 +32,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   const [showPairingModal, setShowPairingModal] = useState(false);
   const [showMeshModal, setShowMeshModal] = useState(false);
   const [showSoundscapeModal, setShowSoundscapeModal] = useState(false);
+  const [showCoRegulationModal, setShowCoRegulationModal] = useState(false);
   const t = getTranslation(locale);
 
   const tabs = [
@@ -106,6 +108,15 @@ export const Navigation: React.FC<NavigationProps> = ({
               title="Ambient Night Soundscapes: Fall Asleep Together"
             >
               <Moon className="w-4 h-4" />
+            </button>
+
+            {/* Synchronized Co-Regulation Sanctuary */}
+            <button
+              onClick={() => setShowCoRegulationModal(true)}
+              className="p-1.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors border border-transparent hover:border-teal-200"
+              title="Co-Regulation Sanctuary: Synchronized 4-7-8 Breathing"
+            >
+              <Wind className="w-4 h-4" />
             </button>
 
             {/* Off-Grid Mesh Sync Status */}
@@ -190,6 +201,12 @@ export const Navigation: React.FC<NavigationProps> = ({
       <AmbientSoundscapeModal
         isOpen={showSoundscapeModal}
         onClose={() => setShowSoundscapeModal(false)}
+        activeUser={activeUser}
+      />
+
+      <CoRegulationModal
+        isOpen={showCoRegulationModal}
+        onClose={() => setShowCoRegulationModal(false)}
         activeUser={activeUser}
       />
     </header>

@@ -236,3 +236,28 @@ export interface IntuitionGameRound {
   revealed: boolean;
 }
 
+export type BreathPatternType = '4-7-8' | 'box' | 'gentle';
+
+export interface BreathPatternConfig {
+  id: BreathPatternType;
+  name: string;
+  subtitle: string;
+  inhale: number; // seconds
+  holdIn: number;
+  exhale: number;
+  holdOut: number;
+  totalDuration: number;
+}
+
+export interface CoRegulationSession {
+  isActive: boolean;
+  pattern: BreathPatternType;
+  startedAt: number; // epoch timestamp
+  initiatorId: string;
+  targetCycles: number;
+  completedCycles: number;
+  soundEnabled: boolean;
+  heartbeatEnabled: boolean;
+}
+
+
