@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SpaceState } from '../core/storage';
 import { NightstandState, SleepPartnerStatus } from '../types';
+import { ambientAudioCoordinator } from '../core/ambientAudioCoordinator';
 import {
   Moon,
   Sun,
@@ -16,7 +17,10 @@ import {
   Coffee,
   Check,
   Send,
-  Sliders
+  Sliders,
+  Flame,
+  CloudRain,
+  Waves
 } from 'lucide-react';
 
 interface NightstandClockViewProps {
@@ -87,14 +91,15 @@ function getMoonPhase(date: Date = new Date()): { phaseName: string; illuminatio
   return { phaseName, illumination, phaseIndex };
 }
 
-// Procedural Audio Engine for Nightstand Bedside Sleep
+// Procedural Audio Engine for Nightstand Bedside Sleep with 100% leak-free lifecycle
 class NightstandAudioEngine {
   private ctx: AudioContext | null = null;
-  private noiseNode: AudioNode | null = null;
-  private osc1: OscillatorNode | null = null;
-  private osc2: OscillatorNode | null = null;
-  private gainNode: GainNode | null = null;
-  private timerInterval: any = null;
+  private masterGain: GainNode | null = null;
+  private activeSources: (AudioBufferSourceNode | OscillatorNode)[] = [];
+  private activeIntervals: any[] = [];
+  private currentTrack: 'none' | 'rain' | 'theta' | 'campfire' | 'ocean' = 'none';
+  private generationId = 0;
+  private currentVolume = 0.6;
 
   private initCtx() {
     if (!this.ctx) {
@@ -102,113 +107,294 @@ class NightstandAudioEngine {
       this.ctx = new AudioContextClass();
     }
     if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
+    }
+    if (!this.masterGain && this.ctx) {
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
     }
   }
 
-  public playSoundscape(type: 'rain' | 'theta' | 'campfire', volume: number = 0.4) {
-    this.stopSoundscape();
+  public setVolume(vol: number) {
+    this.currentVolume = Math.max(0, Math.min(1, vol));
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
+    }
+  }
+
+  public getTrack() {
+    return this.currentTrack;
+  }
+
+  public stopSoundscape(immediate = true) {
+    this.currentTrack = 'none';
+    this.generationId++;
+
+    // 1. Clear all interval timers (e.g. rain drops, crackle pops)
+    this.activeIntervals.forEach(t => clearInterval(t));
+    this.activeIntervals = [];
+
+    // 2. Stop and disconnect all active audio nodes immediately
+    this.activeSources.forEach(src => {
+      try {
+        if ('stop' in src) (src as any).stop();
+        src.disconnect();
+      } catch (e) {}
+    });
+    this.activeSources = [];
+
+    // 3. Immediately silence master gain
+    if (this.masterGain && this.ctx) {
+      try {
+        if (immediate) {
+          this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        } else {
+          this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.ctx.currentTime);
+          this.masterGain.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.08);
+        }
+      } catch (e) {}
+    }
+
+    ambientAudioCoordinator.notifyStopped('nightstand');
+  }
+
+  public playSoundscape(type: 'rain' | 'theta' | 'campfire' | 'ocean', volume: number = 0.6) {
+    this.stopSoundscape(true);
     this.initCtx();
     if (!this.ctx) return;
 
-    this.gainNode = this.ctx.createGain();
-    this.gainNode.gain.setValueAtTime(0.0001, this.ctx.currentTime);
-    this.gainNode.gain.exponentialRampToValueAtTime(volume, this.ctx.currentTime + 2.5);
-    this.gainNode.connect(this.ctx.destination);
+    this.currentTrack = type;
+    this.currentVolume = volume;
+    const thisGen = ++this.generationId;
+
+    if (!this.masterGain) {
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.connect(this.ctx.destination);
+    }
+    const now = this.ctx.currentTime;
+    this.masterGain.gain.setValueAtTime(0.001, now);
+    this.masterGain.gain.linearRampToValueAtTime(volume, now + 0.25);
+
+    ambientAudioCoordinator.notifyNightstandPlaying();
 
     if (type === 'rain') {
-      // Pink noise bed + low-pass filter
-      const bufferSize = this.ctx.sampleRate * 2;
-      const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        b0 = 0.99886 * b0 + white * 0.0555179;
-        b1 = 0.99332 * b1 + white * 0.0750759;
-        b2 = 0.96900 * b2 + white * 0.1538520;
-        b3 = 0.86650 * b3 + white * 0.3104856;
-        b4 = 0.55000 * b4 + white * 0.5329522;
-        b5 = -0.7616 * b5 - white * 0.0168980;
-        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
-        b6 = white * 0.115926;
-      }
-      const whiteNoise = this.ctx.createBufferSource();
-      whiteNoise.buffer = noiseBuffer;
-      whiteNoise.loop = true;
-
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(650, this.ctx.currentTime);
-
-      whiteNoise.connect(filter);
-      filter.connect(this.gainNode);
-      whiteNoise.start();
-      this.noiseNode = whiteNoise;
-
+      this.startRain(thisGen);
     } else if (type === 'theta') {
-      // 432 Hz theta sleep binaural wave
-      const osc1 = this.ctx.createOscillator();
-      const osc2 = this.ctx.createOscillator();
-      osc1.type = 'sine';
-      osc2.type = 'sine';
-      osc1.frequency.setValueAtTime(108, this.ctx.currentTime); // 108Hz base
-      osc2.frequency.setValueAtTime(112.5, this.ctx.currentTime); // 4.5Hz theta delta
-
-      const subOsc = this.ctx.createOscillator();
-      subOsc.type = 'sine';
-      subOsc.frequency.setValueAtTime(54, this.ctx.currentTime); // deep sub drone
-
-      osc1.connect(this.gainNode);
-      osc2.connect(this.gainNode);
-      subOsc.connect(this.gainNode);
-
-      osc1.start();
-      osc2.start();
-      subOsc.start();
-
-      this.osc1 = osc1;
-      this.osc2 = osc2;
-
+      this.startTheta(thisGen);
     } else if (type === 'campfire') {
-      // Campfire / warm crackle bed
-      const bufferSize = this.ctx.sampleRate * 2;
-      const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        // intermittent crackle bursts
-        if (Math.random() < 0.003) {
-          output[i] = (Math.random() * 2 - 1) * 0.7;
-        } else {
-          output[i] = (Math.random() * 2 - 1) * 0.02;
-        }
-      }
-      const crackleSource = this.ctx.createBufferSource();
-      crackleSource.buffer = noiseBuffer;
-      crackleSource.loop = true;
-
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(900, this.ctx.currentTime);
-      filter.Q.setValueAtTime(1.8, this.ctx.currentTime);
-
-      crackleSource.connect(filter);
-      filter.connect(this.gainNode);
-      crackleSource.start();
-      this.noiseNode = crackleSource;
+      this.startCampfire(thisGen);
+    } else if (type === 'ocean') {
+      this.startOcean(thisGen);
     }
+  }
+
+  // 1. Rain Soundscape: Pink noise bed + skylight lowpass filter + organic raindrops
+  private startRain(gen: number) {
+    if (!this.ctx || !this.masterGain) return;
+    const bufferSize = this.ctx.sampleRate * 4;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.09;
+      b6 = white * 0.115926;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(750, this.ctx.currentTime);
+    filter.Q.setValueAtTime(0.8, this.ctx.currentTime);
+
+    noise.connect(filter);
+    filter.connect(this.masterGain);
+    noise.start();
+    this.activeSources.push(noise);
+
+    // Random soft droplets
+    const dropInterval = setInterval(() => {
+      if (this.generationId !== gen || !this.ctx || !this.masterGain) return;
+      try {
+        const drop = this.ctx.createOscillator();
+        const dropGain = this.ctx.createGain();
+        const t = this.ctx.currentTime;
+        const freq = 1250 + Math.random() * 1100;
+        drop.type = 'sine';
+        drop.frequency.setValueAtTime(freq, t);
+        drop.frequency.exponentialRampToValueAtTime(freq * 0.65, t + 0.04);
+
+        dropGain.gain.setValueAtTime(0.0001, t);
+        dropGain.gain.linearRampToValueAtTime(0.025 + Math.random() * 0.02, t + 0.008);
+        dropGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+
+        drop.connect(dropGain);
+        dropGain.connect(this.masterGain);
+        drop.start(t);
+        drop.stop(t + 0.06);
+        this.activeSources.push(drop);
+      } catch (e) {}
+    }, 420);
+    this.activeIntervals.push(dropInterval);
+  }
+
+  // 2. Theta Soundscape: 432Hz harmonic sleep wave + 4.5Hz delta brainwave frequency
+  private startTheta(gen: number) {
+    if (!this.ctx || !this.masterGain) return;
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const subOsc = this.ctx.createOscillator();
+    const highOsc = this.ctx.createOscillator();
+
+    osc1.type = 'sine';
+    osc2.type = 'sine';
+    subOsc.type = 'sine';
+    highOsc.type = 'sine';
+
+    osc1.frequency.setValueAtTime(108, this.ctx.currentTime);
+    osc2.frequency.setValueAtTime(112.5, this.ctx.currentTime); // 4.5Hz delta wave difference
+    subOsc.frequency.setValueAtTime(54, this.ctx.currentTime); // deep sub-bass anchor
+    highOsc.frequency.setValueAtTime(432, this.ctx.currentTime); // 432Hz sleep resonance
+
+    const thetaGain = this.ctx.createGain();
+    thetaGain.gain.setValueAtTime(0.65, this.ctx.currentTime);
+
+    const highGain = this.ctx.createGain();
+    highGain.gain.setValueAtTime(0.018, this.ctx.currentTime);
+
+    osc1.connect(thetaGain);
+    osc2.connect(thetaGain);
+    subOsc.connect(thetaGain);
+    thetaGain.connect(this.masterGain);
+
+    highOsc.connect(highGain);
+    highGain.connect(this.masterGain);
+
+    osc1.start();
+    osc2.start();
+    subOsc.start();
+    highOsc.start();
+
+    this.activeSources.push(osc1, osc2, subOsc, highOsc);
+  }
+
+  // 3. Campfire Soundscape: Deep wood rumble + organic crackling timber pops
+  private startCampfire(gen: number) {
+    if (!this.ctx || !this.masterGain) return;
+    const bufferSize = this.ctx.sampleRate * 3;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      data[i] = (last + (0.02 * white)) / 1.02;
+      last = data[i];
+      data[i] *= 1.9;
+    }
+    const brownSource = this.ctx.createBufferSource();
+    brownSource.buffer = buffer;
+    brownSource.loop = true;
+
+    const lowFilter = this.ctx.createBiquadFilter();
+    lowFilter.type = 'lowpass';
+    lowFilter.frequency.setValueAtTime(200, this.ctx.currentTime);
+
+    brownSource.connect(lowFilter);
+    lowFilter.connect(this.masterGain);
+    brownSource.start();
+    this.activeSources.push(brownSource);
+
+    // Crackle pops
+    const popInterval = setInterval(() => {
+      if (this.generationId !== gen || !this.ctx || !this.masterGain) return;
+      if (Math.random() < 0.6) {
+        try {
+          const pop = this.ctx.createOscillator();
+          const popGain = this.ctx.createGain();
+          const t = this.ctx.currentTime;
+          pop.type = 'triangle';
+          pop.frequency.setValueAtTime(320 + Math.random() * 950, t);
+          popGain.gain.setValueAtTime(0.001, t);
+          popGain.gain.linearRampToValueAtTime(0.045 + Math.random() * 0.04, t + 0.005);
+          popGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03 + Math.random() * 0.04);
+          pop.connect(popGain);
+          popGain.connect(this.masterGain);
+          pop.start(t);
+          pop.stop(t + 0.08);
+          this.activeSources.push(pop);
+        } catch (e) {}
+      }
+    }, 240);
+    this.activeIntervals.push(popInterval);
+  }
+
+  // 4. Ocean Soundscape: Rhythmic tidal surf with 7-second breath ebb and flow
+  private startOcean(gen: number) {
+    if (!this.ctx || !this.masterGain) return;
+    const bufferSize = this.ctx.sampleRate * 4;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.13;
+      b6 = white * 0.115926;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+
+    const waveFilter = this.ctx.createBiquadFilter();
+    waveFilter.type = 'lowpass';
+    waveFilter.frequency.setValueAtTime(450, this.ctx.currentTime);
+
+    const waveGain = this.ctx.createGain();
+    waveGain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+
+    const lfo = this.ctx.createOscillator();
+    const lfoGain = this.ctx.createGain();
+    lfo.frequency.setValueAtTime(0.14, this.ctx.currentTime); // ~7.1 seconds cycle
+    lfoGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+    lfo.connect(lfoGain);
+    lfoGain.connect(waveGain.gain);
+
+    const lfoFilterGain = this.ctx.createGain();
+    lfoFilterGain.gain.setValueAtTime(300, this.ctx.currentTime);
+    lfo.connect(lfoFilterGain);
+    lfoFilterGain.connect(waveFilter.frequency);
+
+    noise.connect(waveFilter);
+    waveFilter.connect(waveGain);
+    waveGain.connect(this.masterGain);
+
+    noise.start();
+    lfo.start();
+    this.activeSources.push(noise, lfo);
   }
 
   public playKissChime() {
     this.initCtx();
     if (!this.ctx) return;
-
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = 'sine';
-    // 528 Hz Solfeggio Love frequency harmonic chime
     osc.frequency.setValueAtTime(528, now);
     osc.frequency.exponentialRampToValueAtTime(792, now + 0.3);
     osc.frequency.exponentialRampToValueAtTime(528, now + 0.8);
@@ -219,35 +405,8 @@ class NightstandAudioEngine {
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
-
     osc.start(now);
     osc.stop(now + 2.3);
-  }
-
-  public stopSoundscape() {
-    if (this.gainNode && this.ctx) {
-      try {
-        this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.ctx.currentTime);
-        this.gainNode.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 1.2);
-      } catch (e) {
-        // ignore
-      }
-    }
-    setTimeout(() => {
-      if (this.noiseNode) {
-        try { (this.noiseNode as any).stop(); } catch (e) {}
-        this.noiseNode = null;
-      }
-      if (this.osc1) {
-        try { this.osc1.stop(); } catch (e) {}
-        this.osc1 = null;
-      }
-      if (this.osc2) {
-        try { this.osc2.stop(); } catch (e) {}
-        this.osc2 = null;
-      }
-      this.gainNode = null;
-    }, 1250);
   }
 }
 
@@ -285,9 +444,8 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
   const [kissAnimation, setKissAnimation] = useState<boolean>(false);
   const [showNoteInput, setShowNoteInput] = useState<boolean>(false);
   const [pillowNote, setPillowNote] = useState<string>('');
-  const [selectedSoundscape, setSelectedSoundscape] = useState<'none' | 'rain' | 'theta' | 'campfire'>(
-    nightstand.ambientSoundscape || 'none'
-  );
+  const [selectedSoundscape, setSelectedSoundscape] = useState<'none' | 'rain' | 'theta' | 'campfire' | 'ocean'>('none');
+  const [volume, setVolume] = useState<number>(0.6);
   const [timerRemaining, setTimerRemaining] = useState<number | null>(null);
 
   const moon = getMoonPhase(currentTime);
@@ -300,14 +458,28 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Sleep countdown timer handler
+  // Register with ambientAudioCoordinator so Midnight Radio and Nightstand never clash
+  useEffect(() => {
+    ambientAudioCoordinator.registerNightstand(() => {
+      audioEngine.stopSoundscape(true);
+      setSelectedSoundscape('none');
+      setTimerRemaining(null);
+    });
+
+    return () => {
+      audioEngine.stopSoundscape(true);
+      setSelectedSoundscape('none');
+    };
+  }, []);
+
+  // Sleep countdown timer handler with gradual 30-sec fadeout
   useEffect(() => {
     let interval: any = null;
     if (selectedSoundscape !== 'none' && timerRemaining !== null && timerRemaining > 0) {
       interval = setInterval(() => {
         setTimerRemaining(prev => {
           if (prev === null || prev <= 1) {
-            audioEngine.stopSoundscape();
+            audioEngine.stopSoundscape(false);
             setSelectedSoundscape('none');
             return null;
           }
@@ -319,13 +491,6 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
       if (interval) clearInterval(interval);
     };
   }, [selectedSoundscape, timerRemaining]);
-
-  // Clean up audio on unmount
-  useEffect(() => {
-    return () => {
-      audioEngine.stopSoundscape();
-    };
-  }, []);
 
   // Format time strings
   const hours = currentTime.getHours().toString().padStart(2, '0');
@@ -399,20 +564,37 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
     onSendMidnightKiss(pillowNote || undefined);
   };
 
-  const handleSoundscapeChange = (type: 'none' | 'rain' | 'theta' | 'campfire') => {
-    setSelectedSoundscape(type);
-    if (type === 'none') {
-      audioEngine.stopSoundscape();
+  const handleSoundscapeChange = (type: 'none' | 'rain' | 'theta' | 'campfire' | 'ocean') => {
+    // If clicking the currently active track or 'none', stop completely and immediately
+    if (type === 'none' || type === selectedSoundscape) {
+      audioEngine.stopSoundscape(true);
+      setSelectedSoundscape('none');
       setTimerRemaining(null);
-    } else {
-      audioEngine.playSoundscape(type);
-      setTimerRemaining(30 * 60); // default 30 min timer
+      onUpdateNightstand({
+        ...nightstand,
+        ambientSoundscape: 'none'
+      });
+      return;
     }
+
+    // Play chosen soundscape with current volume
+    audioEngine.playSoundscape(type, volume);
+    setSelectedSoundscape(type);
+    setTimerRemaining(30 * 60); // default 30 min timer
 
     onUpdateNightstand({
       ...nightstand,
       ambientSoundscape: type
     });
+
+    if ('vibrate' in navigator) {
+      navigator.vibrate([40]);
+    }
+  };
+
+  const handleVolumeChange = (newVol: number) => {
+    setVolume(newVol);
+    audioEngine.setVolume(newVol);
   };
 
   const toggleFullscreen = () => {
@@ -739,50 +921,86 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             <button
-              onClick={() => handleSoundscapeChange(selectedSoundscape === 'rain' ? 'none' : 'rain')}
-              className={`py-1.5 px-2 rounded-xl text-xs font-serif transition-colors cursor-pointer border ${
+              onClick={() => handleSoundscapeChange('rain')}
+              className={`py-2 px-2.5 rounded-xl text-xs font-serif transition-all cursor-pointer border flex items-center justify-center space-x-1.5 ${
                 selectedSoundscape === 'rain'
-                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-medium'
+                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-semibold shadow-xs'
                   : 'bg-neutral-900/60 border-amber-950/60 text-amber-500/80 hover:bg-neutral-800'
               }`}
             >
-              🌧️ Rain
+              <span>🌧️</span>
+              <span>Rain</span>
             </button>
             <button
-              onClick={() => handleSoundscapeChange(selectedSoundscape === 'theta' ? 'none' : 'theta')}
-              className={`py-1.5 px-2 rounded-xl text-xs font-serif transition-colors cursor-pointer border ${
+              onClick={() => handleSoundscapeChange('theta')}
+              className={`py-2 px-2.5 rounded-xl text-xs font-serif transition-all cursor-pointer border flex items-center justify-center space-x-1.5 ${
                 selectedSoundscape === 'theta'
-                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-medium'
+                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-semibold shadow-xs'
                   : 'bg-neutral-900/60 border-amber-950/60 text-amber-500/80 hover:bg-neutral-800'
               }`}
             >
-              🌌 Theta
+              <span>🌌</span>
+              <span>Theta 432Hz</span>
             </button>
             <button
-              onClick={() => handleSoundscapeChange(selectedSoundscape === 'campfire' ? 'none' : 'campfire')}
-              className={`py-1.5 px-2 rounded-xl text-xs font-serif transition-colors cursor-pointer border ${
+              onClick={() => handleSoundscapeChange('campfire')}
+              className={`py-2 px-2.5 rounded-xl text-xs font-serif transition-all cursor-pointer border flex items-center justify-center space-x-1.5 ${
                 selectedSoundscape === 'campfire'
-                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-medium'
+                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-semibold shadow-xs'
                   : 'bg-neutral-900/60 border-amber-950/60 text-amber-500/80 hover:bg-neutral-800'
               }`}
             >
-              🕯️ Ember
+              <span>🕯️</span>
+              <span>Embers</span>
+            </button>
+            <button
+              onClick={() => handleSoundscapeChange('ocean')}
+              className={`py-2 px-2.5 rounded-xl text-xs font-serif transition-all cursor-pointer border flex items-center justify-center space-x-1.5 ${
+                selectedSoundscape === 'ocean'
+                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-semibold shadow-xs'
+                  : 'bg-neutral-900/60 border-amber-950/60 text-amber-500/80 hover:bg-neutral-800'
+              }`}
+            >
+              <span>🌊</span>
+              <span>Ocean Tide</span>
             </button>
           </div>
 
-          <div className="flex items-center justify-between pt-1">
+          {/* Volume Slider & Controls */}
+          {selectedSoundscape !== 'none' && (
+            <div className="flex items-center space-x-3 pt-1">
+              <Volume2 className="w-3.5 h-3.5 text-amber-500/70 shrink-0" />
+              <input
+                type="range"
+                min="0.05"
+                max="1"
+                step="0.05"
+                value={volume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="w-full accent-amber-500 h-1 bg-neutral-800 rounded-lg cursor-pointer"
+                title={`Volume: ${Math.round(volume * 100)}%`}
+              />
+              <span className="text-[10px] font-mono text-amber-500/80 shrink-0 w-7 text-right">
+                {Math.round(volume * 100)}%
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-1 border-t border-neutral-900">
             <span className="text-[11px] font-serif text-amber-600/80">
-              {selectedSoundscape === 'none' ? 'Soundscape off' : '30-min sleep fade active'}
+              {selectedSoundscape === 'none'
+                ? 'Soundscape silent'
+                : `Playing ${selectedSoundscape} • Tap active to stop`}
             </span>
             {selectedSoundscape !== 'none' && (
               <button
                 onClick={() => handleSoundscapeChange('none')}
-                className="text-[11px] text-amber-400 hover:underline cursor-pointer flex items-center space-x-1"
+                className="text-[11px] font-medium text-amber-400 hover:text-amber-300 hover:underline cursor-pointer flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-amber-950/40 border border-amber-800/40"
               >
                 <VolumeX className="w-3 h-3 mr-1" />
-                <span>Silence</span>
+                <span>Instant Stop</span>
               </button>
             )}
           </div>

@@ -422,7 +422,7 @@ export interface NightstandState {
   lastMidnightKissAt?: number;
   lastMidnightKissFrom?: 'user' | 'partner';
   lastMidnightKissNote?: string;
-  ambientSoundscape?: 'none' | 'rain' | 'theta' | 'campfire';
+  ambientSoundscape?: 'none' | 'rain' | 'theta' | 'campfire' | 'ocean';
   sleepTimerMinutes?: number;
 }
 

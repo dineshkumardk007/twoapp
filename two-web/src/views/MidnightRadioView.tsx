@@ -5,10 +5,12 @@ import {
   MidnightRadioStationId,
   RadioWhisper
 } from '../types';
+import { ambientAudioCoordinator } from '../core/ambientAudioCoordinator';
 import {
   Radio,
   Play,
   Pause,
+  Square,
   Volume2,
   VolumeX,
   Send,
@@ -86,14 +88,15 @@ const STATIONS: StationDefinition[] = [
   }
 ];
 
-// Procedural Lo-Fi & Generative Music Synthesizer
+// Procedural Lo-Fi & Generative Music Synthesizer with 100% leak-free tracking
 class ProceduralRadioSynthesizer {
   private ctx: AudioContext | null = null;
   private isRunning = false;
   private currentStation: MidnightRadioStationId = 'tokyo_rain';
   private masterGain: GainNode | null = null;
-  private noiseNode: AudioNode | null = null;
-  private loopInterval: any = null;
+  private activeSources: (AudioBufferSourceNode | OscillatorNode)[] = [];
+  private activeIntervals: any[] = [];
+  private generationId = 0;
   private currentVolume = 0.6;
 
   private initCtx() {
@@ -102,55 +105,104 @@ class ProceduralRadioSynthesizer {
       this.ctx = new AudioContextClass();
     }
     if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
+    }
+    if (!this.masterGain && this.ctx) {
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
     }
   }
 
   public setVolume(vol: number) {
-    this.currentVolume = vol;
+    this.currentVolume = Math.max(0, Math.min(1, vol));
     if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
     }
   }
 
+  public stop(immediate = true) {
+    this.isRunning = false;
+    this.generationId++;
+
+    // Clear all interval and timeout timers
+    this.activeIntervals.forEach(t => clearInterval(t));
+    this.activeIntervals = [];
+
+    // Stop and disconnect every active oscillator and noise source immediately
+    this.activeSources.forEach(src => {
+      try {
+        if ('stop' in src) (src as any).stop();
+        src.disconnect();
+      } catch (e) {}
+    });
+    this.activeSources = [];
+
+    if (this.masterGain && this.ctx) {
+      try {
+        if (immediate) {
+          this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        } else {
+          this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.ctx.currentTime);
+          this.masterGain.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.08);
+        }
+      } catch (e) {}
+    }
+
+    ambientAudioCoordinator.notifyStopped('midnight_radio');
+  }
+
   public start(station: MidnightRadioStationId, volume = 0.6) {
-    this.stop();
+    this.stop(true);
     this.initCtx();
     if (!this.ctx) return;
 
     this.isRunning = true;
     this.currentStation = station;
     this.currentVolume = volume;
+    const thisGen = ++this.generationId;
 
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.001, this.ctx.currentTime);
-    this.masterGain.gain.exponentialRampToValueAtTime(volume, this.ctx.currentTime + 1.5);
-    this.masterGain.connect(this.ctx.destination);
+    if (!this.masterGain) {
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.connect(this.ctx.destination);
+    }
+    const now = this.ctx.currentTime;
+    this.masterGain.gain.setValueAtTime(0.001, now);
+    this.masterGain.gain.linearRampToValueAtTime(volume, now + 0.3);
+
+    ambientAudioCoordinator.notifyRadioPlaying();
 
     if (station === 'tokyo_rain') {
-      this.startTokyoRain();
+      this.startTokyoRain(thisGen);
     } else if (station === 'hearthside') {
-      this.startHearthside();
+      this.startHearthside(thisGen);
     } else if (station === 'cosmic_528') {
-      this.startCosmic528();
+      this.startCosmic528(thisGen);
     } else if (station === 'sunday_cafe') {
-      this.startSundayCafe();
+      this.startSundayCafe(thisGen);
     }
   }
 
   // Station 1: Tokyo Midnight Rain (Vinyl crackle + rain + Rhodes jazz chords)
-  private startTokyoRain() {
+  private startTokyoRain(gen: number) {
     if (!this.ctx || !this.masterGain) return;
 
     // 1. Rain and Vinyl Noise Bed
-    const bufferSize = this.ctx.sampleRate * 2;
+    const bufferSize = this.ctx.sampleRate * 4;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
-      // Soft vinyl clicks
-      const crackle = Math.random() < 0.002 ? (Math.random() * 2 - 1) * 0.4 : 0;
-      data[i] = white * 0.03 + crackle;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      const vinylCrackle = Math.random() < 0.0015 ? (Math.random() * 2 - 1) * 0.3 : 0;
+      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04 + vinylCrackle;
+      b6 = white * 0.115926;
     }
 
     const noiseSource = this.ctx.createBufferSource();
@@ -164,62 +216,68 @@ class ProceduralRadioSynthesizer {
     noiseSource.connect(filter);
     filter.connect(this.masterGain);
     noiseSource.start();
-    this.noiseNode = noiseSource;
+    this.activeSources.push(noiseSource);
 
-    // 2. Repeating Jazz Chord Progression: Fmaj9 -> Em9 -> Dm9 -> Cmaj7
+    // 2. Repeating Jazz Chord Progression: Fmaj9 -> Em9 -> Dm9 -> Cmaj7 -> G13 -> Am9
     const chords = [
       [174.61, 220.0, 261.63, 329.63, 392.0], // Fmaj9
       [164.81, 196.0, 246.94, 293.66, 370.0], // Em9
       [146.83, 174.61, 220.0, 261.63, 329.63], // Dm9
-      [130.81, 164.81, 196.0, 246.94, 293.66]  // Cmaj9
+      [130.81, 164.81, 196.0, 246.94, 293.66], // Cmaj9
+      [196.0, 246.94, 293.66, 349.23, 440.0],  // G13
+      [220.0, 261.63, 329.63, 392.0, 493.88]   // Am9
     ];
 
     let chordIdx = 0;
     const playChord = () => {
-      if (!this.ctx || !this.isRunning || !this.masterGain) return;
+      if (this.generationId !== gen || !this.ctx || !this.isRunning || !this.masterGain) return;
       const notes = chords[chordIdx];
       chordIdx = (chordIdx + 1) % chords.length;
 
       const now = this.ctx.currentTime;
       notes.forEach((freq, i) => {
-        if (!this.ctx || !this.masterGain) return;
-        const osc = this.ctx.createOscillator();
-        const chordGain = this.ctx.createGain();
+        if (!this.ctx || !this.masterGain || this.generationId !== gen) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const chordGain = this.ctx.createGain();
 
-        // Warm Rhodes-like sine + slight triangle overtone
-        osc.type = i === 0 ? 'sine' : 'triangle';
-        osc.frequency.setValueAtTime(freq, now + i * 0.04);
+          osc.type = i === 0 ? 'sine' : 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.04);
 
-        chordGain.gain.setValueAtTime(0.0001, now);
-        chordGain.gain.linearRampToValueAtTime(0.045, now + 0.15 + i * 0.04);
-        chordGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.8);
+          chordGain.gain.setValueAtTime(0.0001, now);
+          chordGain.gain.linearRampToValueAtTime(0.045, now + 0.15 + i * 0.04);
+          chordGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.8);
 
-        osc.connect(chordGain);
-        chordGain.connect(this.masterGain);
+          osc.connect(chordGain);
+          chordGain.connect(this.masterGain);
 
-        osc.start(now);
-        osc.stop(now + 4.0);
+          osc.start(now);
+          osc.stop(now + 4.0);
+          this.activeSources.push(osc);
+        } catch (e) {}
       });
     };
 
     playChord();
-    this.loopInterval = setInterval(playChord, 4200);
+    const chordInterval = setInterval(playChord, 4200);
+    this.activeIntervals.push(chordInterval);
   }
 
   // Station 2: Cottage Hearthside (Wood crackle + acoustic fingerpicking)
-  private startHearthside() {
+  private startHearthside(gen: number) {
     if (!this.ctx || !this.masterGain) return;
 
     // Fireplace crackle bed
-    const bufferSize = this.ctx.sampleRate * 2;
+    const bufferSize = this.ctx.sampleRate * 3;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
+    let last = 0;
     for (let i = 0; i < bufferSize; i++) {
-      if (Math.random() < 0.004) {
-        data[i] = (Math.random() * 2 - 1) * 0.5;
-      } else {
-        data[i] = (Math.random() * 2 - 1) * 0.015;
-      }
+      const white = Math.random() * 2 - 1;
+      data[i] = (last + (0.02 * white)) / 1.02;
+      last = data[i];
+      const pop = Math.random() < 0.003 ? (Math.random() * 2 - 1) * 0.4 : 0;
+      data[i] = data[i] * 1.5 + pop;
     }
     const noise = this.ctx.createBufferSource();
     noise.buffer = noiseBuffer;
@@ -227,13 +285,13 @@ class ProceduralRadioSynthesizer {
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1100, this.ctx.currentTime);
-    filter.Q.setValueAtTime(2.0, this.ctx.currentTime);
+    filter.frequency.setValueAtTime(950, this.ctx.currentTime);
+    filter.Q.setValueAtTime(1.6, this.ctx.currentTime);
 
     noise.connect(filter);
     filter.connect(this.masterGain);
     noise.start();
-    this.noiseNode = noise;
+    this.activeSources.push(noise);
 
     // Folk Acoustic Plucks (D - A - Bm - G arpeggios)
     const arpeggios = [
@@ -245,99 +303,119 @@ class ProceduralRadioSynthesizer {
 
     let patternIdx = 0;
     const playPluckSequence = () => {
-      if (!this.ctx || !this.isRunning || !this.masterGain) return;
+      if (this.generationId !== gen || !this.ctx || !this.isRunning || !this.masterGain) return;
       const notes = arpeggios[patternIdx];
       patternIdx = (patternIdx + 1) % arpeggios.length;
 
       const baseNow = this.ctx.currentTime;
       notes.forEach((freq, idx) => {
-        if (!this.ctx || !this.masterGain) return;
-        const noteTime = baseNow + idx * 0.38;
-        const osc = this.ctx.createOscillator();
-        const noteGain = this.ctx.createGain();
+        if (!this.ctx || !this.masterGain || this.generationId !== gen) return;
+        try {
+          const noteTime = baseNow + idx * 0.38;
+          const osc = this.ctx.createOscillator();
+          const noteGain = this.ctx.createGain();
 
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, noteTime);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, noteTime);
 
-        noteGain.gain.setValueAtTime(0.0001, noteTime);
-        noteGain.gain.linearRampToValueAtTime(0.05, noteTime + 0.03);
-        noteGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 1.2);
+          noteGain.gain.setValueAtTime(0.0001, noteTime);
+          noteGain.gain.linearRampToValueAtTime(0.045, noteTime + 0.03);
+          noteGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 1.2);
 
-        osc.connect(noteGain);
-        noteGain.connect(this.masterGain);
+          osc.connect(noteGain);
+          noteGain.connect(this.masterGain);
 
-        osc.start(noteTime);
-        osc.stop(noteTime + 1.3);
+          osc.start(noteTime);
+          osc.stop(noteTime + 1.3);
+          this.activeSources.push(osc);
+        } catch (e) {}
       });
     };
 
     playPluckSequence();
-    this.loopInterval = setInterval(playPluckSequence, 3200);
+    const pluckInterval = setInterval(playPluckSequence, 3400);
+    this.activeIntervals.push(pluckInterval);
   }
 
   // Station 3: Cosmic Resonance (528Hz Solfeggio Love Frequency & Deep Pad)
-  private startCosmic528() {
+  private startCosmic528(gen: number) {
     if (!this.ctx || !this.masterGain) return;
 
-    // 528Hz primary sine oscillator
+    // 528Hz primary sine oscillator + binaural delta beat + sub
     const osc1 = this.ctx.createOscillator();
     const osc2 = this.ctx.createOscillator();
     const subOsc = this.ctx.createOscillator();
+    const highOsc = this.ctx.createOscillator();
 
     osc1.type = 'sine';
     osc2.type = 'sine';
     subOsc.type = 'sine';
+    highOsc.type = 'sine';
 
     osc1.frequency.setValueAtTime(528, this.ctx.currentTime); // 528Hz Solfeggio
     osc2.frequency.setValueAtTime(530.5, this.ctx.currentTime); // 2.5Hz binaural wave
     subOsc.frequency.setValueAtTime(132, this.ctx.currentTime); // 2 octaves down sub
+    highOsc.frequency.setValueAtTime(1056, this.ctx.currentTime); // 1 octave up gentle harmonic
 
     const padGain = this.ctx.createGain();
-    padGain.gain.setValueAtTime(0.035, this.ctx.currentTime);
+    padGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+
+    const highGain = this.ctx.createGain();
+    highGain.gain.setValueAtTime(0.015, this.ctx.currentTime);
 
     osc1.connect(padGain);
     osc2.connect(padGain);
     subOsc.connect(padGain);
     padGain.connect(this.masterGain);
 
+    highOsc.connect(highGain);
+    highGain.connect(this.masterGain);
+
     osc1.start();
     osc2.start();
     subOsc.start();
-    this.noiseNode = osc1;
+    highOsc.start();
+
+    // Track ALL 4 oscillators so they stop cleanly!
+    this.activeSources.push(osc1, osc2, subOsc, highOsc);
 
     // Periodic soft celestial bell overtone
     const bellPitches = [792, 1056, 1320, 1584];
     const ringBell = () => {
-      if (!this.ctx || !this.isRunning || !this.masterGain) return;
-      const pitch = bellPitches[Math.floor(Math.random() * bellPitches.length)];
-      const now = this.ctx.currentTime;
-      const bOsc = this.ctx.createOscillator();
-      const bGain = this.ctx.createGain();
+      if (this.generationId !== gen || !this.ctx || !this.isRunning || !this.masterGain) return;
+      try {
+        const pitch = bellPitches[Math.floor(Math.random() * bellPitches.length)];
+        const now = this.ctx.currentTime;
+        const bOsc = this.ctx.createOscillator();
+        const bGain = this.ctx.createGain();
 
-      bOsc.type = 'sine';
-      bOsc.frequency.setValueAtTime(pitch, now);
+        bOsc.type = 'sine';
+        bOsc.frequency.setValueAtTime(pitch, now);
 
-      bGain.gain.setValueAtTime(0.0001, now);
-      bGain.gain.linearRampToValueAtTime(0.02, now + 0.1);
-      bGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.0);
+        bGain.gain.setValueAtTime(0.0001, now);
+        bGain.gain.linearRampToValueAtTime(0.025, now + 0.1);
+        bGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.0);
 
-      bOsc.connect(bGain);
-      bGain.connect(this.masterGain);
+        bOsc.connect(bGain);
+        bGain.connect(this.masterGain);
 
-      bOsc.start(now);
-      bOsc.stop(now + 3.1);
+        bOsc.start(now);
+        bOsc.stop(now + 3.1);
+        this.activeSources.push(bOsc);
+      } catch (e) {}
     };
 
     ringBell();
-    this.loopInterval = setInterval(ringBell, 4500);
+    const bellInterval = setInterval(ringBell, 4500);
+    this.activeIntervals.push(bellInterval);
   }
 
   // Station 4: Sunday Morning Cafe (Warm Rhodes & Room Presence)
-  private startSundayCafe() {
+  private startSundayCafe(gen: number) {
     if (!this.ctx || !this.masterGain) return;
 
     // Gentle room presence
-    const bufferSize = this.ctx.sampleRate * 2;
+    const bufferSize = this.ctx.sampleRate * 3;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -354,7 +432,7 @@ class ProceduralRadioSynthesizer {
     noise.connect(filter);
     filter.connect(this.masterGain);
     noise.start();
-    this.noiseNode = noise;
+    this.activeSources.push(noise);
 
     // Warm Sunday Chords (Gmaj7 -> Cmaj7 -> Am7 -> D7)
     const chords = [
@@ -366,54 +444,37 @@ class ProceduralRadioSynthesizer {
 
     let idx = 0;
     const playMorningChord = () => {
-      if (!this.ctx || !this.isRunning || !this.masterGain) return;
+      if (this.generationId !== gen || !this.ctx || !this.isRunning || !this.masterGain) return;
       const notes = chords[idx];
       idx = (idx + 1) % chords.length;
 
       const now = this.ctx.currentTime;
       notes.forEach((f, i) => {
-        if (!this.ctx || !this.masterGain) return;
-        const osc = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
+        if (!this.ctx || !this.masterGain || this.generationId !== gen) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(f, now + i * 0.05);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, now + i * 0.05);
 
-        g.gain.setValueAtTime(0.0001, now);
-        g.gain.linearRampToValueAtTime(0.04, now + 0.12);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.linearRampToValueAtTime(0.04, now + 0.12);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
 
-        osc.connect(g);
-        g.connect(this.masterGain);
+          osc.connect(g);
+          g.connect(this.masterGain);
 
-        osc.start(now);
-        osc.stop(now + 3.4);
+          osc.start(now);
+          osc.stop(now + 3.4);
+          this.activeSources.push(osc);
+        } catch (e) {}
       });
     };
 
     playMorningChord();
-    this.loopInterval = setInterval(playMorningChord, 3800);
-  }
-
-  public stop() {
-    this.isRunning = false;
-    if (this.loopInterval) {
-      clearInterval(this.loopInterval);
-      this.loopInterval = null;
-    }
-    if (this.masterGain && this.ctx) {
-      try {
-        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.ctx.currentTime);
-        this.masterGain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.8);
-      } catch (e) {}
-    }
-    setTimeout(() => {
-      if (this.noiseNode) {
-        try { (this.noiseNode as any).stop(); } catch (e) {}
-        this.noiseNode = null;
-      }
-      this.masterGain = null;
-    }, 850);
+    const cafeInterval = setInterval(playMorningChord, 3800);
+    this.activeIntervals.push(cafeInterval);
   }
 }
 
@@ -442,16 +503,30 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
   const [whisperInput, setWhisperInput] = useState('');
   const [volume, setVolume] = useState<number>(radio.volume || 0.6);
   const [sleepMinutesRemaining, setSleepMinutesRemaining] = useState<number | null>(null);
+  const [isLocalTunedIn, setIsLocalTunedIn] = useState<boolean>(false);
 
   // Equalizer spectrum visualization state
-  const [eqHeights, setEqHeights] = useState<number[]>(new Array(20).fill(15));
+  const [eqHeights, setEqHeights] = useState<number[]>(new Array(20).fill(6));
 
   const currentStationMeta = STATIONS.find(s => s.id === radio.stationId) || STATIONS[0];
+
+  // Register with ambientAudioCoordinator and cleanup on unmount
+  useEffect(() => {
+    ambientAudioCoordinator.registerRadio(() => {
+      setIsLocalTunedIn(false);
+      radioSynth.stop(true);
+    });
+
+    return () => {
+      radioSynth.stop(true);
+      setIsLocalTunedIn(false);
+    };
+  }, []);
 
   // Equalizer animation loop when playing
   useEffect(() => {
     let animId: any;
-    if (radio.isPlaying) {
+    if (isLocalTunedIn) {
       const animate = () => {
         setEqHeights(prev =>
           prev.map(() => Math.floor(Math.random() * 55) + 15)
@@ -465,16 +540,16 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
     return () => {
       if (animId) clearTimeout(animId);
     };
-  }, [radio.isPlaying]);
+  }, [isLocalTunedIn]);
 
   // Handle sleep timer countdown
   useEffect(() => {
     let timer: any = null;
-    if (radio.isPlaying && sleepMinutesRemaining !== null && sleepMinutesRemaining > 0) {
+    if (isLocalTunedIn && sleepMinutesRemaining !== null && sleepMinutesRemaining > 0) {
       timer = setInterval(() => {
         setSleepMinutesRemaining(prev => {
           if (prev === null || prev <= 1) {
-            handleTogglePlay(false);
+            handleStopRadio();
             return null;
           }
           return prev - 1;
@@ -484,59 +559,73 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [radio.isPlaying, sleepMinutesRemaining]);
+  }, [isLocalTunedIn, sleepMinutesRemaining]);
 
-  // Synchronize audio synthesis with radio.isPlaying and radio.stationId
+  // If station changes remotely or locally while user is actively tuned in, update synthesis
   useEffect(() => {
-    if (radio.isPlaying) {
+    if (isLocalTunedIn) {
       radioSynth.start(radio.stationId, volume);
-    } else {
-      radioSynth.stop();
     }
-    return () => {
-      radioSynth.stop();
-    };
-  }, [radio.isPlaying, radio.stationId]);
+  }, [radio.stationId]);
+
+  // If radio is stopped from remote partner, disengage local audio
+  useEffect(() => {
+    if (!radio.isPlaying && isLocalTunedIn) {
+      setIsLocalTunedIn(false);
+      radioSynth.stop(true);
+    }
+  }, [radio.isPlaying]);
 
   const handleTogglePlay = (forceState?: boolean) => {
-    const nextIsPlaying = forceState !== undefined ? forceState : !radio.isPlaying;
+    const nextTunedIn = forceState !== undefined ? forceState : !isLocalTunedIn;
+    setIsLocalTunedIn(nextTunedIn);
 
-    let updatedRadio: MidnightRadioState;
-    if (state.activeUser === 'user') {
-      updatedRadio = {
-        ...radio,
-        isPlaying: nextIsPlaying,
-        userListening: nextIsPlaying,
-        startedAt: nextIsPlaying ? Date.now() : radio.startedAt
-      };
+    if (nextTunedIn) {
+      radioSynth.start(radio.stationId, volume);
     } else {
-      updatedRadio = {
-        ...radio,
-        isPlaying: nextIsPlaying,
-        partnerListening: nextIsPlaying,
-        startedAt: nextIsPlaying ? Date.now() : radio.startedAt
-      };
+      radioSynth.stop(true);
     }
 
+    const updatedRadio: MidnightRadioState = {
+      ...radio,
+      isPlaying: nextTunedIn,
+      userListening: state.activeUser === 'user' ? nextTunedIn : radio.userListening,
+      partnerListening: state.activeUser !== 'user' ? nextTunedIn : radio.partnerListening,
+      startedAt: nextTunedIn ? Date.now() : radio.startedAt
+    };
     onUpdateRadio(updatedRadio);
 
-    // Haptic feedback
     if ('vibrate' in navigator) {
       navigator.vibrate([60, 30, 60]);
     }
   };
 
-  const handleSelectStation = (stationId: MidnightRadioStationId) => {
-    if (stationId === radio.stationId) return;
+  const handleStopRadio = () => {
+    setIsLocalTunedIn(false);
+    radioSynth.stop(true);
+    const updatedRadio: MidnightRadioState = {
+      ...radio,
+      isPlaying: false,
+      userListening: false,
+      partnerListening: false
+    };
+    onUpdateRadio(updatedRadio);
+    if ('vibrate' in navigator) {
+      navigator.vibrate([40, 20]);
+    }
+  };
 
+  const handleSelectStation = (stationId: MidnightRadioStationId) => {
     const updatedRadio: MidnightRadioState = {
       ...radio,
       stationId,
-      isPlaying: true, // auto play on tune
+      isPlaying: true,
+      userListening: true,
       startedAt: Date.now()
     };
-
     onUpdateRadio(updatedRadio);
+    setIsLocalTunedIn(true);
+    radioSynth.start(stationId, volume);
 
     if ('vibrate' in navigator) {
       navigator.vibrate([80]);
@@ -586,7 +675,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
         {/* Dual Listener Synchrony Pill */}
         <div className="inline-flex items-center space-x-2.5 px-4 py-2 rounded-2xl border border-amber-300/80 bg-gradient-to-r from-amber-50 to-orange-50/50 shadow-xs self-start sm:self-auto">
           <div className="relative flex items-center justify-center">
-            {radio.isPlaying ? (
+            {isLocalTunedIn ? (
               <>
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                 <span className="absolute w-4 h-4 rounded-full bg-emerald-500/40 animate-ping" />
@@ -596,12 +685,14 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
             )}
           </div>
           <div className="text-xs font-serif text-linen-primary">
-            {radio.isPlaying && isPartnerListening ? (
+            {isLocalTunedIn && isPartnerListening ? (
               <span className="font-medium text-emerald-800">
                 ✨ Both listening together in sync
               </span>
-            ) : radio.isPlaying ? (
+            ) : isLocalTunedIn ? (
               <span>You are tuned in • Waiting for {partnerName}</span>
+            ) : radio.isPlaying ? (
+              <span className="text-amber-800 font-medium">📻 {partnerName} is tuned in • Tap Tune In to join</span>
             ) : (
               <span className="text-linen-secondary">Tuned off • Tap Play to start shared session</span>
             )}
@@ -629,9 +720,9 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
                 Hi-Fi Vacuum Tube Stereo Receiver
               </span>
               <div className="flex items-center space-x-1.5">
-                <span className={`w-2 h-2 rounded-full ${radio.isPlaying ? 'bg-amber-400 animate-pulse' : 'bg-amber-950'}`} />
+                <span className={`w-2 h-2 rounded-full ${isLocalTunedIn ? 'bg-amber-400 animate-pulse' : 'bg-amber-950'}`} />
                 <span className="text-[10px] font-mono text-amber-400">
-                  {radio.isPlaying ? 'STEREO SYNC' : 'STANDBY'}
+                  {isLocalTunedIn ? 'STEREO SYNC' : 'STANDBY'}
                 </span>
               </div>
             </div>
@@ -675,7 +766,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
                   {/* Glowing cathode filament */}
                   <div
                     className={`w-1 transition-all duration-700 rounded-full ${
-                      radio.isPlaying
+                      isLocalTunedIn
                         ? 'h-10 bg-amber-400 shadow-[0_0_18px_#f59e0b]'
                         : 'h-4 bg-amber-900/60'
                     }`}
@@ -735,31 +826,42 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
                 className="w-1.5 rounded-t-sm transition-all duration-100"
                 style={{
                   height: `${h}%`,
-                  backgroundColor: radio.isPlaying ? currentStationMeta.themeColor : '#451a03'
+                  backgroundColor: isLocalTunedIn ? currentStationMeta.themeColor : '#451a03'
                 }}
               />
             ))}
           </div>
 
-          {/* Master Transport Play/Pause + Volume */}
-          <div className="flex items-center space-x-4">
+          {/* Master Transport Play/Pause + Instant Stop + Volume */}
+          <div className="flex items-center space-x-3">
             <button
               onClick={() => handleTogglePlay()}
               className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-neutral-950 flex items-center justify-center shadow-lg shadow-amber-900/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              title={radio.isPlaying ? 'Pause Station' : 'Broadcast Live Station'}
+              title={isLocalTunedIn ? 'Pause Station' : 'Broadcast Live Station'}
             >
-              {radio.isPlaying ? (
+              {isLocalTunedIn ? (
                 <Pause className="w-6 h-6 fill-current" />
               ) : (
                 <Play className="w-6 h-6 fill-current ml-0.5" />
               )}
             </button>
 
+            {isLocalTunedIn && (
+              <button
+                onClick={handleStopRadio}
+                className="w-10 h-10 rounded-full bg-neutral-900 border border-amber-900/80 text-amber-400 hover:text-amber-200 hover:bg-neutral-800 flex items-center justify-center transition-all cursor-pointer shadow-md"
+                title="Silence & Turn Off Radio"
+              >
+                <Square className="w-4 h-4 fill-current" />
+              </button>
+            )}
+
             {/* Volume Slider */}
             <div className="flex items-center space-x-2 bg-neutral-950/80 px-3 py-2 rounded-2xl border border-amber-950/60">
               <button
                 onClick={() => handleVolumeChange(volume > 0 ? 0 : 0.6)}
                 className="text-amber-500 hover:text-amber-300 transition-colors cursor-pointer"
+                title={volume === 0 ? "Unmute" : "Mute"}
               >
                 {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
