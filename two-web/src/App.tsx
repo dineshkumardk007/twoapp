@@ -38,6 +38,7 @@ import { ConstellationView } from './views/ConstellationView';
 import { CareCompassView } from './views/CareCompassView';
 import { LettersView } from './views/LettersView';
 import { TimeCapsuleView } from './views/TimeCapsuleView';
+import { CoPresenceView } from './views/CoPresenceView';
 import { AdventuresView } from './views/AdventuresView';
 import { CookbookView } from './views/CookbookView';
 import { IntuitionGameView, CURATED_DILEMMAS } from './views/IntuitionGameView';
@@ -765,6 +766,13 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onAddCapsule={handleAddTimeCapsule}
             onOpenCapsule={handleOpenTimeCapsule}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'presence' && (
+          <CoPresenceView
+            activeUser={state.activeUser}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}

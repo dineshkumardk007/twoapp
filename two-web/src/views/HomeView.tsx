@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -317,6 +317,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Hourglass className="w-5 h-5 text-indigo-600 mb-2 group-hover:scale-110 transition-transform" />
             <h4 className="text-sm font-medium text-linen-primary">Time Capsule</h4>
             <p className="text-xs text-linen-secondary mt-0.5">Locked anniversary vault</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('presence')}
+            className="text-left p-4 rounded-2xl border border-amber-200/80 bg-amber-50/30 hover:bg-amber-50/70 transition-colors cursor-pointer group"
+          >
+            <Coffee className="w-5 h-5 text-amber-700 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Co-Presence</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Quiet study & reading room</p>
           </button>
 
           <button

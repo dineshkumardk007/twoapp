@@ -283,5 +283,27 @@ export interface TimeCapsuleItem {
   openedAt?: number;
 }
 
+export type CoPresenceActivity = 'reading' | 'working' | 'writing' | 'crafting' | 'music' | 'resting' | 'tea';
+export type CoPresenceRoomId = 'rainy_window' | 'fireside' | 'bookshop' | 'midnight_balcony';
+
+export interface CoPresenceUserStatus {
+  userId: 'user' | 'partner';
+  name: string;
+  activity: CoPresenceActivity;
+  room: CoPresenceRoomId;
+  customNote?: string;
+  isJoined: boolean;
+  joinedAt: number;
+  timerEndsAt?: number;
+}
+
+export interface CoPresenceInteractionEvent {
+  type: 'tea' | 'glance' | 'blanket' | 'hand' | 'kiss';
+  senderId: string;
+  senderName: string;
+  timestamp: number;
+}
+
+
 
 
