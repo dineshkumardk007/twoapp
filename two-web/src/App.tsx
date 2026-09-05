@@ -25,7 +25,8 @@ import {
   IntuitionGameRound,
   TimeCapsuleItem,
   ScratchCardItem,
-  HearthGardenState
+  HearthGardenState,
+  SoftLandingSession
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -35,6 +36,7 @@ import { Locale } from './core/i18n';
 import { OnboardingView } from './views/OnboardingView';
 import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
+import { SoftLandingView } from './views/SoftLandingView';
 import { RitualsGardenView } from './views/RitualsGardenView';
 import { HearthGardenView } from './views/HearthGardenView';
 import { ConstellationView } from './views/ConstellationView';
@@ -196,6 +198,11 @@ export const App: React.FC = () => {
               ...prev,
               hearthGarden: parsed
             }));
+          } else if (record.type === 'SOFT_LANDING_UPDATE') {
+            setState(prev => ({
+              ...prev,
+              activeSoftLanding: parsed
+            }));
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -275,6 +282,11 @@ export const App: React.FC = () => {
           setState(prev => ({
             ...prev,
             hearthGarden: packet.payload
+          }));
+        } else if (packet.subType === 'SOFT_LANDING_UPDATE') {
+          setState(prev => ({
+            ...prev,
+            activeSoftLanding: packet.payload
           }));
         }
       }
@@ -651,6 +663,22 @@ export const App: React.FC = () => {
     localMesh.broadcastLocally('GARDEN_UPDATE', updated, state.activeUser);
   };
 
+  const handleUpdateSoftLanding = (session: SoftLandingSession | null) => {
+    setState(prev => ({
+      ...prev,
+      activeSoftLanding: session
+    }));
+    wsRelay.broadcastUpdate('SOFT_LANDING_UPDATE', session);
+    localMesh.broadcastLocally('SOFT_LANDING_UPDATE', session, state.activeUser);
+  };
+
+  const handleSaveSoftLandingHistory = (resolvedSession: SoftLandingSession) => {
+    setState(prev => ({
+      ...prev,
+      softLandingHistory: [resolvedSession, ...prev.softLandingHistory]
+    }));
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -794,6 +822,18 @@ export const App: React.FC = () => {
             messages={state.messages}
             activeUser={state.activeUser}
             onSendMessage={handleSendMessage}
+            onOpenSoftLanding={() => setCurrentTab('softlanding')}
+          />
+        )}
+
+        {currentTab === 'softlanding' && (
+          <SoftLandingView
+            activeSession={state.activeSoftLanding}
+            history={state.softLandingHistory}
+            activeUser={state.activeUser}
+            onUpdateSession={handleUpdateSoftLanding}
+            onSaveToHistory={handleSaveSoftLandingHistory}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
 

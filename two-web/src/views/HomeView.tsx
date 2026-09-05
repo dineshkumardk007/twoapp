@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -308,6 +308,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Sprout className="w-5 h-5 text-emerald-600 mb-2 group-hover:scale-110 transition-transform" />
             <h4 className="text-sm font-medium text-linen-primary">Hearth Garden</h4>
             <p className="text-xs text-linen-secondary mt-0.5">{state.hearthGarden?.vitality || 88}% living bonsai</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('softlanding')}
+            className="text-left p-4 rounded-2xl border border-indigo-300/80 bg-gradient-to-br from-indigo-50/50 to-blue-50/30 hover:bg-indigo-100/50 transition-colors cursor-pointer group"
+          >
+            <Feather className="w-5 h-5 text-indigo-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Soft Landing</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">20m safe breather haven</p>
           </button>
 
           <button

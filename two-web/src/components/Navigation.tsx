@@ -3,7 +3,7 @@ import { PairingModal } from './PairingModal';
 import { LocalMeshModal } from './LocalMeshModal';
 import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
 import { CoRegulationModal } from './CoRegulationModal';
-import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout } from 'lucide-react';
+import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather } from 'lucide-react';
 import { Locale, getTranslation } from '../core/i18n';
 
 interface NavigationProps {
@@ -38,6 +38,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   const tabs = [
     { id: 'home', label: t.tabs.home, icon: Heart },
     { id: 'chat', label: t.tabs.chat, icon: MessageSquare },
+    { id: 'softlanding', label: 'Soft Landing', icon: Feather },
     { id: 'rituals', label: t.tabs.rituals, icon: Flame },
     { id: 'garden', label: 'Hearth Garden', icon: Sprout },
     { id: 'constellation', label: 'Constellation', icon: Star },

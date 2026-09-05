@@ -3,7 +3,7 @@ import { ChatMessage, NeedItem } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
-import { Send, Plus, Sparkles, Mic, Square, Trash2, Heart } from 'lucide-react';
+import { Send, Plus, Sparkles, Mic, Square, Trash2, Heart, Feather } from 'lucide-react';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -13,9 +13,10 @@ interface ChatViewProps {
     isNeed?: boolean,
     extra?: { isVoiceMemo?: boolean; audioDataUrl?: string; audioDurationSeconds?: number }
   ) => void;
+  onOpenSoftLanding?: () => void;
 }
 
-export const ChatView: React.FC<ChatViewProps> = ({ messages, activeUser, onSendMessage }) => {
+export const ChatView: React.FC<ChatViewProps> = ({ messages, activeUser, onSendMessage, onOpenSoftLanding }) => {
   const [inputText, setInputText] = useState('');
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -130,13 +131,25 @@ export const ChatView: React.FC<ChatViewProps> = ({ messages, activeUser, onSend
             <span>Encrypted Room</span>
           </div>
         </div>
-        <button
-          onClick={() => setShowNeedModal(true)}
-          className="text-xs font-medium text-linen-accent hover:underline flex items-center"
-        >
-          <Sparkles className="w-3.5 h-3.5 mr-1" />
-          Ask For What You Need
-        </button>
+        <div className="flex items-center space-x-2.5">
+          {onOpenSoftLanding && (
+            <button
+              onClick={onOpenSoftLanding}
+              className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200 flex items-center transition-colors cursor-pointer"
+              title="Pause and take a 20-minute de-escalation breather"
+            >
+              <Feather className="w-3.5 h-3.5 mr-1" />
+              <span>Breather</span>
+            </button>
+          )}
+          <button
+            onClick={() => setShowNeedModal(true)}
+            className="text-xs font-medium text-linen-accent hover:underline flex items-center"
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1" />
+            Ask For What You Need
+          </button>
+        </div>
       </div>
 
       {/* Message List */}

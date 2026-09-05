@@ -367,6 +367,31 @@ export interface HearthGardenState {
   growthLog: { id: string; event: string; timestamp: string }[];
 }
 
+export type SoftLandingPhase = 'idle' | 'breather_active' | 'nvc_reflection' | 'ready_to_reconnect' | 'resolved';
+
+export interface SoftLandingReflection {
+  feeling: string;
+  underlyingNeed: string;
+  gentleRequest: string;
+  isReady: boolean;
+  submittedAt?: string;
+}
+
+export interface SoftLandingSession {
+  id: string;
+  initiatedBy: 'user' | 'partner';
+  initiatedByName: string;
+  initiatedAt: number;
+  breatherDurationMinutes: number;
+  breatherEndsAt: number;
+  status: SoftLandingPhase;
+  loveReassuranceNote: string;
+  userReflection?: SoftLandingReflection;
+  partnerReflection?: SoftLandingReflection;
+  resolvedAt?: number;
+}
+
+
 
 
 

@@ -22,7 +22,8 @@ import {
   IntuitionGameRound,
   TimeCapsuleItem,
   ScratchCardItem,
-  HearthGardenState
+  HearthGardenState,
+  SoftLandingSession
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -55,6 +56,8 @@ export interface SpaceState {
   timeCapsules: TimeCapsuleItem[];
   scratchCards: ScratchCardItem[];
   hearthGarden: HearthGardenState;
+  activeSoftLanding: SoftLandingSession | null;
+  softLandingHistory: SoftLandingSession[];
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -746,7 +749,9 @@ const DEFAULT_STATE: SpaceState = {
       { id: 'log-2', event: 'Sprouted Cherry Blossom: "Our first late-night drive to the coast".', timestamp: 'Yesterday' },
       { id: 'log-3', event: 'Nourished with Morning Dew: Vitality reached 88%.', timestamp: 'Today' }
     ]
-  }
+  },
+  activeSoftLanding: null,
+  softLandingHistory: []
 };
 
 export function loadState(): SpaceState {
@@ -770,6 +775,8 @@ export function loadState(): SpaceState {
       timeCapsules: parsed.timeCapsules || DEFAULT_STATE.timeCapsules,
       scratchCards: parsed.scratchCards || DEFAULT_STATE.scratchCards,
       hearthGarden: parsed.hearthGarden || DEFAULT_STATE.hearthGarden,
+      activeSoftLanding: parsed.activeSoftLanding !== undefined ? parsed.activeSoftLanding : DEFAULT_STATE.activeSoftLanding,
+      softLandingHistory: parsed.softLandingHistory || DEFAULT_STATE.softLandingHistory,
     };
   } catch (e) {
     return DEFAULT_STATE;
