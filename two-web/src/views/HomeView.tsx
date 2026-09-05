@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -317,6 +317,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Feather className="w-5 h-5 text-indigo-600 mb-2 group-hover:scale-110 transition-transform" />
             <h4 className="text-sm font-medium text-linen-primary">Soft Landing</h4>
             <p className="text-xs text-linen-secondary mt-0.5">20m safe breather haven</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('whispers')}
+            className="text-left p-4 rounded-2xl border border-violet-300/80 bg-gradient-to-br from-violet-50/50 to-fuchsia-50/30 hover:bg-violet-100/50 transition-colors cursor-pointer group"
+          >
+            <Mic className="w-5 h-5 text-violet-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Whisper Memos</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">{state.whisperMemos?.length || 0} voice letters & audio</p>
           </button>
 
           <button

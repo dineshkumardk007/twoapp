@@ -23,7 +23,8 @@ import {
   TimeCapsuleItem,
   ScratchCardItem,
   HearthGardenState,
-  SoftLandingSession
+  SoftLandingSession,
+  WhisperMemoItem
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -58,6 +59,7 @@ export interface SpaceState {
   hearthGarden: HearthGardenState;
   activeSoftLanding: SoftLandingSession | null;
   softLandingHistory: SoftLandingSession[];
+  whisperMemos: WhisperMemoItem[];
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -751,7 +753,36 @@ const DEFAULT_STATE: SpaceState = {
     ]
   },
   activeSoftLanding: null,
-  softLandingHistory: []
+  softLandingHistory: [],
+  whisperMemos: [
+    {
+      id: 'whisper-1',
+      title: 'Morning sunlight on the kitchen floor',
+      category: 'morning',
+      authorId: 'partner',
+      authorName: 'Partner',
+      recipientId: 'user',
+      recordedAt: 'Yesterday, 8:15 AM',
+      durationSeconds: 22,
+      transcriptSnippet: 'Just woke up and saw the sun spilling across the kitchen. Left the kettle warm for you. Have the gentlest morning.',
+      isListened: true,
+      listenedAt: 'Yesterday, 8:40 AM',
+      waveformData: [0.2, 0.4, 0.6, 0.8, 0.9, 0.7, 0.5, 0.8, 1.0, 0.8, 0.6, 0.4, 0.7, 0.9, 0.6, 0.3, 0.5, 0.2]
+    },
+    {
+      id: 'whisper-2',
+      title: 'Midnight rain on the skylight',
+      category: 'midnight',
+      authorId: 'user',
+      authorName: 'You',
+      recipientId: 'partner',
+      recordedAt: '3 days ago',
+      durationSeconds: 34,
+      transcriptSnippet: 'Listening to the steady downpour against the window glass. Hope your dreams are safe and peaceful tonight.',
+      isListened: false,
+      waveformData: [0.3, 0.5, 0.4, 0.7, 0.8, 0.6, 0.5, 0.7, 0.9, 0.7, 0.5, 0.6, 0.8, 0.5, 0.4, 0.3, 0.2, 0.1]
+    }
+  ]
 };
 
 export function loadState(): SpaceState {
@@ -777,6 +808,7 @@ export function loadState(): SpaceState {
       hearthGarden: parsed.hearthGarden || DEFAULT_STATE.hearthGarden,
       activeSoftLanding: parsed.activeSoftLanding !== undefined ? parsed.activeSoftLanding : DEFAULT_STATE.activeSoftLanding,
       softLandingHistory: parsed.softLandingHistory || DEFAULT_STATE.softLandingHistory,
+      whisperMemos: parsed.whisperMemos || DEFAULT_STATE.whisperMemos,
     };
   } catch (e) {
     return DEFAULT_STATE;

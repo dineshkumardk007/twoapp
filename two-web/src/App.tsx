@@ -26,7 +26,8 @@ import {
   TimeCapsuleItem,
   ScratchCardItem,
   HearthGardenState,
-  SoftLandingSession
+  SoftLandingSession,
+  WhisperMemoItem
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -42,6 +43,7 @@ import { HearthGardenView } from './views/HearthGardenView';
 import { ConstellationView } from './views/ConstellationView';
 import { CareCompassView } from './views/CareCompassView';
 import { LettersView } from './views/LettersView';
+import { WhisperMemosView } from './views/WhisperMemosView';
 import { TimeCapsuleView } from './views/TimeCapsuleView';
 import { CoPresenceView } from './views/CoPresenceView';
 import { ScratchCardsView } from './views/ScratchCardsView';
@@ -203,6 +205,11 @@ export const App: React.FC = () => {
               ...prev,
               activeSoftLanding: parsed
             }));
+          } else if (record.type === 'WHISPER_MEMO_UPDATE') {
+            setState(prev => ({
+              ...prev,
+              whisperMemos: parsed
+            }));
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -287,6 +294,11 @@ export const App: React.FC = () => {
           setState(prev => ({
             ...prev,
             activeSoftLanding: packet.payload
+          }));
+        } else if (packet.subType === 'WHISPER_MEMO_UPDATE') {
+          setState(prev => ({
+            ...prev,
+            whisperMemos: packet.payload
           }));
         }
       }
@@ -679,6 +691,32 @@ export const App: React.FC = () => {
     }));
   };
 
+  const handleAddWhisperMemo = (newMemo: WhisperMemoItem) => {
+    setState(prev => {
+      const updated = [newMemo, ...prev.whisperMemos];
+      wsRelay.broadcastUpdate('WHISPER_MEMO_UPDATE', updated);
+      localMesh.broadcastLocally('WHISPER_MEMO_UPDATE', updated, prev.activeUser);
+      return {
+        ...prev,
+        whisperMemos: updated
+      };
+    });
+  };
+
+  const handleMarkWhisperListened = (memoId: string) => {
+    setState(prev => {
+      const updated = prev.whisperMemos.map(m =>
+        m.id === memoId ? { ...m, isListened: true, listenedAt: 'Just now' } : m
+      );
+      wsRelay.broadcastUpdate('WHISPER_MEMO_UPDATE', updated);
+      localMesh.broadcastLocally('WHISPER_MEMO_UPDATE', updated, prev.activeUser);
+      return {
+        ...prev,
+        whisperMemos: updated
+      };
+    });
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -880,6 +918,16 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onSendLetter={handleSendLetter}
             onOpenLetter={handleOpenLetter}
+          />
+        )}
+
+        {currentTab === 'whispers' && (
+          <WhisperMemosView
+            memos={state.whisperMemos}
+            activeUser={state.activeUser}
+            onAddMemo={handleAddWhisperMemo}
+            onMarkListened={handleMarkWhisperListened}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
 

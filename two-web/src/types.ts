@@ -391,6 +391,25 @@ export interface SoftLandingSession {
   resolvedAt?: number;
 }
 
+export type WhisperCategory = 'morning' | 'midnight' | 'coffee' | 'love_letter' | 'comfort';
+
+export interface WhisperMemoItem {
+  id: string;
+  title: string;
+  category: WhisperCategory;
+  authorId: 'user' | 'partner';
+  authorName: string;
+  recipientId: 'user' | 'partner';
+  recordedAt: string;
+  durationSeconds: number;
+  audioDataUrl?: string;
+  transcriptSnippet?: string;
+  isListened: boolean;
+  listenedAt?: string;
+  waveformData?: number[];
+}
+
+
 
 
 
