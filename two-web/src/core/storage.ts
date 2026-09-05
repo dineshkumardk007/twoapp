@@ -19,7 +19,8 @@ import {
   CareCompassProfile,
   ComfortBoxData,
   SecretRecipe,
-  IntuitionGameRound
+  IntuitionGameRound,
+  TimeCapsuleItem
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -49,6 +50,7 @@ export interface SpaceState {
   comfortBoxes: ComfortBoxData[];
   recipes: SecretRecipe[];
   intuitionRounds: IntuitionGameRound[];
+  timeCapsules: TimeCapsuleItem[];
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -615,6 +617,37 @@ const DEFAULT_STATE: SpaceState = {
         category: 'cozy'
       }
     }
+  ],
+  timeCapsules: [
+    {
+      id: 'capsule-1',
+      title: 'To Our Next Milestone Anniversary',
+      teaserHint: 'A private promise, three secret memories from our first month, and a surprise weekend getaway plan.',
+      authorId: 'partner',
+      authorName: 'Partner',
+      createdAt: 'Recorded recently',
+      unlockAt: Date.now() + 1000 * 60 * 60 * 24 * 45, // 45 days in future
+      unlockDateFormatted: 'October 20, 2026',
+      sealType: 'gold_key',
+      content: 'If you are reading this, another beautiful year of quiet mornings, shared laughs, and gentle support has passed. Thank you for choosing me every single day through sunny and stormy weather alike. The secret getaway is booked: pack a cozy sweater and an overnight bag for the coast.',
+      photoUrls: ['https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80'],
+      isOpened: false
+    },
+    {
+      id: 'capsule-2',
+      title: 'Sealed on the Night We Moved In Together',
+      teaserHint: 'A handwritten letter written while eating takeout Thai food surrounded by taped cardboard boxes.',
+      authorId: 'user',
+      authorName: 'You',
+      createdAt: '1 year ago',
+      unlockAt: Date.now() - 1000 * 60 * 60 * 24 * 30, // Already unlocked
+      unlockDateFormatted: 'Opened 1 month ago',
+      sealType: 'wax_crest',
+      content: 'We are sitting on the bare wooden floor eating noodles from paper cartons surrounded by mountains of cardboard boxes. The streetlights outside are flickering through the uncurtained windows. I looked across at you laughing with tape stuck to your sweater, and I knew with utter certainty: this is my home. Whatever years come next, I promise to keep this gentleness between us.',
+      photoUrls: ['https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80'],
+      isOpened: true,
+      openedAt: Date.now() - 1000 * 60 * 60 * 24 * 30
+    }
   ]
 };
 
@@ -636,6 +669,7 @@ export function loadState(): SpaceState {
       comfortBoxes: parsed.comfortBoxes || DEFAULT_STATE.comfortBoxes,
       recipes: parsed.recipes || DEFAULT_STATE.recipes,
       intuitionRounds: parsed.intuitionRounds || DEFAULT_STATE.intuitionRounds,
+      timeCapsules: parsed.timeCapsules || DEFAULT_STATE.timeCapsules,
     };
   } catch (e) {
     return DEFAULT_STATE;

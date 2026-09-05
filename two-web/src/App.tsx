@@ -22,7 +22,8 @@ import {
   CareCompassProfile,
   ComfortBoxData,
   SecretRecipe,
-  IntuitionGameRound
+  IntuitionGameRound,
+  TimeCapsuleItem
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -36,6 +37,7 @@ import { RitualsGardenView } from './views/RitualsGardenView';
 import { ConstellationView } from './views/ConstellationView';
 import { CareCompassView } from './views/CareCompassView';
 import { LettersView } from './views/LettersView';
+import { TimeCapsuleView } from './views/TimeCapsuleView';
 import { AdventuresView } from './views/AdventuresView';
 import { CookbookView } from './views/CookbookView';
 import { IntuitionGameView, CURATED_DILEMMAS } from './views/IntuitionGameView';
@@ -173,6 +175,11 @@ export const App: React.FC = () => {
               ...prev,
               adventures: parsed
             }));
+          } else if (record.type === 'TIME_CAPSULE_UPDATE') {
+            setState(prev => ({
+              ...prev,
+              timeCapsules: parsed
+            }));
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -237,6 +244,11 @@ export const App: React.FC = () => {
           setState(prev => ({
             ...prev,
             adventures: packet.payload
+          }));
+        } else if (packet.subType === 'TIME_CAPSULE_UPDATE') {
+          setState(prev => ({
+            ...prev,
+            timeCapsules: packet.payload
           }));
         }
       }
@@ -538,6 +550,32 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleAddTimeCapsule = (newCapsule: TimeCapsuleItem) => {
+    setState(prev => {
+      const updated = [newCapsule, ...prev.timeCapsules];
+      wsRelay.broadcastUpdate('TIME_CAPSULE_UPDATE', updated);
+      localMesh.broadcastLocally('TIME_CAPSULE_UPDATE', updated, prev.activeUser);
+      return {
+        ...prev,
+        timeCapsules: updated
+      };
+    });
+  };
+
+  const handleOpenTimeCapsule = (capsuleId: string) => {
+    setState(prev => {
+      const updated = prev.timeCapsules.map(c =>
+        c.id === capsuleId ? { ...c, isOpened: true, openedAt: Date.now() } : c
+      );
+      wsRelay.broadcastUpdate('TIME_CAPSULE_UPDATE', updated);
+      localMesh.broadcastLocally('TIME_CAPSULE_UPDATE', updated, prev.activeUser);
+      return {
+        ...prev,
+        timeCapsules: updated
+      };
+    });
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -718,6 +756,16 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onSendLetter={handleSendLetter}
             onOpenLetter={handleOpenLetter}
+          />
+        )}
+
+        {currentTab === 'capsules' && (
+          <TimeCapsuleView
+            capsules={state.timeCapsules}
+            activeUser={state.activeUser}
+            onAddCapsule={handleAddTimeCapsule}
+            onOpenCapsule={handleOpenTimeCapsule}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
 

@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -308,6 +308,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Mail className="w-5 h-5 text-rose-600 mb-2" />
             <h4 className="text-sm font-medium text-linen-primary">Wax-Sealed Letters</h4>
             <p className="text-xs text-linen-secondary mt-0.5">Delayed epistolary notes</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('capsules')}
+            className="text-left p-4 rounded-2xl border border-indigo-200/80 bg-indigo-50/30 hover:bg-indigo-50/70 transition-colors cursor-pointer group"
+          >
+            <Hourglass className="w-5 h-5 text-indigo-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Time Capsule</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Locked anniversary vault</p>
           </button>
 
           <button

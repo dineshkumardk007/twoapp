@@ -264,4 +264,24 @@ export interface CoRegulationSession {
   heartbeatEnabled: boolean;
 }
 
+export type CapsuleSealType = 'gold_key' | 'wax_crest' | 'starlight' | 'heart_lock';
+
+export interface TimeCapsuleItem {
+  id: string;
+  title: string;
+  teaserHint: string;
+  authorId: 'user' | 'partner';
+  authorName: string;
+  createdAt: string;
+  unlockAt: number; // epoch ms
+  unlockDateFormatted: string;
+  sealType: CapsuleSealType;
+  content: string;
+  photoUrls: string[];
+  voiceMemoUrl?: string;
+  isOpened: boolean;
+  openedAt?: number;
+}
+
+
 
