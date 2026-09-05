@@ -325,6 +325,21 @@ export interface ScratchCardItem {
   redeemedAt?: string;
 }
 
+export interface ScrapbookSettings {
+  bookTitle: string;
+  subtitle: string;
+  dedication: string;
+  coupleEstablishedYear: string;
+  includeGratitude: boolean;
+  includeLetters: boolean;
+  includeAdventures: boolean;
+  includeMilestones: boolean;
+  includeRecipes: boolean;
+  includeScratchCards: boolean;
+  includeTimeCapsules: boolean;
+  includeRituals: boolean;
+}
+
 
 
 

@@ -3,7 +3,7 @@ import { PairingModal } from './PairingModal';
 import { LocalMeshModal } from './LocalMeshModal';
 import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
 import { CoRegulationModal } from './CoRegulationModal';
-import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift } from 'lucide-react';
+import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked } from 'lucide-react';
 import { Locale, getTranslation } from '../core/i18n';
 
 interface NavigationProps {
@@ -45,6 +45,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'scratch', label: 'Scratch Cards', icon: Gift },
     { id: 'capsules', label: 'Time Capsule', icon: Hourglass },
     { id: 'presence', label: 'Co-Presence', icon: Coffee },
+    { id: 'scrapbook', label: 'Memoir Book', icon: BookMarked },
     { id: 'adventures', label: t.tabs.adventures, icon: MapPin },
     { id: 'recipes', label: 'Cookbook', icon: Utensils },
     { id: 'intuition', label: 'Intuition', icon: Smile },

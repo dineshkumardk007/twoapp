@@ -9,3 +9,35 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+@media print {
+  header, nav, .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .scrapbook-memoir {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .print\:break-after-page {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+  .print\:break-before-page {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+  .print\:break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  @page {
+    margin: 15mm 15mm;
+    size: auto;
+  }
+}

@@ -41,6 +41,7 @@ import { LettersView } from './views/LettersView';
 import { TimeCapsuleView } from './views/TimeCapsuleView';
 import { CoPresenceView } from './views/CoPresenceView';
 import { ScratchCardsView } from './views/ScratchCardsView';
+import { ScrapbookView } from './views/ScrapbookView';
 import { AdventuresView } from './views/AdventuresView';
 import { CookbookView } from './views/CookbookView';
 import { IntuitionGameView, CURATED_DILEMMAS } from './views/IntuitionGameView';
@@ -837,6 +838,14 @@ export const App: React.FC = () => {
           <CoPresenceView
             activeUser={state.activeUser}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'scrapbook' && (
+          <ScrapbookView
+            state={state}
+            activeUser={state.activeUser}
+            onNavigate={setCurrentTab}
           />
         )}
 
