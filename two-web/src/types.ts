@@ -514,6 +514,30 @@ export interface SharedDrawingCanvasState {
   savedSketches: CanvasSavedSketch[];
 }
 
+export type ApologyLanguage = 'regret' | 'responsibility' | 'restitution' | 'repentance' | 'forgiveness';
+
+export type RepairStatus = 'sent' | 'processing' | 'accepted' | 'clarification_needed';
+
+export interface RepairLetter {
+  id: string;
+  authorId: 'user' | 'partner';
+  authorName: string;
+  recipientId: 'user' | 'partner';
+  title: string;
+  situationSummary: string;
+  primaryLanguage: ApologyLanguage;
+  expressionOfRegret: string;
+  ownershipNote: string;
+  restitutionOffer: string;
+  commitmentForNextTime: string;
+  forgivenessRequest: string;
+  sentAt: number;
+  status: RepairStatus;
+  recipientResponseNote?: string;
+  resolvedAt?: number;
+}
+
+
 
 
 

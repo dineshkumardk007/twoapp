@@ -35,7 +35,9 @@ import {
   StateOfUnionSession,
   DrawStroke,
   CanvasSavedSketch,
-  SharedDrawingCanvasState
+  SharedDrawingCanvasState,
+  RepairLetter,
+  RepairStatus
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -47,6 +49,7 @@ import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
 import { SoftLandingView } from './views/SoftLandingView';
 import { StateOfUnionView } from './views/StateOfUnionView';
+import { RepairBridgeView } from './views/RepairBridgeView';
 import { NightstandClockView } from './views/NightstandClockView';
 import { CanvasOfUsView } from './views/CanvasOfUsView';
 import { RitualsGardenView } from './views/RitualsGardenView';
@@ -223,6 +226,113 @@ export const App: React.FC = () => {
               ...prev,
               whisperMemos: parsed
             }));
+          } else if (record.type === 'NIGHTSTAND_UPDATE') {
+            setState(prev => ({
+              ...prev,
+              nightstand: parsed
+            }));
+          } else if (record.type === 'NIGHTSTAND_KISS') {
+            setState(prev => ({
+              ...prev,
+              nightstand: {
+                ...prev.nightstand,
+                lastMidnightKissAt: parsed.timestamp,
+                lastMidnightKissFrom: parsed.from,
+                lastMidnightKissNote: parsed.note
+              }
+            }));
+            if ('vibrate' in navigator) {
+              navigator.vibrate([100, 50, 100, 50, 200]);
+            }
+          } else if (record.type === 'COORDINATES_UPDATE') {
+            setState(prev => ({
+              ...prev,
+              coordinatePins: parsed
+            }));
+          } else if (record.type === 'MIDNIGHT_RADIO_SYNC') {
+            setState(prev => ({
+              ...prev,
+              midnightRadio: parsed
+            }));
+          } else if (record.type === 'MIDNIGHT_RADIO_WHISPER') {
+            setState(prev => ({
+              ...prev,
+              midnightRadio: {
+                ...prev.midnightRadio,
+                whispers: [parsed, ...(prev.midnightRadio.whispers || [])]
+              }
+            }));
+            if ('vibrate' in navigator) {
+              navigator.vibrate([70, 40, 70]);
+            }
+          } else if (record.type === 'STATE_OF_UNION_UPDATE') {
+            setState(prev => ({
+              ...prev,
+              activeStateOfUnion: parsed
+            }));
+          } else if (record.type === 'STATE_OF_UNION_SEAL') {
+            setState(prev => ({
+              ...prev,
+              activeStateOfUnion: null,
+              stateOfUnionHistory: [parsed, ...prev.stateOfUnionHistory]
+            }));
+          } else if (record.type === 'CANVAS_STROKE') {
+            setState(prev => ({
+              ...prev,
+              sharedCanvas: {
+                ...prev.sharedCanvas,
+                strokes: [...(prev.sharedCanvas?.strokes || []), parsed],
+                lastUpdated: Date.now()
+              }
+            }));
+          } else if (record.type === 'CANVAS_CLEAR') {
+            setState(prev => ({
+              ...prev,
+              sharedCanvas: {
+                ...prev.sharedCanvas,
+                strokes: [],
+                lastUpdated: Date.now()
+              }
+            }));
+          } else if (record.type === 'CANVAS_UNDO') {
+            setState(prev => ({
+              ...prev,
+              sharedCanvas: {
+                ...prev.sharedCanvas,
+                strokes: (prev.sharedCanvas?.strokes || []).slice(0, -1),
+                lastUpdated: Date.now()
+              }
+            }));
+          } else if (record.type === 'CANVAS_SAVE_SKETCH') {
+            setState(prev => ({
+              ...prev,
+              sharedCanvas: {
+                ...prev.sharedCanvas,
+                savedSketches: [parsed, ...(prev.sharedCanvas?.savedSketches || [])]
+              }
+            }));
+          } else if (record.type === 'REPAIR_BRIDGE_SEND') {
+            setState(prev => ({
+              ...prev,
+              repairLetters: [parsed, ...prev.repairLetters.filter(l => l.id !== parsed.id)]
+            }));
+          } else if (record.type === 'REPAIR_BRIDGE_RESPOND') {
+            setState(prev => ({
+              ...prev,
+              repairLetters: prev.repairLetters.map(l =>
+                l.id === parsed.letterId
+                  ? {
+                      ...l,
+                      status: parsed.status,
+                      recipientResponseNote: parsed.note,
+                      resolvedAt: parsed.status === 'accepted' ? Date.now() : l.resolvedAt
+                    }
+                  : l
+              )
+            }));
+            if (parsed.status === 'accepted' && 'vibrate' in navigator) {
+              navigator.vibrate([100, 50, 100, 50, 200]);
+            }
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -398,6 +508,28 @@ export const App: React.FC = () => {
               savedSketches: [packet.payload, ...(prev.sharedCanvas.savedSketches || [])]
             }
           }));
+        } else if (packet.subType === 'REPAIR_BRIDGE_SEND') {
+          setState(prev => ({
+            ...prev,
+            repairLetters: [packet.payload, ...prev.repairLetters.filter(l => l.id !== packet.payload.id)]
+          }));
+        } else if (packet.subType === 'REPAIR_BRIDGE_RESPOND') {
+          setState(prev => ({
+            ...prev,
+            repairLetters: prev.repairLetters.map(l =>
+              l.id === packet.payload.letterId
+                ? {
+                    ...l,
+                    status: packet.payload.status,
+                    recipientResponseNote: packet.payload.note,
+                    resolvedAt: packet.payload.status === 'accepted' ? Date.now() : l.resolvedAt
+                  }
+                : l
+            )
+          }));
+          if (packet.payload.status === 'accepted' && 'vibrate' in navigator) {
+            navigator.vibrate([100, 50, 100, 50, 200]);
+          }
         }
       }
     });
@@ -971,6 +1103,34 @@ export const App: React.FC = () => {
     localMesh.broadcastLocally('CANVAS_SAVE_SKETCH', sketch, state.activeUser);
   };
 
+  const handleSendRepair = (letter: RepairLetter) => {
+    setState(prev => ({
+      ...prev,
+      repairLetters: [letter, ...prev.repairLetters.filter(l => l.id !== letter.id)]
+    }));
+    wsRelay.broadcastUpdate('REPAIR_BRIDGE_SEND', letter);
+    localMesh.broadcastLocally('REPAIR_BRIDGE_SEND', letter, state.activeUser);
+  };
+
+  const handleRespondRepair = (letterId: string, status: RepairStatus, note?: string) => {
+    const payload = { letterId, status, note };
+    setState(prev => ({
+      ...prev,
+      repairLetters: prev.repairLetters.map(l =>
+        l.id === letterId
+          ? {
+              ...l,
+              status,
+              recipientResponseNote: note,
+              resolvedAt: status === 'accepted' ? Date.now() : l.resolvedAt
+            }
+          : l
+      )
+    }));
+    wsRelay.broadcastUpdate('REPAIR_BRIDGE_RESPOND', payload);
+    localMesh.broadcastLocally('REPAIR_BRIDGE_RESPOND', payload, state.activeUser);
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -1233,6 +1393,16 @@ export const App: React.FC = () => {
             onClearCanvas={handleClearCanvas}
             onUndoStroke={handleUndoCanvasStroke}
             onSaveSketch={handleSaveCanvasSketch}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'repairbridge' && (
+          <RepairBridgeView
+            repairLetters={state.repairLetters}
+            activeUser={state.activeUser}
+            onSendRepair={handleSendRepair}
+            onRespondRepair={handleRespondRepair}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}

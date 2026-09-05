@@ -31,7 +31,8 @@ import {
   RadioWhisper,
   StateOfUnionSession,
   SharedDrawingCanvasState,
-  DrawStroke
+  DrawStroke,
+  RepairLetter
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -73,6 +74,7 @@ export interface SpaceState {
   activeStateOfUnion: StateOfUnionSession | null;
   stateOfUnionHistory: StateOfUnionSession[];
   sharedCanvas: SharedDrawingCanvasState;
+  repairLetters: RepairLetter[];
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -947,7 +949,27 @@ const DEFAULT_STATE: SpaceState = {
     ],
     lastUpdated: Date.now(),
     savedSketches: []
-  }
+  },
+  repairLetters: [
+    {
+      id: 'repair-1',
+      authorId: 'partner',
+      authorName: 'Partner',
+      recipientId: 'user',
+      title: 'Snapping during dinner prep on Tuesday',
+      situationSummary: 'I raised my voice and acted irritable when you asked about the weekend groceries.',
+      primaryLanguage: 'responsibility',
+      expressionOfRegret: 'I am deeply sorry that my tone caused you to feel small and hesitant around me.',
+      ownershipNote: 'I was stressed about my work review, but taking that out on you was completely unfair. You did nothing wrong.',
+      restitutionOffer: 'I would love to cook our dinner tonight entirely on my own while you rest on the sofa.',
+      commitmentForNextTime: 'If I feel overwhelmed coming home, I will name that I have low capacity and ask for 20 minutes of quiet before we start cooking.',
+      forgivenessRequest: 'I value your peace more than anything. Will you forgive me when your heart is ready?',
+      sentAt: Date.now() - 36 * 60 * 60 * 1000,
+      status: 'accepted',
+      recipientResponseNote: 'Thank you for owning this so cleanly. I felt seen and loved reading this. I forgive you.',
+      resolvedAt: Date.now() - 30 * 60 * 60 * 1000
+    }
+  ]
 };
 
 export function loadState(): SpaceState {
@@ -980,6 +1002,7 @@ export function loadState(): SpaceState {
       activeStateOfUnion: parsed.activeStateOfUnion !== undefined ? parsed.activeStateOfUnion : DEFAULT_STATE.activeStateOfUnion,
       stateOfUnionHistory: parsed.stateOfUnionHistory || DEFAULT_STATE.stateOfUnionHistory,
       sharedCanvas: parsed.sharedCanvas || DEFAULT_STATE.sharedCanvas,
+      repairLetters: parsed.repairLetters || DEFAULT_STATE.repairLetters,
     };
   } catch (e) {
     return DEFAULT_STATE;

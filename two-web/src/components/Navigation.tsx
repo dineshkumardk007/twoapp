@@ -46,6 +46,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'radio', label: 'Midnight Radio', icon: Radio },
     { id: 'stateofunion', label: 'State of Union', icon: Shield },
     { id: 'canvas', label: 'Canvas of Us', icon: Palette },
+    { id: 'repairbridge', label: 'Repair Bridge', icon: Handshake },
     { id: 'rituals', label: t.tabs.rituals, icon: Flame },
     { id: 'constellation', label: 'Constellation', icon: Star },
     { id: 'compass', label: 'Care Compass', icon: Compass },

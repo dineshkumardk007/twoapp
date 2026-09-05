@@ -374,6 +374,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </button>
 
           <button
+            onClick={() => onNavigate('repairbridge')}
+            className="text-left p-4 rounded-2xl border border-indigo-300/80 bg-gradient-to-br from-indigo-50/60 to-blue-50/30 hover:bg-indigo-100/50 transition-colors cursor-pointer group"
+          >
+            <Handshake className="w-5 h-5 text-indigo-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Repair Bridge</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">5 Languages of Apology</p>
+          </button>
+
+          <button
             onClick={() => onNavigate('letters')}
             className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
           >
