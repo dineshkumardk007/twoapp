@@ -6,7 +6,10 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass } from 'lucide-react';
+
+import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
+import { RelationshipMilestone } from '../types';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -15,6 +18,7 @@ interface HomeViewProps {
   onNavigate: (tab: string) => void;
   onSendNeed: (need: NeedItem) => void;
   onOpenTour?: () => void;
+  onAddMilestone?: (milestone: RelationshipMilestone) => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -23,7 +27,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onToggleUserFlag,
   onNavigate,
   onSendNeed,
-  onOpenTour
+  onOpenTour,
+  onAddMilestone = () => {}
 }) => {
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [optInSpicy, setOptInSpicy] = useState(false);
@@ -187,10 +192,43 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <span className="text-xs font-medium text-linen-accent">Read &rarr;</span>
       </div>
 
+      {/* 5.5. Relationship Milestones & Anniversary Counter */}
+      <MilestoneTrackerCard
+        milestones={state.milestones}
+        onAddMilestone={onAddMilestone}
+      />
+
       {/* 6. Quick Action Intimacy Tiles */}
       <div>
         <h3 className="font-serif text-lg font-medium text-linen-primary mb-3">Connection & Relational Tools</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <button
+            onClick={() => onNavigate('rituals')}
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+          >
+            <Flame className="w-5 h-5 text-amber-600 mb-2" />
+            <h4 className="text-sm font-medium text-linen-primary">Pebble Rituals</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">6-second kiss & zen cairn</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('letters')}
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+          >
+            <Mail className="w-5 h-5 text-rose-600 mb-2" />
+            <h4 className="text-sm font-medium text-linen-primary">Wax-Sealed Letters</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Delayed epistolary notes</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('adventures')}
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+          >
+            <Compass className="w-5 h-5 text-emerald-600 mb-2" />
+            <h4 className="text-sm font-medium text-linen-primary">Adventure Roulette</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">Energy-tuned date night sparks</p>
+          </button>
+
           <button
             onClick={() => onNavigate('decks')}
             className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"

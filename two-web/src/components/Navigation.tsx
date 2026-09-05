@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PairingModal } from './PairingModal';
-import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator } from 'lucide-react';
+import { LocalMeshModal } from './LocalMeshModal';
+import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio } from 'lucide-react';
 import { Locale, getTranslation } from '../core/i18n';
 
 interface NavigationProps {
@@ -11,6 +12,7 @@ interface NavigationProps {
   onEmergencyExit: () => void;
   onToggleCamouflage?: () => void;
   onOpenStoryTour?: () => void;
+  onTriggerPulse?: () => void;
   locale?: Locale;
 }
 
@@ -22,14 +24,19 @@ export const Navigation: React.FC<NavigationProps> = ({
   onEmergencyExit,
   onToggleCamouflage,
   onOpenStoryTour,
+  onTriggerPulse,
   locale = 'en'
 }) => {
   const [showPairingModal, setShowPairingModal] = useState(false);
+  const [showMeshModal, setShowMeshModal] = useState(false);
   const t = getTranslation(locale);
 
   const tabs = [
     { id: 'home', label: t.tabs.home, icon: Heart },
     { id: 'chat', label: t.tabs.chat, icon: MessageSquare },
+    { id: 'rituals', label: t.tabs.rituals, icon: Flame },
+    { id: 'letters', label: t.tabs.letters, icon: Mail },
+    { id: 'adventures', label: t.tabs.adventures, icon: Compass },
     { id: 'decks', label: t.tabs.decks, icon: Sparkles },
     { id: 'cycle', label: t.tabs.cycle, icon: Moon },
     { id: 'journal', label: t.tabs.journal, icon: BookOpen },
@@ -72,8 +79,28 @@ export const Navigation: React.FC<NavigationProps> = ({
             )}
           </div>
 
-          {/* Controls: Camouflage, Perspective Switcher, Emergency Wipe */}
+          {/* Controls: Sensory Pulse, Mesh, Camouflage, Perspective Switcher, Emergency Wipe */}
           <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Sensory Pulse Quick Trigger */}
+            {onTriggerPulse && (
+              <button
+                onClick={onTriggerPulse}
+                className="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-200"
+                title={t.actions.sensoryPulse}
+              >
+                <Heart className="w-4 h-4 fill-rose-500" />
+              </button>
+            )}
+
+            {/* Off-Grid Mesh Sync Status */}
+            <button
+              onClick={() => setShowMeshModal(true)}
+              className="p-1.5 text-linen-secondary hover:text-linen-primary hover:bg-linen-variant rounded-lg transition-colors border border-transparent hover:border-linen-border"
+              title={t.actions.meshSync}
+            >
+              <Radio className="w-4 h-4" />
+            </button>
+
             {/* Camouflage Decoy Button */}
             {onToggleCamouflage && (
               <button
@@ -135,6 +162,12 @@ export const Navigation: React.FC<NavigationProps> = ({
       <PairingModal
         isOpen={showPairingModal}
         onClose={() => setShowPairingModal(false)}
+        activeUser={activeUser}
+      />
+
+      <LocalMeshModal
+        isOpen={showMeshModal}
+        onClose={() => setShowMeshModal(false)}
         activeUser={activeUser}
       />
     </header>

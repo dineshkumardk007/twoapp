@@ -98,3 +98,73 @@ export interface CycleRecord {
   privateNotes?: string;
   loggedDate: string;
 }
+
+export interface RitualItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  duration: string;
+  category: 'affection' | 'presence' | 'reflection' | 'play';
+  completedTodayByUser: boolean;
+  completedTodayByPartner: boolean;
+  streakDays: number;
+}
+
+export interface PebbleStone {
+  id: string;
+  color: string;
+  size: number;
+  height: number;
+  rotation: number;
+  placedAt: string;
+  ritualTitle: string;
+}
+
+export type WaxColor = 'burgundy' | 'gold' | 'sage' | 'midnight';
+
+export type LetterCondition = 'none' | 'date' | 'anxious' | 'night' | 'travel';
+
+export interface LoveLetter {
+  id: string;
+  authorId: string;
+  authorName: string;
+  title: string;
+  body: string;
+  waxColor: WaxColor;
+  conditionType: LetterCondition;
+  conditionDetail?: string;
+  sentDate: string;
+  isOpened: boolean;
+  openedDate?: string;
+}
+
+export type EnergyTier = 'low' | 'medium' | 'high';
+export type AdventureCategory = 'home' | 'creative' | 'outdoors' | 'food';
+
+export interface AdventureItem {
+  id: string;
+  title: string;
+  description: string;
+  energyTier: EnergyTier;
+  category: AdventureCategory;
+  estimatedCost: '$' | '$$' | 'Free';
+  isCompleted: boolean;
+  completedDate?: string;
+  personalNotes?: string;
+}
+
+export interface RelationshipMilestone {
+  id: string;
+  title: string;
+  date: string;
+  category: 'first' | 'home' | 'trip' | 'growth' | 'commitment';
+  description: string;
+  photoUrl?: string;
+}
+
+export interface SensoryPulseEvent {
+  senderId: string;
+  timestamp: number;
+  note?: string;
+}
+

@@ -1,14 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { loadState, saveState, clearState, SpaceState } from './core/storage';
 import { wsRelay } from './core/ws';
-import { ThemeMode, NeedItem, ChatMessage, JournalEntry, AgreementItem, ListItem, ChoreItem, ExpenseItem, CycleRecord, CycleSharingLevel } from './types';
+import { localMesh } from './core/localMesh';
+import {
+  ThemeMode,
+  NeedItem,
+  ChatMessage,
+  JournalEntry,
+  AgreementItem,
+  ListItem,
+  ChoreItem,
+  ExpenseItem,
+  CycleRecord,
+  CycleSharingLevel,
+  RitualItem,
+  PebbleStone,
+  LoveLetter,
+  AdventureItem,
+  RelationshipMilestone
+} from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
 import { StoryTourModal } from './components/StoryTourModal';
+import { SensoryPulseOverlay, triggerGlobalPulse } from './components/SensoryPulseOverlay';
 import { Locale } from './core/i18n';
 import { OnboardingView } from './views/OnboardingView';
 import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
+import { RitualsGardenView } from './views/RitualsGardenView';
+import { LettersView } from './views/LettersView';
+import { AdventuresView } from './views/AdventuresView';
 import { DecksView } from './views/DecksView';
 import { CycleView } from './views/CycleView';
 import { JournalView } from './views/JournalView';
@@ -74,6 +95,25 @@ export const App: React.FC = () => {
               ...prev,
               lists: [parsed, ...prev.lists]
             }));
+          } else if (record.type === 'LOVE_LETTER') {
+            setState(prev => ({
+              ...prev,
+              letters: [parsed, ...prev.letters.filter(l => l.id !== parsed.id)]
+            }));
+          } else if (record.type === 'RITUAL_COMPLETE') {
+            setState(prev => {
+              const updatedRituals = prev.rituals.map(r => {
+                if (r.id === parsed.ritualId) {
+                  return {
+                    ...r,
+                    completedTodayByPartner: parsed.activeUser === 'partner' ? true : r.completedTodayByPartner,
+                    completedTodayByUser: parsed.activeUser === 'user' ? true : r.completedTodayByUser
+                  };
+                }
+                return r;
+              });
+              return { ...prev, rituals: updatedRituals };
+            });
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -81,7 +121,22 @@ export const App: React.FC = () => {
       }
     });
 
-    return () => unsubscribe();
+    // Also listen to local offline mesh transport
+    const unsubscribeMesh = localMesh.subscribe((packet) => {
+      if (packet.type === 'LOCAL_MESH_PACKET' && packet.authorId !== state.activeUser) {
+        if (packet.subType === 'LOVE_LETTER') {
+          setState(prev => ({
+            ...prev,
+            letters: [packet.payload, ...prev.letters.filter(l => l.id !== packet.payload.id)]
+          }));
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      unsubscribeMesh();
+    };
   }, [state.activeUser]);
 
   useEffect(() => {
@@ -276,6 +331,89 @@ export const App: React.FC = () => {
     }));
   };
 
+  const handleToggleRitual = (ritualId: string) => {
+    setState(prev => {
+      const isMe = prev.activeUser === 'user';
+      let ritualTitle = '';
+      const updated = prev.rituals.map(r => {
+        if (r.id === ritualId) {
+          ritualTitle = r.title;
+          return {
+            ...r,
+            completedTodayByUser: isMe ? !r.completedTodayByUser : r.completedTodayByUser,
+            completedTodayByPartner: !isMe ? !r.completedTodayByPartner : r.completedTodayByPartner,
+            streakDays: r.streakDays + 1
+          };
+        }
+        return r;
+      });
+
+      const pebbleColors = ['#D4A373', '#B5A895', '#C48B71', '#8F9E8B', '#938581', '#C9ADA7'];
+      const newPebble: PebbleStone = {
+        id: `peb-${Date.now()}`,
+        color: pebbleColors[Math.floor(Math.random() * pebbleColors.length)],
+        size: Math.floor(Math.random() * 35) + 50,
+        height: Math.floor(Math.random() * 8) + 18,
+        rotation: Math.floor(Math.random() * 6) - 3,
+        placedAt: 'Just now',
+        ritualTitle: ritualTitle || 'Micro-Ritual'
+      };
+
+      wsRelay.broadcastUpdate('RITUAL_COMPLETE', { ritualId, activeUser: prev.activeUser });
+      localMesh.broadcastLocally('RITUAL_COMPLETE', { ritualId }, prev.activeUser);
+
+      return {
+        ...prev,
+        rituals: updated,
+        pebbles: [...prev.pebbles, newPebble]
+      };
+    });
+  };
+
+  const handleAddRitual = (newRitual: RitualItem) => {
+    setState(prev => ({
+      ...prev,
+      rituals: [...prev.rituals, newRitual]
+    }));
+  };
+
+  const handleSendLetter = (newLetter: LoveLetter) => {
+    wsRelay.broadcastUpdate('LOVE_LETTER', newLetter);
+    localMesh.broadcastLocally('LOVE_LETTER', newLetter, state.activeUser);
+    setState(prev => ({
+      ...prev,
+      letters: [newLetter, ...prev.letters]
+    }));
+  };
+
+  const handleOpenLetter = (letterId: string) => {
+    setState(prev => ({
+      ...prev,
+      letters: prev.letters.map(l => l.id === letterId ? { ...l, isOpened: true, openedDate: 'Today' } : l)
+    }));
+  };
+
+  const handleAddAdventure = (newAdv: AdventureItem) => {
+    setState(prev => ({
+      ...prev,
+      adventures: [newAdv, ...prev.adventures]
+    }));
+  };
+
+  const handleToggleAdventureComplete = (id: string, notes?: string) => {
+    setState(prev => ({
+      ...prev,
+      adventures: prev.adventures.map(a => a.id === id ? { ...a, isCompleted: !a.isCompleted, personalNotes: notes || a.personalNotes } : a)
+    }));
+  };
+
+  const handleAddMilestone = (newMs: RelationshipMilestone) => {
+    setState(prev => ({
+      ...prev,
+      milestones: [...prev.milestones, newMs]
+    }));
+  };
+
   const handleEmergencyExit = () => {
     clearState();
     window.location.reload();
@@ -306,6 +444,7 @@ export const App: React.FC = () => {
         onEmergencyExit={handleEmergencyExit}
         onToggleCamouflage={() => setIsCamouflaged(true)}
         onOpenStoryTour={() => setShowStoryTour(true)}
+        onTriggerPulse={() => triggerGlobalPulse('Warm hug across distance')}
         locale={locale}
       />
 
@@ -318,6 +457,7 @@ export const App: React.FC = () => {
             onNavigate={setCurrentTab}
             onSendNeed={(need) => handleSendMessage(`I need: ${need.title} — ${need.description}`, true)}
             onOpenTour={() => setShowStoryTour(true)}
+            onAddMilestone={handleAddMilestone}
           />
         )}
 
@@ -326,6 +466,35 @@ export const App: React.FC = () => {
             messages={state.messages}
             activeUser={state.activeUser}
             onSendMessage={handleSendMessage}
+          />
+        )}
+
+        {currentTab === 'rituals' && (
+          <RitualsGardenView
+            rituals={state.rituals}
+            pebbles={state.pebbles}
+            activeUser={state.activeUser}
+            onToggleRitual={handleToggleRitual}
+            onAddRitual={handleAddRitual}
+          />
+        )}
+
+        {currentTab === 'letters' && (
+          <LettersView
+            letters={state.letters}
+            activeUser={state.activeUser}
+            onSendLetter={handleSendLetter}
+            onOpenLetter={handleOpenLetter}
+          />
+        )}
+
+        {currentTab === 'adventures' && (
+          <AdventuresView
+            adventures={state.adventures}
+            activeUser={state.activeUser}
+            onAddAdventure={handleAddAdventure}
+            onToggleComplete={handleToggleAdventureComplete}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
 
@@ -418,6 +587,9 @@ export const App: React.FC = () => {
         onClose={() => setShowStoryTour(false)}
         onNavigateTab={(tab) => setCurrentTab(tab)}
       />
+
+      {/* Real-Time Sensory Haptic Pulse Overlay */}
+      <SensoryPulseOverlay activeUser={state.activeUser} />
     </div>
   );
 };

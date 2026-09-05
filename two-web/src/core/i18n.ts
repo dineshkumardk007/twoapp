@@ -13,6 +13,9 @@ export interface Translations {
   tabs: {
     home: string;
     chat: string;
+    rituals: string;
+    letters: string;
+    adventures: string;
     decks: string;
     cycle: string;
     journal: string;
@@ -30,6 +33,8 @@ export interface Translations {
     exportData: string;
     vaultBackup: string;
     wipeDevice: string;
+    sensoryPulse: string;
+    meshSync: string;
     save: string;
     cancel: string;
   };
@@ -65,6 +70,9 @@ export const translations: Record<Locale, Translations> = {
     tabs: {
       home: 'Today',
       chat: 'Chat',
+      rituals: 'Rituals',
+      letters: 'Letters',
+      adventures: 'Adventures',
       decks: 'Decks',
       cycle: 'Cycle',
       journal: 'Journal',
@@ -82,6 +90,8 @@ export const translations: Record<Locale, Translations> = {
       exportData: 'Export All Space Data (JSON)',
       vaultBackup: 'Manage Vault Backups (.two-vault)',
       wipeDevice: 'Emergency Quick Exit & Device Wipe',
+      sensoryPulse: 'Send Warm Sensory Pulse',
+      meshSync: 'Off-Grid Mesh Sync',
       save: 'Save',
       cancel: 'Cancel',
     },
@@ -115,6 +125,9 @@ export const translations: Record<Locale, Translations> = {
     tabs: {
       home: 'Hoy',
       chat: 'Chat',
+      rituals: 'Rituales',
+      letters: 'Cartas',
+      adventures: 'Aventuras',
       decks: 'Barajas',
       cycle: 'Ciclo',
       journal: 'Diario',
@@ -132,6 +145,8 @@ export const translations: Record<Locale, Translations> = {
       exportData: 'Exportar Datos del Espacio (JSON)',
       vaultBackup: 'Gestionar Copias de Seguridad (.two-vault)',
       wipeDevice: 'Salida Rápida de Emergencia y Borrado',
+      sensoryPulse: 'Enviar Pulso Sensorial',
+      meshSync: 'Sincronización Fuera de Red',
       save: 'Guardar',
       cancel: 'Cancelar',
     },
@@ -165,6 +180,9 @@ export const translations: Record<Locale, Translations> = {
     tabs: {
       home: 'Aujourd’hui',
       chat: 'Discussion',
+      rituals: 'Rituels',
+      letters: 'Lettres',
+      adventures: 'Aventures',
       decks: 'Cartes',
       cycle: 'Cycle',
       journal: 'Journal',
@@ -182,6 +200,8 @@ export const translations: Record<Locale, Translations> = {
       exportData: 'Exporter les Données (JSON)',
       vaultBackup: 'Gérer les Sauvegardes (.two-vault)',
       wipeDevice: 'Sortie d’Urgence & Effacement Local',
+      sensoryPulse: 'Envoyer une Impulsion Douce',
+      meshSync: 'Synchronisation Hors Ligne',
       save: 'Enregistrer',
       cancel: 'Annuler',
     },
@@ -215,6 +235,9 @@ export const translations: Record<Locale, Translations> = {
     tabs: {
       home: 'Heute',
       chat: 'Chat',
+      rituals: 'Rituale',
+      letters: 'Briefe',
+      adventures: 'Abenteuer',
       decks: 'Karten',
       cycle: 'Zyklus',
       journal: 'Tagebuch',
@@ -232,6 +255,8 @@ export const translations: Record<Locale, Translations> = {
       exportData: 'Raumdaten Exportieren (JSON)',
       vaultBackup: 'Tresor-Backups Verwalten (.two-vault)',
       wipeDevice: 'Notausstieg & Gerät Sofort Löschen',
+      sensoryPulse: 'Sanften Sensorischen Puls Senden',
+      meshSync: 'Offline-Mesh Synchronisation',
       save: 'Speichern',
       cancel: 'Abbrechen',
     },
@@ -265,6 +290,9 @@ export const translations: Record<Locale, Translations> = {
     tabs: {
       home: '今日',
       chat: 'チャット',
+      rituals: '習慣・儀式',
+      letters: '封蝋の手紙',
+      adventures: '冒険・デート',
       decks: '対話カード',
       cycle: 'サイクル',
       journal: '日記',
@@ -282,6 +310,8 @@ export const translations: Record<Locale, Translations> = {
       exportData: '全空間データをエクスポート (JSON)',
       vaultBackup: '暗号化バックアップ管理 (.two-vault)',
       wipeDevice: '緊急退出・端末初期化',
+      sensoryPulse: '温もりパルスを届ける',
+      meshSync: 'オフライン近距離メッシュ同期',
       save: '保存',
       cancel: 'キャンセル',
     },
@@ -315,6 +345,9 @@ export const translations: Record<Locale, Translations> = {
     tabs: {
       home: 'आज',
       chat: 'बातचीत',
+      rituals: 'आत्मीय रीतियाँ',
+      letters: 'प्रेम पत्र',
+      adventures: 'रोमांच व डेट',
       decks: 'संवाद कार्ड',
       cycle: 'चक्र',
       journal: 'डायरी',
@@ -330,8 +363,10 @@ export const translations: Record<Locale, Translations> = {
       camouflage: 'कैलकुलेटर भेस मोड (गोपनीयता)',
       storyTour: 'एक साझा दिन की कहानी',
       exportData: 'डेटा निर्यात करें (JSON)',
-      vaultBackup: 'वॉल्ट बैकअप प्रबंधित करें (.two-vault)',
+      vaultBackup: 'वॉल्ट बैकアップ प्रबंधित करें (.two-vault)',
       wipeDevice: 'आपातकालीन त्वरित निकास व सफाई',
+      sensoryPulse: 'आत्मीय स्पर्श स्पंदन भेजें',
+      meshSync: 'ऑफ़लाइन मेश सिंक',
       save: 'सहेजें',
       cancel: 'रद्द करें',
     },
