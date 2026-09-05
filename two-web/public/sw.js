@@ -32,6 +32,18 @@ self.addEventListener('fetch', (event) => {
   // Only intercept GET requests for same origin or fonts
   if (event.request.method !== 'GET') return;
 
+  // Never intercept or cache in development mode or for Vite files
+  if (
+    self.location.port === '3000' ||
+    self.location.hostname === 'localhost' ||
+    self.location.hostname === '127.0.0.1' ||
+    event.request.url.includes('/@vite/') ||
+    event.request.url.includes('/@fs/') ||
+    event.request.url.includes('/src/')
+  ) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {

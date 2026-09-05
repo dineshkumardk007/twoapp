@@ -10,6 +10,7 @@ import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Ma
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
+import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
 import { RelationshipMilestone, ComfortBoxData } from '../types';
 
 interface HomeViewProps {
@@ -140,6 +141,38 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       )}
 
+      {/* 2c. Sensory Pulse - "Thinking of You" Card */}
+      <div className="rounded-3xl border border-rose-200/80 bg-gradient-to-r from-rose-50/80 via-linen-surface to-rose-50/40 p-4 sm:p-5 flex items-center justify-between shadow-xs">
+        <div className="flex items-center space-x-3.5">
+          <button
+            onClick={() => triggerGlobalPulse('Thinking of you')}
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md shadow-rose-200 cursor-pointer shrink-0"
+            title="Tap to send warm touch pulse"
+          >
+            <Heart className="w-5 h-5 sm:w-6 sm:h-6 fill-current animate-pulse" />
+          </button>
+          <div>
+            <div className="flex items-center space-x-2">
+              <h4 className="font-serif text-sm sm:text-base font-medium text-linen-primary">Thinking of You</h4>
+              <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                Sensory Pulse
+              </span>
+            </div>
+            <p className="text-xs text-linen-secondary mt-0.5">
+              Wordless touch • 528Hz Solfeggio chime & gentle mobile vibration
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => triggerGlobalPulse('Thinking of you')}
+          className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-rose-600 text-white text-xs font-medium hover:bg-rose-500 active:scale-95 transition-all shadow-xs cursor-pointer shrink-0 ml-3"
+        >
+          <Heart className="w-3.5 h-3.5 fill-current" />
+          <span className="hidden sm:inline">Send Pulse</span>
+          <span className="sm:hidden">Pulse</span>
+        </button>
+      </div>
+
       {/* 3. Daily Question Engine */}
       <div className="rounded-3xl border border-linen-border bg-linen-surface p-5 sm:p-6 shadow-xs">
         <div className="flex items-center justify-between mb-3">
@@ -229,8 +262,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <h3 className="font-serif text-lg font-medium text-linen-primary mb-3">Connection & Relational Tools</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <button
+            onClick={() => triggerGlobalPulse('Thinking of you')}
+            className="text-left p-4 rounded-2xl border border-rose-200/80 bg-rose-50/40 hover:bg-rose-50/80 transition-colors cursor-pointer group"
+          >
+            <Heart className="w-5 h-5 text-rose-500 mb-2 fill-rose-500 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Thinking of You</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">528Hz Solfeggio touch pulse</p>
+          </button>
+
+          <button
             onClick={() => onNavigate('rituals')}
-            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors"
+            className="text-left p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-colors cursor-pointer"
           >
             <Flame className="w-5 h-5 text-amber-600 mb-2" />
             <h4 className="text-sm font-medium text-linen-primary">Pebble Rituals</h4>

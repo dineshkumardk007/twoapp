@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { EmotionalReport, WeatherState } from '../types';
-import { Sun, Cloud, CloudRain, CloudLightning, Sparkles, Sliders } from 'lucide-react';
+import { Sun, Cloud, CloudRain, CloudLightning, Sparkles, Sliders, Heart } from 'lucide-react';
 
 interface EmotionalWeatherCardProps {
   userReport: EmotionalReport;
@@ -55,17 +55,19 @@ export const EmotionalWeatherCard: React.FC<EmotionalWeatherCardProps> = ({
           <span className="text-base font-serif font-medium text-linen-primary">
             {WEATHER_METADATA[theirReport.weather].label}
           </span>
-          <div className="flex items-center space-x-1 mt-3">
+          <div className="flex items-center space-x-1 mt-3" title={`Capacity: ${theirReport.capacity}/5 hearts`}>
             {[1, 2, 3, 4, 5].map(i => (
-              <span
+              <Heart
                 key={i}
-                className={`w-2 h-2 rounded-full ${
-                  i <= theirReport.capacity ? 'bg-linen-accent' : 'bg-linen-border'
+                className={`w-3.5 h-3.5 transition-colors ${
+                  i <= theirReport.capacity
+                    ? 'fill-rose-500 text-rose-500'
+                    : 'text-linen-border fill-transparent'
                 }`}
               />
             ))}
           </div>
-          <span className="text-xs text-linen-secondary mt-1">Bandwidth: {theirReport.capacity}/5</span>
+          <span className="text-xs text-linen-secondary mt-1">Bandwidth: {theirReport.capacity}/5 hearts</span>
         </div>
 
         {/* You Column */}
@@ -77,17 +79,19 @@ export const EmotionalWeatherCard: React.FC<EmotionalWeatherCardProps> = ({
           <span className="text-base font-serif font-medium text-linen-primary">
             {WEATHER_METADATA[myReport.weather].label}
           </span>
-          <div className="flex items-center space-x-1 mt-3">
+          <div className="flex items-center space-x-1 mt-3" title={`Capacity: ${myReport.capacity}/5 hearts`}>
             {[1, 2, 3, 4, 5].map(i => (
-              <span
+              <Heart
                 key={i}
-                className={`w-2 h-2 rounded-full ${
-                  i <= myReport.capacity ? 'bg-linen-primary' : 'bg-linen-border'
+                className={`w-3.5 h-3.5 transition-colors ${
+                  i <= myReport.capacity
+                    ? 'fill-rose-500 text-rose-500'
+                    : 'text-linen-border fill-transparent'
                 }`}
               />
             ))}
           </div>
-          <span className="text-xs text-linen-secondary mt-1">Bandwidth: {myReport.capacity}/5</span>
+          <span className="text-xs text-linen-secondary mt-1">Bandwidth: {myReport.capacity}/5 hearts</span>
         </div>
       </div>
 
@@ -120,8 +124,21 @@ export const EmotionalWeatherCard: React.FC<EmotionalWeatherCardProps> = ({
 
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-medium text-linen-secondary">
-                Emotional Capacity (Bandwidth): <strong className="text-linen-primary">{myReport.capacity} / 5</strong>
+              <label className="text-xs font-medium text-linen-secondary flex items-center space-x-1.5">
+                <span>Emotional Capacity:</span>
+                <span className="inline-flex items-center space-x-0.5 ml-1">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <Heart
+                      key={i}
+                      className={`w-3 h-3 ${
+                        i <= myReport.capacity
+                          ? 'fill-rose-500 text-rose-500'
+                          : 'text-linen-border fill-transparent'
+                      }`}
+                    />
+                  ))}
+                </span>
+                <strong className="text-linen-primary ml-1">({myReport.capacity}/5)</strong>
               </label>
               <span className="text-xs text-linen-accent">
                 {myReport.capacity <= 1 ? 'Very low energy, need gentle care' : myReport.capacity >= 4 ? 'Generous energy, ready to support' : 'Moderate bandwidth'}
