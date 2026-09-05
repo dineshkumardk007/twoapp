@@ -168,6 +168,11 @@ export const App: React.FC = () => {
               ...prev,
               intuitionRounds: [parsed, ...prev.intuitionRounds.filter(r => r.id !== parsed.id)]
             }));
+          } else if (record.type === 'ADVENTURE_UPDATE') {
+            setState(prev => ({
+              ...prev,
+              adventures: parsed
+            }));
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -227,6 +232,11 @@ export const App: React.FC = () => {
           setState(prev => ({
             ...prev,
             intuitionRounds: [packet.payload, ...prev.intuitionRounds.filter(r => r.id !== packet.payload.id)]
+          }));
+        } else if (packet.subType === 'ADVENTURE_UPDATE') {
+          setState(prev => ({
+            ...prev,
+            adventures: packet.payload
           }));
         }
       }
@@ -493,17 +503,39 @@ export const App: React.FC = () => {
   };
 
   const handleAddAdventure = (newAdv: AdventureItem) => {
-    setState(prev => ({
-      ...prev,
-      adventures: [newAdv, ...prev.adventures]
-    }));
+    setState(prev => {
+      const updated = [newAdv, ...prev.adventures];
+      wsRelay.broadcastUpdate('ADVENTURE_UPDATE', updated);
+      localMesh.broadcastLocally('ADVENTURE_UPDATE', updated, prev.activeUser);
+      return {
+        ...prev,
+        adventures: updated
+      };
+    });
   };
 
-  const handleToggleAdventureComplete = (id: string, notes?: string) => {
-    setState(prev => ({
-      ...prev,
-      adventures: prev.adventures.map(a => a.id === id ? { ...a, isCompleted: !a.isCompleted, personalNotes: notes || a.personalNotes } : a)
-    }));
+  const handleToggleAdventureComplete = (id: string, notes?: string, photoUrl?: string) => {
+    setState(prev => {
+      const updated = prev.adventures.map(a => {
+        if (a.id === id) {
+          const willBeCompleted = !a.isCompleted;
+          return {
+            ...a,
+            isCompleted: willBeCompleted,
+            completedDate: willBeCompleted ? (a.completedDate || 'Recently') : undefined,
+            personalNotes: notes !== undefined ? notes : a.personalNotes,
+            photoUrl: photoUrl !== undefined ? photoUrl : a.photoUrl
+          };
+        }
+        return a;
+      });
+      wsRelay.broadcastUpdate('ADVENTURE_UPDATE', updated);
+      localMesh.broadcastLocally('ADVENTURE_UPDATE', updated, prev.activeUser);
+      return {
+        ...prev,
+        adventures: updated
+      };
+    });
   };
 
   const handleAddMilestone = (newMs: RelationshipMilestone) => {

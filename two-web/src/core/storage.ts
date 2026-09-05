@@ -344,9 +344,11 @@ const DEFAULT_STATE: SpaceState = {
       energyTier: 'low',
       category: 'home',
       estimatedCost: 'Free',
+      season: 'winter',
+      location: 'Living Room Hearth',
       isCompleted: true,
-      completedDate: 'Last month',
-      personalNotes: 'We played Rumours on vinyl and drank chamomile tea.'
+      completedDate: 'Autumn 2025',
+      personalNotes: 'We played Rumours on vinyl, wrapped in three blankets, and drank chamomile tea.'
     },
     {
       id: 'adv-2',
@@ -355,6 +357,8 @@ const DEFAULT_STATE: SpaceState = {
       energyTier: 'low',
       category: 'home',
       estimatedCost: '$',
+      season: 'anytime',
+      location: 'Kitchen Island',
       isCompleted: false
     },
     {
@@ -364,6 +368,8 @@ const DEFAULT_STATE: SpaceState = {
       energyTier: 'medium',
       category: 'food',
       estimatedCost: '$$',
+      season: 'fall',
+      location: 'Our Kitchen',
       isCompleted: false
     },
     {
@@ -373,6 +379,8 @@ const DEFAULT_STATE: SpaceState = {
       energyTier: 'medium',
       category: 'creative',
       estimatedCost: '$',
+      season: 'spring',
+      location: 'Vintage Alley',
       isCompleted: false
     },
     {
@@ -382,6 +390,8 @@ const DEFAULT_STATE: SpaceState = {
       energyTier: 'high',
       category: 'outdoors',
       estimatedCost: '$',
+      season: 'fall',
+      location: 'Pine Crest Ridge',
       isCompleted: false
     },
     {
@@ -391,6 +401,30 @@ const DEFAULT_STATE: SpaceState = {
       energyTier: 'high',
       category: 'outdoors',
       estimatedCost: '$',
+      season: 'summer',
+      location: 'Eastern Bluffs',
+      isCompleted: false
+    },
+    {
+      id: 'adv-7',
+      title: 'Aurora Borealis in a Glass Igloo',
+      description: 'Fall asleep under a ceiling of pure starlight and dancing green northern lights while a wood fire crackles in Lapland.',
+      energyTier: 'high',
+      category: 'outdoors',
+      estimatedCost: '$$',
+      season: 'winter',
+      location: 'Lapland, Finland',
+      isCompleted: false
+    },
+    {
+      id: 'adv-8',
+      title: 'Tuscan Farmhouse Handmade Pasta Workshop',
+      description: 'Spend an afternoon rolling fresh tagliatelle and ravioli from scratch with a local nonna, sipping Chianti overlooking rolling vineyards.',
+      energyTier: 'medium',
+      category: 'food',
+      estimatedCost: '$$',
+      season: 'summer',
+      location: 'Val d’Orcia, Tuscany',
       isCompleted: false
     }
   ],

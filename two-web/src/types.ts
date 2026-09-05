@@ -140,6 +140,7 @@ export interface LoveLetter {
 
 export type EnergyTier = 'low' | 'medium' | 'high';
 export type AdventureCategory = 'home' | 'creative' | 'outdoors' | 'food';
+export type AdventureSeason = 'spring' | 'summer' | 'fall' | 'winter' | 'anytime';
 
 export interface AdventureItem {
   id: string;
@@ -151,6 +152,9 @@ export interface AdventureItem {
   isCompleted: boolean;
   completedDate?: string;
   personalNotes?: string;
+  season?: AdventureSeason;
+  location?: string;
+  photoUrl?: string;
 }
 
 export interface RelationshipMilestone {
