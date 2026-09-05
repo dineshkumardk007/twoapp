@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Radio } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -344,6 +344,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Map className="w-5 h-5 text-teal-600 mb-2 group-hover:scale-110 transition-transform" />
             <h4 className="text-sm font-medium text-linen-primary">Secret Coordinates</h4>
             <p className="text-xs text-linen-secondary mt-0.5">{state.coordinatePins?.length || 0} geocache memories</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('radio')}
+            className="text-left p-4 rounded-2xl border border-amber-400/80 bg-gradient-to-br from-amber-50/70 to-orange-50/40 hover:bg-amber-100/60 transition-colors cursor-pointer group"
+          >
+            <Radio className="w-5 h-5 text-amber-700 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Midnight Radio</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">{state.midnightRadio?.isPlaying ? 'Playing in sync' : 'Synced Lo-Fi airwaves'}</p>
           </button>
 
           <button

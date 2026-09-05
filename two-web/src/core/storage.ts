@@ -26,7 +26,9 @@ import {
   SoftLandingSession,
   WhisperMemoItem,
   NightstandState,
-  MemoryCoordinatePin
+  MemoryCoordinatePin,
+  MidnightRadioState,
+  RadioWhisper
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -64,6 +66,7 @@ export interface SpaceState {
   whisperMemos: WhisperMemoItem[];
   nightstand: NightstandState;
   coordinatePins: MemoryCoordinatePin[];
+  midnightRadio: MidnightRadioState;
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -852,7 +855,24 @@ const DEFAULT_STATE: SpaceState = {
       songSnippet: 'Lord Huron - The Night We Met',
       isFavorite: false
     }
-  ]
+  ],
+  midnightRadio: {
+    isPlaying: false,
+    stationId: 'tokyo_rain',
+    startedAt: Date.now(),
+    volume: 0.6,
+    userListening: false,
+    partnerListening: true,
+    whispers: [
+      {
+        id: 'whisper-radio-1',
+        senderId: 'partner',
+        senderName: 'Partner',
+        text: 'Listening to the quiet rain with you.',
+        timestamp: Date.now() - 12 * 60 * 1000
+      }
+    ]
+  }
 };
 
 export function loadState(): SpaceState {
@@ -881,6 +901,7 @@ export function loadState(): SpaceState {
       whisperMemos: parsed.whisperMemos || DEFAULT_STATE.whisperMemos,
       nightstand: parsed.nightstand || DEFAULT_STATE.nightstand,
       coordinatePins: parsed.coordinatePins || DEFAULT_STATE.coordinatePins,
+      midnightRadio: parsed.midnightRadio || DEFAULT_STATE.midnightRadio,
     };
   } catch (e) {
     return DEFAULT_STATE;

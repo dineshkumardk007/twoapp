@@ -29,7 +29,9 @@ import {
   SoftLandingSession,
   WhisperMemoItem,
   NightstandState,
-  MemoryCoordinatePin
+  MemoryCoordinatePin,
+  MidnightRadioState,
+  RadioWhisper
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -48,6 +50,7 @@ import { CareCompassView } from './views/CareCompassView';
 import { LettersView } from './views/LettersView';
 import { WhisperMemosView } from './views/WhisperMemosView';
 import { CoordinatesMapView } from './views/CoordinatesMapView';
+import { MidnightRadioView } from './views/MidnightRadioView';
 import { TimeCapsuleView } from './views/TimeCapsuleView';
 import { CoPresenceView } from './views/CoPresenceView';
 import { ScratchCardsView } from './views/ScratchCardsView';
@@ -327,6 +330,22 @@ export const App: React.FC = () => {
             ...prev,
             coordinatePins: packet.payload
           }));
+        } else if (packet.subType === 'MIDNIGHT_RADIO_SYNC') {
+          setState(prev => ({
+            ...prev,
+            midnightRadio: packet.payload
+          }));
+        } else if (packet.subType === 'MIDNIGHT_RADIO_WHISPER') {
+          setState(prev => ({
+            ...prev,
+            midnightRadio: {
+              ...prev.midnightRadio,
+              whispers: [packet.payload, ...(prev.midnightRadio.whispers || [])]
+            }
+          }));
+          if ('vibrate' in navigator) {
+            navigator.vibrate([70, 40, 70]);
+          }
         }
       }
     });
@@ -802,6 +821,34 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleUpdateRadio = (updated: MidnightRadioState) => {
+    setState(prev => ({
+      ...prev,
+      midnightRadio: updated
+    }));
+    wsRelay.broadcastUpdate('MIDNIGHT_RADIO_SYNC', updated);
+    localMesh.broadcastLocally('MIDNIGHT_RADIO_SYNC', updated, state.activeUser);
+  };
+
+  const handleSendRadioWhisper = (text: string) => {
+    const whisper: RadioWhisper = {
+      id: 'whisper-' + Date.now(),
+      senderId: state.activeUser,
+      senderName: state.activeUser === 'user' ? 'You' : 'Partner',
+      text,
+      timestamp: Date.now()
+    };
+    setState(prev => ({
+      ...prev,
+      midnightRadio: {
+        ...prev.midnightRadio,
+        whispers: [whisper, ...(prev.midnightRadio.whispers || [])]
+      }
+    }));
+    wsRelay.broadcastUpdate('MIDNIGHT_RADIO_WHISPER', whisper);
+    localMesh.broadcastLocally('MIDNIGHT_RADIO_WHISPER', whisper, state.activeUser);
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -1032,6 +1079,15 @@ export const App: React.FC = () => {
             onAddPin={handleAddPin}
             onDeletePin={handleDeletePin}
             onToggleFavorite={handleToggleFavoritePin}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'radio' && (
+          <MidnightRadioView
+            state={state}
+            onUpdateRadio={handleUpdateRadio}
+            onSendRadioWhisper={handleSendRadioWhisper}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}

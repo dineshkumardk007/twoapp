@@ -445,6 +445,27 @@ export interface MemoryCoordinatePin {
   isFavorite: boolean;
 }
 
+export type MidnightRadioStationId = 'tokyo_rain' | 'hearthside' | 'cosmic_528' | 'sunday_cafe';
+
+export interface RadioWhisper {
+  id: string;
+  senderId: 'user' | 'partner';
+  senderName: string;
+  text: string;
+  timestamp: number;
+}
+
+export interface MidnightRadioState {
+  isPlaying: boolean;
+  stationId: MidnightRadioStationId;
+  startedAt: number;
+  volume: number;
+  userListening: boolean;
+  partnerListening: boolean;
+  whispers: RadioWhisper[];
+}
+
+
 
 
 
