@@ -59,11 +59,12 @@ export const Navigation: React.FC<NavigationProps> = ({
             </span>
             <button
               onClick={() => setShowPairingModal(true)}
-              className="hidden sm:inline-flex items-center text-xs font-medium text-linen-secondary px-2.5 py-0.5 rounded-full bg-linen-variant hover:bg-linen-border border border-linen-border transition-colors cursor-pointer"
+              className="inline-flex items-center text-xs font-medium text-linen-secondary px-2 sm:px-2.5 py-0.5 rounded-full bg-linen-variant hover:bg-linen-border border border-linen-border transition-colors cursor-pointer"
               title="Click to view QR Code or verify Safety Numbers"
             >
-              <Shield className="w-3 h-3 mr-1 text-emerald-600" />
-              <span>{t.encryptedNotice}</span>
+              <Shield className="w-3 h-3 mr-1 text-emerald-600 shrink-0" />
+              <span className="hidden sm:inline">{t.encryptedNotice}</span>
+              <span className="sm:hidden text-[10px] font-semibold">E2EE</span>
             </button>
 
             {/* Interactive Story Tour button */}
