@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -299,6 +299,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Flame className="w-5 h-5 text-amber-600 mb-2" />
             <h4 className="text-sm font-medium text-linen-primary">Pebble Rituals</h4>
             <p className="text-xs text-linen-secondary mt-0.5">6-second kiss & zen cairn</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('garden')}
+            className="text-left p-4 rounded-2xl border border-emerald-300/80 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 hover:bg-emerald-100/50 transition-colors cursor-pointer group"
+          >
+            <Sprout className="w-5 h-5 text-emerald-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Hearth Garden</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">{state.hearthGarden?.vitality || 88}% living bonsai</p>
           </button>
 
           <button

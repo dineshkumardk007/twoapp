@@ -21,7 +21,8 @@ import {
   SecretRecipe,
   IntuitionGameRound,
   TimeCapsuleItem,
-  ScratchCardItem
+  ScratchCardItem,
+  HearthGardenState
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -53,6 +54,7 @@ export interface SpaceState {
   intuitionRounds: IntuitionGameRound[];
   timeCapsules: TimeCapsuleItem[];
   scratchCards: ScratchCardItem[];
+  hearthGarden: HearthGardenState;
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -696,7 +698,55 @@ const DEFAULT_STATE: SpaceState = {
       isRedeemed: true,
       redeemedAt: 'Last Friday'
     }
-  ]
+  ],
+  hearthGarden: {
+    level: 3,
+    stageName: 'Young Japanese Hearth Bonsai',
+    vitality: 88,
+    waterLevel: 75,
+    sunlightLevel: 80,
+    isDormant: false,
+    lastNourishedAt: 'Today',
+    totalWaterings: 14,
+    totalSunbaths: 11,
+    blossoms: [
+      {
+        id: 'blossom-1',
+        type: 'cherry',
+        note: 'Our first late-night drive to the coast when the fog rolled over the water.',
+        sproutedBy: 'user',
+        sproutedByName: 'You',
+        sproutedAt: 'Yesterday',
+        xPercent: 32,
+        yPercent: 38
+      },
+      {
+        id: 'blossom-2',
+        type: 'jasmine',
+        note: 'When you left a warm tea on my desk without saying a word because you saw I was stressed.',
+        sproutedBy: 'partner',
+        sproutedByName: 'Partner',
+        sproutedAt: '3 days ago',
+        xPercent: 68,
+        yPercent: 34
+      },
+      {
+        id: 'blossom-3',
+        type: 'lotus',
+        note: 'The unstoppable laughing fit over our burned first attempt at homemade gnocchi.',
+        sproutedBy: 'user',
+        sproutedByName: 'You',
+        sproutedAt: 'Last week',
+        xPercent: 50,
+        yPercent: 25
+      }
+    ],
+    growthLog: [
+      { id: 'log-1', event: 'Garden sprouted: Young Japanese Hearth Bonsai took root.', timestamp: '14 days ago' },
+      { id: 'log-2', event: 'Sprouted Cherry Blossom: "Our first late-night drive to the coast".', timestamp: 'Yesterday' },
+      { id: 'log-3', event: 'Nourished with Morning Dew: Vitality reached 88%.', timestamp: 'Today' }
+    ]
+  }
 };
 
 export function loadState(): SpaceState {
@@ -719,6 +769,7 @@ export function loadState(): SpaceState {
       intuitionRounds: parsed.intuitionRounds || DEFAULT_STATE.intuitionRounds,
       timeCapsules: parsed.timeCapsules || DEFAULT_STATE.timeCapsules,
       scratchCards: parsed.scratchCards || DEFAULT_STATE.scratchCards,
+      hearthGarden: parsed.hearthGarden || DEFAULT_STATE.hearthGarden,
     };
   } catch (e) {
     return DEFAULT_STATE;

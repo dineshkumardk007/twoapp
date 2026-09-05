@@ -24,7 +24,8 @@ import {
   SecretRecipe,
   IntuitionGameRound,
   TimeCapsuleItem,
-  ScratchCardItem
+  ScratchCardItem,
+  HearthGardenState
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -35,6 +36,7 @@ import { OnboardingView } from './views/OnboardingView';
 import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
 import { RitualsGardenView } from './views/RitualsGardenView';
+import { HearthGardenView } from './views/HearthGardenView';
 import { ConstellationView } from './views/ConstellationView';
 import { CareCompassView } from './views/CareCompassView';
 import { LettersView } from './views/LettersView';
@@ -189,6 +191,11 @@ export const App: React.FC = () => {
               ...prev,
               scratchCards: parsed
             }));
+          } else if (record.type === 'GARDEN_UPDATE') {
+            setState(prev => ({
+              ...prev,
+              hearthGarden: parsed
+            }));
           }
         } catch (e) {
           console.error('[Relay Ingest Error]', e);
@@ -263,6 +270,11 @@ export const App: React.FC = () => {
           setState(prev => ({
             ...prev,
             scratchCards: packet.payload
+          }));
+        } else if (packet.subType === 'GARDEN_UPDATE') {
+          setState(prev => ({
+            ...prev,
+            hearthGarden: packet.payload
           }));
         }
       }
@@ -630,6 +642,15 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleUpdateGarden = (updated: HearthGardenState) => {
+    setState(prev => ({
+      ...prev,
+      hearthGarden: updated
+    }));
+    wsRelay.broadcastUpdate('GARDEN_UPDATE', updated);
+    localMesh.broadcastLocally('GARDEN_UPDATE', updated, state.activeUser);
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -783,6 +804,15 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onToggleRitual={handleToggleRitual}
             onAddRitual={handleAddRitual}
+          />
+        )}
+
+        {currentTab === 'garden' && (
+          <HearthGardenView
+            garden={state.hearthGarden}
+            activeUser={state.activeUser}
+            onUpdateGarden={handleUpdateGarden}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
 

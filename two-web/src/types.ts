@@ -340,6 +340,34 @@ export interface ScrapbookSettings {
   includeRituals: boolean;
 }
 
+export type BlossomType = 'cherry' | 'jasmine' | 'golden_leaf' | 'lotus';
+
+export interface GardenBlossom {
+  id: string;
+  type: BlossomType;
+  note: string;
+  sproutedBy: 'user' | 'partner';
+  sproutedByName: string;
+  sproutedAt: string;
+  xPercent: number; // percentage coordinate 10-90 on canopy
+  yPercent: number; // percentage coordinate 15-75 on canopy
+}
+
+export interface HearthGardenState {
+  level: number; // 1 to 10 growth stages
+  stageName: string;
+  vitality: number; // 0 to 100%
+  waterLevel: number; // 0 to 100%
+  sunlightLevel: number; // 0 to 100%
+  isDormant: boolean; // gentle winter slumber if inactive
+  lastNourishedAt: string;
+  totalWaterings: number;
+  totalSunbaths: number;
+  blossoms: GardenBlossom[];
+  growthLog: { id: string; event: string; timestamp: string }[];
+}
+
+
 
 
 
