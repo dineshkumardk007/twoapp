@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -326,6 +326,24 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <Mic className="w-5 h-5 text-violet-600 mb-2 group-hover:scale-110 transition-transform" />
             <h4 className="text-sm font-medium text-linen-primary">Whisper Memos</h4>
             <p className="text-xs text-linen-secondary mt-0.5">{state.whisperMemos?.length || 0} voice letters & audio</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('nightstand')}
+            className="text-left p-4 rounded-2xl border border-amber-950/40 bg-gradient-to-br from-neutral-900 to-black hover:border-amber-500/50 transition-colors cursor-pointer group"
+          >
+            <Bed className="w-5 h-5 text-amber-400 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-amber-200">Nightstand Clock</h4>
+            <p className="text-xs text-amber-400/60 mt-0.5">Under the same moon & kisses</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('coordinates')}
+            className="text-left p-4 rounded-2xl border border-teal-300/80 bg-gradient-to-br from-teal-50/50 to-emerald-50/30 hover:bg-teal-100/50 transition-colors cursor-pointer group"
+          >
+            <Map className="w-5 h-5 text-teal-600 mb-2 group-hover:scale-110 transition-transform" />
+            <h4 className="text-sm font-medium text-linen-primary">Secret Coordinates</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">{state.coordinatePins?.length || 0} geocache memories</p>
           </button>
 
           <button

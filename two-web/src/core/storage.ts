@@ -24,7 +24,9 @@ import {
   ScratchCardItem,
   HearthGardenState,
   SoftLandingSession,
-  WhisperMemoItem
+  WhisperMemoItem,
+  NightstandState,
+  MemoryCoordinatePin
 } from '../types';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
@@ -60,6 +62,8 @@ export interface SpaceState {
   activeSoftLanding: SoftLandingSession | null;
   softLandingHistory: SoftLandingSession[];
   whisperMemos: WhisperMemoItem[];
+  nightstand: NightstandState;
+  coordinatePins: MemoryCoordinatePin[];
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -782,6 +786,72 @@ const DEFAULT_STATE: SpaceState = {
       isListened: false,
       waveformData: [0.3, 0.5, 0.4, 0.7, 0.8, 0.6, 0.5, 0.7, 0.9, 0.7, 0.5, 0.6, 0.8, 0.5, 0.4, 0.3, 0.2, 0.1]
     }
+  ],
+  nightstand: {
+    userStatus: {
+      isSleeping: false,
+      sleptAt: undefined,
+      wakeAlarmAt: '07:30',
+      goodnightNote: 'Rest well tonight, my love.'
+    },
+    partnerStatus: {
+      isSleeping: true,
+      sleptAt: Date.now() - 42 * 60 * 1000,
+      wakeAlarmAt: '07:00',
+      goodnightNote: 'Already dreaming. Leaving a quiet kiss on your pillow.'
+    },
+    lastMidnightKissAt: Date.now() - 15 * 60 * 1000,
+    lastMidnightKissFrom: 'partner',
+    lastMidnightKissNote: 'Soft cheek kiss in the dark',
+    ambientSoundscape: 'none',
+    sleepTimerMinutes: 30
+  },
+  coordinatePins: [
+    {
+      id: 'pin-1',
+      title: 'Our First Awkward Coffee Date',
+      category: 'first_date',
+      story: 'We ordered two oat lattes and ended up talking until the barista politely turned the chairs upside down on the tables around us.',
+      date: 'Oct 14, 2022',
+      latitude: 40.7128,
+      longitude: -74.006,
+      locationName: 'Little Canal Cafe, Lower East Side',
+      authorId: 'partner',
+      authorName: 'Partner',
+      weatherAtMoment: 'Crisp autumn drizzle, 14°C',
+      songSnippet: 'Norah Jones - Come Away With Me',
+      isFavorite: true
+    },
+    {
+      id: 'pin-2',
+      title: 'The Rooftop Where We Watched the Perseids',
+      category: 'secret_spot',
+      story: 'Shared a sleeping bag on the gravel roof. Counted seven shooting stars and whispered the wishes we were too shy to say out loud.',
+      date: 'Aug 12, 2023',
+      latitude: 34.0522,
+      longitude: -118.2437,
+      locationName: 'Old Brick Building Fire Escape',
+      authorId: 'user',
+      authorName: 'You',
+      weatherAtMoment: 'Warm summer midnight breeze',
+      songSnippet: 'Sufjan Stevens - Mystery of Love',
+      isFavorite: true
+    },
+    {
+      id: 'pin-3',
+      title: 'The Seaside Pier at Midnight',
+      category: 'first_kiss',
+      story: 'Ocean waves crashing beneath the wooden floorboards. The salty air and cold hands tucked inside oversized coat pockets.',
+      date: 'Dec 31, 2022',
+      latitude: 37.7749,
+      longitude: -122.4194,
+      locationName: 'Embarcadero Pier 7',
+      authorId: 'partner',
+      authorName: 'Partner',
+      weatherAtMoment: 'Chilly Pacific mist, foggy',
+      songSnippet: 'Lord Huron - The Night We Met',
+      isFavorite: false
+    }
   ]
 };
 
@@ -809,6 +879,8 @@ export function loadState(): SpaceState {
       activeSoftLanding: parsed.activeSoftLanding !== undefined ? parsed.activeSoftLanding : DEFAULT_STATE.activeSoftLanding,
       softLandingHistory: parsed.softLandingHistory || DEFAULT_STATE.softLandingHistory,
       whisperMemos: parsed.whisperMemos || DEFAULT_STATE.whisperMemos,
+      nightstand: parsed.nightstand || DEFAULT_STATE.nightstand,
+      coordinatePins: parsed.coordinatePins || DEFAULT_STATE.coordinatePins,
     };
   } catch (e) {
     return DEFAULT_STATE;

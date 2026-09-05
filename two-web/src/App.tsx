@@ -27,7 +27,9 @@ import {
   ScratchCardItem,
   HearthGardenState,
   SoftLandingSession,
-  WhisperMemoItem
+  WhisperMemoItem,
+  NightstandState,
+  MemoryCoordinatePin
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
@@ -38,6 +40,7 @@ import { OnboardingView } from './views/OnboardingView';
 import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
 import { SoftLandingView } from './views/SoftLandingView';
+import { NightstandClockView } from './views/NightstandClockView';
 import { RitualsGardenView } from './views/RitualsGardenView';
 import { HearthGardenView } from './views/HearthGardenView';
 import { ConstellationView } from './views/ConstellationView';
@@ -300,6 +303,24 @@ export const App: React.FC = () => {
             ...prev,
             whisperMemos: packet.payload
           }));
+        } else if (packet.subType === 'NIGHTSTAND_UPDATE') {
+          setState(prev => ({
+            ...prev,
+            nightstand: packet.payload
+          }));
+        } else if (packet.subType === 'NIGHTSTAND_KISS') {
+          setState(prev => ({
+            ...prev,
+            nightstand: {
+              ...prev.nightstand,
+              lastMidnightKissAt: packet.payload.timestamp,
+              lastMidnightKissFrom: packet.payload.from,
+              lastMidnightKissNote: packet.payload.note
+            }
+          }));
+          if ('vibrate' in navigator) {
+            navigator.vibrate([100, 50, 100, 50, 200]);
+          }
         }
       }
     });
@@ -717,6 +738,35 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleUpdateNightstand = (updated: NightstandState) => {
+    setState(prev => ({
+      ...prev,
+      nightstand: updated
+    }));
+    wsRelay.broadcastUpdate('NIGHTSTAND_UPDATE', updated);
+    localMesh.broadcastLocally('NIGHTSTAND_UPDATE', updated, state.activeUser);
+  };
+
+  const handleSendMidnightKiss = (note?: string) => {
+    const timestamp = Date.now();
+    const payload = {
+      timestamp,
+      from: state.activeUser,
+      note
+    };
+    setState(prev => ({
+      ...prev,
+      nightstand: {
+        ...prev.nightstand,
+        lastMidnightKissAt: timestamp,
+        lastMidnightKissFrom: state.activeUser,
+        lastMidnightKissNote: note
+      }
+    }));
+    wsRelay.broadcastUpdate('NIGHTSTAND_KISS', payload);
+    localMesh.broadcastLocally('NIGHTSTAND_KISS', payload, state.activeUser);
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -872,6 +922,15 @@ export const App: React.FC = () => {
             onUpdateSession={handleUpdateSoftLanding}
             onSaveToHistory={handleSaveSoftLandingHistory}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'nightstand' && (
+          <NightstandClockView
+            state={state}
+            onUpdateNightstand={handleUpdateNightstand}
+            onSendMidnightKiss={handleSendMidnightKiss}
+            onNavigate={setCurrentTab}
           />
         )}
 

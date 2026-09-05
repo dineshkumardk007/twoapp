@@ -409,6 +409,43 @@ export interface WhisperMemoItem {
   waveformData?: number[];
 }
 
+export interface SleepPartnerStatus {
+  isSleeping: boolean;
+  sleptAt?: number;
+  wakeAlarmAt?: string; // e.g. "07:00"
+  goodnightNote?: string;
+}
+
+export interface NightstandState {
+  userStatus: SleepPartnerStatus;
+  partnerStatus: SleepPartnerStatus;
+  lastMidnightKissAt?: number;
+  lastMidnightKissFrom?: 'user' | 'partner';
+  lastMidnightKissNote?: string;
+  ambientSoundscape?: 'none' | 'rain' | 'theta' | 'campfire';
+  sleepTimerMinutes?: number;
+}
+
+export type CoordinateCategory = 'first_date' | 'first_kiss' | 'favorite_cafe' | 'adventure' | 'secret_spot' | 'dream_destination';
+
+export interface MemoryCoordinatePin {
+  id: string;
+  title: string;
+  category: CoordinateCategory;
+  story: string;
+  date: string;
+  latitude: number;
+  longitude: number;
+  locationName: string;
+  authorId: 'user' | 'partner';
+  authorName: string;
+  photoUrl?: string;
+  weatherAtMoment?: string;
+  songSnippet?: string;
+  isFavorite: boolean;
+}
+
+
 
 
 
