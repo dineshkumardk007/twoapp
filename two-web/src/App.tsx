@@ -47,6 +47,7 @@ import { ConstellationView } from './views/ConstellationView';
 import { CareCompassView } from './views/CareCompassView';
 import { LettersView } from './views/LettersView';
 import { WhisperMemosView } from './views/WhisperMemosView';
+import { CoordinatesMapView } from './views/CoordinatesMapView';
 import { TimeCapsuleView } from './views/TimeCapsuleView';
 import { CoPresenceView } from './views/CoPresenceView';
 import { ScratchCardsView } from './views/ScratchCardsView';
@@ -321,6 +322,11 @@ export const App: React.FC = () => {
           if ('vibrate' in navigator) {
             navigator.vibrate([100, 50, 100, 50, 200]);
           }
+        } else if (packet.subType === 'COORDINATES_UPDATE') {
+          setState(prev => ({
+            ...prev,
+            coordinatePins: packet.payload
+          }));
         }
       }
     });
@@ -767,6 +773,35 @@ export const App: React.FC = () => {
     localMesh.broadcastLocally('NIGHTSTAND_KISS', payload, state.activeUser);
   };
 
+  const handleAddPin = (pin: MemoryCoordinatePin) => {
+    setState(prev => {
+      const updated = [pin, ...prev.coordinatePins];
+      wsRelay.broadcastUpdate('COORDINATES_UPDATE', updated);
+      localMesh.broadcastLocally('COORDINATES_UPDATE', updated, prev.activeUser);
+      return { ...prev, coordinatePins: updated };
+    });
+  };
+
+  const handleDeletePin = (pinId: string) => {
+    setState(prev => {
+      const updated = prev.coordinatePins.filter(p => p.id !== pinId);
+      wsRelay.broadcastUpdate('COORDINATES_UPDATE', updated);
+      localMesh.broadcastLocally('COORDINATES_UPDATE', updated, prev.activeUser);
+      return { ...prev, coordinatePins: updated };
+    });
+  };
+
+  const handleToggleFavoritePin = (pinId: string) => {
+    setState(prev => {
+      const updated = prev.coordinatePins.map(p =>
+        p.id === pinId ? { ...p, isFavorite: !p.isFavorite } : p
+      );
+      wsRelay.broadcastUpdate('COORDINATES_UPDATE', updated);
+      localMesh.broadcastLocally('COORDINATES_UPDATE', updated, prev.activeUser);
+      return { ...prev, coordinatePins: updated };
+    });
+  };
+
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
     setState(prev => ({
       ...prev,
@@ -986,6 +1021,17 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onAddMemo={handleAddWhisperMemo}
             onMarkListened={handleMarkWhisperListened}
+            onSendToChat={(msg) => handleSendMessage(msg, false)}
+          />
+        )}
+
+        {currentTab === 'coordinates' && (
+          <CoordinatesMapView
+            pins={state.coordinatePins}
+            activeUser={state.activeUser}
+            onAddPin={handleAddPin}
+            onDeletePin={handleDeletePin}
+            onToggleFavorite={handleToggleFavoritePin}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
