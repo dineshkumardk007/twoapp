@@ -412,12 +412,6 @@ class NightstandAudioEngine {
 
 const audioEngine = new NightstandAudioEngine();
 
-const SOUNDSCAPES = [
-  { id: 'rain', name: 'Gentle Rain', desc: 'Pink Noise Bed', icon: CloudRain },
-  { id: 'theta', name: 'Theta 432Hz', desc: 'Delta Sleep Drone', icon: Sparkles },
-  { id: 'campfire', name: 'Hearth Embers', desc: 'Warm Wood Crackle', icon: Flame },
-  { id: 'ocean', name: 'Ocean Tide', desc: 'Breath Cycle Surf', icon: Waves }
-] as const;
 
 export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
   state,
@@ -794,7 +788,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
       </div>
 
       {/* Bottom Section: Dual Actions & Audio Soundscape Deck */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch z-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end z-10">
         {/* Card 1: Sleep Status Toggle */}
         <div className={`p-4 rounded-2xl border ${theme.card} flex flex-col justify-between space-y-3`}>
           <div className="flex items-center justify-between">
@@ -913,7 +907,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
         </div>
 
         {/* Card 3: Procedural Ambient Sleep Soundscapes */}
-        <div className={`p-4 rounded-2xl border ${theme.card} flex flex-col justify-between space-y-3`}>
+        <div className={`p-4 rounded-2xl border ${theme.card} space-y-3`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Volume2 className="w-4 h-4 text-amber-500" />
@@ -921,105 +915,59 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
                 Sleep Soundscape
               </span>
             </div>
-            {timerRemaining !== null ? (
-              <span className="text-[10px] font-mono text-amber-400/80 px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-900/60">
+            {timerRemaining !== null && (
+              <span className="text-[10px] font-mono text-amber-400/80">
                 {Math.floor(timerRemaining / 60)}:{(timerRemaining % 60).toString().padStart(2, '0')} left
-              </span>
-            ) : (
-              <span className="text-[10px] font-mono text-amber-600/70">
-                30m Sleep Timer
               </span>
             )}
           </div>
 
-          {/* 2x2 Clean Responsive Grid */}
-          <div className="grid grid-cols-2 gap-2">
-            {SOUNDSCAPES.map((s) => {
-              const isActive = selectedSoundscape === s.id;
-              const IconComponent = s.icon;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => handleSoundscapeChange(s.id)}
-                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer relative overflow-hidden flex items-center space-x-2.5 ${
-                    isActive
-                      ? 'bg-amber-500/25 border-amber-400 text-amber-100 shadow-md shadow-amber-950/50'
-                      : 'bg-neutral-900/60 border-amber-950/60 text-amber-400/80 hover:bg-neutral-800/80 hover:border-amber-900/80 hover:text-amber-200'
-                  }`}
-                >
-                  <div
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                      isActive
-                        ? 'bg-amber-500 text-neutral-950'
-                        : 'bg-neutral-950/80 text-amber-500/80'
-                    }`}
-                  >
-                    <IconComponent className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-serif text-xs font-medium truncate">
-                        {s.name}
-                      </span>
-                      {isActive && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 ml-1" />
-                      )}
-                    </div>
-                    <span className="text-[10px] text-amber-600/80 font-mono truncate block">
-                      {s.desc}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-3 gap-1.5">
+            <button
+              onClick={() => handleSoundscapeChange(selectedSoundscape === 'rain' ? 'none' : 'rain')}
+              className={`py-1.5 px-2 rounded-xl text-xs font-serif transition-colors cursor-pointer border ${
+                selectedSoundscape === 'rain'
+                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-medium'
+                  : 'bg-neutral-900/60 border-amber-950/60 text-amber-500/80 hover:bg-neutral-800'
+              }`}
+            >
+              🌧️ Rain
+            </button>
+            <button
+              onClick={() => handleSoundscapeChange(selectedSoundscape === 'theta' ? 'none' : 'theta')}
+              className={`py-1.5 px-2 rounded-xl text-xs font-serif transition-colors cursor-pointer border ${
+                selectedSoundscape === 'theta'
+                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-medium'
+                  : 'bg-neutral-900/60 border-amber-950/60 text-amber-500/80 hover:bg-neutral-800'
+              }`}
+            >
+              🌌 Theta
+            </button>
+            <button
+              onClick={() => handleSoundscapeChange(selectedSoundscape === 'campfire' ? 'none' : 'campfire')}
+              className={`py-1.5 px-2 rounded-xl text-xs font-serif transition-colors cursor-pointer border ${
+                selectedSoundscape === 'campfire'
+                  ? 'bg-amber-500/30 border-amber-400 text-amber-200 font-medium'
+                  : 'bg-neutral-900/60 border-amber-950/60 text-amber-500/80 hover:bg-neutral-800'
+              }`}
+            >
+              🕯️ Ember
+            </button>
           </div>
 
-          {/* Volume Slider & Controls */}
-          <div className="space-y-2 pt-1 border-t border-amber-950/40">
-            <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-[11px] font-serif text-amber-600/80">
+              {selectedSoundscape === 'none' ? 'Soundscape off' : '30-min sleep fade active'}
+            </span>
+            {selectedSoundscape !== 'none' && (
               <button
-                onClick={() => handleVolumeChange(volume > 0 ? 0 : 0.6)}
-                className="text-amber-500/70 hover:text-amber-300 transition-colors cursor-pointer shrink-0"
-                title={volume === 0 ? "Unmute" : "Mute"}
+                onClick={() => handleSoundscapeChange('none')}
+                className="text-[11px] text-amber-400 hover:underline cursor-pointer flex items-center space-x-1"
               >
-                {volume === 0 ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                <VolumeX className="w-3 h-3 mr-1" />
+                <span>Silence</span>
               </button>
-              <input
-                type="range"
-                min="0.05"
-                max="1"
-                step="0.05"
-                value={volume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className="w-full accent-amber-500 h-1 bg-neutral-800 rounded-lg cursor-pointer"
-                title={`Volume: ${Math.round(volume * 100)}%`}
-              />
-              <span className="text-[10px] font-mono text-amber-500/80 shrink-0 w-7 text-right">
-                {Math.round(volume * 100)}%
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5 text-[11px] font-serif text-amber-500/80 truncate">
-                <span className={`w-1.5 h-1.5 rounded-full ${selectedSoundscape !== 'none' ? 'bg-amber-400 animate-pulse' : 'bg-neutral-700'}`} />
-                <span className="truncate">
-                  {selectedSoundscape === 'none'
-                    ? 'Soundscape silent'
-                    : `Playing ${SOUNDSCAPES.find(s => s.id === selectedSoundscape)?.name || selectedSoundscape}`}
-                </span>
-              </div>
-
-              {selectedSoundscape !== 'none' && (
-                <button
-                  onClick={() => handleSoundscapeChange('none')}
-                  className="text-[10px] font-medium text-amber-300 hover:text-amber-100 cursor-pointer flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-amber-950/80 border border-amber-700/60 hover:bg-amber-900/60 transition-all shrink-0 ml-2 shadow-xs"
-                  title="Stop and silence sleep soundscape"
-                >
-                  <VolumeX className="w-3 h-3 mr-0.5" />
-                  <span>Stop</span>
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
