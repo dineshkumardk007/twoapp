@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -23,6 +26,36 @@ android {
         }
     }
 
+
+    /**
+     * Release signing, supplied from outside the repository.
+     *
+     * Read from keystore.properties beside the project, or from the
+     * environment so a CI runner can pass it as secrets. Neither the keystore
+     * nor its passwords belong in version control.
+     */
+    val keystoreProperties = Properties().apply {
+        val file = rootProject.file("keystore.properties")
+        if (file.exists()) FileInputStream(file).use { load(it) }
+    }
+
+    fun signingValue(key: String, environmentVariable: String): String? =
+        keystoreProperties.getProperty(key) ?: System.getenv(environmentVariable)
+
+    val releaseStoreFile = signingValue("storeFile", "TWO_KEYSTORE_FILE")
+    val hasReleaseKeystore = releaseStoreFile != null && file(releaseStoreFile).exists()
+
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = signingValue("storePassword", "TWO_KEYSTORE_PASSWORD")
+                keyAlias = signingValue("keyAlias", "TWO_KEY_ALIAS")
+                keyPassword = signingValue("keyPassword", "TWO_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -31,7 +64,18 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug") // Dev convenience
+            /*
+             * Signed with the real key when one is configured, and left
+             * unsigned when it is not.
+             *
+             * This used to fall back to the debug keystore, which is worse than
+             * being unsigned in both directions: the APK looked shippable while
+             * Play would refuse it, and because the debug key ships inside every
+             * Android SDK, anyone at all could sign an update over the top of an
+             * installed copy. An unsigned APK simply cannot be installed, which
+             * is a failure you notice.
+             */
+            signingConfig = if (hasReleaseKeystore) signingConfigs.getByName("release") else null
         }
         debug {
             applicationIdSuffix = ".debug"
