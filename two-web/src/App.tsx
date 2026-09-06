@@ -52,6 +52,7 @@ import { CalculatorDecoy } from './components/CalculatorDecoy';
 import { StoryTourModal } from './components/StoryTourModal';
 import { SensoryPulseOverlay, triggerGlobalPulse } from './components/SensoryPulseOverlay';
 import { Locale } from './core/i18n';
+import { Lock } from 'lucide-react';
 import { OnboardingView } from './views/OnboardingView';
 import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
@@ -100,12 +101,24 @@ export const App: React.FC = () => {
   const [session, setSession] = useState<SpaceSession | null>(loadSpaceSession);
   const [relayStatus, setRelayStatus] = useState<RelayStatus>(() => wsRelay.getStatus());
 
+  // PIN lock protection state
+  const [isPinUnlocked, setIsPinUnlocked] = useState<boolean>(() => !state.appPin);
+  const [pinAttempt, setPinAttempt] = useState('');
+  const [pinError, setPinError] = useState(false);
+
   // Track live WebSocket relay status
   useEffect(() => {
     return wsRelay.subscribeStatus((status) => {
       setRelayStatus(status);
     });
   }, []);
+
+  // Broadcast user name to partner whenever relay connects
+  useEffect(() => {
+    if (relayStatus === 'connected' && state.userName && state.userName !== 'You') {
+      wsRelay.broadcastUpdate('NAME_EXCHANGE', { name: state.userName, role: state.activeUser });
+    }
+  }, [relayStatus, state.userName, state.activeUser]);
 
   // Check URL parameters for dual-window live sync demonstration
   useEffect(() => {
@@ -145,7 +158,18 @@ export const App: React.FC = () => {
         try {
           const parsed = JSON.parse(record.payload);
 
-          if (record.type === 'CHAT') {
+          if (record.type === 'NAME_EXCHANGE') {
+            if (parsed.name && typeof parsed.name === 'string') {
+              setState(prev => ({
+                ...prev,
+                partnerName: parsed.name
+              }));
+              const currentSession = loadSpaceSession();
+              if (currentSession) {
+                saveSpaceSession({ ...currentSession, partnerName: parsed.name });
+              }
+            }
+          } else if (record.type === 'CHAT') {
             setState(prev => ({
               ...prev,
               messages: [...prev.messages, parsed]
@@ -1363,15 +1387,93 @@ export const App: React.FC = () => {
   if (!session || !state.isPaired) {
     return (
       <OnboardingView
-        onComplete={(newSession: SpaceSession) => {
-          saveSpaceSession(newSession);
+        onComplete={(newSession: SpaceSession, enteredName: string, chosenPin: string | null) => {
+          saveSpaceSession({
+            ...newSession,
+            userName: enteredName
+          });
           setSession(newSession);
           // The partner who created the space is 'user'; the joiner is
           // 'partner'. Every record on the wire is attributed with this role.
-          setState(prev => ({ ...prev, isPaired: true, activeUser: newSession.role }));
+          setState(prev => ({
+            ...prev,
+            isPaired: true,
+            activeUser: newSession.role,
+            userName: enteredName,
+            appPin: chosenPin
+          }));
+          setIsPinUnlocked(true);
           setSpaceVersion(v => v + 1);
         }}
       />
+    );
+  }
+
+  // App Lock PIN Screen (if enabled by user)
+  if (state.appPin && !isPinUnlocked) {
+    const handlePinInput = (val: string) => {
+      const next = (pinAttempt + val).slice(0, 4);
+      setPinAttempt(next);
+      setPinError(false);
+      if (next.length === 4) {
+        if (next === state.appPin) {
+          setIsPinUnlocked(true);
+          setPinAttempt('');
+        } else {
+          setPinError(true);
+          setTimeout(() => {
+            setPinAttempt('');
+            setPinError(false);
+          }, 700);
+        }
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-linen-bg flex items-center justify-center p-4">
+        <div className="max-w-xs w-full bg-linen-surface border border-linen-border rounded-3xl p-8 shadow-sm text-center space-y-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-500 shadow-xs">
+            <Lock className="w-7 h-7 text-rose-500" />
+          </div>
+          <div>
+            <h2 className="font-serif text-2xl font-medium text-linen-primary">Sanctuary Locked</h2>
+            <p className="text-xs text-linen-secondary mt-1">Enter your 4-digit PIN to open</p>
+          </div>
+
+          <div className="flex justify-center space-x-3 py-2">
+            {[0, 1, 2, 3].map((idx) => (
+              <div
+                key={idx}
+                className={`w-10 h-12 rounded-xl border flex items-center justify-center text-xl font-mono transition-all ${
+                  pinError
+                    ? 'border-red-500 bg-red-50 text-red-600'
+                    : pinAttempt.length > idx
+                    ? 'border-linen-primary bg-linen-variant text-linen-primary font-bold'
+                    : 'border-linen-border bg-linen-surface text-linen-secondary/30'
+                }`}
+              >
+                {pinAttempt.length > idx ? '•' : ''}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2.5 max-w-[240px] mx-auto pt-2">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((btn) => (
+              <button
+                key={btn}
+                onClick={() => {
+                  if (btn === 'C') setPinAttempt('');
+                  else if (btn === '⌫') setPinAttempt(prev => prev.slice(0, -1));
+                  else handlePinInput(btn);
+                }}
+                className="py-3.5 rounded-xl border border-linen-border bg-linen-variant/40 hover:bg-linen-variant text-linen-primary text-lg font-medium transition-colors cursor-pointer"
+              >
+                {btn}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -1410,6 +1512,7 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onSendMessage={handleSendMessage}
             onOpenSoftLanding={() => setCurrentTab('softlanding')}
+            partnerName={state.partnerName || 'Partner'}
           />
         )}
 

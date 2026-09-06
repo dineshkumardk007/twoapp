@@ -104,13 +104,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         <div className="bg-linen-variant/40 rounded-xl p-3 text-xs space-y-2 border border-linen-border/60">
           <div className="flex justify-between items-center text-linen-secondary">
-            <span>Your Device Role:</span>
+            <span>Linked Sanctuary:</span>
             <strong className="text-linen-primary font-medium">
-              {state.activeUser === 'user' ? 'Space Creator (User)' : 'Space Joiner (Partner)'}
+              {state.userName || 'You'} &amp; {state.partnerName || 'Partner'}
             </strong>
           </div>
           <div className="flex justify-between items-center text-linen-secondary">
-            <span>Relay Server:</span>
+            <span>Your Device:</span>
+            <span className="text-linen-primary font-medium">
+              {state.activeUser === 'user' ? 'Creator Device' : 'Partner Device'}
+            </span>
+          </div>
+          <div className="flex justify-between items-center text-linen-secondary">
+            <span>App Lock:</span>
+            <span className="text-linen-primary font-medium">
+              {state.appPin ? 'Protected with 4-Digit PIN' : 'Instant Open (No PIN)'}
+            </span>
+          </div>
+          <div className="flex justify-between items-center text-linen-secondary">
+            <span>Encrypted Relay:</span>
             <span className="font-mono text-[10px] text-linen-primary">wss://twoapp-tfj8.onrender.com/relay</span>
           </div>
         </div>

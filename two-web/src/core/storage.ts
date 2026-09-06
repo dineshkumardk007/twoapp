@@ -78,11 +78,17 @@ export interface SpaceState {
   sharedCanvas: SharedDrawingCanvasState;
   repairLetters: RepairLetter[];
   kintsugiMoments: KintsugiVesselItem[];
+  userName: string;
+  partnerName: string;
+  appPin: string | null;
 }
 
 const DEFAULT_STATE: SpaceState = {
   isPaired: false,
   activeUser: 'user',
+  userName: 'You',
+  partnerName: 'Partner',
+  appPin: null,
   userReport: {
     weather: 'CALM',
     capacity: 4,
@@ -1009,7 +1015,9 @@ export function loadState(): SpaceState {
       return {
         ...DEFAULT_STATE,
         isPaired,
-        activeUser
+        activeUser,
+        userName: session?.userName || DEFAULT_STATE.userName,
+        partnerName: session?.partnerName || DEFAULT_STATE.partnerName
       };
     }
     const parsed = JSON.parse(raw);
@@ -1018,6 +1026,9 @@ export function loadState(): SpaceState {
       ...parsed,
       isPaired,
       activeUser,
+      userName: parsed.userName || session?.userName || DEFAULT_STATE.userName,
+      partnerName: parsed.partnerName || session?.partnerName || DEFAULT_STATE.partnerName,
+      appPin: parsed.appPin !== undefined ? parsed.appPin : null,
       rituals: parsed.rituals || DEFAULT_STATE.rituals,
       pebbles: parsed.pebbles || DEFAULT_STATE.pebbles,
       letters: parsed.letters || DEFAULT_STATE.letters,

@@ -14,9 +14,16 @@ interface ChatViewProps {
     extra?: { isVoiceMemo?: boolean; audioDataUrl?: string; audioDurationSeconds?: number }
   ) => void;
   onOpenSoftLanding?: () => void;
+  partnerName?: string;
 }
 
-export const ChatView: React.FC<ChatViewProps> = ({ messages, activeUser, onSendMessage, onOpenSoftLanding }) => {
+export const ChatView: React.FC<ChatViewProps> = ({
+  messages,
+  activeUser,
+  onSendMessage,
+  onOpenSoftLanding,
+  partnerName = 'Partner'
+}) => {
   const [inputText, setInputText] = useState('');
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -118,8 +125,6 @@ export const ChatView: React.FC<ChatViewProps> = ({ messages, activeUser, onSend
     });
   };
 
-  const partnerName = 'Partner';
-
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
       {/* Header */}
@@ -188,7 +193,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ messages, activeUser, onSend
                 )}
               </div>
               <span className="text-[10px] text-linen-secondary mt-1 px-1">
-                {isFromCurrentPerspective ? 'You' : 'Partner'} • {msg.timestamp}
+                {isFromCurrentPerspective ? 'You' : partnerName} • {msg.timestamp}
               </span>
             </div>
           );

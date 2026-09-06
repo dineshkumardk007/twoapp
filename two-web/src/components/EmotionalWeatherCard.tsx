@@ -7,6 +7,7 @@ interface EmotionalWeatherCardProps {
   partnerReport: EmotionalReport;
   activeUser: 'user' | 'partner';
   onUpdateReport: (report: Partial<EmotionalReport>) => void;
+  partnerName?: string;
 }
 
 const WEATHER_METADATA: Record<WeatherState, { label: string; icon: string; desc: string }> = {
@@ -21,14 +22,14 @@ export const EmotionalWeatherCard: React.FC<EmotionalWeatherCardProps> = ({
   userReport,
   partnerReport,
   activeUser,
-  onUpdateReport
+  onUpdateReport,
+  partnerName = 'Partner'
 }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   // Determine current active person's report vs partner's report
   const myReport = activeUser === 'user' ? userReport : partnerReport;
   const theirReport = activeUser === 'user' ? partnerReport : userReport;
-  const partnerName = 'Partner';
 
   return (
     <div className="bg-linen-surface rounded-2xl border border-linen-border p-6 shadow-sm">

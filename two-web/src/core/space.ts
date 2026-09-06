@@ -26,9 +26,11 @@ const SALT_SPACE_KEY = 'two.space.key.v1';
 export type SpaceRole = 'user' | 'partner';
 
 export interface SpaceSession {
-  /** The shared pairing code, normalised to `word-word-...`. */
+  /** The shared pairing code, normalised to `TWO-XXXX` or words. */
   code: string;
   role: SpaceRole;
+  userName?: string;
+  partnerName?: string;
 }
 
 export interface SpaceCredentials {
@@ -37,29 +39,26 @@ export interface SpaceCredentials {
   role: SpaceRole;
 }
 
-/** Generates a fresh pairing code for the partner who creates the space. */
-export function generatePairingCode(): string {
-  const picks = new Uint32Array(PAIRING_WORD_COUNT);
-  window.crypto.getRandomValues(picks);
+const CUTE_PREFIXES = ['TWO', 'LOVE', 'HEART', 'MOON', 'SOUL', 'STAR', 'DEAR', 'EDEN'];
 
-  const words: string[] = [];
-  for (let i = 0; i < PAIRING_WORD_COUNT; i++) {
-    words.push(BIP39_WORDS[picks[i] % BIP39_WORDS.length]);
-  }
-  return words.join('-');
+/** Generates a fresh, memorable pairing code for linking two partners (e.g. TWO-8492). */
+export function generatePairingCode(): string {
+  const prefix = CUTE_PREFIXES[Math.floor(Math.random() * CUTE_PREFIXES.length)];
+  const num = Math.floor(1000 + Math.random() * 9000);
+  return `${prefix}-${num}`;
 }
 
 /**
  * Accepts whatever the joining partner typed and reduces it to canonical form,
- * so "Rabbit Ocean  Velvet" and "rabbit-ocean-velvet" derive the same space.
+ * so "two 8492", "TWO-8492" and "two-8492" derive the same space.
  */
 export function normalizePairingCode(raw: string): string {
-  return raw.toLowerCase().split(/[^a-z]+/).filter(Boolean).join('-');
+  return raw.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-');
 }
 
 export function isPlausiblePairingCode(raw: string): boolean {
-  const parts = normalizePairingCode(raw).split('-').filter(Boolean);
-  return parts.length === PAIRING_WORD_COUNT;
+  const clean = normalizePairingCode(raw);
+  return clean.length >= 4;
 }
 
 async function importCodeMaterial(code: string): Promise<CryptoKey> {
@@ -126,7 +125,12 @@ export function loadSpaceSession(): SpaceSession | null {
     if (!parsed.code || (parsed.role !== 'user' && parsed.role !== 'partner')) {
       return null;
     }
-    return { code: parsed.code, role: parsed.role };
+    return {
+      code: parsed.code,
+      role: parsed.role,
+      userName: parsed.userName,
+      partnerName: parsed.partnerName
+    };
   } catch {
     return null;
   }

@@ -50,7 +50,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     ? state.partnerReport.notAboutYouActive
     : state.userReport.notAboutYouActive;
 
-  const partnerName = 'Partner';
+  const partnerName = state.partnerName || 'Partner';
 
   const dayIndex = new Date().getDate();
   const dailyQuestion = getDailyQuestion(dayIndex, optInSpicy);
@@ -112,6 +112,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         partnerReport={state.partnerReport}
         activeUser={state.activeUser}
         onUpdateReport={onUpdateReport}
+        partnerName={partnerName}
       />
 
       {/* 2. "It's Not About You" Flag */}
