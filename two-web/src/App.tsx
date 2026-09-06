@@ -161,6 +161,7 @@ export const App: React.FC = () => {
   }, []);
   const [pinAttempt, setPinAttempt] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [passphraseAttempt, setPassphraseAttempt] = useState('');
 
   // Track live WebSocket relay status
   useEffect(() => {
@@ -1638,33 +1639,61 @@ export const App: React.FC = () => {
 
 
   if (isLocked) {
+    const attemptUnlock = (secret: string) => {
+      if (!secret || isUnlocking) return;
+      setIsUnlocking(true);
+      void unlockVault(secret)
+        .then(opened => {
+          if (opened) {
+            setState(opened.payload.state);
+            setSession(opened.payload.session);
+            setVaultKey(opened.key);
+            setIsLocked(false);
+            setPinAttempt('');
+            setPassphraseAttempt('');
+            setSpaceVersion(v => v + 1);
+          } else {
+            setPinError(true);
+            setTimeout(() => {
+              setPinAttempt('');
+              setPinError(false);
+            }, 700);
+          }
+        })
+        .finally(() => setIsUnlocking(false));
+    };
+
+    /**
+     * Wipes this device and starts over.
+     *
+     * The escape hatch matters because a vault can outlive the thing that
+     * created it: an account password sealed one during the login experiment,
+     * and a four-digit keypad cannot express a password. Without this the only
+     * way out would be clearing site data by hand.
+     */
+    const startFresh = () => {
+      if (
+        !window.confirm(
+          'Start fresh on this device? Everything stored here will be erased. ' +
+            'If you know your space link code you can enter it again and your shared ' +
+            'history will come back from the relay.'
+        )
+      ) {
+        return;
+      }
+      destroyVault();
+      clearState();
+      clearSpaceSession();
+      window.location.reload();
+    };
+
     const handlePinInput = (val: string) => {
       if (isUnlocking) return;
       const next = (pinAttempt + val).slice(0, 4);
       setPinAttempt(next);
       setPinError(false);
 
-      if (next.length === 4) {
-        setIsUnlocking(true);
-        void unlockVault(next)
-          .then(opened => {
-            if (opened) {
-              setState(opened.payload.state);
-              setSession(opened.payload.session);
-              setVaultKey(opened.key);
-              setIsLocked(false);
-              setPinAttempt('');
-              setSpaceVersion(v => v + 1);
-            } else {
-              setPinError(true);
-              setTimeout(() => {
-                setPinAttempt('');
-                setPinError(false);
-              }, 700);
-            }
-          })
-          .finally(() => setIsUnlocking(false));
-      }
+      if (next.length === 4) attemptUnlock(next);
     };
 
     return (
@@ -1710,6 +1739,34 @@ export const App: React.FC = () => {
               </button>
             ))}
           </div>
+          {/* A vault can outlive whatever created it. The login experiment sealed
+              some with an account password, which a four-digit keypad cannot
+              express - without this those devices would be permanently shut. */}
+          <div className="pt-1 space-y-2">
+            <input
+              type="password"
+              value={passphraseAttempt}
+              onChange={(e) => setPassphraseAttempt(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && attemptUnlock(passphraseAttempt)}
+              placeholder="…or the password you used before"
+              className="w-full px-3 py-2.5 rounded-xl border border-linen-border bg-linen-variant/40 text-sm text-linen-primary text-center placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary"
+            />
+            <button
+              onClick={() => attemptUnlock(passphraseAttempt)}
+              disabled={!passphraseAttempt || isUnlocking}
+              className="w-full py-2.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 disabled:opacity-40 transition-opacity cursor-pointer"
+            >
+              Unlock
+            </button>
+          </div>
+
+          <button
+            onClick={startFresh}
+            className="w-full text-[11px] text-linen-secondary hover:text-rose-700 transition-colors cursor-pointer"
+          >
+            I never set a PIN — start fresh on this device
+          </button>
+
         </div>
       </div>
     );
