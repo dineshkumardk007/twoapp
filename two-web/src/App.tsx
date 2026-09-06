@@ -654,10 +654,20 @@ export const App: React.FC = () => {
   }, [state]);
 
   const toggleActiveUser = () => {
-    setState(prev => ({
-      ...prev,
-      activeUser: prev.activeUser === 'user' ? 'partner' : 'user'
-    }));
+    setState(prev => {
+      const nextUser = prev.activeUser === 'user' ? 'partner' : 'user';
+      const curSession = loadSpaceSession();
+      if (curSession) {
+        const updated: SpaceSession = { ...curSession, role: nextUser };
+        saveSpaceSession(updated);
+        setSession(updated);
+      }
+      return {
+        ...prev,
+        activeUser: nextUser
+      };
+    });
+    setSpaceVersion(v => v + 1);
   };
 
   const handleUpdateReport = (updatedFields: any) => {
@@ -1375,7 +1385,7 @@ export const App: React.FC = () => {
   }
 
   const handleUnpair = () => {
-    if (window.confirm('Are you sure you want to disconnect from this space? You can reconnect anytime with your 8-word pairing phrase.')) {
+    if (window.confirm('Are you sure you want to disconnect from this space? You can reconnect anytime using your Space Link Code.')) {
       clearSpaceSession();
       wsRelay.disconnect();
       setSession(null);
@@ -1496,6 +1506,7 @@ export const App: React.FC = () => {
         {currentTab === 'home' && (
           <HomeView
             state={state}
+            spaceCode={session?.code}
             onUpdateReport={handleUpdateReport}
             onToggleUserFlag={handleToggleUserFlag}
             onNavigate={setCurrentTab}
@@ -1799,6 +1810,7 @@ export const App: React.FC = () => {
         {currentTab === 'settings' && (
           <SettingsView
             state={state}
+            spaceCode={session?.code}
             currentTheme={theme}
             onSelectTheme={setTheme}
             onEmergencyWipe={handleEmergencyExit}
@@ -1807,6 +1819,7 @@ export const App: React.FC = () => {
             onSelectLocale={setLocale}
             onToggleCamouflage={() => setIsCamouflaged(true)}
             onUnpair={handleUnpair}
+            onToggleActiveUser={toggleActiveUser}
           />
         )}
       </main>

@@ -3,9 +3,13 @@ import {
   generatePairingCode,
   normalizePairingCode,
   isPlausiblePairingCode,
-  SpaceSession
+  getLastSpaceCode,
+  saveSpaceSession,
+  loadSpaceSession,
+  SpaceSession,
+  SpaceRole
 } from '../core/space';
-import { ArrowRight, Copy, Check, Link2, UserPlus, Heart, Lock, Clipboard, Share2, Sparkles, KeyRound } from 'lucide-react';
+import { ArrowRight, Copy, Check, Link2, UserPlus, Heart, Lock, Clipboard, Share2, Sparkles, KeyRound, RotateCcw, ShieldCheck } from 'lucide-react';
 
 interface OnboardingViewProps {
   onComplete: (session: SpaceSession, userName: string, appPin: string | null) => void;
@@ -15,14 +19,31 @@ type OnboardingStep = 'name' | 'pair' | 'pin';
 type PairMode = 'choose' | 'create' | 'join';
 
 export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) => {
+  const existingSession = loadSpaceSession();
+  const lastCode = getLastSpaceCode();
+
   const [step, setStep] = useState<OnboardingStep>('name');
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState(() => {
+    return existingSession?.userName || localStorage.getItem('two_draft_user_name') || '';
+  });
   const [pairMode, setPairMode] = useState<PairMode>('choose');
-  const [createdCode, setCreatedCode] = useState('');
-  const [joinCode, setJoinCode] = useState('');
+  const [createdCode, setCreatedCode] = useState(() => {
+    return existingSession?.role === 'user' ? existingSession.code : '';
+  });
+  const [joinCode, setJoinCode] = useState(() => {
+    return lastCode || '';
+  });
+  const [joinRole, setJoinRole] = useState<SpaceRole>('partner');
   const [copied, setCopied] = useState(false);
-  const [session, setSession] = useState<SpaceSession | null>(null);
+  const [session, setSession] = useState<SpaceSession | null>(existingSession);
   const [pinInput, setPinInput] = useState('');
+
+  const handleUserNameChange = (val: string) => {
+    setUserName(val);
+    try {
+      localStorage.setItem('two_draft_user_name', val.trim());
+    } catch {}
+  };
 
   const handleNameSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -34,42 +55,57 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
     const code = createdCode || generatePairingCode();
     setCreatedCode(code);
     setPairMode('create');
+
+    // Persist immediately to localStorage so a page refresh never wipes the session or code!
+    const draftSession: SpaceSession = {
+      code,
+      role: 'user',
+      userName: userName.trim() || 'You'
+    };
+    saveSpaceSession(draftSession);
+    setSession(draftSession);
   };
 
   const confirmCreate = () => {
+    const activeCode = createdCode || generatePairingCode();
     const newSession: SpaceSession = {
-      code: createdCode,
+      code: activeCode,
       role: 'user',
-      userName: userName.trim()
+      userName: userName.trim() || 'You'
     };
+    saveSpaceSession(newSession);
     setSession(newSession);
-    setStep('pin');
+    onComplete(newSession, userName.trim() || 'You', null);
   };
 
   const confirmJoin = () => {
     if (!isPlausiblePairingCode(joinCode)) return;
+    const cleanCode = normalizePairingCode(joinCode);
     const newSession: SpaceSession = {
-      code: normalizePairingCode(joinCode),
-      role: 'partner',
-      userName: userName.trim()
+      code: cleanCode,
+      role: joinRole,
+      userName: userName.trim() || (joinRole === 'user' ? 'You' : 'Partner')
     };
+    saveSpaceSession(newSession);
     setSession(newSession);
-    setStep('pin');
+    onComplete(newSession, userName.trim() || (joinRole === 'user' ? 'You' : 'Partner'), null);
   };
 
   const handleFinish = (withPin: boolean) => {
     if (!session) return;
     const finalPin = withPin && pinInput.length === 4 ? pinInput : null;
-    onComplete(session, userName.trim(), finalPin);
+    onComplete(session, userName.trim() || 'You', finalPin);
   };
 
   const startSoloDemo = () => {
     const demoCode = 'TWO-DEMO';
-    onComplete(
-      { code: demoCode, role: 'user', userName: userName.trim() || 'You' },
-      userName.trim() || 'You',
-      null
-    );
+    const demoSession: SpaceSession = {
+      code: demoCode,
+      role: 'user',
+      userName: userName.trim() || 'You'
+    };
+    saveSpaceSession(demoSession);
+    onComplete(demoSession, userName.trim() || 'You', null);
   };
 
   const handleCopy = async () => {
@@ -83,7 +119,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
   };
 
   const handleShare = async () => {
-    const text = `Hey, here is our link code for Two: ${createdCode}. Download or open the app and enter this code to connect!`;
+    const text = `Hey, here is our link code for Two: ${createdCode}. Open the app and enter this code to connect!`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -100,7 +136,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
     try {
       const text = await navigator.clipboard.readText();
       if (text && text.trim()) {
-        setJoinCode(text.trim());
+        setJoinCode(text.trim().toUpperCase());
       }
     } catch {}
   };
@@ -122,7 +158,44 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
               </p>
             </div>
 
-            <div className="space-y-2 pt-2">
+            {/* Quick Resume Card if a previous session/code exists on this device */}
+            {lastCode && (
+              <div className="bg-linen-variant/60 border border-linen-border rounded-2xl p-4 space-y-2.5 text-left shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
+                    <RotateCcw className="w-3.5 h-3.5 text-linen-accent" />
+                    <span>Previous Session Found</span>
+                  </div>
+                  <span className="font-mono text-xs font-bold text-linen-primary bg-linen-surface px-2 py-0.5 rounded-md border border-linen-border">
+                    {lastCode}
+                  </span>
+                </div>
+                <p className="text-xs text-linen-secondary leading-snug">
+                  You previously used code <strong className="text-linen-primary font-mono">{lastCode}</strong>. Would you like to rejoin?
+                </p>
+                <div className="flex space-x-2 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const effectiveName = userName.trim() || existingSession?.userName || 'You';
+                      const sess: SpaceSession = {
+                        code: lastCode,
+                        role: existingSession?.role || 'user',
+                        userName: effectiveName
+                      };
+                      saveSpaceSession(sess);
+                      onComplete(sess, effectiveName, null);
+                    }}
+                    className="flex-1 py-2.5 px-3 bg-linen-primary text-linen-surface text-xs font-medium rounded-xl hover:opacity-95 transition-opacity text-center cursor-pointer shadow-2xs flex items-center justify-center"
+                  >
+                    <span>Rejoin {lastCode}</span>
+                    <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2 pt-1">
               <label className="text-xs font-semibold uppercase tracking-wider text-linen-accent block">
                 What should your partner call you?
               </label>
@@ -130,21 +203,36 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                 type="text"
                 autoFocus
                 value={userName}
-                onChange={(e) => setUserName(e.target.value)}
+                onChange={(e) => handleUserNameChange(e.target.value)}
                 placeholder="Enter your name or nickname..."
                 className="w-full px-4 py-3.5 rounded-2xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary text-base placeholder:text-linen-secondary/60"
                 maxLength={30}
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={!userName.trim()}
-              className="w-full py-4 bg-linen-primary text-linen-surface font-medium rounded-2xl hover:opacity-95 disabled:opacity-50 transition-all flex items-center justify-center shadow-xs cursor-pointer"
-            >
-              <span>Continue</span>
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </button>
+            <div className="space-y-3">
+              <button
+                type="submit"
+                disabled={!userName.trim()}
+                className="w-full py-4 bg-linen-primary text-linen-surface font-medium rounded-2xl hover:opacity-95 disabled:opacity-50 transition-all flex items-center justify-center shadow-xs cursor-pointer"
+              >
+                <span>Continue</span>
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('pair');
+                  setPairMode('join');
+                  setJoinRole('partner');
+                }}
+                className="w-full py-2.5 text-xs text-linen-accent hover:text-linen-primary font-medium transition-colors flex items-center justify-center cursor-pointer"
+              >
+                <KeyRound className="w-3.5 h-3.5 mr-1.5" />
+                <span>Already have a space code? Reconnect here</span>
+              </button>
+            </div>
           </form>
         )}
 
@@ -153,10 +241,10 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
           <div className="space-y-6">
             <div className="text-center space-y-1">
               <h2 className="font-serif text-2xl font-medium text-linen-primary">
-                Hi, {userName.trim()}!
+                Hi, {userName.trim() || 'there'}!
               </h2>
               <p className="text-xs text-linen-secondary max-w-sm mx-auto">
-                Connect your phone with your partner. Once linked, you will stay connected forever.
+                Connect your device with your partner. Once linked, you stay connected forever.
               </p>
             </div>
 
@@ -174,17 +262,20 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                 </button>
 
                 <button
-                  onClick={() => setPairMode('join')}
+                  onClick={() => {
+                    setPairMode('join');
+                    setJoinRole('partner');
+                  }}
                   className="w-full py-4 px-5 bg-linen-variant/70 text-linen-primary font-medium rounded-2xl border border-linen-border hover:bg-linen-variant transition-all flex items-center shadow-xs cursor-pointer"
                 >
                   <UserPlus className="w-5 h-5 mr-3.5 shrink-0 text-linen-accent" />
                   <div className="text-left leading-tight">
-                    <span className="block text-sm font-semibold">I Have a Code</span>
-                    <span className="block text-xs text-linen-secondary font-normal mt-0.5">My partner gave me a link code</span>
+                    <span className="block text-sm font-semibold">Enter Code / Reconnect</span>
+                    <span className="block text-xs text-linen-secondary font-normal mt-0.5">Join your partner or reconnect to an existing space</span>
                   </div>
                 </button>
 
-                <div className="pt-4 border-t border-linen-border/60 text-center">
+                <div className="pt-4 border-t border-linen-border/60 text-center space-y-2">
                   <button
                     onClick={startSoloDemo}
                     className="text-[11px] text-linen-secondary hover:text-linen-primary transition-colors inline-flex items-center cursor-pointer"
@@ -192,6 +283,15 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                     <Sparkles className="w-3 h-3 mr-1 text-linen-accent" />
                     Testing solo? Explore Solo Preview
                   </button>
+
+                  <div>
+                    <button
+                      onClick={() => setStep('name')}
+                      className="text-xs text-linen-secondary hover:text-linen-primary transition-colors cursor-pointer"
+                    >
+                      Change Name
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -223,35 +323,58 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                       Send to Partner
                     </button>
                   </div>
+
+                  <div className="flex items-center justify-center text-[11px] text-emerald-700 font-medium pt-1">
+                    <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-600 shrink-0" />
+                    <span>Auto-saved. Refreshing will never lose this space.</span>
+                  </div>
                 </div>
 
                 <p className="text-xs text-linen-secondary leading-relaxed text-center px-3">
-                  Send this code to your partner. Once they type it into their app, both of your devices will automatically lock into your shared sanctuary.
+                  Send this code to your partner. You can enter your sanctuary right now — your space code is also displayed on your Home screen.
                 </p>
 
-                <button
-                  onClick={confirmCreate}
-                  className="w-full py-3.5 bg-linen-primary text-linen-surface font-medium rounded-xl hover:opacity-95 transition-all flex items-center justify-center shadow-xs cursor-pointer"
-                >
-                  <span>Continue to Sanctuary</span>
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={confirmCreate}
+                    className="w-full py-3.5 bg-linen-primary text-linen-surface font-medium rounded-xl hover:opacity-95 transition-all flex items-center justify-center shadow-xs cursor-pointer"
+                  >
+                    <span>Enter Sanctuary Now</span>
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </button>
 
-                <button
-                  onClick={() => setPairMode('choose')}
-                  className="w-full text-xs text-linen-secondary hover:text-linen-primary transition-colors text-center py-1 cursor-pointer"
-                >
-                  Back
-                </button>
+                  <button
+                    onClick={() => {
+                      const newSession: SpaceSession = {
+                        code: createdCode,
+                        role: 'user',
+                        userName: userName.trim() || 'You'
+                      };
+                      setSession(newSession);
+                      setStep('pin');
+                    }}
+                    className="w-full py-2 text-xs text-linen-secondary hover:text-linen-primary transition-colors flex items-center justify-center cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5 mr-1" />
+                    <span>Optional: Add 4-digit PIN lock</span>
+                  </button>
+
+                  <button
+                    onClick={() => setPairMode('choose')}
+                    className="w-full text-xs text-linen-secondary hover:text-linen-primary transition-colors text-center py-1 cursor-pointer"
+                  >
+                    Back
+                  </button>
+                </div>
               </div>
             )}
 
             {pairMode === 'join' && (
               <div className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold uppercase tracking-wider text-linen-accent">
-                      Enter Partner’s Code
+                      Enter Space Code
                     </label>
                     <button
                       onClick={handlePaste}
@@ -261,6 +384,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                       Paste
                     </button>
                   </div>
+
                   <input
                     type="text"
                     autoFocus
@@ -269,9 +393,45 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                     placeholder="e.g. TWO-8492"
                     className="w-full px-4 py-3.5 rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary text-lg font-mono text-center tracking-wider"
                   />
-                  <p className="text-[11px] text-linen-secondary text-center">
-                    Type or paste the code shown on your partner’s screen.
-                  </p>
+
+                  {/* Device / Role Selector to avoid duplicate partner roles */}
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-linen-secondary block">
+                      Select your role for this device:
+                    </label>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setJoinRole('user')}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          joinRole === 'user'
+                            ? 'border-linen-primary bg-linen-variant/70 ring-1 ring-linen-primary/20 shadow-2xs'
+                            : 'border-linen-border bg-linen-surface/60 hover:bg-linen-variant/30 text-linen-secondary'
+                        }`}
+                      >
+                        <span className="block text-xs font-semibold text-linen-primary">Creator</span>
+                        <span className="block text-[10px] text-linen-secondary leading-tight mt-0.5">
+                          I originally created this space
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setJoinRole('partner')}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          joinRole === 'partner'
+                            ? 'border-linen-primary bg-linen-variant/70 ring-1 ring-linen-primary/20 shadow-2xs'
+                            : 'border-linen-border bg-linen-surface/60 hover:bg-linen-variant/30 text-linen-secondary'
+                        }`}
+                      >
+                        <span className="block text-xs font-semibold text-linen-primary">Partner</span>
+                        <span className="block text-[10px] text-linen-secondary leading-tight mt-0.5">
+                          My partner sent me this code
+                        </span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <button
@@ -279,7 +439,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                   disabled={!isPlausiblePairingCode(joinCode)}
                   className="w-full py-3.5 bg-linen-primary text-linen-surface font-medium rounded-xl hover:opacity-95 disabled:opacity-50 transition-all flex items-center justify-center shadow-xs cursor-pointer"
                 >
-                  <span>Link Together Forever</span>
+                  <span>Connect &amp; Enter Sanctuary</span>
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </button>
 

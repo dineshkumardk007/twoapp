@@ -6,7 +6,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { NeedItem } from '../types';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote } from '../data/quotes';
-import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Radio, Shield, Palette } from 'lucide-react';
+import { MessageSquare, Handshake, BookOpen, Layers, CheckSquare, DollarSign, Mail, Sparkles, Quote, Send, Flame, Compass, Moon, Star, Heart, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Radio, Shield, Palette, Link2, Copy, Check, Share2 } from 'lucide-react';
 import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -16,6 +16,7 @@ import { RelationshipMilestone, ComfortBoxData } from '../types';
 
 interface HomeViewProps {
   state: SpaceState;
+  spaceCode?: string;
   onUpdateReport: (report: any) => void;
   onToggleUserFlag: (active: boolean) => void;
   onNavigate: (tab: string) => void;
@@ -27,6 +28,7 @@ interface HomeViewProps {
 
 export const HomeView: React.FC<HomeViewProps> = ({
   state,
+  spaceCode,
   onUpdateReport,
   onToggleUserFlag,
   onNavigate,
@@ -41,6 +43,31 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showCoRegulation, setShowCoRegulation] = useState(false);
   const [optInSpicy, setOptInSpicy] = useState(false);
   const [questionPromptToast, setQuestionPromptToast] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  const handleCopyCode = async () => {
+    if (!spaceCode) return;
+    try {
+      await navigator.clipboard.writeText(spaceCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } catch {}
+  };
+
+  const handleShareCode = async () => {
+    if (!spaceCode) return;
+    const text = `Hey, here is our link code for Two: ${spaceCode}. Open the app and enter this code to connect!`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Link our Two sanctuary',
+          text
+        });
+        return;
+      } catch {}
+    }
+    handleCopyCode();
+  };
 
   const isUserFlagActive = state.activeUser === 'user'
     ? state.userReport.notAboutYouActive
@@ -103,6 +130,52 @@ export const HomeView: React.FC<HomeViewProps> = ({
           >
             Start Tour →
           </button>
+        </div>
+      )}
+
+      {/* Our Space Link Code Banner */}
+      {spaceCode && (
+        <div className="rounded-2xl border border-linen-border bg-linen-surface p-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-linen-variant flex items-center justify-center text-linen-accent shrink-0 border border-linen-border/60 shadow-2xs">
+                <Link2 className="w-5 h-5 text-linen-accent" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
+                    Our Space Link Code
+                  </span>
+                  <span className="font-mono text-xs font-bold text-linen-primary px-2 py-0.5 rounded-md bg-linen-variant border border-linen-border">
+                    {spaceCode}
+                  </span>
+                </div>
+                <p className="text-xs text-linen-secondary mt-0.5">
+                  {state.partnerName && state.partnerName !== 'Partner'
+                    ? `Linked with ${state.partnerName} • Both devices connected`
+                    : 'Share this code with your partner so they can join your space'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 self-end sm:self-center">
+              <button
+                onClick={handleCopyCode}
+                className="px-3 py-1.5 rounded-xl border border-linen-border bg-linen-variant/60 hover:bg-linen-variant text-xs font-medium text-linen-primary transition-colors flex items-center shadow-2xs cursor-pointer"
+              >
+                {copiedCode ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5 text-linen-secondary" />}
+                <span>{copiedCode ? 'Copied' : 'Copy Code'}</span>
+              </button>
+
+              <button
+                onClick={handleShareCode}
+                className="px-3 py-1.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity flex items-center shadow-2xs cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5 mr-1.5" />
+                <span>Share</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

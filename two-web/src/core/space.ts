@@ -116,6 +116,16 @@ export async function deriveSpaceCredentials(
   return { spaceId, key, role };
 }
 
+const LAST_CODE_KEY = 'two_last_space_code_v1';
+
+export function getLastSpaceCode(): string | null {
+  try {
+    return localStorage.getItem(LAST_CODE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function loadSpaceSession(): SpaceSession | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY);
@@ -139,6 +149,9 @@ export function loadSpaceSession(): SpaceSession | null {
 export function saveSpaceSession(session: SpaceSession) {
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    if (session.code) {
+      localStorage.setItem(LAST_CODE_KEY, session.code);
+    }
   } catch (e) {
     console.error('[Space] Could not persist session', e);
   }

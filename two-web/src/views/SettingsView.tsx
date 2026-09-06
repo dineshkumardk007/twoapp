@@ -3,10 +3,11 @@ import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
-import { Shield, Download, Trash2, Palette, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut } from 'lucide-react';
+import { Shield, Download, Trash2, Palette, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw } from 'lucide-react';
 
 interface SettingsViewProps {
   state: SpaceState;
+  spaceCode?: string;
   currentTheme: ThemeMode;
   onSelectTheme: (theme: ThemeMode) => void;
   onEmergencyWipe: () => void;
@@ -15,10 +16,12 @@ interface SettingsViewProps {
   onSelectLocale?: (locale: Locale) => void;
   onToggleCamouflage?: () => void;
   onUnpair?: () => void;
+  onToggleActiveUser?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   state,
+  spaceCode,
   currentTheme,
   onSelectTheme,
   onEmergencyWipe,
@@ -26,13 +29,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   currentLocale = 'en',
   onSelectLocale = () => {},
   onToggleCamouflage = () => {},
-  onUnpair = () => {}
+  onUnpair = () => {},
+  onToggleActiveUser = () => {}
 }) => {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
   const [relayInput, setRelayInput] = useState(() => {
     return (window as any).AndroidBridge?.getRelayUrl?.() || localStorage.getItem('two_custom_relay_url') || '';
   });
+
+  const handleCopyCode = async () => {
+    if (!spaceCode) return;
+    try {
+      await navigator.clipboard.writeText(spaceCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } catch {}
+  };
+
+  const handleShareCode = async () => {
+    if (!spaceCode) return;
+    const text = `Hey, here is our link code for Two: ${spaceCode}. Open the app and enter this code to connect!`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Link our Two sanctuary',
+          text
+        });
+        return;
+      } catch {}
+    }
+    handleCopyCode();
+  };
 
   const handleSaveRelay = () => {
     const trimmed = relayInput.trim();
@@ -102,25 +131,68 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </span>
         </div>
 
-        <div className="bg-linen-variant/40 rounded-xl p-3 text-xs space-y-2 border border-linen-border/60">
+        <div className="bg-linen-variant/40 rounded-xl p-3 text-xs space-y-2.5 border border-linen-border/60">
+          {spaceCode && (
+            <div className="flex justify-between items-center text-linen-secondary pb-2 border-b border-linen-border/40">
+              <div>
+                <span className="block text-[10px] uppercase tracking-wider font-semibold text-linen-accent">
+                  Space Link Code
+                </span>
+                <span className="font-mono text-sm font-bold text-linen-primary">{spaceCode}</span>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <button
+                  type="button"
+                  onClick={handleCopyCode}
+                  className="px-2.5 py-1 rounded-lg border border-linen-border bg-linen-surface hover:bg-linen-variant text-linen-primary text-[11px] font-medium transition-colors flex items-center shadow-2xs cursor-pointer"
+                >
+                  {copiedCode ? <Check className="w-3 h-3 mr-1 text-emerald-600" /> : <Copy className="w-3 h-3 mr-1 text-linen-secondary" />}
+                  <span>{copiedCode ? 'Copied' : 'Copy'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareCode}
+                  className="px-2.5 py-1 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 transition-opacity flex items-center shadow-2xs cursor-pointer"
+                >
+                  <Share2 className="w-3 h-3 mr-1" />
+                  <span>Share</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between items-center text-linen-secondary">
             <span>Linked Sanctuary:</span>
             <strong className="text-linen-primary font-medium">
               {state.userName || 'You'} &amp; {state.partnerName || 'Partner'}
             </strong>
           </div>
+
           <div className="flex justify-between items-center text-linen-secondary">
-            <span>Your Device:</span>
-            <span className="text-linen-primary font-medium">
-              {state.activeUser === 'user' ? 'Creator Device' : 'Partner Device'}
-            </span>
+            <span>Your Device Role:</span>
+            <div className="flex items-center space-x-2">
+              <span className="text-linen-primary font-medium">
+                {state.activeUser === 'user' ? 'Creator Device' : 'Partner Device'}
+              </span>
+              <button
+                type="button"
+                onClick={onToggleActiveUser}
+                title="Switch device role if both devices are accidentally set to the same role"
+                className="px-2 py-0.5 rounded-md border border-linen-border bg-linen-surface hover:bg-linen-variant text-[10px] text-linen-accent font-medium flex items-center transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-2.5 h-2.5 mr-1" />
+                Switch Role
+              </button>
+            </div>
           </div>
+
           <div className="flex justify-between items-center text-linen-secondary">
             <span>App Lock:</span>
             <span className="text-linen-primary font-medium">
               {state.appPin ? 'Protected with 4-Digit PIN' : 'Instant Open (No PIN)'}
             </span>
           </div>
+
           <div className="flex justify-between items-center text-linen-secondary">
             <span>Encrypted Relay:</span>
             <span className="font-mono text-[10px] text-linen-primary">wss://twoapp-tfj8.onrender.com/relay</span>
@@ -128,7 +200,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         <p className="text-xs text-linen-secondary leading-relaxed">
-          Need to switch to a different pairing phrase or reconnect? Unpairing returns you to the pairing setup without wiping your local entries.
+          Need to switch to a different link code or reconnect? Unpairing returns you to the welcome setup without wiping your local history.
         </p>
 
         <button
@@ -136,7 +208,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           className="inline-flex items-center px-3.5 py-2 rounded-xl border border-linen-border bg-linen-variant hover:bg-linen-border text-linen-primary text-xs font-medium transition-colors cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5 mr-1.5 text-linen-accent" />
-          Unpair / Reset Space Connection
+          Unpair / Reconnect Space
         </button>
       </div>
 
