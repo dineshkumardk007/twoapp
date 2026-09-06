@@ -9,6 +9,10 @@ export default defineConfig({
     host: true
   },
   build: {
+    // Emitted so the service worker can discover every code-split chunk by name
+    // and precache it. Without that list, a screen you had not visited would be
+    // the one thing that did not work offline.
+    manifest: true,
     rollupOptions: {
       output: {
         /**

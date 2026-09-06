@@ -17,9 +17,46 @@ const STATIC_ASSETS = [
   '/icon-maskable.svg'
 ];
 
+/**
+ * Every code-split chunk, read from the build manifest.
+ *
+ * Screens load on demand, which is what keeps the first paint quick - but a
+ * screen you had never opened would then be the one thing that did not work on
+ * a train. Pulling the whole set down once at install costs nothing visible,
+ * because it happens behind an app that is already usable, and it puts the
+ * entire sanctuary back within reach offline.
+ */
+async function cacheAllChunks(cache) {
+  try {
+    const response = await fetch('.vite/manifest.json', { cache: 'no-cache' });
+    if (!response.ok) return;
+
+    const manifest = await response.json();
+    const files = new Set();
+    for (const entry of Object.values(manifest)) {
+      if (entry.file) files.add(entry.file);
+      for (const css of entry.css || []) files.add(css);
+    }
+
+    // Individually, so one missing file cannot fail the whole install the way
+    // addAll would.
+    await Promise.all(
+      [...files].map((file) => cache.add(file).catch(() => {}))
+    );
+  } catch (e) {
+    // No manifest means the dev server, or a build without one. The app still
+    // works; it just falls back to caching each chunk as it is first opened.
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // The shell first, so a slow chunk sweep cannot delay the app being
+      // usable offline at all.
+      await cache.addAll(STATIC_ASSETS);
+      await cacheAllChunks(cache);
+    })
   );
   self.skipWaiting();
 });
