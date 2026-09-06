@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense, startTransition } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, SpaceState } from './core/storage';
 import { AppDock } from './components/AppDock';
 import { UnknownDeviceAlert } from './components/UnknownDeviceAlert';
@@ -65,48 +65,66 @@ import {
 } from './types';
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
-import { StoryTourModal } from './components/StoryTourModal';
 import { SensoryPulseOverlay, triggerGlobalPulse } from './components/SensoryPulseOverlay';
 import { playMessageChime, playLetterChime, triggerHaptic } from './core/audioAlerts';
 import { InAppNotificationToast, InAppNotification } from './components/InAppNotificationToast';
-import { SanctuaryDirectoryModal } from './components/SanctuaryDirectoryModal';
 import { Locale } from './core/i18n';
 import { Lock } from 'lucide-react';
-import { OnboardingView } from './views/OnboardingView';
-import { HomeView } from './views/HomeView';
-import { ChatView } from './views/ChatView';
-import { SoftLandingView } from './views/SoftLandingView';
-import { StateOfUnionView } from './views/StateOfUnionView';
-import { RepairBridgeView } from './views/RepairBridgeView';
-import { KintsugiMomentsView } from './views/KintsugiMomentsView';
-import { NightstandClockView } from './views/NightstandClockView';
-import { CanvasOfUsView } from './views/CanvasOfUsView';
-import { RitualsGardenView } from './views/RitualsGardenView';
-import { HearthGardenView } from './views/HearthGardenView';
-import { ConstellationView } from './views/ConstellationView';
-import { CareCompassView } from './views/CareCompassView';
-import { LettersView } from './views/LettersView';
-import { WhisperMemosView } from './views/WhisperMemosView';
-import { CoordinatesMapView } from './views/CoordinatesMapView';
-import { MidnightRadioView } from './views/MidnightRadioView';
-import { TimeCapsuleView } from './views/TimeCapsuleView';
-import { CoPresenceView } from './views/CoPresenceView';
-import { ScratchCardsView } from './views/ScratchCardsView';
-import { ScrapbookView } from './views/ScrapbookView';
-import { AdventuresView } from './views/AdventuresView';
-import { CookbookView } from './views/CookbookView';
-import { IntuitionGameView, CURATED_DILEMMAS } from './views/IntuitionGameView';
-import { DecksView } from './views/DecksView';
-import { CycleView } from './views/CycleView';
-import { JournalView } from './views/JournalView';
-import { RepairKitView } from './views/RepairKitView';
-import { ListsView } from './views/ListsView';
-import { ChoreSplitView } from './views/ChoreSplitView';
-import { MoneyLightView } from './views/MoneyLightView';
-import { TimelineView } from './views/TimelineView';
-import { SettingsView } from './views/SettingsView';
+import { CURATED_DILEMMAS } from './data/dilemmas';
 import { newId } from './core/ids';
 import { hydrateMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
+
+
+// Screens are fetched the first time they are opened rather than all at once.
+// Thirty-three of them in a single file meant every one had to arrive before
+// anything could be drawn.
+const AdventuresView = lazy(() => import('./views/AdventuresView').then(m => ({ default: m.AdventuresView })));
+const CanvasOfUsView = lazy(() => import('./views/CanvasOfUsView').then(m => ({ default: m.CanvasOfUsView })));
+const CareCompassView = lazy(() => import('./views/CareCompassView').then(m => ({ default: m.CareCompassView })));
+const ChatView = lazy(() => import('./views/ChatView').then(m => ({ default: m.ChatView })));
+const ChoreSplitView = lazy(() => import('./views/ChoreSplitView').then(m => ({ default: m.ChoreSplitView })));
+const CoPresenceView = lazy(() => import('./views/CoPresenceView').then(m => ({ default: m.CoPresenceView })));
+const ConstellationView = lazy(() => import('./views/ConstellationView').then(m => ({ default: m.ConstellationView })));
+const CookbookView = lazy(() => import('./views/CookbookView').then(m => ({ default: m.CookbookView })));
+const CoordinatesMapView = lazy(() => import('./views/CoordinatesMapView').then(m => ({ default: m.CoordinatesMapView })));
+const CycleView = lazy(() => import('./views/CycleView').then(m => ({ default: m.CycleView })));
+const DecksView = lazy(() => import('./views/DecksView').then(m => ({ default: m.DecksView })));
+const HearthGardenView = lazy(() => import('./views/HearthGardenView').then(m => ({ default: m.HearthGardenView })));
+const HomeView = lazy(() => import('./views/HomeView').then(m => ({ default: m.HomeView })));
+const IntuitionGameView = lazy(() => import('./views/IntuitionGameView').then(m => ({ default: m.IntuitionGameView })));
+const JournalView = lazy(() => import('./views/JournalView').then(m => ({ default: m.JournalView })));
+const KintsugiMomentsView = lazy(() => import('./views/KintsugiMomentsView').then(m => ({ default: m.KintsugiMomentsView })));
+const LettersView = lazy(() => import('./views/LettersView').then(m => ({ default: m.LettersView })));
+const ListsView = lazy(() => import('./views/ListsView').then(m => ({ default: m.ListsView })));
+const MidnightRadioView = lazy(() => import('./views/MidnightRadioView').then(m => ({ default: m.MidnightRadioView })));
+const MoneyLightView = lazy(() => import('./views/MoneyLightView').then(m => ({ default: m.MoneyLightView })));
+const NightstandClockView = lazy(() => import('./views/NightstandClockView').then(m => ({ default: m.NightstandClockView })));
+const OnboardingView = lazy(() => import('./views/OnboardingView').then(m => ({ default: m.OnboardingView })));
+const RepairBridgeView = lazy(() => import('./views/RepairBridgeView').then(m => ({ default: m.RepairBridgeView })));
+const RepairKitView = lazy(() => import('./views/RepairKitView').then(m => ({ default: m.RepairKitView })));
+const RitualsGardenView = lazy(() => import('./views/RitualsGardenView').then(m => ({ default: m.RitualsGardenView })));
+const SanctuaryDirectoryModal = lazy(() => import('./components/SanctuaryDirectoryModal').then(m => ({ default: m.SanctuaryDirectoryModal })));
+const ScrapbookView = lazy(() => import('./views/ScrapbookView').then(m => ({ default: m.ScrapbookView })));
+const ScratchCardsView = lazy(() => import('./views/ScratchCardsView').then(m => ({ default: m.ScratchCardsView })));
+const SettingsView = lazy(() => import('./views/SettingsView').then(m => ({ default: m.SettingsView })));
+const SoftLandingView = lazy(() => import('./views/SoftLandingView').then(m => ({ default: m.SoftLandingView })));
+const StateOfUnionView = lazy(() => import('./views/StateOfUnionView').then(m => ({ default: m.StateOfUnionView })));
+const StoryTourModal = lazy(() => import('./components/StoryTourModal').then(m => ({ default: m.StoryTourModal })));
+const TimeCapsuleView = lazy(() => import('./views/TimeCapsuleView').then(m => ({ default: m.TimeCapsuleView })));
+const TimelineView = lazy(() => import('./views/TimelineView').then(m => ({ default: m.TimelineView })));
+const WhisperMemosView = lazy(() => import('./views/WhisperMemosView').then(m => ({ default: m.WhisperMemosView })));
+
+/**
+ * Held while a screen's chunk arrives.
+ *
+ * Deliberately close to nothing: the chunks are small and, inside the Android
+ * app, read straight off local storage, so anything more elaborate would flash
+ * for a frame and read as a glitch. It keeps the page from collapsing to zero
+ * height while it waits.
+ */
+const ScreenFallback: React.FC = () => (
+  <div className="min-h-[60vh]" aria-busy="true" />
+);
 
 export const App: React.FC = () => {
   const [state, setState] = useState<SpaceState>(loadState);
@@ -930,7 +948,11 @@ export const App: React.FC = () => {
   }, [state.messages.length, currentTab]);
 
   const handleSelectTab = (tabId: string) => {
-    setCurrentTab(tabId);
+    // Screens load as separate chunks, so switching tab can suspend. Marked as
+    // a transition, React keeps the screen you are on until the next one is
+    // ready instead of tearing it down for a placeholder - the difference
+    // between a tap that feels instant and one that blinks.
+    startTransition(() => setCurrentTab(tabId));
     if (tabId === 'chat') {
       setUnreadChatCount(0);
       sendReadReceipt();
@@ -1928,6 +1950,7 @@ Anyone using the old code loses access, including your partner until you give th
 
   if (!session || !state.isPaired) {
     return (
+      <Suspense fallback={<ScreenFallback />}>
       <OnboardingView
         onComplete={(newSession: SpaceSession, enteredName: string, chosenPin: string | null, chosenVaultName?: string) => {
           const namedSession = { ...newSession, userName: enteredName };
@@ -1973,6 +1996,7 @@ Anyone using the old code loses access, including your partner until you give th
           }
         }}
       />
+      </Suspense>
     );
   }
 
@@ -2038,6 +2062,9 @@ Anyone using the old code loses access, including your partner until you give th
           isTablet ? 'max-w-5xl' : 'max-w-3xl'
         }`}
       >
+        {/* The screens below arrive as separate chunks. Only this region
+            waits for one; the navigation around it never moves. */}
+        <Suspense fallback={<ScreenFallback />}>
         {currentTab === 'home' && (
           <HomeView
             state={state}
@@ -2377,6 +2404,7 @@ Anyone using the old code loses access, including your partner until you give th
             }}
           />
         )}
+        </Suspense>
       </main>
 
       {/* In-App Notification Toast for Messages & Letters */}
@@ -2387,13 +2415,17 @@ Anyone using the old code loses access, including your partner until you give th
       />
 
       {/* Sanctuary Directory Modal (All 32 Spaces) */}
-      <SanctuaryDirectoryModal
-        isOpen={showDirectoryModal}
-        onClose={() => setShowDirectoryModal(false)}
-        currentTab={currentTab}
-        onSelectTab={handleSelectTab}
-        unreadChatCount={unreadChatCount}
-      />
+      {showDirectoryModal && (
+        <Suspense fallback={null}>
+          <SanctuaryDirectoryModal
+            isOpen={showDirectoryModal}
+            onClose={() => setShowDirectoryModal(false)}
+            currentTab={currentTab}
+            onSelectTab={handleSelectTab}
+            unreadChatCount={unreadChatCount}
+          />
+        </Suspense>
+      )}
 
       {/* Interactive Story Tour Modal */}
       {inApp && (
@@ -2405,11 +2437,15 @@ Anyone using the old code loses access, including your partner until you give th
         />
       )}
 
-      <StoryTourModal
-        isOpen={showStoryTour}
-        onClose={() => setShowStoryTour(false)}
-        onNavigateTab={(tab) => handleSelectTab(tab)}
-      />
+      {showStoryTour && (
+        <Suspense fallback={null}>
+          <StoryTourModal
+            isOpen={showStoryTour}
+            onClose={() => setShowStoryTour(false)}
+            onNavigateTab={(tab) => handleSelectTab(tab)}
+          />
+        </Suspense>
+      )}
 
       {/* Real-Time Sensory Haptic Pulse Overlay */}
       <SensoryPulseOverlay activeUser={state.activeUser} />

@@ -4,9 +4,25 @@
     {
       "name": "two-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "cwd": "two-web",
       "port": 3000
+    },
+    {
+      "name": "two-web-dist",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "preview",
+        "--",
+        "--port",
+        "4173"
+      ],
+      "cwd": "two-web",
+      "port": 4173
     }
   ]
 }
