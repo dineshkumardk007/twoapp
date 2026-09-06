@@ -57,15 +57,38 @@ VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
 ```
 
-**Relay** (Render → Environment):
+**Relay** (Render → Environment) — pick the one that matches your project:
 
 ```env
-SUPABASE_JWT_SECRET=your-jwt-secret-from-step-1
+# Current Supabase projects sign with ES256 and publish public keys.
+# This is almost certainly the one you want.
+SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 ```
 
+```env
+# Only for older projects still on the deprecated shared secret.
+SUPABASE_JWT_SECRET=your-legacy-jwt-secret
+```
+
+**Check which you are on** before setting either:
+
+```
+https://YOUR-PROJECT.supabase.co/auth/v1/.well-known/jwks.json
+```
+
+Keys with `"alg":"ES256"` (or RS256) means asymmetric — set `SUPABASE_URL`.
+An empty `{"keys":[]}` or a 404 means legacy — set `SUPABASE_JWT_SECRET`.
+
+Setting the **wrong** one is worse than setting neither: every token fails to
+verify, every device is refused, and the only symptom is that nothing syncs.
+
 Both sides degrade safely: with no `VITE_SUPABASE_*` the app runs account-free
-exactly as before, and with no `SUPABASE_JWT_SECRET` the relay accepts every
-socket. **Set both, or login is decorative.**
+exactly as before, and with neither relay variable set the relay accepts every
+socket. **Set both sides, or login is decorative.**
+
+Do the web app first and confirm signup works, *then* close the relay. Closing
+it first locks out every client that is not yet sending a token — including the
+bundled Android build.
 
 ---
 

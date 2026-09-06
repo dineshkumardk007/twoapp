@@ -95,7 +95,7 @@ export class WebSocketRelay {
             // When accounts are configured the relay is closed: a socket must
             // present a valid Supabase token before it can join any space.
             if (isAuthEnforced) {
-              const user = verifyAccessToken(message.accessToken);
+              const user = await verifyAccessToken(message.accessToken);
               if (!user) {
                 this.sendJson(ws, { type: 'UNAUTHORIZED', error: 'Sign in to connect' });
                 ws.close();

@@ -8,7 +8,7 @@ import { pairingRouter } from './routes/pairing.js';
 import { syncRouter } from './routes/sync.js';
 import { WebSocketRelay } from './websocket/relay.js';
 import { db } from './db.js';
-import { isAuthEnforced } from './auth/verifyJwt.js';
+import { isAuthEnforced, primeJwks } from './auth/verifyJwt.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -62,6 +62,10 @@ async function start() {
   } catch (err) {
     console.error('[Two Relay Server] Storage initialisation error:', err);
   }
+
+  // Load the signing keys before accepting sockets, so the first sign-in after
+  // a deploy is not the one that pays for the fetch.
+  await primeJwks();
 
   server.listen(PORT, () => {
     console.log(`[Two Relay Server] listening on port ${PORT} (storage: ${db.kind})`);
