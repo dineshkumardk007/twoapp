@@ -56,90 +56,9 @@ class MainActivity : FragmentActivity() {
         exitSafeManager = ExitSafeManager(this, app.database, app.keystoreManager)
 
         setContent {
-            var currentTheme by remember { mutableStateOf(AppThemeMode.WARM_LINEN) }
-            var currentScreen by remember { mutableStateOf(Screen.HOME) }
-            val scope = rememberCoroutineScope()
-
-            TwoTheme(themeMode = currentTheme) {
+            TwoTheme(themeMode = AppThemeMode.WARM_LINEN) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    when (currentScreen) {
-                        Screen.PASSPHRASE -> PassphraseScreen(
-                            onPassphraseConfirmed = { currentScreen = Screen.RECOVERY_PHRASE }
-                        )
-
-                        Screen.RECOVERY_PHRASE -> RecoveryPhraseScreen(
-                            onConfirmed = { currentScreen = Screen.PAIRING }
-                        )
-
-                        Screen.PAIRING -> PairingScreen(
-                            userPublicKeyHex = "A1F2C84...",
-                            onPairingCompleted = { currentScreen = Screen.SAFETY_NUMBER }
-                        )
-
-                        Screen.SAFETY_NUMBER -> SafetyNumberScreen(
-                            userPublicKey = ByteArray(32) { 0x01 },
-                            partnerPublicKey = ByteArray(32) { 0x02 },
-                            onVerified = { currentScreen = Screen.HOME }
-                        )
-
-                        Screen.HOME -> HomeScreen(
-                            onNavigateToChat = { currentScreen = Screen.CHAT },
-                            onNavigateToDecks = { currentScreen = Screen.DECKS },
-                            onNavigateToJournal = { currentScreen = Screen.JOURNAL },
-                            onNavigateToRepair = { currentScreen = Screen.REPAIR_KIT },
-                            onNavigateToNeeds = { currentScreen = Screen.CHAT },
-                            onNavigateToMemories = { currentScreen = Screen.MEMORIES },
-                            onNavigateToSettings = { currentScreen = Screen.SETTINGS },
-                            onEmergencyQuickExit = {
-                                scope.launch {
-                                    exitSafeManager.executeSilentWipe()
-                                    finishAffinity()
-                                }
-                            }
-                        )
-
-                        Screen.CHAT -> ChatScreen(
-                            onBack = { currentScreen = Screen.HOME }
-                        )
-
-                        Screen.DECKS -> DecksScreen(
-                            onBack = { currentScreen = Screen.HOME }
-                        )
-
-                        Screen.JOURNAL -> JournalScreen(
-                            onBack = { currentScreen = Screen.HOME }
-                        )
-
-                        Screen.REPAIR_KIT -> RepairKitScreen(
-                            onBack = { currentScreen = Screen.HOME }
-                        )
-
-                        Screen.LISTS -> SharedListsScreen(
-                            onBack = { currentScreen = Screen.HOME }
-                        )
-
-                        Screen.MEMORIES -> TimelineScreen(
-                            onBack = { currentScreen = Screen.HOME }
-                        )
-
-                        Screen.SETTINGS -> SettingsScreen(
-                            currentTheme = currentTheme,
-                            onThemeSelected = { currentTheme = it },
-                            onNavigateToAuditLog = { currentScreen = Screen.AUDIT_LOG },
-                            onNavigateToExport = { currentScreen = Screen.HOME },
-                            onEmergencyQuickExit = {
-                                scope.launch {
-                                    exitSafeManager.executeSilentWipe()
-                                    finishAffinity()
-                                }
-                            },
-                            onBack = { currentScreen = Screen.HOME }
-                        )
-
-                        Screen.AUDIT_LOG -> ConsentAuditLogScreen(
-                            onBack = { currentScreen = Screen.SETTINGS }
-                        )
-                    }
+                    app.two.android.features.web.TwoWebView()
                 }
             }
         }

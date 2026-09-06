@@ -28,11 +28,31 @@ const RECONNECT_MAX_MS = 30_000;
  * why the scheme tracks the page scheme rather than being hardcoded.
  */
 function resolveRelayUrl(): string {
+  // 1. Injected by native Android WebView bridge (if running in APK)
+  try {
+    const androidUrl = (window as any).AndroidBridge?.getRelayUrl?.();
+    if (androidUrl && typeof androidUrl === 'string' && androidUrl.trim()) {
+      return androidUrl.trim();
+    }
+  } catch {}
+
+  // 2. Saved by user in localStorage
+  try {
+    const saved = localStorage.getItem('two_custom_relay_url');
+    if (saved && saved.trim()) return saved.trim();
+  } catch {}
+
+  // 3. Explicit Vite env variable
   const override = (import.meta as any)?.env?.VITE_RELAY_URL as string | undefined;
   if (override) return override;
 
   const loc = window.location;
   const scheme = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+
+  // 4. Android WebView virtual asset loader host (fallback to localhost dev relay if none set)
+  if (loc.hostname === 'appassets.androidplatform.net') {
+    return 'ws://10.0.2.2:4000/relay';
+  }
 
   // Deployed behind the reverse proxy the page is on 80/443, so `port` is empty
   // and the relay is same-origin. Any explicit port means a dev server (vite

@@ -28,6 +28,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 }) => {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
+  const [relayInput, setRelayInput] = useState(() => {
+    return (window as any).AndroidBridge?.getRelayUrl?.() || localStorage.getItem('two_custom_relay_url') || '';
+  });
+
+  const handleSaveRelay = () => {
+    const trimmed = relayInput.trim();
+    if (trimmed) {
+      localStorage.setItem('two_custom_relay_url', trimmed);
+      (window as any).AndroidBridge?.setRelayUrl?.(trimmed);
+      alert('Relay server saved! Reloading to connect...');
+      window.location.reload();
+    } else {
+      localStorage.removeItem('two_custom_relay_url');
+      (window as any).AndroidBridge?.setRelayUrl?.('');
+      alert('Reset to default relay.');
+      window.location.reload();
+    }
+  };
 
   const t = getTranslation(currentLocale);
 
@@ -137,6 +155,32 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           >
             <Calculator className="w-3.5 h-3.5 mr-2 text-linen-accent" />
             {t.settings.engageCamouflage}
+          </button>
+        </div>
+      </div>
+
+      {/* Cloud Relay Server (Internet Sync) */}
+      <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
+        <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
+          <Globe className="w-4 h-4 text-linen-accent" />
+          <span>Cloud Relay Server (Sync Over Internet)</span>
+        </div>
+        <p className="text-xs text-linen-secondary leading-relaxed">
+          Set your deployed relay address (e.g. Render, Railway, or Cloudflare Tunnel) to sync with your partner across mobile data and the internet.
+        </p>
+        <div className="flex gap-2 pt-1">
+          <input
+            type="text"
+            placeholder="https://your-relay.onrender.com"
+            value={relayInput}
+            onChange={(e) => setRelayInput(e.target.value)}
+            className="flex-1 px-3 py-2 text-xs rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-1 focus:ring-linen-primary"
+          />
+          <button
+            onClick={handleSaveRelay}
+            className="px-3 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity"
+          >
+            Save
           </button>
         </div>
       </div>
