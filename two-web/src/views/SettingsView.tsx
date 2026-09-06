@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode } from '../core/space';
 import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
@@ -16,7 +17,13 @@ interface SettingsViewProps {
   onSelectLocale?: (locale: Locale) => void;
   onToggleCamouflage?: () => void;
   onUnpair?: () => void;
+  /** Move this space to a freshly generated link code. */
+  onRotateCode?: (code: string) => void;
   onToggleActiveUser?: () => void;
+  decoyCode?: string;
+  onUpdateDecoyCode?: (code: string) => void;
+  autoCamouflageOnBlur?: boolean;
+  onToggleAutoCamouflage?: (enabled: boolean) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -30,11 +37,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSelectLocale = () => {},
   onToggleCamouflage = () => {},
   onUnpair = () => {},
-  onToggleActiveUser = () => {}
+  onRotateCode = () => {},
+  onToggleActiveUser = () => {},
+  decoyCode = '142.85',
+  onUpdateDecoyCode,
+  autoCamouflageOnBlur = false,
+  onToggleAutoCamouflage
 }) => {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [decoyCodeInput, setDecoyCodeInput] = useState(decoyCode);
+  const [decoySaved, setDecoySaved] = useState(false);
+  const [rotateMode, setRotateMode] = useState<'idle' | 'new' | 'join'>('idle');
+  const [rotateCode, setRotateCode] = useState('');
+  const [joinRotation, setJoinRotation] = useState('');
+
   const [relayInput, setRelayInput] = useState(() => {
     return (window as any).AndroidBridge?.getRelayUrl?.() || localStorage.getItem('two_custom_relay_url') || '';
   });
@@ -61,6 +79,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       } catch {}
     }
     handleCopyCode();
+  };
+
+  const beginRotation = () => {
+    setRotateCode(generatePairingCode());
+    setRotateMode('new');
+  };
+
+  const applyRotation = (code: string) => {
+    const clean = normalizePairingCode(code);
+    if (!isPlausiblePairingCode(clean)) return;
+    onRotateCode(clean);
+    setRotateMode('idle');
+    setRotateCode('');
+    setJoinRotation('');
   };
 
   const handleSaveRelay = () => {
@@ -158,6 +190,86 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span>Share</span>
                 </button>
               </div>
+            </div>
+          )}
+
+          {spaceCode && (
+            <div className="pb-2 border-b border-linen-border/40">
+              {rotateMode === 'idle' && (
+                <button
+                  type="button"
+                  onClick={beginRotation}
+                  className="w-full px-2.5 py-2 rounded-lg border border-linen-border bg-linen-surface hover:bg-linen-variant text-linen-primary text-[11px] font-medium transition-colors flex items-center justify-center cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3 mr-1.5 text-linen-secondary" />
+                  <span>Change our link code</span>
+                </button>
+              )}
+
+              {rotateMode === 'new' && (
+                <div className="space-y-2">
+                  <p className="text-[11px] text-linen-secondary leading-relaxed">
+                    Your new code. Read it to your partner, then switch. Anything already on this
+                    device stays; messages sent under the old code stop arriving once you both move.
+                  </p>
+                  <div className="font-mono text-sm font-bold text-linen-primary text-center bg-linen-surface border border-linen-border rounded-lg py-2">
+                    {rotateCode}
+                  </div>
+                  <div className="flex space-x-1.5">
+                    <button
+                      type="button"
+                      onClick={() => applyRotation(rotateCode)}
+                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 transition-opacity cursor-pointer"
+                    >
+                      Switch to this code
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRotateMode('idle')}
+                      className="px-2.5 py-1.5 rounded-lg border border-linen-border text-linen-secondary text-[11px] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRotateMode('join')}
+                    className="w-full text-[11px] text-linen-secondary hover:text-linen-primary transition-colors cursor-pointer"
+                  >
+                    My partner gave me the new code instead
+                  </button>
+                </div>
+              )}
+
+              {rotateMode === 'join' && (
+                <div className="space-y-2">
+                  <p className="text-[11px] text-linen-secondary">Enter the new code your partner read out.</p>
+                  <input
+                    type="text"
+                    value={joinRotation}
+                    onChange={(e) => setJoinRotation(e.target.value)}
+                    placeholder="TWO-XXXX-XXXX-XXXX"
+                    className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface font-mono text-sm text-linen-primary"
+                  />
+                  <div className="flex space-x-1.5">
+                    <button
+                      type="button"
+                      disabled={!isPlausiblePairingCode(joinRotation)}
+                      onClick={() => applyRotation(joinRotation)}
+                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+                    >
+                      Switch to this code
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRotateMode('idle')}
+                      className="px-2.5 py-1.5 rounded-lg border border-linen-border text-linen-secondary text-[11px] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -265,18 +377,80 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       {/* Camouflage / Decoy Mode (Discreet Calculator) */}
-      <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
+      <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-4">
         <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
           <Calculator className="w-4 h-4 text-linen-accent" />
           <span>{t.settings.camouflageTitle}</span>
         </div>
         <p className="text-xs text-linen-secondary leading-relaxed">
-          {t.settings.camouflageDesc}
+          {t.settings.camouflageDesc} When active, Two looks and behaves identically to a genuine working calculator.
         </p>
-        <div className="pt-1">
+
+        {/* Custom Unlock Code Input */}
+        <div className="pt-1 space-y-2">
+          <label className="block text-xs font-semibold text-linen-primary">
+            Calculator Unlock Code
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={decoyCodeInput}
+              onChange={(e) => {
+                setDecoyCodeInput(e.target.value);
+                setDecoySaved(false);
+              }}
+              placeholder="e.g. 142.85 or 2024"
+              className="max-w-[180px] px-3 py-2 text-xs font-mono rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-1 focus:ring-linen-primary"
+            />
+            <button
+              onClick={() => {
+                const trimmed = decoyCodeInput.trim() || '142.85';
+                if (onUpdateDecoyCode) onUpdateDecoyCode(trimmed);
+                setDecoySaved(true);
+                setTimeout(() => setDecoySaved(false), 2000);
+              }}
+              className="px-3 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity flex items-center"
+            >
+              {decoySaved ? <Check className="w-3.5 h-3.5 mr-1 text-emerald-300" /> : null}
+              <span>{decoySaved ? 'Saved' : 'Save Code'}</span>
+            </button>
+          </div>
+          <p className="text-[11px] text-linen-secondary">
+            Type this sequence into the calculator and press <span className="font-mono font-bold text-linen-primary">=</span> to return to your sanctuary.
+          </p>
+        </div>
+
+        {/* Auto-Camouflage on Tab Blur / App Switch */}
+        {onToggleAutoCamouflage && (
+          <div className="pt-2 border-t border-linen-border/60 flex items-center justify-between">
+            <div className="space-y-0.5 max-w-[80%]">
+              <span className="text-xs font-medium text-linen-primary block">
+                Auto-Camouflage on App Switch
+              </span>
+              <p className="text-[11px] text-linen-secondary leading-normal">
+                Immediately disguise as the calculator whenever you switch apps or leave this browser tab.
+              </p>
+            </div>
+            <button
+              onClick={() => onToggleAutoCamouflage(!autoCamouflageOnBlur)}
+              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 cursor-pointer shrink-0 ${
+                autoCamouflageOnBlur ? 'bg-linen-primary' : 'bg-linen-border'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                  autoCamouflageOnBlur ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        )}
+
+        {/* Manual Camouflage Trigger Button */}
+        <div className="pt-2">
           <button
             onClick={onToggleCamouflage}
-            className="inline-flex items-center px-4 py-2.5 rounded-xl border border-linen-border bg-linen-variant hover:bg-linen-border text-linen-primary text-xs font-medium transition-colors"
+            className="inline-flex items-center px-4 py-2.5 rounded-xl border border-linen-border bg-linen-variant hover:bg-linen-border text-linen-primary text-xs font-medium transition-colors cursor-pointer shadow-2xs"
           >
             <Calculator className="w-3.5 h-3.5 mr-2 text-linen-accent" />
             {t.settings.engageCamouflage}

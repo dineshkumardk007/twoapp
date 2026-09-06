@@ -1062,11 +1062,72 @@ export function loadState(): SpaceState {
   }
 }
 
-export function saveState(state: SpaceState) {
+// Canvas strokes are the one collection with no natural ceiling: every doodle
+// either partner has ever drawn is appended forever, and a single session can
+// add hundreds. Unlike messages or letters they carry no lasting meaning once
+// the drawing is done, so only a recent window is persisted.
+const MAX_PERSISTED_STROKES = 2000;
+
+export interface SaveResult {
+  ok: boolean;
+  /** Storage is full - the write was lost and the user needs to know. */
+  quotaExceeded: boolean;
+}
+
+function isQuotaError(e: unknown): boolean {
+  if (!(e instanceof Error)) return false;
+  // Browsers disagree on the name; Firefox and Safari use their own.
+  return (
+    e.name === 'QuotaExceededError' ||
+    e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+    e.name === 'QUOTA_EXCEEDED_ERR'
+  );
+}
+
+/** Trims the unbounded collections so a long-lived space cannot fill storage. */
+export function pruneForStorage(state: SpaceState): SpaceState {
+  const strokes = state.sharedCanvas?.strokes;
+  if (!strokes || strokes.length <= MAX_PERSISTED_STROKES) return state;
+
+  return {
+    ...state,
+    sharedCanvas: {
+      ...state.sharedCanvas,
+      strokes: strokes.slice(-MAX_PERSISTED_STROKES)
+    }
+  };
+}
+
+/**
+ * Persists the vault in the clear (used when no PIN is set).
+ *
+ * Returns the outcome rather than swallowing it: a silent QuotaExceededError
+ * means the app keeps working from memory while saving nothing, and the user
+ * loses everything on refresh without ever being told.
+ */
+export function saveState(state: SpaceState): SaveResult {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(pruneForStorage(state)));
+    return { ok: true, quotaExceeded: false };
   } catch (e) {
-    console.error('Storage error', e);
+    const quota = isQuotaError(e);
+    console.error(quota ? '[Storage] Quota exceeded - nothing was saved' : '[Storage] Save failed', e);
+    return { ok: false, quotaExceeded: quota };
+  }
+}
+
+/** Rough share of the localStorage budget in use, for display in Settings. */
+export function estimateStorageBytes(): number {
+  try {
+    let total = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      total += k.length + (localStorage.getItem(k)?.length || 0);
+    }
+    return total * 2; // UTF-16 code units
+  } catch {
+    return 0;
   }
 }
 

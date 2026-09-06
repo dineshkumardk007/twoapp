@@ -45,6 +45,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [questionPromptToast, setQuestionPromptToast] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
 
+  const [sanctuaryStartDate] = useState(() => {
+    const saved = localStorage.getItem('two_sanctuary_created');
+    if (saved) return parseInt(saved, 10);
+    const now = Date.now();
+    localStorage.setItem('two_sanctuary_created', String(now));
+    return now;
+  });
+
+  const daysTogether = Math.max(1, Math.floor((Date.now() - sanctuaryStartDate) / (1000 * 60 * 60 * 24)) + 1);
+
+  const getMilestoneText = (days: number) => {
+    if (days === 1) return 'Our Journey Begins 🌱';
+    if (days < 7) return `${days} Days of Connection ✨`;
+    if (days < 30) return `${Math.floor(days / 7)} Weeks Strong 🌿`;
+    if (days < 100) return `${days} Days of Softness 💖`;
+    if (days < 365) return 'Centennial of Love 🌟';
+    return `${(days / 365).toFixed(1)} Years of Devotion 🕊️`;
+  };
+
   const handleCopyCode = async () => {
     if (!spaceCode) return;
     try {
@@ -178,6 +197,41 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Days in Our Sanctuary Milestone Card */}
+      <div className="rounded-2xl border border-linen-border bg-gradient-to-r from-linen-surface via-rose-50/20 to-linen-variant/50 p-4 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-rose-500/10 border border-rose-200/80 flex items-center justify-center text-rose-500 shrink-0 shadow-2xs">
+              <Heart className="w-5 h-5 fill-rose-500 text-rose-500" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-rose-600">
+                  Day {daysTogether} in Our Sanctuary
+                </span>
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-800 font-medium">
+                  {getMilestoneText(daysTogether)}
+                </span>
+              </div>
+              <p className="text-xs text-linen-secondary mt-0.5">
+                {state.partnerName && state.partnerName !== 'Partner'
+                  ? `Growing closer every single day with ${state.partnerName}`
+                  : 'A dedicated private world created for the two of you'}
+              </p>
+            </div>
+          </div>
+
+          <div className="text-right hidden sm:block pr-2">
+            <span className="font-serif text-2xl font-bold text-linen-primary">
+              {daysTogether}
+            </span>
+            <span className="text-[10px] uppercase tracking-wider text-linen-secondary block">
+              Days Together
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* 1. Side-by-Side Emotional Weather & Capacity */}
       <EmotionalWeatherCard

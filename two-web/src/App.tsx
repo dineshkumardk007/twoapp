@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { loadState, saveState, clearState, SpaceState } from './core/storage';
+import React, { useState, useEffect, useRef } from 'react';
+import { loadState, saveState, clearState, pruneForStorage, SpaceState } from './core/storage';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
   hasEncryptedVault,
@@ -9,6 +9,7 @@ import {
   destroyVault
 } from './core/vault';
 import {
+  isWeakPairingCode,
   deriveSpaceCredentials,
   loadSpaceSession,
   saveSpaceSession,
@@ -58,6 +59,9 @@ import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
 import { StoryTourModal } from './components/StoryTourModal';
 import { SensoryPulseOverlay, triggerGlobalPulse } from './components/SensoryPulseOverlay';
+import { playMessageChime, playLetterChime, triggerHaptic } from './core/audioAlerts';
+import { InAppNotificationToast, InAppNotification } from './components/InAppNotificationToast';
+import { SanctuaryDirectoryModal } from './components/SanctuaryDirectoryModal';
 import { Locale } from './core/i18n';
 import { Lock } from 'lucide-react';
 import { OnboardingView } from './views/OnboardingView';
@@ -104,6 +108,18 @@ export const App: React.FC = () => {
   // Bumped when pairing completes so the relay effect re-runs and joins the new space.
   const [spaceVersion, setSpaceVersion] = useState(0);
 
+  // Notifications, audio alerts, and directory drawer states
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [inAppNotification, setInAppNotification] = useState<InAppNotification | null>(null);
+  const [showDirectoryModal, setShowDirectoryModal] = useState(false);
+  const [decoyCode, setDecoyCode] = useState(() => localStorage.getItem('two_decoy_code') || '142.85');
+  const [autoCamouflageOnBlur, setAutoCamouflageOnBlur] = useState(() => localStorage.getItem('two_auto_camo') === 'true');
+
+  const currentTabRef = useRef(currentTab);
+  currentTabRef.current = currentTab;
+  const partnerNameRef = useRef(state.partnerName);
+  partnerNameRef.current = state.partnerName;
+
   // Session & relay connection state
   const [session, setSession] = useState<SpaceSession | null>(loadSpaceSession);
   const [relayStatus, setRelayStatus] = useState<RelayStatus>(() => wsRelay.getStatus());
@@ -114,6 +130,9 @@ export const App: React.FC = () => {
   const [isLocked, setIsLocked] = useState<boolean>(() => hasEncryptedVault());
   const [vaultKey, setVaultKey] = useState<CryptoKey | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  // Device storage is full: the app still runs from memory, but nothing is
+  // being saved. Silence here would cost the user everything on refresh.
+  const [storageFull, setStorageFull] = useState(false);
   const [pinAttempt, setPinAttempt] = useState('');
   const [pinError, setPinError] = useState(false);
 
@@ -185,6 +204,24 @@ export const App: React.FC = () => {
               ...prev,
               messages: [...prev.messages, parsed]
             }));
+            const isFromPartner = record.authorId !== state.activeUser;
+            if (isFromPartner) {
+              playMessageChime();
+              triggerHaptic([35, 45, 35]);
+              if (currentTabRef.current !== 'chat') {
+                setUnreadChatCount(c => c + 1);
+                setInAppNotification({
+                  id: String(Date.now()),
+                  title: partnerNameRef.current || 'Partner',
+                  body: parsed.text || 'Sent you a message',
+                  type: 'chat',
+                  tabId: 'chat'
+                });
+              }
+              if (typeof document !== 'undefined' && document.hidden) {
+                document.title = `(1) 💌 New message from ${partnerNameRef.current || 'Partner'}`;
+              }
+            }
           } else if (record.type === 'WEATHER') {
             setState(prev => {
               const isPartner = record.authorId !== prev.activeUser;
@@ -213,6 +250,20 @@ export const App: React.FC = () => {
               ...prev,
               letters: [parsed, ...prev.letters.filter(l => l.id !== parsed.id)]
             }));
+            const isFromPartner = record.authorId !== state.activeUser;
+            if (isFromPartner) {
+              playLetterChime();
+              triggerHaptic([45, 55, 45]);
+              if (currentTabRef.current !== 'letters') {
+                setInAppNotification({
+                  id: String(Date.now()),
+                  title: `${partnerNameRef.current || 'Partner'} sent a Love Letter`,
+                  body: parsed.title || 'A new sealed letter awaits in your Sanctuary',
+                  type: 'letter',
+                  tabId: 'letters'
+                });
+              }
+            }
           } else if (record.type === 'RITUAL_COMPLETE') {
             setState(prev => {
               const updatedRituals = prev.rituals.map(r => {
@@ -446,6 +497,17 @@ export const App: React.FC = () => {
             ...prev,
             letters: [packet.payload, ...prev.letters.filter(l => l.id !== packet.payload.id)]
           }));
+          playLetterChime();
+          triggerHaptic([45, 55, 45]);
+          if (currentTabRef.current !== 'letters') {
+            setInAppNotification({
+              id: String(Date.now()),
+              title: `${partnerNameRef.current || 'Partner'} sent a Love Letter (Mesh)`,
+              body: packet.payload.title || 'A sealed letter arrived offline',
+              type: 'letter',
+              tabId: 'letters'
+            });
+          }
         } else if (packet.subType === 'GRATITUDE_STAR') {
           setState(prev => ({
             ...prev,
@@ -662,10 +724,13 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (isLocked) return; // nothing meaningful to persist before unlock
+
     if (vaultKey) {
-      void writeVault(vaultKey, { state, session });
+      void writeVault(vaultKey, { state: pruneForStorage(state), session }).then(ok =>
+        setStorageFull(!ok)
+      );
     } else {
-      saveState(state);
+      setStorageFull(saveState(state).quotaExceeded);
     }
   }, [state, session, vaultKey, isLocked]);
 
@@ -685,6 +750,40 @@ export const App: React.FC = () => {
     });
     setSpaceVersion(v => v + 1);
   };
+
+  const handleSelectTab = (tabId: string) => {
+    setCurrentTab(tabId);
+    if (tabId === 'chat') {
+      setUnreadChatCount(0);
+      if (typeof document !== 'undefined') {
+        document.title = 'Two — Private Encrypted Space';
+      }
+    }
+  };
+
+  // Reset unread title if user focuses tab while on chat
+  useEffect(() => {
+    const handleFocus = () => {
+      if (currentTabRef.current === 'chat') {
+        setUnreadChatCount(0);
+        if (typeof document !== 'undefined') {
+          document.title = 'Two — Private Encrypted Space';
+        }
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // Auto-Camouflage when switching away from the tab or app
+  useEffect(() => {
+    if (!autoCamouflageOnBlur) return;
+    const handleBlur = () => {
+      setIsCamouflaged(true);
+    };
+    window.addEventListener('blur', handleBlur);
+    return () => window.removeEventListener('blur', handleBlur);
+  }, [autoCamouflageOnBlur]);
 
   const handleUpdateReport = (updatedFields: any) => {
     wsRelay.broadcastUpdate('WEATHER', updatedFields);
@@ -1400,8 +1499,26 @@ export const App: React.FC = () => {
   }[theme];
 
   if (isCamouflaged) {
-    return <CalculatorDecoy onUnlock={() => setIsCamouflaged(false)} />;
+    return <CalculatorDecoy onUnlock={() => setIsCamouflaged(false)} secretPin={decoyCode} />;
   }
+
+  /**
+   * Moves the space to a new link code.
+   *
+   * The code is the whole secret, so rotating it is how a couple recovers from
+   * one being overheard or screenshotted: the new code derives a different room
+   * and a different key, and the old room's ciphertext becomes unreadable to
+   * both of them. Local history is untouched - it lives in the vault, not in
+   * the space.
+   */
+  const handleRotateCode = (newCode: string) => {
+    if (!session || newCode === session.code) return;
+
+    const rotated = { ...session, code: newCode };
+    setSession(rotated);
+    if (!vaultKey) saveSpaceSession(rotated);
+    setSpaceVersion(v => v + 1);
+  };
 
   const handleUnpair = () => {
     if (window.confirm('Are you sure you want to disconnect from this space? You can reconnect anytime using your Space Link Code.')) {
@@ -1543,7 +1660,7 @@ export const App: React.FC = () => {
     <div className={`min-h-screen transition-colors duration-200 ${themeClass}`}>
       <Navigation
         currentTab={currentTab}
-        onSelectTab={setCurrentTab}
+        onSelectTab={handleSelectTab}
         activeUser={state.activeUser}
         onToggleActiveUser={toggleActiveUser}
         onEmergencyExit={handleEmergencyExit}
@@ -1552,7 +1669,34 @@ export const App: React.FC = () => {
         onTriggerPulse={() => triggerGlobalPulse('Warm hug across distance')}
         locale={locale}
         relayStatus={relayStatus}
+        unreadChatCount={unreadChatCount}
+        onOpenDirectory={() => setShowDirectoryModal(true)}
       />
+
+      {session && isWeakPairingCode(session.code) && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-4">
+          <div className="rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-rose-900">
+            <p className="text-sm font-semibold">Your link code is from an older, weaker format</p>
+            <p className="text-xs mt-1 leading-relaxed">
+              Short codes like <span className="font-mono">TWO-8492</span> can be guessed, which would let
+              someone else read this space. Disconnect in Settings and link again to get a longer code.
+              Your history on this device stays where it is.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {storageFull && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-4">
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900">
+            <p className="text-sm font-semibold">This device is out of storage</p>
+            <p className="text-xs mt-1 leading-relaxed">
+              Everything still works right now, but nothing new is being saved and it will be lost
+              if you refresh. Free up space on your device, or export a vault backup from Settings.
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-20">
         {currentTab === 'home' && (
@@ -1873,16 +2017,43 @@ export const App: React.FC = () => {
             onSelectLocale={setLocale}
             onToggleCamouflage={() => setIsCamouflaged(true)}
             onUnpair={handleUnpair}
+            onRotateCode={handleRotateCode}
             onToggleActiveUser={toggleActiveUser}
+            decoyCode={decoyCode}
+            onUpdateDecoyCode={(newCode) => {
+              setDecoyCode(newCode);
+              localStorage.setItem('two_decoy_code', newCode);
+            }}
+            autoCamouflageOnBlur={autoCamouflageOnBlur}
+            onToggleAutoCamouflage={(val) => {
+              setAutoCamouflageOnBlur(val);
+              localStorage.setItem('two_auto_camo', String(val));
+            }}
           />
         )}
       </main>
+
+      {/* In-App Notification Toast for Messages & Letters */}
+      <InAppNotificationToast
+        notification={inAppNotification}
+        onDismiss={() => setInAppNotification(null)}
+        onOpenTab={handleSelectTab}
+      />
+
+      {/* Sanctuary Directory Modal (All 32 Spaces) */}
+      <SanctuaryDirectoryModal
+        isOpen={showDirectoryModal}
+        onClose={() => setShowDirectoryModal(false)}
+        currentTab={currentTab}
+        onSelectTab={handleSelectTab}
+        unreadChatCount={unreadChatCount}
+      />
 
       {/* Interactive Story Tour Modal */}
       <StoryTourModal
         isOpen={showStoryTour}
         onClose={() => setShowStoryTour(false)}
-        onNavigateTab={(tab) => setCurrentTab(tab)}
+        onNavigateTab={(tab) => handleSelectTab(tab)}
       />
 
       {/* Real-Time Sensory Haptic Pulse Overlay */}

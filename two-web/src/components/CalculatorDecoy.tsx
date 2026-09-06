@@ -71,7 +71,13 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
 
   const handleEquals = () => {
     // Check if secret unlock sequence was typed
-    if (display === secretPin || inputHistory.endsWith(secretPin)) {
+    const cleanPin = (secretPin || '142.85').replace(/=/g, '').trim();
+    if (
+      display === secretPin ||
+      display === cleanPin ||
+      inputHistory.endsWith(secretPin) ||
+      inputHistory.endsWith(cleanPin)
+    ) {
       onUnlock();
       return;
     }
@@ -107,7 +113,10 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
         {/* Camouflage Mode Header Info */}
         <div className="flex items-center justify-between text-neutral-500 text-[11px] px-1">
           <span className="font-mono">DEG</span>
-          <span className="opacity-40 hover:opacity-100 transition-opacity cursor-default" title="Discreet Unlock: Type 142.85 then press =">
+          <span
+            className="opacity-40 hover:opacity-100 transition-opacity cursor-default"
+            title={`Discreet Unlock: Type ${(secretPin || '142.85').replace(/=/g, '')} then press =`}
+          >
             ●
           </span>
         </div>

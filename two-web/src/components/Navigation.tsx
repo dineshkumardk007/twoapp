@@ -3,7 +3,7 @@ import { PairingModal } from './PairingModal';
 import { LocalMeshModal } from './LocalMeshModal';
 import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
 import { CoRegulationModal } from './CoRegulationModal';
-import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Palette } from 'lucide-react';
+import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Palette, LayoutGrid } from 'lucide-react';
 import { Locale, getTranslation } from '../core/i18n';
 
 interface NavigationProps {
@@ -17,6 +17,8 @@ interface NavigationProps {
   onTriggerPulse?: () => void;
   locale?: Locale;
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
+  unreadChatCount?: number;
+  onOpenDirectory?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -29,7 +31,9 @@ export const Navigation: React.FC<NavigationProps> = ({
   onOpenStoryTour,
   onTriggerPulse,
   locale = 'en',
-  relayStatus = 'connected'
+  relayStatus = 'connected',
+  unreadChatCount = 0,
+  onOpenDirectory
 }) => {
   const [showPairingModal, setShowPairingModal] = useState(false);
   const [showMeshModal, setShowMeshModal] = useState(false);
@@ -155,6 +159,18 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
             )}
 
+            {/* Sanctuary Directory / All Spaces Drawer Button */}
+            {onOpenDirectory && (
+              <button
+                onClick={onOpenDirectory}
+                className="inline-flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-1.5 text-linen-secondary hover:text-linen-primary hover:bg-linen-variant rounded-lg transition-colors border border-transparent hover:border-linen-border cursor-pointer"
+                title="Sanctuary Explorer (All 32 Spaces)"
+              >
+                <LayoutGrid className="w-4 h-4 text-linen-accent" />
+                <span className="hidden md:inline text-xs font-medium">Spaces</span>
+              </button>
+            )}
+
             {/* Real-Time E2EE Relay Status Badge */}
             <div
               className="inline-flex items-center text-xs font-medium px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant text-linen-primary border border-linen-border select-none"
@@ -189,22 +205,39 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex space-x-1 sm:space-x-4 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex items-center space-x-1 sm:space-x-3 overflow-x-auto pb-2 scrollbar-none">
+          {onOpenDirectory && (
+            <button
+              onClick={onOpenDirectory}
+              className="flex items-center px-2.5 py-2 text-xs font-semibold rounded-lg whitespace-nowrap bg-linen-variant/90 hover:bg-linen-variant text-linen-primary border border-linen-border/80 transition-all shrink-0 cursor-pointer shadow-2xs"
+              title="Open Sanctuary Explorer"
+            >
+              <LayoutGrid className="w-3.5 h-3.5 mr-1 text-linen-accent" />
+              <span>All Spaces</span>
+            </button>
+          )}
+
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = currentTab === tab.id;
+            const isChat = tab.id === 'chat';
             return (
               <button
                 key={tab.id}
                 onClick={() => onSelectTab(tab.id)}
-                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-all ${
+                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-all relative ${
                   isActive
                     ? 'bg-linen-primary text-linen-surface shadow-sm'
                     : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
                 }`}
               >
                 <Icon className="w-4 h-4 mr-1.5" />
-                {tab.label}
+                <span>{tab.label}</span>
+                {isChat && unreadChatCount > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse leading-tight">
+                    {unreadChatCount}
+                  </span>
+                )}
               </button>
             );
           })}

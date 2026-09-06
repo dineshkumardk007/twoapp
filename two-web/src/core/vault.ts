@@ -107,7 +107,15 @@ async function encryptInto(key: CryptoKey, salt: Uint8Array<ArrayBuffer>, payloa
     nonce: toBase64(nonce),
     ct: toBase64(new Uint8Array(ct))
   };
-  localStorage.setItem(VAULT_KEY, JSON.stringify(envelope));
+
+  // Encrypted vaults are ~35% larger than the JSON they hold, so they hit the
+  // storage ceiling sooner. Surface the failure rather than dropping the write.
+  try {
+    localStorage.setItem(VAULT_KEY, JSON.stringify(envelope));
+  } catch (e) {
+    console.error('[Vault] Could not persist encrypted vault', e);
+    throw e;
+  }
 }
 
 /**
@@ -151,10 +159,15 @@ export async function unlockVault(
 }
 
 /** Persists the payload under an already-derived key, reusing the stored salt. */
-export async function writeVault(key: CryptoKey, payload: VaultPayload): Promise<void> {
+export async function writeVault(key: CryptoKey, payload: VaultPayload): Promise<boolean> {
   const envelope = readEnvelope();
-  if (!envelope) return;
-  await encryptInto(key, fromBase64(envelope.salt), payload);
+  if (!envelope) return false;
+  try {
+    await encryptInto(key, fromBase64(envelope.salt), payload);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Removes PIN protection. The caller must persist the payload in the clear. */
