@@ -27,6 +27,8 @@ const RECONNECT_MAX_MS = 30_000;
  * `ws://` from an `https://` page would be blocked as mixed content, which is
  * why the scheme tracks the page scheme rather than being hardcoded.
  */
+const PRODUCTION_RELAY_URL = 'wss://twoapp-tfj8.onrender.com/relay';
+
 function resolveRelayUrl(): string {
   // 1. Injected by native Android WebView bridge (if running in APK)
   try {
@@ -49,19 +51,16 @@ function resolveRelayUrl(): string {
   const loc = window.location;
   const scheme = loc.protocol === 'https:' ? 'wss:' : 'ws:';
 
-  // 4. Android WebView virtual asset loader host (fallback to localhost dev relay if none set)
-  if (loc.hostname === 'appassets.androidplatform.net') {
-    return 'ws://10.0.2.2:4000/relay';
+  // 4. Local development server
+  if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
+    if (loc.port && loc.port !== String(RELAY_DEV_PORT)) {
+      return `${scheme}//${loc.hostname}:${RELAY_DEV_PORT}/relay`;
+    }
+    return `${scheme}//${loc.host}/relay`;
   }
 
-  // Deployed behind the reverse proxy the page is on 80/443, so `port` is empty
-  // and the relay is same-origin. Any explicit port means a dev server (vite
-  // runs on 3000 here) with the relay alongside it on 4000.
-  if (loc.port && loc.port !== String(RELAY_DEV_PORT)) {
-    return `${scheme}//${loc.hostname}:${RELAY_DEV_PORT}/relay`;
-  }
-
-  return `${scheme}//${loc.host}/relay`;
+  // 5. Cloud deployment (Android WebView appassets.androidplatform.net, Vercel, or custom domains)
+  return PRODUCTION_RELAY_URL;
 }
 
 class WebSocketRelayClient {

@@ -118,7 +118,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ messages, activeUser, onSend
     });
   };
 
-  const partnerName = activeUser === 'user' ? 'Partner' : 'You';
+  const partnerName = 'Partner';
 
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
@@ -188,7 +188,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ messages, activeUser, onSend
                 )}
               </div>
               <span className="text-[10px] text-linen-secondary mt-1 px-1">
-                {msg.authorName} • {msg.timestamp}
+                {isFromCurrentPerspective ? 'You' : 'Partner'} • {msg.timestamp}
               </span>
             </div>
           );

@@ -8,6 +8,7 @@ import android.content.SharedPreferences
  * Supports local development (emulator/Wi-Fi) and live cloud deployments (Render, Railway, Cloudflare).
  */
 object NetworkConfig {
+    const val DEFAULT_CLOUD_URL = "https://twoapp-tfj8.onrender.com"
     const val EMULATOR_HOST = "10.0.2.2"
     const val DEFAULT_PORT = 4000
     const val PHYSICAL_DEVICE_HOST = "192.168.29.197"
@@ -33,36 +34,30 @@ object NetworkConfig {
     }
 
     val isConfiguredForCloud: Boolean
-        get() = customServerUrl.isNotBlank()
+        get() = true
 
     val httpBaseUrl: String
         get() {
-            if (customServerUrl.isNotBlank()) {
-                val url = customServerUrl.removeSuffix("/")
-                return if (url.startsWith("http://") || url.startsWith("https://")) {
-                    url
-                } else {
-                    "https://$url"
-                }
+            val target = if (customServerUrl.isNotBlank()) customServerUrl else DEFAULT_CLOUD_URL
+            val url = target.removeSuffix("/")
+            return if (url.startsWith("http://") || url.startsWith("https://")) {
+                url
+            } else {
+                "https://$url"
             }
-            val host = if (isEmulator) EMULATOR_HOST else PHYSICAL_DEVICE_HOST
-            return "http://$host:$DEFAULT_PORT"
         }
 
     val wsRelayUrl: String
         get() {
-            if (customServerUrl.isNotBlank()) {
-                val clean = customServerUrl.removeSuffix("/")
-                val withoutProtocol = clean
-                    .removePrefix("https://")
-                    .removePrefix("http://")
-                    .removePrefix("wss://")
-                    .removePrefix("ws://")
+            val target = if (customServerUrl.isNotBlank()) customServerUrl else DEFAULT_CLOUD_URL
+            val clean = target.removeSuffix("/")
+            val withoutProtocol = clean
+                .removePrefix("https://")
+                .removePrefix("http://")
+                .removePrefix("wss://")
+                .removePrefix("ws://")
 
-                val scheme = if (clean.startsWith("http://") || clean.startsWith("ws://")) "ws" else "wss"
-                return "$scheme://$withoutProtocol/relay"
-            }
-            val host = if (isEmulator) EMULATOR_HOST else PHYSICAL_DEVICE_HOST
-            return "ws://$host:$DEFAULT_PORT/relay"
+            val scheme = if (clean.startsWith("http://") || clean.startsWith("ws://")) "ws" else "wss"
+            return "$scheme://$withoutProtocol/relay"
         }
 }

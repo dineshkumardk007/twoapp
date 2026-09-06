@@ -3,7 +3,7 @@ import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
-import { Shield, Download, Trash2, Palette, Lock, KeyRound, Globe, Calculator, ExternalLink } from 'lucide-react';
+import { Shield, Download, Trash2, Palette, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut } from 'lucide-react';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -14,6 +14,7 @@ interface SettingsViewProps {
   currentLocale?: Locale;
   onSelectLocale?: (locale: Locale) => void;
   onToggleCamouflage?: () => void;
+  onUnpair?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -24,7 +25,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onRestoreState = () => {},
   currentLocale = 'en',
   onSelectLocale = () => {},
-  onToggleCamouflage = () => {}
+  onToggleCamouflage = () => {},
+  onUnpair = () => {}
 }) => {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
@@ -85,6 +87,45 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div>
         <h2 className="font-serif text-2xl font-medium text-linen-primary">{t.settings.title}</h2>
         <p className="text-sm text-linen-secondary">{t.settings.subtitle}</p>
+      </div>
+
+      {/* Connected Space & End-to-End Encryption */}
+      <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
+            <Link2 className="w-4 h-4 text-linen-accent" />
+            <span>Connected Space &amp; Relay</span>
+          </div>
+          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+            E2EE Live
+          </span>
+        </div>
+
+        <div className="bg-linen-variant/40 rounded-xl p-3 text-xs space-y-2 border border-linen-border/60">
+          <div className="flex justify-between items-center text-linen-secondary">
+            <span>Your Device Role:</span>
+            <strong className="text-linen-primary font-medium">
+              {state.activeUser === 'user' ? 'Space Creator (User)' : 'Space Joiner (Partner)'}
+            </strong>
+          </div>
+          <div className="flex justify-between items-center text-linen-secondary">
+            <span>Relay Server:</span>
+            <span className="font-mono text-[10px] text-linen-primary">wss://twoapp-tfj8.onrender.com/relay</span>
+          </div>
+        </div>
+
+        <p className="text-xs text-linen-secondary leading-relaxed">
+          Need to switch to a different pairing phrase or reconnect? Unpairing returns you to the pairing setup without wiping your local entries.
+        </p>
+
+        <button
+          onClick={onUnpair}
+          className="inline-flex items-center px-3.5 py-2 rounded-xl border border-linen-border bg-linen-variant hover:bg-linen-border text-linen-primary text-xs font-medium transition-colors cursor-pointer"
+        >
+          <LogOut className="w-3.5 h-3.5 mr-1.5 text-linen-accent" />
+          Unpair / Reset Space Connection
+        </button>
       </div>
 
       {/* Language & Locale Picker */}

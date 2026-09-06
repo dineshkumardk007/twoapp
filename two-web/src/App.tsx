@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { loadState, saveState, clearState, SpaceState } from './core/storage';
-import { wsRelay } from './core/ws';
+import { wsRelay, RelayStatus } from './core/ws';
 import {
   deriveSpaceCredentials,
   loadSpaceSession,
   saveSpaceSession,
+  clearSpaceSession,
   SpaceSession
 } from './core/space';
 import { localMesh } from './core/localMesh';
@@ -95,6 +96,17 @@ export const App: React.FC = () => {
   // Bumped when pairing completes so the relay effect re-runs and joins the new space.
   const [spaceVersion, setSpaceVersion] = useState(0);
 
+  // Session & relay connection state
+  const [session, setSession] = useState<SpaceSession | null>(loadSpaceSession);
+  const [relayStatus, setRelayStatus] = useState<RelayStatus>(() => wsRelay.getStatus());
+
+  // Track live WebSocket relay status
+  useEffect(() => {
+    return wsRelay.subscribeStatus((status) => {
+      setRelayStatus(status);
+    });
+  }, []);
+
   // Check URL parameters for dual-window live sync demonstration
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -108,8 +120,10 @@ export const App: React.FC = () => {
   // then join the relay. Nothing is sent until the key exists, so records are
   // never broadcast in the clear.
   useEffect(() => {
-    const session = loadSpaceSession();
-    if (!session) return;
+    if (!session) {
+      wsRelay.disconnect();
+      return;
+    }
 
     let cancelled = false;
     deriveSpaceCredentials(session.code, session.role)
@@ -121,7 +135,7 @@ export const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [spaceVersion]);
+  }, [session, spaceVersion]);
 
   // Listen for remote updates
   useEffect(() => {
@@ -1336,14 +1350,25 @@ export const App: React.FC = () => {
     return <CalculatorDecoy onUnlock={() => setIsCamouflaged(false)} />;
   }
 
-  if (!state.isPaired) {
+  const handleUnpair = () => {
+    if (window.confirm('Are you sure you want to disconnect from this space? You can reconnect anytime with your 8-word pairing phrase.')) {
+      clearSpaceSession();
+      wsRelay.disconnect();
+      setSession(null);
+      setState(prev => ({ ...prev, isPaired: false }));
+      setSpaceVersion(v => v + 1);
+    }
+  };
+
+  if (!session || !state.isPaired) {
     return (
       <OnboardingView
-        onComplete={(session: SpaceSession) => {
-          saveSpaceSession(session);
+        onComplete={(newSession: SpaceSession) => {
+          saveSpaceSession(newSession);
+          setSession(newSession);
           // The partner who created the space is 'user'; the joiner is
           // 'partner'. Every record on the wire is attributed with this role.
-          setState(prev => ({ ...prev, isPaired: true, activeUser: session.role }));
+          setState(prev => ({ ...prev, isPaired: true, activeUser: newSession.role }));
           setSpaceVersion(v => v + 1);
         }}
       />
@@ -1362,6 +1387,7 @@ export const App: React.FC = () => {
         onOpenStoryTour={() => setShowStoryTour(true)}
         onTriggerPulse={() => triggerGlobalPulse('Warm hug across distance')}
         locale={locale}
+        relayStatus={relayStatus}
       />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-20">
@@ -1677,6 +1703,7 @@ export const App: React.FC = () => {
             currentLocale={locale}
             onSelectLocale={setLocale}
             onToggleCamouflage={() => setIsCamouflaged(true)}
+            onUnpair={handleUnpair}
           />
         )}
       </main>

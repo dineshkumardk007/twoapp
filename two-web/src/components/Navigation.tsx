@@ -16,6 +16,7 @@ interface NavigationProps {
   onOpenStoryTour?: () => void;
   onTriggerPulse?: () => void;
   locale?: Locale;
+  relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -27,7 +28,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   onToggleCamouflage,
   onOpenStoryTour,
   onTriggerPulse,
-  locale = 'en'
+  locale = 'en',
+  relayStatus = 'connected'
 }) => {
   const [showPairingModal, setShowPairingModal] = useState(false);
   const [showMeshModal, setShowMeshModal] = useState(false);
@@ -153,18 +155,27 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
             )}
 
-            {/* Testing Perspective Switcher */}
-            <button
-              onClick={onToggleActiveUser}
-              className="inline-flex items-center text-xs font-medium px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant hover:bg-linen-border transition-colors text-linen-primary border border-linen-border"
-              title="Switch user perspective to test how your partner sees the app"
+            {/* Real-Time E2EE Relay Status Badge */}
+            <div
+              className="inline-flex items-center text-xs font-medium px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant text-linen-primary border border-linen-border select-none"
+              title={relayStatus === 'connected' ? 'Connected securely to E2EE Relay' : 'Connecting to Relay...'}
             >
-              <Users className="w-3.5 h-3.5 mr-1.5 text-linen-accent" />
-              <span className="hidden sm:inline">{t.perspective}:</span>
-              <strong className="ml-1 text-linen-primary">
-                {activeUser === 'user' ? t.you : t.partner}
-              </strong>
-            </button>
+              <span
+                className={`w-2 h-2 rounded-full mr-1.5 shrink-0 ${
+                  relayStatus === 'connected'
+                    ? 'bg-emerald-500 shadow-xs animate-pulse'
+                    : relayStatus === 'connecting' || relayStatus === 'reconnecting'
+                    ? 'bg-amber-400 animate-pulse'
+                    : 'bg-stone-400'
+                }`}
+              />
+              <span className="hidden sm:inline">
+                {relayStatus === 'connected' ? 'Two • Connected' : 'Connecting...'}
+              </span>
+              <span className="sm:hidden">
+                {relayStatus === 'connected' ? 'Live' : 'Syncing'}
+              </span>
+            </div>
 
             {/* Emergency Exit */}
             <button

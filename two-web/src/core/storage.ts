@@ -35,6 +35,7 @@ import {
   RepairLetter,
   KintsugiVesselItem
 } from '../types';
+import { loadSpaceSession } from './space';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
 
@@ -80,43 +81,21 @@ export interface SpaceState {
 }
 
 const DEFAULT_STATE: SpaceState = {
-  isPaired: true,
+  isPaired: false,
   activeUser: 'user',
   userReport: {
     weather: 'CALM',
     capacity: 4,
     notAboutYouActive: false,
-    updatedAt: 'Today, 2:00 PM'
+    updatedAt: 'Today'
   },
   partnerReport: {
-    weather: 'RAINY',
-    capacity: 1,
-    notAboutYouActive: true,
-    updatedAt: 'Today, 1:15 PM'
+    weather: 'CALM',
+    capacity: 4,
+    notAboutYouActive: false,
+    updatedAt: 'Today'
   },
-  messages: [
-    {
-      id: '1',
-      authorId: 'partner',
-      authorName: 'Partner',
-      text: 'Hey love, how is your afternoon going?',
-      timestamp: '2:15 PM'
-    },
-    {
-      id: '2',
-      authorId: 'user',
-      authorName: 'You',
-      text: 'Taking a deep breath after a busy meeting. Loved our morning coffee.',
-      timestamp: '2:18 PM'
-    },
-    {
-      id: '3',
-      authorId: 'partner',
-      authorName: 'Partner',
-      text: 'Thinking of you. Take all the time you need today.',
-      timestamp: '2:20 PM'
-    }
-  ],
+  messages: [],
   journalEntries: [
     {
       id: '1',
@@ -1021,12 +1000,24 @@ const DEFAULT_STATE: SpaceState = {
 
 export function loadState(): SpaceState {
   try {
+    const session = loadSpaceSession();
+    const isPaired = Boolean(session);
+    const activeUser = session ? session.role : 'user';
+
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_STATE;
+    if (!raw) {
+      return {
+        ...DEFAULT_STATE,
+        isPaired,
+        activeUser
+      };
+    }
     const parsed = JSON.parse(raw);
     return {
       ...DEFAULT_STATE,
       ...parsed,
+      isPaired,
+      activeUser,
       rituals: parsed.rituals || DEFAULT_STATE.rituals,
       pebbles: parsed.pebbles || DEFAULT_STATE.pebbles,
       letters: parsed.letters || DEFAULT_STATE.letters,

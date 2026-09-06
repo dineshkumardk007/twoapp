@@ -28,7 +28,7 @@ export const EmotionalWeatherCard: React.FC<EmotionalWeatherCardProps> = ({
   // Determine current active person's report vs partner's report
   const myReport = activeUser === 'user' ? userReport : partnerReport;
   const theirReport = activeUser === 'user' ? partnerReport : userReport;
-  const partnerName = activeUser === 'user' ? 'Partner' : 'You';
+  const partnerName = 'Partner';
 
   return (
     <div className="bg-linen-surface rounded-2xl border border-linen-border p-6 shadow-sm">
@@ -73,7 +73,7 @@ export const EmotionalWeatherCard: React.FC<EmotionalWeatherCardProps> = ({
         {/* You Column */}
         <div className="pl-4 flex flex-col items-center text-center">
           <span className="text-xs font-medium text-linen-accent uppercase tracking-wider">
-            {activeUser === 'user' ? 'Your Status' : 'Partner (Active)'}
+            Your Status
           </span>
           <div className="text-3xl my-2">{WEATHER_METADATA[myReport.weather].icon}</div>
           <span className="text-base font-serif font-medium text-linen-primary">
