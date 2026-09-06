@@ -1,5 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, SpaceState } from './core/storage';
+import {
+  isAuthConfigured,
+  getAccessToken,
+  getSession as getAuthSession,
+  signOut,
+  saveEscrow,
+  loadEscrow
+} from './core/auth';
+import { wrapForEscrow, unwrapSecret } from './core/keyEscrow';
+import { fetchPendingInvite, acceptInvite } from './core/invites';
+import { LoginView } from './views/LoginView';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
   hasEncryptedVault,
@@ -8,8 +19,10 @@ import {
   writeVault,
   destroyVault
 } from './core/vault';
+import type { SpaceRole } from './core/space';
 import {
   isWeakPairingCode,
+  generatePairingCode,
   deriveSpaceCredentials,
   loadSpaceSession,
   saveSpaceSession,
@@ -129,6 +142,13 @@ export const App: React.FC = () => {
   // opened. `vaultKey` is held only in memory and drives every later write.
   const [isLocked, setIsLocked] = useState<boolean>(() => hasEncryptedVault());
   const [vaultKey, setVaultKey] = useState<CryptoKey | null>(null);
+
+  // The login password is held in memory only, for the lifetime of the tab. It
+  // is what unlocks the local vault (replacing the old 4-digit PIN) and what
+  // unwraps the pairing code held in escrow, so the app asks for it on every
+  // open even when the Supabase session is still valid.
+  const [authPassword, setAuthPassword] = useState<string | null>(null);
+  const [authError, setAuthError] = useState('');
   const [isUnlocking, setIsUnlocking] = useState(false);
   // Device storage is full: the app still runs from memory, but nothing is
   // being saved. Silence here would cost the user everything on refresh.
@@ -158,6 +178,19 @@ export const App: React.FC = () => {
       setState(prev => ({ ...prev, activeUser: perspective }));
     }
   }, []);
+
+  // Hand the relay a token whenever one is available, so a refreshed Supabase
+  // session reconnects without the user doing anything.
+  useEffect(() => {
+    if (!isAuthConfigured) return;
+    let cancelled = false;
+    getAccessToken().then(token => {
+      if (!cancelled) wsRelay.setAccessToken(token);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [authPassword]);
 
   // Derive this couple's room id and content key from the stored pairing code,
   // then join the relay. Nothing is sent until the key exists, so records are
@@ -1520,6 +1553,118 @@ export const App: React.FC = () => {
     setSpaceVersion(v => v + 1);
   };
 
+  /**
+   * Everything that has to happen once an account is confirmed.
+   *
+   * Resolves which space this person belongs to, in priority order:
+   *   1. an escrowed pairing code they already have (restoring a new device)
+   *   2. an invite a partner left for them (joining an existing space)
+   *   3. a freshly generated code (a brand new space)
+   *
+   * The code itself is never asked for and never shown; it is escrowed under
+   * the password and the recovery phrase so it can survive a new device.
+   */
+  const handleAuthenticated = async (
+    password: string,
+    recoveryPhrase: string | null,
+    displayName: string
+  ) => {
+    setAuthError('');
+    wsRelay.setAccessToken(await getAccessToken());
+
+    let code: string | null = null;
+    let role: SpaceRole = 'user';
+
+    try {
+      const escrow = await loadEscrow();
+      if (escrow) {
+        code = await unwrapSecret(escrow.wrapped_by_password, password);
+        if (!code) {
+          // The account is fine but this password cannot open the escrow, which
+          // means it was changed after the space was sealed.
+          setAuthError(
+            'Your account opened, but this password cannot unlock your sanctuary. Use the password you had when you created it, or restore with your 12-word phrase.'
+          );
+          return;
+        }
+      }
+
+      if (!code) {
+        const invite = await fetchPendingInvite();
+        if (invite) {
+          code = invite.code;
+          role = 'partner';
+          await acceptInvite(invite.id);
+        }
+      }
+
+      const isNewSpace = !code;
+      if (!code) code = generatePairingCode();
+
+      // Only a fresh signup carries a recovery phrase, and that is the only
+      // moment both wrappings can be written together.
+      if (recoveryPhrase) {
+        const wrapped = await wrapForEscrow(code, password, recoveryPhrase);
+        await saveEscrow({
+          wrapped_by_password: wrapped.byPassword,
+          wrapped_by_recovery: wrapped.byRecovery
+        });
+      }
+
+      const nextSession: SpaceSession = {
+        code,
+        role,
+        userName: displayName || state.userName || (role === 'user' ? 'You' : 'Partner')
+      };
+
+      setAuthPassword(password);
+      setSession(nextSession);
+
+      // The password replaces the PIN, so the local vault is keyed on it.
+      if (hasEncryptedVault()) {
+        const opened = await unlockVault(password);
+        if (opened) {
+          setState({ ...opened.payload.state, isPaired: true, activeUser: role, pinEnabled: true });
+          setVaultKey(opened.key);
+          setIsLocked(false);
+        } else {
+          setAuthError('This device holds a sanctuary sealed with a different password.');
+          return;
+        }
+      } else {
+        const nextState: SpaceState = {
+          ...state,
+          isPaired: true,
+          activeUser: role,
+          userName: nextSession.userName || state.userName,
+          pinEnabled: true
+        };
+        setState(nextState);
+        const key = await createVault(password, { state: nextState, session: nextSession });
+        setVaultKey(key);
+        setIsLocked(false);
+        clearState();
+        clearSpaceSession();
+      }
+
+      if (isNewSpace) console.info('[Auth] New sanctuary created for this account.');
+      setSpaceVersion(v => v + 1);
+    } catch (e: any) {
+      console.error('[Auth] Sign-in flow failed', e);
+      setAuthError('Could not open your sanctuary. Check your connection and try again.');
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    wsRelay.setAccessToken(null);
+    wsRelay.disconnect();
+    setAuthPassword(null);
+    setVaultKey(null);
+    setSession(null);
+    setIsLocked(hasEncryptedVault());
+  };
+
   const handleUnpair = () => {
     if (window.confirm('Are you sure you want to disconnect from this space? You can reconnect anytime using your Space Link Code.')) {
       clearSpaceSession();
@@ -1533,7 +1678,22 @@ export const App: React.FC = () => {
   // App Lock PIN Screen. The vault is genuinely encrypted, so this is not a
   // comparison against a stored PIN - the PIN derives the key, and a wrong one
   // simply fails to decrypt.
-  if (isLocked) {
+  // Accounts gate everything. The password is held only in memory, so it is
+  // asked for on each open - it is both the sign-in and the device unlock.
+  if (isAuthConfigured && !authPassword) {
+    return (
+      <>
+        {authError && (
+          <div className="fixed top-3 inset-x-3 z-50 max-w-md mx-auto rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 shadow-sm">
+            <p className="text-xs text-rose-900 leading-relaxed">{authError}</p>
+          </div>
+        )}
+        <LoginView onAuthenticated={handleAuthenticated} />
+      </>
+    );
+  }
+
+  if (isLocked && !isAuthConfigured) {
     const handlePinInput = (val: string) => {
       if (isUnlocking) return;
       const next = (pinAttempt + val).slice(0, 4);
@@ -2019,6 +2179,8 @@ export const App: React.FC = () => {
             onToggleCamouflage={() => setIsCamouflaged(true)}
             onUnpair={handleUnpair}
             onRotateCode={handleRotateCode}
+            onSignOut={handleSignOut}
+            userName={state.userName}
             onToggleActiveUser={toggleActiveUser}
             decoyCode={decoyCode}
             onUpdateDecoyCode={(newCode) => {

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode } from '../core/space';
+import { isAuthConfigured } from '../core/auth';
+import { sendInvite } from '../core/invites';
 import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
@@ -19,6 +21,10 @@ interface SettingsViewProps {
   onUnpair?: () => void;
   /** Move this space to a freshly generated link code. */
   onRotateCode?: (code: string) => void;
+  /** Signs out of the account and locks the sanctuary. */
+  onSignOut?: () => void;
+  /** Display name used when inviting a partner. */
+  userName?: string;
   onToggleActiveUser?: () => void;
   decoyCode?: string;
   onUpdateDecoyCode?: (code: string) => void;
@@ -38,6 +44,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onToggleCamouflage = () => {},
   onUnpair = () => {},
   onRotateCode = () => {},
+  onSignOut,
+  userName = '',
   onToggleActiveUser = () => {},
   decoyCode = '142.85',
   onUpdateDecoyCode,
@@ -49,6 +57,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [copiedCode, setCopiedCode] = useState(false);
   const [decoyCodeInput, setDecoyCodeInput] = useState(decoyCode);
   const [decoySaved, setDecoySaved] = useState(false);
+  const [inviteTo, setInviteTo] = useState('');
+  const [inviteState, setInviteState] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [inviteError, setInviteError] = useState('');
+
   const [rotateMode, setRotateMode] = useState<'idle' | 'new' | 'join'>('idle');
   const [rotateCode, setRotateCode] = useState('');
   const [joinRotation, setJoinRotation] = useState('');
@@ -79,6 +91,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       } catch {}
     }
     handleCopyCode();
+  };
+
+  const handleInvite = async () => {
+    if (!spaceCode) return;
+    setInviteState('sending');
+    setInviteError('');
+
+    const res = await sendInvite(inviteTo, spaceCode, userName);
+    if (res.ok) {
+      setInviteState('sent');
+      setInviteTo('');
+      setTimeout(() => setInviteState('idle'), 4000);
+    } else {
+      setInviteState('idle');
+      setInviteError(res.error || 'Could not send the invitation.');
+    }
   };
 
   const beginRotation = () => {
@@ -190,6 +218,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span>Share</span>
                 </button>
               </div>
+            </div>
+          )}
+
+          {isAuthConfigured && spaceCode && (
+            <div className="pb-2 border-b border-linen-border/40 space-y-2">
+              <span className="block text-[10px] uppercase tracking-wider font-semibold text-linen-accent">
+                Invite your partner
+              </span>
+              <p className="text-[11px] text-linen-secondary leading-relaxed">
+                Send it to their mobile number or email. When they sign in, their sanctuary joins
+                yours automatically — no code to read out.
+              </p>
+              <input
+                type="text"
+                value={inviteTo}
+                onChange={(e) => setInviteTo(e.target.value)}
+                placeholder="9876543210  or  them@example.com"
+                className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface text-sm text-linen-primary"
+              />
+              {inviteError && <p className="text-[11px] text-rose-700">{inviteError}</p>}
+              <button
+                type="button"
+                disabled={inviteState === 'sending' || !inviteTo.trim()}
+                onClick={handleInvite}
+                className="w-full px-2.5 py-2 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+              >
+                {inviteState === 'sending'
+                  ? 'Sending…'
+                  : inviteState === 'sent'
+                  ? 'Invitation sent'
+                  : 'Send invitation'}
+              </button>
             </div>
           )}
 
@@ -322,6 +382,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <LogOut className="w-3.5 h-3.5 mr-1.5 text-linen-accent" />
           Unpair / Reconnect Space
         </button>
+
+        {isAuthConfigured && onSignOut && (
+          <button
+            onClick={onSignOut}
+            className="inline-flex items-center px-3.5 py-2 ml-2 rounded-xl border border-linen-border bg-linen-surface hover:bg-linen-variant text-linen-primary text-xs font-medium transition-colors cursor-pointer"
+          >
+            <Lock className="w-3.5 h-3.5 mr-1.5 text-linen-accent" />
+            Sign out
+          </button>
+        )}
       </div>
 
       {/* Language & Locale Picker */}

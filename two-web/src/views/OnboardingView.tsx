@@ -156,7 +156,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
               </div>
               <h1 className="font-serif text-2xl sm:text-3xl font-medium text-linen-primary">Welcome to Two</h1>
               <p className="text-xs sm:text-sm text-linen-secondary max-w-sm mx-auto leading-relaxed">
-                A private sanctuary built only for the two of you. Zero accounts, zero ads, zero passwords required.
+                A private sanctuary built only for the two of you. No ads, no tracking, and everything you write is encrypted on this device.
               </p>
             </div>
 
