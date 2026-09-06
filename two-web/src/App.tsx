@@ -1778,7 +1778,7 @@ Anyone using the old code loses access, including your partner until you give th
     };
 
     return (
-      <div className="min-h-screen bg-linen-bg flex items-center justify-center p-4">
+      <div className="min-h-screen app-min-vh bg-linen-bg flex items-center justify-center p-4">
         <div className="max-w-xs w-full bg-linen-surface border border-linen-border rounded-3xl p-8 shadow-sm text-center space-y-6">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-500 shadow-xs">
             <Lock className="w-7 h-7 text-rose-500" />
@@ -1905,7 +1905,7 @@ Anyone using the old code loses access, including your partner until you give th
 
 
   return (
-    <div className={`min-h-screen transition-colors duration-200 ${themeClass}`}>
+    <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
       <Navigation
         currentTab={currentTab}
         onSelectTab={handleSelectTab}

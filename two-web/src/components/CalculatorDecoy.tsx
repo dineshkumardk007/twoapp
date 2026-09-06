@@ -108,7 +108,7 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white flex flex-col items-center justify-center p-4 selection:bg-none">
+    <div className="min-h-screen app-min-vh bg-neutral-900 text-white flex flex-col items-center justify-center p-4 selection:bg-none">
       <div className="w-full max-w-xs bg-neutral-950 rounded-3xl p-6 shadow-2xl border border-neutral-800 space-y-5">
         {/* Camouflage Mode Header Info */}
         <div className="flex items-center justify-between text-neutral-500 text-[11px] px-1">

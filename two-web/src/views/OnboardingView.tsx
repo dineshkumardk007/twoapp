@@ -151,7 +151,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
   };
 
   return (
-    <div className="min-h-screen bg-linen-bg flex items-center justify-center p-4">
+    <div className="min-h-screen app-min-vh bg-linen-bg flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 shadow-sm">
         
         {/* Step 1: Your Name (No login / account) */}

@@ -41,3 +41,55 @@
     size: auto;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Mobile viewport height
+   ---------------------------------------------------------------------------
+   `100vh` on a phone means the height with the browser chrome hidden, so it is
+   larger than what you can actually see and it CHANGES as the address bar
+   collapses. Anything sized with it grows and shrinks while you scroll, and it
+   does not shrink at all when the keyboard opens - which is what pushed the
+   chat composer under the keyboard and made the whole view jump.
+
+   `dvh` tracks the real visible area, keyboard included. The `vh` line stays
+   first as a fallback for anything that does not understand it. */
+.app-vh {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.app-min-vh {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* A scroll container should absorb its own overscroll rather than handing it to
+   the page, which is what makes a chat log drag the whole layout with it. */
+.scroll-contain {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------------------------------------------------------------------------
+   Chat shell
+   ---------------------------------------------------------------------------
+   The old height was `calc(100vh - 12rem)`: a guess at how much chrome sits
+   around the view, measured against a unit that is wrong on phones. On a small
+   screen that left the composer below the fold, and every address-bar movement
+   resized the box under your thumb.
+
+   Sizing from the dynamic viewport instead, with a smaller allowance on phones
+   where there is simply less chrome, keeps the composer on screen and still
+   lets the log take whatever is left. */
+.chat-shell {
+  height: calc(100vh - 11rem);
+  height: calc(100dvh - 11rem);
+  min-height: 20rem;
+}
+
+@media (min-width: 640px) {
+  .chat-shell {
+    height: calc(100vh - 12rem);
+    height: calc(100dvh - 12rem);
+  }
+}

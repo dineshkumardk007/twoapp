@@ -49,13 +49,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [recordingSeconds, setRecordingSeconds] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<any>(null);
 
   // Auto-scroll to the bottom whenever a new message is sent or received
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // scrollIntoView walks up and scrolls EVERY scrollable ancestor, including
+    // the page, which is what yanked the whole layout around on each message.
+    // Driving the log's own scrollTop moves only the log.
+    const log = messagesRef.current;
+    if (log) log.scrollTop = log.scrollHeight;
   }, [messages]);
 
   // Clean up recording timer on unmount
@@ -145,7 +150,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-12rem)] bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
+    <div className="flex flex-col chat-shell bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
       {/* Header */}
       <div className="px-6 py-3.5 border-b border-linen-border bg-linen-variant/40 flex items-center justify-between">
         <div>
@@ -177,7 +182,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       </div>
 
       {/* Message List */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+      <div ref={messagesRef} className="flex-1 min-h-0 overflow-y-auto scroll-contain p-4 sm:p-6 space-y-4">
         {messages.map(msg => {
           const isFromCurrentPerspective = msg.authorId === activeUser;
           return (
