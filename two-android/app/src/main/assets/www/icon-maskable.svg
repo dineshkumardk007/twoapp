@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="192" height="192" role="img" aria-label="Two">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512" role="img" aria-label="Two">
   <title>Two</title>
   <defs>
     <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1">
@@ -7,9 +7,9 @@
     </linearGradient>
   </defs>
 
-  <rect width="108" height="108" rx="24" fill="url(#plate)"/>
+  <rect width="108" height="108" rx="0" fill="url(#plate)"/>
 
-  <g transform="translate(2.700,2.700) scale(0.95)" fill="none" stroke-linecap="round">
+  <g transform="translate(12.960,12.960) scale(0.76)" fill="none" stroke-linecap="round">
     <path d="M54,84 C51,70 51,56 54,44 C56,36 56,30 54,25" stroke="#4E5A2E" stroke-width="4.5"/>
 
     <path d="M54,47 C58,32 66,25 80,24 C79,38 70,46 54,47 Z" fill="#606C38"/>

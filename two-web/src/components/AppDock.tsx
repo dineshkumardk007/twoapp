@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronUp, X, Search } from 'lucide-react';
 import { getDestinations, allDestinations } from '../data/destinations';
 
@@ -47,22 +47,51 @@ export const AppDock: React.FC<AppDockProps> = ({
   const groups = useMemo(() => getDestinations(unreadChatCount), [unreadChatCount]);
   const flat = useMemo(() => allDestinations(unreadChatCount), [unreadChatCount]);
 
-  // A tablet has room for more shortcuts before the bar starts to feel cramped.
-  const slots = isTablet ? 6 : 4;
+  const railRef = useRef<HTMLDivElement | null>(null);
 
-  const quick = useMemo(() => {
-    const picked = favourites
-      .map(id => flat.find(d => d.id === id))
-      .filter(Boolean)
-      .slice(0, slots) as typeof flat;
+  /**
+   * Every destination, most-used first.
+   *
+   * The bar used to show four and hide the other twenty-eight behind a sheet,
+   * which made the sheet the only real way to move around. Now the bar scrolls:
+   * the four you reach for are still under your thumb where they were, and the
+   * rest are a swipe away instead of two taps and a search field.
+   */
+  const rail = useMemo(() => {
+    const seen = new Set<string>();
+    const ordered: typeof flat = [];
 
-    // Keep the bar full even if a stored favourite no longer exists.
-    for (const d of flat) {
-      if (picked.length >= slots) break;
-      if (!picked.some(p => p.id === d.id)) picked.push(d);
+    for (const id of favourites) {
+      const found = flat.find(d => d.id === id);
+      if (found && !seen.has(found.id)) {
+        seen.add(found.id);
+        ordered.push(found);
+      }
     }
-    return picked;
-  }, [favourites, flat, slots]);
+    for (const d of flat) {
+      if (!seen.has(d.id)) {
+        seen.add(d.id);
+        ordered.push(d);
+      }
+    }
+    return ordered;
+  }, [favourites, flat]);
+
+  // Jumping somewhere from the sheet should leave that tab visible in the bar,
+  // not scrolled off behind the edge with no sign of where you are.
+  useEffect(() => {
+    const strip = railRef.current;
+    if (!strip) return;
+
+    const active = strip.querySelector<HTMLElement>('[data-dock-active="true"]');
+    if (!active) return;
+
+    const target = active.offsetLeft - strip.clientWidth / 2 + active.clientWidth / 2;
+    strip.scrollTo({
+      left: Math.max(0, target),
+      behavior: strip.scrollLeft === 0 ? 'auto' : 'smooth'
+    });
+  }, [currentTab, rail]);
 
   // The sheet is a navigation layer, not a page: hardware back should close it.
   useEffect(() => {
@@ -127,10 +156,15 @@ export const AppDock: React.FC<AppDockProps> = ({
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-linen-secondary/70" />
+                  {/* Deliberately NOT autofocused. Opening the sheet threw the
+                      keyboard up over the destinations you came here to look
+                      at, so browsing meant dismissing a keyboard first. Tap the
+                      field when you actually want to search. */}
                   <input
-                    autoFocus
                     value={search}
                     onChange={e => setSearch(e.target.value)}
+                    inputMode="search"
+                    enterKeyHint="search"
                     placeholder="Find anywhere in our sanctuary…"
                     className="w-full rounded-2xl border border-linen-border/70 bg-linen-variant/50 py-2.5 pl-9 pr-3 text-sm text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
                   />
@@ -145,7 +179,7 @@ export const AppDock: React.FC<AppDockProps> = ({
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+            <div className="min-h-0 flex-1 overflow-y-auto scroll-contain px-4 pb-4">
               {filtered.length === 0 && (
                 <p className="py-10 text-center text-sm text-linen-secondary">Nothing by that name.</p>
               )}
@@ -201,37 +235,59 @@ export const AppDock: React.FC<AppDockProps> = ({
         className="fixed inset-x-0 bottom-0 z-40 border-t border-white/20 bg-linen-surface/70 backdrop-blur-2xl"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div className={`mx-auto flex items-stretch gap-1 px-2 py-1.5 ${isTablet ? 'max-w-2xl' : ''}`}>
-          {quick.map(item => {
-            const Icon = item.icon;
-            const active = currentTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => go(item.id)}
-                className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 transition-all active:scale-90 ${
-                  active ? 'bg-linen-variant/70 text-linen-primary' : 'text-linen-secondary'
-                }`}
-              >
-                <Icon className={`h-5 w-5 ${active ? 'text-linen-primary' : 'text-linen-secondary'}`} />
-                <span className="max-w-full truncate px-1 text-[9px] font-medium">
-                  {item.name.split(' ')[0]}
-                </span>
-                {item.badge && (
-                  <span className="absolute right-1/4 top-0.5 h-2 w-2 rounded-full bg-rose-500" />
-                )}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => setExpanded(true)}
-            aria-label="All destinations"
-            className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-linen-secondary transition-all active:scale-90"
+        <div className={`mx-auto flex items-stretch ${isTablet ? 'max-w-3xl' : ''}`}>
+          <div
+            ref={railRef}
+            className="dock-rail flex min-w-0 flex-1 items-stretch gap-1 overflow-x-auto px-2 py-1.5"
           >
-            <ChevronUp className="h-5 w-5" />
-            <span className="text-[9px] font-medium">All</span>
-          </button>
+            {rail.map(item => {
+              const Icon = item.icon;
+              const active = currentTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  data-dock-active={active}
+                  onClick={() => go(item.id)}
+                  className={`dock-tab relative flex shrink-0 snap-start flex-col items-center gap-0.5 rounded-2xl py-1.5 transition-all active:scale-90 ${
+                    // Sized so the next tab is always half-visible at the right
+                    // edge. That sliver is the only thing telling you the bar
+                    // scrolls at all; with tabs sized to divide the width
+                    // exactly, it reads as a fixed row of four.
+                    isTablet ? 'w-[88px]' : 'w-[66px]'
+                  } ${active ? 'dock-tab-active text-linen-primary' : 'text-linen-secondary'}`}
+                >
+                  <Icon
+                    className={`h-5 w-5 transition-transform ${
+                      active ? 'dock-tab-icon text-linen-primary' : 'text-linen-secondary'
+                    }`}
+                  />
+                  <span
+                    className={`max-w-full truncate px-1 text-[9px] ${
+                      active ? 'font-semibold' : 'font-medium'
+                    }`}
+                  >
+                    {item.name.split(' ')[0]}
+                  </span>
+                  {item.badge && (
+                    <span className="absolute right-1/4 top-0.5 h-2 w-2 rounded-full bg-rose-500" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Pinned outside the scroller: the way out of the bar must not be
+              something you have to scroll to find. */}
+          <div className="dock-all-edge flex shrink-0 items-stretch py-1.5 pl-1 pr-2">
+            <button
+              onClick={() => setExpanded(true)}
+              aria-label="All destinations"
+              className="flex w-[54px] flex-col items-center justify-center gap-0.5 rounded-2xl text-linen-secondary transition-all active:scale-90"
+            >
+              <ChevronUp className="h-5 w-5" />
+              <span className="text-[9px] font-medium">All</span>
+            </button>
+          </div>
         </div>
       </div>
     </>

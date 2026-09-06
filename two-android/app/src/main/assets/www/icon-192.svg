@@ -1,6 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <rect width="192" height="192" rx="42" fill="#FAF8F5"/>
-  <rect x="6" y="6" width="180" height="180" rx="36" fill="none" stroke="#E6E0D8" stroke-width="2"/>
-  <text x="96" y="125" font-size="80" text-anchor="middle" font-family="serif" fill="#2D2621">Two</text>
-  <circle cx="140" cy="55" r="8" fill="#8B5A2B"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="192" height="192" role="img" aria-label="Two">
+  <title>Two</title>
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFEFC"/>
+      <stop offset="1" stop-color="#F0ECE4"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="108" height="108" rx="24" fill="url(#plate)"/>
+
+  <g transform="translate(2.700,2.700) scale(0.95)" fill="none" stroke-linecap="round">
+    <path d="M54,84 C51,70 51,56 54,44 C56,36 56,30 54,25" stroke="#4E5A2E" stroke-width="4.5"/>
+
+    <path d="M54,47 C58,32 66,25 80,24 C79,38 70,46 54,47 Z" fill="#606C38"/>
+    <path d="M56,45 C64,39 71,32 77,27" stroke="#FAF8F5" stroke-width="1.4" opacity="0.45"/>
+
+    <path d="M54,64 C50,49 42,42 28,41 C29,55 38,63 54,64 Z" fill="#8A9A5B"/>
+    <path d="M52,62 C44,56 37,49 31,44" stroke="#FAF8F5" stroke-width="1.4" opacity="0.45"/>
+  </g>
 </svg>

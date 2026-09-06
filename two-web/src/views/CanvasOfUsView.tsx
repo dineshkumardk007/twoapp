@@ -9,6 +9,7 @@ import {
   Edit3,
   Brush,
   Eraser,
+  Pencil,
   Undo2,
   Trash2,
   Download,
@@ -75,6 +76,90 @@ const PALETTE_COLORS = [
   { name: 'Chalk White', hex: '#f8fafc' }
 ];
 
+type CanvasTool = 'pen' | 'watercolor' | 'pencil' | 'eraser';
+type CanvasBackground = 'parchment' | 'night_sky' | 'clean_linen';
+
+const BACKGROUND_INK: Record<CanvasBackground, string> = {
+  night_sky: '#0f172a',
+  parchment: '#f6f2e8',
+  clean_linen: '#ffffff'
+};
+
+/**
+ * The single definition of how a tool looks.
+ *
+ * The live preview and the committed redraw used to carry separate copies of
+ * this, so a stroke could visibly change the instant you lifted your finger.
+ */
+function applyToolStyle(
+  ctx: CanvasRenderingContext2D,
+  tool: CanvasTool,
+  color: string,
+  size: number,
+  background: CanvasBackground
+) {
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  switch (tool) {
+    case 'eraser':
+      ctx.strokeStyle = BACKGROUND_INK[background];
+      ctx.lineWidth = size * 2.5;
+      break;
+    case 'watercolor':
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.28;
+      ctx.lineWidth = size * 3.5;
+      break;
+    case 'pencil':
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.75;
+      ctx.lineWidth = Math.max(1, size * 0.7);
+      break;
+    default:
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.95;
+      ctx.lineWidth = size;
+  }
+}
+
+/**
+ * Traces a stroke as quadratic curves through the midpoints of its samples.
+ *
+ * Joining raw samples with straight lines turns every hand tremor into a
+ * visible corner, which is what made a slow, deliberate line look shaky.
+ * Curving through the midpoints keeps the path where the finger actually went
+ * while removing the faceting.
+ */
+function tracePath(
+  ctx: CanvasRenderingContext2D,
+  points: { x: number; y: number }[],
+  width: number,
+  height: number
+) {
+  const px = (p: { x: number; y: number }) => ({ x: p.x * width, y: p.y * height });
+
+  const first = px(points[0]);
+  ctx.moveTo(first.x, first.y);
+
+  if (points.length === 2) {
+    const second = px(points[1]);
+    ctx.lineTo(second.x, second.y);
+    return;
+  }
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const current = px(points[i]);
+    const next = px(points[i + 1]);
+    ctx.quadraticCurveTo(current.x, current.y, (current.x + next.x) / 2, (current.y + next.y) / 2);
+  }
+
+  // The last sample is only a control point above, so finish on it explicitly
+  // or the stroke stops short of where the finger lifted.
+  const last = px(points[points.length - 1]);
+  ctx.lineTo(last.x, last.y);
+}
+
 export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   canvasState,
   activeUser,
@@ -86,10 +171,10 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
 }) => {
   const partnerName = activeUser === 'user' ? 'Partner' : 'You';
 
-  const [activeTool, setActiveTool] = useState<'pen' | 'watercolor' | 'pencil' | 'eraser'>('pen');
+  const [activeTool, setActiveTool] = useState<CanvasTool>('pen');
   const [activeColor, setActiveColor] = useState<string>('#f43f5e');
   const [brushSize, setBrushSize] = useState<number>(4);
-  const [backgroundType, setBackgroundType] = useState<'parchment' | 'night_sky' | 'clean_linen'>(
+  const [backgroundType, setBackgroundType] = useState<CanvasBackground>(
     canvasState.background || 'parchment'
   );
   const [savedFeedback, setSavedFeedback] = useState(false);
@@ -98,6 +183,20 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   const isDrawingRef = useRef(false);
   const currentPointsRef = useRef<{ x: number; y: number }[]>([]);
 
+  /**
+   * The canvas size in CSS pixels.
+   *
+   * The backing store is sized in device pixels and the context is scaled by
+   * that same ratio once, so every drawing call below works in CSS pixels.
+   * Reading `canvas.width` here instead applies the ratio a SECOND time, which
+   * is what put strokes away from the finger that drew them: at a device ratio
+   * of 3 a point tapped halfway across the board rendered one and a half board
+   * widths off, and the error grew with the distance from the top-left corner.
+   * Desktops mostly hid it because their ratio is 1, where multiplying twice
+   * changes nothing.
+   */
+  const sizeRef = useRef({ width: 0, height: 0 });
+
   // Render all committed strokes onto the HTML5 Canvas
   const redrawCanvas = () => {
     const canvas = canvasRef.current;
@@ -105,8 +204,8 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const width = canvas.width;
-    const height = canvas.height;
+    const { width, height } = sizeRef.current;
+    if (width === 0 || height === 0) return;
 
     ctx.clearRect(0, 0, width, height);
 
@@ -144,123 +243,143 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
       if (stroke.points.length < 2) return;
 
       ctx.save();
+      applyToolStyle(ctx, stroke.tool as CanvasTool, stroke.color, stroke.size, backgroundType);
       ctx.beginPath();
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      if (stroke.tool === 'eraser') {
-        ctx.strokeStyle = backgroundType === 'night_sky' ? '#0f172a' : backgroundType === 'parchment' ? '#f6f2e8' : '#ffffff';
-        ctx.lineWidth = stroke.size * 2.5;
-      } else if (stroke.tool === 'watercolor') {
-        ctx.strokeStyle = stroke.color;
-        ctx.globalAlpha = 0.28;
-        ctx.lineWidth = stroke.size * 3.5;
-      } else if (stroke.tool === 'pencil') {
-        ctx.strokeStyle = stroke.color;
-        ctx.globalAlpha = 0.75;
-        ctx.lineWidth = Math.max(1, stroke.size * 0.7);
-      } else {
-        // Pen
-        ctx.strokeStyle = stroke.color;
-        ctx.globalAlpha = 0.95;
-        ctx.lineWidth = stroke.size;
-      }
-
-      const p0 = stroke.points[0];
-      ctx.moveTo(p0.x * width, p0.y * height);
-
-      for (let i = 1; i < stroke.points.length; i++) {
-        const pt = stroke.points[i];
-        ctx.lineTo(pt.x * width, pt.y * height);
-      }
-
+      tracePath(ctx, stroke.points, width, height);
       ctx.stroke();
       ctx.restore();
     });
   };
 
-  // Adjust canvas resolution for Retina / DPI and redraw
+  // The resize observer below is set up once and must not capture the redraw
+  // from the render that installed it, or it repaints with a stale background
+  // and stroke list after every rotation.
+  const redrawRef = useRef(redrawCanvas);
+  redrawRef.current = redrawCanvas;
+
+  // Match the backing store to the display and redraw at the new size.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const updateDimensions = () => {
       const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.scale(dpr, dpr);
+      if (rect.width === 0 || rect.height === 0) return;
+
+      // Beyond 3x there is nothing left for an eye to resolve, and every extra
+      // pixel is paid for on every repaint of every stroke.
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      const nextWidth = Math.round(rect.width * dpr);
+      const nextHeight = Math.round(rect.height * dpr);
+
+      // Assigning width or height clears the canvas even when the value is
+      // unchanged, so an observer callback that changes nothing must not touch
+      // them - otherwise a stray layout pass wipes the board mid-stroke.
+      if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+        canvas.width = nextWidth;
+        canvas.height = nextHeight;
       }
-      redrawCanvas();
+      sizeRef.current = { width: rect.width, height: rect.height };
+
+      // Resizing resets the transform, so the ratio is reapplied here rather
+      // than once at mount. setTransform rather than scale: scale multiplies
+      // into whatever is already there and would compound on every call.
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      redrawRef.current();
     };
 
     updateDimensions();
+
+    // The board is a share of a flexible column: opening the dock, rotating the
+    // phone or the address bar collapsing all change its size without ever
+    // firing a window resize.
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(updateDimensions);
+      observer.observe(canvas);
+      return () => observer.disconnect();
+    }
+
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, [backgroundType]);
+  }, []);
 
   // Redraw whenever strokes change
   useEffect(() => {
     redrawCanvas();
   }, [canvasState.strokes, backgroundType]);
 
-  // Pointer event handlers for drawing
-  const getNormalizedPoint = (e: React.PointerEvent<HTMLCanvasElement>) => {
+  // Points are stored as a fraction of the board, so a stroke drawn on a phone
+  // lands in the same place on a laptop that is showing a wider board.
+  const normalizedFrom = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+    const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
     return { x, y };
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     isDrawingRef.current = true;
-    const pt = getNormalizedPoint(e);
-    currentPointsRef.current = [pt];
+    currentPointsRef.current = [normalizedFrom(e.clientX, e.clientY)];
     playSketchSound();
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isDrawingRef.current || !canvasRef.current) return;
-    const pt = getNormalizedPoint(e);
-    currentPointsRef.current.push(pt);
 
-    // Live preview on canvas
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    if (ctx && currentPointsRef.current.length >= 2) {
+    const { width, height } = sizeRef.current;
+    if (!ctx || width === 0) return;
+
+    // A 120Hz screen delivers several positions per frame but React only hands
+    // us the last one. Asking for the coalesced batch is the difference between
+    // a fast stroke arriving as a smooth arc and as three long chords.
+    const native = e.nativeEvent;
+    const batch =
+      typeof native.getCoalescedEvents === 'function'
+        ? native.getCoalescedEvents()
+        : [native];
+
+    for (const sample of batch.length > 0 ? batch : [native]) {
+      const pt = normalizedFrom(sample.clientX, sample.clientY);
       const pts = currentPointsRef.current;
-      const p1 = pts[pts.length - 2];
-      const p2 = pts[pts.length - 1];
+      const prev = pts[pts.length - 1];
+
+      // Sub-pixel repeats add nothing to the picture and go out over the relay
+      // encrypted, one by one, to the other phone.
+      if (prev) {
+        const dx = (pt.x - prev.x) * width;
+        const dy = (pt.y - prev.y) * height;
+        if (dx * dx + dy * dy < 0.5) continue;
+      }
+      pts.push(pt);
+
+      if (pts.length < 2) continue;
 
       ctx.save();
+      applyToolStyle(ctx, activeTool, activeColor, brushSize, backgroundType);
       ctx.beginPath();
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
 
-      if (activeTool === 'eraser') {
-        ctx.strokeStyle = backgroundType === 'night_sky' ? '#0f172a' : backgroundType === 'parchment' ? '#f6f2e8' : '#ffffff';
-        ctx.lineWidth = brushSize * 2.5;
-      } else if (activeTool === 'watercolor') {
-        ctx.strokeStyle = activeColor;
-        ctx.globalAlpha = 0.28;
-        ctx.lineWidth = brushSize * 3.5;
-      } else if (activeTool === 'pencil') {
-        ctx.strokeStyle = activeColor;
-        ctx.globalAlpha = 0.75;
-        ctx.lineWidth = Math.max(1, brushSize * 0.7);
+      const toPx = (p: { x: number; y: number }) => ({ x: p.x * width, y: p.y * height });
+      const b = toPx(pts[pts.length - 2]);
+      const c = toPx(pts[pts.length - 1]);
+
+      if (pts.length === 2) {
+        ctx.moveTo(b.x, b.y);
+        ctx.lineTo(c.x, c.y);
       } else {
-        ctx.strokeStyle = activeColor;
-        ctx.globalAlpha = 0.95;
-        ctx.lineWidth = brushSize;
+        // Draw the same midpoint-to-midpoint curve the finished stroke will be
+        // rendered with, so nothing shifts when the stroke is committed.
+        const a = toPx(pts[pts.length - 3]);
+        ctx.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2);
+        ctx.quadraticCurveTo(b.x, b.y, (b.x + c.x) / 2, (b.y + c.y) / 2);
       }
 
-      ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
-      ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
       ctx.stroke();
       ctx.restore();
     }
@@ -270,18 +389,28 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     if (!isDrawingRef.current) return;
     isDrawingRef.current = false;
 
-    if (currentPointsRef.current.length >= 2) {
-      const newStroke: DrawStroke = {
-        id: 'stroke-' + Date.now(),
-        authorId: activeUser,
-        tool: activeTool,
-        color: activeColor,
-        size: brushSize,
-        points: [...currentPointsRef.current]
-      };
-      onAddStroke(newStroke);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Already released, e.g. the pointer was cancelled by the system.
     }
+
+    const points = currentPointsRef.current;
     currentPointsRef.current = [];
+
+    // A tap is a dot, not nothing. Repeating the point gives the round line cap
+    // something to draw, which is what a pen touched to paper actually leaves.
+    if (points.length === 1) points.push({ ...points[0] });
+    if (points.length < 2) return;
+
+    onAddStroke({
+      id: 'stroke-' + Date.now(),
+      authorId: activeUser,
+      tool: activeTool,
+      color: activeColor,
+      size: brushSize,
+      points
+    });
   };
 
   const handleSaveToVault = () => {
@@ -371,6 +500,17 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           >
             <Brush className="w-4 h-4 text-sky-600" />
             <span className="hidden sm:inline">Watercolor</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTool('pencil')}
+            className={`p-2 rounded-xl text-xs font-serif transition-all cursor-pointer flex items-center space-x-1.5 ${
+              activeTool === 'pencil' ? 'bg-linen-surface text-linen-primary shadow-xs font-semibold' : 'text-linen-secondary hover:text-linen-primary'
+            }`}
+            title="Pencil (Light Graphite)"
+          >
+            <Pencil className="w-4 h-4 text-stone-600" />
+            <span className="hidden sm:inline">Pencil</span>
           </button>
 
           <button
@@ -464,7 +604,10 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          className="w-full h-[400px] sm:h-[500px] touch-none cursor-crosshair block"
+          // Without this, a stroke interrupted by an incoming call or a system
+          // gesture is silently thrown away instead of being kept.
+          onPointerCancel={handlePointerUp}
+          className="w-full h-[52vh] max-h-[500px] min-h-[300px] sm:h-[500px] touch-none cursor-crosshair block"
         />
 
         {/* Bottom Canvas Telemetry Badge */}

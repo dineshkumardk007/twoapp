@@ -1,22 +1,52 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The app mark: one stem, two leaves.
+
+  It matches the leaf on the website's browser tab, and the pair is the point -
+  the app is called Two. Drawn as a vector so it stays sharp from the 48dp
+  launcher grid up to the 512dp store listing, and kept inside the 66dp safe
+  circle so a round, squircle or teardrop mask cannot clip a leaf off.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
     <group
-        android:scaleX="0.6"
-        android:scaleY="0.6"
-        android:translateX="21.6"
-        android:translateY="21.6">
+        android:scaleX="0.82"
+        android:scaleY="0.82"
+        android:translateX="9.72"
+        android:translateY="9.72">
+
+        <!-- Stem first, so each leaf covers the join where it meets it. -->
         <path
-            android:fillColor="#B07D62"
-            android:pathData="M42,54 A18,18 0 1,1 42,53.9 Z" />
+            android:strokeColor="#4E5A2E"
+            android:strokeWidth="4.5"
+            android:strokeLineCap="round"
+            android:pathData="M54,84 C51,70 51,56 54,44 C56,36 56,30 54,25" />
+
+        <!-- Upper leaf -->
         <path
-            android:fillColor="#2D312E"
-            android:pathData="M66,54 A18,18 0 1,1 66,53.9 Z" />
+            android:fillColor="#606C38"
+            android:pathData="M54,47 C58,32 66,25 80,24 C79,38 70,46 54,47 Z" />
         <path
-            android:fillColor="#E0A96D"
-            android:pathData="M54,42.5 A18,18 0 0,1 54,65.5 A18,18 0 0,1 54,42.5 Z" />
+            android:strokeColor="#FAF8F5"
+            android:strokeWidth="1.4"
+            android:strokeAlpha="0.45"
+            android:strokeLineCap="round"
+            android:pathData="M56,45 C64,39 71,32 77,27" />
+
+        <!-- Lower leaf, a shade lighter so the two read as a pair and not one
+             solid blob at launcher size. -->
+        <path
+            android:fillColor="#8A9A5B"
+            android:pathData="M54,64 C50,49 42,42 28,41 C29,55 38,63 54,64 Z" />
+        <path
+            android:strokeColor="#FAF8F5"
+            android:strokeWidth="1.4"
+            android:strokeAlpha="0.45"
+            android:strokeLineCap="round"
+            android:pathData="M52,62 C44,56 37,49 31,44" />
     </group>
 </vector>
