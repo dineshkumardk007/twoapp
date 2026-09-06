@@ -226,6 +226,21 @@ export const App: React.FC = () => {
 
   useEffect(() => wsRelay.subscribePresence(setPartnerOnline), []);
 
+  // The relay confirming a record is what turns a pending message into "sent".
+  useEffect(
+    () =>
+      wsRelay.subscribe((msg: any) => {
+        if (msg?.type !== 'RECORD_ACK' || !msg.correlationId) return;
+        setState(prev => ({
+          ...prev,
+          messages: prev.messages.map(m =>
+            m.id === msg.correlationId ? { ...m, delivered: true } : m
+          )
+        }));
+      }),
+    []
+  );
+
   // Listen for remote updates
   useEffect(() => {
     const unsubscribe = wsRelay.subscribe((msg) => {
@@ -325,6 +340,12 @@ export const App: React.FC = () => {
               });
               return { ...prev, rituals: updatedRituals };
             });
+          } else if (record.type === 'READ_RECEIPT') {
+            const upTo = Number(parsed.upTo) || 0;
+            setState(prev => ({
+              ...prev,
+              partnerReadAt: Math.max(prev.partnerReadAt || 0, upTo)
+            }));
           } else if (record.type === 'VAULT_NAME') {
             setState(prev => ({ ...prev, vaultName: String(parsed.name || '') }));
           } else if (record.type === 'GRATITUDE_STAR') {
@@ -800,10 +821,36 @@ export const App: React.FC = () => {
     setSpaceVersion(v => v + 1);
   };
 
+  /**
+   * Tells the partner how far we have read.
+   *
+   * Sends one watermark rather than a receipt per message, and stays quiet when
+   * nothing new has arrived, so opening the chat repeatedly does not fill the
+   * relay with duplicates.
+   */
+  const lastSentReceiptRef = useRef(0);
+  const sendReadReceipt = () => {
+    const newest = state.messages.reduce(
+      (max, m) => (m.authorId !== state.activeUser && m.sentAt && m.sentAt > max ? m.sentAt : max),
+      0
+    );
+    if (!newest || newest <= lastSentReceiptRef.current) return;
+    lastSentReceiptRef.current = newest;
+    wsRelay.broadcastUpdate('READ_RECEIPT', { upTo: newest });
+  };
+
+  // Opening the chat is not the only way to read something: a message arriving
+  // while the chat is already open has also been seen.
+  useEffect(() => {
+    if (currentTab === 'chat') sendReadReceipt();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.messages.length, currentTab]);
+
   const handleSelectTab = (tabId: string) => {
     setCurrentTab(tabId);
     if (tabId === 'chat') {
       setUnreadChatCount(0);
+      sendReadReceipt();
       if (typeof document !== 'undefined') {
         document.title = 'Two — Private Encrypted Space';
       }
@@ -869,10 +916,14 @@ export const App: React.FC = () => {
       authorName: state.activeUser === 'user' ? 'You' : 'Partner',
       text,
       timestamp: 'Just now',
+      sentAt: Date.now(),
+      delivered: false,
       isNeedCard,
       ...extra
     };
-    wsRelay.broadcastUpdate('CHAT', newMessage);
+    // The message id doubles as the correlation id, so the relay's ack can be
+    // matched back to this exact bubble.
+    wsRelay.broadcastUpdate('CHAT', newMessage, newMessage.id);
     setState(prev => ({
       ...prev,
       messages: [...prev.messages, newMessage]
@@ -1984,6 +2035,7 @@ export const App: React.FC = () => {
             onSendMessage={handleSendMessage}
             onOpenSoftLanding={() => setCurrentTab('softlanding')}
             partnerName={state.partnerName || 'Partner'}
+            partnerReadAt={state.partnerReadAt}
           />
         )}
 

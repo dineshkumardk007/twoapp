@@ -88,6 +88,14 @@ export interface SpaceState {
    * so the relay never learns it.
    */
   vaultName: string;
+  /**
+   * Newest message sentAt the partner has confirmed reading.
+   *
+   * A single watermark rather than a flag per message: one small record covers
+   * an entire backlog, instead of storing hundreds of receipts on the relay
+   * forever.
+   */
+  partnerReadAt: number;
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -97,6 +105,7 @@ const DEFAULT_STATE: SpaceState = {
   partnerName: 'Partner',
   pinEnabled: false,
   vaultName: '',
+  partnerReadAt: 0,
   userReport: {
     weather: 'CALM',
     capacity: 4,
@@ -1040,6 +1049,7 @@ export function loadState(): SpaceState {
       // and drop the value on the next save.
       pinEnabled: parsed.pinEnabled !== undefined ? parsed.pinEnabled : !!parsed.appPin,
       vaultName: parsed.vaultName || '',
+      partnerReadAt: parsed.partnerReadAt || 0,
       rituals: parsed.rituals || DEFAULT_STATE.rituals,
       pebbles: parsed.pebbles || DEFAULT_STATE.pebbles,
       letters: parsed.letters || DEFAULT_STATE.letters,

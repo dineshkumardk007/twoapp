@@ -212,8 +212,8 @@ class WebSocketRelayClient {
       // Confirmed by the relay, so stop re-sending it. `persisted: false` means
       // the relay took it but its database is down; it stays deliverable live,
       // and the relay flushes it to storage on recovery.
-      this.ackRecord(payload.recordId);
-      this.emit(payload);
+      const correlationId = this.ackRecord(payload.recordId);
+      this.emit({ ...payload, correlationId });
       return;
     }
 
@@ -249,12 +249,18 @@ class WebSocketRelayClient {
     }
   }
 
-  /** Encrypts `data` and broadcasts it to the partner. Fire-and-forget. */
-  broadcastUpdate(type: string, data: any): void {
-    void this.encryptAndSend(type, data);
+  /**
+   * Encrypts `data` and broadcasts it to the partner. Fire-and-forget.
+   *
+   * `correlationId` lets the caller recognise its own record in the relay's
+   * acknowledgement - the record id is generated here, so without it a sender
+   * cannot tell which of its messages was confirmed.
+   */
+  broadcastUpdate(type: string, data: any, correlationId?: string): void {
+    void this.encryptAndSend(type, data, correlationId);
   }
 
-  private async encryptAndSend(type: string, data: any) {
+  private async encryptAndSend(type: string, data: any, correlationId?: string) {
     const creds = this.creds;
     // No credentials means no key, so there is nothing safe to queue.
     if (!creds) return;
@@ -291,15 +297,15 @@ class WebSocketRelayClient {
       // locally when the user performed the action.
       this.markApplied(recordId);
 
-      this.enqueue(record);
+      this.enqueue(record, correlationId);
       this.flushOutbox();
     } catch (e) {
       console.error('[Relay] Encryption failed', e);
     }
   }
 
-  private enqueue(record: any) {
-    this.outbox.push(record);
+  private enqueue(record: any, correlationId?: string) {
+    this.outbox.push({ record, correlationId });
     if (this.outbox.length > MAX_OUTBOX) this.outbox.shift();
     this.persistOutbox();
   }
@@ -307,15 +313,19 @@ class WebSocketRelayClient {
   /** Sends everything still awaiting acknowledgement. Safe to call repeatedly. */
   private flushOutbox() {
     if (!this.isOpen() || !this.creds) return;
-    for (const record of this.outbox) {
-      this.rawSend({ type: 'RECORD', spaceId: record.spaceId, record });
+    for (const entry of this.outbox) {
+      // Only the record goes on the wire; correlationId is a local concern.
+      this.rawSend({ type: 'RECORD', spaceId: entry.record.spaceId, record: entry.record });
     }
   }
 
-  private ackRecord(recordId: string) {
-    const before = this.outbox.length;
-    this.outbox = this.outbox.filter(r => r.id !== recordId);
-    if (this.outbox.length !== before) this.persistOutbox();
+  /** Removes an acknowledged record and reports which message it belonged to. */
+  private ackRecord(recordId: string): string | undefined {
+    const entry = this.outbox.find(e => e.record.id === recordId);
+    if (!entry) return undefined;
+    this.outbox = this.outbox.filter(e => e.record.id !== recordId);
+    this.persistOutbox();
+    return entry.correlationId;
   }
 
   private outboxKey(spaceId: string) {
@@ -338,7 +348,13 @@ class WebSocketRelayClient {
   private restoreOutbox(spaceId: string) {
     try {
       const raw = localStorage.getItem(this.outboxKey(spaceId));
-      this.outbox = raw ? JSON.parse(raw) : [];
+      const parsed = raw ? JSON.parse(raw) : [];
+
+      // Earlier builds stored bare records. Upgrading with a non-empty queue
+      // would otherwise send `record: undefined` and lose those messages.
+      this.outbox = (Array.isArray(parsed) ? parsed : [])
+        .map((e: any) => (e && e.record ? e : { record: e, correlationId: undefined }))
+        .filter((e: any) => e.record && typeof e.record.id === 'string');
     } catch {
       this.outbox = [];
     }

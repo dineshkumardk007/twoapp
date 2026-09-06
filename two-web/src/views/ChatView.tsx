@@ -4,7 +4,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
 import { HeartOptionsModal } from '../components/HeartOptionsModal';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
-import { Send, Plus, Sparkles, Mic, Square, Trash2, Heart, Feather } from 'lucide-react';
+import { Send, Plus, Sparkles, Mic, Square, Trash2, Heart, Feather, Check, CheckCheck, Clock } from 'lucide-react';
 
 // Five playful, five affectionate. Kept short so the row never scrolls on a phone.
 const QUICK_EMOJIS: { char: string; label: string }[] = [
@@ -23,6 +23,8 @@ const QUICK_EMOJIS: { char: string; label: string }[] = [
 interface ChatViewProps {
   messages: ChatMessage[];
   activeUser: 'user' | 'partner';
+  /** Newest sentAt the partner has confirmed reading. */
+  partnerReadAt?: number;
   onSendMessage: (
     text: string,
     isNeed?: boolean,
@@ -36,6 +38,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   messages,
   activeUser,
   onSendMessage,
+  partnerReadAt = 0,
   onOpenSoftLanding,
   partnerName = 'Partner'
 }) => {
@@ -210,6 +213,26 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </div>
               <span className="text-[10px] text-linen-secondary mt-1 px-1">
                 {isFromCurrentPerspective ? 'You' : partnerName} • {msg.timestamp}
+                {isFromCurrentPerspective && (
+                  <span className="ml-1.5 inline-flex items-center align-middle">
+                    {msg.sentAt && partnerReadAt >= msg.sentAt ? (
+                      <>
+                        <CheckCheck className="w-3.5 h-3.5 text-sky-600" />
+                        <span className="sr-only">Read</span>
+                      </>
+                    ) : msg.delivered ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-linen-secondary/70" />
+                        <span className="sr-only">Sent</span>
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="w-3 h-3 text-linen-secondary/50" />
+                        <span className="sr-only">Sending</span>
+                      </>
+                    )}
+                  </span>
+                )}
               </span>
             </div>
           );

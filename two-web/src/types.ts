@@ -21,7 +21,12 @@ export interface ChatMessage {
   authorId: string;
   authorName: string;
   text: string;
+  /** Human-facing label such as "Just now"; not comparable. */
   timestamp: string;
+  /** Epoch ms, used to compare against the partner's read watermark. */
+  sentAt?: number;
+  /** True once the relay has acknowledged the record. */
+  delivered?: boolean;
   isNeedCard?: boolean;
   isVoiceMemo?: boolean;
   audioDataUrl?: string;
