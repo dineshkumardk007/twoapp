@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  CoPresenceActivity, CoPresenceRoomId, CoPresenceUserStatus, CoPresenceInteractionEvent 
+  CoPresenceActivity, 
+  CoPresenceRoomId, 
+  CoPresenceUserStatus, 
+  CoPresenceInteractionEvent,
+  CoPresenceTimerEvent
 } from '../types';
 import { wsRelay } from '../core/ws';
 import { localMesh } from '../core/localMesh';
@@ -13,6 +17,8 @@ import {
 
 interface CoPresenceViewProps {
   activeUser: 'user' | 'partner';
+  userName?: string;
+  partnerName?: string;
   onSendToChat?: (message: string) => void;
 }
 
@@ -124,7 +130,12 @@ function playInteractionSound(type: string) {
   } catch (_) {}
 }
 
-export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSendToChat }) => {
+export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ 
+  activeUser, 
+  userName = 'You', 
+  partnerName = 'Partner',
+  onSendToChat 
+}) => {
   const [selectedRoomId, setSelectedRoomId] = useState<CoPresenceRoomId>('rainy_window');
   const [myActivity, setMyActivity] = useState<CoPresenceActivity>('reading');
   const [myCustomNote, setMyCustomNote] = useState<string>('');
@@ -136,7 +147,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
   // Partner status received from network
   const [partnerStatus, setPartnerStatus] = useState<CoPresenceUserStatus>({
     userId: activeUser === 'user' ? 'partner' : 'user',
-    name: activeUser === 'user' ? 'Partner' : 'You',
+    name: partnerName || (activeUser === 'user' ? 'Partner' : 'You'),
     activity: 'reading',
     room: 'rainy_window',
     customNote: 'Reading chapter 4 by the lamp',
@@ -150,8 +161,9 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
     icon: string;
   } | null>(null);
 
-  // Pomodoro shared timer
+  // Pomodoro shared synchronized timer
   const [timerActive, setTimerActive] = useState(false);
+  const [timerEndsAt, setTimerEndsAt] = useState<number | null>(null);
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(25 * 60);
 
   const currentRoom = useMemo(() => ROOMS[selectedRoomId], [selectedRoomId]);
@@ -170,23 +182,30 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
     };
   }, [soundEnabled, currentRoom, volume]);
 
-  // Timer Tick
+  // Real-time wall-clock countdown tick (zero drift across network)
   useEffect(() => {
-    if (!timerActive) return;
-    const interval = setInterval(() => {
-      setTimerSecondsLeft(prev => {
-        if (prev <= 1) {
-          setTimerActive(false);
-          playInteractionSound('glance');
-          return 25 * 60;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timerActive]);
+    if (!timerActive || !timerEndsAt) return;
 
-  // Listen for remote presence updates and interactions
+    const tick = () => {
+      const remaining = Math.max(0, Math.round((timerEndsAt - Date.now()) / 1000));
+      setTimerSecondsLeft(remaining);
+
+      if (remaining <= 0) {
+        setTimerActive(false);
+        setTimerEndsAt(null);
+        setTimerSecondsLeft(25 * 60);
+        playInteractionSound('glance');
+        setActiveInteractionToast({ text: 'Co-Focus session completed together! 🍵✨', icon: '🎉' });
+        setTimeout(() => setActiveInteractionToast(null), 5000);
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [timerActive, timerEndsAt]);
+
+  // Listen for remote presence updates, interactions, and timer sync
   useEffect(() => {
     const unsubWs = wsRelay.subscribe((msg) => {
       if (msg.type === 'REMOTE_RECORD') {
@@ -195,6 +214,13 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
             const data: CoPresenceUserStatus = JSON.parse(msg.record.payload);
             if (data.userId !== activeUser) {
               setPartnerStatus(data);
+              // If partner has an active focus session running, sync our timer to it!
+              if (data.timerActive && data.timerEndsAt && data.timerEndsAt > Date.now()) {
+                const remaining = Math.max(0, Math.round((data.timerEndsAt - Date.now()) / 1000));
+                setTimerActive(true);
+                setTimerEndsAt(data.timerEndsAt);
+                setTimerSecondsLeft(remaining);
+              }
             }
           } catch (_) {}
         } else if (msg.record?.type === 'CO_PRESENCE_INTERACTION') {
@@ -202,6 +228,13 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
             const data: CoPresenceInteractionEvent = JSON.parse(msg.record.payload);
             if (data.senderId !== activeUser) {
               handleReceiveInteraction(data);
+            }
+          } catch (_) {}
+        } else if (msg.record?.type === 'CO_PRESENCE_TIMER') {
+          try {
+            const data: CoPresenceTimerEvent = JSON.parse(msg.record.payload);
+            if (data.senderId !== activeUser) {
+              handleReceiveTimerEvent(data);
             }
           } catch (_) {}
         }
@@ -212,30 +245,166 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
       if (packet.authorId !== activeUser) {
         if (packet.subType === 'CO_PRESENCE_STATUS') {
           setPartnerStatus(packet.payload);
+          if (packet.payload?.timerActive && packet.payload?.timerEndsAt && packet.payload.timerEndsAt > Date.now()) {
+            const remaining = Math.max(0, Math.round((packet.payload.timerEndsAt - Date.now()) / 1000));
+            setTimerActive(true);
+            setTimerEndsAt(packet.payload.timerEndsAt);
+            setTimerSecondsLeft(remaining);
+          }
         } else if (packet.subType === 'CO_PRESENCE_INTERACTION') {
           handleReceiveInteraction(packet.payload);
+        } else if (packet.subType === 'CO_PRESENCE_TIMER') {
+          handleReceiveTimerEvent(packet.payload);
         }
       }
     });
+
+    // Broadcast our initial arrival into the sanctuary room on mount
+    broadcastMyStatus(myActivity, selectedRoomId, myCustomNote);
 
     return () => {
       unsubWs();
       unsubMesh();
     };
-  }, [activeUser]);
+  }, [activeUser, myActivity, selectedRoomId, myCustomNote]);
 
-  const broadcastMyStatus = (activity: CoPresenceActivity, room: CoPresenceRoomId, note?: string) => {
+  const broadcastMyStatus = (
+    activity: CoPresenceActivity, 
+    room: CoPresenceRoomId, 
+    note?: string,
+    isTimerRunning?: boolean,
+    targetEndsAt?: number | null,
+    secsLeft?: number
+  ) => {
     const status: CoPresenceUserStatus = {
       userId: activeUser,
-      name: activeUser === 'user' ? 'You' : 'Partner',
+      name: userName || (activeUser === 'user' ? 'You' : 'Partner'),
       activity,
       room,
-      customNote: note || myCustomNote,
+      customNote: note !== undefined ? note : myCustomNote,
       isJoined,
-      joinedAt: joinedTimestamp
+      joinedAt: joinedTimestamp,
+      timerActive: isTimerRunning !== undefined ? isTimerRunning : timerActive,
+      timerEndsAt: targetEndsAt !== undefined ? (targetEndsAt || undefined) : (timerEndsAt || undefined),
+      timerSecondsLeft: secsLeft !== undefined ? secsLeft : timerSecondsLeft
     };
     wsRelay.broadcastUpdate('CO_PRESENCE_STATUS', status);
     localMesh.broadcastLocally('CO_PRESENCE_STATUS', status, activeUser);
+  };
+
+  const handleStartTimer = () => {
+    const currentLeft = timerSecondsLeft > 0 ? timerSecondsLeft : 25 * 60;
+    const endsAt = Date.now() + currentLeft * 1000;
+    setTimerActive(true);
+    setTimerEndsAt(endsAt);
+    setTimerSecondsLeft(currentLeft);
+    playInteractionSound('glance');
+
+    const event: CoPresenceTimerEvent = {
+      action: 'start',
+      isActive: true,
+      secondsLeft: currentLeft,
+      timerEndsAt: endsAt,
+      senderId: activeUser,
+      senderName: userName || (activeUser === 'user' ? 'You' : 'Partner'),
+      timestamp: Date.now()
+    };
+    wsRelay.broadcastUpdate('CO_PRESENCE_TIMER', event);
+    localMesh.broadcastLocally('CO_PRESENCE_TIMER', event, activeUser);
+
+    broadcastMyStatus(myActivity, selectedRoomId, myCustomNote, true, endsAt, currentLeft);
+
+    setActiveInteractionToast({ text: 'Started shared Co-Focus timer ⏱️', icon: '⏱️' });
+    setTimeout(() => setActiveInteractionToast(null), 3000);
+  };
+
+  const handlePauseTimer = () => {
+    setTimerActive(false);
+    setTimerEndsAt(null);
+
+    const event: CoPresenceTimerEvent = {
+      action: 'pause',
+      isActive: false,
+      secondsLeft: timerSecondsLeft,
+      timerEndsAt: null,
+      senderId: activeUser,
+      senderName: userName || (activeUser === 'user' ? 'You' : 'Partner'),
+      timestamp: Date.now()
+    };
+    wsRelay.broadcastUpdate('CO_PRESENCE_TIMER', event);
+    localMesh.broadcastLocally('CO_PRESENCE_TIMER', event, activeUser);
+
+    broadcastMyStatus(myActivity, selectedRoomId, myCustomNote, false, null, timerSecondsLeft);
+
+    setActiveInteractionToast({ text: 'Paused shared Co-Focus timer ⏸️', icon: '⏸️' });
+    setTimeout(() => setActiveInteractionToast(null), 3000);
+  };
+
+  const handleResetTimer = () => {
+    setTimerActive(false);
+    setTimerEndsAt(null);
+    setTimerSecondsLeft(25 * 60);
+
+    const event: CoPresenceTimerEvent = {
+      action: 'reset',
+      isActive: false,
+      secondsLeft: 25 * 60,
+      timerEndsAt: null,
+      senderId: activeUser,
+      senderName: userName || (activeUser === 'user' ? 'You' : 'Partner'),
+      timestamp: Date.now()
+    };
+    wsRelay.broadcastUpdate('CO_PRESENCE_TIMER', event);
+    localMesh.broadcastLocally('CO_PRESENCE_TIMER', event, activeUser);
+
+    broadcastMyStatus(myActivity, selectedRoomId, myCustomNote, false, null, 25 * 60);
+
+    setActiveInteractionToast({ text: 'Reset Co-Focus timer to 25:00 🔄', icon: '🔄' });
+    setTimeout(() => setActiveInteractionToast(null), 3000);
+  };
+
+  const handleReceiveTimerEvent = (event: CoPresenceTimerEvent) => {
+    if (event.action === 'start') {
+      const endsAt = event.timerEndsAt || (Date.now() + (event.secondsLeft || 25 * 60) * 1000);
+      const remaining = Math.max(0, Math.round((endsAt - Date.now()) / 1000));
+      setTimerActive(true);
+      setTimerEndsAt(endsAt);
+      setTimerSecondsLeft(remaining);
+      playInteractionSound('glance');
+      setActiveInteractionToast({
+        text: `${event.senderName || partnerName || 'Partner'} started a 25m Co-Focus session ⏱️`,
+        icon: '⏱️'
+      });
+      setTimeout(() => setActiveInteractionToast(null), 4000);
+    } else if (event.action === 'pause') {
+      setTimerActive(false);
+      setTimerEndsAt(null);
+      setTimerSecondsLeft(event.secondsLeft);
+      setActiveInteractionToast({
+        text: `${event.senderName || partnerName || 'Partner'} paused the Co-Focus timer ⏸️`,
+        icon: '⏸️'
+      });
+      setTimeout(() => setActiveInteractionToast(null), 4000);
+    } else if (event.action === 'reset') {
+      setTimerActive(false);
+      setTimerEndsAt(null);
+      setTimerSecondsLeft(event.secondsLeft || 25 * 60);
+      setActiveInteractionToast({
+        text: `${event.senderName || partnerName || 'Partner'} reset the timer 🔄`,
+        icon: '🔄'
+      });
+      setTimeout(() => setActiveInteractionToast(null), 4000);
+    } else if (event.action === 'complete') {
+      setTimerActive(false);
+      setTimerEndsAt(null);
+      setTimerSecondsLeft(25 * 60);
+      playInteractionSound('glance');
+      setActiveInteractionToast({
+        text: 'Co-Focus session completed together! 🍵✨',
+        icon: '🎉'
+      });
+      setTimeout(() => setActiveInteractionToast(null), 5000);
+    }
   };
 
   const handleReceiveInteraction = (event: CoPresenceInteractionEvent) => {
@@ -281,7 +450,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
     const event: CoPresenceInteractionEvent = {
       type,
       senderId: activeUser,
-      senderName: activeUser === 'user' ? 'You' : 'Partner',
+      senderName: userName || (activeUser === 'user' ? 'You' : 'Partner'),
       timestamp: Date.now()
     };
     wsRelay.broadcastUpdate('CO_PRESENCE_INTERACTION', event);
@@ -342,7 +511,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
         <div className="flex items-center space-x-3 bg-linen-surface border border-linen-border px-3.5 py-2 rounded-2xl shadow-xs self-start sm:self-auto">
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-1.5 rounded-xl transition-colors ${
+            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
               soundEnabled ? 'text-amber-600 bg-amber-50' : 'text-linen-secondary hover:text-linen-primary'
             }`}
             title="Toggle Room Ambient Sounds"
@@ -373,7 +542,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
 
         {/* Interaction Floating Toast Banner */}
         {activeInteractionToast && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/90 backdrop-blur-md border border-amber-400/60 px-5 py-2.5 rounded-2xl text-amber-200 text-xs font-serif font-medium shadow-xl flex items-center space-x-2 animate-in slide-in-from-top-4 duration-300">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/95 backdrop-blur-md border border-amber-400/70 px-5 py-2.5 rounded-2xl text-amber-200 text-xs font-serif font-medium shadow-2xl flex items-center space-x-2 animate-in slide-in-from-top-4 duration-300">
             <span className="text-lg">{activeInteractionToast.icon}</span>
             <span>{activeInteractionToast.text}</span>
           </div>
@@ -399,7 +568,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
                   <button
                     key={id}
                     onClick={() => handleSelectRoom(id)}
-                    className={`px-3 py-1 rounded-xl text-xs transition-all flex items-center space-x-1 ${
+                    className={`px-3 py-1 rounded-xl text-xs transition-all flex items-center space-x-1 cursor-pointer ${
                       isSelected ? 'bg-white/20 text-white font-medium shadow-xs' : 'text-stone-400 hover:text-stone-200'
                     }`}
                   >
@@ -422,14 +591,24 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
                   </div>
                   <div>
                     <span className="text-xs uppercase tracking-wider font-semibold text-amber-300/80">Partner's Side</span>
-                    <h4 className="font-serif text-base font-medium text-stone-100">{partnerStatus.name}</h4>
+                    <h4 className="font-serif text-base font-medium text-stone-100">
+                      {partnerName || partnerStatus.name || 'Partner'}
+                    </h4>
                   </div>
                 </div>
 
-                <span className="inline-flex items-center text-[10px] font-medium px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-ping" />
-                  Beside You
-                </span>
+                <div className="flex items-center space-x-2">
+                  {timerActive && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 flex items-center">
+                      <Clock className="w-2.5 h-2.5 mr-1" />
+                      Co-Focusing
+                    </span>
+                  )}
+                  <span className="inline-flex items-center text-[10px] font-medium px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-ping" />
+                    Beside You
+                  </span>
+                </div>
               </div>
 
               {/* Partner's Activity */}
@@ -439,7 +618,9 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
                   <span>{ACTIVITIES[partnerStatus.activity].label}</span>
                 </div>
                 <p className="text-xs text-stone-300 italic font-serif">
-                  {partnerStatus.customNote ? `“${partnerStatus.customNote}”` : `${partnerStatus.name} is ${ACTIVITIES[partnerStatus.activity].verb}.`}
+                  {partnerStatus.customNote 
+                    ? `“${partnerStatus.customNote}”` 
+                    : `${partnerName || partnerStatus.name} is ${ACTIVITIES[partnerStatus.activity].verb}.`}
                 </p>
               </div>
 
@@ -459,7 +640,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
                   <div>
                     <span className="text-xs uppercase tracking-wider font-semibold text-rose-300/80">Your Side</span>
                     <h4 className="font-serif text-base font-medium text-stone-100">
-                      {activeUser === 'user' ? 'You' : 'Partner'}
+                      {userName || (activeUser === 'user' ? 'You' : 'Partner')}
                     </h4>
                   </div>
                 </div>
@@ -567,7 +748,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
                     <button
                       key={act}
                       onClick={() => handleSelectActivity(act)}
-                      className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs transition-all ${
+                      className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-rose-500 text-white font-medium shadow-xs'
                           : 'bg-black/30 hover:bg-white/10 text-stone-300 border border-white/5'
@@ -581,36 +762,42 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ activeUser, onSe
               </div>
             </div>
 
-            {/* Shared Gentle Pomodoro Focus Timer */}
+            {/* Shared Real-Time Co-Focus Timer */}
             <div className="p-4 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-stone-300">Shared Co-Focus Timer</span>
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-xs font-medium text-stone-300">Shared Co-Focus Timer</span>
+                  {timerActive && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  )}
+                </div>
+                <Clock className={`w-3.5 h-3.5 ${timerActive ? 'text-emerald-400 animate-pulse' : 'text-amber-400'}`} />
               </div>
 
               <div className="text-center py-1">
-                <span className="font-mono text-3xl font-bold text-amber-300 tracking-wider">
+                <span className={`font-mono text-3xl font-bold tracking-wider ${timerActive ? 'text-emerald-300' : 'text-amber-300'}`}>
                   {formatTimer(timerSecondsLeft)}
                 </span>
                 <span className="block text-[10px] text-stone-400 mt-0.5">
-                  {timerActive ? 'Co-Focusing in quiet flow' : '25m Focus • 5m Cuddle Break'}
+                  {timerActive ? 'Both focusing in quiet flow ✨' : '25m Focus • 5m Cuddle Break'}
                 </span>
               </div>
 
               <div className="flex items-center justify-center space-x-2">
                 <button
-                  onClick={() => setTimerActive(!timerActive)}
-                  className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-semibold inline-flex items-center space-x-1 transition-colors cursor-pointer"
+                  onClick={timerActive ? handlePauseTimer : handleStartTimer}
+                  className={`px-4 py-1.5 rounded-xl text-stone-950 text-xs font-semibold inline-flex items-center space-x-1 transition-all cursor-pointer shadow-xs ${
+                    timerActive
+                      ? 'bg-amber-400 hover:bg-amber-300'
+                      : 'bg-emerald-400 hover:bg-emerald-300'
+                  }`}
                 >
                   {timerActive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
                   <span>{timerActive ? 'Pause' : 'Start Focus'}</span>
                 </button>
                 <button
-                  onClick={() => {
-                    setTimerActive(false);
-                    setTimerSecondsLeft(25 * 60);
-                  }}
-                  className="p-1.5 rounded-xl text-stone-400 hover:text-white hover:bg-white/10 transition-colors"
+                  onClick={handleResetTimer}
+                  className="p-1.5 rounded-xl text-stone-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                   title="Reset Timer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />

@@ -98,9 +98,11 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
   };
 
   const startSoloDemo = () => {
-    const demoCode = 'TWO-DEMO';
+    // A fresh random code per person. A fixed one (it used to be 'TWO-DEMO')
+    // derives one shared room and one shared key, so every solo visitor would
+    // land in the same space and see each other's data.
     const demoSession: SpaceSession = {
-      code: demoCode,
+      code: generatePairingCode(),
       role: 'user',
       userName: userName.trim() || 'You'
     };

@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { loadState, saveState, clearState, SpaceState } from './core/storage';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
+  hasEncryptedVault,
+  unlockVault,
+  createVault,
+  writeVault,
+  destroyVault
+} from './core/vault';
+import {
   deriveSpaceCredentials,
   loadSpaceSession,
   saveSpaceSession,
@@ -102,7 +109,11 @@ export const App: React.FC = () => {
   const [relayStatus, setRelayStatus] = useState<RelayStatus>(() => wsRelay.getStatus());
 
   // PIN lock protection state
-  const [isPinUnlocked, setIsPinUnlocked] = useState<boolean>(() => !state.appPin);
+  // When a PIN is set the vault is encrypted, so nothing can be read until it is
+  // opened. `vaultKey` is held only in memory and drives every later write.
+  const [isLocked, setIsLocked] = useState<boolean>(() => hasEncryptedVault());
+  const [vaultKey, setVaultKey] = useState<CryptoKey | null>(null);
+  const [isUnlocking, setIsUnlocking] = useState(false);
   const [pinAttempt, setPinAttempt] = useState('');
   const [pinError, setPinError] = useState(false);
 
@@ -133,7 +144,7 @@ export const App: React.FC = () => {
   // then join the relay. Nothing is sent until the key exists, so records are
   // never broadcast in the clear.
   useEffect(() => {
-    if (!session) {
+    if (isLocked || !session) {
       wsRelay.disconnect();
       return;
     }
@@ -148,7 +159,7 @@ export const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [session, spaceVersion]);
+  }, [session, spaceVersion, isLocked]);
 
   // Listen for remote updates
   useEffect(() => {
@@ -650,8 +661,13 @@ export const App: React.FC = () => {
   }, [state.activeUser]);
 
   useEffect(() => {
-    saveState(state);
-  }, [state]);
+    if (isLocked) return; // nothing meaningful to persist before unlock
+    if (vaultKey) {
+      void writeVault(vaultKey, { state, session });
+    } else {
+      saveState(state);
+    }
+  }, [state, session, vaultKey, isLocked]);
 
   const toggleActiveUser = () => {
     setState(prev => {
@@ -1369,7 +1385,10 @@ export const App: React.FC = () => {
   };
 
   const handleEmergencyExit = () => {
+    // Wipe the encrypted vault too, or the panic button leaves everything behind.
     clearState();
+    clearSpaceSession();
+    destroyVault();
     window.location.reload();
   };
 
@@ -1394,48 +1413,36 @@ export const App: React.FC = () => {
     }
   };
 
-  if (!session || !state.isPaired) {
-    return (
-      <OnboardingView
-        onComplete={(newSession: SpaceSession, enteredName: string, chosenPin: string | null) => {
-          saveSpaceSession({
-            ...newSession,
-            userName: enteredName
-          });
-          setSession(newSession);
-          // The partner who created the space is 'user'; the joiner is
-          // 'partner'. Every record on the wire is attributed with this role.
-          setState(prev => ({
-            ...prev,
-            isPaired: true,
-            activeUser: newSession.role,
-            userName: enteredName,
-            appPin: chosenPin
-          }));
-          setIsPinUnlocked(true);
-          setSpaceVersion(v => v + 1);
-        }}
-      />
-    );
-  }
-
-  // App Lock PIN Screen (if enabled by user)
-  if (state.appPin && !isPinUnlocked) {
+  // App Lock PIN Screen. The vault is genuinely encrypted, so this is not a
+  // comparison against a stored PIN - the PIN derives the key, and a wrong one
+  // simply fails to decrypt.
+  if (isLocked) {
     const handlePinInput = (val: string) => {
+      if (isUnlocking) return;
       const next = (pinAttempt + val).slice(0, 4);
       setPinAttempt(next);
       setPinError(false);
+
       if (next.length === 4) {
-        if (next === state.appPin) {
-          setIsPinUnlocked(true);
-          setPinAttempt('');
-        } else {
-          setPinError(true);
-          setTimeout(() => {
-            setPinAttempt('');
-            setPinError(false);
-          }, 700);
-        }
+        setIsUnlocking(true);
+        void unlockVault(next)
+          .then(opened => {
+            if (opened) {
+              setState(opened.payload.state);
+              setSession(opened.payload.session);
+              setVaultKey(opened.key);
+              setIsLocked(false);
+              setPinAttempt('');
+              setSpaceVersion(v => v + 1);
+            } else {
+              setPinError(true);
+              setTimeout(() => {
+                setPinAttempt('');
+                setPinError(false);
+              }, 700);
+            }
+          })
+          .finally(() => setIsUnlocking(false));
       }
     };
 
@@ -1486,6 +1493,51 @@ export const App: React.FC = () => {
       </div>
     );
   }
+
+  if (!session || !state.isPaired) {
+    return (
+      <OnboardingView
+        onComplete={(newSession: SpaceSession, enteredName: string, chosenPin: string | null) => {
+          const namedSession = { ...newSession, userName: enteredName };
+
+          // The partner who created the space is 'user'; the joiner is
+          // 'partner'. Every record on the wire is attributed with this role.
+          const nextState: SpaceState = {
+            ...state,
+            isPaired: true,
+            activeUser: newSession.role,
+            userName: enteredName,
+            pinEnabled: !!chosenPin
+          };
+
+          setSession(namedSession);
+          setState(nextState);
+          setSpaceVersion(v => v + 1);
+
+          if (chosenPin) {
+            // Encrypt everything under the PIN, then remove the cleartext
+            // copies - including the pairing code, which is the key to the
+            // whole space on the relay.
+            void createVault(chosenPin, { state: nextState, session: namedSession })
+              .then(key => {
+                setVaultKey(key);
+                clearState();
+                clearSpaceSession();
+              })
+              .catch(e => {
+                // Don't claim protection we failed to apply.
+                console.error('[Vault] Could not enable PIN protection', e);
+                setState(prev => ({ ...prev, pinEnabled: false }));
+                saveSpaceSession(namedSession);
+              });
+          } else {
+            saveSpaceSession(namedSession);
+          }
+        }}
+      />
+    );
+  }
+
 
   return (
     <div className={`min-h-screen transition-colors duration-200 ${themeClass}`}>
@@ -1690,6 +1742,8 @@ export const App: React.FC = () => {
         {currentTab === 'presence' && (
           <CoPresenceView
             activeUser={state.activeUser}
+            userName={state.userName}
+            partnerName={state.partnerName}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}

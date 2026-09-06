@@ -316,51 +316,202 @@ class PostgresRelayDb implements RelayDb {
   }
 }
 
+/**
+ * Wraps PostgreSQL with a degraded mode instead of a one-way trapdoor.
+ *
+ * The previous behaviour switched to in-memory on the first connection error
+ * and never went back, so a brief Postgres hiccup at boot silently cost the
+ * couple every message until someone noticed and restarted the process. Here a
+ * failure marks the relay degraded, buffers writes in memory, and keeps
+ * retrying; when Postgres returns the buffer is drained into it.
+ */
 class ResilientRelayDb implements RelayDb {
-  private activeDb: RelayDb;
+  private postgres: RelayDb | null;
+  private memory = new InMemoryRelayDb();
+
+  /** False while Postgres is unreachable. Reported by /health. */
+  private healthy = true;
+
+  /** Records accepted while degraded, replayed into Postgres on recovery. */
+  private pending: StoredRecord[] = [];
+  private static readonly MAX_PENDING = 10_000;
+
+  private retryTimer: NodeJS.Timeout | null = null;
+  private retryDelayMs = 5_000;
+  private static readonly MAX_RETRY_MS = 60_000;
 
   constructor() {
-    this.activeDb = process.env.DATABASE_URL
+    this.postgres = process.env.DATABASE_URL
       ? new PostgresRelayDb(process.env.DATABASE_URL)
-      : new InMemoryRelayDb();
+      : null;
+    if (!this.postgres) this.healthy = false;
   }
 
   get kind() {
-    return this.activeDb.kind;
+    return this.postgres ? ('postgres' as const) : ('memory' as const);
+  }
+
+  /** True when running on Postgres and currently connected. */
+  get isDurable() {
+    return this.postgres !== null && this.healthy;
+  }
+
+  get pendingCount() {
+    return this.pending.length;
   }
 
   get rendezvousTokens() {
-    return this.activeDb.rendezvousTokens;
+    return this.memory.rendezvousTokens;
   }
 
   async init() {
-    if (this.activeDb.kind === 'postgres') {
-      try {
-        await this.activeDb.init();
-      } catch (err: any) {
-        console.error('[Relay DB] Failed to connect to PostgreSQL database:', err.message || err);
-        console.warn('[Relay DB] Falling back to In-Memory mode so the relay stays online!');
-        this.activeDb = new InMemoryRelayDb();
-        await this.activeDb.init();
-      }
-    } else {
-      await this.activeDb.init();
+    await this.memory.init();
+    if (!this.postgres) return;
+
+    try {
+      await this.postgres.init();
+      this.healthy = true;
+      console.log('[Relay DB] PostgreSQL connected.');
+    } catch (err: any) {
+      this.healthy = false;
+      console.error('[Relay DB] PostgreSQL unavailable at startup:', err?.message || err);
+      console.warn('[Relay DB] Serving in DEGRADED mode - writes are buffered in memory and retried.');
+      this.scheduleRetry();
     }
   }
 
-  createUser(user: StoredUser) { return this.activeDb.createUser(user); }
-  findUserByAuthId(authId: string) { return this.activeDb.findUserByAuthId(authId); }
-  findUserById(id: string) { return this.activeDb.findUserById(id); }
+  private scheduleRetry() {
+    if (this.retryTimer || !this.postgres) return;
+
+    this.retryTimer = setTimeout(async () => {
+      this.retryTimer = null;
+      try {
+        await this.postgres!.init();
+        this.healthy = true;
+        this.retryDelayMs = 5_000;
+        console.log('[Relay DB] PostgreSQL recovered.');
+        await this.drainPending();
+      } catch (err: any) {
+        // Back off, but keep trying - the outage may outlast a few attempts.
+        this.retryDelayMs = Math.min(this.retryDelayMs * 2, ResilientRelayDb.MAX_RETRY_MS);
+        console.warn(`[Relay DB] Still unavailable, retrying in ${this.retryDelayMs / 1000}s`);
+        this.scheduleRetry();
+      }
+    }, this.retryDelayMs);
+
+    // A pending reconnect must never hold the process open.
+    if (typeof this.retryTimer.unref === 'function') this.retryTimer.unref();
+  }
+
+  private async drainPending() {
+    if (!this.postgres || this.pending.length === 0) return;
+
+    const batch = this.pending;
+    this.pending = [];
+    let flushed = 0;
+
+    for (const record of batch) {
+      try {
+        await this.postgres.saveRecord(record);
+        flushed++;
+      } catch {
+        // Went down again mid-drain; keep the remainder for the next attempt.
+        this.pending.push(record);
+      }
+    }
+    console.log(`[Relay DB] Flushed ${flushed} buffered record(s); ${this.pending.length} still pending.`);
+
+    if (this.pending.length > 0) {
+      this.healthy = false;
+      this.scheduleRetry();
+    }
+  }
+
+  private degrade(err: unknown) {
+    if (this.healthy) {
+      console.error('[Relay DB] Write failed, entering degraded mode:', (err as any)?.message || err);
+    }
+    this.healthy = false;
+    this.scheduleRetry();
+  }
+
+  /**
+   * Persists a record, returning whether it reached durable storage. The relay
+   * forwards the message either way; the caller tells the sender the truth.
+   */
+  async saveRecordDurable(record: StoredRecord): Promise<boolean> {
+    await this.memory.saveRecord(record);
+
+    if (!this.postgres) return false;
+
+    if (this.healthy) {
+      try {
+        await this.postgres.saveRecord(record);
+        return true;
+      } catch (err) {
+        this.degrade(err);
+      }
+    }
+
+    if (this.pending.length < ResilientRelayDb.MAX_PENDING) {
+      this.pending.push(record);
+    } else {
+      console.error('[Relay DB] Pending buffer full - dropping oldest buffered record.');
+      this.pending.shift();
+      this.pending.push(record);
+    }
+    return false;
+  }
+
+  async saveRecord(record: StoredRecord) {
+    await this.saveRecordDurable(record);
+    return record;
+  }
+
+  async getRecordsForSpace(spaceId: string, sinceLamport = 0) {
+    if (this.postgres && this.healthy) {
+      try {
+        return await this.postgres.getRecordsForSpace(spaceId, sinceLamport);
+      } catch (err) {
+        this.degrade(err);
+      }
+    }
+    // Degraded: serve whatever this process still holds rather than nothing.
+    return this.memory.getRecordsForSpace(spaceId, sinceLamport);
+  }
+
+  private async viaPostgres<T>(op: (db: RelayDb) => Promise<T>, fallback: () => Promise<T>): Promise<T> {
+    if (this.postgres && this.healthy) {
+      try {
+        return await op(this.postgres);
+      } catch (err) {
+        this.degrade(err);
+      }
+    }
+    return fallback();
+  }
+
+  createUser(user: StoredUser) {
+    return this.viaPostgres(db => db.createUser(user), () => this.memory.createUser(user));
+  }
+  findUserByAuthId(authId: string) {
+    return this.viaPostgres(db => db.findUserByAuthId(authId), () => this.memory.findUserByAuthId(authId));
+  }
+  findUserById(id: string) {
+    return this.viaPostgres(db => db.findUserById(id), () => this.memory.findUserById(id));
+  }
   createSpace(spaceId: string, creatorId: string, creatorPublicKey: string, sealedKey: string) {
-    return this.activeDb.createSpace(spaceId, creatorId, creatorPublicKey, sealedKey);
+    return this.viaPostgres(
+      db => db.createSpace(spaceId, creatorId, creatorPublicKey, sealedKey),
+      () => this.memory.createSpace(spaceId, creatorId, creatorPublicKey, sealedKey)
+    );
   }
   addMemberToSpace(spaceId: string, memberId: string, sealedKey: string) {
-    return this.activeDb.addMemberToSpace(spaceId, memberId, sealedKey);
-  }
-  saveRecord(record: StoredRecord) { return this.activeDb.saveRecord(record); }
-  getRecordsForSpace(spaceId: string, sinceLamport?: number) {
-    return this.activeDb.getRecordsForSpace(spaceId, sinceLamport);
+    return this.viaPostgres(
+      db => db.addMemberToSpace(spaceId, memberId, sealedKey),
+      () => this.memory.addMemberToSpace(spaceId, memberId, sealedKey)
+    );
   }
 }
 
-export const db: RelayDb = new ResilientRelayDb();
+export const db = new ResilientRelayDb();

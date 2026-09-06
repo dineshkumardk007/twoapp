@@ -189,7 +189,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="flex justify-between items-center text-linen-secondary">
             <span>App Lock:</span>
             <span className="text-linen-primary font-medium">
-              {state.appPin ? 'Protected with 4-Digit PIN' : 'Instant Open (No PIN)'}
+              {state.pinEnabled ? 'Protected with 4-Digit PIN' : 'Instant Open (No PIN)'}
             </span>
           </div>
 

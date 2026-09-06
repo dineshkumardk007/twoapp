@@ -39,13 +39,55 @@ export interface SpaceCredentials {
   role: SpaceRole;
 }
 
-const CUTE_PREFIXES = ['TWO', 'LOVE', 'HEART', 'MOON', 'SOUL', 'STAR', 'DEAR', 'EDEN'];
+// Ambiguity is the enemy of a code you read aloud over the phone, so 0/O, 1/I/L
+// and U are all absent. 30 symbols -> just under 5 bits each.
+const CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTVWXYZ';
+const CODE_LENGTH = 12; // ~58.9 bits
+const CODE_GROUP = 4;
 
-/** Generates a fresh, memorable pairing code for linking two partners (e.g. TWO-8492). */
+/**
+ * Draws an unbiased index into CODE_ALPHABET.
+ *
+ * `% alphabet.length` on a random byte would quietly favour the first few
+ * symbols (256 is not a multiple of 30), so values landing in the short tail
+ * are rejected and redrawn.
+ */
+function randomSymbol(): string {
+  const limit = 256 - (256 % CODE_ALPHABET.length);
+  const buf = new Uint8Array(1);
+  for (;;) {
+    window.crypto.getRandomValues(buf);
+    if (buf[0] < limit) return CODE_ALPHABET[buf[0] % CODE_ALPHABET.length];
+  }
+}
+
+/**
+ * Generates a fresh pairing code, e.g. `TWO-7K2M-9XQP-R4TN`.
+ *
+ * The code is the ONLY secret protecting a space: both the room id and the
+ * AES key derive from it, so its entropy is the ceiling on the whole system's
+ * security. At 12 symbols the keyspace is ~5.8e17, which combined with the
+ * PBKDF2 cost below puts an offline sweep far out of reach. Math.random() is
+ * unsuitable here at any length - it is predictable, not merely short.
+ */
 export function generatePairingCode(): string {
-  const prefix = CUTE_PREFIXES[Math.floor(Math.random() * CUTE_PREFIXES.length)];
-  const num = Math.floor(1000 + Math.random() * 9000);
-  return `${prefix}-${num}`;
+  let symbols = '';
+  for (let i = 0; i < CODE_LENGTH; i++) symbols += randomSymbol();
+
+  const groups: string[] = [];
+  for (let i = 0; i < symbols.length; i += CODE_GROUP) {
+    groups.push(symbols.slice(i, i + CODE_GROUP));
+  }
+  return `TWO-${groups.join('-')}`;
+}
+
+/**
+ * True for codes from the old `PREFIX-NNNN` scheme (~16 bits), whose entire
+ * keyspace can be swept in minutes. Such a space should be re-paired.
+ */
+export function isWeakPairingCode(raw: string): boolean {
+  const symbols = normalizePairingCode(raw).replace(/-/g, '');
+  return symbols.length < 12;
 }
 
 /**

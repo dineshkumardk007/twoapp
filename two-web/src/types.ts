@@ -295,10 +295,22 @@ export interface CoPresenceUserStatus {
   isJoined: boolean;
   joinedAt: number;
   timerEndsAt?: number;
+  timerActive?: boolean;
+  timerSecondsLeft?: number;
 }
 
 export interface CoPresenceInteractionEvent {
   type: 'tea' | 'glance' | 'blanket' | 'hand' | 'kiss';
+  senderId: string;
+  senderName: string;
+  timestamp: number;
+}
+
+export interface CoPresenceTimerEvent {
+  action: 'start' | 'pause' | 'reset' | 'tick' | 'complete';
+  isActive: boolean;
+  secondsLeft: number;
+  timerEndsAt?: number | null;
   senderId: string;
   senderName: string;
   timestamp: number;

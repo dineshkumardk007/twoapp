@@ -80,7 +80,8 @@ export interface SpaceState {
   kintsugiMoments: KintsugiVesselItem[];
   userName: string;
   partnerName: string;
-  appPin: string | null;
+  /** Whether PIN protection is on. The PIN itself lives nowhere - see core/vault.ts. */
+  pinEnabled: boolean;
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -88,7 +89,7 @@ const DEFAULT_STATE: SpaceState = {
   activeUser: 'user',
   userName: 'You',
   partnerName: 'Partner',
-  appPin: null,
+  pinEnabled: false,
   userReport: {
     weather: 'CALM',
     capacity: 4,
@@ -1028,7 +1029,9 @@ export function loadState(): SpaceState {
       activeUser,
       userName: parsed.userName || session?.userName || DEFAULT_STATE.userName,
       partnerName: parsed.partnerName || session?.partnerName || DEFAULT_STATE.partnerName,
-      appPin: parsed.appPin !== undefined ? parsed.appPin : null,
+      // Older vaults stored the PIN in the clear; treat its presence as the flag
+      // and drop the value on the next save.
+      pinEnabled: parsed.pinEnabled !== undefined ? parsed.pinEnabled : !!parsed.appPin,
       rituals: parsed.rituals || DEFAULT_STATE.rituals,
       pebbles: parsed.pebbles || DEFAULT_STATE.pebbles,
       letters: parsed.letters || DEFAULT_STATE.letters,
