@@ -1,89 +1,315 @@
-// WebSocket Client Relay connection for real-time multi-window E2EE synchronization
+// WebSocket relay client for real-time end-to-end encrypted sync between partners.
+//
+// Everything leaving this module is AES-GCM ciphertext: the relay sees a room
+// id, an author role, a record type and an opaque blob. Decryption happens here
+// on the way in, so subscribers keep receiving `record.payload` as a plaintext
+// JSON string exactly as they always have.
+
+import { encryptText, decryptText } from './crypto';
+import type { SpaceCredentials } from './space';
 
 type MessageCallback = (data: any) => void;
 
+export type RelayStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting';
+
+type StatusCallback = (status: RelayStatus) => void;
+
+const HEARTBEAT_MS = 25_000;
+const RECONNECT_BASE_MS = 1_000;
+const RECONNECT_MAX_MS = 30_000;
+
+/**
+ * Works out where the relay lives.
+ *
+ * In production the app is served behind a TLS reverse proxy that forwards
+ * `/relay` to the relay server, so the socket is same-origin `wss://`. Using
+ * `ws://` from an `https://` page would be blocked as mixed content, which is
+ * why the scheme tracks the page scheme rather than being hardcoded.
+ */
+function resolveRelayUrl(): string {
+  const override = (import.meta as any)?.env?.VITE_RELAY_URL as string | undefined;
+  if (override) return override;
+
+  const loc = window.location;
+  const scheme = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+
+  // Vite dev (5173) and preview (4173) serve the UI on their own port while the
+  // relay runs separately on 4000.
+  if (loc.port === '5173' || loc.port === '4173') {
+    return `${scheme}//${loc.hostname}:4000/relay`;
+  }
+
+  return `${scheme}//${loc.host}/relay`;
+}
+
 class WebSocketRelayClient {
   private ws: WebSocket | null = null;
-  private spaceId: string = 'default-space-id';
-  private userId: string = 'user';
-  private listeners: Set<MessageCallback> = new Set();
-  private isConnecting: boolean = false;
+  private creds: SpaceCredentials | null = null;
 
-  connect(spaceId: string, userId: string) {
-    this.spaceId = spaceId;
-    this.userId = userId;
+  private listeners = new Set<MessageCallback>();
+  private statusListeners = new Set<StatusCallback>();
 
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  private reconnectAttempts = 0;
+  private stopped = false;
+
+  private status: RelayStatus = 'idle';
+  private lamport = Date.now();
+
+  // Inbound records are decrypted asynchronously; chaining them keeps canvas
+  // strokes and chat messages in the order the partner sent them.
+  private inboundChain: Promise<void> = Promise.resolve();
+
+  connect(creds: SpaceCredentials) {
+    const switchingSpace = this.creds?.spaceId !== creds.spaceId;
+    this.creds = creds;
+    this.stopped = false;
+
+    if (this.ws && !switchingSpace) {
+      const state = this.ws.readyState;
+      if (state === WebSocket.OPEN || state === WebSocket.CONNECTING) return;
+    }
+
+    if (switchingSpace) this.teardownSocket();
+    this.open();
+  }
+
+  private open() {
+    if (!this.creds || this.stopped) return;
+
+    this.setStatus(this.reconnectAttempts > 0 ? 'reconnecting' : 'connecting');
+
+    let socket: WebSocket;
+    try {
+      socket = new WebSocket(resolveRelayUrl());
+    } catch {
+      this.scheduleReconnect();
+      return;
+    }
+    this.ws = socket;
+
+    socket.onopen = () => {
+      if (this.stopped || !this.creds) return;
+      this.reconnectAttempts = 0;
+      this.setStatus('connected');
+
+      this.rawSend({
+        type: 'JOIN',
+        spaceId: this.creds.spaceId,
+        userId: this.creds.role
+      });
+
+      this.startHeartbeat();
+    };
+
+    socket.onmessage = (event) => {
+      const raw = typeof event.data === 'string' ? event.data : '';
+      if (!raw) return;
+      this.inboundChain = this.inboundChain
+        .then(() => this.handleInbound(raw))
+        .catch(() => undefined);
+    };
+
+    socket.onclose = () => {
+      this.stopHeartbeat();
+      if (this.ws === socket) this.ws = null;
+      if (this.stopped) return;
+      this.scheduleReconnect();
+    };
+
+    // An error is always followed by a close event, which drives the retry.
+    socket.onerror = () => undefined;
+  }
+
+  private async handleInbound(raw: string) {
+    let payload: any;
+    try {
+      payload = JSON.parse(raw);
+    } catch {
       return;
     }
 
+    if (payload?.type !== 'REMOTE_RECORD' || !payload.record) {
+      this.emit(payload);
+      return;
+    }
+
+    const creds = this.creds;
+    if (!creds) return;
+
+    const record = payload.record;
     try {
-      this.isConnecting = true;
-      const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
-      const wsUrl = `ws://${host}:4000/relay`;
-      this.ws = new WebSocket(wsUrl);
+      const plaintext = await decryptText(
+        record.payload,
+        record.nonce,
+        creds.key,
+        record.id,
+        record.spaceId,
+        record.type
+      );
+      // Same shape subscribers have always received: payload is a JSON string.
+      this.emit({ type: 'REMOTE_RECORD', record: { ...record, payload: plaintext } });
+    } catch {
+      // Authentication failed: a stale record from a rotated code, or someone
+      // in the room without the key. Dropping it is the correct outcome.
+    }
+  }
 
-      this.ws.onopen = () => {
-        this.isConnecting = false;
-        // Join space room
-        this.send({
-          type: 'JOIN',
-          spaceId: this.spaceId,
-          userId: this.userId
-        });
-      };
+  /** Encrypts `data` and broadcasts it to the partner. Fire-and-forget. */
+  broadcastUpdate(type: string, data: any): void {
+    void this.encryptAndSend(type, data);
+  }
 
-      this.ws.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          this.listeners.forEach(cb => cb(payload));
-        } catch (e) {
-          console.error('[WS Parse Error]', e);
+  private async encryptAndSend(type: string, data: any) {
+    const creds = this.creds;
+    if (!creds || !this.isOpen()) return;
+
+    const recordId =
+      typeof window.crypto.randomUUID === 'function'
+        ? window.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      const { ciphertext, nonce } = await encryptText(
+        JSON.stringify(data),
+        creds.key,
+        recordId,
+        creds.spaceId,
+        type
+      );
+
+      this.lamport = Math.max(this.lamport + 1, Date.now());
+
+      this.rawSend({
+        type: 'RECORD',
+        spaceId: creds.spaceId,
+        record: {
+          id: recordId,
+          spaceId: creds.spaceId,
+          authorId: creds.role,
+          type,
+          payload: ciphertext,
+          nonce,
+          lamportClock: this.lamport,
+          clientTs: Date.now(),
+          createdAt: new Date().toISOString()
         }
-      };
-
-      this.ws.onclose = () => {
-        this.isConnecting = false;
-        // Auto-reconnect after 3s
-        setTimeout(() => this.connect(this.spaceId, this.userId), 3000);
-      };
-
-      this.ws.onerror = () => {
-        this.isConnecting = false;
-      };
+      });
     } catch (e) {
-      this.isConnecting = false;
+      console.error('[Relay] Encryption failed', e);
     }
   }
 
-  send(data: any) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(data));
+  private rawSend(data: any) {
+    if (!this.isOpen()) return;
+    try {
+      this.ws!.send(JSON.stringify(data));
+    } catch (e) {
+      console.error('[Relay] Send failed', e);
     }
   }
 
-  broadcastUpdate(type: string, data: any) {
-    this.send({
-      type: 'RECORD',
-      spaceId: this.spaceId,
-      record: {
-        id: Date.now().toString(),
-        spaceId: this.spaceId,
-        authorId: this.userId,
-        type,
-        payload: JSON.stringify(data),
-        nonce: '',
-        lamportClock: Date.now(),
-        clientTs: Date.now(),
-        createdAt: new Date().toISOString()
+  private isOpen(): boolean {
+    return !!this.ws && this.ws.readyState === WebSocket.OPEN;
+  }
+
+  private scheduleReconnect() {
+    if (this.stopped || this.reconnectTimer) return;
+
+    this.setStatus('reconnecting');
+    const delay = Math.min(
+      RECONNECT_BASE_MS * 2 ** this.reconnectAttempts,
+      RECONNECT_MAX_MS
+    );
+    this.reconnectAttempts++;
+
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.open();
+    }, delay);
+  }
+
+  private startHeartbeat() {
+    this.stopHeartbeat();
+    // Idle WebSockets get culled by proxies; a periodic ping keeps the pipe warm.
+    this.heartbeatTimer = setInterval(() => this.rawSend({ type: 'PING' }), HEARTBEAT_MS);
+  }
+
+  private stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+  }
+
+  private teardownSocket() {
+    this.stopHeartbeat();
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    if (this.ws) {
+      const socket = this.ws;
+      this.ws = null;
+      socket.onopen = null;
+      socket.onmessage = null;
+      socket.onclose = null;
+      socket.onerror = null;
+      try {
+        socket.close();
+      } catch {
+        /* already closing */
+      }
+    }
+  }
+
+  disconnect() {
+    this.stopped = true;
+    this.reconnectAttempts = 0;
+    this.teardownSocket();
+    this.creds = null;
+    this.setStatus('idle');
+  }
+
+  private emit(payload: any) {
+    this.listeners.forEach(cb => {
+      try {
+        cb(payload);
+      } catch (e) {
+        console.error('[Relay] Listener error', e);
       }
     });
+  }
+
+  private setStatus(status: RelayStatus) {
+    if (this.status === status) return;
+    this.status = status;
+    this.statusListeners.forEach(cb => {
+      try {
+        cb(status);
+      } catch {
+        /* ignore */
+      }
+    });
+  }
+
+  getStatus(): RelayStatus {
+    return this.status;
   }
 
   subscribe(callback: MessageCallback) {
     this.listeners.add(callback);
     return () => {
       this.listeners.delete(callback);
+    };
+  }
+
+  subscribeStatus(callback: StatusCallback) {
+    this.statusListeners.add(callback);
+    callback(this.status);
+    return () => {
+      this.statusListeners.delete(callback);
     };
   }
 }

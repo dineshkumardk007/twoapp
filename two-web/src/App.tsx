@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { loadState, saveState, clearState, SpaceState } from './core/storage';
 import { wsRelay } from './core/ws';
+import {
+  deriveSpaceCredentials,
+  loadSpaceSession,
+  saveSpaceSession,
+  SpaceSession
+} from './core/space';
 import { localMesh } from './core/localMesh';
 import {
   ThemeMode,
@@ -86,6 +92,8 @@ export const App: React.FC = () => {
   const [isCamouflaged, setIsCamouflaged] = useState(false);
   const [showStoryTour, setShowStoryTour] = useState(false);
   const [locale, setLocale] = useState<Locale>('en');
+  // Bumped when pairing completes so the relay effect re-runs and joins the new space.
+  const [spaceVersion, setSpaceVersion] = useState(0);
 
   // Check URL parameters for dual-window live sync demonstration
   useEffect(() => {
@@ -96,10 +104,27 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  // Connect to WebSocket Relay on mount and listen for remote updates
+  // Derive this couple's room id and content key from the stored pairing code,
+  // then join the relay. Nothing is sent until the key exists, so records are
+  // never broadcast in the clear.
   useEffect(() => {
-    wsRelay.connect('default-space-id', state.activeUser);
+    const session = loadSpaceSession();
+    if (!session) return;
 
+    let cancelled = false;
+    deriveSpaceCredentials(session.code, session.role)
+      .then(creds => {
+        if (!cancelled) wsRelay.connect(creds);
+      })
+      .catch(e => console.error('[Space] Key derivation failed', e));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [spaceVersion]);
+
+  // Listen for remote updates
+  useEffect(() => {
     const unsubscribe = wsRelay.subscribe((msg) => {
       if (msg.type === 'REMOTE_RECORD') {
         const record = msg.record;
@@ -1312,7 +1337,17 @@ export const App: React.FC = () => {
   }
 
   if (!state.isPaired) {
-    return <OnboardingView onComplete={() => setState(prev => ({ ...prev, isPaired: true }))} />;
+    return (
+      <OnboardingView
+        onComplete={(session: SpaceSession) => {
+          saveSpaceSession(session);
+          // The partner who created the space is 'user'; the joiner is
+          // 'partner'. Every record on the wire is attributed with this role.
+          setState(prev => ({ ...prev, isPaired: true, activeUser: session.role }));
+          setSpaceVersion(v => v + 1);
+        }}
+      />
+    );
   }
 
   return (
