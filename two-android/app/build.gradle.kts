@@ -79,11 +79,10 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
 
-    // Room Database & SQLCipher
+    // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    implementation(libs.sqlcipher)
 
     // Background Sync & WorkManager
     implementation(libs.androidx.work.runtime.ktx)
@@ -101,11 +100,6 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
     implementation(libs.zxing.core)
-
-    // Cryptography (Libsodium, Tink, JNA)
-    implementation(libs.lazysodium.android)
-    implementation(libs.jna)
-    implementation(libs.google.tink)
 
     // Coroutines & Serialization
     implementation(libs.kotlinx.coroutines.android)
