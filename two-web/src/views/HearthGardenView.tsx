@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { HearthGardenState, GardenBlossom, BlossomType } from '../types';
 import { HearthGardenCanvas, playWaterDropSound, playSunlightChime, playBlossomPopSound } from '../components/HearthGardenCanvas';
 import { Sprout, Droplets, Sun, Heart, Sparkles, Scissors, Clock, Plus, X, MessageSquare, History, ShieldCheck } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface HearthGardenViewProps {
   garden: HearthGardenState;
@@ -58,7 +59,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
       totalWaterings: newTotalWaterings,
       growthLog: [
         {
-          id: `log-${Date.now()}`,
+          id: newId('log'),
           event: `${authorName} watered the bonsai with morning dew. Vitality raised to ${newVitality}%.`,
           timestamp: 'Just now'
         },
@@ -87,7 +88,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
       totalSunbaths: garden.totalSunbaths + 1,
       growthLog: [
         {
-          id: `log-${Date.now()}`,
+          id: newId('log'),
           event: `${authorName} opened the window shutters to bask the canopy in warm sunlight.`,
           timestamp: 'Just now'
         },
@@ -108,7 +109,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
       lastNourishedAt: 'Just now',
       growthLog: [
         {
-          id: `log-${Date.now()}`,
+          id: newId('log'),
           event: `${authorName} mindfully pruned old twigs and cleared mental noise.`,
           timestamp: 'Just now'
         },
@@ -133,7 +134,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
     const authorName = activeUser === 'user' ? 'You' : 'Partner';
 
     const newBlossom: GardenBlossom = {
-      id: `blossom-${Date.now()}`,
+      id: newId('blossom'),
       type: blossomType,
       note: blossomNote.trim(),
       sproutedBy: activeUser,
@@ -150,7 +151,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
       blossoms: [newBlossom, ...garden.blossoms],
       growthLog: [
         {
-          id: `log-${Date.now()}`,
+          id: newId('log'),
           event: `${authorName} sprouted a ${blossomType.replace('_', ' ')} blossom: "${blossomNote.trim()}".`,
           timestamp: 'Just now'
         },

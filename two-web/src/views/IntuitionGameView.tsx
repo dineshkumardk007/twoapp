@@ -4,6 +4,7 @@ import {
   Smile, Flame, Award, ArrowRight, Shield, Shuffle 
 } from 'lucide-react';
 import { IntuitionDilemma, IntuitionGameRound } from '../types';
+import { newId } from '../core/ids';
 
 interface IntuitionGameViewProps {
   currentRound: IntuitionGameRound;
@@ -123,7 +124,7 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
   const handleShuffleNewRound = () => {
     const nextDilemma = CURATED_DILEMMAS[Math.floor(Math.random() * CURATED_DILEMMAS.length)];
     const newRound: IntuitionGameRound = {
-      id: `round-${Date.now()}`,
+      id: newId('round'),
       date: 'Today',
       dilemma: nextDilemma,
       authorId: activeUser,

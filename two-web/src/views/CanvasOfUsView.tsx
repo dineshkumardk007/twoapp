@@ -20,6 +20,7 @@ import {
   Check,
   Maximize2
 } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface CanvasOfUsViewProps {
   canvasState: SharedDrawingCanvasState;
@@ -404,7 +405,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     if (points.length < 2) return;
 
     onAddStroke({
-      id: 'stroke-' + Date.now(),
+      id: newId('stroke'),
       authorId: activeUser,
       tool: activeTool,
       color: activeColor,
@@ -419,7 +420,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
 
     const dataUrl = canvas.toDataURL('image/png');
     const sketch: CanvasSavedSketch = {
-      id: 'sketch-' + Date.now(),
+      id: newId('sketch'),
       title: `Love Sketch #${(canvasState.savedSketches?.length || 0) + 1}`,
       date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
       dataUrl,

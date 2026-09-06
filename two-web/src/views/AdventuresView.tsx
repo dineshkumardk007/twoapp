@@ -5,6 +5,7 @@ import {
   Plus, Send, Shuffle, DollarSign, X, MapPin, Calendar, Award, 
   Search, Filter, Camera, Heart, BookOpen, Stamp
 } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface AdventuresViewProps {
   adventures: AdventureItem[];
@@ -186,7 +187,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
     if (!newTitle.trim()) return;
 
     const created: AdventureItem = {
-      id: `adv-${Date.now()}`,
+      id: newId('adv'),
       title: newTitle.trim(),
       description: newDesc.trim() || 'A shared dream to experience together.',
       energyTier: newEnergy,

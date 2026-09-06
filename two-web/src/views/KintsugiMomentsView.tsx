@@ -16,6 +16,7 @@ import {
   Filter,
   CheckCircle2
 } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface KintsugiMomentsViewProps {
   moments: KintsugiVesselItem[];
@@ -144,7 +145,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
     if (!title.trim() || !hardshipStory.trim() || !wisdomLearned.trim()) return;
 
     const newMoment: KintsugiVesselItem = {
-      id: 'kintsugi-' + Date.now(),
+      id: newId('kintsugi'),
       title: title.trim(),
       themeTag,
       hardshipStory: hardshipStory.trim(),

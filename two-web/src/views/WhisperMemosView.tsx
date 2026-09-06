@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { WhisperMemoItem, WhisperCategory } from '../types';
 import { Mic, Square, Play, Pause, RotateCcw, Volume2, Plus, Sparkles, Heart, MessageSquare, Clock, Check, Radio, Trash2, X, Send } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface WhisperMemosViewProps {
   memos: WhisperMemoItem[];
@@ -166,7 +167,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
     const recipientId = activeUser === 'user' ? 'partner' : 'user';
 
     const newMemo: WhisperMemoItem = {
-      id: `whisper-${Date.now()}`,
+      id: newId('whisper'),
       title: memoTitle.trim() || `${CATEGORY_META[memoCategory].label}`,
       category: memoCategory,
       authorId: activeUser,

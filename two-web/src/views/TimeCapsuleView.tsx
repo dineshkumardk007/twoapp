@@ -5,6 +5,7 @@ import {
   Clock, Plus, X, Image as ImageIcon, Send, ShieldCheck, CheckCircle2, 
   Eye, EyeOff
 } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface TimeCapsuleViewProps {
   capsules: TimeCapsuleItem[];
@@ -149,7 +150,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
       .filter(u => u.length > 0);
 
     const created: TimeCapsuleItem = {
-      id: `capsule-${Date.now()}`,
+      id: newId('capsule'),
       title: newTitle.trim(),
       teaserHint: newTeaser.trim() || 'A secret love message sealed until the right moment.',
       authorId: activeUser,

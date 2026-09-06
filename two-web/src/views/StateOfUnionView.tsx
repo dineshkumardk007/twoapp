@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface StateOfUnionViewProps {
   activeSession: StateOfUnionSession | null;
@@ -72,7 +73,7 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
 
   // Fallback initial session if null
   const session: StateOfUnionSession = activeSession || {
-    id: 'sou-' + Date.now(),
+    id: newId('sou'),
     weekLabel: `Week of ${new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`,
     createdAt: Date.now(),
     isCompleted: false,

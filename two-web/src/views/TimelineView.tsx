@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { QuoteItem } from '../types';
 import { Quote, Plus, Sparkles, Image as ImageIcon, Lock, Unlock, Calendar, Clock, Heart, Camera, X } from 'lucide-react';
+import { newId } from '../core/ids';
 
 export interface MemoryItem {
   id: string;
@@ -81,7 +82,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ quotes, activeUser, 
     if (!newTitle.trim() || !newDesc.trim()) return;
 
     const created: MemoryItem = {
-      id: Date.now().toString(),
+      id: newId(),
       title: newTitle.trim(),
       date: newDate.trim() || 'Today',
       tag: newTag,

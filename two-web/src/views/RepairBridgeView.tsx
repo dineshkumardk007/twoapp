@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface RepairBridgeViewProps {
   repairLetters: RepairLetter[];
@@ -135,7 +136,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
     if (!title.trim() || !situationSummary.trim()) return;
 
     const letter: RepairLetter = {
-      id: 'repair-' + Date.now(),
+      id: newId('repair'),
       authorId: activeUser,
       authorName: activeUser === 'user' ? 'You' : 'Partner',
       recipientId: partnerId,

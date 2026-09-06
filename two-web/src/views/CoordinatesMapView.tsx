@@ -19,6 +19,7 @@ import {
   Calendar,
   Crosshair
 } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface CoordinatesMapViewProps {
   pins: MemoryCoordinatePin[];
@@ -241,7 +242,7 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
     if (!newTitle.trim() || !newLocationName.trim()) return;
 
     const pin: MemoryCoordinatePin = {
-      id: 'pin-' + Date.now(),
+      id: newId('pin'),
       title: newTitle.trim(),
       category: newCategory,
       locationName: newLocationName.trim(),

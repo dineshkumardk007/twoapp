@@ -105,6 +105,7 @@ import { ChoreSplitView } from './views/ChoreSplitView';
 import { MoneyLightView } from './views/MoneyLightView';
 import { TimelineView } from './views/TimelineView';
 import { SettingsView } from './views/SettingsView';
+import { newId } from './core/ids';
 
 export const App: React.FC = () => {
   const [state, setState] = useState<SpaceState>(loadState);
@@ -290,7 +291,7 @@ export const App: React.FC = () => {
               if (currentTabRef.current !== 'chat') {
                 setUnreadChatCount(c => c + 1);
                 setInAppNotification({
-                  id: String(Date.now()),
+                  id: newId(),
                   title: partnerNameRef.current || 'Partner',
                   body: parsed.text || 'Sent you a message',
                   type: 'chat',
@@ -335,7 +336,7 @@ export const App: React.FC = () => {
               triggerHaptic([45, 55, 45]);
               if (currentTabRef.current !== 'letters') {
                 setInAppNotification({
-                  id: String(Date.now()),
+                  id: newId(),
                   title: `${partnerNameRef.current || 'Partner'} sent a Love Letter`,
                   body: parsed.title || 'A new sealed letter awaits in your Sanctuary',
                   type: 'letter',
@@ -612,7 +613,7 @@ export const App: React.FC = () => {
           triggerHaptic([45, 55, 45]);
           if (currentTabRef.current !== 'letters') {
             setInAppNotification({
-              id: String(Date.now()),
+              id: newId(),
               title: `${partnerNameRef.current || 'Partner'} sent a Love Letter (Mesh)`,
               body: packet.payload.title || 'A sealed letter arrived offline',
               type: 'letter',
@@ -952,7 +953,7 @@ export const App: React.FC = () => {
     extra?: { isVoiceMemo?: boolean; audioDataUrl?: string; audioDurationSeconds?: number }
   ) => {
     const newMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: newId(),
       authorId: state.activeUser,
       authorName: state.activeUser === 'user' ? 'You' : 'Partner',
       text,
@@ -974,7 +975,7 @@ export const App: React.FC = () => {
   const handleAddJournalEntry = (entry: Omit<JournalEntry, 'id'>) => {
     const newEntry: JournalEntry = {
       ...entry,
-      id: Date.now().toString()
+      id: newId()
     };
     setState(prev => ({
       ...prev,
@@ -994,7 +995,7 @@ export const App: React.FC = () => {
   const handleAddAgreement = (agreement: Omit<AgreementItem, 'id'>) => {
     const newAgreement: AgreementItem = {
       ...agreement,
-      id: Date.now().toString()
+      id: newId()
     };
     setState(prev => ({
       ...prev,
@@ -1013,7 +1014,7 @@ export const App: React.FC = () => {
 
   const handleAddListItem = (title: string, isHidden: boolean) => {
     const newItem: ListItem = {
-      id: Date.now().toString(),
+      id: newId(),
       title,
       isCompleted: false,
       isHiddenFromPartner: isHidden,
@@ -1038,7 +1039,7 @@ export const App: React.FC = () => {
   const handleAddChore = (chore: Omit<ChoreItem, 'id'>) => {
     const newChore: ChoreItem = {
       ...chore,
-      id: Date.now().toString()
+      id: newId()
     };
     setState(prev => ({
       ...prev,
@@ -1049,7 +1050,7 @@ export const App: React.FC = () => {
   const handleAddExpense = (expense: Omit<ExpenseItem, 'id'>) => {
     const newExpense: ExpenseItem = {
       ...expense,
-      id: Date.now().toString()
+      id: newId()
     };
     setState(prev => ({
       ...prev,
@@ -1069,7 +1070,7 @@ export const App: React.FC = () => {
       ...prev,
       quotes: [
         {
-          id: Date.now().toString(),
+          id: newId(),
           quote: quoteText,
           author: prev.activeUser === 'user' ? 'You' : 'Partner',
           isCustom: true
@@ -1085,7 +1086,7 @@ export const App: React.FC = () => {
       cycleSharingLevel: level,
       consentLogs: [
         {
-          id: Date.now().toString(),
+          id: newId(),
           kind: 'cycle',
           action: level === 'private' ? 'revoke' : 'grant',
           details: `Cycle sharing level updated to: ${level}`,
@@ -1099,7 +1100,7 @@ export const App: React.FC = () => {
   const handleLogCycleRecord = (record: Omit<CycleRecord, 'id'>) => {
     const newRecord: CycleRecord = {
       ...record,
-      id: Date.now().toString()
+      id: newId()
     };
     setState(prev => ({
       ...prev,
@@ -1126,7 +1127,7 @@ export const App: React.FC = () => {
 
       const pebbleColors = ['#D4A373', '#B5A895', '#C48B71', '#8F9E8B', '#938581', '#C9ADA7'];
       const newPebble: PebbleStone = {
-        id: `peb-${Date.now()}`,
+        id: newId('peb'),
         color: pebbleColors[Math.floor(Math.random() * pebbleColors.length)],
         size: Math.floor(Math.random() * 35) + 50,
         height: Math.floor(Math.random() * 8) + 18,
@@ -1391,7 +1392,7 @@ export const App: React.FC = () => {
 
   const handleSendRadioWhisper = (text: string) => {
     const whisper: RadioWhisper = {
-      id: 'whisper-' + Date.now(),
+      id: newId('whisper'),
       senderId: state.activeUser,
       senderName: state.activeUser === 'user' ? 'You' : 'Partner',
       text,
@@ -1613,7 +1614,7 @@ export const App: React.FC = () => {
   const handleNewDilemma = () => {
     const nextDilemma = CURATED_DILEMMAS[Math.floor(Math.random() * CURATED_DILEMMAS.length)];
     const newRound: IntuitionGameRound = {
-      id: `round-${Date.now()}`,
+      id: newId('round'),
       date: 'Today',
       dilemma: nextDilemma,
       authorId: state.activeUser,

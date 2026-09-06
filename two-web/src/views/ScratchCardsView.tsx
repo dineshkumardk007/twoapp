@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ScratchCardItem, ScratchFoilType, ScratchCardCategory } from '../types';
 import { ScratchCardCanvas } from '../components/ScratchCardCanvas';
 import { Gift, Ticket, Sparkles, Heart, Plus, Check, MessageSquare, Clock, Award, X, RefreshCw, Send, ShieldCheck, Star } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface ScratchCardsViewProps {
   cards: ScratchCardItem[];
@@ -137,7 +138,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
     if (!title.trim() || !revealedContent.trim()) return;
 
     const newCard: ScratchCardItem = {
-      id: `scratch-${Date.now()}`,
+      id: newId('scratch'),
       title: title.trim(),
       category,
       foilType,

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LoveLetter, WaxColor, LetterCondition } from '../types';
 import { Mail, Feather, Heart, Sparkles, Lock, Unlock, Calendar, Moon, Plane, Shield, X, CheckCircle2 } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface LettersViewProps {
   letters: LoveLetter[];
@@ -46,7 +47,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
     if (!title.trim() || !body.trim()) return;
 
     const newLetter: LoveLetter = {
-      id: `let-${Date.now()}`,
+      id: newId('let'),
       authorId: activeUser,
       authorName: activeUser === 'user' ? 'You' : 'Partner',
       title: title.trim(),

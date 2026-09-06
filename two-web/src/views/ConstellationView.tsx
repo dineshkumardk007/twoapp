@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Star, Plus, X, Heart, Eye, Filter, Info, Shield } from 'lucide-react';
 import { GratitudeStar, StarCategory } from '../types';
+import { newId } from '../core/ids';
 
 interface ConstellationViewProps {
   stars: GratitudeStar[];
@@ -49,7 +50,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
     const y = Math.floor(15 + Math.random() * 70);
 
     const newStar: GratitudeStar = {
-      id: Date.now().toString(),
+      id: newId(),
       authorId: activeUser,
       authorName: activeUser === 'user' ? 'You' : 'Partner',
       note: note.trim(),

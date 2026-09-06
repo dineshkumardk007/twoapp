@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RelationshipMilestone } from '../types';
 import { Calendar, Heart, Award, Sparkles, Plus, Clock, Compass, MapPin, X } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface MilestoneTrackerCardProps {
   milestones: RelationshipMilestone[];
@@ -35,7 +36,7 @@ export const MilestoneTrackerCard: React.FC<MilestoneTrackerCardProps> = ({
     if (!title.trim() || !date.trim()) return;
 
     onAddMilestone({
-      id: `ms-${Date.now()}`,
+      id: newId('ms'),
       title: title.trim(),
       date: date.trim(),
       category,

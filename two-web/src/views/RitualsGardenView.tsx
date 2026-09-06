@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RitualItem, PebbleStone } from '../types';
 import { wsRelay } from '../core/ws';
 import { Heart, Sparkles, CheckCircle2, Clock, Plus, Flame, Info, RotateCcw, Award } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface RitualsGardenViewProps {
   rituals: RitualItem[];
@@ -58,7 +59,7 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
     if (!newTitle.trim()) return;
 
     const created: RitualItem = {
-      id: `r-${Date.now()}`,
+      id: newId('r'),
       title: newTitle.trim(),
       subtitle: newSubtitle.trim() || 'A private shared moment for the two of us.',
       duration: newDuration,

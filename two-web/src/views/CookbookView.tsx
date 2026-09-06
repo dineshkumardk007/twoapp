@@ -4,6 +4,7 @@ import {
   Wine, Heart, Play, Pause, RotateCcw, ShoppingBag, Send, ArrowRight, ArrowLeft 
 } from 'lucide-react';
 import { SecretRecipe } from '../types';
+import { newId } from '../core/ids';
 
 interface CookbookViewProps {
   recipes: SecretRecipe[];
@@ -102,7 +103,7 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
       .map(i => i.trim())
       .filter(i => i.length > 0)
       .map((name, idx) => ({
-        id: `ing-${Date.now()}-${idx}`,
+        id: newId('ing'),
         name,
         checked: false
       }));
@@ -113,7 +114,7 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
       .filter(s => s.length > 0);
 
     const recipe: SecretRecipe = {
-      id: `rcp-${Date.now()}`,
+      id: newId('rcp'),
       title: newTitle.trim(),
       story: newStory.trim(),
       prepTime: newPrepTime.trim(),

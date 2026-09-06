@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SoftLandingSession, SoftLandingReflection } from '../types';
 import { Shield, Heart, Clock, Volume2, VolumeX, Sparkles, Check, MessageSquare, History, X, Handshake, AlertCircle } from 'lucide-react';
+import { newId } from '../core/ids';
 
 interface SoftLandingViewProps {
   activeSession: SoftLandingSession | null;
@@ -198,7 +199,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
     const endsAt = Date.now() + durationMinutes * 60 * 1000;
 
     const newSession: SoftLandingSession = {
-      id: `soft-landing-${Date.now()}`,
+      id: newId('soft-landing'),
       initiatedBy: activeUser,
       initiatedByName: authorName,
       initiatedAt: Date.now(),
