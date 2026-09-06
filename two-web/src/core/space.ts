@@ -221,6 +221,29 @@ const DEVICE_ID_KEY = 'two_device_id_v1';
  * same participant and silently forward nothing. The role still labels who
  * wrote a record; only delivery keys off this id.
  */
+/** A short human label for this device, so a roster entry is recognisable. */
+export function describeThisDevice(): string {
+  if (typeof navigator === 'undefined') return 'Unknown device';
+  const ua = navigator.userAgent;
+
+  const os =
+    /iPhone|iPad|iPod/i.test(ua) ? 'iPhone' :
+    /Android/i.test(ua) ? 'Android' :
+    /Windows/i.test(ua) ? 'Windows' :
+    /Mac OS X/i.test(ua) ? 'Mac' :
+    /Linux/i.test(ua) ? 'Linux' : 'Unknown';
+
+  // Order matters: Edge and Opera both claim to be Chrome.
+  const browser =
+    /Edg\//i.test(ua) ? 'Edge' :
+    /OPR\//i.test(ua) ? 'Opera' :
+    /Chrome\//i.test(ua) ? 'Chrome' :
+    /Firefox\//i.test(ua) ? 'Firefox' :
+    /Safari\//i.test(ua) ? 'Safari' : 'Browser';
+
+  return `${browser} on ${os}`;
+}
+
 export function getDeviceId(): string {
   try {
     const existing = localStorage.getItem(DEVICE_ID_KEY);

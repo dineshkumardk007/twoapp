@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, SpaceState } from './core/storage';
 import { AppDock } from './components/AppDock';
+import { UnknownDeviceAlert } from './components/UnknownDeviceAlert';
 import { isAndroidApp, formFactor } from './core/platform';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
@@ -14,6 +15,8 @@ import type { SpaceRole } from './core/space';
 import {
   isWeakPairingCode,
   generatePairingCode,
+  getDeviceId,
+  describeThisDevice,
   normalizeJoinPhrase,
   deriveSpaceCredentials,
   loadSpaceSession,
@@ -139,6 +142,7 @@ export const App: React.FC = () => {
   // Whether the partner's device is actually in the space right now, and when
   // we last heard anything from them.
   const [partnerOnline, setPartnerOnline] = useState(false);
+  const [occupancy, setOccupancy] = useState({ peers: 0, ownDevices: 0, total: 0 });
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
 
   const [isUnlocking, setIsUnlocking] = useState(false);
@@ -209,12 +213,33 @@ export const App: React.FC = () => {
 
   useEffect(
     () =>
-      wsRelay.subscribePresence(online => {
+      wsRelay.subscribePresence((online, info) => {
         setPartnerOnline(online);
+        setOccupancy(info);
         if (online) setState(prev => (prev.partnerEverSeen ? prev : { ...prev, partnerEverSeen: true }));
       }),
     []
   );
+
+  // Announce this device so the other side can put a name to it. Sent on every
+  // (re)connect because the partner may not have been listening the first time.
+  useEffect(() => {
+    if (!session) return;
+    const announce = () =>
+      wsRelay.broadcastUpdate('DEVICE_HELLO', {
+        deviceId: getDeviceId(),
+        label: describeThisDevice()
+      });
+
+    const t = setTimeout(announce, 1200);
+    const unsub = wsRelay.subscribeStatus(st => {
+      if (st === 'connected') setTimeout(announce, 800);
+    });
+    return () => {
+      clearTimeout(t);
+      unsub();
+    };
+  }, [session, spaceVersion]);
 
   // The relay confirming a record is what turns a pending message into "sent".
   useEffect(
@@ -332,6 +357,27 @@ export const App: React.FC = () => {
               });
               return { ...prev, rituals: updatedRituals };
             });
+          } else if (record.type === 'DEVICE_HELLO') {
+            const id = String(parsed.deviceId || '');
+            if (id && id !== getDeviceId()) {
+              setState(prev => {
+                if (prev.knownDevices.some(d => d.id === id)) return prev;
+                return {
+                  ...prev,
+                  knownDevices: [
+                    ...prev.knownDevices,
+                    {
+                      id,
+                      label: String(parsed.label || 'Unknown device'),
+                      firstSeenAt: Date.now(),
+                      // The first device to answer is the partner you just
+                      // paired with; anything after that deserves a question.
+                      approved: prev.knownDevices.length === 0
+                    }
+                  ]
+                };
+              });
+            }
           } else if (record.type === 'READ_RECEIPT') {
             // Our own laptop shares this role; its receipt must not mark our
             // messages as read by the partner.
@@ -1615,6 +1661,41 @@ export const App: React.FC = () => {
     setSpaceVersion(v => v + 1);
   };
 
+  const handleApproveDevice = (deviceId: string) => {
+    setState(prev => ({
+      ...prev,
+      knownDevices: prev.knownDevices.map(d => (d.id === deviceId ? { ...d, approved: true } : d)),
+      approvedDeviceCount: Math.max(prev.approvedDeviceCount, occupancy.total || prev.approvedDeviceCount)
+    }));
+  };
+
+  /** Accepts the current occupancy as normal, without naming a device. */
+  const handleApproveCount = () => {
+    setState(prev => ({
+      ...prev,
+      approvedDeviceCount: Math.max(prev.approvedDeviceCount, occupancy.total)
+    }));
+  };
+
+  /**
+   * Rotating is the only response that actually removes someone: it derives a
+   * new room and a new key, so the code they hold stops working.
+   */
+  const handleRotateFromAlert = () => {
+    const fresh = generatePairingCode();
+    if (
+      !window.confirm(
+        `Change our link code to ${fresh}?
+
+Anyone using the old code loses access, including your partner until you give them this one.`
+      )
+    ) {
+      return;
+    }
+    handleRotateCode(fresh);
+    setState(prev => ({ ...prev, knownDevices: [], approvedDeviceCount: 1 }));
+  };
+
   /** Renames the space on both devices. */
   const handleRenameVault = (name: string) => {
     const clean = name.trim().slice(0, 40);
@@ -1842,6 +1923,17 @@ export const App: React.FC = () => {
         vaultName={state.vaultName}
         partnerOnline={partnerOnline}
       />
+
+      {session && (
+        <UnknownDeviceAlert
+          totalDevices={occupancy.total}
+          approvedCount={state.approvedDeviceCount}
+          pending={state.knownDevices.filter(d => !d.approved)}
+          onApprove={handleApproveDevice}
+          onApproveCount={handleApproveCount}
+          onRotateCode={handleRotateFromAlert}
+        />
+      )}
 
       {session && isWeakPairingCode(session.code) && (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-4">

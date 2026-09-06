@@ -266,6 +266,10 @@ export class WebSocketRelay {
         type: 'PRESENCE',
         peers: partners,
         ownDevices,
+        // The total comes from the relay's own socket table, so unlike anything
+        // a client asserts about itself it cannot be forged by someone holding
+        // the pairing code. It is what makes an extra listener detectable.
+        total: inSpace.length,
         timestamp: Date.now()
       });
     }

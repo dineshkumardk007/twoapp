@@ -104,6 +104,18 @@ export interface SpaceState {
    * is instead of leaving you guessing.
    */
   partnerEverSeen: boolean;
+  /**
+   * Devices this space has been told about, and whether you have vouched for
+   * them.
+   *
+   * Advisory, not a gate: anyone holding the link code can decrypt regardless
+   * and could assert any id they like. Its job is to make an unexpected device
+   * visible and give you a reason to rotate the code - which is the only thing
+   * that actually shuts someone out.
+   */
+  knownDevices: KnownDevice[];
+  /** How many devices you have accepted as legitimately in this space. */
+  approvedDeviceCount: number;
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -115,6 +127,8 @@ const DEFAULT_STATE: SpaceState = {
   vaultName: '',
   partnerReadAt: 0,
   partnerEverSeen: false,
+  knownDevices: [],
+  approvedDeviceCount: 1,
   userReport: {
     weather: 'CALM',
     capacity: 4,
@@ -1060,6 +1074,8 @@ export function loadState(): SpaceState {
       vaultName: parsed.vaultName || '',
       partnerReadAt: parsed.partnerReadAt || 0,
       partnerEverSeen: parsed.partnerEverSeen || false,
+      knownDevices: parsed.knownDevices || [],
+      approvedDeviceCount: parsed.approvedDeviceCount || 1,
       rituals: parsed.rituals || DEFAULT_STATE.rituals,
       pebbles: parsed.pebbles || DEFAULT_STATE.pebbles,
       letters: parsed.letters || DEFAULT_STATE.letters,
@@ -1095,6 +1111,13 @@ export function loadState(): SpaceState {
 // add hundreds. Unlike messages or letters they carry no lasting meaning once
 // the drawing is done, so only a recent window is persisted.
 const MAX_PERSISTED_STROKES = 2000;
+
+export interface KnownDevice {
+  id: string;
+  label: string;
+  firstSeenAt: number;
+  approved: boolean;
+}
 
 export interface SaveResult {
   ok: boolean;

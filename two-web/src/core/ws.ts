@@ -14,7 +14,16 @@ type MessageCallback = (data: any) => void;
 export type RelayStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting';
 
 type StatusCallback = (status: RelayStatus) => void;
-type PresenceCallback = (partnerOnline: boolean) => void;
+export interface PresenceInfo {
+  /** Devices in the space holding the OTHER role. */
+  peers: number;
+  /** This person's own other devices. */
+  ownDevices: number;
+  /** Every socket in the space, as counted by the relay itself. */
+  total: number;
+}
+
+type PresenceCallback = (partnerOnline: boolean, info: PresenceInfo) => void;
 
 const RELAY_DEV_PORT = 4000;
 const MAX_OUTBOX = 500;
@@ -75,6 +84,7 @@ class WebSocketRelayClient {
   private statusListeners = new Set<StatusCallback>();
   private presenceListeners = new Set<PresenceCallback>();
   private partnerOnline = false;
+  private presenceInfo: PresenceInfo = { peers: 0, ownDevices: 0, total: 0 };
 
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
@@ -183,7 +193,12 @@ class WebSocketRelayClient {
     }
 
     if (payload?.type === 'PRESENCE') {
-      this.setPartnerOnline(Number(payload.peers) > 0);
+      this.presenceInfo = {
+        peers: Number(payload.peers) || 0,
+        ownDevices: Number(payload.ownDevices) || 0,
+        total: Number(payload.total) || 0
+      };
+      this.setPartnerOnline(this.presenceInfo.peers > 0, true);
       this.emit(payload);
       return;
     }
@@ -481,12 +496,16 @@ class WebSocketRelayClient {
     return this.status;
   }
 
-  private setPartnerOnline(online: boolean) {
-    if (this.partnerOnline === online) return;
+  private setPartnerOnline(online: boolean, force = false) {
+    // Occupancy can change while `online` stays true - a third device arriving
+    // is exactly that case - so presence updates must not be deduped on the
+    // boolean alone.
+    if (this.partnerOnline === online && !force) return;
     this.partnerOnline = online;
+    const info = this.presenceInfo;
     this.presenceListeners.forEach(cb => {
       try {
-        cb(online);
+        cb(online, info);
       } catch {
         /* ignore */
       }
@@ -496,7 +515,7 @@ class WebSocketRelayClient {
   /** Notifies when the partner's device joins or leaves the space. */
   subscribePresence(callback: PresenceCallback) {
     this.presenceListeners.add(callback);
-    callback(this.partnerOnline);
+    callback(this.partnerOnline, this.presenceInfo);
     return () => {
       this.presenceListeners.delete(callback);
     };
