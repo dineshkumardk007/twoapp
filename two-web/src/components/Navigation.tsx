@@ -3,6 +3,7 @@ import { PairingModal } from './PairingModal';
 import { LocalMeshModal } from './LocalMeshModal';
 import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
 import { CoRegulationModal } from './CoRegulationModal';
+import { SanctuaryToolsModal } from './SanctuaryToolsModal';
 import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Palette, LayoutGrid } from 'lucide-react';
 import { Locale, getTranslation } from '../core/i18n';
 
@@ -39,6 +40,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   const [showMeshModal, setShowMeshModal] = useState(false);
   const [showSoundscapeModal, setShowSoundscapeModal] = useState(false);
   const [showCoRegulationModal, setShowCoRegulationModal] = useState(false);
+  const [showToolsModal, setShowToolsModal] = useState(false);
   const t = getTranslation(locale);
 
   const tabs = [
@@ -81,100 +83,17 @@ export const Navigation: React.FC<NavigationProps> = ({
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Brand & Privacy Status */}
-          <div className="flex items-center space-x-3">
-            <span className="font-serif text-2xl font-medium tracking-tight text-linen-primary cursor-pointer" onClick={() => onSelectTab('home')}>
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+            <span
+              className="font-serif text-2xl font-medium tracking-tight text-linen-primary cursor-pointer select-none"
+              onClick={() => onSelectTab('home')}
+            >
               {t.appName}
             </span>
             <button
               onClick={() => setShowPairingModal(true)}
-              className="inline-flex items-center text-xs font-medium text-linen-secondary px-2 sm:px-2.5 py-0.5 rounded-full bg-linen-variant hover:bg-linen-border border border-linen-border transition-colors cursor-pointer"
-              title="Click to view QR Code or verify Safety Numbers"
-            >
-              <Shield className="w-3 h-3 mr-1 text-emerald-600 shrink-0" />
-              <span className="hidden sm:inline">{t.encryptedNotice}</span>
-              <span className="sm:hidden text-[10px] font-semibold">E2EE</span>
-            </button>
-
-            {/* Interactive Story Tour button */}
-            {onOpenStoryTour && (
-              <button
-                onClick={onOpenStoryTour}
-                className="inline-flex items-center text-xs font-medium text-linen-accent px-2.5 py-1 rounded-lg bg-linen-variant/60 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer"
-                title="Interactive 5-Act Walkthrough: A Day in the Life with Two"
-              >
-                <Sparkles className="w-3.5 h-3.5 mr-1" />
-                <span className="hidden md:inline">Tour</span>
-              </button>
-            )}
-          </div>
-
-          {/* Controls: Sensory Pulse, Mesh, Camouflage, Perspective Switcher, Emergency Wipe */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Sensory Pulse Quick Trigger */}
-            {onTriggerPulse && (
-              <button
-                onClick={onTriggerPulse}
-                className="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-200"
-                title={t.actions.sensoryPulse}
-              >
-                <Heart className="w-4 h-4 fill-rose-500" />
-              </button>
-            )}
-
-            {/* Synced Ambient Soundscape & Sleep Timer */}
-            <button
-              onClick={() => setShowSoundscapeModal(true)}
-              className="p-1.5 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-200"
-              title="Ambient Night Soundscapes: Fall Asleep Together"
-            >
-              <Moon className="w-4 h-4" />
-            </button>
-
-            {/* Synchronized Co-Regulation Sanctuary */}
-            <button
-              onClick={() => setShowCoRegulationModal(true)}
-              className="p-1.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors border border-transparent hover:border-teal-200"
-              title="Co-Regulation Sanctuary: Synchronized 4-7-8 Breathing"
-            >
-              <Wind className="w-4 h-4" />
-            </button>
-
-            {/* Off-Grid Mesh Sync Status */}
-            <button
-              onClick={() => setShowMeshModal(true)}
-              className="p-1.5 text-linen-secondary hover:text-linen-primary hover:bg-linen-variant rounded-lg transition-colors border border-transparent hover:border-linen-border"
-              title={t.actions.meshSync}
-            >
-              <Radio className="w-4 h-4" />
-            </button>
-
-            {/* Camouflage Decoy Button */}
-            {onToggleCamouflage && (
-              <button
-                onClick={onToggleCamouflage}
-                className="p-1.5 text-linen-secondary hover:text-linen-primary hover:bg-linen-variant rounded-lg transition-colors border border-transparent hover:border-linen-border"
-                title={t.actions.camouflage}
-              >
-                <Calculator className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Sanctuary Directory / All Spaces Drawer Button */}
-            {onOpenDirectory && (
-              <button
-                onClick={onOpenDirectory}
-                className="inline-flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-1.5 text-linen-secondary hover:text-linen-primary hover:bg-linen-variant rounded-lg transition-colors border border-transparent hover:border-linen-border cursor-pointer"
-                title="Sanctuary Explorer (All 32 Spaces)"
-              >
-                <LayoutGrid className="w-4 h-4 text-linen-accent" />
-                <span className="hidden md:inline text-xs font-medium">Spaces</span>
-              </button>
-            )}
-
-            {/* Real-Time E2EE Relay Status Badge */}
-            <div
-              className="inline-flex items-center text-xs font-medium px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant text-linen-primary border border-linen-border select-none"
-              title={relayStatus === 'connected' ? 'Connected securely to E2EE Relay' : 'Connecting to Relay...'}
+              className="inline-flex items-center text-xs font-medium text-linen-secondary px-2 sm:px-2.5 py-1 rounded-full bg-linen-variant hover:bg-linen-border border border-linen-border transition-colors cursor-pointer select-none"
+              title="End-to-End Encrypted • Click to verify Safety Numbers"
             >
               <span
                 className={`w-2 h-2 rounded-full mr-1.5 shrink-0 ${
@@ -185,18 +104,55 @@ export const Navigation: React.FC<NavigationProps> = ({
                     : 'bg-stone-400'
                 }`}
               />
-              <span className="hidden sm:inline">
-                {relayStatus === 'connected' ? 'Two • Connected' : 'Connecting...'}
+              <span className="hidden sm:inline font-medium text-linen-primary">
+                {relayStatus === 'connected' ? 'Two • Live' : 'Connecting'}
               </span>
-              <span className="sm:hidden">
-                {relayStatus === 'connected' ? 'Live' : 'Syncing'}
+              <span className="sm:hidden font-semibold text-[10px] text-linen-primary">
+                {relayStatus === 'connected' ? 'Live' : 'Sync'}
               </span>
-            </div>
+            </button>
+          </div>
 
-            {/* Emergency Exit */}
+          {/* Action Menu Buttons: Tour, Spaces, Tools (All match the Tour button design!) */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2.5">
+            {/* 1. Interactive Story Tour button */}
+            {onOpenStoryTour && (
+              <button
+                onClick={onOpenStoryTour}
+                className="inline-flex items-center text-xs font-medium text-linen-accent px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs"
+                title="Interactive 5-Act Walkthrough: A Day in the Life with Two"
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1 text-linen-accent shrink-0" />
+                <span>Tour</span>
+              </button>
+            )}
+
+            {/* 2. Sanctuary Spaces Explorer button */}
+            {onOpenDirectory && (
+              <button
+                onClick={onOpenDirectory}
+                className="inline-flex items-center text-xs font-medium text-linen-primary px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs"
+                title="Sanctuary Explorer (Browse All 32 Spaces)"
+              >
+                <LayoutGrid className="w-3.5 h-3.5 mr-1 text-linen-accent shrink-0" />
+                <span>Spaces</span>
+              </button>
+            )}
+
+            {/* 3. Sanctuary Tools Menu button */}
+            <button
+              onClick={() => setShowToolsModal(true)}
+              className="inline-flex items-center text-xs font-medium text-linen-primary px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs"
+              title="Sanctuary Tools (Soundscapes, Breathing, Camouflage, Mesh & More)"
+            >
+              <Compass className="w-3.5 h-3.5 mr-1 text-linen-accent shrink-0" />
+              <span>Tools</span>
+            </button>
+
+            {/* Emergency Exit button */}
             <button
               onClick={onEmergencyExit}
-              className="p-1.5 text-linen-secondary hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-1.5 text-linen-secondary hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200 cursor-pointer"
               title={t.actions.quickExit}
             >
               <LogOut className="w-4 h-4" />
@@ -265,6 +221,20 @@ export const Navigation: React.FC<NavigationProps> = ({
       <CoRegulationModal
         isOpen={showCoRegulationModal}
         onClose={() => setShowCoRegulationModal(false)}
+        activeUser={activeUser}
+      />
+
+      <SanctuaryToolsModal
+        isOpen={showToolsModal}
+        onClose={() => setShowToolsModal(false)}
+        onOpenSoundscapes={() => setShowSoundscapeModal(true)}
+        onOpenCoRegulation={() => setShowCoRegulationModal(true)}
+        onTriggerPulse={onTriggerPulse}
+        onToggleCamouflage={onToggleCamouflage}
+        onOpenMesh={() => setShowMeshModal(true)}
+        onOpenSafetyNumbers={() => setShowPairingModal(true)}
+        onEmergencyExit={onEmergencyExit}
+        relayStatus={relayStatus}
         activeUser={activeUser}
       />
     </header>
