@@ -82,6 +82,12 @@ export interface SpaceState {
   partnerName: string;
   /** Whether PIN protection is on. The PIN itself lives nowhere - see core/vault.ts. */
   pinEnabled: boolean;
+  /**
+   * What the couple named their space, shown in the header so both know whose
+   * sanctuary they are in. Synced as an encrypted record like everything else,
+   * so the relay never learns it.
+   */
+  vaultName: string;
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -90,6 +96,7 @@ const DEFAULT_STATE: SpaceState = {
   userName: 'You',
   partnerName: 'Partner',
   pinEnabled: false,
+  vaultName: '',
   userReport: {
     weather: 'CALM',
     capacity: 4,
@@ -1032,6 +1039,7 @@ export function loadState(): SpaceState {
       // Older vaults stored the PIN in the clear; treat its presence as the flag
       // and drop the value on the next save.
       pinEnabled: parsed.pinEnabled !== undefined ? parsed.pinEnabled : !!parsed.appPin,
+      vaultName: parsed.vaultName || '',
       rituals: parsed.rituals || DEFAULT_STATE.rituals,
       pebbles: parsed.pebbles || DEFAULT_STATE.pebbles,
       letters: parsed.letters || DEFAULT_STATE.letters,

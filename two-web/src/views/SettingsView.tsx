@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode } from '../core/space';
+import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode, generateJoinPhrase } from '../core/space';
 import { isAuthConfigured } from '../core/auth';
 import { sendInvite } from '../core/invites';
 import { SpaceState } from '../core/storage';
@@ -25,6 +25,15 @@ interface SettingsViewProps {
   onSignOut?: () => void;
   /** Display name used when inviting a partner. */
   userName?: string;
+  vaultName?: string;
+  onRenameVault?: (name: string) => void;
+  /** Words spoken aloud that the server never sees; folded into the content key. */
+  joinPhrase?: string;
+  onSetJoinPhrase?: (phrase: string) => void;
+  /** True only when the partner's device is in the space right now. */
+  partnerOnline?: boolean;
+  relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
+  lastSyncedAt?: number | null;
   onToggleActiveUser?: () => void;
   decoyCode?: string;
   onUpdateDecoyCode?: (code: string) => void;
@@ -46,6 +55,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onRotateCode = () => {},
   onSignOut,
   userName = '',
+  vaultName = '',
+  onRenameVault,
+  joinPhrase = '',
+  onSetJoinPhrase,
+  partnerOnline = false,
+  relayStatus = 'idle',
+  lastSyncedAt = null,
   onToggleActiveUser = () => {},
   decoyCode = '142.85',
   onUpdateDecoyCode,
@@ -57,6 +73,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [copiedCode, setCopiedCode] = useState(false);
   const [decoyCodeInput, setDecoyCodeInput] = useState(decoyCode);
   const [decoySaved, setDecoySaved] = useState(false);
+  const [nameDraft, setNameDraft] = useState(vaultName);
+  const [nameSaved, setNameSaved] = useState(false);
+
   const [inviteTo, setInviteTo] = useState('');
   const [inviteState, setInviteState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [inviteError, setInviteError] = useState('');
@@ -93,10 +112,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     handleCopyCode();
   };
 
+  const handleRename = () => {
+    if (!onRenameVault) return;
+    onRenameVault(nameDraft);
+    setNameSaved(true);
+    setTimeout(() => setNameSaved(false), 2000);
+  };
+
+  const relayLabel =
+    relayStatus === 'connected' ? 'Connected to the relay' :
+    relayStatus === 'connecting' ? 'Connecting…' :
+    relayStatus === 'reconnecting' ? 'Reconnecting…' : 'Offline';
+
   const handleInvite = async () => {
     if (!spaceCode) return;
     setInviteState('sending');
     setInviteError('');
+
+    // The invite carries the code through the server, so the phrase - which
+    // never leaves this device - is what keeps the operator out. Mint one now
+    // if this space does not have one yet.
+    let phrase = joinPhrase;
+    if (!phrase && onSetJoinPhrase) {
+      phrase = generateJoinPhrase();
+      onSetJoinPhrase(phrase);
+    }
 
     const res = await sendInvite(inviteTo, spaceCode, userName);
     if (res.ok) {
@@ -221,6 +261,74 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           )}
 
+          {/* Who you are connected to, and whether they are here right now. */}
+          <div className="pb-2 border-b border-linen-border/40 space-y-2.5">
+            <span className="block text-[10px] uppercase tracking-wider font-semibold text-linen-accent">
+              Our space
+            </span>
+
+            <div className="flex items-center space-x-1.5">
+              <input
+                type="text"
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                placeholder="Name our sanctuary…"
+                maxLength={40}
+                className="flex-1 px-3 py-2 rounded-lg border border-linen-border bg-linen-surface text-sm text-linen-primary"
+              />
+              <button
+                type="button"
+                disabled={!onRenameVault || nameDraft.trim() === vaultName.trim()}
+                onClick={handleRename}
+                className="px-2.5 py-2 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 disabled:opacity-40 transition-opacity cursor-pointer"
+              >
+                {nameSaved ? 'Saved' : 'Rename'}
+              </button>
+            </div>
+            <p className="text-[11px] text-linen-secondary leading-relaxed">
+              Shown at the top for both of you. It is encrypted like everything else, so the
+              server never learns what you called yourselves.
+            </p>
+
+            <dl className="space-y-1.5 pt-1">
+              <div className="flex justify-between items-center">
+                <dt className="text-linen-secondary">Paired</dt>
+                <dd className="text-linen-primary font-medium">
+                  {spaceCode ? 'Yes' : 'Not yet'}
+                </dd>
+              </div>
+              <div className="flex justify-between items-center">
+                <dt className="text-linen-secondary">Partner</dt>
+                <dd className="flex items-center font-medium">
+                  <span
+                    className={`w-2 h-2 rounded-full mr-1.5 ${
+                      partnerOnline ? 'bg-emerald-500' : 'bg-linen-border'
+                    }`}
+                  />
+                  <span className={partnerOnline ? 'text-emerald-700' : 'text-linen-secondary'}>
+                    {partnerOnline ? 'Here now' : 'Away'}
+                  </span>
+                </dd>
+              </div>
+              <div className="flex justify-between items-center">
+                <dt className="text-linen-secondary">Relay</dt>
+                <dd className="text-linen-primary font-medium">{relayLabel}</dd>
+              </div>
+              <div className="flex justify-between items-center">
+                <dt className="text-linen-secondary">Last sync</dt>
+                <dd className="text-linen-primary font-medium">
+                  {lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString() : '—'}
+                </dd>
+              </div>
+              <div className="flex justify-between items-center">
+                <dt className="text-linen-secondary">Device lock</dt>
+                <dd className="text-linen-primary font-medium">
+                  {state.pinEnabled ? 'On' : 'Off'}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
           {isAuthConfigured && spaceCode && (
             <div className="pb-2 border-b border-linen-border/40 space-y-2">
               <span className="block text-[10px] uppercase tracking-wider font-semibold text-linen-accent">
@@ -238,6 +346,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface text-sm text-linen-primary"
               />
               {inviteError && <p className="text-[11px] text-rose-700">{inviteError}</p>}
+
+              {joinPhrase && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 space-y-1">
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-amber-900">
+                    Say these four words to them
+                  </p>
+                  <p className="font-mono text-sm font-bold text-amber-950">{joinPhrase}</p>
+                  <p className="text-[10px] text-amber-900 leading-relaxed">
+                    Speak them in person or on a call — never type them into a message. They are
+                    what stops anyone but the two of you reading this space.
+                  </p>
+                </div>
+              )}
               <button
                 type="button"
                 disabled={inviteState === 'sending' || !inviteTo.trim()}

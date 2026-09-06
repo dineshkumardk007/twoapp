@@ -14,6 +14,7 @@ type MessageCallback = (data: any) => void;
 export type RelayStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting';
 
 type StatusCallback = (status: RelayStatus) => void;
+type PresenceCallback = (partnerOnline: boolean) => void;
 
 const RELAY_DEV_PORT = 4000;
 const MAX_OUTBOX = 500;
@@ -72,6 +73,8 @@ class WebSocketRelayClient {
 
   private listeners = new Set<MessageCallback>();
   private statusListeners = new Set<StatusCallback>();
+  private presenceListeners = new Set<PresenceCallback>();
+  private partnerOnline = false;
 
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
@@ -172,6 +175,7 @@ class WebSocketRelayClient {
 
     socket.onclose = () => {
       this.stopHeartbeat();
+      this.setPartnerOnline(false);
       if (this.ws === socket) this.ws = null;
       if (this.stopped) return;
       this.scheduleReconnect();
@@ -186,6 +190,12 @@ class WebSocketRelayClient {
     try {
       payload = JSON.parse(raw);
     } catch {
+      return;
+    }
+
+    if (payload?.type === 'PRESENCE') {
+      this.setPartnerOnline(Number(payload.peers) > 0);
+      this.emit(payload);
       return;
     }
 
@@ -473,6 +483,27 @@ class WebSocketRelayClient {
 
   getStatus(): RelayStatus {
     return this.status;
+  }
+
+  private setPartnerOnline(online: boolean) {
+    if (this.partnerOnline === online) return;
+    this.partnerOnline = online;
+    this.presenceListeners.forEach(cb => {
+      try {
+        cb(online);
+      } catch {
+        /* ignore */
+      }
+    });
+  }
+
+  /** Notifies when the partner's device joins or leaves the space. */
+  subscribePresence(callback: PresenceCallback) {
+    this.presenceListeners.add(callback);
+    callback(this.partnerOnline);
+    return () => {
+      this.presenceListeners.delete(callback);
+    };
   }
 
   reconnectNow() {

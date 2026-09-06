@@ -28,6 +28,15 @@ export type SpaceRole = 'user' | 'partner';
 export interface SpaceSession {
   /** The shared pairing code, normalised to `TWO-XXXX` or words. */
   code: string;
+  /**
+   * Words the couple speak aloud, never sent anywhere.
+   *
+   * An invite carries the pairing code through the server, so the code alone no
+   * longer keeps the operator out. Mixing this into the content key does: the
+   * server can see the room and the ciphertext, but cannot derive the key
+   * without words that were only ever spoken.
+   */
+  joinPhrase?: string;
   role: SpaceRole;
   userName?: string;
   partnerName?: string;
@@ -44,6 +53,25 @@ export interface SpaceCredentials {
 const CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTVWXYZ';
 const CODE_LENGTH = 12; // ~58.9 bits
 const CODE_GROUP = 4;
+
+const JOIN_PHRASE_WORDS = 4; // ~31 bits from the 220-word list
+
+/** Four words that are easy to say down a phone line and hard to guess. */
+export function generateJoinPhrase(): string {
+  const picks = new Uint32Array(JOIN_PHRASE_WORDS);
+  window.crypto.getRandomValues(picks);
+
+  const words: string[] = [];
+  for (let i = 0; i < JOIN_PHRASE_WORDS; i++) {
+    words.push(BIP39_WORDS[picks[i] % BIP39_WORDS.length]);
+  }
+  return words.join(' ');
+}
+
+/** Forgiving about spacing, case and punctuation, so speaking it works. */
+export function normalizeJoinPhrase(raw: string): string {
+  return raw.toLowerCase().split(/[^a-z]+/).filter(Boolean).join(' ');
+}
 
 /**
  * Draws an unbiased index into CODE_ALPHABET.
@@ -121,11 +149,24 @@ async function importCodeMaterial(code: string): Promise<CryptoKey> {
  */
 export async function deriveSpaceCredentials(
   rawCode: string,
-  role: SpaceRole
+  role: SpaceRole,
+  rawJoinPhrase?: string
 ): Promise<SpaceCredentials> {
   const code = normalizePairingCode(rawCode);
-  const material = await importCodeMaterial(code);
+  const phrase = normalizeJoinPhrase(rawJoinPhrase || '');
   const enc = new TextEncoder();
+
+  // The room is found from the code alone, so partners who disagree about the
+  // phrase still meet - and we can tell them the phrase is wrong instead of
+  // leaving them in separate empty rooms wondering why nobody arrived.
+  const idMaterial = await importCodeMaterial(code);
+
+  // The content key additionally folds in the spoken phrase. An empty phrase
+  // must reproduce the original derivation exactly, or every existing space
+  // would become unreadable.
+  const keyMaterial = phrase
+    ? await importCodeMaterial(`${code}::${phrase}`)
+    : idMaterial;
 
   const idBits = await window.crypto.subtle.deriveBits(
     {
@@ -134,7 +175,7 @@ export async function deriveSpaceCredentials(
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256'
     },
-    material,
+    idMaterial,
     128
   );
 
@@ -149,7 +190,7 @@ export async function deriveSpaceCredentials(
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256'
     },
-    material,
+    keyMaterial,
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt', 'decrypt']
@@ -209,7 +250,8 @@ export function loadSpaceSession(): SpaceSession | null {
       code: parsed.code,
       role: parsed.role,
       userName: parsed.userName,
-      partnerName: parsed.partnerName
+      partnerName: parsed.partnerName,
+      joinPhrase: parsed.joinPhrase
     };
   } catch {
     return null;

@@ -19,6 +19,10 @@ interface NavigationProps {
   onTriggerPulse?: () => void;
   locale?: Locale;
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
+  /** What the couple named their space; shown instead of the product name. */
+  vaultName?: string;
+  /** True only when the partner's device is actually in the space right now. */
+  partnerOnline?: boolean;
   unreadChatCount?: number;
   onOpenDirectory?: () => void;
   partnerName?: string;
@@ -35,6 +39,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   onTriggerPulse,
   locale = 'en',
   relayStatus = 'connected',
+  vaultName = '',
+  partnerOnline = false,
   unreadChatCount = 0,
   onOpenDirectory,
   partnerName = 'Partner'
@@ -110,10 +116,18 @@ export const Navigation: React.FC<NavigationProps> = ({
                 }`}
               />
               <span className="hidden sm:inline font-medium text-linen-primary">
-                {relayStatus === 'connected' ? 'Two • Live' : 'Connecting'}
+                {/* "Two • Live" only ever meant "I reached the server", which read
+                    as "we are connected to each other". Show who you are with,
+                    and keep presence a separate, honest signal. */}
+                {vaultName || 'Two'}
+                {relayStatus === 'connected'
+                  ? partnerOnline
+                    ? ' • together'
+                    : ' • synced'
+                  : ' • connecting'}
               </span>
               <span className="sm:hidden font-semibold text-[10px] text-linen-primary">
-                {relayStatus === 'connected' ? 'Live' : 'Sync'}
+                {relayStatus === 'connected' ? (partnerOnline ? 'Together' : 'Synced') : 'Sync'}
               </span>
             </button>
           </div>

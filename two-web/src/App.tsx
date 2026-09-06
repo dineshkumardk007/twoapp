@@ -23,6 +23,7 @@ import type { SpaceRole } from './core/space';
 import {
   isWeakPairingCode,
   generatePairingCode,
+  normalizeJoinPhrase,
   deriveSpaceCredentials,
   loadSpaceSession,
   saveSpaceSession,
@@ -149,6 +150,16 @@ export const App: React.FC = () => {
   // open even when the Supabase session is still valid.
   const [authPassword, setAuthPassword] = useState<string | null>(null);
   const [authError, setAuthError] = useState('');
+
+  // Whether the partner's device is actually in the space right now, and when
+  // we last heard anything from them.
+  const [partnerOnline, setPartnerOnline] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+
+  // An invite was found, but the space cannot be opened until the partner
+  // supplies the words that were spoken aloud.
+  const [awaitingPhrase, setAwaitingPhrase] = useState<{ code: string; fromName: string } | null>(null);
+  const [phraseInput, setPhraseInput] = useState('');
   const [isUnlocking, setIsUnlocking] = useState(false);
   // Device storage is full: the app still runs from memory, but nothing is
   // being saved. Silence here would cost the user everything on refresh.
@@ -202,7 +213,7 @@ export const App: React.FC = () => {
     }
 
     let cancelled = false;
-    deriveSpaceCredentials(session.code, session.role)
+    deriveSpaceCredentials(session.code, session.role, session.joinPhrase)
       .then(creds => {
         if (!cancelled) wsRelay.connect(creds);
       })
@@ -213,11 +224,14 @@ export const App: React.FC = () => {
     };
   }, [session, spaceVersion, isLocked]);
 
+  useEffect(() => wsRelay.subscribePresence(setPartnerOnline), []);
+
   // Listen for remote updates
   useEffect(() => {
     const unsubscribe = wsRelay.subscribe((msg) => {
       if (msg.type === 'REMOTE_RECORD') {
         const record = msg.record;
+        setLastSyncedAt(Date.now());
         try {
           const parsed = JSON.parse(record.payload);
 
@@ -311,6 +325,8 @@ export const App: React.FC = () => {
               });
               return { ...prev, rituals: updatedRituals };
             });
+          } else if (record.type === 'VAULT_NAME') {
+            setState(prev => ({ ...prev, vaultName: String(parsed.name || '') }));
           } else if (record.type === 'GRATITUDE_STAR') {
             setState(prev => ({
               ...prev,
@@ -1592,9 +1608,12 @@ export const App: React.FC = () => {
       if (!code) {
         const invite = await fetchPendingInvite();
         if (invite) {
-          code = invite.code;
-          role = 'partner';
+          // The code came through the server, so it is not sufficient on its
+          // own. Ask for the words the partner spoke before opening anything.
           await acceptInvite(invite.id);
+          setAuthPassword(password);
+          setAwaitingPhrase({ code: invite.code, fromName: invite.from_name || 'Your partner' });
+          return;
         }
       }
 
@@ -1665,6 +1684,39 @@ export const App: React.FC = () => {
     setIsLocked(hasEncryptedVault());
   };
 
+  /** Adopts a space from an invite once the spoken words are supplied. */
+  const handleJoinWithPhrase = () => {
+    if (!awaitingPhrase) return;
+    const phrase = normalizeJoinPhrase(phraseInput);
+    if (!phrase) return;
+
+    const joined: SpaceSession = {
+      code: awaitingPhrase.code,
+      role: 'partner',
+      joinPhrase: phrase,
+      userName: state.userName || 'Partner'
+    };
+    setSession(joined);
+    setState(prev => ({ ...prev, isPaired: true, activeUser: 'partner' }));
+    setAwaitingPhrase(null);
+    setPhraseInput('');
+    setSpaceVersion(v => v + 1);
+  };
+
+  /** Records the phrase this space uses, so reconnects derive the same key. */
+  const handleSetJoinPhrase = (phrase: string) => {
+    setSession(prev => (prev ? { ...prev, joinPhrase: normalizeJoinPhrase(phrase) } : prev));
+    setSpaceVersion(v => v + 1);
+  };
+
+  /** Renames the space on both devices. */
+  const handleRenameVault = (name: string) => {
+    const clean = name.trim().slice(0, 40);
+    setState(prev => ({ ...prev, vaultName: clean }));
+    wsRelay.broadcastUpdate('VAULT_NAME', { name: clean });
+    localMesh.broadcastLocally('VAULT_NAME', { name: clean }, state.activeUser);
+  };
+
   const handleUnpair = () => {
     if (window.confirm('Are you sure you want to disconnect from this space? You can reconnect anytime using your Space Link Code.')) {
       clearSpaceSession();
@@ -1678,6 +1730,49 @@ export const App: React.FC = () => {
   // App Lock PIN Screen. The vault is genuinely encrypted, so this is not a
   // comparison against a stored PIN - the PIN derives the key, and a wrong one
   // simply fails to decrypt.
+  // An invite was accepted, but the space stays sealed until the spoken words
+  // arrive. The server delivered the code; it cannot supply this.
+  if (awaitingPhrase) {
+    return (
+      <div className="min-h-screen bg-linen-bg flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+          <div className="text-center space-y-2">
+            <h1 className="font-serif text-2xl font-medium text-linen-primary">
+              {awaitingPhrase.fromName} invited you
+            </h1>
+            <p className="text-xs text-linen-secondary leading-relaxed">
+              Ask them for the four words shown on their screen, and type them here. They were
+              never sent through the internet, which is what keeps this space private.
+            </p>
+          </div>
+
+          <input
+            type="text"
+            autoFocus
+            value={phraseInput}
+            onChange={(e) => setPhraseInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleJoinWithPhrase()}
+            placeholder="four words they read out"
+            className="w-full px-4 py-3 rounded-2xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary text-base"
+          />
+
+          <button
+            disabled={normalizeJoinPhrase(phraseInput).split(' ').filter(Boolean).length < 2}
+            onClick={handleJoinWithPhrase}
+            className="w-full py-3.5 bg-linen-primary text-linen-surface font-medium rounded-2xl hover:opacity-95 disabled:opacity-50 transition-all cursor-pointer"
+          >
+            Open our space
+          </button>
+
+          <p className="text-[11px] text-linen-secondary text-center leading-relaxed">
+            If the words are wrong you will land in the right place but see nothing — come back
+            here and try again.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Accounts gate everything. The password is held only in memory, so it is
   // asked for on each open - it is both the sign-in and the device unlock.
   if (isAuthConfigured && !authPassword) {
@@ -1832,6 +1927,8 @@ export const App: React.FC = () => {
         unreadChatCount={unreadChatCount}
         onOpenDirectory={() => setShowDirectoryModal(true)}
         partnerName={state.partnerName}
+        vaultName={state.vaultName}
+        partnerOnline={partnerOnline}
       />
 
       {session && isWeakPairingCode(session.code) && (
@@ -2179,6 +2276,13 @@ export const App: React.FC = () => {
             onToggleCamouflage={() => setIsCamouflaged(true)}
             onUnpair={handleUnpair}
             onRotateCode={handleRotateCode}
+            vaultName={state.vaultName}
+            onRenameVault={handleRenameVault}
+            joinPhrase={session?.joinPhrase || ''}
+            onSetJoinPhrase={handleSetJoinPhrase}
+            partnerOnline={partnerOnline}
+            relayStatus={relayStatus}
+            lastSyncedAt={lastSyncedAt}
             onSignOut={handleSignOut}
             userName={state.userName}
             onToggleActiveUser={toggleActiveUser}
