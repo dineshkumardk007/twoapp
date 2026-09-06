@@ -6,14 +6,15 @@
 // exact build forever. New deploys and new APK builds silently had no effect,
 // because the stale index.html kept pointing at the stale bundle sitting
 // beside it in the same cache.
-const CACHE_NAME = 'two-app-cache-v2';
+const CACHE_NAME = 'two-app-cache-v3';
 
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon-192.svg',
-  '/icon-512.svg'
+  '/icon-512.svg',
+  '/icon-maskable.svg'
 ];
 
 self.addEventListener('install', (event) => {
