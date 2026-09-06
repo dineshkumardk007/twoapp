@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    name: Build & Export Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.11.1
+        working-directory: two-android
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+        working-directory: two-android
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        working-directory: two-android
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: two-android-debug-apk
+          path: two-android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30
