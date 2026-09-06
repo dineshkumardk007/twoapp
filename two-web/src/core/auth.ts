@@ -11,8 +11,22 @@
 import { createClient, type SupabaseClient, type Session } from '@supabase/supabase-js';
 import type { WrappedSecret, SealedPayload } from './keyEscrow';
 
-const SUPABASE_URL = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
-const SUPABASE_ANON_KEY = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined;
+// Supabase's publishable key is meant to be public: it ships inside every
+// browser bundle, and what it can reach is decided entirely by row-level
+// security, not by keeping the key secret. Vite bakes VITE_* values into the
+// bundle at build time anyway, so an env var would be no less visible - it
+// would only add a deployment step that is easy to forget and whose failure
+// mode is a silent one (no login page, and nothing syncing).
+//
+// Rotate it any time from Supabase → Project Settings → API Keys; publishable
+// keys rotate independently of everything else.
+const DEFAULT_SUPABASE_URL = 'https://vlbyxsmofaoiypgpddcn.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_w8WHLL9314TBVm69LhvHww_h7t3vkNZ';
+
+const SUPABASE_URL =
+  ((import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined) || DEFAULT_SUPABASE_URL;
+const SUPABASE_ANON_KEY =
+  ((import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined) || DEFAULT_SUPABASE_ANON_KEY;
 
 /** False when the deployment has no Supabase configured; the app then runs without accounts. */
 export const isAuthConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
