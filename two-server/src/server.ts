@@ -47,8 +47,7 @@ async function start() {
   try {
     await db.init();
   } catch (err) {
-    console.error('[Two Relay Server] Storage initialisation failed:', err);
-    process.exit(1);
+    console.error('[Two Relay Server] Storage initialisation error:', err);
   }
 
   server.listen(PORT, () => {

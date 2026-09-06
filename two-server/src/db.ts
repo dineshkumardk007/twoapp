@@ -130,10 +130,16 @@ class PostgresRelayDb implements RelayDb {
   private pool: Pool;
 
   constructor(connectionString: string) {
+    const isRemote = connectionString.includes('supabase.co') ||
+                     connectionString.includes('pooler.supabase.com') ||
+                     connectionString.includes('sslmode=require') ||
+                     process.env.NODE_ENV === 'production';
+
     this.pool = new Pool({
       connectionString,
       max: 10,
-      idleTimeoutMillis: 30_000
+      idleTimeoutMillis: 30_000,
+      ssl: isRemote ? { rejectUnauthorized: false } : undefined
     });
     this.pool.on('error', err => console.error('[Relay DB] Idle client error', err));
   }
@@ -310,6 +316,51 @@ class PostgresRelayDb implements RelayDb {
   }
 }
 
-export const db: RelayDb = process.env.DATABASE_URL
-  ? new PostgresRelayDb(process.env.DATABASE_URL)
-  : new InMemoryRelayDb();
+class ResilientRelayDb implements RelayDb {
+  private activeDb: RelayDb;
+
+  constructor() {
+    this.activeDb = process.env.DATABASE_URL
+      ? new PostgresRelayDb(process.env.DATABASE_URL)
+      : new InMemoryRelayDb();
+  }
+
+  get kind() {
+    return this.activeDb.kind;
+  }
+
+  get rendezvousTokens() {
+    return this.activeDb.rendezvousTokens;
+  }
+
+  async init() {
+    if (this.activeDb.kind === 'postgres') {
+      try {
+        await this.activeDb.init();
+      } catch (err: any) {
+        console.error('[Relay DB] Failed to connect to PostgreSQL database:', err.message || err);
+        console.warn('[Relay DB] Falling back to In-Memory mode so the relay stays online!');
+        this.activeDb = new InMemoryRelayDb();
+        await this.activeDb.init();
+      }
+    } else {
+      await this.activeDb.init();
+    }
+  }
+
+  createUser(user: StoredUser) { return this.activeDb.createUser(user); }
+  findUserByAuthId(authId: string) { return this.activeDb.findUserByAuthId(authId); }
+  findUserById(id: string) { return this.activeDb.findUserById(id); }
+  createSpace(spaceId: string, creatorId: string, creatorPublicKey: string, sealedKey: string) {
+    return this.activeDb.createSpace(spaceId, creatorId, creatorPublicKey, sealedKey);
+  }
+  addMemberToSpace(spaceId: string, memberId: string, sealedKey: string) {
+    return this.activeDb.addMemberToSpace(spaceId, memberId, sealedKey);
+  }
+  saveRecord(record: StoredRecord) { return this.activeDb.saveRecord(record); }
+  getRecordsForSpace(spaceId: string, sinceLamport?: number) {
+    return this.activeDb.getRecordsForSpace(spaceId, sinceLamport);
+  }
+}
+
+export const db: RelayDb = new ResilientRelayDb();
