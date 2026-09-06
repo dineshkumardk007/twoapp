@@ -1,25 +1,68 @@
 package app.two.android.core.network
 
+import android.content.Context
+import android.content.SharedPreferences
+
 /**
  * Network configuration for connecting the Android client to the Zero-Knowledge Relay Server.
+ * Supports local development (emulator/Wi-Fi) and live cloud deployments (Render, Railway, Cloudflare).
  */
 object NetworkConfig {
-    // 10.0.2.2 is the special alias to your host loopback interface (localhost) from the Android Emulator.
     const val EMULATOR_HOST = "10.0.2.2"
     const val DEFAULT_PORT = 4000
-
-    // Local Wi-Fi network host for physical Android testing
     const val PHYSICAL_DEVICE_HOST = "192.168.29.197"
+    private const val PREFS_NAME = "two_network_prefs"
+    private const val KEY_CUSTOM_URL = "custom_relay_url"
 
-    // Set to true when running on the standard Android Studio emulator
     var isEmulator: Boolean = true
 
-    val host: String
-        get() = if (isEmulator) EMULATOR_HOST else PHYSICAL_DEVICE_HOST
+    @Volatile
+    var customServerUrl: String = ""
+        private set
+
+    fun init(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        customServerUrl = prefs.getString(KEY_CUSTOM_URL, "") ?: ""
+    }
+
+    fun setServerUrl(context: Context, url: String) {
+        val trimmed = url.trim().removeSuffix("/")
+        customServerUrl = trimmed
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_CUSTOM_URL, trimmed).apply()
+    }
+
+    val isConfiguredForCloud: Boolean
+        get() = customServerUrl.isNotBlank()
 
     val httpBaseUrl: String
-        get() = "http://$host:$DEFAULT_PORT"
+        get() {
+            if (customServerUrl.isNotBlank()) {
+                val url = customServerUrl.removeSuffix("/")
+                return if (url.startsWith("http://") || url.startsWith("https://")) {
+                    url
+                } else {
+                    "https://$url"
+                }
+            }
+            val host = if (isEmulator) EMULATOR_HOST else PHYSICAL_DEVICE_HOST
+            return "http://$host:$DEFAULT_PORT"
+        }
 
     val wsRelayUrl: String
-        get() = "ws://$host:$DEFAULT_PORT/relay"
+        get() {
+            if (customServerUrl.isNotBlank()) {
+                val clean = customServerUrl.removeSuffix("/")
+                val withoutProtocol = clean
+                    .removePrefix("https://")
+                    .removePrefix("http://")
+                    .removePrefix("wss://")
+                    .removePrefix("ws://")
+
+                val scheme = if (clean.startsWith("http://") || clean.startsWith("ws://")) "ws" else "wss"
+                return "$scheme://$withoutProtocol/relay"
+            }
+            val host = if (isEmulator) EMULATOR_HOST else PHYSICAL_DEVICE_HOST
+            return "ws://$host:$DEFAULT_PORT/relay"
+        }
 }

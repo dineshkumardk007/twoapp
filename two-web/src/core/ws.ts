@@ -14,6 +14,7 @@ export type RelayStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting';
 
 type StatusCallback = (status: RelayStatus) => void;
 
+const RELAY_DEV_PORT = 4000;
 const HEARTBEAT_MS = 25_000;
 const RECONNECT_BASE_MS = 1_000;
 const RECONNECT_MAX_MS = 30_000;
@@ -33,10 +34,11 @@ function resolveRelayUrl(): string {
   const loc = window.location;
   const scheme = loc.protocol === 'https:' ? 'wss:' : 'ws:';
 
-  // Vite dev (5173) and preview (4173) serve the UI on their own port while the
-  // relay runs separately on 4000.
-  if (loc.port === '5173' || loc.port === '4173') {
-    return `${scheme}//${loc.hostname}:4000/relay`;
+  // Deployed behind the reverse proxy the page is on 80/443, so `port` is empty
+  // and the relay is same-origin. Any explicit port means a dev server (vite
+  // runs on 3000 here) with the relay alongside it on 4000.
+  if (loc.port && loc.port !== String(RELAY_DEV_PORT)) {
+    return `${scheme}//${loc.hostname}:${RELAY_DEV_PORT}/relay`;
   }
 
   return `${scheme}//${loc.host}/relay`;

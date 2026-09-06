@@ -25,6 +25,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Two"
+        android:usesCleartextTraffic="true"
         tools:targetApi="35">
 
         <activity

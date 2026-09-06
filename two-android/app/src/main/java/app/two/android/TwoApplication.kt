@@ -26,6 +26,7 @@ class TwoApplication : Application() {
         database = AppDatabase.getInstance(this)
         keystoreManager = KeystoreManager()
         syncEngine = SyncEngine(database)
+        app.two.android.core.network.NetworkConfig.init(this)
 
         // 2. Schedule periodic background synchronization with network constraints
         schedulePeriodicSync()

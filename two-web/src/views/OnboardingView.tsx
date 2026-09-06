@@ -6,17 +6,7 @@ import {
   isPlausiblePairingCode,
   SpaceSession
 } from '../core/space';
-import {
-  Key,
-  Shield,
-  CheckCircle2,
-  QrCode,
-  ArrowRight,
-  Copy,
-  Check,
-  Link2,
-  UserPlus
-} from 'lucide-react';
+import { CheckCircle2, ArrowRight, Copy, Check, Link2, UserPlus } from 'lucide-react';
 
 interface OnboardingViewProps {
   onComplete: (session: SpaceSession) => void;

@@ -11,7 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import app.two.android.core.network.NetworkConfig
 import app.two.android.core.theme.AppThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,6 +29,11 @@ fun SettingsScreen(
     var isDiscreetNotificationEnabled by remember { mutableStateOf(false) }
     var isBiometricEnabled by remember { mutableStateOf(true) }
     var showQuickExitConfirm by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    var showServerDialog by remember { mutableStateOf(false) }
+    var currentServerUrl by remember { mutableStateOf(NetworkConfig.customServerUrl) }
+    var serverInput by remember { mutableStateOf(NetworkConfig.customServerUrl) }
 
     Scaffold(
         topBar = {
@@ -149,6 +156,44 @@ fun SettingsScreen(
                 }
             }
 
+            // Relay Server (Internet Connection)
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Relay Server (Sync over Internet)", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            }
+
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            serverInput = NetworkConfig.customServerUrl
+                            showServerDialog = true
+                        },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Relay Address", style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                if (currentServerUrl.isNotBlank()) currentServerUrl else "Default (${NetworkConfig.httpBaseUrl})",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.secondary,
+                                maxLines = 1
+                            )
+                        }
+                        Icon(Icons.Default.CloudQueue, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
+                    }
+                }
+            }
+
             // Tactile Aesthetic Themes
             item {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -217,6 +262,52 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(onClick = { showQuickExitConfirm = false }) {
                     Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showServerDialog) {
+        AlertDialog(
+            onDismissRequest = { showServerDialog = false },
+            title = { Text("Set Relay Server URL") },
+            text = {
+                Column {
+                    Text(
+                        "Enter the public URL of your deployed relay server (e.g. Render, Railway, or Cloudflare Tunnel) to sync across the internet on mobile data.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = serverInput,
+                        onValueChange = { serverInput = it },
+                        placeholder = { Text("https://your-relay.onrender.com") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        NetworkConfig.setServerUrl(context, serverInput)
+                        currentServerUrl = NetworkConfig.customServerUrl
+                        showServerDialog = false
+                    }
+                ) {
+                    Text("Save & Connect")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        NetworkConfig.setServerUrl(context, "")
+                        currentServerUrl = ""
+                        showServerDialog = false
+                    }
+                ) {
+                    Text("Reset")
                 }
             }
         )
