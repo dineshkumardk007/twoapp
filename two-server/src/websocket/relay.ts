@@ -138,6 +138,8 @@ export class WebSocketRelay {
             });
 
             await this.replayMissedRecords(currentClient, message.since);
+            // Tell both sides who is present now.
+            this.broadcastPresence(currentClient.spaceId);
             return;
           }
 
@@ -195,8 +197,11 @@ export class WebSocketRelay {
 
       ws.on('close', () => {
         if (currentClient) {
+          const { spaceId } = currentClient;
           this.clients.delete(currentClient);
           currentClient = null;
+          // The partner should see them leave, not wait for a timeout.
+          this.broadcastPresence(spaceId);
         }
       });
 
@@ -242,6 +247,28 @@ export class WebSocketRelay {
       if (client.spaceId === spaceId && client.connectionId !== senderConnectionId && client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(raw);
       }
+    }
+  }
+
+  /**
+   * Tells everyone in a space how many OTHER devices are currently present.
+   *
+   * The header used to show "Live" whenever a client reached the relay, which
+   * read as "we are connected to each other" even when the partner had never
+   * opened the app. This is the signal that actually answers that question.
+   */
+  private broadcastPresence(spaceId: string) {
+    const inSpace: SpaceClient[] = [];
+    for (const c of this.clients) {
+      if (c.spaceId === spaceId && c.ws.readyState === WebSocket.OPEN) inSpace.push(c);
+    }
+
+    for (const client of inSpace) {
+      this.sendJson(client.ws, {
+        type: 'PRESENCE',
+        peers: inSpace.length - 1,
+        timestamp: Date.now()
+      });
     }
   }
 
