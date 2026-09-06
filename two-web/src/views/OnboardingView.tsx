@@ -12,7 +12,13 @@ import {
 import { ArrowRight, Copy, Check, Link2, UserPlus, Heart, Lock, Clipboard, Share2, Sparkles, KeyRound, RotateCcw, ShieldCheck } from 'lucide-react';
 
 interface OnboardingViewProps {
-  onComplete: (session: SpaceSession, userName: string, appPin: string | null) => void;
+  onComplete: (
+    session: SpaceSession,
+    userName: string,
+    appPin: string | null,
+    /** What the couple called their space; shown in the header for both. */
+    vaultName?: string
+  ) => void;
 }
 
 type OnboardingStep = 'name' | 'pair' | 'pin';
@@ -37,6 +43,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
   const [copied, setCopied] = useState(false);
   const [session, setSession] = useState<SpaceSession | null>(existingSession);
   const [pinInput, setPinInput] = useState('');
+  const [vaultNameDraft, setVaultNameDraft] = useState('');
 
   const handleUserNameChange = (val: string) => {
     setUserName(val);
@@ -75,7 +82,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
     };
     saveSpaceSession(newSession);
     setSession(newSession);
-    onComplete(newSession, userName.trim() || 'You', null);
+    onComplete(newSession, userName.trim() || 'You', null, vaultNameDraft.trim());
   };
 
   const confirmJoin = () => {
@@ -94,7 +101,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
   const handleFinish = (withPin: boolean) => {
     if (!session) return;
     const finalPin = withPin && pinInput.length === 4 ? pinInput : null;
-    onComplete(session, userName.trim() || 'You', finalPin);
+    onComplete(session, userName.trim() || 'You', finalPin, vaultNameDraft.trim());
   };
 
   const startSoloDemo = () => {
@@ -335,6 +342,26 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                 <p className="text-xs text-linen-secondary leading-relaxed text-center px-3">
                   Send this code to your partner. You can enter your sanctuary right now — your space code is also displayed on your Home screen.
                 </p>
+
+                {/* Naming it here is what makes the header say who you are with,
+                    instead of the product name. */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent block">
+                    Name your sanctuary
+                  </label>
+                  <input
+                    type="text"
+                    value={vaultNameDraft}
+                    onChange={(e) => setVaultNameDraft(e.target.value)}
+                    placeholder="Ravi &amp; Priya, Our Little World…"
+                    maxLength={40}
+                    className="w-full px-4 py-3 rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary text-base"
+                  />
+                  <p className="text-[11px] text-linen-secondary leading-relaxed">
+                    Shown at the top for both of you, so you always know whose space you are in.
+                    Encrypted like everything else — you can change it later in Settings.
+                  </p>
+                </div>
 
                 <div className="space-y-2">
                   <button

@@ -1869,7 +1869,7 @@ export const App: React.FC = () => {
   if (!session || !state.isPaired) {
     return (
       <OnboardingView
-        onComplete={(newSession: SpaceSession, enteredName: string, chosenPin: string | null) => {
+        onComplete={(newSession: SpaceSession, enteredName: string, chosenPin: string | null, chosenVaultName?: string) => {
           const namedSession = { ...newSession, userName: enteredName };
 
           // The partner who created the space is 'user'; the joiner is
@@ -1879,12 +1879,18 @@ export const App: React.FC = () => {
             isPaired: true,
             activeUser: newSession.role,
             userName: enteredName,
-            pinEnabled: !!chosenPin
+            pinEnabled: !!chosenPin,
+            vaultName: chosenVaultName?.trim() || state.vaultName
           };
 
           setSession(namedSession);
           setState(nextState);
           setSpaceVersion(v => v + 1);
+
+          if (nextState.vaultName) {
+            // Fire once the relay is up so the partner adopts the same name.
+            setTimeout(() => wsRelay.broadcastUpdate('VAULT_NAME', { name: nextState.vaultName }), 1500);
+          }
 
           if (chosenPin) {
             // Encrypt everything under the PIN, then remove the cleartext

@@ -17,6 +17,9 @@ interface SanctuaryToolsModalProps {
   onEmergencyExit: () => void;
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
   activeUser: 'user' | 'partner';
+  vaultName?: string;
+  /** True only when the partner's device is in the space right now. */
+  partnerOnline?: boolean;
 }
 
 export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
@@ -31,7 +34,9 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   onOpenSafetyNumbers,
   onEmergencyExit,
   relayStatus = 'connected',
-  activeUser
+  activeUser,
+  vaultName = '',
+  partnerOnline = false
 }) => {
   if (!isOpen) return null;
 
@@ -184,7 +189,9 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
               }`}
             />
             <span className="font-medium text-linen-primary text-xs">
-              {relayStatus === 'connected' ? 'Two • Live & Protected' : 'Connecting to Relay...'}
+              {relayStatus === 'connected'
+                ? `${vaultName || 'Two'} • ${partnerOnline ? 'together' : 'synced'}`
+                : 'Connecting to Relay...'}
             </span>
           </div>
           <span className="text-[11px] text-linen-secondary font-mono">

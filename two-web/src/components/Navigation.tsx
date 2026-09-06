@@ -267,6 +267,8 @@ export const Navigation: React.FC<NavigationProps> = ({
         onEmergencyExit={onEmergencyExit}
         relayStatus={relayStatus}
         activeUser={activeUser}
+        vaultName={vaultName}
+        partnerOnline={partnerOnline}
       />
 
       <HeartOptionsModal
