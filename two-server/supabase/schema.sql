@@ -19,6 +19,10 @@ create table if not exists public.space_escrow (
   user_id             uuid primary key references auth.users(id) on delete cascade,
   wrapped_by_password jsonb not null,
   wrapped_by_recovery jsonb not null,
+  -- The pairing code and join phrase, sealed under the master key that the two
+  -- wrappings above protect. Kept separate so it can be re-sealed when the join
+  -- phrase is minted later, without needing the recovery phrase again.
+  payload             jsonb,
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now()
 );
@@ -98,6 +102,49 @@ create policy "invite: recipient accepts"
     to_identifier = coalesce(auth.jwt() ->> 'phone', '')
     or to_identifier = lower(coalesce(auth.jwt() ->> 'email', ''))
   );
+
+-- ---------------------------------------------------------------------------
+-- user_devices: which devices are signed in, and which have been revoked.
+-- ---------------------------------------------------------------------------
+-- Holds no key material - only a label and timestamps - so it is safe to read
+-- back plainly. Revoking sets revoked_at; the device signs itself out the next
+-- time it checks, which is on load and whenever the tab regains focus.
+
+create table if not exists public.user_devices (
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  device_id    text not null,
+  label        text,
+  created_at   timestamptz not null default now(),
+  last_seen_at timestamptz not null default now(),
+  revoked_at   timestamptz,
+  primary key (user_id, device_id)
+);
+
+create index if not exists user_devices_user_idx on public.user_devices (user_id);
+
+alter table public.user_devices enable row level security;
+
+drop policy if exists "own devices: read"   on public.user_devices;
+drop policy if exists "own devices: write"  on public.user_devices;
+drop policy if exists "own devices: update" on public.user_devices;
+drop policy if exists "own devices: delete" on public.user_devices;
+
+create policy "own devices: read"
+  on public.user_devices for select
+  using (auth.uid() = user_id);
+
+create policy "own devices: write"
+  on public.user_devices for insert
+  with check (auth.uid() = user_id);
+
+create policy "own devices: update"
+  on public.user_devices for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "own devices: delete"
+  on public.user_devices for delete
+  using (auth.uid() = user_id);
 
 -- ---------------------------------------------------------------------------
 -- Housekeeping: expired invites carry a pairing code, so do not keep them.

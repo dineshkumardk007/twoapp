@@ -37,9 +37,11 @@ function consumeToken(client: SpaceClient): boolean {
 // A single record is a chat line, a mood, or a canvas stroke - never media.
 const MAX_RECORD_BYTES = 256 * 1024;
 
-// Cap on how much history one JOIN may replay, so a long-dormant device cannot
-// pull an unbounded backlog in a single burst.
-const MAX_REPLAY_RECORDS = 500;
+// Cap on how much history one JOIN may replay. Raised from 500 because a fresh
+// device signs in with no history at all and refills entirely from here: at 500
+// a laptop would show a truncated conversation and look broken. Still bounded,
+// so a long-dormant device cannot pull an unlimited backlog in one burst.
+const MAX_REPLAY_RECORDS = 2000;
 
 // Nothing here was rate limited, so a single socket could pin the relay and the
 // database. A couple types and draws; these ceilings are far above human pace
@@ -264,9 +266,18 @@ export class WebSocketRelay {
     }
 
     for (const client of inSpace) {
+      // Count only the OTHER person, not this person's other devices. Someone
+      // signed in on a laptop and a phone would otherwise be told their partner
+      // is present while they are sitting alone.
+      const partners = inSpace.filter(c => c.authorRole !== client.authorRole).length;
+      const ownDevices = inSpace.filter(
+        c => c.authorRole === client.authorRole && c.connectionId !== client.connectionId
+      ).length;
+
       this.sendJson(client.ws, {
         type: 'PRESENCE',
-        peers: inSpace.length - 1,
+        peers: partners,
+        ownDevices,
         timestamp: Date.now()
       });
     }

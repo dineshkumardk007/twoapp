@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode, generateJoinPhrase } from '../core/space';
 import { isAuthConfigured } from '../core/auth';
 import { sendInvite } from '../core/invites';
+import { listDevices, revokeDevice, isThisDevice, DeviceRow } from '../core/devices';
 import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
@@ -73,6 +74,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [copiedCode, setCopiedCode] = useState(false);
   const [decoyCodeInput, setDecoyCodeInput] = useState(decoyCode);
   const [decoySaved, setDecoySaved] = useState(false);
+  const [devices, setDevices] = useState<DeviceRow[]>([]);
+  const [devicesLoaded, setDevicesLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthConfigured) return;
+    listDevices().then(d => {
+      setDevices(d);
+      setDevicesLoaded(true);
+    });
+  }, []);
+
+  const handleRevoke = async (deviceId: string) => {
+    if (!window.confirm('Sign this device out? It will be locked the next time it is opened.')) return;
+    if (await revokeDevice(deviceId)) {
+      setDevices(await listDevices());
+    }
+  };
+
   const [nameDraft, setNameDraft] = useState(vaultName);
   const [nameSaved, setNameSaved] = useState(false);
 
@@ -328,6 +347,55 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </dl>
           </div>
+
+          {isAuthConfigured && (
+            <div className="pb-2 border-b border-linen-border/40 space-y-2">
+              <span className="block text-[10px] uppercase tracking-wider font-semibold text-linen-accent">
+                Signed in on
+              </span>
+
+              {!devicesLoaded && <p className="text-[11px] text-linen-secondary">Checking…</p>}
+              {devicesLoaded && devices.length === 0 && (
+                <p className="text-[11px] text-linen-secondary">No other devices yet.</p>
+              )}
+
+              {devices.map(d => (
+                <div
+                  key={d.device_id}
+                  className="flex items-center justify-between bg-linen-surface border border-linen-border rounded-lg px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-linen-primary truncate">
+                      {d.label || 'Unknown device'}
+                      {isThisDevice(d.device_id) && (
+                        <span className="ml-1.5 text-[10px] text-emerald-700 font-semibold">this one</span>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-linen-secondary">
+                      {d.revoked_at
+                        ? 'Signed out'
+                        : `Last used ${new Date(d.last_seen_at).toLocaleDateString()}`}
+                    </p>
+                  </div>
+
+                  {!isThisDevice(d.device_id) && !d.revoked_at && (
+                    <button
+                      type="button"
+                      onClick={() => handleRevoke(d.device_id)}
+                      className="shrink-0 ml-2 px-2.5 py-1 rounded-lg border border-linen-border text-[11px] text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
+                    >
+                      Sign out
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              <p className="text-[11px] text-linen-secondary leading-relaxed">
+                Signing a device out takes effect the next time that device is opened — it cannot
+                be reached while it is switched off.
+              </p>
+            </div>
+          )}
 
           {isAuthConfigured && spaceCode && (
             <div className="pb-2 border-b border-linen-border/40 space-y-2">

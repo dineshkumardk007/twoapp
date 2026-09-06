@@ -6,10 +6,18 @@ import {
   getSession as getAuthSession,
   signOut,
   saveEscrow,
-  loadEscrow
+  loadEscrow,
+  updateEscrowPayload
 } from './core/auth';
-import { wrapForEscrow, unwrapSecret } from './core/keyEscrow';
+import {
+  wrapForEscrow,
+  unwrapSecret,
+  generateMasterKey,
+  sealSpaceSecret,
+  openSpaceSecret
+} from './core/keyEscrow';
 import { fetchPendingInvite, acceptInvite } from './core/invites';
+import { registerThisDevice, isThisDeviceRevoked } from './core/devices';
 import { LoginView } from './views/LoginView';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
@@ -150,6 +158,9 @@ export const App: React.FC = () => {
   // open even when the Supabase session is still valid.
   const [authPassword, setAuthPassword] = useState<string | null>(null);
   const [authError, setAuthError] = useState('');
+  // Opens the escrowed payload. Held in memory for the session so the join
+  // phrase can be re-sealed later without the recovery phrase.
+  const masterKeyRef = useRef<string | null>(null);
 
   // Whether the partner's device is actually in the space right now, and when
   // we last heard anything from them.
@@ -223,6 +234,25 @@ export const App: React.FC = () => {
       cancelled = true;
     };
   }, [session, spaceVersion, isLocked]);
+
+  // A device signed out from elsewhere finds out here. Cooperative by nature:
+  // it can only act once it is actually running again.
+  useEffect(() => {
+    if (!isAuthConfigured || !authPassword) return;
+
+    const check = async () => {
+      if (await isThisDeviceRevoked()) {
+        setAuthError('This device was signed out from another device.');
+        await handleSignOut();
+      }
+    };
+
+    void check();
+    const onFocus = () => void check();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authPassword]);
 
   useEffect(() => wsRelay.subscribePresence(setPartnerOnline), []);
 
@@ -341,6 +371,9 @@ export const App: React.FC = () => {
               return { ...prev, rituals: updatedRituals };
             });
           } else if (record.type === 'READ_RECEIPT') {
+            // Our own laptop shares this role; its receipt must not mark our
+            // messages as read by the partner.
+            if (record.authorId === state.activeUser) return;
             const upTo = Number(parsed.upTo) || 0;
             setState(prev => ({
               ...prev,
@@ -1638,14 +1671,23 @@ export const App: React.FC = () => {
   ) => {
     setAuthError('');
     wsRelay.setAccessToken(await getAccessToken());
+    void registerThisDevice();
 
     let code: string | null = null;
     let role: SpaceRole = 'user';
 
     try {
+      let joinPhrase: string | undefined;
+
       const escrow = await loadEscrow();
       if (escrow) {
-        code = await unwrapSecret(escrow.wrapped_by_password, password);
+        const master = await unwrapSecret(escrow.wrapped_by_password, password);
+        if (master) {
+          masterKeyRef.current = master;
+          const secret = escrow.payload ? await openSpaceSecret(master, escrow.payload) : null;
+          code = secret?.code || null;
+          joinPhrase = secret?.joinPhrase;
+        }
         if (!code) {
           // The account is fine but this password cannot open the escrow, which
           // means it was changed after the space was sealed.
@@ -1674,16 +1716,20 @@ export const App: React.FC = () => {
       // Only a fresh signup carries a recovery phrase, and that is the only
       // moment both wrappings can be written together.
       if (recoveryPhrase) {
-        const wrapped = await wrapForEscrow(code, password, recoveryPhrase);
+        const master = generateMasterKey();
+        masterKeyRef.current = master;
+        const wrapped = await wrapForEscrow(master, password, recoveryPhrase);
         await saveEscrow({
           wrapped_by_password: wrapped.byPassword,
-          wrapped_by_recovery: wrapped.byRecovery
+          wrapped_by_recovery: wrapped.byRecovery,
+          payload: await sealSpaceSecret(master, { code, joinPhrase })
         });
       }
 
       const nextSession: SpaceSession = {
         code,
         role,
+        joinPhrase,
         userName: displayName || state.userName || (role === 'user' ? 'You' : 'Partner')
       };
 
@@ -1756,8 +1802,16 @@ export const App: React.FC = () => {
 
   /** Records the phrase this space uses, so reconnects derive the same key. */
   const handleSetJoinPhrase = (phrase: string) => {
-    setSession(prev => (prev ? { ...prev, joinPhrase: normalizeJoinPhrase(phrase) } : prev));
+    const clean = normalizeJoinPhrase(phrase);
+    setSession(prev => (prev ? { ...prev, joinPhrase: clean } : prev));
     setSpaceVersion(v => v + 1);
+
+    // Push it into escrow as well, or a laptop signing in later would join the
+    // right room holding the wrong key and see nothing but undecryptable noise.
+    const master = masterKeyRef.current;
+    if (master && session?.code) {
+      void sealSpaceSecret(master, { code: session.code, joinPhrase: clean }).then(updateEscrowPayload);
+    }
   };
 
   /** Renames the space on both devices. */

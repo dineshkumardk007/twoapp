@@ -9,7 +9,7 @@
 // deliberate product choice. See docs/AUTH.md for what that costs.
 
 import { createClient, type SupabaseClient, type Session } from '@supabase/supabase-js';
-import type { WrappedSecret } from './keyEscrow';
+import type { WrappedSecret, SealedPayload } from './keyEscrow';
 
 const SUPABASE_URL = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_ANON_KEY = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -133,8 +133,11 @@ export async function getAccessToken(): Promise<string | null> {
 // ---------------------------------------------------------------------------
 
 export interface EscrowRow {
+  /** Both wrap the same master key, so either secret opens the space. */
   wrapped_by_password: WrappedSecret;
   wrapped_by_recovery: WrappedSecret;
+  /** The pairing code and join phrase, sealed under that master key. */
+  payload: SealedPayload;
 }
 
 /** Stores both wrappings of the pairing code for the signed-in user. */
@@ -147,10 +150,26 @@ export async function saveEscrow(row: EscrowRow): Promise<boolean> {
     user_id: session.user.id,
     wrapped_by_password: row.wrapped_by_password,
     wrapped_by_recovery: row.wrapped_by_recovery,
+    payload: row.payload,
     updated_at: new Date().toISOString()
   });
 
   if (error) console.error('[Auth] Could not save space escrow', error.message);
+  return !error;
+}
+
+/** Updates only the sealed payload, leaving both key wrappings untouched. */
+export async function updateEscrowPayload(payload: SealedPayload): Promise<boolean> {
+  if (!supabase) return false;
+  const session = await getSession();
+  if (!session) return false;
+
+  const { error } = await supabase
+    .from('space_escrow')
+    .update({ payload, updated_at: new Date().toISOString() })
+    .eq('user_id', session.user.id);
+
+  if (error) console.error('[Auth] Could not update space escrow', error.message);
   return !error;
 }
 
@@ -161,7 +180,7 @@ export async function loadEscrow(): Promise<EscrowRow | null> {
 
   const { data, error } = await supabase
     .from('space_escrow')
-    .select('wrapped_by_password, wrapped_by_recovery')
+    .select('wrapped_by_password, wrapped_by_recovery, payload')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
