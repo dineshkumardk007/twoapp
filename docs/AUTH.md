@@ -32,12 +32,17 @@ Open **SQL Editor → New query**, paste the contents of
 [`two-server/supabase/schema.sql`](../two-server/supabase/schema.sql), and run it.
 It is idempotent, so re-running is safe.
 
-It creates two tables, both with row-level security on:
+It creates three tables, all with row-level security on:
 
 | Table | Holds | Who can read it |
 |---|---|---|
-| `space_escrow` | Your pairing code, encrypted twice | Only you |
+| `space_escrow` | A master key wrapped under your password and recovery phrase, plus the pairing code and join phrase sealed under it | Only you |
 | `space_invites` | A code left for a partner | Only the sender and the addressee |
+| `user_devices` | Device label and last-seen time, for the device list | Only you |
+
+Re-run this file after pulling updates. It has gained a `payload` column on
+`space_escrow` and the whole `user_devices` table since the first version, and
+escrow saves will fail against the older shape.
 
 Identity itself lives in Supabase's own `auth.users`, which already enforces
 `UNIQUE` on both phone and email — **that** is what prevents the same mobile
@@ -112,6 +117,21 @@ wording has been removed from `/health` and the onboarding copy accordingly.
 Couples who want the stronger guarantee can still use **Settings → Change our
 link code**, which rotates to a code that is read aloud and never touches the
 server.
+
+## If phone signup is rejected
+
+Supabase's phone provider normally expects an SMS provider to be configured,
+even with *Confirm phone* switched off. If signup with a mobile number fails
+while email works, that is the cause, and there are two ways out:
+
+- **Turn on email confirmation and use email only** — free, and it restores a
+  working password reset.
+- **Map numbers onto synthetic emails** (`919876543210@phone.local`) so phone
+  users go through the email provider. Nothing changes for the user, who still
+  types their number. Ask and I will wire it up.
+
+Do not add an SMS provider just to make signup work unless you actually want
+verified numbers; it costs per message.
 
 ## Passwords
 
