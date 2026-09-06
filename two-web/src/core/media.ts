@@ -24,6 +24,29 @@ const REF_PREFIX = 'two-media:';
  */
 const MIN_EXTERNALIZE_CHARS = 2048;
 
+/**
+ * Bytes already in the store, so re-saving does not rewrite them.
+ *
+ * A save runs on every change to the space. Without this, each one would treat
+ * the same photo as new, hand it a fresh id and write another copy - so a long
+ * session would leave dozens of identical images in IndexedDB, and only the
+ * sweep at next startup would notice. Populated both when media is stored and
+ * when it is read back, and it lives as long as the tab does.
+ */
+const knownMedia = new Map<string, string>();
+
+/**
+ * What a stored entry looks like.
+ *
+ * IndexedDB takes an ArrayBuffer directly, so the encrypted form is kept as raw
+ * bytes: one byte per character of the data URL plus GCM's 16-byte tag. Coming
+ * back through base64 to store it as a string would have added a third on top,
+ * and localStorage would have charged two bytes per character on top of that.
+ */
+type StoredMedia =
+  | { v: 1; data: string }
+  | { v: 1; iv: number[]; ct: ArrayBuffer };
+
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openDb(): Promise<IDBDatabase> {
@@ -142,32 +165,85 @@ export interface Externalized<T> {
  */
 export function externalizeMedia<T>(value: T, nextId: () => string): Externalized<T> {
   const writes: Array<{ id: string; dataUrl: string }> = [];
-  const assigned = new Map<string, string>();
 
   const out = mapStrings(value, (s: string) => {
     if (!shouldExternalize(s)) return s;
 
-    const existing = assigned.get(s);
-    if (existing) return existing;
+    // Already stored, this save or an earlier one: reuse the id and write
+    // nothing.
+    const known = knownMedia.get(s);
+    if (known) return REF_PREFIX + known;
 
     const id = nextId();
-    const ref = REF_PREFIX + id;
-    assigned.set(s, ref);
+    knownMedia.set(s, id);
     writes.push({ id, dataUrl: s });
-    return ref;
+    return REF_PREFIX + id;
   });
 
   return { value: out, writes };
 }
 
-/** Writes the bytes behind a set of references. Failures are not fatal. */
-export async function persistMedia(writes: Array<{ id: string; dataUrl: string }>): Promise<void> {
+/**
+ * Writes the bytes behind a set of references. Failures are not fatal.
+ *
+ * When a key is given the bytes are encrypted with it, because a space with a
+ * PIN keeps its vault encrypted at rest and moving photos to another store must
+ * not quietly exempt them from that. The id is bound in as additional data, so
+ * an entry cannot be swapped for another one under a different id.
+ */
+export async function persistMedia(
+  writes: Array<{ id: string; dataUrl: string }>,
+  key?: CryptoKey | null
+): Promise<void> {
   for (const { id, dataUrl } of writes) {
     try {
-      await tx('readwrite', store => store.put(dataUrl, id));
+      const record: StoredMedia = key
+        ? await encryptEntry(id, dataUrl, key)
+        : { v: 1, data: dataUrl };
+      await tx('readwrite', store => store.put(record, id));
     } catch (e) {
       console.error('[Media] Could not store', id, e);
+      // Do not leave a claim we did not honour: the next save should try again
+      // rather than hand out a reference to bytes that never landed.
+      knownMedia.delete(dataUrl);
     }
+  }
+}
+
+async function encryptEntry(id: string, dataUrl: string, key: CryptoKey): Promise<StoredMedia> {
+  const iv = new Uint8Array(new ArrayBuffer(12));
+  window.crypto.getRandomValues(iv);
+
+  const ct = await window.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv, additionalData: new TextEncoder().encode(id) },
+    key,
+    new TextEncoder().encode(dataUrl)
+  );
+
+  // Kept as a plain array: twelve numbers cost nothing, and it avoids
+  // handing a possibly-shared buffer back to subtle.decrypt later.
+  return { v: 1, iv: Array.from(iv), ct };
+}
+
+async function decryptEntry(id: string, record: StoredMedia, key: CryptoKey | null | undefined): Promise<string> {
+  if (!('ct' in record)) return record.data;
+
+  // Encrypted, and the key that would open it is not in hand. Better an empty
+  // frame than a crash.
+  if (!key) return '';
+
+  try {
+    const iv = new Uint8Array(new ArrayBuffer(record.iv.length));
+    iv.set(record.iv);
+
+    const plain = await window.crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv, additionalData: new TextEncoder().encode(id) },
+      key,
+      record.ct
+    );
+    return new TextDecoder().decode(plain);
+  } catch {
+    return '';
   }
 }
 
@@ -179,7 +255,7 @@ export async function persistMedia(writes: Array<{ id: string; dataUrl: string }
  * left as `two-media:...`, so an <img> renders as nothing instead of trying to
  * fetch a URL that means nothing to the browser.
  */
-export async function hydrateMedia<T>(value: T): Promise<T> {
+export async function hydrateMedia<T>(value: T, key?: CryptoKey | null): Promise<T> {
   if (!containsMediaRefs(value)) return value;
 
   const wanted = new Set<string>();
@@ -191,8 +267,21 @@ export async function hydrateMedia<T>(value: T): Promise<T> {
   const resolved = new Map<string, string>();
   for (const id of wanted) {
     try {
-      const stored = await tx<string | undefined>('readonly', store => store.get(id));
-      resolved.set(id, typeof stored === 'string' ? stored : '');
+      const stored = await tx<StoredMedia | string | undefined>('readonly', store => store.get(id));
+
+      // A bare string is an entry written before media was given an envelope.
+      const dataUrl =
+        typeof stored === 'string'
+          ? stored
+          : stored
+          ? await decryptEntry(id, stored, key)
+          : '';
+
+      resolved.set(id, dataUrl);
+
+      // Remember what these bytes are already called, so the next save does not
+      // store a second copy of them under a new id.
+      if (dataUrl) knownMedia.set(dataUrl, id);
     } catch {
       resolved.set(id, '');
     }
@@ -235,8 +324,12 @@ export async function estimateMediaBytes(): Promise<number> {
     const keys = await tx<IDBValidKey[]>('readonly', store => store.getAllKeys());
     let total = 0;
     for (const key of keys) {
-      const value = await tx<string | undefined>('readonly', store => store.get(key as string));
+      const value = await tx<StoredMedia | string | undefined>('readonly', store =>
+        store.get(key as string)
+      );
       if (typeof value === 'string') total += value.length;
+      else if (value && 'ct' in value) total += value.ct.byteLength;
+      else if (value) total += value.data.length;
     }
     return total;
   } catch {
@@ -246,6 +339,7 @@ export async function estimateMediaBytes(): Promise<number> {
 
 /** Removes everything. Used when the space is wiped. */
 export async function clearMedia(): Promise<void> {
+  knownMedia.clear();
   try {
     await tx('readwrite', store => store.clear());
   } catch {

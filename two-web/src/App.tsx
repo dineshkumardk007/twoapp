@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense, startTransition } from 'react';
-import { loadState, saveState, clearState, pruneForStorage, SpaceState } from './core/storage';
+import { loadState, saveState, clearState, pruneForStorage, forStorage, SpaceState } from './core/storage';
 import { AppDock } from './components/AppDock';
 import { UnknownDeviceAlert } from './components/UnknownDeviceAlert';
 import { isAndroidApp, formFactor } from './core/platform';
@@ -135,39 +135,6 @@ export const App: React.FC = () => {
    */
   const [mediaReady, setMediaReady] = useState(() => !containsMediaRefs(state));
 
-  /**
-   * Reads photos and voice memos back out of IndexedDB into the shape every
-   * component and the relay already expect.
-   *
-   * Keyed on mediaReady rather than on state: state changes on every keystroke,
-   * and there is only work to do here when a vault has just been loaded or
-   * unlocked.
-   */
-  useEffect(() => {
-    if (mediaReady) return;
-    let cancelled = false;
-
-    hydrateMedia(state)
-      .then(hydrated => {
-        if (cancelled) return;
-        setState(hydrated);
-        setMediaReady(true);
-        // The live set of references is only known once everything is loaded,
-        // so this is the moment to drop stored media nothing points at.
-        void collectMediaGarbage(hydrated);
-      })
-      .catch(() => {
-        // Showing the space without its photos beats not showing it at all.
-        if (!cancelled) setMediaReady(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-    // state is read when the effect runs; adding it here would re-run this on
-    // every edit for no benefit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mediaReady]);
   const [currentTab, setCurrentTab] = useState('home');
   const [theme, setTheme] = useState<ThemeMode>('linen');
   const [isCamouflaged, setIsCamouflaged] = useState(false);
@@ -197,6 +164,40 @@ export const App: React.FC = () => {
   // opened. `vaultKey` is held only in memory and drives every later write.
   const [isLocked, setIsLocked] = useState<boolean>(() => hasEncryptedVault());
   const [vaultKey, setVaultKey] = useState<CryptoKey | null>(null);
+
+  /**
+   * Reads photos and voice memos back out of IndexedDB into the shape every
+   * component and the relay already expect.
+   *
+   * Keyed on mediaReady rather than on state: state changes on every keystroke,
+   * and there is only work to do here when a vault has just been loaded or
+   * unlocked.
+   */
+  useEffect(() => {
+    if (mediaReady) return;
+    let cancelled = false;
+
+    hydrateMedia(state, vaultKey)
+      .then(hydrated => {
+        if (cancelled) return;
+        setState(hydrated);
+        setMediaReady(true);
+        // The live set of references is only known once everything is loaded,
+        // so this is the moment to drop stored media nothing points at.
+        void collectMediaGarbage(hydrated);
+      })
+      .catch(() => {
+        // Showing the space without its photos beats not showing it at all.
+        if (!cancelled) setMediaReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // state is read when the effect runs; adding it here would re-run this on
+    // every edit for no benefit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaReady, vaultKey]);
 
 
   // Whether the partner's device is actually in the space right now, and when
@@ -897,7 +898,10 @@ export const App: React.FC = () => {
     if (isLocked) return; // nothing meaningful to persist before unlock
 
     if (vaultKey) {
-      void writeVault(vaultKey, { state: pruneForStorage(state), session }).then(ok =>
+      // forStorage rather than pruneForStorage: media has to be moved out here
+      // too, and encrypted with the vault key on its way, so a space with a PIN
+      // does not end up with its photos sitting in the clear.
+      void writeVault(vaultKey, { state: forStorage(state, vaultKey), session }).then(ok =>
         setStorageFull(!ok)
       );
     } else {

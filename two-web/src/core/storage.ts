@@ -1172,18 +1172,23 @@ export function saveState(state: SpaceState): SaveResult {
 /**
  * The form the vault is written in: trimmed, with media moved out to IndexedDB.
  *
+ * Exported because the PIN-protected path writes through vault.ts rather than
+ * here, and must not skip this - otherwise the one group of people who asked
+ * for more protection would be the only ones still filling localStorage with
+ * photos.
+ *
  * The bytes are written without being waited for. A save happens on every
  * change and must not block the interface, and the reference is already in the
  * snapshot either way - if the write fails, that one photo comes back empty
  * rather than the whole save being lost, which is much the better trade in a
  * store this small.
  */
-function forStorage(state: SpaceState): SpaceState {
+export function forStorage(state: SpaceState, key?: CryptoKey | null): SpaceState {
   const pruned = pruneForStorage(state);
   const { value, writes } = externalizeMedia(pruned, () => newId());
 
   if (writes.length > 0) {
-    void persistMedia(writes);
+    void persistMedia(writes, key);
   }
   return value;
 }
