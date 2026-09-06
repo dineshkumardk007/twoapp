@@ -8,6 +8,7 @@ import { pairingRouter } from './routes/pairing.js';
 import { syncRouter } from './routes/sync.js';
 import { WebSocketRelay } from './websocket/relay.js';
 import { db } from './db.js';
+import { isAuthEnforced } from './auth/verifyJwt.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -32,8 +33,16 @@ app.get('/health', (req, res) => {
     // the relay still forwards messages, but they are buffered in memory.
     durable: db.isDurable,
     pending_writes: db.pendingCount,
-    zero_knowledge: true,
-    privacy_guarantee: 'The operator cannot read couple content by design.'
+    // Content is still encrypted on the device before it reaches this relay, so
+    // the relay itself never sees plaintext. But when accounts are enabled the
+    // pairing code travels through the server in an invite, so the operator is
+    // trusted rather than mathematically excluded. Claiming otherwise would be
+    // untrue.
+    accounts_enabled: isAuthEnforced,
+    encrypted_in_transit_and_at_rest: true,
+    privacy_note: isAuthEnforced
+      ? 'Records are stored as ciphertext. Pairing invitations pass through this server, so the operator is trusted not to read them.'
+      : 'Records are stored as ciphertext and pairing codes never reach this server.'
   });
 });
 
