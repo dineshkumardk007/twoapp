@@ -32,7 +32,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
 // Fetch user's public key (for partner key verification)
 authRouter.get('/user/:id', async (req: Request, res: Response) => {
   const userId = String(req.params.id);
-  const user = db.users.get(userId);
+  const user = await db.findUserById(userId);
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }

@@ -47,6 +47,7 @@ export interface RelayDb {
   init(): Promise<void>;
   createUser(user: StoredUser): Promise<StoredUser>;
   findUserByAuthId(authId: string): Promise<StoredUser | null>;
+  findUserById(id: string): Promise<StoredUser | null>;
   createSpace(spaceId: string, creatorId: string, creatorPublicKey: string, sealedKey: string): Promise<StoredSpace>;
   addMemberToSpace(spaceId: string, memberId: string, sealedKey: string): Promise<StoredSpace>;
   saveRecord(record: StoredRecord): Promise<StoredRecord>;
@@ -76,6 +77,10 @@ class InMemoryRelayDb implements RelayDb {
       if (u.authId === authId) return u;
     }
     return null;
+  }
+
+  async findUserById(id: string) {
+    return this.users.get(id) ?? null;
   }
 
   async createSpace(spaceId: string, creatorId: string, creatorPublicKey: string, sealedKey: string) {
@@ -194,6 +199,23 @@ class PostgresRelayDb implements RelayDb {
       `SELECT id, auth_id, public_key, encrypted_private_key
        FROM relay_users WHERE auth_id = $1 LIMIT 1`,
       [authId]
+    );
+    if (rows.length === 0) return null;
+
+    const r = rows[0];
+    return {
+      id: r.id,
+      authId: r.auth_id,
+      publicKey: r.public_key,
+      encryptedPrivateKey: r.encrypted_private_key
+    };
+  }
+
+  async findUserById(id: string) {
+    const { rows } = await this.pool.query(
+      `SELECT id, auth_id, public_key, encrypted_private_key
+       FROM relay_users WHERE id = $1 LIMIT 1`,
+      [id]
     );
     if (rows.length === 0) return null;
 

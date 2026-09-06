@@ -8,6 +8,8 @@ RUN npm ci
 
 COPY index.html vite.config.ts tsconfig.json tailwind.config.js postcss.config.js ./
 COPY src ./src
+# PWA manifest, service worker and icons - Vite emits these into dist/
+COPY public ./public
 
 RUN npm run build
 

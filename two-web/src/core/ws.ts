@@ -97,7 +97,10 @@ class WebSocketRelayClient {
       this.rawSend({
         type: 'JOIN',
         spaceId: this.creds.spaceId,
-        userId: this.creds.role
+        userId: this.creds.role,
+        // Ask only for what we missed while disconnected, so nothing we have
+        // already applied gets replayed and duplicated.
+        since: this.loadHighWaterMark(this.creds.spaceId)
       });
 
       this.startHeartbeat();
@@ -150,6 +153,7 @@ class WebSocketRelayClient {
       );
       // Same shape subscribers have always received: payload is a JSON string.
       this.emit({ type: 'REMOTE_RECORD', record: { ...record, payload: plaintext } });
+      this.saveHighWaterMark(creds.spaceId, Number(record.lamportClock));
     } catch {
       // Authentication failed: a stale record from a rotated code, or someone
       // in the room without the key. Dropping it is the correct outcome.
@@ -212,6 +216,33 @@ class WebSocketRelayClient {
 
   private isOpen(): boolean {
     return !!this.ws && this.ws.readyState === WebSocket.OPEN;
+  }
+
+  // Highest lamport clock already applied for a space, so a reconnect resumes
+  // rather than replaying the whole history.
+  private highWaterKey(spaceId: string) {
+    return `two_relay_seen_${spaceId}`;
+  }
+
+  private loadHighWaterMark(spaceId: string): number {
+    try {
+      const raw = localStorage.getItem(this.highWaterKey(spaceId));
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private saveHighWaterMark(spaceId: string, lamport: number) {
+    if (!Number.isFinite(lamport)) return;
+    try {
+      if (lamport > this.loadHighWaterMark(spaceId)) {
+        localStorage.setItem(this.highWaterKey(spaceId), String(lamport));
+      }
+    } catch {
+      /* storage unavailable; replay just starts from zero next time */
+    }
   }
 
   private scheduleReconnect() {

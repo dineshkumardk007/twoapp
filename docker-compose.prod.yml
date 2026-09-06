@@ -25,7 +25,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4000
-      DATABASE_URL: postgresql://two_admin:${POSTGRES_PASSWORD:-two_production_secure_pass_2026}@two_db:5432/two_space_db?schema=public
+      DATABASE_URL: postgresql://two_admin:${POSTGRES_PASSWORD:-two_production_secure_pass_2026}@two_db:5432/two_space_db
+      # Restrict browser origins allowed to call the relay.
+      CORS_ORIGIN: https://${DOMAIN:-localhost}
     depends_on:
       - two_db
     networks:
