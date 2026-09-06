@@ -22,6 +22,7 @@ import app.two.android.features.onboarding.*
 import app.two.android.features.repair.RepairKitScreen
 import app.two.android.features.settings.ConsentAuditLogScreen
 import app.two.android.features.settings.SettingsScreen
+import app.two.android.features.web.TwoWebView
 import kotlinx.coroutines.launch
 
 enum class Screen {
@@ -58,7 +59,7 @@ class MainActivity : FragmentActivity() {
         setContent {
             TwoTheme(themeMode = AppThemeMode.WARM_LINEN) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    app.two.android.features.web.TwoWebView()
+                    TwoWebView()
                 }
             }
         }
