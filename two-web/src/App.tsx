@@ -1671,6 +1671,7 @@ export const App: React.FC = () => {
         relayStatus={relayStatus}
         unreadChatCount={unreadChatCount}
         onOpenDirectory={() => setShowDirectoryModal(true)}
+        partnerName={state.partnerName}
       />
 
       {session && isWeakPairingCode(session.code) && (

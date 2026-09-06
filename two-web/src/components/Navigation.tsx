@@ -4,6 +4,7 @@ import { LocalMeshModal } from './LocalMeshModal';
 import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
 import { CoRegulationModal } from './CoRegulationModal';
 import { SanctuaryToolsModal } from './SanctuaryToolsModal';
+import { HeartOptionsModal } from './HeartOptionsModal';
 import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Palette, LayoutGrid } from 'lucide-react';
 import { Locale, getTranslation } from '../core/i18n';
 
@@ -20,6 +21,7 @@ interface NavigationProps {
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
   unreadChatCount?: number;
   onOpenDirectory?: () => void;
+  partnerName?: string;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -34,13 +36,15 @@ export const Navigation: React.FC<NavigationProps> = ({
   locale = 'en',
   relayStatus = 'connected',
   unreadChatCount = 0,
-  onOpenDirectory
+  onOpenDirectory,
+  partnerName = 'Partner'
 }) => {
   const [showPairingModal, setShowPairingModal] = useState(false);
   const [showMeshModal, setShowMeshModal] = useState(false);
   const [showSoundscapeModal, setShowSoundscapeModal] = useState(false);
   const [showCoRegulationModal, setShowCoRegulationModal] = useState(false);
   const [showToolsModal, setShowToolsModal] = useState(false);
+  const [showHeartModal, setShowHeartModal] = useState(false);
   const t = getTranslation(locale);
 
   const tabs = [
@@ -114,13 +118,13 @@ export const Navigation: React.FC<NavigationProps> = ({
             </button>
           </div>
 
-          {/* Action Menu Buttons: Tour, Spaces, Tools (All match the Tour button design!) */}
+          {/* Action Menu Buttons: Tour, Heart, Spaces, Tools (All match the Tour button design!) */}
           <div className="flex items-center space-x-1.5 sm:space-x-2.5">
             {/* 1. Interactive Story Tour button */}
             {onOpenStoryTour && (
               <button
                 onClick={onOpenStoryTour}
-                className="inline-flex items-center text-xs font-medium text-linen-accent px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs"
+                className="inline-flex items-center text-xs font-medium text-linen-accent px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs shrink-0"
                 title="Interactive 5-Act Walkthrough: A Day in the Life with Two"
               >
                 <Sparkles className="w-3.5 h-3.5 mr-1 text-linen-accent shrink-0" />
@@ -128,11 +132,21 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
             )}
 
-            {/* 2. Sanctuary Spaces Explorer button */}
+            {/* 2. Heart Sensory Touch & Options button */}
+            <button
+              onClick={() => setShowHeartModal(true)}
+              className="inline-flex items-center text-xs font-medium text-rose-600 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/90 transition-colors cursor-pointer shadow-2xs shrink-0 group"
+              title="Heart Touch: Send sensory pulse & loving presence"
+            >
+              <Heart className="w-3.5 h-3.5 mr-1 text-rose-500 fill-rose-500 shrink-0 group-hover:scale-110 transition-transform animate-pulse" />
+              <span>Heart</span>
+            </button>
+
+            {/* 3. Sanctuary Spaces Explorer button */}
             {onOpenDirectory && (
               <button
                 onClick={onOpenDirectory}
-                className="inline-flex items-center text-xs font-medium text-linen-primary px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs"
+                className="inline-flex items-center text-xs font-medium text-linen-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs shrink-0"
                 title="Sanctuary Explorer (Browse All 32 Spaces)"
               >
                 <LayoutGrid className="w-3.5 h-3.5 mr-1 text-linen-accent shrink-0" />
@@ -140,10 +154,10 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
             )}
 
-            {/* 3. Sanctuary Tools Menu button */}
+            {/* 4. Sanctuary Tools Menu button */}
             <button
               onClick={() => setShowToolsModal(true)}
-              className="inline-flex items-center text-xs font-medium text-linen-primary px-2.5 sm:px-3 py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs"
+              className="inline-flex items-center text-xs font-medium text-linen-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs shrink-0"
               title="Sanctuary Tools (Soundscapes, Breathing, Camouflage, Mesh & More)"
             >
               <Compass className="w-3.5 h-3.5 mr-1 text-linen-accent shrink-0" />
@@ -153,7 +167,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             {/* Emergency Exit button */}
             <button
               onClick={onEmergencyExit}
-              className="p-1.5 text-linen-secondary hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200 cursor-pointer"
+              className="p-1 sm:p-1.5 text-linen-secondary hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200 cursor-pointer shrink-0"
               title={t.actions.quickExit}
             >
               <LogOut className="w-4 h-4" />
@@ -232,12 +246,19 @@ export const Navigation: React.FC<NavigationProps> = ({
         onOpenSoundscapes={() => setShowSoundscapeModal(true)}
         onOpenCoRegulation={() => setShowCoRegulationModal(true)}
         onTriggerPulse={onTriggerPulse}
+        onOpenHeartModal={() => setShowHeartModal(true)}
         onToggleCamouflage={onToggleCamouflage}
         onOpenMesh={() => setShowMeshModal(true)}
         onOpenSafetyNumbers={() => setShowPairingModal(true)}
         onEmergencyExit={onEmergencyExit}
         relayStatus={relayStatus}
         activeUser={activeUser}
+      />
+
+      <HeartOptionsModal
+        isOpen={showHeartModal}
+        onClose={() => setShowHeartModal(false)}
+        partnerName={partnerName}
       />
     </>
   );

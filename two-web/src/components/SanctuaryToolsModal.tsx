@@ -10,6 +10,7 @@ interface SanctuaryToolsModalProps {
   onOpenSoundscapes: () => void;
   onOpenCoRegulation: () => void;
   onTriggerPulse?: () => void;
+  onOpenHeartModal?: () => void;
   onToggleCamouflage?: () => void;
   onOpenMesh: () => void;
   onOpenSafetyNumbers: () => void;
@@ -24,6 +25,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   onOpenSoundscapes,
   onOpenCoRegulation,
   onTriggerPulse,
+  onOpenHeartModal,
   onToggleCamouflage,
   onOpenMesh,
   onOpenSafetyNumbers,
@@ -62,15 +64,19 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'pulse',
-      title: 'Sensory Touch Pulse',
-      subtitle: 'Instant Heartbeat Across Distance',
-      desc: 'Send a gentle sensory heartbeat vibration directly to your partner’s screen and phone in real time.',
+      title: 'Sensory Heart Pulse & Options',
+      subtitle: 'Instant Touch, Hugs, Kisses & Notes',
+      desc: 'Send wordless touches, warm hugs, gentle kisses, synchronized heartbeats, and custom notes directly to your partner.',
       icon: Heart,
       iconColor: 'text-rose-500 bg-rose-50 border-rose-200',
-      actionText: 'Send Warm Hug',
+      actionText: 'Heart Options',
       action: () => {
-        if (onTriggerPulse) onTriggerPulse();
         onClose();
+        if (onOpenHeartModal) {
+          onOpenHeartModal();
+        } else if (onTriggerPulse) {
+          onTriggerPulse();
+        }
       }
     },
     {

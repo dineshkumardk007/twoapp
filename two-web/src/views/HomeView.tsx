@@ -11,6 +11,7 @@ import { AmbientSoundscapeModal } from '../components/AmbientSoundscapeModal';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
 import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
+import { HeartOptionsModal } from '../components/HeartOptionsModal';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
 import { RelationshipMilestone, ComfortBoxData } from '../types';
 
@@ -41,6 +42,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showSoundscapes, setShowSoundscapes] = useState(false);
   const [showComfortBox, setShowComfortBox] = useState(false);
   const [showCoRegulation, setShowCoRegulation] = useState(false);
+  const [showHeartModal, setShowHeartModal] = useState(false);
   const [optInSpicy, setOptInSpicy] = useState(false);
   const [questionPromptToast, setQuestionPromptToast] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -295,6 +297,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
         <div className="flex items-center space-x-2 shrink-0 ml-3">
           <button
+            onClick={() => setShowHeartModal(true)}
+            className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-rose-50/90 border border-rose-200 text-rose-700 text-xs font-medium hover:bg-rose-100/90 active:scale-95 transition-all shadow-2xs cursor-pointer"
+            title="Open Heart touch expressions & custom notes"
+          >
+            <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />
+            <span className="hidden sm:inline">Heart Options</span>
+            <span className="sm:hidden">Options</span>
+          </button>
+          <button
             onClick={() => setShowCoRegulation(true)}
             className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-linen-surface border border-teal-200 text-teal-800 text-xs font-medium hover:bg-teal-50 active:scale-95 transition-all shadow-2xs cursor-pointer"
             title="Open synchronized 4-7-8 breathing sanctuary"
@@ -403,12 +414,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <h3 className="font-serif text-lg font-medium text-linen-primary mb-3">Connection & Relational Tools</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <button
-            onClick={() => triggerGlobalPulse('Thinking of you')}
+            onClick={() => setShowHeartModal(true)}
             className="text-left p-4 rounded-2xl border border-rose-200/80 bg-rose-50/40 hover:bg-rose-50/80 transition-colors cursor-pointer group"
           >
-            <Heart className="w-5 h-5 text-rose-500 mb-2 fill-rose-500 group-hover:scale-110 transition-transform" />
-            <h4 className="text-sm font-medium text-linen-primary">Thinking of You</h4>
-            <p className="text-xs text-linen-secondary mt-0.5">528Hz Solfeggio touch pulse</p>
+            <Heart className="w-5 h-5 text-rose-500 mb-2 fill-rose-500 group-hover:scale-110 transition-transform animate-pulse" />
+            <h4 className="text-sm font-medium text-linen-primary">Heart Touch Options</h4>
+            <p className="text-xs text-linen-secondary mt-0.5">528Hz pulses, warm hugs & notes</p>
           </button>
 
           <button
@@ -728,6 +739,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
         isOpen={showCoRegulation}
         onClose={() => setShowCoRegulation(false)}
         activeUser={state.activeUser}
+      />
+
+      <HeartOptionsModal
+        isOpen={showHeartModal}
+        onClose={() => setShowHeartModal(false)}
+        partnerName={partnerName}
       />
     </div>
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage, NeedItem } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
+import { HeartOptionsModal } from '../components/HeartOptionsModal';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
 import { Send, Plus, Sparkles, Mic, Square, Trash2, Heart, Feather } from 'lucide-react';
 
@@ -26,6 +27,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 }) => {
   const [inputText, setInputText] = useState('');
   const [showNeedModal, setShowNeedModal] = useState(false);
+  const [showHeartModal, setShowHeartModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
 
@@ -248,11 +250,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </button>
 
             <button
-              onClick={() => triggerGlobalPulse('Thinking of you')}
-              className="p-2.5 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-              title="Send 'Thinking of You' sensory pulse (528Hz chime & gentle vibration)"
+              onClick={() => setShowHeartModal(true)}
+              className="p-2.5 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              title="Heart Touch Options (528Hz pulse, warm hugs, kisses & notes)"
             >
-              <Heart className="w-5 h-5 fill-rose-500 hover:scale-110 transition-transform" />
+              <Heart className="w-5 h-5 fill-rose-500 hover:scale-110 transition-transform animate-pulse" />
             </button>
 
             <input
@@ -282,6 +284,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
           onSendMessage(`I need: ${need.title} — ${need.description}`, true);
           setShowNeedModal(false);
         }}
+      />
+
+      <HeartOptionsModal
+        isOpen={showHeartModal}
+        onClose={() => setShowHeartModal(false)}
+        partnerName={partnerName}
       />
     </div>
   );
