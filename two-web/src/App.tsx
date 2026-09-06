@@ -19,6 +19,8 @@ import {
 import { fetchPendingInvite, acceptInvite } from './core/invites';
 import { registerThisDevice, isThisDeviceRevoked } from './core/devices';
 import { LoginView } from './views/LoginView';
+import { AppDock } from './components/AppDock';
+import { isAndroidApp, formFactor } from './core/platform';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
   hasEncryptedVault,
@@ -175,6 +177,20 @@ export const App: React.FC = () => {
   // Device storage is full: the app still runs from memory, but nothing is
   // being saved. Silence here would cost the user everything on refresh.
   const [storageFull, setStorageFull] = useState(false);
+
+  // The dock is an app-only surface; the website keeps its header and directory.
+  const [inApp] = useState(isAndroidApp);
+  const [isTablet, setIsTablet] = useState(() => formFactor() === 'tablet');
+
+  useEffect(() => {
+    const onResize = () => setIsTablet(formFactor() === 'tablet');
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
   const [pinAttempt, setPinAttempt] = useState('');
   const [pinError, setPinError] = useState(false);
 
@@ -2067,7 +2083,11 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-20">
+      <main
+        className={`mx-auto px-4 sm:px-6 py-6 ${inApp ? 'pb-32' : 'pb-20'} ${
+          isTablet ? 'max-w-5xl' : 'max-w-3xl'
+        }`}
+      >
         {currentTab === 'home' && (
           <HomeView
             state={state}
@@ -2429,6 +2449,15 @@ export const App: React.FC = () => {
       />
 
       {/* Interactive Story Tour Modal */}
+      {inApp && (
+        <AppDock
+          currentTab={currentTab}
+          onSelectTab={handleSelectTab}
+          unreadChatCount={unreadChatCount}
+          isTablet={isTablet}
+        />
+      )}
+
       <StoryTourModal
         isOpen={showStoryTour}
         onClose={() => setShowStoryTour(false)}

@@ -1,6 +1,8 @@
 package app.two.android
 
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -48,6 +50,12 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Draw behind the status and gesture bars. The web layer positions its
+        // dock with env(safe-area-inset-bottom), which only resolves to a real
+        // value when the WebView actually extends under the system bars.
+        enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // 1. Enable FLAG_SECURE to prevent screenshots and task-switcher previews
         SecurityWindowManager.applyWindowProtection(this, true)

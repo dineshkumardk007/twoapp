@@ -1,5 +1,13 @@
-// Service Worker for Two PWA (Offline Shell & Asset Caching)
-const CACHE_NAME = 'two-app-cache-v1';
+// Service Worker for Two (offline shell & asset caching)
+//
+// Bumping this name purges every older cache in `activate`. The previous
+// version was cache-first for *everything*, index.html included, under a name
+// that never changed - so once a device had the shell it kept serving that
+// exact build forever. New deploys and new APK builds silently had no effect,
+// because the stale index.html kept pointing at the stale bundle sitting
+// beside it in the same cache.
+const CACHE_NAME = 'two-app-cache-v2';
+
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -10,66 +18,102 @@ const STATIC_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    })
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
+      )
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  // Only intercept GET requests for same origin or fonts
-  if (event.request.method !== 'GET') return;
-
-  // Never intercept or cache in development mode or for Vite files
-  if (
+function isDevRequest(url) {
+  return (
     self.location.port === '3000' ||
     self.location.hostname === 'localhost' ||
     self.location.hostname === '127.0.0.1' ||
-    event.request.url.includes('/@vite/') ||
-    event.request.url.includes('/@fs/') ||
-    event.request.url.includes('/src/')
-  ) {
+    url.includes('/@vite/') ||
+    url.includes('/@fs/') ||
+    url.includes('/src/')
+  );
+}
+
+/** Build output is content-hashed, so a given filename can never change. */
+function isImmutableAsset(url) {
+  // Vite emits `name-HASH.ext`, so the hash is preceded by a hyphen, not a dot.
+  return url.includes('/assets/') && /[-.][0-9a-zA-Z_-]{8,}\.(js|css)$/.test(url);
+}
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+  if (isDevRequest(event.request.url)) return;
+
+  const isNavigation =
+    event.request.mode === 'navigate' ||
+    (event.request.headers.get('accept') || '').includes('text/html');
+
+  // The shell decides which bundle runs, so it must never be pinned. Network
+  // first, cache only as an offline fallback.
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', clone));
+          return response;
+        })
+        .catch(() => caches.match('/index.html').then((r) => r || caches.match('/')))
+    );
     return;
   }
 
+  // Hashed assets are safe to serve from cache indefinitely: a new build emits
+  // new filenames rather than replacing these.
+  if (isImmutableAsset(event.request.url)) {
+    event.respondWith(
+      caches.match(event.request).then(
+        (cached) =>
+          cached ||
+          fetch(event.request).then((response) => {
+            if (response && response.status === 200) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            }
+            return response;
+          })
+      )
+    );
+    return;
+  }
+
+  // Everything else: serve what we have, but refresh it in the background so a
+  // stale copy is never more than one visit old.
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request)
-        .then((networkResponse) => {
-          // Cache successful responses for shell assets
+    caches.match(event.request).then((cached) => {
+      const network = fetch(event.request)
+        .then((response) => {
           if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            (event.request.url.startsWith(self.location.origin) || event.request.url.includes('fonts.googleapis.com') || event.request.url.includes('fonts.gstatic.com'))
+            response &&
+            response.status === 200 &&
+            (event.request.url.startsWith(self.location.origin) ||
+              event.request.url.includes('fonts.googleapis.com') ||
+              event.request.url.includes('fonts.gstatic.com'))
           ) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
-          return networkResponse;
+          return response;
         })
-        .catch(() => {
-          // Offline fallback
-          if (event.request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('/index.html');
-          }
-        });
+        .catch(() => cached);
+
+      return cached || network;
     })
   );
 });

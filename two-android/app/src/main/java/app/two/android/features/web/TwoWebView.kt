@@ -65,6 +65,9 @@ fun TwoWebView(
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
                 setBackgroundColor(Color.parseColor("#FAF8F5"))
+                // Let the page paint under the system bars; the CSS handles insets.
+                setFitsSystemWindows(false)
+                overScrollMode = WebView.OVER_SCROLL_NEVER
 
                 settings.apply {
                     javaScriptEnabled = true
@@ -77,6 +80,12 @@ fun TwoWebView(
                     useWideViewPort = true
                     loadWithOverviewMode = true
                     setSupportZoom(false)
+
+                    // The bundle is a responsive layout, not a desktop page: let it
+                    // lay out at the device's own width so a tablet gets a tablet
+                    // layout rather than a scaled-up phone one.
+                    textZoom = 100
+                    layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 }
 
                 addJavascriptInterface(AndroidWebBridge(context), "AndroidBridge")
