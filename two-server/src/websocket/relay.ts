@@ -3,7 +3,18 @@ import { db, StoredRecord } from '../db.js';
 
 interface SpaceClient {
   ws: WebSocket;
+  /**
+   * Server-assigned, unique per socket. Routing keys off THIS rather than
+   * anything the client supplies, so two devices are always distinct even when
+   * an older client reports the same userId for both (it used to send the
+   * user-chosen role, which made the relay treat a couple as one participant
+   * and forward nothing between them).
+   */
+  connectionId: number;
+  /** Client-supplied device id where available; diagnostics only. */
   userId: string;
+  /** Authorship label ('user' | 'partner'), used to filter a client's own history. */
+  authorRole: string;
   spaceId: string;
   /** Token bucket state for rate limiting. */
   tokens: number;
@@ -40,6 +51,7 @@ const MAX_CLIENTS_PER_SPACE = 8;  // two phones, a tablet, spare reconnects
 export class WebSocketRelay {
   private wss: WebSocketServer;
   private clients = new Set<SpaceClient>();
+  private nextConnectionId = 1;
 
   constructor(wss: WebSocketServer) {
     this.wss = wss;
@@ -49,6 +61,7 @@ export class WebSocketRelay {
   private setupServer() {
     this.wss.on('connection', (ws: WebSocket) => {
       let currentClient: SpaceClient | null = null;
+      const connectionId = this.nextConnectionId++;
 
       ws.on('message', async (data: Buffer) => {
         if (data.length > MAX_RECORD_BYTES) {
@@ -95,7 +108,11 @@ export class WebSocketRelay {
 
             currentClient = {
               ws,
+              connectionId,
               userId: message.userId,
+              // Older clients send only userId, which was the role; falling back
+              // to it keeps them working unchanged.
+              authorRole: isNonEmptyString(message.role) ? message.role : message.userId,
               spaceId: message.spaceId,
               tokens: RECORD_BURST,
               lastRefill: Date.now()
@@ -141,7 +158,7 @@ export class WebSocketRelay {
             // whether the record actually reached durable storage.
             const persisted = await db.saveRecordDurable(record);
 
-            this.broadcastToSpace(currentClient.spaceId, currentClient.userId, {
+            this.broadcastToSpace(currentClient.spaceId, currentClient.connectionId, {
               type: 'REMOTE_RECORD',
               record
             });
@@ -193,8 +210,9 @@ export class WebSocketRelay {
       return;
     }
 
+    // Replay is filtered by authorship, not by the routing id.
     const batch = missed
-      .filter(r => r.authorId !== client.userId)
+      .filter(r => r.authorId !== client.authorRole)
       .slice(0, MAX_REPLAY_RECORDS);
 
     for (const record of batch) {
@@ -205,10 +223,11 @@ export class WebSocketRelay {
     this.sendJson(client.ws, { type: 'REPLAY_COMPLETE', count: batch.length });
   }
 
-  private broadcastToSpace(spaceId: string, senderUserId: string, payload: any) {
+  /** Fans a record out to every OTHER connection in the space, whatever role it holds. */
+  private broadcastToSpace(spaceId: string, senderConnectionId: number, payload: any) {
     const raw = JSON.stringify(payload);
     for (const client of this.clients) {
-      if (client.spaceId === spaceId && client.userId !== senderUserId && client.ws.readyState === WebSocket.OPEN) {
+      if (client.spaceId === spaceId && client.connectionId !== senderConnectionId && client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(raw);
       }
     }

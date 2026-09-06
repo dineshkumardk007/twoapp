@@ -129,18 +129,23 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-linen-surface border border-linen-border rounded-3xl w-full max-w-xl max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+    <div 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+    >
+      <div className="bg-linen-surface border border-linen-border rounded-3xl w-full max-w-lg max-h-[82dvh] sm:max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="p-5 sm:p-6 border-b border-linen-border flex items-center justify-between bg-gradient-to-r from-linen-variant/60 via-linen-surface to-linen-variant/40">
+        <div className="p-4 sm:p-5 border-b border-linen-border flex items-center justify-between bg-gradient-to-r from-linen-variant/60 via-linen-surface to-linen-variant/40 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-linen-primary text-linen-surface flex items-center justify-center shadow-xs">
+            <div className="w-10 h-10 rounded-2xl bg-linen-primary text-linen-surface flex items-center justify-center shadow-xs shrink-0">
               <Compass className="w-5 h-5 text-linen-surface" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-serif text-xl font-medium text-linen-primary">
+                <h3 className="font-serif text-lg sm:text-xl font-medium text-linen-primary">
                   Sanctuary Tools
                 </h3>
                 <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-linen-variant text-linen-accent border border-linen-border">
@@ -163,17 +168,17 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
         </div>
 
         {/* Live Relay Status Strip */}
-        <div className="px-5 py-2.5 bg-linen-variant/40 border-b border-linen-border/60 flex items-center justify-between text-xs">
+        <div className="px-4 sm:px-5 py-2 bg-linen-variant/40 border-b border-linen-border/60 flex items-center justify-between text-xs shrink-0">
           <div className="flex items-center space-x-2">
             <span
-              className={`w-2.5 h-2.5 rounded-full ${
+              className={`w-2 h-2 rounded-full ${
                 relayStatus === 'connected'
                   ? 'bg-emerald-500 animate-pulse'
                   : 'bg-amber-400 animate-pulse'
               }`}
             />
-            <span className="font-medium text-linen-primary">
-              {relayStatus === 'connected' ? 'Connected securely to E2EE Relay' : 'Connecting to Relay...'}
+            <span className="font-medium text-linen-primary text-xs">
+              {relayStatus === 'connected' ? 'Two • Live & Protected' : 'Connecting to Relay...'}
             </span>
           </div>
           <span className="text-[11px] text-linen-secondary font-mono">
@@ -182,39 +187,39 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
         </div>
 
         {/* Scrollable Tools List */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-3 scrollbar-none">
+        <div className="p-3 sm:p-4 overflow-y-auto space-y-2.5 flex-1 min-h-0 scrollbar-none">
           {tools.map((tool) => {
             const Icon = tool.icon;
             return (
               <div
                 key={tool.id}
                 onClick={tool.action}
-                className="group p-3.5 sm:p-4 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-start justify-between gap-3"
+                className="group p-3 sm:p-3.5 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between gap-3"
               >
-                <div className="flex items-start space-x-3.5">
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
                   <div className={`p-2.5 rounded-xl border shrink-0 transition-transform group-hover:scale-105 ${tool.iconColor}`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-linen-primary flex items-center">
-                      <span>{tool.title}</span>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-semibold text-linen-primary truncate">
+                      {tool.title}
                     </h4>
-                    <p className="text-xs font-medium text-linen-accent mt-0.5">
+                    <p className="text-xs text-linen-accent truncate">
                       {tool.subtitle}
                     </p>
-                    <p className="text-xs text-linen-secondary mt-1 leading-relaxed">
+                    <p className="text-xs text-linen-secondary line-clamp-1 mt-0.5">
                       {tool.desc}
                     </p>
                   </div>
                 </div>
 
-                <div className="shrink-0 self-center">
+                <div className="shrink-0">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       tool.action();
                     }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       tool.isDanger
                         ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
                         : 'bg-linen-primary text-linen-surface hover:opacity-90 shadow-2xs'
@@ -229,11 +234,11 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-linen-border/60 bg-linen-variant/20 flex items-center justify-between text-xs text-linen-secondary">
-          <span>All communications are end-to-end encrypted locally.</span>
+        <div className="p-3 sm:p-4 border-t border-linen-border/60 bg-linen-variant/20 flex items-center justify-between text-xs text-linen-secondary shrink-0">
+          <span className="text-[11px] truncate">End-to-end encrypted locally.</span>
           <button
             onClick={onClose}
-            className="px-3 py-1 rounded-lg hover:bg-linen-variant text-linen-primary font-medium transition-colors cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-linen-variant hover:bg-linen-border text-linen-primary font-medium transition-colors cursor-pointer text-xs shadow-2xs"
           >
             Done
           </button>

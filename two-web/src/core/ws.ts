@@ -6,6 +6,7 @@
 // JSON string exactly as they always have.
 
 import { encryptText, decryptText } from './crypto';
+import { getDeviceId } from './space';
 import type { SpaceCredentials } from './space';
 
 type MessageCallback = (data: any) => void;
@@ -135,7 +136,9 @@ class WebSocketRelayClient {
       this.rawSend({
         type: 'JOIN',
         spaceId: this.creds.spaceId,
-        userId: this.creds.role,
+        // Delivery is per device; `role` stays the authorship label.
+        userId: getDeviceId(),
+        role: this.creds.role,
         // Ask only for what we missed while disconnected, so nothing we have
         // already applied gets replayed and duplicated.
         since: this.loadHighWaterMark(this.creds.spaceId)
@@ -252,6 +255,10 @@ class WebSocketRelayClient {
         clientTs: Date.now(),
         createdAt: new Date().toISOString()
       };
+
+      // If the relay ever echoes this back, ignore it: we already applied it
+      // locally when the user performed the action.
+      this.markApplied(recordId);
 
       this.enqueue(record);
       this.flushOutbox();

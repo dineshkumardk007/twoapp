@@ -168,6 +168,34 @@ export function getLastSpaceCode(): string | null {
   }
 }
 
+const DEVICE_ID_KEY = 'two_device_id_v1';
+
+/**
+ * A stable random id for this device.
+ *
+ * The relay must route between two *devices*, which is not the same thing as
+ * the couple's chosen roles: both partners can legitimately hold the role
+ * 'user' (reinstalling and picking "I created this space", or both tapping
+ * Rejoin). Routing on the role in that case makes the relay treat them as the
+ * same participant and silently forward nothing. The role still labels who
+ * wrote a record; only delivery keys off this id.
+ */
+export function getDeviceId(): string {
+  try {
+    const existing = localStorage.getItem(DEVICE_ID_KEY);
+    if (existing) return existing;
+
+    const bytes = new Uint8Array(new ArrayBuffer(16));
+    window.crypto.getRandomValues(bytes);
+    const id = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem(DEVICE_ID_KEY, id);
+    return id;
+  } catch {
+    // Private mode: a per-session id still beats colliding on the role.
+    return `eph-${Math.random().toString(36).slice(2)}`;
+  }
+}
+
 export function loadSpaceSession(): SpaceSession | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY);

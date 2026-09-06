@@ -79,7 +79,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   ];
 
   return (
-    <header className="border-b border-linen-border bg-linen-surface/80 backdrop-blur-md sticky top-0 z-40">
+    <>
+      <header className="border-b border-linen-border bg-linen-surface/80 backdrop-blur-md sticky top-0 z-40">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Brand & Privacy Status */}
@@ -199,8 +200,9 @@ export const Navigation: React.FC<NavigationProps> = ({
           })}
         </div>
       </div>
+    </header>
 
-      <PairingModal
+    <PairingModal
         isOpen={showPairingModal}
         onClose={() => setShowPairingModal(false)}
         activeUser={activeUser}
@@ -237,6 +239,6 @@ export const Navigation: React.FC<NavigationProps> = ({
         relayStatus={relayStatus}
         activeUser={activeUser}
       />
-    </header>
+    </>
   );
 };
