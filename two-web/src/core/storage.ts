@@ -36,6 +36,8 @@ import {
   KintsugiVesselItem
 } from '../types';
 import { loadSpaceSession } from './space';
+import { externalizeMedia, persistMedia } from './media';
+import { newId } from './ids';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
 
@@ -1158,7 +1160,7 @@ export function pruneForStorage(state: SpaceState): SpaceState {
  */
 export function saveState(state: SpaceState): SaveResult {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(pruneForStorage(state)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(forStorage(state)));
     return { ok: true, quotaExceeded: false };
   } catch (e) {
     const quota = isQuotaError(e);
@@ -1167,7 +1169,32 @@ export function saveState(state: SpaceState): SaveResult {
   }
 }
 
-/** Rough share of the localStorage budget in use, for display in Settings. */
+/**
+ * The form the vault is written in: trimmed, with media moved out to IndexedDB.
+ *
+ * The bytes are written without being waited for. A save happens on every
+ * change and must not block the interface, and the reference is already in the
+ * snapshot either way - if the write fails, that one photo comes back empty
+ * rather than the whole save being lost, which is much the better trade in a
+ * store this small.
+ */
+function forStorage(state: SpaceState): SpaceState {
+  const pruned = pruneForStorage(state);
+  const { value, writes } = externalizeMedia(pruned, () => newId());
+
+  if (writes.length > 0) {
+    void persistMedia(writes);
+  }
+  return value;
+}
+
+/**
+ * Rough share of the localStorage budget in use.
+ *
+ * This is the vault only. Photos and voice memos live in IndexedDB on a much
+ * larger quota - add estimateMediaBytes() from core/media if you ever want the
+ * whole picture.
+ */
 export function estimateStorageBytes(): number {
   try {
     let total = 0;

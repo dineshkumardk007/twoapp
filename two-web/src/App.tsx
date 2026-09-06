@@ -106,9 +106,50 @@ import { MoneyLightView } from './views/MoneyLightView';
 import { TimelineView } from './views/TimelineView';
 import { SettingsView } from './views/SettingsView';
 import { newId } from './core/ids';
+import { hydrateMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
 
 export const App: React.FC = () => {
   const [state, setState] = useState<SpaceState>(loadState);
+  /**
+   * False while photos and voice memos are still being read back out of
+   * IndexedDB. Seeded from the loaded vault, so a space with no media - which
+   * is most of them, most of the time - never waits or flashes a splash.
+   */
+  const [mediaReady, setMediaReady] = useState(() => !containsMediaRefs(state));
+
+  /**
+   * Reads photos and voice memos back out of IndexedDB into the shape every
+   * component and the relay already expect.
+   *
+   * Keyed on mediaReady rather than on state: state changes on every keystroke,
+   * and there is only work to do here when a vault has just been loaded or
+   * unlocked.
+   */
+  useEffect(() => {
+    if (mediaReady) return;
+    let cancelled = false;
+
+    hydrateMedia(state)
+      .then(hydrated => {
+        if (cancelled) return;
+        setState(hydrated);
+        setMediaReady(true);
+        // The live set of references is only known once everything is loaded,
+        // so this is the moment to drop stored media nothing points at.
+        void collectMediaGarbage(hydrated);
+      })
+      .catch(() => {
+        // Showing the space without its photos beats not showing it at all.
+        if (!cancelled) setMediaReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // state is read when the effect runs; adding it here would re-run this on
+    // every edit for no benefit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaReady]);
   const [currentTab, setCurrentTab] = useState('home');
   const [theme, setTheme] = useState<ThemeMode>('linen');
   const [isCamouflaged, setIsCamouflaged] = useState(false);
@@ -1628,6 +1669,7 @@ export const App: React.FC = () => {
   const handleEmergencyExit = () => {
     // Wipe the encrypted vault too, or the panic button leaves everything behind.
     clearState();
+    void clearMedia();
     clearSpaceSession();
     destroyVault();
     window.location.reload();
@@ -1727,6 +1769,8 @@ Anyone using the old code loses access, including your partner until you give th
       void unlockVault(secret)
         .then(opened => {
           if (opened) {
+            // The vault carries the same references localStorage does.
+            setMediaReady(!containsMediaRefs(opened.payload.state));
             setState(opened.payload.state);
             setSession(opened.payload.session);
             setVaultKey(opened.key);
@@ -1765,6 +1809,7 @@ Anyone using the old code loses access, including your partner until you give th
       }
       destroyVault();
       clearState();
+      void clearMedia();
       clearSpaceSession();
       window.location.reload();
     };
@@ -1850,6 +1895,33 @@ Anyone using the old code loses access, including your partner until you give th
           </button>
 
         </div>
+      </div>
+    );
+  }
+
+  /**
+   * Media is still being read back out of IndexedDB.
+   *
+   * Only reached when this space actually has photos or voice memos stored, and
+   * only for as long as they take to read - rendering underneath would put
+   * empty frames on screen that fill in a moment later.
+   */
+  if (!mediaReady) {
+    return (
+      <div className="min-h-screen app-min-vh bg-linen-bg flex items-center justify-center">
+        {/* Inlined rather than loaded from /icon-192.svg: inside the Android
+            WebView the assets are served from a base this path would miss. */}
+        <svg
+          viewBox="0 0 108 108"
+          className="w-14 h-14 animate-pulse"
+          fill="none"
+          strokeLinecap="round"
+          aria-label="Loading"
+        >
+          <path d="M54,84 C51,70 51,56 54,44 C56,36 56,30 54,25" stroke="#4E5A2E" strokeWidth="4.5" />
+          <path d="M54,47 C58,32 66,25 80,24 C79,38 70,46 54,47 Z" fill="#606C38" />
+          <path d="M54,64 C50,49 42,42 28,41 C29,55 38,63 54,64 Z" fill="#8A9A5B" />
+        </svg>
       </div>
     );
   }
