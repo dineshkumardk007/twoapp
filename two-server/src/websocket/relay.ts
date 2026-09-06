@@ -5,6 +5,21 @@ interface SpaceClient {
   ws: WebSocket;
   userId: string;
   spaceId: string;
+  /** Token bucket state for rate limiting. */
+  tokens: number;
+  lastRefill: number;
+}
+
+/** Returns false when the caller has exhausted its budget. */
+function consumeToken(client: SpaceClient): boolean {
+  const now = Date.now();
+  const elapsed = (now - client.lastRefill) / 1000;
+  client.tokens = Math.min(RECORD_BURST, client.tokens + elapsed * RECORD_REFILL_PER_SEC);
+  client.lastRefill = now;
+
+  if (client.tokens < 1) return false;
+  client.tokens -= 1;
+  return true;
 }
 
 // A single record is a chat line, a mood, or a canvas stroke - never media.
@@ -13,6 +28,14 @@ const MAX_RECORD_BYTES = 256 * 1024;
 // Cap on how much history one JOIN may replay, so a long-dormant device cannot
 // pull an unbounded backlog in a single burst.
 const MAX_REPLAY_RECORDS = 500;
+
+// Nothing here was rate limited, so a single socket could pin the relay and the
+// database. A couple types and draws; these ceilings are far above human pace
+// (canvas strokes are the burstiest traffic) and far below abusive.
+const RECORD_BURST = 60;          // tokens in the bucket
+const RECORD_REFILL_PER_SEC = 20; // sustained records/second
+const MAX_TOTAL_CLIENTS = 2_000;
+const MAX_CLIENTS_PER_SPACE = 8;  // two phones, a tablet, spare reconnects
 
 export class WebSocketRelay {
   private wss: WebSocketServer;
@@ -56,7 +79,27 @@ export class WebSocketRelay {
             // Re-joining on the same socket replaces the previous membership.
             if (currentClient) this.clients.delete(currentClient);
 
-            currentClient = { ws, userId: message.userId, spaceId: message.spaceId };
+            if (this.clients.size >= MAX_TOTAL_CLIENTS) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Relay at capacity, try again shortly' });
+              ws.close();
+              return;
+            }
+
+            let inSpace = 0;
+            for (const c of this.clients) if (c.spaceId === message.spaceId) inSpace++;
+            if (inSpace >= MAX_CLIENTS_PER_SPACE) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Too many devices in this space' });
+              ws.close();
+              return;
+            }
+
+            currentClient = {
+              ws,
+              userId: message.userId,
+              spaceId: message.spaceId,
+              tokens: RECORD_BURST,
+              lastRefill: Date.now()
+            };
             this.clients.add(currentClient);
 
             this.sendJson(ws, {
@@ -75,6 +118,11 @@ export class WebSocketRelay {
               return;
             }
 
+            if (!consumeToken(currentClient)) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Rate limit exceeded, slow down' });
+              return;
+            }
+
             const record = message.record as StoredRecord;
             if (!isValidRecord(record)) {
               this.sendJson(ws, { type: 'ERROR', error: 'Invalid record' });
@@ -88,8 +136,10 @@ export class WebSocketRelay {
             }
 
             // Commit ciphertext to storage so a partner who is offline right now
-            // still receives it when they next connect.
-            await db.saveRecord(record);
+            // still receives it when they next connect. A storage outage must not
+            // stop live delivery, so forward either way and tell the sender
+            // whether the record actually reached durable storage.
+            const persisted = await db.saveRecordDurable(record);
 
             this.broadcastToSpace(currentClient.spaceId, currentClient.userId, {
               type: 'REMOTE_RECORD',
@@ -99,7 +149,8 @@ export class WebSocketRelay {
             this.sendJson(ws, {
               type: 'RECORD_ACK',
               recordId: record.id,
-              lamportClock: record.lamportClock
+              lamportClock: record.lamportClock,
+              persisted
             });
             return;
           }

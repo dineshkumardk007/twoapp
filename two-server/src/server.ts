@@ -24,10 +24,14 @@ app.use(express.json({ limit: '10mb' }));
 // Healthcheck & Zero-Knowledge Verification
 app.get('/health', (req, res) => {
   res.json({
-    status: 'ok',
+    status: db.isDurable || db.kind === 'memory' ? 'ok' : 'degraded',
     app: 'Two Zero-Knowledge Relay',
     timestamp: new Date().toISOString(),
     storage: db.kind,
+    // durable=false means Postgres is configured but currently unreachable:
+    // the relay still forwards messages, but they are buffered in memory.
+    durable: db.isDurable,
+    pending_writes: db.pendingCount,
     zero_knowledge: true,
     privacy_guarantee: 'The operator cannot read couple content by design.'
   });

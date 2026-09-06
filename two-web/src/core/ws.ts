@@ -15,6 +15,8 @@ export type RelayStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting';
 type StatusCallback = (status: RelayStatus) => void;
 
 const RELAY_DEV_PORT = 4000;
+const MAX_OUTBOX = 500;
+const MAX_APPLIED_IDS = 4_000;
 const HEARTBEAT_MS = 25_000;
 const RECONNECT_BASE_MS = 1_000;
 const RECONNECT_MAX_MS = 30_000;
@@ -82,6 +84,18 @@ class WebSocketRelayClient {
   // strokes and chat messages in the order the partner sent them.
   private inboundChain: Promise<void> = Promise.resolve();
 
+  // Records sent but not yet acknowledged by the relay. Anything written while
+  // the socket is down waits here instead of being dropped, and is replayed on
+  // reconnect - a phone asleep, a tunnel, or a sleeping free-tier server must
+  // not cost the user a message.
+  private outbox: any[] = [];
+
+  // Because the outbox re-sends, the partner can legitimately receive the same
+  // record twice. Handlers like CHAT append blindly, so duplicates are filtered
+  // here rather than in fifty call sites.
+  private appliedIds: string[] = [];
+  private appliedSet = new Set<string>();
+
   connect(creds: SpaceCredentials) {
     const switchingSpace = this.creds?.spaceId !== creds.spaceId;
     this.creds = creds;
@@ -92,7 +106,10 @@ class WebSocketRelayClient {
       if (state === WebSocket.OPEN || state === WebSocket.CONNECTING) return;
     }
 
-    if (switchingSpace) this.teardownSocket();
+    if (switchingSpace) {
+      this.teardownSocket();
+      this.restoreOutbox(creds.spaceId);
+    }
     this.open();
   }
 
@@ -125,6 +142,9 @@ class WebSocketRelayClient {
       });
 
       this.startHeartbeat();
+
+      // Deliver anything written while we were offline.
+      this.flushOutbox();
     };
 
     socket.onmessage = (event) => {
@@ -154,6 +174,15 @@ class WebSocketRelayClient {
       return;
     }
 
+    if (payload?.type === 'RECORD_ACK' && payload.recordId) {
+      // Confirmed by the relay, so stop re-sending it. `persisted: false` means
+      // the relay took it but its database is down; it stays deliverable live,
+      // and the relay flushes it to storage on recovery.
+      this.ackRecord(payload.recordId);
+      this.emit(payload);
+      return;
+    }
+
     if (payload?.type !== 'REMOTE_RECORD' || !payload.record) {
       this.emit(payload);
       return;
@@ -163,6 +192,11 @@ class WebSocketRelayClient {
     if (!creds) return;
 
     const record = payload.record;
+
+    // A re-sent or replayed record must not be applied twice; handlers such as
+    // CHAT append unconditionally.
+    if (!record.id || !this.markApplied(record.id)) return;
+
     try {
       const plaintext = await decryptText(
         record.payload,
@@ -188,7 +222,8 @@ class WebSocketRelayClient {
 
   private async encryptAndSend(type: string, data: any) {
     const creds = this.creds;
-    if (!creds || !this.isOpen()) return;
+    // No credentials means no key, so there is nothing safe to queue.
+    if (!creds) return;
 
     const recordId =
       typeof window.crypto.randomUUID === 'function'
@@ -206,24 +241,86 @@ class WebSocketRelayClient {
 
       this.lamport = Math.max(this.lamport + 1, Date.now());
 
-      this.rawSend({
-        type: 'RECORD',
+      const record = {
+        id: recordId,
         spaceId: creds.spaceId,
-        record: {
-          id: recordId,
-          spaceId: creds.spaceId,
-          authorId: creds.role,
-          type,
-          payload: ciphertext,
-          nonce,
-          lamportClock: this.lamport,
-          clientTs: Date.now(),
-          createdAt: new Date().toISOString()
-        }
-      });
+        authorId: creds.role,
+        type,
+        payload: ciphertext,
+        nonce,
+        lamportClock: this.lamport,
+        clientTs: Date.now(),
+        createdAt: new Date().toISOString()
+      };
+
+      this.enqueue(record);
+      this.flushOutbox();
     } catch (e) {
       console.error('[Relay] Encryption failed', e);
     }
+  }
+
+  private enqueue(record: any) {
+    this.outbox.push(record);
+    if (this.outbox.length > MAX_OUTBOX) this.outbox.shift();
+    this.persistOutbox();
+  }
+
+  /** Sends everything still awaiting acknowledgement. Safe to call repeatedly. */
+  private flushOutbox() {
+    if (!this.isOpen() || !this.creds) return;
+    for (const record of this.outbox) {
+      this.rawSend({ type: 'RECORD', spaceId: record.spaceId, record });
+    }
+  }
+
+  private ackRecord(recordId: string) {
+    const before = this.outbox.length;
+    this.outbox = this.outbox.filter(r => r.id !== recordId);
+    if (this.outbox.length !== before) this.persistOutbox();
+  }
+
+  private outboxKey(spaceId: string) {
+    return `two_relay_outbox_${spaceId}`;
+  }
+
+  // The queue holds ciphertext, so persisting it across reloads costs nothing
+  // in confidentiality and means closing the tab offline does not lose work.
+  private persistOutbox() {
+    if (!this.creds) return;
+    try {
+      const key = this.outboxKey(this.creds.spaceId);
+      if (this.outbox.length === 0) localStorage.removeItem(key);
+      else localStorage.setItem(key, JSON.stringify(this.outbox));
+    } catch {
+      /* quota or private mode - delivery falls back to this session only */
+    }
+  }
+
+  private restoreOutbox(spaceId: string) {
+    try {
+      const raw = localStorage.getItem(this.outboxKey(spaceId));
+      this.outbox = raw ? JSON.parse(raw) : [];
+    } catch {
+      this.outbox = [];
+    }
+  }
+
+  /** Returns false when this record was already applied (a re-send or replay overlap). */
+  private markApplied(recordId: string): boolean {
+    if (this.appliedSet.has(recordId)) return false;
+    this.appliedSet.add(recordId);
+    this.appliedIds.push(recordId);
+    if (this.appliedIds.length > MAX_APPLIED_IDS) {
+      const evicted = this.appliedIds.shift();
+      if (evicted) this.appliedSet.delete(evicted);
+    }
+    return true;
+  }
+
+  /** Number of records written but not yet confirmed by the relay. */
+  getPendingCount(): number {
+    return this.outbox.length;
   }
 
   private rawSend(data: any) {
@@ -350,6 +447,17 @@ class WebSocketRelayClient {
     return this.status;
   }
 
+  reconnectNow() {
+    if (this.stopped || !this.creds) return;
+    if (this.isOpen()) {
+      this.rawSend({ type: 'PING' });
+      return;
+    }
+    this.reconnectAttempts = 0;
+    this.teardownSocket();
+    this.open();
+  }
+
   subscribe(callback: MessageCallback) {
     this.listeners.add(callback);
     return () => {
@@ -367,3 +475,17 @@ class WebSocketRelayClient {
 }
 
 export const wsRelay = new WebSocketRelayClient();
+
+// Immediately wake up and reconnect when returning to the tab on mobile browsers or regaining network
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      wsRelay.reconnectNow();
+    }
+  });
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    wsRelay.reconnectNow();
+  });
+}
