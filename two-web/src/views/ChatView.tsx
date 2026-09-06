@@ -6,6 +6,20 @@ import { HeartOptionsModal } from '../components/HeartOptionsModal';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
 import { Send, Plus, Sparkles, Mic, Square, Trash2, Heart, Feather } from 'lucide-react';
 
+// Five playful, five affectionate. Kept short so the row never scrolls on a phone.
+const QUICK_EMOJIS: { char: string; label: string }[] = [
+  { char: '😂', label: 'Laughing' },
+  { char: '🤣', label: 'Rolling laughing' },
+  { char: '😜', label: 'Playful' },
+  { char: '🙃', label: 'Upside down' },
+  { char: '😭', label: 'Crying' },
+  { char: '❤️', label: 'Heart' },
+  { char: '😍', label: 'Adoring' },
+  { char: '🥰', label: 'Loved' },
+  { char: '😘', label: 'Kiss' },
+  { char: '🫶', label: 'Heart hands' }
+];
+
 interface ChatViewProps {
   messages: ChatMessage[];
   activeUser: 'user' | 'partner';
@@ -203,8 +217,27 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Quick emoji row. Tapping appends to the draft rather than sending, so a
+          few can be combined or wrapped in words before it goes. */}
+      {!isRecording && (
+        <div className="px-4 pt-3 border-t border-linen-border bg-linen-surface flex items-center gap-1 overflow-x-auto">
+          {QUICK_EMOJIS.map(({ char, label }) => (
+            <button
+              key={char}
+              type="button"
+              onClick={() => setInputText(t => t + char)}
+              aria-label={label}
+              title={label}
+              className="shrink-0 w-9 h-9 rounded-xl text-lg leading-none flex items-center justify-center hover:bg-linen-variant active:scale-90 transition-all cursor-pointer"
+            >
+              {char}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Input Bar */}
-      <div className="p-4 border-t border-linen-border bg-linen-surface flex items-center space-x-2">
+      <div className="p-4 pt-2 border-t-0 bg-linen-surface flex items-center space-x-2">
         {isRecording ? (
           /* Live Recording Controls */
           <div className="flex-1 flex items-center justify-between px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 animate-pulse">
