@@ -96,6 +96,14 @@ export interface SpaceState {
    * forever.
    */
   partnerReadAt: number;
+  /**
+   * True once anything has ever arrived from the partner.
+   *
+   * A space with an account but no partner looks identical to a broken one:
+   * everything connects, nothing syncs. This is what lets the app say which it
+   * is instead of leaving you guessing.
+   */
+  partnerEverSeen: boolean;
 }
 
 const DEFAULT_STATE: SpaceState = {
@@ -106,6 +114,7 @@ const DEFAULT_STATE: SpaceState = {
   pinEnabled: false,
   vaultName: '',
   partnerReadAt: 0,
+  partnerEverSeen: false,
   userReport: {
     weather: 'CALM',
     capacity: 4,
@@ -1050,6 +1059,7 @@ export function loadState(): SpaceState {
       pinEnabled: parsed.pinEnabled !== undefined ? parsed.pinEnabled : !!parsed.appPin,
       vaultName: parsed.vaultName || '',
       partnerReadAt: parsed.partnerReadAt || 0,
+      partnerEverSeen: parsed.partnerEverSeen || false,
       rituals: parsed.rituals || DEFAULT_STATE.rituals,
       pebbles: parsed.pebbles || DEFAULT_STATE.pebbles,
       letters: parsed.letters || DEFAULT_STATE.letters,

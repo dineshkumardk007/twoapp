@@ -20,6 +20,7 @@ import { fetchPendingInvite, acceptInvite } from './core/invites';
 import { registerThisDevice, isThisDeviceRevoked } from './core/devices';
 import { LoginView } from './views/LoginView';
 import { AppDock } from './components/AppDock';
+import { InvitePartnerBanner } from './components/InvitePartnerBanner';
 import { isAndroidApp, formFactor } from './core/platform';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
@@ -270,7 +271,14 @@ export const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authPassword]);
 
-  useEffect(() => wsRelay.subscribePresence(setPartnerOnline), []);
+  useEffect(
+    () =>
+      wsRelay.subscribePresence(online => {
+        setPartnerOnline(online);
+        if (online) setState(prev => (prev.partnerEverSeen ? prev : { ...prev, partnerEverSeen: true }));
+      }),
+    []
+  );
 
   // The relay confirming a record is what turns a pending message into "sent".
   useEffect(
@@ -293,6 +301,8 @@ export const App: React.FC = () => {
       if (msg.type === 'REMOTE_RECORD') {
         const record = msg.record;
         setLastSyncedAt(Date.now());
+        // Anything arriving proves a partner exists on the other end.
+        setState(prev => (prev.partnerEverSeen ? prev : { ...prev, partnerEverSeen: true }));
         try {
           const parsed = JSON.parse(record.payload);
 
@@ -2057,6 +2067,15 @@ export const App: React.FC = () => {
         vaultName={state.vaultName}
         partnerOnline={partnerOnline}
       />
+
+      {isAuthConfigured && session && !state.partnerEverSeen && (
+        <InvitePartnerBanner
+          spaceCode={session.code}
+          userName={state.userName}
+          joinPhrase={session.joinPhrase}
+          onSetJoinPhrase={handleSetJoinPhrase}
+        />
+      )}
 
       {session && isWeakPairingCode(session.code) && (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-4">
