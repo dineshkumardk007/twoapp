@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode, generateJoinPhrase } from '../core/space';
-import { isAuthConfigured } from '../core/auth';
-import { sendInvite } from '../core/invites';
-import { listDevices, revokeDevice, isThisDevice, DeviceRow } from '../core/devices';
 import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
@@ -22,15 +19,10 @@ interface SettingsViewProps {
   onUnpair?: () => void;
   /** Move this space to a freshly generated link code. */
   onRotateCode?: (code: string) => void;
-  /** Signs out of the account and locks the sanctuary. */
-  onSignOut?: () => void;
   /** Display name used when inviting a partner. */
   userName?: string;
   vaultName?: string;
   onRenameVault?: (name: string) => void;
-  /** Words spoken aloud that the server never sees; folded into the content key. */
-  joinPhrase?: string;
-  onSetJoinPhrase?: (phrase: string) => void;
   /** True only when the partner's device is in the space right now. */
   partnerOnline?: boolean;
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
@@ -54,12 +46,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onToggleCamouflage = () => {},
   onUnpair = () => {},
   onRotateCode = () => {},
-  onSignOut,
   userName = '',
   vaultName = '',
   onRenameVault,
-  joinPhrase = '',
-  onSetJoinPhrase,
   partnerOnline = false,
   relayStatus = 'idle',
   lastSyncedAt = null,
@@ -74,30 +63,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [copiedCode, setCopiedCode] = useState(false);
   const [decoyCodeInput, setDecoyCodeInput] = useState(decoyCode);
   const [decoySaved, setDecoySaved] = useState(false);
-  const [devices, setDevices] = useState<DeviceRow[]>([]);
-  const [devicesLoaded, setDevicesLoaded] = useState(false);
-
-  useEffect(() => {
-    if (!isAuthConfigured) return;
-    listDevices().then(d => {
-      setDevices(d);
-      setDevicesLoaded(true);
-    });
-  }, []);
-
-  const handleRevoke = async (deviceId: string) => {
-    if (!window.confirm('Sign this device out? It will be locked the next time it is opened.')) return;
-    if (await revokeDevice(deviceId)) {
-      setDevices(await listDevices());
-    }
-  };
-
   const [nameDraft, setNameDraft] = useState(vaultName);
   const [nameSaved, setNameSaved] = useState(false);
-
-  const [inviteTo, setInviteTo] = useState('');
-  const [inviteState, setInviteState] = useState<'idle' | 'sending' | 'sent'>('idle');
-  const [inviteError, setInviteError] = useState('');
 
   const [rotateMode, setRotateMode] = useState<'idle' | 'new' | 'join'>('idle');
   const [rotateCode, setRotateCode] = useState('');
@@ -143,30 +110,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     relayStatus === 'connecting' ? 'Connecting…' :
     relayStatus === 'reconnecting' ? 'Reconnecting…' : 'Offline';
 
-  const handleInvite = async () => {
-    if (!spaceCode) return;
-    setInviteState('sending');
-    setInviteError('');
-
-    // The invite carries the code through the server, so the phrase - which
-    // never leaves this device - is what keeps the operator out. Mint one now
-    // if this space does not have one yet.
-    let phrase = joinPhrase;
-    if (!phrase && onSetJoinPhrase) {
-      phrase = generateJoinPhrase();
-      onSetJoinPhrase(phrase);
-    }
-
-    const res = await sendInvite(inviteTo, spaceCode, userName);
-    if (res.ok) {
-      setInviteState('sent');
-      setInviteTo('');
-      setTimeout(() => setInviteState('idle'), 4000);
-    } else {
-      setInviteState('idle');
-      setInviteError(res.error || 'Could not send the invitation.');
-    }
-  };
 
   const beginRotation = () => {
     setRotateCode(generatePairingCode());
@@ -348,99 +291,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </dl>
           </div>
 
-          {isAuthConfigured && (
-            <div className="pb-2 border-b border-linen-border/40 space-y-2">
-              <span className="block text-[10px] uppercase tracking-wider font-semibold text-linen-accent">
-                Signed in on
-              </span>
 
-              {!devicesLoaded && <p className="text-[11px] text-linen-secondary">Checking…</p>}
-              {devicesLoaded && devices.length === 0 && (
-                <p className="text-[11px] text-linen-secondary">No other devices yet.</p>
-              )}
-
-              {devices.map(d => (
-                <div
-                  key={d.device_id}
-                  className="flex items-center justify-between bg-linen-surface border border-linen-border rounded-lg px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-linen-primary truncate">
-                      {d.label || 'Unknown device'}
-                      {isThisDevice(d.device_id) && (
-                        <span className="ml-1.5 text-[10px] text-emerald-700 font-semibold">this one</span>
-                      )}
-                    </p>
-                    <p className="text-[10px] text-linen-secondary">
-                      {d.revoked_at
-                        ? 'Signed out'
-                        : `Last used ${new Date(d.last_seen_at).toLocaleDateString()}`}
-                    </p>
-                  </div>
-
-                  {!isThisDevice(d.device_id) && !d.revoked_at && (
-                    <button
-                      type="button"
-                      onClick={() => handleRevoke(d.device_id)}
-                      className="shrink-0 ml-2 px-2.5 py-1 rounded-lg border border-linen-border text-[11px] text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
-                    >
-                      Sign out
-                    </button>
-                  )}
-                </div>
-              ))}
-
-              <p className="text-[11px] text-linen-secondary leading-relaxed">
-                Signing a device out takes effect the next time that device is opened — it cannot
-                be reached while it is switched off.
-              </p>
-            </div>
-          )}
-
-          {isAuthConfigured && spaceCode && (
-            <div className="pb-2 border-b border-linen-border/40 space-y-2">
-              <span className="block text-[10px] uppercase tracking-wider font-semibold text-linen-accent">
-                Invite your partner
-              </span>
-              <p className="text-[11px] text-linen-secondary leading-relaxed">
-                Send it to their mobile number or email. When they sign in, their sanctuary joins
-                yours automatically — no code to read out.
-              </p>
-              <input
-                type="text"
-                value={inviteTo}
-                onChange={(e) => setInviteTo(e.target.value)}
-                placeholder="9876543210  or  them@example.com"
-                className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface text-sm text-linen-primary"
-              />
-              {inviteError && <p className="text-[11px] text-rose-700">{inviteError}</p>}
-
-              {joinPhrase && (
-                <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 space-y-1">
-                  <p className="text-[10px] uppercase tracking-wider font-semibold text-amber-900">
-                    Say these four words to them
-                  </p>
-                  <p className="font-mono text-sm font-bold text-amber-950">{joinPhrase}</p>
-                  <p className="text-[10px] text-amber-900 leading-relaxed">
-                    Speak them in person or on a call — never type them into a message. They are
-                    what stops anyone but the two of you reading this space.
-                  </p>
-                </div>
-              )}
-              <button
-                type="button"
-                disabled={inviteState === 'sending' || !inviteTo.trim()}
-                onClick={handleInvite}
-                className="w-full px-2.5 py-2 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
-              >
-                {inviteState === 'sending'
-                  ? 'Sending…'
-                  : inviteState === 'sent'
-                  ? 'Invitation sent'
-                  : 'Send invitation'}
-              </button>
-            </div>
-          )}
 
           {spaceCode && (
             <div className="pb-2 border-b border-linen-border/40">
@@ -572,15 +423,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           Unpair / Reconnect Space
         </button>
 
-        {isAuthConfigured && onSignOut && (
-          <button
-            onClick={onSignOut}
-            className="inline-flex items-center px-3.5 py-2 ml-2 rounded-xl border border-linen-border bg-linen-surface hover:bg-linen-variant text-linen-primary text-xs font-medium transition-colors cursor-pointer"
-          >
-            <Lock className="w-3.5 h-3.5 mr-1.5 text-linen-accent" />
-            Sign out
-          </button>
-        )}
       </div>
 
       {/* Language & Locale Picker */}

@@ -8,7 +8,6 @@ import { pairingRouter } from './routes/pairing.js';
 import { syncRouter } from './routes/sync.js';
 import { WebSocketRelay } from './websocket/relay.js';
 import { db } from './db.js';
-import { isAuthEnforced, primeJwks } from './auth/verifyJwt.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -33,16 +32,11 @@ app.get('/health', (req, res) => {
     // the relay still forwards messages, but they are buffered in memory.
     durable: db.isDurable,
     pending_writes: db.pendingCount,
-    // Content is still encrypted on the device before it reaches this relay, so
-    // the relay itself never sees plaintext. But when accounts are enabled the
-    // pairing code travels through the server in an invite, so the operator is
-    // trusted rather than mathematically excluded. Claiming otherwise would be
-    // untrue.
-    accounts_enabled: isAuthEnforced,
+    // Pairing codes are typed by the couple and never reach this server, so the
+    // keys are derived somewhere the operator cannot see. Records arrive and
+    // are stored as ciphertext.
     encrypted_in_transit_and_at_rest: true,
-    privacy_note: isAuthEnforced
-      ? 'Records are stored as ciphertext. Pairing invitations pass through this server, so the operator is trusted not to read them.'
-      : 'Records are stored as ciphertext and pairing codes never reach this server.'
+    privacy_note: 'Records are stored as ciphertext and pairing codes never reach this server.'
   });
 });
 
@@ -62,10 +56,6 @@ async function start() {
   } catch (err) {
     console.error('[Two Relay Server] Storage initialisation error:', err);
   }
-
-  // Load the signing keys before accepting sockets, so the first sign-in after
-  // a deploy is not the one that pays for the fetch.
-  await primeJwks();
 
   server.listen(PORT, () => {
     console.log(`[Two Relay Server] listening on port ${PORT} (storage: ${db.kind})`);

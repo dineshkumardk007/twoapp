@@ -94,22 +94,12 @@ class WebSocketRelayClient {
   // not cost the user a message.
   private outbox: any[] = [];
 
-  // Supabase access token, when the deployment uses accounts. Kept here rather
-  // than fetched at JOIN time because JOIN runs inside a sync onopen handler.
-  private accessToken: string | null = null;
 
   // Because the outbox re-sends, the partner can legitimately receive the same
   // record twice. Handlers like CHAT append blindly, so duplicates are filtered
   // here rather than in fifty call sites.
   private appliedIds: string[] = [];
   private appliedSet = new Set<string>();
-
-  /** Supplies the token the relay checks on JOIN; reconnects if it changed. */
-  setAccessToken(token: string | null) {
-    const changed = this.accessToken !== token;
-    this.accessToken = token;
-    if (changed && this.isOpen()) this.reconnectNow();
-  }
 
   connect(creds: SpaceCredentials) {
     const switchingSpace = this.creds?.spaceId !== creds.spaceId;
@@ -153,7 +143,6 @@ class WebSocketRelayClient {
         // Delivery is per device; `role` stays the authorship label.
         userId: getDeviceId(),
         role: this.creds.role,
-        accessToken: this.accessToken,
         // Ask only for what we missed while disconnected, so nothing we have
         // already applied gets replayed and duplicated.
         since: this.loadHighWaterMark(this.creds.spaceId)
@@ -195,15 +184,6 @@ class WebSocketRelayClient {
 
     if (payload?.type === 'PRESENCE') {
       this.setPartnerOnline(Number(payload.peers) > 0);
-      this.emit(payload);
-      return;
-    }
-
-    if (payload?.type === 'UNAUTHORIZED') {
-      // Retrying cannot help until the user signs in again.
-      console.warn('[Relay] Rejected: not signed in');
-      this.stopped = true;
-      this.setStatus('idle');
       this.emit(payload);
       return;
     }

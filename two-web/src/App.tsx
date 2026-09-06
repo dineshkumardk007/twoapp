@@ -1,26 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, SpaceState } from './core/storage';
-import {
-  isAuthConfigured,
-  getAccessToken,
-  getSession as getAuthSession,
-  signOut,
-  saveEscrow,
-  loadEscrow,
-  updateEscrowPayload
-} from './core/auth';
-import {
-  wrapForEscrow,
-  unwrapSecret,
-  generateMasterKey,
-  sealSpaceSecret,
-  openSpaceSecret
-} from './core/keyEscrow';
-import { fetchPendingInvite, acceptInvite } from './core/invites';
-import { registerThisDevice, isThisDeviceRevoked } from './core/devices';
-import { LoginView } from './views/LoginView';
 import { AppDock } from './components/AppDock';
-import { InvitePartnerBanner } from './components/InvitePartnerBanner';
 import { isAndroidApp, formFactor } from './core/platform';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
@@ -155,25 +135,12 @@ export const App: React.FC = () => {
   const [isLocked, setIsLocked] = useState<boolean>(() => hasEncryptedVault());
   const [vaultKey, setVaultKey] = useState<CryptoKey | null>(null);
 
-  // The login password is held in memory only, for the lifetime of the tab. It
-  // is what unlocks the local vault (replacing the old 4-digit PIN) and what
-  // unwraps the pairing code held in escrow, so the app asks for it on every
-  // open even when the Supabase session is still valid.
-  const [authPassword, setAuthPassword] = useState<string | null>(null);
-  const [authError, setAuthError] = useState('');
-  // Opens the escrowed payload. Held in memory for the session so the join
-  // phrase can be re-sealed later without the recovery phrase.
-  const masterKeyRef = useRef<string | null>(null);
 
   // Whether the partner's device is actually in the space right now, and when
   // we last heard anything from them.
   const [partnerOnline, setPartnerOnline] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
 
-  // An invite was found, but the space cannot be opened until the partner
-  // supplies the words that were spoken aloud.
-  const [awaitingPhrase, setAwaitingPhrase] = useState<{ code: string; fromName: string } | null>(null);
-  const [phraseInput, setPhraseInput] = useState('');
   const [isUnlocking, setIsUnlocking] = useState(false);
   // Device storage is full: the app still runs from memory, but nothing is
   // being saved. Silence here would cost the user everything on refresh.
@@ -218,19 +185,6 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  // Hand the relay a token whenever one is available, so a refreshed Supabase
-  // session reconnects without the user doing anything.
-  useEffect(() => {
-    if (!isAuthConfigured) return;
-    let cancelled = false;
-    getAccessToken().then(token => {
-      if (!cancelled) wsRelay.setAccessToken(token);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [authPassword]);
-
   // Derive this couple's room id and content key from the stored pairing code,
   // then join the relay. Nothing is sent until the key exists, so records are
   // never broadcast in the clear.
@@ -251,25 +205,6 @@ export const App: React.FC = () => {
       cancelled = true;
     };
   }, [session, spaceVersion, isLocked]);
-
-  // A device signed out from elsewhere finds out here. Cooperative by nature:
-  // it can only act once it is actually running again.
-  useEffect(() => {
-    if (!isAuthConfigured || !authPassword) return;
-
-    const check = async () => {
-      if (await isThisDeviceRevoked()) {
-        setAuthError('This device was signed out from another device.');
-        await handleSignOut();
-      }
-    };
-
-    void check();
-    const onFocus = () => void check();
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authPassword]);
 
   useEffect(
     () =>
@@ -1679,167 +1614,6 @@ export const App: React.FC = () => {
     setSpaceVersion(v => v + 1);
   };
 
-  /**
-   * Everything that has to happen once an account is confirmed.
-   *
-   * Resolves which space this person belongs to, in priority order:
-   *   1. an escrowed pairing code they already have (restoring a new device)
-   *   2. an invite a partner left for them (joining an existing space)
-   *   3. a freshly generated code (a brand new space)
-   *
-   * The code itself is never asked for and never shown; it is escrowed under
-   * the password and the recovery phrase so it can survive a new device.
-   */
-  const handleAuthenticated = async (
-    password: string,
-    recoveryPhrase: string | null,
-    displayName: string
-  ) => {
-    setAuthError('');
-    wsRelay.setAccessToken(await getAccessToken());
-    void registerThisDevice();
-
-    let code: string | null = null;
-    let role: SpaceRole = 'user';
-
-    try {
-      let joinPhrase: string | undefined;
-
-      const escrow = await loadEscrow();
-      if (escrow) {
-        const master = await unwrapSecret(escrow.wrapped_by_password, password);
-        if (master) {
-          masterKeyRef.current = master;
-          const secret = escrow.payload ? await openSpaceSecret(master, escrow.payload) : null;
-          code = secret?.code || null;
-          joinPhrase = secret?.joinPhrase;
-        }
-        if (!code) {
-          // The account is fine but this password cannot open the escrow, which
-          // means it was changed after the space was sealed.
-          setAuthError(
-            'Your account opened, but this password cannot unlock your sanctuary. Use the password you had when you created it, or restore with your 12-word phrase.'
-          );
-          return;
-        }
-      }
-
-      if (!code) {
-        const invite = await fetchPendingInvite();
-        if (invite) {
-          // The code came through the server, so it is not sufficient on its
-          // own. Ask for the words the partner spoke before opening anything.
-          await acceptInvite(invite.id);
-          setAuthPassword(password);
-          setAwaitingPhrase({ code: invite.code, fromName: invite.from_name || 'Your partner' });
-          return;
-        }
-      }
-
-      const isNewSpace = !code;
-      if (!code) code = generatePairingCode();
-
-      // Only a fresh signup carries a recovery phrase, and that is the only
-      // moment both wrappings can be written together.
-      if (recoveryPhrase) {
-        const master = generateMasterKey();
-        masterKeyRef.current = master;
-        const wrapped = await wrapForEscrow(master, password, recoveryPhrase);
-        await saveEscrow({
-          wrapped_by_password: wrapped.byPassword,
-          wrapped_by_recovery: wrapped.byRecovery,
-          payload: await sealSpaceSecret(master, { code, joinPhrase })
-        });
-      }
-
-      const nextSession: SpaceSession = {
-        code,
-        role,
-        joinPhrase,
-        userName: displayName || state.userName || (role === 'user' ? 'You' : 'Partner')
-      };
-
-      setAuthPassword(password);
-      setSession(nextSession);
-
-      // The password replaces the PIN, so the local vault is keyed on it.
-      if (hasEncryptedVault()) {
-        const opened = await unlockVault(password);
-        if (opened) {
-          setState({ ...opened.payload.state, isPaired: true, activeUser: role, pinEnabled: true });
-          setVaultKey(opened.key);
-          setIsLocked(false);
-        } else {
-          setAuthError('This device holds a sanctuary sealed with a different password.');
-          return;
-        }
-      } else {
-        const nextState: SpaceState = {
-          ...state,
-          isPaired: true,
-          activeUser: role,
-          userName: nextSession.userName || state.userName,
-          pinEnabled: true
-        };
-        setState(nextState);
-        const key = await createVault(password, { state: nextState, session: nextSession });
-        setVaultKey(key);
-        setIsLocked(false);
-        clearState();
-        clearSpaceSession();
-      }
-
-      if (isNewSpace) console.info('[Auth] New sanctuary created for this account.');
-      setSpaceVersion(v => v + 1);
-    } catch (e: any) {
-      console.error('[Auth] Sign-in flow failed', e);
-      setAuthError('Could not open your sanctuary. Check your connection and try again.');
-    }
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    wsRelay.setAccessToken(null);
-    wsRelay.disconnect();
-    setAuthPassword(null);
-    setVaultKey(null);
-    setSession(null);
-    setIsLocked(hasEncryptedVault());
-  };
-
-  /** Adopts a space from an invite once the spoken words are supplied. */
-  const handleJoinWithPhrase = () => {
-    if (!awaitingPhrase) return;
-    const phrase = normalizeJoinPhrase(phraseInput);
-    if (!phrase) return;
-
-    const joined: SpaceSession = {
-      code: awaitingPhrase.code,
-      role: 'partner',
-      joinPhrase: phrase,
-      userName: state.userName || 'Partner'
-    };
-    setSession(joined);
-    setState(prev => ({ ...prev, isPaired: true, activeUser: 'partner' }));
-    setAwaitingPhrase(null);
-    setPhraseInput('');
-    setSpaceVersion(v => v + 1);
-  };
-
-  /** Records the phrase this space uses, so reconnects derive the same key. */
-  const handleSetJoinPhrase = (phrase: string) => {
-    const clean = normalizeJoinPhrase(phrase);
-    setSession(prev => (prev ? { ...prev, joinPhrase: clean } : prev));
-    setSpaceVersion(v => v + 1);
-
-    // Push it into escrow as well, or a laptop signing in later would join the
-    // right room holding the wrong key and see nothing but undecryptable noise.
-    const master = masterKeyRef.current;
-    if (master && session?.code) {
-      void sealSpaceSecret(master, { code: session.code, joinPhrase: clean }).then(updateEscrowPayload);
-    }
-  };
-
   /** Renames the space on both devices. */
   const handleRenameVault = (name: string) => {
     const clean = name.trim().slice(0, 40);
@@ -1861,65 +1635,9 @@ export const App: React.FC = () => {
   // App Lock PIN Screen. The vault is genuinely encrypted, so this is not a
   // comparison against a stored PIN - the PIN derives the key, and a wrong one
   // simply fails to decrypt.
-  // An invite was accepted, but the space stays sealed until the spoken words
-  // arrive. The server delivered the code; it cannot supply this.
-  if (awaitingPhrase) {
-    return (
-      <div className="min-h-screen bg-linen-bg flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
-          <div className="text-center space-y-2">
-            <h1 className="font-serif text-2xl font-medium text-linen-primary">
-              {awaitingPhrase.fromName} invited you
-            </h1>
-            <p className="text-xs text-linen-secondary leading-relaxed">
-              Ask them for the four words shown on their screen, and type them here. They were
-              never sent through the internet, which is what keeps this space private.
-            </p>
-          </div>
 
-          <input
-            type="text"
-            autoFocus
-            value={phraseInput}
-            onChange={(e) => setPhraseInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleJoinWithPhrase()}
-            placeholder="four words they read out"
-            className="w-full px-4 py-3 rounded-2xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary text-base"
-          />
 
-          <button
-            disabled={normalizeJoinPhrase(phraseInput).split(' ').filter(Boolean).length < 2}
-            onClick={handleJoinWithPhrase}
-            className="w-full py-3.5 bg-linen-primary text-linen-surface font-medium rounded-2xl hover:opacity-95 disabled:opacity-50 transition-all cursor-pointer"
-          >
-            Open our space
-          </button>
-
-          <p className="text-[11px] text-linen-secondary text-center leading-relaxed">
-            If the words are wrong you will land in the right place but see nothing — come back
-            here and try again.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Accounts gate everything. The password is held only in memory, so it is
-  // asked for on each open - it is both the sign-in and the device unlock.
-  if (isAuthConfigured && !authPassword) {
-    return (
-      <>
-        {authError && (
-          <div className="fixed top-3 inset-x-3 z-50 max-w-md mx-auto rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 shadow-sm">
-            <p className="text-xs text-rose-900 leading-relaxed">{authError}</p>
-          </div>
-        )}
-        <LoginView onAuthenticated={handleAuthenticated} />
-      </>
-    );
-  }
-
-  if (isLocked && !isAuthConfigured) {
+  if (isLocked) {
     const handlePinInput = (val: string) => {
       if (isUnlocking) return;
       const next = (pinAttempt + val).slice(0, 4);
@@ -2067,15 +1785,6 @@ export const App: React.FC = () => {
         vaultName={state.vaultName}
         partnerOnline={partnerOnline}
       />
-
-      {isAuthConfigured && session && !state.partnerEverSeen && (
-        <InvitePartnerBanner
-          spaceCode={session.code}
-          userName={state.userName}
-          joinPhrase={session.joinPhrase}
-          onSetJoinPhrase={handleSetJoinPhrase}
-        />
-      )}
 
       {session && isWeakPairingCode(session.code) && (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-4">
@@ -2429,12 +2138,9 @@ export const App: React.FC = () => {
             onRotateCode={handleRotateCode}
             vaultName={state.vaultName}
             onRenameVault={handleRenameVault}
-            joinPhrase={session?.joinPhrase || ''}
-            onSetJoinPhrase={handleSetJoinPhrase}
             partnerOnline={partnerOnline}
             relayStatus={relayStatus}
             lastSyncedAt={lastSyncedAt}
-            onSignOut={handleSignOut}
             userName={state.userName}
             onToggleActiveUser={toggleActiveUser}
             decoyCode={decoyCode}
