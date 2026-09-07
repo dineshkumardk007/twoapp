@@ -50,6 +50,18 @@ const RECORD_REFILL_PER_SEC = 20; // sustained records/second
 const MAX_TOTAL_CLIENTS = 2_000;
 const MAX_CLIENTS_PER_SPACE = 8;  // two phones, a tablet, spare reconnects
 
+/**
+ * How often to check that a socket is still attached to a living device.
+ *
+ * A socket was only ever removed when it closed cleanly. A phone that loses
+ * signal, gets killed by the system, or goes into a tunnel sends no close
+ * frame, so its entry sat in the table indefinitely while the device
+ * reconnected alongside it. The presence count is taken from that table, which
+ * is why a couple with two phones could be told four devices were in their
+ * space: two of them were ghosts of themselves.
+ */
+const LIVENESS_INTERVAL_MS = 30_000;
+
 export class WebSocketRelay {
   private wss: WebSocketServer;
   private clients = new Set<SpaceClient>();
@@ -58,12 +70,49 @@ export class WebSocketRelay {
   constructor(wss: WebSocketServer) {
     this.wss = wss;
     this.setupServer();
+    this.startLivenessChecks();
+  }
+
+  /**
+   * Drops sockets whose device has gone without saying so.
+   *
+   * Protocol-level ping, not the JSON PING the app sends: this one is answered
+   * by the socket itself, so it detects a device that has stopped existing
+   * rather than one that has merely stopped talking. A socket that misses a
+   * round is terminated, which fires its close handler and corrects the
+   * presence count for everyone still there.
+   */
+  private startLivenessChecks() {
+    const timer = setInterval(() => {
+      for (const socket of this.wss.clients) {
+        const tracked = socket as WebSocket & { isAlive?: boolean };
+        if (tracked.isAlive === false) {
+          tracked.terminate();
+          continue;
+        }
+        tracked.isAlive = false;
+        try {
+          tracked.ping();
+        } catch {
+          tracked.terminate();
+        }
+      }
+    }, LIVENESS_INTERVAL_MS);
+
+    // A housekeeping timer should never be the reason the process stays up.
+    timer.unref?.();
   }
 
   private setupServer() {
     this.wss.on('connection', (ws: WebSocket) => {
       let currentClient: SpaceClient | null = null;
       const connectionId = this.nextConnectionId++;
+
+      const tracked = ws as WebSocket & { isAlive?: boolean };
+      tracked.isAlive = true;
+      ws.on('pong', () => {
+        tracked.isAlive = true;
+      });
 
       ws.on('message', async (data: Buffer) => {
         if (data.length > MAX_RECORD_BYTES) {
@@ -93,6 +142,26 @@ export class WebSocketRelay {
 
             // Re-joining on the same socket replaces the previous membership.
             if (currentClient) this.clients.delete(currentClient);
+
+            // And a device that reconnects replaces its OWN earlier socket
+            // rather than sitting beside it. Without this, every reconnect
+            // before the liveness check catches up shows as another device in
+            // the space - and the alert about unrecognised devices fires at the
+            // couple's own phones.
+            for (const existing of this.clients) {
+              if (
+                existing.spaceId === message.spaceId &&
+                existing.userId === message.userId &&
+                existing.ws !== ws
+              ) {
+                this.clients.delete(existing);
+                try {
+                  existing.ws.close(4000, 'Replaced by a newer connection from the same device');
+                } catch {
+                  /* already gone */
+                }
+              }
+            }
 
             if (this.clients.size >= MAX_TOTAL_CLIENTS) {
               this.sendJson(ws, { type: 'ERROR', error: 'Relay at capacity, try again shortly' });
