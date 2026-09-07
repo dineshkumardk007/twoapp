@@ -79,6 +79,9 @@ const REVEAL_AT_PERCENT = 52;
 
 const BRUSH_RADIUS = 24;
 
+/** How long the foil takes to dissolve once the card is opened. */
+const FOIL_FADE_MS = 500;
+
 /**
  * Progress is tracked on a fixed grid of cells rather than by counting pixels.
  *
@@ -122,7 +125,62 @@ export const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
   const completedRef = useRef(isCompleted);
   const [scratchPercent, setScratchPercent] = useState<number>(isCompleted ? 100 : 0);
   const [fullyRevealed, setFullyRevealed] = useState<boolean>(isCompleted);
+
+  /**
+   * Kept separate from fullyRevealed so the foil can fade before it goes.
+   *
+   * The canvas carried a 500ms opacity transition and an opacity that dropped
+   * to 0 on reveal - but it was also only mounted while !fullyRevealed, so the
+   * one state change that was supposed to start the fade removed the element
+   * in the same commit. The foil vanished between two frames and the
+   * transition never ran once. This holds the canvas on screen, transparent to
+   * the pointer, for as long as the fade lasts.
+   */
+  const [foilRemoved, setFoilRemoved] = useState<boolean>(isCompleted);
+
+  /**
+   * True once this card was opened by scratching it here and now.
+   *
+   * Reaching the threshold calls onScratchComplete, the parent marks the card
+   * scratched, and isCompleted comes back true on the next render. Without
+   * this flag that arrival is indistinguishable from opening a card that was
+   * already scratched on a previous visit - and the branch that correctly
+   * removes the foil instantly for the latter was tearing it off mid-fade for
+   * the former.
+   */
+  const revealedHereRef = useRef(false);
   const lastSoundTimeRef = useRef<number>(0);
+
+  /**
+   * The pending "tell the parent it is open" call.
+   *
+   * onScratchComplete writes to the app's state, which re-renders this card
+   * from the top and takes this component's own state with it - so anything
+   * this component was in the middle of showing is discarded the instant that
+   * call is made. Handing it over only once the foil has finished dissolving
+   * is what lets the dissolve happen at all.
+   */
+  const completeTimerRef = useRef<any>(null);
+  const onScratchCompleteRef = useRef(onScratchComplete);
+  onScratchCompleteRef.current = onScratchComplete;
+
+  // Leaving the screen mid-fade must not lose the fact that the card was
+  // opened - hand it over immediately instead of dropping it with the timer.
+  useEffect(() => {
+    return () => {
+      if (completeTimerRef.current) {
+        clearTimeout(completeTimerRef.current);
+        completeTimerRef.current = null;
+        onScratchCompleteRef.current();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!fullyRevealed || foilRemoved) return;
+    const timer = setTimeout(() => setFoilRemoved(true), FOIL_FADE_MS);
+    return () => clearTimeout(timer);
+  }, [fullyRevealed, foilRemoved]);
 
   // Paint realistic metallic foil texture
   const paintFoil = useCallback((preserveProgress = false) => {
@@ -237,6 +295,9 @@ export const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       completedRef.current = true;
       setFullyRevealed(true);
       setScratchPercent(100);
+      // Already scratched before this visit: there is no foil to dissolve, so
+      // do not sit through a fade of something that was never on screen.
+      if (!revealedHereRef.current) setFoilRemoved(true);
     }
   }, [isCompleted, paintFoil]);
 
@@ -252,20 +313,24 @@ export const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     const container = containerRef.current;
     if (!container || isCompleted || typeof ResizeObserver === 'undefined') return;
 
-    let first = true;
     const observer = new ResizeObserver(() => {
-      // The observer fires once on attach, when nothing has changed yet.
-      if (first) {
-        first = false;
-        return;
-      }
       const { width, height } = sizeRef.current;
+
+      // Nothing has moved since the last paint. The observer fires once on
+      // attach, and this is usually that fire.
       if (
+        width > 0 &&
         Math.abs(container.clientWidth - width) < 1 &&
         Math.abs(container.clientHeight - height) < 1
       ) {
         return;
       }
+
+      // width === 0 means the card has never been painted: the mount-time
+      // paint found a container with no size yet and bailed out. This fire is
+      // then the only chance to lay the foil down, and skipping it as "the
+      // first one" left the card with no foil at all - content sitting in the
+      // open, and nothing to scratch.
       paintFoil(true);
     });
 
@@ -335,9 +400,13 @@ export const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
 
     if (percent >= REVEAL_AT_PERCENT && !completedRef.current) {
       completedRef.current = true;
+      revealedHereRef.current = true;
       setFullyRevealed(true);
       playRevealChime();
-      onScratchComplete();
+      completeTimerRef.current = setTimeout(() => {
+        completeTimerRef.current = null;
+        onScratchCompleteRef.current();
+      }, FOIL_FADE_MS);
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         try {
           navigator.vibrate([80, 50, 80]);
@@ -400,7 +469,7 @@ export const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       </div>
 
       {/* Foil Scratch Layer */}
-      {!fullyRevealed && (
+      {!foilRemoved && (
         <canvas
           ref={canvasRef}
           onPointerDown={handlePointerDown}
