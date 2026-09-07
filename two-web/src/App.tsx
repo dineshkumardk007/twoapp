@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense, startTransition } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, startTransition } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, forStorage, SpaceState } from './core/storage';
 import { AppDock } from './components/AppDock';
 import { UnknownDeviceAlert } from './components/UnknownDeviceAlert';
@@ -976,6 +976,64 @@ export const App: React.FC = () => {
     if (currentTab === 'chat') sendReadReceipt();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.messages.length, currentTab]);
+
+  /**
+   * Publishes the real height of everything above the main column.
+   *
+   * The chat used to size itself with calc(100dvh - 11rem): a guess at how much
+   * chrome sits above it, in a unit that is wrong on phones. The guess was
+   * already approximate, and it is now wrong in a second way, because the dock
+   * is absent on this screen.
+   *
+   * The measured region covers the header AND the banners that can appear under
+   * it - an unrecognised device, a weak link code, storage being full. Each
+   * comes and goes at runtime, and measuring only the header left the chat
+   * overhanging the bottom of the screen by exactly their height whenever one
+   * was showing.
+   */
+  const headerRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * Publishes the real height of everything above the main column.
+   *
+   * The chat used to size itself with calc(100dvh - 11rem): a guess at how much
+   * chrome sits above it, in a unit that is wrong on phones. It was approximate
+   * to begin with, and wrong in a second way once the dock stopped appearing on
+   * that screen.
+   *
+   * The measured region is the header AND the banners under it - an
+   * unrecognised device, a weak link code, storage full. Each appears and
+   * disappears at runtime, and measuring only the header left the chat hanging
+   * off the bottom of the screen by exactly their height while one showed.
+   *
+   * Measured after every render rather than through a ResizeObserver: every one
+   * of those banners is driven by state, so a render is precisely when the
+   * height can have changed, and there is no observer lifetime to get wrong.
+   * The cost is one getBoundingClientRect against one element.
+   */
+  const publishChromeHeight = () => {
+    const el = headerRef.current;
+    if (!el) return;
+    document.documentElement.style.setProperty(
+      '--two-header-h',
+      `${Math.round(el.getBoundingClientRect().height)}px`
+    );
+  };
+
+  useLayoutEffect(publishChromeHeight);
+
+  // Rotation, window resizing, and the keyboard opening in the app - none of
+  // which re-render anything on their own.
+  useEffect(() => {
+    const onResize = () => publishChromeHeight();
+    window.addEventListener('resize', onResize);
+    window.visualViewport?.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onResize);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelectTab = (tabId: string) => {
     // Screens load as separate chunks, so switching tab can suspend. Marked as
@@ -2061,6 +2119,7 @@ Anyone using the old code loses access, including your partner until you give th
 
   return (
     <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
+      <div ref={headerRef}>
       <Navigation
         currentTab={currentTab}
         onSelectTab={handleSelectTab}
@@ -2115,10 +2174,14 @@ Anyone using the old code loses access, including your partner until you give th
         </div>
       )}
 
+      </div>
+
       <main
-        className={`mx-auto px-4 sm:px-6 py-6 ${inApp ? 'pb-32' : 'pb-20'} ${
-          isTablet ? 'max-w-5xl' : 'max-w-3xl'
-        }`}
+        className={`mx-auto px-4 sm:px-6 ${
+          currentTab === 'chat'
+            ? 'py-4'
+            : `py-6 ${inApp ? 'pb-32' : 'pb-20'}`
+        } ${isTablet ? 'max-w-5xl' : 'max-w-3xl'}`}
       >
         {/* The screens below arrive as separate chunks. Only this region
             waits for one; the navigation around it never moves. */}
@@ -2488,7 +2551,10 @@ Anyone using the old code loses access, including your partner until you give th
       )}
 
       {/* Interactive Story Tour Modal */}
-      {inApp && (
+      {/* Not on chat. The dock costs about a fifth of a phone's height, and
+          chat is the one screen where that height is the content. The top bar
+          is still there, so this is never a dead end. */}
+      {inApp && currentTab !== 'chat' && (
         <AppDock
           currentTab={currentTab}
           onSelectTab={handleSelectTab}

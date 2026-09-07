@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.webkit.*
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -53,7 +54,21 @@ fun TwoWebView(
     }
 
     AndroidView(
-        modifier = modifier.fillMaxSize(),
+        // Keeps the WebView inside the area it is actually allowed to draw in:
+        // below the status bar, above the gesture bar, and above the keyboard.
+        //
+        // The window is edge-to-edge, which on its own means the page paints
+        // under the notification shade and counts that space in 100dvh. It also
+        // means the window never resizes for the keyboard, so adjustResize has
+        // nothing to act on and the page pans instead of shrinking - which is
+        // why the chat slid out of place when the keyboard opened.
+        //
+        // safeDrawing covers system bars, display cutouts and the IME together,
+        // so the WebView shrinks as the keyboard rises and 100dvh inside it is
+        // finally the height you can see.
+        modifier = modifier
+            .fillMaxSize()
+            .safeDrawingPadding(),
         factory = { context ->
             val assetLoader = WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(context))

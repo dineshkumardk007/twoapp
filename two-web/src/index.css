@@ -73,25 +73,23 @@
 /* ---------------------------------------------------------------------------
    Chat shell
    ---------------------------------------------------------------------------
-   The old height was `calc(100vh - 12rem)`: a guess at how much chrome sits
-   around the view, measured against a unit that is wrong on phones. On a small
-   screen that left the composer below the fold, and every address-bar movement
-   resized the box under your thumb.
+   This used to be `calc(100dvh - 11rem)`: a guess at how much chrome sits above
+   the chat, with a second guess for wider screens. It was approximate to begin
+   with, and wrong in a new way once the dock stopped appearing on this screen.
 
-   Sizing from the dynamic viewport instead, with a smaller allowance on phones
-   where there is simply less chrome, keeps the composer on screen and still
-   lets the log take whatever is left. */
+   --two-header-h is published by App from a ResizeObserver on the real header,
+   so the only number left here is the breathing room around the panel, which
+   matches the 1rem of vertical padding the chat view is given. That makes the
+   composer sit exactly on the bottom edge of the visible area on any device,
+   in either orientation.
+
+   Inside the Android app the WebView is now inset for the keyboard as well, so
+   100dvh shrinks as the keyboard rises and the composer rides up with it
+   instead of the page sliding out from underneath. */
 .chat-shell {
-  height: calc(100vh - 11rem);
-  height: calc(100dvh - 11rem);
-  min-height: 20rem;
-}
-
-@media (min-width: 640px) {
-  .chat-shell {
-    height: calc(100vh - 12rem);
-    height: calc(100dvh - 12rem);
-  }
+  height: calc(100vh - var(--two-header-h, 3.5rem) - 2rem);
+  height: calc(100dvh - var(--two-header-h, 3.5rem) - 2rem);
+  min-height: 16rem;
 }
 
 /* ---------------------------------------------------------------------------
