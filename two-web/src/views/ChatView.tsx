@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage, NeedItem } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
-import { Send, Plus, Sparkles, Mic, Square, Trash2, Feather, Check, CheckCheck, Clock, Smile, X } from 'lucide-react';
+import { Send, Sparkles, Mic, Square, Trash2, Feather, Check, CheckCheck, Clock, Smile, X } from 'lucide-react';
 
 /**
  * The picker's contents, grouped the way you would reach for them.
@@ -387,14 +387,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
               title="Emoji"
             >
               <Smile className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={() => setShowNeedModal(true)}
-              className="p-2.5 rounded-xl text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
-              title="Ask for what you need"
-            >
-              <Plus className="w-5 h-5" />
             </button>
 
             <button
