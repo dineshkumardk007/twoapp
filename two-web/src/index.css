@@ -87,8 +87,8 @@
    100dvh shrinks as the keyboard rises and the composer rides up with it
    instead of the page sliding out from underneath. */
 .chat-shell {
-  height: calc(100vh - var(--two-header-h, 3.5rem) - 2rem);
-  height: calc(100dvh - var(--two-header-h, 3.5rem) - 2rem);
+  height: calc(100vh - var(--two-header-h, 3.5rem) - var(--two-dock-h, 0px) - 2rem);
+  height: calc(100dvh - var(--two-header-h, 3.5rem) - var(--two-dock-h, 0px) - 2rem);
   min-height: 16rem;
 }
 

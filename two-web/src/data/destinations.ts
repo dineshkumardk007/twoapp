@@ -80,6 +80,13 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
         { id: 'repair', name: 'Relationship Agreements', desc: 'Gentle boundaries & relationship compass rules', icon: Shield },
         { id: 'stateofunion', name: 'State of Union', desc: 'Weekly or monthly heart-to-heart alignment session', icon: Shield }
       ]
+    },
+    {
+      title: 'Your Space',
+      emoji: '⚙️',
+      items: [
+        { id: 'settings', name: 'Settings', desc: 'Devices, link code, backups & how this space is locked', icon: Settings }
+      ]
     }
   ];
 }

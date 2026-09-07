@@ -27,15 +27,17 @@ interface NavigationProps {
   onOpenDirectory?: () => void;
   partnerName?: string;
   /**
-   * Render the modals but not the bar.
+   * Render a single slim bar instead of the website's full header.
    *
-   * Used by the Android app, where the dock is the navigation and a second full
-   * header on top of it wastes a fifth of the screen. The modals stay, because
-   * SanctuaryToolsModal is the hub that reaches soundscapes, co-regulation, the
-   * mesh, safety numbers, camouflage and the quick exit - dropping this
-   * component entirely would take all of that with it.
+   * Used by the Android app, where the dock is the navigation. The website's
+   * header carries a second row of thirty-two tabs under the brand, and that
+   * row is what made it cost a fifth of a phone screen - not the brand row
+   * itself. So the app keeps the four things that row never had anywhere else
+   * to live (the space's name, whether it is connected, Heart and Tools) and
+   * drops the rest: the tab row, the tour, the spaces button and the quick
+   * exit, all of which the dock or the tools hub already reach.
    */
-  chromeless?: boolean;
+  compact?: boolean;
   /** Incremented by the dock to open the tools hub from outside. */
   openToolsSignal?: number;
   /** Likewise for the heart panel, which also lives inside this component. */
@@ -58,7 +60,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   unreadChatCount = 0,
   onOpenDirectory,
   partnerName = 'Partner',
-  chromeless = false,
+  compact = false,
   openToolsSignal = 0,
   openHeartSignal = 0
 }) => {
@@ -166,7 +168,65 @@ export const Navigation: React.FC<NavigationProps> = ({
     if (openHeartSignal > 0) setShowHeartModal(true);
   }, [openHeartSignal]);
 
-  if (chromeless) return modals;
+  if (compact) {
+    const connected = relayStatus === 'connected';
+    const connecting = relayStatus === 'connecting' || relayStatus === 'reconnecting';
+
+    return (
+      <>
+        <header className="app-topbar sticky top-0 z-40 border-b border-linen-border/70 bg-linen-surface/80 backdrop-blur-md">
+          <div className="flex h-11 items-center justify-between gap-2 px-3">
+            {/* Left: who you are with, and whether the link is up. Tapping it
+                opens safety numbers, exactly as it does on the website. */}
+            <button
+              onClick={() => setShowPairingModal(true)}
+              className="flex min-w-0 items-center gap-1.5 rounded-full px-1 py-1 text-left active:scale-95 transition-transform"
+              title="End-to-end encrypted - tap to verify safety numbers"
+            >
+              <span
+                className={`h-2 w-2 shrink-0 rounded-full ${
+                  connected
+                    ? 'bg-emerald-500'
+                    : connecting
+                    ? 'bg-amber-400 animate-pulse'
+                    : 'bg-stone-400'
+                }`}
+              />
+              <span className="truncate font-serif text-base font-medium tracking-tight text-linen-primary">
+                {vaultName || t.appName}
+              </span>
+              <span className="shrink-0 text-[11px] text-linen-secondary">
+                &middot; {connected ? (partnerOnline ? 'together' : 'synced') : 'connecting'}
+              </span>
+            </button>
+
+            {/* Right: the two panels with no other home. Tools is the hub for
+                soundscapes, co-regulation, the mesh, safety numbers,
+                camouflage and the quick exit. */}
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button
+                onClick={() => setShowHeartModal(true)}
+                className="inline-flex items-center rounded-lg border border-rose-200/90 bg-rose-50/80 px-2.5 py-1 text-xs font-medium text-rose-600 active:scale-95 transition-transform"
+                title="Heart Touch: send a sensory pulse"
+              >
+                <Heart className="mr-1 h-3.5 w-3.5 shrink-0 fill-rose-500 text-rose-500" />
+                <span>Heart</span>
+              </button>
+              <button
+                onClick={() => setShowToolsModal(true)}
+                className="inline-flex items-center rounded-lg border border-linen-border bg-linen-variant/80 px-2.5 py-1 text-xs font-medium text-linen-primary active:scale-95 transition-transform"
+                title="Sanctuary Tools (soundscapes, breathing, camouflage, mesh & more)"
+              >
+                <Compass className="mr-1 h-3.5 w-3.5 shrink-0 text-linen-accent" />
+                <span>Tools</span>
+              </button>
+            </div>
+          </div>
+        </header>
+        {modals}
+      </>
+    );
+  }
 
   return (
     <>

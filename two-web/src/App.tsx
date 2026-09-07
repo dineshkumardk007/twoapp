@@ -2110,7 +2110,7 @@ export const App: React.FC = () => {
     <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
       <div ref={headerRef}>
       <Navigation
-        chromeless={inApp}
+        compact={inApp}
         openToolsSignal={toolsSignal}
         openHeartSignal={heartSignal}
         currentTab={currentTab}
@@ -2534,21 +2534,18 @@ export const App: React.FC = () => {
         </Suspense>
       )}
 
-      {/* Interactive Story Tour Modal */}
-      {/* Not on chat. The dock costs about a fifth of a phone's height, and
-          chat is the one screen where that height is the content. The top bar
-          is still there, so this is never a dead end. */}
-      {inApp && currentTab !== 'chat' && (
+      {/* On every screen, chat included. Chat used to be the exception, on the
+          grounds that the dock ate height the conversation needed - but that
+          made the one screen you live in the one screen you could not leave
+          without going somewhere else first. The chat panel now measures the
+          dock instead of guessing around it, so it costs the conversation
+          exactly the dock's height and nothing more. */}
+      {inApp && (
         <AppDock
           currentTab={currentTab}
           onSelectTab={handleSelectTab}
           unreadChatCount={unreadChatCount}
           isTablet={isTablet}
-          relayStatus={relayStatus}
-          partnerOnline={partnerOnline}
-          vaultName={state.vaultName}
-          onOpenTools={() => setToolsSignal(n => n + 1)}
-          onOpenHeart={() => setHeartSignal(n => n + 1)}
         />
       )}
 
