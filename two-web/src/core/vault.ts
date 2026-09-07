@@ -122,11 +122,21 @@ async function encryptInto(key: CryptoKey, salt: Uint8Array<ArrayBuffer>, payloa
  * Turns on PIN protection: encrypts the payload and returns the key to keep in
  * memory for subsequent writes. The caller is responsible for clearing whatever
  * plaintext copies existed before.
+ *
+ * The payload may be given as a function of the key. Media lives outside the
+ * vault and is encrypted under the same key, so building the payload needs the
+ * key that is about to protect it - and that key does not exist until the salt
+ * is drawn here. Passing a plain payload stays valid for callers with no media
+ * to place, such as a space being created.
  */
-export async function createVault(pin: string, payload: VaultPayload): Promise<CryptoKey> {
+export async function createVault(
+  pin: string,
+  payload: VaultPayload | ((key: CryptoKey) => VaultPayload | Promise<VaultPayload>)
+): Promise<CryptoKey> {
   const salt = randomBytes(16);
   const key = await deriveVaultKey(pin, salt);
-  await encryptInto(key, salt, payload);
+  const resolved = typeof payload === 'function' ? await payload(key) : payload;
+  await encryptInto(key, salt, resolved);
   return key;
 }
 

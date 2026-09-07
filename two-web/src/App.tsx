@@ -1904,6 +1904,68 @@ export const App: React.FC = () => {
     localMesh.broadcastLocally('VAULT_NAME', { name: clean }, state.activeUser);
   };
 
+  /**
+   * Sets, changes, or removes the app-lock PIN after onboarding.
+   *
+   * The PIN was previously offered once, on the screen that creates a space -
+   * which meant the partner who joined was never asked and could not lock
+   * their own device at all, and neither of them could change or remove one
+   * afterwards. It is a property of a device, not of the space, so each of you
+   * sets your own and they need not match.
+   *
+   * A wrong current PIN is caught by trying to open the vault with it. There
+   * is no stored PIN to compare against: the PIN derives the key, and the
+   * wrong one simply fails to decrypt.
+   */
+  const handleUpdatePin = async (
+    currentPin: string | null,
+    nextPin: string | null
+  ): Promise<'ok' | 'wrong-pin' | 'busy' | 'error'> => {
+    if (hasEncryptedVault()) {
+      const opened = await unlockVault(currentPin ?? '');
+      if (!opened) return 'wrong-pin';
+    }
+
+    // Photos and voice memos are encrypted under the vault key, so a new PIN
+    // means writing every one of them again. That needs the bytes themselves,
+    // which are only in memory once hydration has finished.
+    if (!mediaReady) return 'busy';
+
+    try {
+      if (nextPin) {
+        // The old ciphertext cannot be read under the new key, so drop it
+        // first; forStorage below writes every piece back under the new one.
+        await clearMedia();
+
+        const key = await createVault(nextPin, newKey => ({
+          state: forStorage(state, newKey),
+          session
+        }));
+
+        setVaultKey(key);
+        // Remove the plaintext copies this device kept while it had no PIN -
+        // including the link code, which is the key to the whole space.
+        clearState();
+        clearSpaceSession();
+        setState(prev => ({ ...prev, pinEnabled: true }));
+        return 'ok';
+      }
+
+      // Removing the lock: media goes back to being stored unencrypted, so it
+      // has to be rewritten just the same.
+      await clearMedia();
+      destroyVault();
+      setVaultKey(null);
+      setStorageFull(saveState(forStorage({ ...state, pinEnabled: false })).quotaExceeded);
+      if (session) saveSpaceSession(session);
+      setState(prev => ({ ...prev, pinEnabled: false }));
+      return 'ok';
+    } catch (e) {
+      console.error('[Vault] Could not change the app lock', e);
+      return 'error';
+    }
+  };
+
   const handleUnpair = () => {
     if (window.confirm('Are you sure you want to disconnect from this space? You can reconnect anytime using your Space Link Code.')) {
       clearSpaceSession();
@@ -2532,6 +2594,8 @@ export const App: React.FC = () => {
               setDecoyCode(newCode);
               localStorage.setItem('two_decoy_code', newCode);
             }}
+            pinEnabled={!!vaultKey || hasEncryptedVault()}
+            onUpdatePin={handleUpdatePin}
             decoyOnLaunch={decoyOnLaunch}
             onToggleDecoyOnLaunch={handleToggleDecoyOnLaunch}
             autoCamouflageOnBlur={autoCamouflageOnBlur}

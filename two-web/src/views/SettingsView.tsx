@@ -47,6 +47,18 @@ interface SettingsViewProps {
   onToggleAutoCamouflage?: (enabled: boolean) => void;
   decoyOnLaunch?: boolean;
   onToggleDecoyOnLaunch?: (enabled: boolean) => void;
+  /** True when this device already has an app-lock PIN. */
+  pinEnabled?: boolean;
+  /**
+   * Set, change, or remove this device's app-lock PIN.
+   *
+   * Pass the current PIN when one exists and null when it does not; pass null
+   * as the next PIN to remove the lock entirely.
+   */
+  onUpdatePin?: (
+    currentPin: string | null,
+    nextPin: string | null
+  ) => Promise<'ok' | 'wrong-pin' | 'busy' | 'error'>;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -68,6 +80,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   relayStatus = 'idle',
   lastSyncedAt = null,
   connectedDeviceCount = 0,
+  pinEnabled = false,
+  onUpdatePin,
   onToggleActiveUser = () => {},
   decoyCode = '142.85',
   onUpdateDecoyCode,
@@ -99,6 +113,72 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
    * at least one of them is a device you do not know about.
    */
   const moreConnectedThanKnown = connectedDeviceCount > knownDevices.length;
+
+  // App lock. 'idle' shows the buttons; the rest are the open form.
+  const [lockMode, setLockMode] = useState<'idle' | 'set' | 'change' | 'remove'>('idle');
+  const [currentPinInput, setCurrentPinInput] = useState('');
+  const [newPinInput, setNewPinInput] = useState('');
+  const [confirmPinInput, setConfirmPinInput] = useState('');
+  const [lockBusy, setLockBusy] = useState(false);
+  const [lockMessage, setLockMessage] = useState<{ tone: 'ok' | 'bad'; text: string } | null>(null);
+
+  const onlyDigits = (v: string) => v.replace(/\D/g, '').slice(0, 4);
+
+  const closeLockForm = () => {
+    setLockMode('idle');
+    setCurrentPinInput('');
+    setNewPinInput('');
+    setConfirmPinInput('');
+  };
+
+  const submitLockChange = async () => {
+    if (!onUpdatePin || lockBusy) return;
+    setLockMessage(null);
+
+    const removing = lockMode === 'remove';
+    if (!removing) {
+      if (newPinInput.length !== 4) {
+        setLockMessage({ tone: 'bad', text: 'A PIN is four digits.' });
+        return;
+      }
+      if (newPinInput !== confirmPinInput) {
+        setLockMessage({ tone: 'bad', text: 'The two PINs are not the same.' });
+        return;
+      }
+    }
+    if (pinEnabled && currentPinInput.length !== 4) {
+      setLockMessage({ tone: 'bad', text: 'Enter your current PIN first.' });
+      return;
+    }
+
+    setLockBusy(true);
+    const result = await onUpdatePin(
+      pinEnabled ? currentPinInput : null,
+      removing ? null : newPinInput
+    );
+    setLockBusy(false);
+
+    if (result === 'ok') {
+      closeLockForm();
+      setLockMessage({
+        tone: 'ok',
+        text: removing
+          ? 'App lock removed. This device now opens without a PIN.'
+          : 'App lock updated. It applies the next time this app is opened.'
+      });
+      return;
+    }
+
+    setLockMessage({
+      tone: 'bad',
+      text:
+        result === 'wrong-pin'
+          ? 'That is not your current PIN.'
+          : result === 'busy'
+          ? 'Still loading your photos and memos. Try again in a moment.'
+          : 'Could not change the app lock. Nothing was altered.'
+    });
+  };
 
   const [rotationPhrase, setRotationPhrase] = useState('');
   const rotationPhraseCheck = checkJoinPhrase(rotationPhrase);
@@ -396,6 +476,155 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               names are what each device says about itself &mdash; labels, not proof.
             </p>
           </div>
+
+          {/* Device lock.
+              A PIN belongs to the device it is typed on, not to the space: it
+              encrypts what this phone holds, and the two of you can pick
+              different ones, or only one of you can use one at all. It used to
+              be offered once, while creating a space, so whoever joined was
+              never asked and neither of you could change it afterwards. */}
+          {onUpdatePin && (
+            <div className="pt-4 mt-4 border-t border-linen-border/60 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-linen-primary">Device lock</span>
+                <span
+                  className={`text-xs font-medium ${
+                    pinEnabled ? 'text-emerald-700' : 'text-linen-secondary'
+                  }`}
+                >
+                  {pinEnabled ? 'PIN set' : 'No PIN'}
+                </span>
+              </div>
+
+              <p className="text-[11px] text-linen-secondary leading-relaxed">
+                With a PIN, everything this device holds is encrypted with it &mdash; messages,
+                letters, photos, and the link code itself. It is not stored anywhere to be checked
+                against: the wrong PIN simply cannot open the vault. This is your device only, so
+                your partner sets their own, and it does not have to match yours.
+              </p>
+
+              {lockMode === 'idle' ? (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLockMessage(null);
+                      setLockMode(pinEnabled ? 'change' : 'set');
+                    }}
+                    className="px-2.5 py-2 rounded-lg border border-linen-border bg-linen-surface hover:bg-linen-variant text-linen-primary text-[11px] font-medium transition-colors cursor-pointer"
+                  >
+                    {pinEnabled ? 'Change PIN' : 'Set a PIN'}
+                  </button>
+                  {pinEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLockMessage(null);
+                        setLockMode('remove');
+                      }}
+                      className="px-2.5 py-2 rounded-lg border border-linen-border bg-linen-surface hover:bg-rose-50 text-linen-secondary hover:text-rose-700 text-[11px] font-medium transition-colors cursor-pointer"
+                    >
+                      Remove PIN
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2 rounded-xl border border-linen-border/70 bg-linen-variant/30 p-3">
+                  {pinEnabled && (
+                    <label className="block">
+                      <span className="block text-[11px] font-medium text-linen-secondary mb-1">
+                        Current PIN
+                      </span>
+                      <input
+                        type="password"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        value={currentPinInput}
+                        onChange={e => setCurrentPinInput(onlyDigits(e.target.value))}
+                        placeholder="0000"
+                        className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface text-linen-primary text-sm tracking-[0.4em] focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
+                      />
+                    </label>
+                  )}
+
+                  {lockMode !== 'remove' && (
+                    <>
+                      <label className="block">
+                        <span className="block text-[11px] font-medium text-linen-secondary mb-1">
+                          New PIN
+                        </span>
+                        <input
+                          type="password"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          value={newPinInput}
+                          onChange={e => setNewPinInput(onlyDigits(e.target.value))}
+                          placeholder="0000"
+                          className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface text-linen-primary text-sm tracking-[0.4em] focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="block text-[11px] font-medium text-linen-secondary mb-1">
+                          Repeat new PIN
+                        </span>
+                        <input
+                          type="password"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          value={confirmPinInput}
+                          onChange={e => setConfirmPinInput(onlyDigits(e.target.value))}
+                          placeholder="0000"
+                          className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface text-linen-primary text-sm tracking-[0.4em] focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
+                        />
+                      </label>
+                    </>
+                  )}
+
+                  {lockMode === 'remove' && (
+                    <p className="text-[11px] leading-relaxed text-amber-800">
+                      Removing the PIN decrypts this device&rsquo;s vault and leaves it readable to
+                      anyone who picks up the phone. Your history is not deleted.
+                    </p>
+                  )}
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={lockBusy}
+                      onClick={() => void submitLockChange()}
+                      className="flex-1 px-2.5 py-2 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+                    >
+                      {lockBusy
+                        ? 'Working...'
+                        : lockMode === 'remove'
+                        ? 'Remove the lock'
+                        : pinEnabled
+                        ? 'Change it'
+                        : 'Lock this device'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={lockBusy}
+                      onClick={closeLockForm}
+                      className="px-2.5 py-2 rounded-lg border border-linen-border bg-linen-surface text-linen-secondary text-[11px] font-medium hover:bg-linen-variant disabled:opacity-50 transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {lockMessage && (
+                <p
+                  className={`text-[11px] leading-relaxed ${
+                    lockMessage.tone === 'ok' ? 'text-emerald-700' : 'text-rose-700'
+                  }`}
+                >
+                  {lockMessage.text}
+                </p>
+              )}
+            </div>
+          )}
           </div>
 
 
