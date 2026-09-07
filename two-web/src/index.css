@@ -120,28 +120,49 @@
   box-shadow: -10px 0 12px -8px rgb(0 0 0 / 0.16);
 }
 
+/* Every tab carries its destination's full name, on up to two lines, in a box
+   of fixed height. Fixed height is the point: a one-word tab and a two-word tab
+   have to put their icons on the same baseline, or the row ripples as you
+   scroll it. */
+.dock-tab-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  height: 21px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 /* The current tab sits proud of the bar.
    A single light source above-left: a pale top face falling to a warmer bottom,
    a bright inner rim catching the light along the top edge, a darker rim along
-   the bottom where it turns away, and a short contact shadow underneath. That
-   reads as a raised key at a glance without the plastic gloss that dates an
-   interface. The lift is 1px - enough to see, small enough that the row of
-   labels still sits on one line. */
+   the bottom where it turns away, and a contact shadow underneath. That reads
+   as a raised key at a glance without the plastic gloss that dates an
+   interface.
+
+   The size comes from a transform, never from width or padding. A tab that
+   grew its box would push every tab to its right along the rail, so choosing a
+   destination would shuffle the row you chose it from - the exact thing a
+   fixed dock exists to prevent. transform is painted after layout, so this key
+   swells out of the bar and its neighbours do not move a pixel. */
 .dock-tab-active {
   background-image: linear-gradient(180deg, #ffffff 0%, #f2efeb 100%);
   border: 1px solid rgb(255 255 255 / 0.7);
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.12);
+  z-index: 1;
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.95),
     inset 0 -1px 0 rgb(45 49 46 / 0.06),
     0 1px 1px rgb(45 49 46 / 0.07),
-    0 3px 6px -2px rgb(45 49 46 / 0.18);
+    0 4px 10px -3px rgb(45 49 46 / 0.24);
 }
 
 /* The icon lifts a touch further than the key it sits on, which is what sells
    the depth: two planes moving by different amounts. */
 .dock-tab-icon {
-  transform: translateY(-0.5px) scale(1.08);
+  transform: translateY(-0.5px) scale(1.16);
   filter: drop-shadow(0 1px 0.5px rgb(45 49 46 / 0.22));
 }
 

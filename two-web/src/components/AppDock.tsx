@@ -21,8 +21,19 @@ interface AppDockProps {
   onOpenHeart?: () => void;
 }
 
-const FAVOURITES_KEY = 'two_dock_favourites_v1';
-const DEFAULT_FAVOURITES = ['home', 'chat', 'canvas', 'nightstand'];
+/**
+ * The four that lead the rail, then every other destination in the order the
+ * directory lists them.
+ *
+ * Deliberately a constant and not a most-recently-used list. The bar used to
+ * promote whatever you last opened to the front, so the row you had just
+ * learned rearranged itself under your thumb every single time you tapped it -
+ * you could never build muscle memory for a position, because tapping the
+ * position was what destroyed it. A dock is worth having because it is always
+ * the same.
+ */
+const PINNED = ['home', 'chat', 'canvas', 'nightstand'];
+const LEGACY_FAVOURITES_KEY = 'two_dock_favourites_v1';
 
 /**
  * The app's bottom dock: a frosted bar of favourites that pulls up into every
@@ -53,23 +64,13 @@ export const AppDock: React.FC<AppDockProps> = ({
   const [expanded, setExpanded] = useState(false);
   const [search, setSearch] = useState('');
 
-  const [favourites, setFavourites] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(FAVOURITES_KEY);
-      const parsed = raw ? JSON.parse(raw) : null;
-      return Array.isArray(parsed) && parsed.length ? parsed : DEFAULT_FAVOURITES;
-    } catch {
-      return DEFAULT_FAVOURITES;
-    }
-  });
-
   const groups = useMemo(() => getDestinations(unreadChatCount), [unreadChatCount]);
   const flat = useMemo(() => allDestinations(unreadChatCount), [unreadChatCount]);
 
   const railRef = useRef<HTMLDivElement | null>(null);
 
   /**
-   * Every destination, most-used first.
+   * Every destination, in one order that never changes.
    *
    * The bar used to show four and hide the other twenty-eight behind a sheet,
    * which made the sheet the only real way to move around. Now the bar scrolls:
@@ -80,7 +81,7 @@ export const AppDock: React.FC<AppDockProps> = ({
     const seen = new Set<string>();
     const ordered: typeof flat = [];
 
-    for (const id of favourites) {
+    for (const id of PINNED) {
       const found = flat.find(d => d.id === id);
       if (found && !seen.has(found.id)) {
         seen.add(found.id);
@@ -94,7 +95,18 @@ export const AppDock: React.FC<AppDockProps> = ({
       }
     }
     return ordered;
-  }, [favourites, flat]);
+  }, [flat]);
+
+  // Whatever order a device had drifted into is no longer read, so the stored
+  // list is dead weight sitting in localStorage. Clear it once rather than
+  // leave a key behind that looks like it still means something.
+  useEffect(() => {
+    try {
+      localStorage.removeItem(LEGACY_FAVOURITES_KEY);
+    } catch {
+      /* private mode - nothing was stored to begin with */
+    }
+  }, []);
 
   // Jumping somewhere from the sheet should leave that tab visible in the bar,
   // not scrolled off behind the edge with no sign of where you are.
@@ -128,17 +140,6 @@ export const AppDock: React.FC<AppDockProps> = ({
     onSelectTab(id);
     setExpanded(false);
     setSearch('');
-
-    // Promote what you actually use to the bar, most recent first.
-    setFavourites(prev => {
-      const next = [id, ...prev.filter(f => f !== id)].slice(0, 6);
-      try {
-        localStorage.setItem(FAVOURITES_KEY, JSON.stringify(next));
-      } catch {
-        /* private mode - the defaults are fine */
-      }
-      return next;
-    });
   };
 
   const filtered = useMemo(() => {
@@ -301,7 +302,7 @@ export const AppDock: React.FC<AppDockProps> = ({
         <div className={`mx-auto flex items-stretch ${isTablet ? 'max-w-3xl' : ''}`}>
           <div
             ref={railRef}
-            className="dock-rail flex min-w-0 flex-1 items-stretch gap-1 overflow-x-auto px-2 py-1.5"
+            className="dock-rail flex min-w-0 flex-1 items-stretch gap-1.5 overflow-x-auto px-2 py-2"
           >
             {rail.map(item => {
               const Icon = item.icon;
@@ -311,12 +312,12 @@ export const AppDock: React.FC<AppDockProps> = ({
                   key={item.id}
                   data-dock-active={active}
                   onClick={() => go(item.id)}
-                  className={`dock-tab relative flex shrink-0 snap-start flex-col items-center gap-0.5 rounded-2xl py-1.5 transition-all active:scale-90 ${
+                  className={`dock-tab relative flex shrink-0 snap-start flex-col items-center gap-1 rounded-2xl py-1.5 transition-all active:scale-90 ${
                     // Sized so the next tab is always half-visible at the right
                     // edge. That sliver is the only thing telling you the bar
                     // scrolls at all; with tabs sized to divide the width
                     // exactly, it reads as a fixed row of four.
-                    isTablet ? 'w-[88px]' : 'w-[66px]'
+                    isTablet ? 'w-[104px]' : 'w-[80px]'
                   } ${active ? 'dock-tab-active text-linen-primary' : 'text-linen-secondary'}`}
                 >
                   <Icon
@@ -324,12 +325,19 @@ export const AppDock: React.FC<AppDockProps> = ({
                       active ? 'dock-tab-icon text-linen-primary' : 'text-linen-secondary'
                     }`}
                   />
+                  {/* The whole name, the same one the directory sheet and the
+                      screen itself use. It used to be the first word only, so
+                      the bar said "Private" for Private Chat and "State" for
+                      State of Union - you had to already know the map to read
+                      your own position on it. Two lines, clamped, with the box
+                      held at a fixed height so a one-word tab and a two-word
+                      tab sit on the same baseline. */}
                   <span
-                    className={`max-w-full truncate px-1 text-[9px] ${
+                    className={`dock-tab-label px-0.5 text-[9px] leading-[1.15] ${
                       active ? 'font-semibold' : 'font-medium'
                     }`}
                   >
-                    {item.name.split(' ')[0]}
+                    {item.name}
                   </span>
                   {item.badge && (
                     <span className="absolute right-1/4 top-0.5 h-2 w-2 rounded-full bg-rose-500" />
