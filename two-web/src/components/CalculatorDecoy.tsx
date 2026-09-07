@@ -1,14 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface CalculatorDecoyProps {
   onUnlock: () => void;
   secretPin?: string;
+  /**
+   * The way back in when the code has been forgotten.
+   *
+   * Reached by holding the display down, which is not something anyone does to
+   * a calculator by accident. Without it, a mistyped or forgotten code makes
+   * the vault on this device unreachable except by reinstalling, which erases
+   * it - the disguise would have become a lock with no key.
+   */
+  onEscape?: () => void;
 }
+
+const ESCAPE_HOLD_MS = 5000;
 
 export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
   onUnlock,
-  secretPin = '142.85'
+  secretPin = '142.85',
+  onEscape
 }) => {
+  const [askingEscape, setAskingEscape] = useState(false);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [display, setDisplay] = useState('0');
   const [prevValue, setPrevValue] = useState<number | null>(null);
   const [operation, setOperation] = useState<string | null>(null);
@@ -107,6 +121,23 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
     setDisplay(String(parseFloat(display) / 100));
   };
 
+  const beginHold = () => {
+    if (!onEscape || holdTimer.current) return;
+    holdTimer.current = setTimeout(() => {
+      holdTimer.current = null;
+      setAskingEscape(true);
+    }, ESCAPE_HOLD_MS);
+  };
+
+  const cancelHold = () => {
+    if (!holdTimer.current) return;
+    clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+  };
+
+  // A hold interrupted by unmounting must not fire afterwards.
+  useEffect(() => cancelHold, []);
+
   return (
     <div className="min-h-screen app-min-vh bg-neutral-900 text-white flex flex-col items-center justify-center p-4 selection:bg-none">
       <div className="w-full max-w-xs bg-neutral-950 rounded-3xl p-6 shadow-2xl border border-neutral-800 space-y-5">
@@ -121,12 +152,50 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
           </span>
         </div>
 
-        {/* Calculator Display Screen */}
-        <div className="text-right py-4 px-2 overflow-hidden">
+        {/* Calculator Display Screen.
+            Also the escape hatch: held for five seconds it offers a way out,
+            for whoever forgot the code. Nothing about it looks pressable. */}
+        <div
+          className="text-right py-4 px-2 overflow-hidden select-none"
+          onPointerDown={beginHold}
+          onPointerUp={cancelHold}
+          onPointerLeave={cancelHold}
+          onPointerCancel={cancelHold}
+          onContextMenu={e => e.preventDefault()}
+        >
           <span className="font-mono text-4xl sm:text-5xl font-light tracking-tight text-white block truncate">
             {display}
           </span>
         </div>
+
+        {askingEscape && onEscape && (
+          <div className="rounded-2xl border border-neutral-700 bg-neutral-900 p-4 space-y-3">
+            <p className="text-xs leading-relaxed text-neutral-300">
+              Turn off the calculator screen and open Two? You can switch it back
+              on in Settings.
+            </p>
+            <p className="text-[11px] leading-relaxed text-neutral-500">
+              If you set a PIN, you will still be asked for it.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setAskingEscape(false)}
+                className="flex-1 rounded-xl bg-neutral-800 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setAskingEscape(false);
+                  onEscape();
+                }}
+                className="flex-1 rounded-xl bg-neutral-200 px-3 py-2 text-xs font-medium text-neutral-900 hover:bg-white transition-colors"
+              >
+                Open Two
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Keypad Grid */}
         <div className="grid grid-cols-4 gap-2.5 text-sm font-medium select-none">

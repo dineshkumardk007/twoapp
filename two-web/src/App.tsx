@@ -137,7 +137,26 @@ export const App: React.FC = () => {
 
   const [currentTab, setCurrentTab] = useState('home');
   const [theme, setTheme] = useState<ThemeMode>('linen');
-  const [isCamouflaged, setIsCamouflaged] = useState(false);
+  /**
+   * Whether the calculator opens instead of the app.
+   *
+   * Restricted to the Android app deliberately. A browser gives the disguise
+   * away by every means it has - the URL, the history, the tab title - so
+   * opening a website to a calculator only pretends to hide something.
+   */
+  const [decoyOnLaunch, setDecoyOnLaunch] = useState(
+    () => localStorage.getItem('two_decoy_on_launch') === 'true'
+  );
+  const [isCamouflaged, setIsCamouflaged] = useState(
+    () => isAndroidApp() && localStorage.getItem('two_decoy_on_launch') === 'true'
+  );
+
+  /**
+   * The message handler is installed once and would otherwise close over the
+   * camouflage state from the render that installed it.
+   */
+  const isCamouflagedRef = useRef(isCamouflaged);
+  isCamouflagedRef.current = isCamouflaged;
   const [showStoryTour, setShowStoryTour] = useState(false);
   const [locale, setLocale] = useState<Locale>('en');
   // Bumped when pairing completes so the relay effect re-runs and joins the new space.
@@ -358,7 +377,14 @@ export const App: React.FC = () => {
                   tabId: 'chat'
                 });
               }
-              if (typeof document !== 'undefined' && document.hidden) {
+              // Not while disguised: rewriting the tab to "New message from
+              // ..." is exactly the thing the calculator is there to prevent,
+              // and it fires whether or not anyone is looking at the screen.
+              if (
+                typeof document !== 'undefined' &&
+                document.hidden &&
+                !isCamouflagedRef.current
+              ) {
                 document.title = `(1) 💌 New message from ${partnerNameRef.current || 'Partner'}`;
               }
             }
@@ -989,6 +1015,28 @@ export const App: React.FC = () => {
     window.addEventListener('blur', handleBlur);
     return () => window.removeEventListener('blur', handleBlur);
   }, [autoCamouflageOnBlur]);
+
+  const handleToggleDecoyOnLaunch = (enabled: boolean) => {
+    setDecoyOnLaunch(enabled);
+    try {
+      localStorage.setItem('two_decoy_on_launch', String(enabled));
+    } catch {
+      /* private mode - the setting simply will not survive a restart */
+    }
+  };
+
+  /**
+   * The way back in when the code has been forgotten.
+   *
+   * Turns the setting off as well as leaving the calculator, because otherwise
+   * the next launch drops you straight back behind a door you already could not
+   * open. If a PIN is set it still stands directly behind this - the gesture
+   * skips the disguise, never the vault.
+   */
+  const handleDecoyEscape = () => {
+    handleToggleDecoyOnLaunch(false);
+    setIsCamouflaged(false);
+  };
 
   const handleUpdateReport = (updatedFields: any) => {
     wsRelay.broadcastUpdate('WEATHER', updatedFields);
@@ -1709,7 +1757,13 @@ export const App: React.FC = () => {
   }[theme];
 
   if (isCamouflaged) {
-    return <CalculatorDecoy onUnlock={() => setIsCamouflaged(false)} secretPin={decoyCode} />;
+    return (
+      <CalculatorDecoy
+        onUnlock={() => setIsCamouflaged(false)}
+        secretPin={decoyCode}
+        onEscape={handleDecoyEscape}
+      />
+    );
   }
 
   /**
@@ -2401,6 +2455,8 @@ Anyone using the old code loses access, including your partner until you give th
               setDecoyCode(newCode);
               localStorage.setItem('two_decoy_code', newCode);
             }}
+            decoyOnLaunch={decoyOnLaunch}
+            onToggleDecoyOnLaunch={handleToggleDecoyOnLaunch}
             autoCamouflageOnBlur={autoCamouflageOnBlur}
             onToggleAutoCamouflage={(val) => {
               setAutoCamouflageOnBlur(val);

@@ -32,6 +32,8 @@ interface SettingsViewProps {
   onUpdateDecoyCode?: (code: string) => void;
   autoCamouflageOnBlur?: boolean;
   onToggleAutoCamouflage?: (enabled: boolean) => void;
+  decoyOnLaunch?: boolean;
+  onToggleDecoyOnLaunch?: (enabled: boolean) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -56,7 +58,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   decoyCode = '142.85',
   onUpdateDecoyCode,
   autoCamouflageOnBlur = false,
-  onToggleAutoCamouflage
+  onToggleAutoCamouflage,
+  decoyOnLaunch = false,
+  onToggleDecoyOnLaunch
 }) => {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
@@ -520,6 +524,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             Type this sequence into the calculator and press <span className="font-mono font-bold text-linen-primary">=</span> to return to your sanctuary.
           </p>
         </div>
+
+        {/* Open straight to the calculator */}
+        {onToggleDecoyOnLaunch && (
+          <div className="pt-2 border-t border-linen-border/60 flex items-center justify-between">
+            <div className="space-y-0.5 max-w-[80%]">
+              <span className="text-xs font-medium text-linen-primary block">
+                Always open to the calculator
+              </span>
+              <p className="text-[11px] text-linen-secondary leading-normal">
+                Two opens as a calculator every time, until you type the code above.
+                Applies to the installed app only &mdash; a browser gives itself away
+                by its address and history whatever is on screen.
+              </p>
+              <p className="text-[11px] text-linen-secondary/80 leading-normal pt-1">
+                Forgotten the code? Press and hold the calculator&rsquo;s display for
+                five seconds.
+              </p>
+            </div>
+            <button
+              onClick={() => onToggleDecoyOnLaunch(!decoyOnLaunch)}
+              aria-pressed={decoyOnLaunch}
+              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 cursor-pointer shrink-0 ${
+                decoyOnLaunch ? 'bg-linen-primary' : 'bg-linen-border'
+              }`}
+            >
+              <span
+                className={`block w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${
+                  decoyOnLaunch ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        )}
 
         {/* Auto-Camouflage on Tab Blur / App Switch */}
         {onToggleAutoCamouflage && (
