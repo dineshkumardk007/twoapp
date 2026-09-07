@@ -178,29 +178,43 @@ export const Navigation: React.FC<NavigationProps> = ({
       <>
         <header className="app-topbar sticky top-0 z-40 border-b border-linen-border/70 bg-linen-surface/80 backdrop-blur-md">
           <div className="flex h-11 items-center justify-between gap-2 px-3">
-            {/* Left: who you are with, and whether the link is up. Tapping it
-                opens safety numbers, exactly as it does on the website. */}
-            <button
-              onClick={() => setShowPairingModal(true)}
-              className="flex min-w-0 items-center gap-1.5 rounded-full px-1 py-1 text-left active:scale-95 transition-transform"
-              title="End-to-end encrypted - tap to verify safety numbers"
-            >
+            {/* Left: the product name, then the link's state - two things, the
+                way the website has always had them. They were briefly merged
+                into one label, which read fine until a couple named their
+                space: the name they chose replaced the app's own, and there
+                was then nothing on the screen saying what the app was. */}
+            <div className="flex min-w-0 items-center gap-2">
               <span
-                className={`h-2 w-2 shrink-0 rounded-full ${
-                  connected
-                    ? 'bg-emerald-500'
-                    : connecting
-                    ? 'bg-amber-400 animate-pulse'
-                    : 'bg-stone-400'
-                }`}
-              />
-              <span className="truncate font-serif text-base font-medium tracking-tight text-linen-primary">
-                {vaultName || t.appName}
+                onClick={() => onSelectTab('home')}
+                className="shrink-0 cursor-pointer select-none font-serif text-xl font-medium tracking-tight text-linen-primary"
+              >
+                {t.appName}
               </span>
-              <span className="shrink-0 text-[11px] text-linen-secondary">
-                &middot; {connected ? (partnerOnline ? 'together' : 'synced') : 'connecting'}
-              </span>
-            </button>
+
+              <button
+                onClick={() => setShowPairingModal(true)}
+                className="flex min-w-0 items-center gap-1.5 rounded-full border border-linen-border bg-linen-variant px-2 py-1 active:scale-95 transition-transform"
+                title="End-to-end encrypted - tap to verify safety numbers"
+              >
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${
+                    connected
+                      ? 'bg-emerald-500'
+                      : connecting
+                      ? 'bg-amber-400 animate-pulse'
+                      : 'bg-stone-400'
+                  }`}
+                />
+                {vaultName && (
+                  <span className="truncate text-[11px] font-medium text-linen-primary">
+                    {vaultName}
+                  </span>
+                )}
+                <span className="shrink-0 text-[11px] text-linen-secondary">
+                  {connected ? (partnerOnline ? 'together' : 'synced') : 'connecting'}
+                </span>
+              </button>
+            </div>
 
             {/* Right: the two panels with no other home. Tools is the hub for
                 soundscapes, co-regulation, the mesh, safety numbers,
