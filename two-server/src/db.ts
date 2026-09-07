@@ -52,6 +52,8 @@ export interface RelayDb {
   addMemberToSpace(spaceId: string, memberId: string, sealedKey: string): Promise<StoredSpace>;
   saveRecord(record: StoredRecord): Promise<StoredRecord>;
   getRecordsForSpace(spaceId: string, sinceLamport?: number): Promise<StoredRecord[]>;
+  /** Deletes records older than the retention window. Returns how many went. */
+  purgeRecordsOlderThan(days: number): Promise<number>;
   rendezvousTokens: Map<string, RendezvousToken>;
 }
 
@@ -118,6 +120,16 @@ class InMemoryRelayDb implements RelayDb {
     return this.records
       .filter(r => r.spaceId === spaceId && r.lamportClock > sinceLamport)
       .sort((a, b) => a.lamportClock - b.lamportClock);
+  }
+
+  async purgeRecordsOlderThan(days: number) {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    const before = this.records.length;
+    this.records = this.records.filter(r => {
+      const at = r.createdAt ? new Date(r.createdAt).getTime() : Date.now();
+      return Number.isFinite(at) ? at >= cutoff : true;
+    });
+    return before - this.records.length;
   }
 }
 
@@ -314,6 +326,18 @@ class PostgresRelayDb implements RelayDb {
       createdAt: new Date(r.created_at).toISOString()
     }));
   }
+
+  async purgeRecordsOlderThan(days: number) {
+    // created_at is the server's own clock. client_ts is whatever the sending
+    // device believed the time was, and a phone with a wrong clock could
+    // otherwise have its records deleted the moment they arrived.
+    const { rowCount } = await this.pool.query(
+      `DELETE FROM relay_records
+       WHERE created_at < now() - ($1 || ' days')::interval`,
+      [String(days)]
+    );
+    return rowCount ?? 0;
+  }
 }
 
 /**
@@ -362,6 +386,23 @@ class ResilientRelayDb implements RelayDb {
 
   get rendezvousTokens() {
     return this.memory.rendezvousTokens;
+  }
+
+  /**
+   * Trims history past the retention window.
+   *
+   * Skipped entirely while degraded: the buffered writes have not reached
+   * Postgres yet, and deleting from a database we are not currently able to
+   * write to is the wrong move while an outage is in progress.
+   */
+  async purgeRecordsOlderThan(days: number) {
+    if (!this.postgres || !this.healthy) return 0;
+    try {
+      return await this.postgres.purgeRecordsOlderThan(days);
+    } catch (err: any) {
+      console.error('[Relay DB] Retention sweep failed:', err?.message || err);
+      return 0;
+    }
   }
 
   async init() {
