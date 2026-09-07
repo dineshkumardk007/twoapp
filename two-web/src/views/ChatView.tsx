@@ -4,20 +4,56 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
 import { HeartOptionsModal } from '../components/HeartOptionsModal';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
-import { Send, Plus, Sparkles, Mic, Square, Trash2, Heart, Feather, Check, CheckCheck, Clock } from 'lucide-react';
+import { Send, Plus, Sparkles, Mic, Square, Trash2, Heart, Feather, Check, CheckCheck, Clock, Smile, X } from 'lucide-react';
 
-// Five playful, five affectionate. Kept short so the row never scrolls on a phone.
-const QUICK_EMOJIS: { char: string; label: string }[] = [
-  { char: '😂', label: 'Laughing' },
-  { char: '🤣', label: 'Rolling laughing' },
-  { char: '😜', label: 'Playful' },
-  { char: '🙃', label: 'Upside down' },
-  { char: '😭', label: 'Crying' },
-  { char: '❤️', label: 'Heart' },
-  { char: '😍', label: 'Adoring' },
-  { char: '🥰', label: 'Loved' },
-  { char: '😘', label: 'Kiss' },
-  { char: '🫶', label: 'Heart hands' }
+/**
+ * The picker's contents, grouped the way you would reach for them.
+ *
+ * These used to sit in an always-open row above the composer, which spent a
+ * permanent strip of a phone screen on ten characters and still could not
+ * offer an eleventh. Behind a button the same space holds all of this, and
+ * gives it back to the conversation when it is closed.
+ */
+const EMOJI_GROUPS: { title: string; chars: string[] }[] = [
+  {
+    title: 'Us',
+    chars: [
+      '❤️', '🥰', '😘', '😍', '🫂', '🤗', '💋', '💕',
+      '💞', '💝', '🧡', '💛', '💚', '💙', '💜', '🤍'
+    ]
+  },
+  {
+    title: 'Faces',
+    chars: [
+      '😂', '🤣', '😅', '😊', '🙂', '🙃', '😜', '😝',
+      '🤩', '🥳', '😎', '🤔', '😐', '😑', '😶', '🙄',
+      '😬', '😥', '😢', '😭', '😩', '🥺', '😨', '😱',
+      '😠', '😡', '😴', '🤤', '🤒', '🤕', '🤧', '🤯'
+    ]
+  },
+  {
+    title: 'Hands',
+    chars: [
+      '👍', '👎', '👏', '🙌', '🙏', '🤝', '✌️', '🤞',
+      '👋', '🤙', '👆', '👇', '💪', '✍️', '👌', '👊'
+    ]
+  },
+  {
+    title: 'Life',
+    chars: [
+      '🌟', '✨', '🔥', '🎉', '🎊', '🎁', '🎂', '🍾',
+      '☕', '🍵', '🍫', '🍓', '🍊', '🍕', '🍜', '🍦',
+      '🌸', '🌻', '🌹', '🌷', '🌱', '🌳', '🌊', '🌄',
+      '🌙', '☀️', '☁️', '🌧️', '❄️', '🌈', '⭐', '💫'
+    ]
+  },
+  {
+    title: 'Things',
+    chars: [
+      '🎵', '🎶', '📷', '📞', '💤', '🛌', '🏠', '✈️',
+      '🚗', '🧳', '📚', '✏️', '📦', '🔑', '⏰', '🧩'
+    ]
+  }
 ];
 
 interface ChatViewProps {
@@ -50,6 +86,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   partnerName = 'Partner'
 }) => {
   const [inputText, setInputText] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [showHeartModal, setShowHeartModal] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -263,22 +300,49 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick emoji row. Tapping appends to the draft rather than sending, so a
-          few can be combined or wrapped in words before it goes. */}
-      {!isRecording && (
-        <div className="px-4 pt-3 border-t border-linen-border bg-linen-surface flex items-center gap-1 overflow-x-auto">
-          {QUICK_EMOJIS.map(({ char, label }) => (
+      {/* The picker, open only when asked for. It sits between the messages
+          and the composer so the draft you are adding to stays in view, and it
+          is capped at a third of the panel so the conversation never vanishes
+          behind it. Tapping appends rather than sends, so several can be
+          combined, or wrapped in words, before it goes. */}
+      {!isRecording && showEmojiPicker && (
+        <div className="border-t border-linen-border bg-linen-surface">
+          <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
+              Emoji
+            </span>
             <button
-              key={char}
               type="button"
-              onClick={() => setInputText(t => t + char)}
-              aria-label={label}
-              title={label}
-              className="shrink-0 w-9 h-9 rounded-xl text-lg leading-none flex items-center justify-center hover:bg-linen-variant active:scale-90 transition-all cursor-pointer"
+              onClick={() => setShowEmojiPicker(false)}
+              aria-label="Close emoji picker"
+              className="rounded-lg p-1 text-linen-secondary hover:bg-linen-variant active:scale-90 transition-all"
             >
-              {char}
+              <X className="h-4 w-4" />
             </button>
-          ))}
+          </div>
+
+          <div className="max-h-44 overflow-y-auto scroll-contain px-3 pb-2">
+            {EMOJI_GROUPS.map(group => (
+              <div key={group.title} className="mb-1.5">
+                <p className="px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-linen-secondary/70">
+                  {group.title}
+                </p>
+                <div className="grid grid-cols-8 gap-0.5">
+                  {group.chars.map(char => (
+                    <button
+                      key={char}
+                      type="button"
+                      onClick={() => setInputText(t => t + char)}
+                      aria-label={`Add ${char}`}
+                      className="flex h-9 items-center justify-center rounded-xl text-xl leading-none hover:bg-linen-variant active:scale-90 transition-all cursor-pointer"
+                    >
+                      {char}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -312,6 +376,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
         ) : (
           /* Standard Input Bar */
           <>
+            {/* Deliberately the leftmost control, which is exactly where the
+                first emoji of the old row sat - the character you reached for
+                is still under the same thumb, it just opens the rest now. */}
+            <button
+              onClick={() => setShowEmojiPicker(v => !v)}
+              aria-expanded={showEmojiPicker}
+              className={`p-2.5 rounded-xl transition-colors ${
+                showEmojiPicker
+                  ? 'bg-linen-variant text-linen-primary'
+                  : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
+              }`}
+              title="Emoji"
+            >
+              <Smile className="w-5 h-5" />
+            </button>
+
             <button
               onClick={() => setShowNeedModal(true)}
               className="p-2.5 rounded-xl text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
