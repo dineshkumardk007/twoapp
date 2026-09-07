@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage, NeedItem } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
-import { Send, Sparkles, Mic, Square, Trash2, Feather, Check, CheckCheck, Clock, Smile, X } from 'lucide-react';
+import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, X } from 'lucide-react';
 
 /**
  * The picker's contents, grouped the way you would reach for them.
@@ -86,14 +86,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [inputText, setInputText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showNeedModal, setShowNeedModal] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingSeconds, setRecordingSeconds] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const recordingTimerRef = useRef<any>(null);
 
   // Auto-scroll to the bottom whenever a new message is sent or received
   useEffect(() => {
@@ -104,90 +99,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
     if (log) log.scrollTop = log.scrollHeight;
   }, [messages]);
 
-  // Clean up recording timer on unmount
-  useEffect(() => {
-    return () => {
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-    };
-  }, []);
-
   const handleSendText = () => {
     if (!inputText.trim()) return;
     onSendMessage(inputText.trim());
     setInputText('');
-  };
-
-  const startVoiceRecording = async () => {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        fallbackSimulatedVoiceMemo();
-        return;
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = recorder;
-      audioChunksRef.current = [];
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      recorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = () => {
-          const base64Data = reader.result as string;
-          onSendMessage('🎙️ Whisper voice note', false, {
-            isVoiceMemo: true,
-            audioDataUrl: base64Data,
-            audioDurationSeconds: recordingSeconds || 6
-          });
-        };
-        // Stop all audio tracks to release microphone
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      recorder.start();
-      setIsRecording(true);
-      setRecordingSeconds(0);
-
-      recordingTimerRef.current = setInterval(() => {
-        setRecordingSeconds(prev => prev + 1);
-      }, 1000);
-    } catch (err) {
-      console.warn('[Microphone Access Declined or Unavailable - Using Calming Demo Voice Note]', err);
-      fallbackSimulatedVoiceMemo();
-    }
-  };
-
-  const stopVoiceRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-    }
-  };
-
-  const cancelVoiceRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.onstop = null; // discard chunks
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-      setRecordingSeconds(0);
-    }
-  };
-
-  const fallbackSimulatedVoiceMemo = () => {
-    // Elegant fallback simulation when browser microphone is unavailable/blocked
-    onSendMessage('🎙️ Whisper voice note', false, {
-      isVoiceMemo: true,
-      audioDurationSeconds: 8
-    });
   };
 
   return (
@@ -302,7 +217,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           is capped at a third of the panel so the conversation never vanishes
           behind it. Tapping appends rather than sends, so several can be
           combined, or wrapped in words, before it goes. */}
-      {!isRecording && showEmojiPicker && (
+      {showEmojiPicker && (
         <div className="border-t border-linen-border bg-linen-surface">
           <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
@@ -345,34 +260,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {/* Input Bar */}
       <div className="p-4 pt-2 border-t-0 bg-linen-surface flex items-center space-x-2">
-        {isRecording ? (
-          /* Live Recording Controls */
-          <div className="flex-1 flex items-center justify-between px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 animate-pulse">
-            <div className="flex items-center space-x-2 text-rose-700 text-xs font-medium">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block animate-ping" />
-              <span>Recording quiet whisper... {recordingSeconds}s</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={cancelVoiceRecording}
-                className="p-1.5 text-rose-600 hover:text-rose-800 transition-colors"
-                title="Cancel voice memo"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={stopVoiceRecording}
-                className="p-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors flex items-center space-x-1 text-xs px-2.5"
-                title="Finish & send voice memo"
-              >
-                <Square className="w-3 h-3 fill-current" />
-                <span>Send</span>
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Standard Input Bar */
-          <>
             {/* Deliberately the leftmost control, which is exactly where the
                 first emoji of the old row sat - the character you reached for
                 is still under the same thumb, it just opens the rest now. */}
@@ -387,14 +274,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
               title="Emoji"
             >
               <Smile className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={startVoiceRecording}
-              className="p-2.5 rounded-xl text-linen-secondary hover:text-linen-accent hover:bg-linen-variant transition-colors"
-              title="Record a whisper voice memo"
-            >
-              <Mic className="w-5 h-5" />
             </button>
 
             <input
@@ -413,8 +292,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
             >
               <Send className="w-4 h-4" />
             </button>
-          </>
-        )}
       </div>
 
       <NeedMenuModal
