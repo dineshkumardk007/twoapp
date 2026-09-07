@@ -15,6 +15,8 @@ interface SanctuaryToolsModalProps {
   onOpenMesh: () => void;
   onOpenSafetyNumbers: () => void;
   onEmergencyExit: () => void;
+  /** Opens the five-act walkthrough. Absent on surfaces that cannot show it. */
+  onOpenStoryTour?: () => void;
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
   activeUser: 'user' | 'partner';
   vaultName?: string;
@@ -33,6 +35,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   onOpenMesh,
   onOpenSafetyNumbers,
   onEmergencyExit,
+  onOpenStoryTour,
   relayStatus = 'connected',
   activeUser,
   vaultName = '',
@@ -123,6 +126,24 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
         onOpenSafetyNumbers();
       }
     },
+    // Kept here because the home screen only offers the tour on a first run,
+    // and the app has no header button for it. Without this the walkthrough
+    // would be unreachable forever the moment that card was dismissed.
+    ...(onOpenStoryTour
+      ? [{
+          id: 'tour',
+          title: 'Interactive Story Tour',
+          subtitle: 'A Day in the Life with Two - 5-Act Walkthrough',
+          desc: 'Walk through a full day in the sanctuary, act by act, to see how the spaces fit together.',
+          icon: Sparkles,
+          iconColor: 'text-amber-600 bg-amber-50 border-amber-200',
+          actionText: 'Start Tour',
+          action: () => {
+            onClose();
+            onOpenStoryTour();
+          }
+        }]
+      : []),
     {
       id: 'wipe',
       title: 'Emergency Exit',

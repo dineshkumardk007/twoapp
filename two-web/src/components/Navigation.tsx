@@ -139,6 +139,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         onOpenSoundscapes={() => setShowSoundscapeModal(true)}
         onOpenCoRegulation={() => setShowCoRegulationModal(true)}
         onTriggerPulse={onTriggerPulse}
+        onOpenStoryTour={onOpenStoryTour}
         onOpenHeartModal={() => setShowHeartModal(true)}
         onToggleCamouflage={onToggleCamouflage}
         onOpenMesh={() => setShowMeshModal(true)}

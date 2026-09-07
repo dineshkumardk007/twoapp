@@ -77,6 +77,9 @@ import { hydrateMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from
 // Screens are fetched the first time they are opened rather than all at once.
 // Thirty-three of them in a single file meant every one had to arrive before
 // anything could be drawn.
+/** Set the first time the home screen shows the tour card. */
+const TOUR_CARD_SEEN_KEY = 'two_story_tour_card_seen_v1';
+
 const AdventuresView = lazy(() => import('./views/AdventuresView').then(m => ({ default: m.AdventuresView })));
 const CanvasOfUsView = lazy(() => import('./views/CanvasOfUsView').then(m => ({ default: m.CanvasOfUsView })));
 const CareCompassView = lazy(() => import('./views/CareCompassView').then(m => ({ default: m.CareCompassView })));
@@ -157,6 +160,33 @@ export const App: React.FC = () => {
   const isCamouflagedRef = useRef(isCamouflaged);
   isCamouflagedRef.current = isCamouflaged;
   const [showStoryTour, setShowStoryTour] = useState(false);
+
+  /**
+   * The home screen's tour card, shown on a first run and never again.
+   *
+   * Captured once at mount rather than read on every render, so the card cannot
+   * vanish underneath you the moment the flag is written - it stays for the
+   * whole of this run and is gone on the next launch.
+   */
+  const [showTourCard] = useState(() => {
+    try {
+      return localStorage.getItem(TOUR_CARD_SEEN_KEY) !== 'true';
+    } catch {
+      // Private mode: showing it every launch beats hiding it forever.
+      return true;
+    }
+  });
+
+  // Written only once home has actually been on screen. Opening the app
+  // straight into chat and closing it again should not burn the one showing.
+  useEffect(() => {
+    if (!showTourCard || currentTab !== 'home') return;
+    try {
+      localStorage.setItem(TOUR_CARD_SEEN_KEY, 'true');
+    } catch {
+      /* private mode - nothing to remember it with */
+    }
+  }, [showTourCard, currentTab]);
   const [locale, setLocale] = useState<Locale>('en');
   // Bumped when pairing completes so the relay effect re-runs and joins the new space.
   const [spaceVersion, setSpaceVersion] = useState(0);
@@ -2176,7 +2206,7 @@ export const App: React.FC = () => {
             onToggleUserFlag={handleToggleUserFlag}
             onNavigate={setCurrentTab}
             onSendNeed={(need) => handleSendMessage(`I need: ${need.title} — ${need.description}`, true)}
-            onOpenTour={() => setShowStoryTour(true)}
+            onOpenTour={showTourCard ? () => setShowStoryTour(true) : undefined}
             onAddMilestone={handleAddMilestone}
             onSaveComfortBox={handleSaveComfortBox}
           />
