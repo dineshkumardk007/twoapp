@@ -8,6 +8,17 @@ interface AppDockProps {
   unreadChatCount?: number;
   /** Roughly how many favourites fit across the bar. */
   isTablet?: boolean;
+  /**
+   * Everything below is what the top bar used to carry.
+   *
+   * The app has no header any more, so the dock has to answer the two questions
+   * that bar answered: are we connected, and where are the tools.
+   */
+  relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
+  partnerOnline?: boolean;
+  vaultName?: string;
+  onOpenTools?: () => void;
+  onOpenHeart?: () => void;
 }
 
 const FAVOURITES_KEY = 'two_dock_favourites_v1';
@@ -29,8 +40,16 @@ export const AppDock: React.FC<AppDockProps> = ({
   currentTab,
   onSelectTab,
   unreadChatCount = 0,
-  isTablet = false
+  isTablet = false,
+  relayStatus = 'idle',
+  partnerOnline = false,
+  vaultName = '',
+  onOpenTools,
+  onOpenHeart
 }) => {
+  const connected = relayStatus === 'connected';
+  const connecting = relayStatus === 'connecting' || relayStatus === 'reconnecting';
+  const statusLabel = connected ? (partnerOnline ? 'Together' : 'Synced') : 'Connecting';
   const [expanded, setExpanded] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -152,6 +171,50 @@ export const AppDock: React.FC<AppDockProps> = ({
           >
             <div className="shrink-0 px-4 pt-3 pb-2">
               <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-linen-secondary/30" />
+
+              {/* What the header used to say, and the two things worth reaching
+                  from here. Tools is the hub: soundscapes, co-regulation, the
+                  mesh, safety numbers, camouflage and the quick exit all live
+                  behind it. The tour is not here because it has its own card on
+                  the home screen, and the spaces are the dock itself. */}
+              <div className="mb-2.5 flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-1.5 text-xs text-linen-secondary">
+                  <span
+                    className={`h-2 w-2 shrink-0 rounded-full ${
+                      connected ? 'bg-emerald-500' : connecting ? 'bg-amber-400 animate-pulse' : 'bg-stone-400'
+                    }`}
+                  />
+                  <span className="truncate font-medium text-linen-primary">
+                    {vaultName || 'Two'}
+                  </span>
+                  <span className="truncate">&middot; {statusLabel}</span>
+                </span>
+
+                <span className="flex shrink-0 items-center gap-1.5">
+                  {onOpenHeart && (
+                    <button
+                      onClick={() => {
+                        setExpanded(false);
+                        onOpenHeart();
+                      }}
+                      className="rounded-xl border border-linen-border/70 bg-linen-surface/70 px-2.5 py-1.5 text-[11px] font-medium text-linen-secondary active:scale-95 transition-transform"
+                    >
+                      Heart
+                    </button>
+                  )}
+                  {onOpenTools && (
+                    <button
+                      onClick={() => {
+                        setExpanded(false);
+                        onOpenTools();
+                      }}
+                      className="rounded-xl border border-linen-border/70 bg-linen-variant/60 px-2.5 py-1.5 text-[11px] font-medium text-linen-primary active:scale-95 transition-transform"
+                    >
+                      Tools
+                    </button>
+                  )}
+                </span>
+              </div>
 
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
@@ -281,11 +344,21 @@ export const AppDock: React.FC<AppDockProps> = ({
           <div className="dock-all-edge flex shrink-0 items-stretch py-1.5 pl-1 pr-2">
             <button
               onClick={() => setExpanded(true)}
-              aria-label="All destinations"
-              className="flex w-[54px] flex-col items-center justify-center gap-0.5 rounded-2xl text-linen-secondary transition-all active:scale-90"
+              aria-label={`All destinations. ${statusLabel}.`}
+              className="relative flex w-[54px] flex-col items-center justify-center gap-0.5 rounded-2xl text-linen-secondary transition-all active:scale-90"
             >
               <ChevronUp className="h-5 w-5" />
               <span className="text-[9px] font-medium">All</span>
+              {/* Connection state, without needing to open anything. Amber and
+                  grey are worth a glance; green is the resting state and would
+                  only add noise. */}
+              {!connected && (
+                <span
+                  className={`absolute right-2 top-1 h-1.5 w-1.5 rounded-full ${
+                    connecting ? 'bg-amber-400 animate-pulse' : 'bg-stone-400'
+                  }`}
+                />
+              )}
             </button>
           </div>
         </div>

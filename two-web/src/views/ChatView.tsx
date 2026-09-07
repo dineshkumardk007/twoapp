@@ -25,6 +25,12 @@ interface ChatViewProps {
   activeUser: 'user' | 'partner';
   /** Newest sentAt the partner has confirmed reading. */
   partnerReadAt?: number;
+  /**
+   * Connection state, shown here because chat is the one screen with neither
+   * the header nor the dock: without it there would be nothing on screen to say
+   * a message is queued rather than sent.
+   */
+  relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
   onSendMessage: (
     text: string,
     isNeed?: boolean,
@@ -39,6 +45,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   activeUser,
   onSendMessage,
   partnerReadAt = 0,
+  relayStatus = 'connected',
   onOpenSoftLanding,
   partnerName = 'Partner'
 }) => {
@@ -156,8 +163,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <div>
           <h3 className="font-serif text-base font-medium text-linen-primary">{partnerName}</h3>
           <div className="flex items-center text-xs text-linen-secondary space-x-1">
+            {/* Encryption is unconditional, so this dot stays green: it is a
+                statement about the room, not the connection. The connection
+                gets its own words, and only when there is something to say. */}
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
             <span>Encrypted Room</span>
+            {relayStatus !== 'connected' && (
+              <span className="text-amber-700">
+                &middot;{' '}
+                {relayStatus === 'connecting' || relayStatus === 'reconnecting'
+                  ? 'Connecting'
+                  : 'Offline'}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center space-x-2.5">

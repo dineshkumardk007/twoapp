@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, startTransition } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, forStorage, SpaceState } from './core/storage';
 import { AppDock } from './components/AppDock';
-import { UnknownDeviceAlert } from './components/UnknownDeviceAlert';
 import { isAndroidApp, formFactor } from './core/platform';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
@@ -1074,6 +1073,17 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('blur', handleBlur);
   }, [autoCamouflageOnBlur]);
 
+  /**
+   * Bumped by the dock to open the tools hub.
+   *
+   * The hub and its five sibling modals live inside Navigation. In the app that
+   * component renders no bar, but it still has to be mounted, because Tools is
+   * the only route to soundscapes, co-regulation, the mesh, safety numbers,
+   * camouflage and the quick exit.
+   */
+  const [toolsSignal, setToolsSignal] = useState(0);
+  const [heartSignal, setHeartSignal] = useState(0);
+
   const handleToggleDecoyOnLaunch = (enabled: boolean) => {
     setDecoyOnLaunch(enabled);
     try {
@@ -1833,49 +1843,28 @@ export const App: React.FC = () => {
    * both of them. Local history is untouched - it lives in the vault, not in
    * the space.
    */
-  const handleRotateCode = (newCode: string) => {
-    if (!session || newCode === session.code) return;
+  const handleRotateCode = (newCode: string, joinPhrase?: string) => {
+    if (!session || (newCode === session.code && joinPhrase === session.joinPhrase)) return;
 
-    const rotated = { ...session, code: newCode };
+    // An explicit phrase replaces whatever this device had; omitting it keeps
+    // the current one, so rotating your own code does not silently drop it.
+    const rotated = {
+      ...session,
+      code: newCode,
+      joinPhrase: joinPhrase !== undefined ? joinPhrase : session.joinPhrase
+    };
     setSession(rotated);
     if (!vaultKey) saveSpaceSession(rotated);
     setSpaceVersion(v => v + 1);
   };
 
-  const handleApproveDevice = (deviceId: string) => {
-    setState(prev => ({
-      ...prev,
-      knownDevices: prev.knownDevices.map(d => (d.id === deviceId ? { ...d, approved: true } : d)),
-      approvedDeviceCount: Math.max(prev.approvedDeviceCount, occupancy.total || prev.approvedDeviceCount)
-    }));
-  };
 
   /** Accepts the current occupancy as normal, without naming a device. */
-  const handleApproveCount = () => {
-    setState(prev => ({
-      ...prev,
-      approvedDeviceCount: Math.max(prev.approvedDeviceCount, occupancy.total)
-    }));
-  };
 
   /**
    * Rotating is the only response that actually removes someone: it derives a
    * new room and a new key, so the code they hold stops working.
    */
-  const handleRotateFromAlert = () => {
-    const fresh = generatePairingCode();
-    if (
-      !window.confirm(
-        `Change our link code to ${fresh}?
-
-Anyone using the old code loses access, including your partner until you give them this one.`
-      )
-    ) {
-      return;
-    }
-    handleRotateCode(fresh);
-    setState(prev => ({ ...prev, knownDevices: [], approvedDeviceCount: 1 }));
-  };
 
   /** Renames the space on both devices. */
   const handleRenameVault = (name: string) => {
@@ -2121,6 +2110,9 @@ Anyone using the old code loses access, including your partner until you give th
     <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
       <div ref={headerRef}>
       <Navigation
+        chromeless={inApp}
+        openToolsSignal={toolsSignal}
+        openHeartSignal={heartSignal}
         currentTab={currentTab}
         onSelectTab={handleSelectTab}
         activeUser={state.activeUser}
@@ -2138,16 +2130,6 @@ Anyone using the old code loses access, including your partner until you give th
         partnerOnline={partnerOnline}
       />
 
-      {session && (
-        <UnknownDeviceAlert
-          totalDevices={occupancy.total}
-          approvedCount={state.approvedDeviceCount}
-          pending={state.knownDevices.filter(d => !d.approved)}
-          onApprove={handleApproveDevice}
-          onApproveCount={handleApproveCount}
-          onRotateCode={handleRotateFromAlert}
-        />
-      )}
 
       {session && isWeakPairingCode(session.code) && (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-4">
@@ -2208,6 +2190,7 @@ Anyone using the old code loses access, including your partner until you give th
             onOpenSoftLanding={() => setCurrentTab('softlanding')}
             partnerName={state.partnerName || 'Partner'}
             partnerReadAt={state.partnerReadAt}
+            relayStatus={relayStatus}
           />
         )}
 
@@ -2506,6 +2489,7 @@ Anyone using the old code loses access, including your partner until you give th
             onToggleCamouflage={() => setIsCamouflaged(true)}
             onUnpair={handleUnpair}
             onRotateCode={handleRotateCode}
+            connectedDeviceCount={occupancy.total}
             vaultName={state.vaultName}
             onRenameVault={handleRenameVault}
             partnerOnline={partnerOnline}
@@ -2560,6 +2544,11 @@ Anyone using the old code loses access, including your partner until you give th
           onSelectTab={handleSelectTab}
           unreadChatCount={unreadChatCount}
           isTablet={isTablet}
+          relayStatus={relayStatus}
+          partnerOnline={partnerOnline}
+          vaultName={state.vaultName}
+          onOpenTools={() => setToolsSignal(n => n + 1)}
+          onOpenHeart={() => setHeartSignal(n => n + 1)}
         />
       )}
 

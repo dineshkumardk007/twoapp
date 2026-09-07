@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PairingModal } from './PairingModal';
 import { LocalMeshModal } from './LocalMeshModal';
 import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
@@ -26,6 +26,20 @@ interface NavigationProps {
   unreadChatCount?: number;
   onOpenDirectory?: () => void;
   partnerName?: string;
+  /**
+   * Render the modals but not the bar.
+   *
+   * Used by the Android app, where the dock is the navigation and a second full
+   * header on top of it wastes a fifth of the screen. The modals stay, because
+   * SanctuaryToolsModal is the hub that reaches soundscapes, co-regulation, the
+   * mesh, safety numbers, camouflage and the quick exit - dropping this
+   * component entirely would take all of that with it.
+   */
+  chromeless?: boolean;
+  /** Incremented by the dock to open the tools hub from outside. */
+  openToolsSignal?: number;
+  /** Likewise for the heart panel, which also lives inside this component. */
+  openHeartSignal?: number;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -43,7 +57,10 @@ export const Navigation: React.FC<NavigationProps> = ({
   partnerOnline = false,
   unreadChatCount = 0,
   onOpenDirectory,
-  partnerName = 'Partner'
+  partnerName = 'Partner',
+  chromeless = false,
+  openToolsSignal = 0,
+  openHeartSignal = 0
 }) => {
   const [showPairingModal, setShowPairingModal] = useState(false);
   const [showMeshModal, setShowMeshModal] = useState(false);
@@ -87,6 +104,69 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'timeline', label: t.tabs.timeline, icon: Image },
     { id: 'settings', label: t.tabs.settings, icon: Settings },
   ];
+
+  const modals = (
+    <>
+    <PairingModal
+        isOpen={showPairingModal}
+        onClose={() => setShowPairingModal(false)}
+        activeUser={activeUser}
+      />
+
+      <LocalMeshModal
+        isOpen={showMeshModal}
+        onClose={() => setShowMeshModal(false)}
+        activeUser={activeUser}
+      />
+
+      <AmbientSoundscapeModal
+        isOpen={showSoundscapeModal}
+        onClose={() => setShowSoundscapeModal(false)}
+        activeUser={activeUser}
+      />
+
+      <CoRegulationModal
+        isOpen={showCoRegulationModal}
+        onClose={() => setShowCoRegulationModal(false)}
+        activeUser={activeUser}
+      />
+
+      <SanctuaryToolsModal
+        isOpen={showToolsModal}
+        onClose={() => setShowToolsModal(false)}
+        onOpenSoundscapes={() => setShowSoundscapeModal(true)}
+        onOpenCoRegulation={() => setShowCoRegulationModal(true)}
+        onTriggerPulse={onTriggerPulse}
+        onOpenHeartModal={() => setShowHeartModal(true)}
+        onToggleCamouflage={onToggleCamouflage}
+        onOpenMesh={() => setShowMeshModal(true)}
+        onOpenSafetyNumbers={() => setShowPairingModal(true)}
+        onEmergencyExit={onEmergencyExit}
+        relayStatus={relayStatus}
+        activeUser={activeUser}
+        vaultName={vaultName}
+        partnerOnline={partnerOnline}
+      />
+
+      <HeartOptionsModal
+        isOpen={showHeartModal}
+        onClose={() => setShowHeartModal(false)}
+        partnerName={partnerName}
+      />
+    </>
+  );
+
+  // The dock asks for the tools hub by bumping a counter; opening on the value
+  // itself would reopen the modal every time the component re-rendered.
+  useEffect(() => {
+    if (openToolsSignal > 0) setShowToolsModal(true);
+  }, [openToolsSignal]);
+
+  useEffect(() => {
+    if (openHeartSignal > 0) setShowHeartModal(true);
+  }, [openHeartSignal]);
+
+  if (chromeless) return modals;
 
   return (
     <>
@@ -229,53 +309,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
       </div>
     </header>
-
-    <PairingModal
-        isOpen={showPairingModal}
-        onClose={() => setShowPairingModal(false)}
-        activeUser={activeUser}
-      />
-
-      <LocalMeshModal
-        isOpen={showMeshModal}
-        onClose={() => setShowMeshModal(false)}
-        activeUser={activeUser}
-      />
-
-      <AmbientSoundscapeModal
-        isOpen={showSoundscapeModal}
-        onClose={() => setShowSoundscapeModal(false)}
-        activeUser={activeUser}
-      />
-
-      <CoRegulationModal
-        isOpen={showCoRegulationModal}
-        onClose={() => setShowCoRegulationModal(false)}
-        activeUser={activeUser}
-      />
-
-      <SanctuaryToolsModal
-        isOpen={showToolsModal}
-        onClose={() => setShowToolsModal(false)}
-        onOpenSoundscapes={() => setShowSoundscapeModal(true)}
-        onOpenCoRegulation={() => setShowCoRegulationModal(true)}
-        onTriggerPulse={onTriggerPulse}
-        onOpenHeartModal={() => setShowHeartModal(true)}
-        onToggleCamouflage={onToggleCamouflage}
-        onOpenMesh={() => setShowMeshModal(true)}
-        onOpenSafetyNumbers={() => setShowPairingModal(true)}
-        onEmergencyExit={onEmergencyExit}
-        relayStatus={relayStatus}
-        activeUser={activeUser}
-        vaultName={vaultName}
-        partnerOnline={partnerOnline}
-      />
-
-      <HeartOptionsModal
-        isOpen={showHeartModal}
-        onClose={() => setShowHeartModal(false)}
-        partnerName={partnerName}
-      />
+      {modals}
     </>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode, generateJoinPhrase } from '../core/space';
+import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode, generateJoinPhrase, checkJoinPhrase, getDeviceId } from '../core/space';
 import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
@@ -17,8 +17,14 @@ interface SettingsViewProps {
   onSelectLocale?: (locale: Locale) => void;
   onToggleCamouflage?: () => void;
   onUnpair?: () => void;
-  /** Move this space to a freshly generated link code. */
-  onRotateCode?: (code: string) => void;
+  /**
+   * Move this space to another link code.
+   *
+   * The phrase is part of the address, not a setting: switching to a space that
+   * has one without supplying it derives a different room, and nothing on
+   * screen would say why nobody is there.
+   */
+  onRotateCode?: (code: string, joinPhrase?: string) => void;
   /** Display name used when inviting a partner. */
   userName?: string;
   vaultName?: string;
@@ -27,6 +33,13 @@ interface SettingsViewProps {
   partnerOnline?: boolean;
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
   lastSyncedAt?: number | null;
+  /**
+   * Sockets the relay currently counts in this space.
+   *
+   * Comes from the server's own table rather than anything a client says about
+   * itself, which is what makes it the trustworthy half of this pair.
+   */
+  connectedDeviceCount?: number;
   onToggleActiveUser?: () => void;
   decoyCode?: string;
   onUpdateDecoyCode?: (code: string) => void;
@@ -54,6 +67,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   partnerOnline = false,
   relayStatus = 'idle',
   lastSyncedAt = null,
+  connectedDeviceCount = 0,
   onToggleActiveUser = () => {},
   decoyCode = '142.85',
   onUpdateDecoyCode,
@@ -70,6 +84,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [nameDraft, setNameDraft] = useState(vaultName);
   const [nameSaved, setNameSaved] = useState(false);
 
+  const thisDeviceId = getDeviceId();
+  const knownDevices = state.knownDevices || [];
+
+  /**
+   * Whether more sockets are connected than there are devices you have ever
+   * seen.
+   *
+   * The two numbers are not the same kind of thing - the count is live, the
+   * roster is historical - so their difference is not a number of strangers and
+   * must never be printed as one. Some of the devices in the roster may be
+   * switched off right now, which would make the real number higher. As a
+   * threshold it is still sound: if more are connected than you have ever met,
+   * at least one of them is a device you do not know about.
+   */
+  const moreConnectedThanKnown = connectedDeviceCount > knownDevices.length;
+
+  const [rotationPhrase, setRotationPhrase] = useState('');
+  const rotationPhraseCheck = checkJoinPhrase(rotationPhrase);
   const [rotateMode, setRotateMode] = useState<'idle' | 'new' | 'join'>('idle');
   const [rotateCode, setRotateCode] = useState('');
   const [joinRotation, setJoinRotation] = useState('');
@@ -120,10 +152,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setRotateMode('new');
   };
 
-  const applyRotation = (code: string) => {
+  const applyRotation = (code: string, phrase?: string) => {
     const clean = normalizePairingCode(code);
     if (!isPlausiblePairingCode(clean)) return;
-    onRotateCode(clean);
+    onRotateCode(clean, phrase);
     setRotateMode('idle');
     setRotateCode('');
     setJoinRotation('');
@@ -293,6 +325,77 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </dd>
               </div>
             </dl>
+
+          {/* Devices in your space.
+              Two numbers, deliberately shown together. The count is the relay's
+              own socket table and cannot be forged. The names below are what
+              each device chose to say about itself, and only appear for devices
+              that announced themselves at all - so the list can be shorter than
+              the count, and that gap is the fact worth seeing. */}
+          <div className="pt-4 mt-4 border-t border-linen-border/60 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-linen-primary">Devices in your space</span>
+              <span
+                className={`text-xs font-medium ${
+                  moreConnectedThanKnown ? 'text-amber-700' : 'text-emerald-700'
+                }`}
+              >
+                {connectedDeviceCount === 0
+                  ? 'Not connected'
+                  : `${connectedDeviceCount} connected now`}
+              </span>
+            </div>
+
+            {knownDevices.length > 0 ? (
+              <ul className="space-y-1.5">
+                {knownDevices.map(device => (
+                  <li
+                    key={device.id}
+                    className="flex items-center justify-between rounded-xl border border-linen-border/60 bg-linen-variant/30 px-3 py-2"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-xs font-medium text-linen-primary truncate">
+                        {device.label}
+                        {device.id === thisDeviceId && (
+                          <span className="ml-1.5 font-normal text-linen-secondary">· this device</span>
+                        )}
+                      </span>
+                      <span className="block text-[10px] text-linen-secondary">
+                        First seen {new Date(device.firstSeenAt).toLocaleDateString()}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-linen-secondary">
+                No devices have introduced themselves yet. They appear here once both of you have
+                opened the app while connected.
+              </p>
+            )}
+
+            {moreConnectedThanKnown && (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-amber-950">
+                <p className="text-xs font-semibold">
+                  {connectedDeviceCount} devices are connected, but only {knownDevices.length}{' '}
+                  {knownDevices.length === 1 ? 'has' : 'have'} ever introduced{' '}
+                  {knownDevices.length === 1 ? 'itself' : 'themselves'}
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed">
+                  So at least one device here is not one you know about. It may be your own on an
+                  older version. If it is not, anyone with your link code can read everything here,
+                  including past messages, and changing the link code below is the only thing that
+                  shuts them out.
+                </p>
+              </div>
+            )}
+
+            <p className="text-[11px] text-linen-secondary leading-relaxed">
+              The count is live and comes from the relay, so it cannot be faked. The list is every
+              device that has ever introduced itself, whether or not it is on right now, and those
+              names are what each device says about itself &mdash; labels, not proof.
+            </p>
+          </div>
           </div>
 
 
@@ -355,11 +458,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     placeholder="TWO-XXXX-XXXX-XXXX"
                     className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface font-mono text-sm text-linen-primary"
                   />
+                  <input
+                    type="text"
+                    value={rotationPhrase}
+                    onChange={(e) => setRotationPhrase(e.target.value)}
+                    placeholder="spoken phrase, if they gave you one"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    className={`w-full px-3 py-2 rounded-lg border bg-linen-surface font-mono text-sm text-linen-primary ${
+                      rotationPhrase.trim() && rotationPhraseCheck.unknown.length > 0
+                        ? 'border-rose-400'
+                        : 'border-linen-border'
+                    }`}
+                  />
+                  {rotationPhrase.trim() && rotationPhraseCheck.unknown.length > 0 && (
+                    <p className="text-[11px] text-rose-600">
+                      Not one of the words:{' '}
+                      <span className="font-mono font-semibold">
+                        {rotationPhraseCheck.unknown.join(', ')}
+                      </span>
+                    </p>
+                  )}
                   <div className="flex space-x-1.5">
                     <button
                       type="button"
-                      disabled={!isPlausiblePairingCode(joinRotation)}
-                      onClick={() => applyRotation(joinRotation)}
+                      disabled={
+                        !isPlausiblePairingCode(joinRotation) ||
+                        (!!rotationPhrase.trim() && !rotationPhraseCheck.complete)
+                      }
+                      onClick={() =>
+                        applyRotation(
+                          joinRotation,
+                          rotationPhraseCheck.complete ? rotationPhraseCheck.words.join(' ') : undefined
+                        )
+                      }
                       className="flex-1 px-2.5 py-1.5 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
                     >
                       Switch to this code

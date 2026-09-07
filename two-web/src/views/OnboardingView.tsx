@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import {
+  generateJoinPhrase,
+  checkJoinPhrase,
   generatePairingCode,
   normalizePairingCode,
   isPlausiblePairingCode,
@@ -33,6 +35,18 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
     return existingSession?.userName || localStorage.getItem('two_draft_user_name') || '';
   });
   const [pairMode, setPairMode] = useState<PairMode>('choose');
+
+  /**
+   * A spoken phrase that, with the code, decides which room you meet in.
+   *
+   * Empty means no phrase, which is exactly how every space worked before this
+   * existed and still derives the same room. Once set it is not optional for
+   * the other side: the phrase is part of the address, so a partner without it
+   * arrives somewhere else entirely.
+   */
+  const [joinPhrase, setJoinPhrase] = useState('');
+  const [joinPhraseInput, setJoinPhraseInput] = useState('');
+  const phraseCheck = checkJoinPhrase(joinPhraseInput);
   const [createdCode, setCreatedCode] = useState(() => {
     return existingSession?.role === 'user' ? existingSession.code : '';
   });
@@ -67,7 +81,8 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
     const draftSession: SpaceSession = {
       code,
       role: 'user',
-      userName: userName.trim() || 'You'
+      userName: userName.trim() || 'You',
+      joinPhrase: joinPhrase || undefined
     };
     saveSpaceSession(draftSession);
     setSession(draftSession);
@@ -78,7 +93,8 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
     const newSession: SpaceSession = {
       code: activeCode,
       role: 'user',
-      userName: userName.trim() || 'You'
+      userName: userName.trim() || 'You',
+      joinPhrase: joinPhrase || undefined
     };
     saveSpaceSession(newSession);
     setSession(newSession);
@@ -87,11 +103,15 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
 
   const confirmJoin = () => {
     if (!isPlausiblePairingCode(joinCode)) return;
+    // A half-typed phrase is worse than none: it derives a room nobody else is
+    // in, and nothing on screen would ever say so.
+    if (joinPhraseInput.trim() && !phraseCheck.complete) return;
     const cleanCode = normalizePairingCode(joinCode);
     const newSession: SpaceSession = {
       code: cleanCode,
       role: joinRole,
-      userName: userName.trim() || (joinRole === 'user' ? 'You' : 'Partner')
+      userName: userName.trim() || (joinRole === 'user' ? 'You' : 'Partner'),
+      joinPhrase: phraseCheck.complete ? phraseCheck.words.join(' ') : undefined
     };
     saveSpaceSession(newSession);
     setSession(newSession);
@@ -363,6 +383,42 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                   </p>
                 </div>
 
+                  {/* A second secret, deliberately spoken rather than sent.
+                      The code and the phrase together decide which room you
+                      meet in, so this is only worth anything if it travels by a
+                      different route than the code did. */}
+                  <div className="pt-3 mt-3 border-t border-linen-border/60 space-y-2">
+                    {joinPhrase ? (
+                      <div className="space-y-2">
+                        <label className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent block">
+                          Your spoken phrase
+                        </label>
+                        <p className="rounded-xl border border-linen-border bg-linen-variant/40 px-3 py-2.5 text-center font-mono text-sm text-linen-primary">
+                          {joinPhrase}
+                        </p>
+                        <p className="text-[11px] text-linen-secondary leading-relaxed">
+                          <strong className="font-semibold text-linen-primary">Say these words out loud</strong>{' '}
+                          &mdash; do not send them the same way you sent the code. Your partner types
+                          them when joining. Without them, the code alone reaches nobody.
+                        </p>
+                        <button
+                          onClick={() => setJoinPhrase('')}
+                          className="text-[11px] text-linen-secondary hover:text-linen-primary transition-colors cursor-pointer"
+                        >
+                          Remove the phrase
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setJoinPhrase(generateJoinPhrase())}
+                        className="w-full py-2 text-xs text-linen-secondary hover:text-linen-primary transition-colors flex items-center justify-center cursor-pointer"
+                      >
+                        <Lock className="w-3.5 h-3.5 mr-1" />
+                        <span>Optional: add a spoken phrase</span>
+                      </button>
+                    )}
+                  </div>
+
                 <div className="space-y-2">
                   <button
                     onClick={confirmCreate}
@@ -372,12 +428,14 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </button>
 
+
                   <button
                     onClick={() => {
                       const newSession: SpaceSession = {
                         code: createdCode,
                         role: 'user',
-                        userName: userName.trim() || 'You'
+                        userName: userName.trim() || 'You',
+                        joinPhrase: joinPhrase || undefined
                       };
                       setSession(newSession);
                       setStep('pin');
@@ -423,6 +481,50 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                     className="w-full px-4 py-3.5 rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary text-lg font-mono text-center tracking-wider"
                   />
 
+
+                  {/* The phrase, if there is one. Checked word by word as it is
+                      typed, because getting it wrong does not fail loudly: it
+                      derives a room nobody else is in, which on screen looks
+                      exactly like a partner who never arrived. */}
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-linen-secondary block">
+                      Spoken phrase (only if they gave you one)
+                    </label>
+                    <input
+                      type="text"
+                      value={joinPhraseInput}
+                      onChange={(e) => setJoinPhraseInput(e.target.value)}
+                      placeholder="four words, said aloud"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      className={`w-full px-4 py-3 rounded-xl border bg-linen-variant/40 focus:outline-hidden focus:ring-2 text-linen-primary text-sm font-mono text-center ${
+                        joinPhraseInput.trim() && phraseCheck.unknown.length > 0
+                          ? 'border-rose-400 focus:ring-rose-400'
+                          : 'border-linen-border focus:ring-linen-primary'
+                      }`}
+                    />
+                    {joinPhraseInput.trim() && phraseCheck.unknown.length > 0 && (
+                      <p className="text-[11px] text-rose-600 leading-relaxed">
+                        Not one of the words:{' '}
+                        <span className="font-mono font-semibold">
+                          {phraseCheck.unknown.join(', ')}
+                        </span>
+                        . Check the spelling with them &mdash; a wrong word connects you to nothing.
+                      </p>
+                    )}
+                    {joinPhraseInput.trim() &&
+                      phraseCheck.unknown.length === 0 &&
+                      !phraseCheck.complete && (
+                        <p className="text-[11px] text-linen-secondary">
+                          {phraseCheck.words.length} of 4 words.
+                        </p>
+                      )}
+                    {phraseCheck.complete && (
+                      <p className="text-[11px] text-emerald-700">All four words recognised.</p>
+                    )}
+                  </div>
+
                   {/* Device / Role Selector to avoid duplicate partner roles */}
                   <div className="space-y-1.5 pt-1">
                     <label className="text-[11px] font-semibold uppercase tracking-wider text-linen-secondary block">
@@ -465,7 +567,12 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
 
                 <button
                   onClick={confirmJoin}
-                  disabled={!isPlausiblePairingCode(joinCode)}
+                  // A partly-typed phrase would derive a room nobody is in, and
+                  // nothing afterwards would say so. Better to refuse now.
+                  disabled={
+                    !isPlausiblePairingCode(joinCode) ||
+                    (!!joinPhraseInput.trim() && !phraseCheck.complete)
+                  }
                   className="w-full py-3.5 bg-linen-primary text-linen-surface font-medium rounded-xl hover:opacity-95 disabled:opacity-50 transition-all flex items-center justify-center shadow-xs cursor-pointer"
                 >
                   <span>Connect &amp; Enter Sanctuary</span>

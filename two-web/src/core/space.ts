@@ -68,6 +68,35 @@ export function generateJoinPhrase(): string {
   return words.join(' ');
 }
 
+/** Every word the phrase may be built from, for checking what was typed. */
+const JOIN_PHRASE_WORDS_SET = new Set(BIP39_WORDS.map(w => w.toLowerCase()));
+
+export interface JoinPhraseCheck {
+  words: string[];
+  /** Words that are not in the list - almost always a mistyping. */
+  unknown: string[];
+  /** True when this is usable: the right number of words, all of them real. */
+  complete: boolean;
+}
+
+/**
+ * Inspects a typed phrase so the interface can object before it is too late.
+ *
+ * A wrong phrase does not fail loudly - it derives a different room, and the
+ * two of you simply never see each other. Catching a bad word while it is being
+ * typed is the difference between "that word is not one of them" and an evening
+ * spent wondering why the app is broken.
+ */
+export function checkJoinPhrase(raw: string): JoinPhraseCheck {
+  const words = normalizeJoinPhrase(raw).split(' ').filter(Boolean);
+  const unknown = words.filter(w => !JOIN_PHRASE_WORDS_SET.has(w));
+  return {
+    words,
+    unknown,
+    complete: words.length === JOIN_PHRASE_WORDS && unknown.length === 0
+  };
+}
+
 /** Forgiving about spacing, case and punctuation, so speaking it works. */
 export function normalizeJoinPhrase(raw: string): string {
   return raw.toLowerCase().split(/[^a-z]+/).filter(Boolean).join(' ');
@@ -156,17 +185,29 @@ export async function deriveSpaceCredentials(
   const phrase = normalizeJoinPhrase(rawJoinPhrase || '');
   const enc = new TextEncoder();
 
-  // The room is found from the code alone, so partners who disagree about the
-  // phrase still meet - and we can tell them the phrase is wrong instead of
-  // leaving them in separate empty rooms wondering why nobody arrived.
-  const idMaterial = await importCodeMaterial(code);
-
-  // The content key additionally folds in the spoken phrase. An empty phrase
-  // must reproduce the original derivation exactly, or every existing space
-  // would become unreadable.
-  const keyMaterial = phrase
+  // The phrase folds into BOTH the room and the key.
+  //
+  // It used to fold into the key alone, so the room was found from the code by
+  // itself. That protected what was said but not the fact of saying it: anyone
+  // holding the code still joined, still received every encrypted record, and
+  // still occupied a socket in the count. Putting the phrase in the room id
+  // means a wrong phrase is a different room, and someone with only the code
+  // cannot reach you at all.
+  //
+  // The cost is that a mismatch is silent - two people who type it differently
+  // sit in separate rooms with nothing to tell them why - which is why the
+  // phrase is generated rather than invented, and why every word is checked
+  // against the list before it is ever used.
+  //
+  // An empty phrase must reproduce the original derivation byte for byte, or
+  // every space created before this change would move rooms and lose its
+  // history.
+  const material = phrase
     ? await importCodeMaterial(`${code}::${phrase}`)
-    : idMaterial;
+    : await importCodeMaterial(code);
+
+  const idMaterial = material;
+  const keyMaterial = material;
 
   const idBits = await window.crypto.subtle.deriveBits(
     {
