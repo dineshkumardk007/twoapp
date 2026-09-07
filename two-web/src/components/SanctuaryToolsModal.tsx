@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   X, Moon, Wind, Heart, Radio, Calculator, Shield, LogOut, 
-  Sparkles, Check, Compass, Wifi, EyeOff, Activity 
+  Sparkles, Check, Compass, Wifi, EyeOff, Activity, Settings 
 } from 'lucide-react';
 
 interface SanctuaryToolsModalProps {
@@ -17,6 +17,8 @@ interface SanctuaryToolsModalProps {
   onEmergencyExit: () => void;
   /** Opens the five-act walkthrough. Absent on surfaces that cannot show it. */
   onOpenStoryTour?: () => void;
+  /** Jumps to the settings screen. */
+  onOpenSettings?: () => void;
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
   activeUser: 'user' | 'partner';
   vaultName?: string;
@@ -36,6 +38,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   onOpenSafetyNumbers,
   onEmergencyExit,
   onOpenStoryTour,
+  onOpenSettings,
   relayStatus = 'connected',
   activeUser,
   vaultName = '',
@@ -126,6 +129,21 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
         onOpenSafetyNumbers();
       }
     },
+    ...(onOpenSettings
+      ? [{
+          id: 'settings',
+          title: 'Settings',
+          subtitle: 'Devices, Link Code, Backups & Lock',
+          desc: 'See which devices are in your space, rotate the link code, export a backup and set how this space is locked.',
+          icon: Settings,
+          iconColor: 'text-linen-accent bg-linen-variant border-linen-border',
+          actionText: 'Open Settings',
+          action: () => {
+            onClose();
+            onOpenSettings();
+          }
+        }]
+      : []),
     // Kept here because the home screen only offers the tour on a first run,
     // and the app has no header button for it. Without this the walkthrough
     // would be unreachable forever the moment that card was dismissed.

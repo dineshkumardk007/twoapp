@@ -140,6 +140,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         onOpenCoRegulation={() => setShowCoRegulationModal(true)}
         onTriggerPulse={onTriggerPulse}
         onOpenStoryTour={onOpenStoryTour}
+        onOpenSettings={() => onSelectTab('settings')}
         onOpenHeartModal={() => setShowHeartModal(true)}
         onToggleCamouflage={onToggleCamouflage}
         onOpenMesh={() => setShowMeshModal(true)}
