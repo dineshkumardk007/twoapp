@@ -353,6 +353,18 @@ class PostgresRelayDb implements RelayDb {
  * failure marks the relay degraded, buffers writes in memory, and keeps
  * retrying; when Postgres returns the buffer is drained into it.
  */
+/**
+ * True for a failure that retrying cannot fix.
+ *
+ * SQLSTATE class 22 is a data exception (a value the column cannot hold) and
+ * class 23 an integrity violation. Everything else - dropped sockets, class 08
+ * connection errors, a sleeping database - is worth waiting out.
+ */
+function isPermanentWriteError(err: any): boolean {
+  const code = typeof err?.code === 'string' ? err.code : '';
+  return /^(22|23)/.test(code) && code.length === 5;
+}
+
 class ResilientRelayDb implements RelayDb {
   private postgres: RelayDb | null;
   private memory = new InMemoryRelayDb();
@@ -465,7 +477,18 @@ class ResilientRelayDb implements RelayDb {
       try {
         await this.postgres.saveRecord(record);
         flushed++;
-      } catch {
+      } catch (err: any) {
+        if (isPermanentWriteError(err)) {
+          // This record will never insert, however long we wait. Re-queuing it
+          // meant every drain failed on it, which put the relay back into
+          // degraded mode, which scheduled another drain - so one malformed
+          // record stopped ALL later records from ever reaching Postgres.
+          // Drop it loudly instead of holding durability hostage to it.
+          console.error(
+            `[Relay DB] Discarding record ${record.id} - it cannot be stored: ${err?.message || err}`
+          );
+          continue;
+        }
         // Went down again mid-drain; keep the remainder for the next attempt.
         this.pending.push(record);
       }

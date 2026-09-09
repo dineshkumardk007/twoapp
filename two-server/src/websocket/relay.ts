@@ -363,6 +363,10 @@ function isValidRecord(r: any): r is StoredRecord {
     isNonEmptyString(r.type) &&
     isNonEmptyString(r.payload) &&
     isNonEmptyString(r.nonce) &&
-    Number.isFinite(Number(r.lamportClock))
+    Number.isFinite(Number(r.lamportClock)) &&
+    // clientTs was not checked here, but the INSERT binds it to a bigint
+    // column. A record without one was acknowledged to the sender and then
+    // failed to store as String(undefined) - 'undefined' - forever.
+    Number.isFinite(Number(r.clientTs))
   );
 }
