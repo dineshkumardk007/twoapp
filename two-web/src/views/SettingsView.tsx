@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AUTO_LOCK_CHOICES, AutoLockSetting } from '../core/autoLock';
 import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode, generateJoinPhrase, checkJoinPhrase, getDeviceId } from '../core/space';
 import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
@@ -59,6 +60,9 @@ interface SettingsViewProps {
     currentPin: string | null,
     nextPin: string | null
   ) => Promise<'ok' | 'wrong-pin' | 'busy' | 'error'>;
+  /** How long the app may sit in the background before locking itself. */
+  autoLock?: AutoLockSetting;
+  onSelectAutoLock?: (value: AutoLockSetting) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -82,6 +86,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   connectedDeviceCount = 0,
   pinEnabled = false,
   onUpdatePin,
+  autoLock = 60,
+  onSelectAutoLock,
   onToggleActiveUser = () => {},
   decoyCode = '142.85',
   onUpdateDecoyCode,
@@ -622,6 +628,37 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 >
                   {lockMessage.text}
                 </p>
+              )}
+
+              {/* A PIN only guards a closed app. Left open on a table, Two
+                  stayed open - so the lock covered the least likely case and
+                  not the everyday one. */}
+              {pinEnabled && onSelectAutoLock && (
+                <div className="rounded-xl border border-linen-border/70 bg-linen-variant/30 p-3 space-y-2">
+                  <label className="block">
+                    <span className="block text-[11px] font-medium text-linen-secondary mb-1">
+                      Lock again after leaving the app
+                    </span>
+                    <select
+                      value={String(autoLock)}
+                      onChange={e => {
+                        const raw = e.target.value;
+                        onSelectAutoLock(raw === 'off' ? 'off' : (Number(raw) as AutoLockSetting));
+                      }}
+                      className="w-full rounded-lg border border-linen-border bg-linen-surface px-3 py-2 text-sm text-linen-primary focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
+                    >
+                      {AUTO_LOCK_CHOICES.map(choice => (
+                        <option key={String(choice.value)} value={String(choice.value)}>
+                          {choice.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="text-[11px] leading-relaxed text-linen-secondary">
+                    Locking the instant you switch away costs a PIN every time you glance at a
+                    notification. A minute covers the glance and not the walk away.
+                  </p>
+                </div>
               )}
             </div>
           )}

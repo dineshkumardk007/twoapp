@@ -72,11 +72,25 @@ import { Lock } from 'lucide-react';
 import { CURATED_DILEMMAS } from './data/dilemmas';
 import { newId } from './core/ids';
 import { hydrateMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
+import {
+  lockoutRemaining,
+  registerFailure,
+  clearFailures,
+  isUnderSuspicion
+} from './core/lockGuard';
+import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting } from './core/autoLock';
 
 
 // Screens are fetched the first time they are opened rather than all at once.
 // Thirty-three of them in a single file meant every one had to arrive before
 // anything could be drawn.
+/** "45 seconds" / "2 minutes" - a wait you can read at a glance. */
+function formatWait(seconds: number): string {
+  if (seconds < 60) return `${seconds} second${seconds === 1 ? '' : 's'}`;
+  const minutes = Math.ceil(seconds / 60);
+  return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+}
+
 /** Set the first time the home screen shows the tour card. */
 const TOUR_CARD_SEEN_KEY = 'two_story_tour_card_seen_v1';
 
@@ -274,6 +288,10 @@ export const App: React.FC = () => {
   }, []);
   const [pinAttempt, setPinAttempt] = useState('');
   const [pinError, setPinError] = useState(false);
+
+  /** Seconds still to wait before another PIN may be tried; 0 when free. */
+  const [lockoutLeft, setLockoutLeft] = useState(() => lockoutRemaining());
+  const [autoLock, setAutoLock] = useState<AutoLockSetting>(() => readAutoLock());
   const [passphraseAttempt, setPassphraseAttempt] = useState('');
 
   // Track live WebSocket relay status
@@ -1063,6 +1081,47 @@ export const App: React.FC = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /**
+   * Ticks the lock-out countdown down to zero.
+   *
+   * Only runs while a wait is actually in progress - there is nothing to
+   * animate on a lock screen that will accept a PIN right now.
+   */
+  useEffect(() => {
+    if (!isLocked || lockoutLeft <= 0) return;
+
+    const refresh = () => setLockoutLeft(lockoutRemaining());
+    const timer = setInterval(refresh, 1000);
+
+    // A hidden tab has its timers throttled to roughly once a minute, so a
+    // wait that ended while the app was in the background would still show as
+    // running - keypad greyed out, countdown frozen - until the next tick
+    // happened to fire. Recomputing on the way back in fixes the display from
+    // the clock rather than from however many ticks were allowed to run.
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('focus', refresh);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [isLocked, lockoutLeft]);
+
+  /**
+   * Shuts the app again when it has been left.
+   *
+   * Only meaningful once there is a vault: with no PIN set there is nothing to
+   * lock back to, and reloading an unprotected app would just be a stutter.
+   */
+  useEffect(() => {
+    return watchForAbsence({
+      enabled: () => !!vaultKey && !isLocked,
+      getSetting: () => readAutoLock(),
+      onLock: lockNow
+    });
+  }, [vaultKey, isLocked]);
 
   const handleSelectTab = (tabId: string) => {
     // Screens load as separate chunks, so switching tab can suspend. Marked as
@@ -1984,10 +2043,27 @@ export const App: React.FC = () => {
   if (isLocked) {
     const attemptUnlock = (secret: string) => {
       if (!secret || isUnlocking) return;
+
+      // Refuse before deriving anything. Checked here rather than only in the
+      // UI so that a wait cannot be skipped by reloading the page, which is
+      // what re-enables every button on this screen.
+      const waiting = lockoutRemaining();
+      if (waiting > 0) {
+        setLockoutLeft(waiting);
+        setPinError(true);
+        setTimeout(() => {
+          setPinAttempt('');
+          setPinError(false);
+        }, 700);
+        return;
+      }
+
       setIsUnlocking(true);
       void unlockVault(secret)
         .then(opened => {
           if (opened) {
+            clearFailures();
+            setLockoutLeft(0);
             // The vault carries the same references localStorage does.
             setMediaReady(!containsMediaRefs(opened.payload.state));
             setState(opened.payload.state);
@@ -1998,6 +2074,8 @@ export const App: React.FC = () => {
             setPassphraseAttempt('');
             setSpaceVersion(v => v + 1);
           } else {
+            const penalty = registerFailure();
+            setLockoutLeft(penalty);
             setPinError(true);
             setTimeout(() => {
               setPinAttempt('');
@@ -2034,7 +2112,7 @@ export const App: React.FC = () => {
     };
 
     const handlePinInput = (val: string) => {
-      if (isUnlocking) return;
+      if (isUnlocking || lockoutLeft > 0) return;
       const next = (pinAttempt + val).slice(0, 4);
       setPinAttempt(next);
       setPinError(false);
@@ -2050,15 +2128,40 @@ export const App: React.FC = () => {
           </div>
           <div>
             <h2 className="font-serif text-2xl font-medium text-linen-primary">Sanctuary Locked</h2>
-            <p className="text-xs text-linen-secondary mt-1">Enter your 4-digit PIN to open</p>
+            <p className="text-xs text-linen-secondary mt-1">
+              {lockoutLeft > 0
+                ? 'Too many wrong PINs'
+                : 'Enter your 4-digit PIN to open'}
+            </p>
           </div>
+
+          {/* The wait, counted down. Saying how long is not a courtesy to
+              somebody guessing - they can see the keypad is dead either way -
+              it is so that you, having fumbled your own PIN, know the app is
+              waiting rather than broken. */}
+          {lockoutLeft > 0 && (
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-950">
+              <p className="text-sm font-semibold">
+                Try again in {formatWait(lockoutLeft)}
+              </p>
+              {isUnderSuspicion() && (
+                <p className="mt-1 text-[11px] leading-relaxed">
+                  Each wrong PIN now waits longer than the last. Nothing here is
+                  deleted and nothing is sent anywhere &mdash; if this is your device,
+                  the wait is the only cost.
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-center space-x-3 py-2">
             {[0, 1, 2, 3].map((idx) => (
               <div
                 key={idx}
                 className={`w-10 h-12 rounded-xl border flex items-center justify-center text-xl font-mono transition-all ${
-                  pinError
+                  lockoutLeft > 0
+                    ? 'border-linen-border bg-linen-variant/30 text-linen-secondary/30'
+                    : pinError
                     ? 'border-red-500 bg-red-50 text-red-600'
                     : pinAttempt.length > idx
                     ? 'border-linen-primary bg-linen-variant text-linen-primary font-bold'
@@ -2079,7 +2182,8 @@ export const App: React.FC = () => {
                   else if (btn === '⌫') setPinAttempt(prev => prev.slice(0, -1));
                   else handlePinInput(btn);
                 }}
-                className="py-3.5 rounded-xl border border-linen-border bg-linen-variant/40 hover:bg-linen-variant text-linen-primary text-lg font-medium transition-colors cursor-pointer"
+                disabled={lockoutLeft > 0}
+                className="py-3.5 rounded-xl border border-linen-border bg-linen-variant/40 hover:bg-linen-variant text-linen-primary text-lg font-medium transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-linen-variant/40"
               >
                 {btn}
               </button>
@@ -2094,12 +2198,13 @@ export const App: React.FC = () => {
               value={passphraseAttempt}
               onChange={(e) => setPassphraseAttempt(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && attemptUnlock(passphraseAttempt)}
+              disabled={lockoutLeft > 0}
               placeholder="…or the password you used before"
               className="w-full px-3 py-2.5 rounded-xl border border-linen-border bg-linen-variant/40 text-sm text-linen-primary text-center placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary"
             />
             <button
               onClick={() => attemptUnlock(passphraseAttempt)}
-              disabled={!passphraseAttempt || isUnlocking}
+              disabled={!passphraseAttempt || isUnlocking || lockoutLeft > 0}
               className="w-full py-2.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 disabled:opacity-40 transition-opacity cursor-pointer"
             >
               Unlock
@@ -2596,6 +2701,11 @@ export const App: React.FC = () => {
             }}
             pinEnabled={!!vaultKey || hasEncryptedVault()}
             onUpdatePin={handleUpdatePin}
+            autoLock={autoLock}
+            onSelectAutoLock={(value) => {
+              writeAutoLock(value);
+              setAutoLock(value);
+            }}
             decoyOnLaunch={decoyOnLaunch}
             onToggleDecoyOnLaunch={handleToggleDecoyOnLaunch}
             autoCamouflageOnBlur={autoCamouflageOnBlur}
