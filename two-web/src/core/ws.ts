@@ -160,7 +160,7 @@ export class WebSocketRelayClient {
         spaceId: this.creds.spaceId,
         // Delivery is per device; `role` stays the authorship label.
         userId: getDeviceId(),
-        role: this.creds.role,
+        role: this.creds.authorLabel || this.creds.role,
         // Ask only for what we missed while disconnected, so nothing we have
         // already applied gets replayed and duplicated.
         since: this.loadHighWaterMark(this.creds.spaceId)
@@ -349,7 +349,7 @@ export class WebSocketRelayClient {
       const record = {
         id: recordId,
         spaceId: creds.spaceId,
-        authorId: creds.role,
+        authorId: creds.authorLabel || creds.role,
         type,
         payload: ciphertext,
         nonce,

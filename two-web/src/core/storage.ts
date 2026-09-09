@@ -1090,7 +1090,12 @@ export function loadState(): SpaceState {
       vaultName: parsed.vaultName || '',
       partnerReadAt: parsed.partnerReadAt || 0,
       partnerLastSeen: parsed.partnerLastSeen || 0,
-      groups: Array.isArray(parsed.groups) ? parsed.groups : [],
+      // Groups saved before the creator's name became the shared one have no
+      // nameConfirmed; treating them as confirmed keeps the name they already
+      // show rather than replacing it with a placeholder.
+      groups: Array.isArray(parsed.groups)
+        ? parsed.groups.map((g: any) => ({ ...g, nameConfirmed: g.nameConfirmed !== false }))
+        : [],
       partnerEverSeen: parsed.partnerEverSeen || false,
       knownDevices: parsed.knownDevices || [],
       approvedDeviceCount: parsed.approvedDeviceCount || 1,

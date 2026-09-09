@@ -22,6 +22,16 @@ import { Pool } from 'pg';
  */
 export const PRESENCE_BEAT = 'PRESENCE_BEAT';
 
+/**
+ * Record types where only the newest from each author is worth keeping.
+ *
+ * All of them answer a question about right now - am I here, what is my name,
+ * how far have I read - so an older answer is not history, it is a stale
+ * duplicate. Collapsing them keeps a chatty group from burying its own
+ * messages in the 2000-record replay a new device receives.
+ */
+export const LATEST_ONLY_TYPES = new Set([PRESENCE_BEAT, 'GROUP_HELLO', 'GROUP_READ']);
+
 export interface StoredRecord {
   id: string;
   spaceId: string;
@@ -121,11 +131,11 @@ class InMemoryRelayDb implements RelayDb {
   }
 
   async saveRecord(record: StoredRecord) {
-    if (record.type === PRESENCE_BEAT) {
+    if (LATEST_ONLY_TYPES.has(record.type)) {
       this.records = this.records.filter(
         r =>
           !(
-            r.type === PRESENCE_BEAT &&
+            r.type === record.type &&
             r.spaceId === record.spaceId &&
             r.authorId === record.authorId
           )
@@ -317,11 +327,11 @@ class PostgresRelayDb implements RelayDb {
     // arrives, and each carries a fresh id because the clients dedupe inbound
     // records by id - a stable id would be applied once and every later beat
     // silently ignored.
-    if (record.type === PRESENCE_BEAT) {
+    if (LATEST_ONLY_TYPES.has(record.type)) {
       await this.pool.query(
         `DELETE FROM relay_records
           WHERE space_id = $1 AND author_id = $2 AND type = $3`,
-        [record.spaceId, record.authorId, PRESENCE_BEAT]
+        [record.spaceId, record.authorId, record.type]
       );
     }
 

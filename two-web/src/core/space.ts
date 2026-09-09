@@ -46,6 +46,16 @@ export interface SpaceCredentials {
   spaceId: string;
   key: CryptoKey;
   role: SpaceRole;
+  /**
+   * What this connection calls itself when authoring records.
+   *
+   * A couple has two seats, so the role is a usable author label. A group has
+   * one seat that everybody sits in, which made every member's records look
+   * like they came from the same author - and the relay skips replaying a
+   * space's history back to its own author, so a new member was replayed
+   * nothing at all. Groups pass their device id here instead.
+   */
+  authorLabel?: string;
 }
 
 // Ambiguity is the enemy of a code you read aloud over the phone, so 0/O, 1/I/L
@@ -151,6 +161,32 @@ export function isWeakPairingCode(raw: string): boolean {
  * Accepts whatever the joining partner typed and reduces it to canonical form,
  * so "two 8492", "TWO-8492" and "two-8492" derive the same space.
  */
+/**
+ * Shapes a code as it is typed: upper case, grouped, dashes supplied for you.
+ *
+ * A phone keyboard offers lower case and hides the dash behind a symbols page,
+ * so entering a code meant three deliberate detours per attempt.
+ *
+ * The shape is not cosmetic. normalizePairingCode turns each run of
+ * punctuation into a single dash and the key is derived from that string, so
+ * TWO-ABCD-EFGH-IJKL and TWOABCDEFGHIJKL are different codes deriving
+ * different rooms. Rebuilding the canonical grouping here is what stops a
+ * pasted code, a spoken one and a typed one from landing in three rooms.
+ */
+export function formatCodeInput(raw: string): string {
+  const symbols = (raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  // Someone part-way through typing the prefix is left alone. Formatting "T"
+  // as "TWO-T" would mean their next two keystrokes produced "TWO-TWO".
+  if ('TWO'.startsWith(symbols)) return symbols;
+
+  const body = (symbols.startsWith('TWO') ? symbols.slice(3) : symbols).slice(0, CODE_LENGTH);
+  if (!body) return 'TWO';
+
+  const groups = body.match(new RegExp(`.{1,${CODE_GROUP}}`, 'g')) || [];
+  return `TWO-${groups.join('-')}`;
+}
+
 export function normalizePairingCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-');
 }

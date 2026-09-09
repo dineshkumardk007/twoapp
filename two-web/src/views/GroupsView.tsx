@@ -6,14 +6,16 @@ import {
   generateJoinPhrase,
   checkJoinPhrase,
   isPlausiblePairingCode,
-  normalizePairingCode
+  normalizePairingCode,
+  formatCodeInput
 } from '../core/space';
 
 interface GroupsViewProps {
   groups: GroupSpace[];
   /** Given the very code and phrase shown on screen, not a fresh pair. */
   onCreate: (name: string, code: string, joinPhrase: string) => void;
-  onJoin: (name: string, code: string, joinPhrase: string) => void;
+  /** No name: the group carries the one its creator gave it. */
+  onJoin: (code: string, joinPhrase: string) => void;
   onOpen: (groupId: string) => void;
   onLeave: (groupId: string) => void;
 }
@@ -73,10 +75,6 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
   };
 
   const submitJoin = () => {
-    if (!name.trim()) {
-      setError('Give the group a name so you can tell it apart.');
-      return;
-    }
     if (!isPlausiblePairingCode(code)) {
       setError('That does not look like a group code.');
       return;
@@ -92,7 +90,7 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
       );
       return;
     }
-    onJoin(name, normalizePairingCode(code), phrase);
+    onJoin(normalizePairingCode(code), phrase);
     close();
   };
 
@@ -190,17 +188,21 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
       {mode === 'join' && (
         <div className="rounded-2xl border border-linen-border bg-linen-surface p-4 space-y-3">
           <h3 className="text-sm font-semibold text-linen-primary">Join a group</h3>
-          <input
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="Name it on this device"
-            className="w-full rounded-xl border border-linen-border bg-linen-variant/40 px-3 py-2.5 text-sm text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
-          />
+          <p className="text-[11px] leading-relaxed text-linen-secondary">
+            The group keeps the name whoever started it chose, so everyone sees the same one.
+          </p>
+          {/* Upper case and dashes are supplied as you type: a phone keyboard
+              offers neither without a detour, and the dashes are part of the
+              code rather than decoration. */}
           <input
             value={code}
-            onChange={e => setCode(e.target.value.toUpperCase())}
-            placeholder="Group code"
-            className="w-full rounded-xl border border-linen-border bg-linen-variant/40 px-3 py-2.5 font-mono text-sm text-linen-primary placeholder:font-sans placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
+            onChange={e => setCode(formatCodeInput(e.target.value))}
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            inputMode="text"
+            placeholder="TWO-XXXX-XXXX-XXXX"
+            className="w-full rounded-xl border border-linen-border bg-linen-variant/40 px-3 py-2.5 font-mono text-sm uppercase tracking-wider text-linen-primary placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
           />
           <input
             value={phrase}

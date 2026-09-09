@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, Smile, X, Check, CheckCheck, Info, Users } from 'lucide-react';
-import { GroupSpace, readBreakdown, GroupMessage, isOverCapacity, MAX_GROUP_MEMBERS } from '../core/groups';
+import { Send, Smile, X, Check, CheckCheck, Info, Users, Crown } from 'lucide-react';
+import {
+  GroupSpace,
+  readBreakdown,
+  GroupMessage,
+  isOverCapacity,
+  MAX_GROUP_MEMBERS,
+  membersOnline
+} from '../core/groups';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
 
 interface GroupChatViewProps {
@@ -16,10 +23,17 @@ interface GroupChatViewProps {
   onTyping: () => void;
 }
 
+/**
+ * Written as \u{...} escapes rather than pasted characters.
+ *
+ * The first version of this list carried Python escapes - \U0001f602 - which
+ * JavaScript does not recognise, so ten of the twelve rendered on screen as
+ * the literal text "U0001f602".
+ */
 const EMOJI = [
-  '❤️', '\U0001f602', '\U0001f44d', '\U0001f64f', '\U0001f389', '\U0001f525',
-  '\U0001f60a', '\U0001f622', '\U0001f44f', '✨', '\U0001f37b', '\U0001f4af'
-].map(e => e);
+  '\u2764\ufe0f', '\u{1f602}', '\u{1f44d}', '\u{1f64f}', '\u{1f389}', '\u{1f525}',
+  '\u{1f60a}', '\u{1f622}', '\u{1f44f}', '\u2728', '\u{1f37b}', '\u{1f4af}'
+];
 
 /**
  * Group chat.
@@ -42,6 +56,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   const [text, setText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [infoFor, setInfoFor] = useState<GroupMessage | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
   const lastTypingSentRef = useRef(0);
 
@@ -75,12 +90,25 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   })();
 
   const others = group.members.filter(m => m.id !== myId);
-  const someoneHere = others.some(m => Date.now() - m.lastSeen < 90_000);
+
+  // Recomputed on a timer: "online" is a claim about now, and a screen that
+  // only re-rendered when a message arrived would keep showing somebody as
+  // present long after their last beat.
+  const [presenceTick, setPresenceTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setPresenceTick(n => n + 1), 20_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const online = membersOnline(group, myId);
+  void presenceTick;
 
   const subtitle = typingLabel
     ? typingLabel
-    : someoneHere
-    ? 'online'
+    : online.length === 1
+    ? `${online[0].name} is online`
+    : online.length > 1
+    ? `${online.length} online`
     : (() => {
         const newest = others.reduce((max, m) => Math.max(max, m.lastSeen), 0);
         return newest ? formatLastSeen(newest) : `${group.members.length || 1} in this group`;
@@ -106,10 +134,19 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
             {!connected && <span className="shrink-0 text-amber-700">&middot; Connecting</span>}
           </div>
         </div>
-        <span className="flex shrink-0 items-center gap-1 rounded-lg border border-linen-border bg-linen-surface px-2 py-1 text-[11px] text-linen-secondary">
+        <button
+          onClick={() => setShowMembers(v => !v)}
+          aria-label="Who is in this group"
+          aria-expanded={showMembers}
+          className={`flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-[11px] transition-colors ${
+            showMembers
+              ? 'border-linen-primary/40 bg-linen-variant text-linen-primary'
+              : 'border-linen-border bg-linen-surface text-linen-secondary hover:bg-linen-variant'
+          }`}
+        >
           <Users className="h-3.5 w-3.5" />
           {group.members.length || 1}
-        </span>
+        </button>
       </div>
 
       {/* A group past its size is said out loud rather than half-recorded.
@@ -123,6 +160,57 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
           <p className="mt-0.5 text-[11px] leading-relaxed">
             It is meant for {MAX_GROUP_MEMBERS}. Anyone with the code and the words can join, and
             nobody can be removed &mdash; start a new group if this is not who you expected.
+          </p>
+        </div>
+      )}
+
+      {/* Who is in here. Opened from the count in the header. */}
+      {showMembers && (
+        <div className="border-b border-linen-border bg-linen-surface px-4 py-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
+              In this group
+            </span>
+            <button
+              onClick={() => setShowMembers(false)}
+              aria-label="Close"
+              className="rounded-lg p-1 text-linen-secondary hover:bg-linen-variant transition-colors cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <ul className="max-h-40 space-y-1.5 overflow-y-auto scroll-contain">
+            {group.members.map(m => {
+              const isMe = m.id === myId;
+              const here = online.some(o => o.id === m.id);
+              return (
+                <li key={m.id} className="flex items-center justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                        isMe || here ? 'bg-emerald-500' : 'bg-stone-300'
+                      }`}
+                    />
+                    <span className="truncate text-xs text-linen-primary">
+                      {m.name}
+                      {isMe && <span className="text-linen-secondary"> · you</span>}
+                    </span>
+                    {group.founder && isMe && (
+                      <Crown className="h-3 w-3 shrink-0 text-amber-500" />
+                    )}
+                  </span>
+                  <span className="shrink-0 text-[10px] text-linen-secondary">
+                    {isMe ? '' : here ? 'online' : formatLastSeen(m.lastSeen) || 'not seen yet'}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="mt-2 text-[10px] leading-relaxed text-linen-secondary">
+            Names are what each device says about itself, and anyone with the code and the words
+            can join. Nobody can be removed.
           </p>
         </div>
       )}
@@ -243,7 +331,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
       )}
 
       {/* Composer */}
-      <div className="flex items-center gap-2 border-t border-linen-border bg-linen-surface p-4 pt-2">
+      <div className="flex items-center gap-2 border-t border-linen-border bg-linen-surface px-3 pb-1.5 pt-2">
         <button
           onClick={() => setShowEmoji(v => !v)}
           aria-expanded={showEmoji}

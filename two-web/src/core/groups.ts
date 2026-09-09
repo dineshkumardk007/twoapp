@@ -65,8 +65,18 @@ export interface GroupSpace {
   code: string;
   /** Optional spoken words, folded into the room and the key. */
   joinPhrase?: string;
-  /** True for the device that created it - used only for wording. */
+  /** True for the device that created it. Only a founder names the group. */
   founder: boolean;
+  /**
+   * False on a device that joined and has not yet heard the founder say what
+   * the group is called.
+   *
+   * Joining used to ask for a name, which meant the same room could be called
+   * three different things on three phones. The creator's name is now the
+   * group's name everywhere, and this marks the gap between joining and
+   * learning it.
+   */
+  nameConfirmed: boolean;
   createdAt: number;
   members: GroupMember[];
   messages: GroupMessage[];
@@ -92,17 +102,20 @@ export const GROUP_READ = 'GROUP_READ';
  * authors. A group has no such distinction, so every member derives with the
  * same value and identifies itself by member id instead.
  */
-export function deriveGroupCredentials(
+export async function deriveGroupCredentials(
   code: string,
   joinPhrase?: string
 ): Promise<SpaceCredentials> {
-  return deriveSpaceCredentials(code, 'user', joinPhrase);
+  const creds = await deriveSpaceCredentials(code, 'user', joinPhrase);
+  // Authorship is per device here, not per seat - see SpaceCredentials.
+  return { ...creds, authorLabel: getDeviceId() };
 }
 
 export function newGroup(name: string, code: string, joinPhrase: string | undefined, founder: boolean): GroupSpace {
   return {
     id: newId('group'),
-    name: name.trim().slice(0, 40) || 'Our group',
+    name: name.trim().slice(0, 40) || (founder ? 'Our group' : 'Group'),
+    nameConfirmed: founder,
     code,
     joinPhrase: joinPhrase || undefined,
     founder,
@@ -195,4 +208,12 @@ export function unreadCount(group: GroupSpace, myId: string): number {
   const me = group.members.find(m => m.id === myId);
   const readUpTo = me?.readUpTo || 0;
   return group.messages.filter(m => m.authorId !== myId && m.sentAt > readUpTo).length;
+}
+
+/** How long since a beat still counts as being here. */
+export const MEMBER_ONLINE_MS = 75_000;
+
+/** Members other than this device that are here right now. */
+export function membersOnline(group: GroupSpace, myId: string, now = Date.now()): GroupMember[] {
+  return group.members.filter(m => m.id !== myId && now - m.lastSeen < MEMBER_ONLINE_MS);
 }

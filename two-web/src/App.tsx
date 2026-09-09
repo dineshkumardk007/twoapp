@@ -1130,7 +1130,14 @@ export const App: React.FC = () => {
    */
   const publishChromeHeight = () => {
     const el = headerRef.current;
-    if (!el) return;
+    // No header on screen means no header height. Group mode renders none, and
+    // leaving the sanctuary's last measurement in place reserved 45px of room
+    // for a bar that was not there - which is why the group composer sat high
+    // above its dock with a band of empty surface beneath it.
+    if (!el) {
+      document.documentElement.style.setProperty('--two-header-h', '0px');
+      return;
+    }
     document.documentElement.style.setProperty(
       '--two-header-h',
       `${Math.round(el.getBoundingClientRect().height)}px`
@@ -1278,7 +1285,20 @@ export const App: React.FC = () => {
         if (g.id !== groupId) return g;
 
         if (record.type === GROUP_HELLO) {
-          return { ...g, members: withMember(g.members, { id: from, name: String(parsed.name || 'Someone'), at: Number(parsed.at) || Date.now() }) };
+          const withThem = withMember(g.members, {
+            id: from,
+            name: String(parsed.name || 'Someone'),
+            at: Number(parsed.at) || Date.now()
+          });
+
+          // Only the founder names the group, and only for devices that have
+          // not been told yet. Without the guard a second founder-ish hello
+          // could rename a room out from under everyone.
+          const announced = String(parsed.groupName || '').trim();
+          if (parsed.founder && announced && (!g.nameConfirmed || g.name !== announced)) {
+            return { ...g, members: withThem, name: announced.slice(0, 40), nameConfirmed: true };
+          }
+          return { ...g, members: withThem };
         }
 
         if (record.type === GROUP_READ) {
@@ -1347,18 +1367,47 @@ export const App: React.FC = () => {
   // to put on its messages.
   useEffect(() => {
     if (isLocked) return;
-    const hello = () => {
+
+    /**
+     * Says who this device is, and that it is still here.
+     *
+     * The same record does both jobs because they are the same claim, and the
+     * relay keeps only the newest one per device - so repeating it every
+     * minute costs one row rather than one row a minute. Before this, a
+     * member's "last seen" only moved when they spoke, which made someone
+     * sitting quietly in the group look like they had left an hour ago.
+     */
+    const hello = (onlyWhenVisible: boolean) => {
+      // The first announcement goes out whatever the app is doing: it carries
+      // this device's name and, from a founder, the group's - and a member
+      // whose phone happened to be in their pocket when they joined would
+      // otherwise be "Someone" to everybody until they next opened it.
+      // The repeats are the presence signal, and those do wait for the
+      // foreground, so a pocketed phone does not report itself as present.
+      if (onlyWhenVisible && document.visibilityState !== 'visible') return;
       state.groups.forEach(group => {
         if (groupStatuses[group.id] !== 'connected') return;
         sendToGroup(group.id, GROUP_HELLO, {
           from: myMemberId(),
           name: state.userName || 'Someone',
+          groupName: group.name,
+          founder: group.founder,
           at: Date.now()
         });
       });
     };
-    const timer = setTimeout(hello, 800);
-    return () => clearTimeout(timer);
+
+    const announce = () => hello(false);
+    const beat = () => hello(true);
+
+    const first = setTimeout(announce, 800);
+    const timer = setInterval(beat, 60_000);
+    document.addEventListener('visibilitychange', beat);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', beat);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupKeys, groupStatuses, isLocked, state.userName]);
 
@@ -1391,8 +1440,9 @@ export const App: React.FC = () => {
     setActiveGroupId(group.id);
   };
 
-  const handleJoinGroup = (name: string, code: string, joinPhrase: string) => {
-    const group = newGroup(name, code, joinPhrase, false);
+  const handleJoinGroup = (code: string, joinPhrase: string) => {
+    // Named "Group" until the founder's hello says otherwise.
+    const group = newGroup('', code, joinPhrase, false);
     group.members = [{ id: myMemberId(), name: state.userName || 'Someone', lastSeen: Date.now(), readUpTo: 0 }];
     setState(prev => ({ ...prev, groups: [...prev.groups, group] }));
     setActiveGroupId(group.id);

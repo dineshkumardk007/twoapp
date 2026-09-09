@@ -21,7 +21,7 @@ interface AppDockProps {
  * position was what destroyed it. A dock is worth having because it is always
  * the same.
  */
-const PINNED = ['home', 'chat', 'canvas', 'nightstand'];
+const PINNED = ['home', 'chat', 'groups', 'canvas', 'nightstand'];
 const LEGACY_FAVOURITES_KEY = 'two_dock_favourites_v1';
 
 /**
