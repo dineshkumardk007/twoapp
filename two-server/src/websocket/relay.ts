@@ -48,7 +48,7 @@ const MAX_REPLAY_RECORDS = 2000;
 const RECORD_BURST = 60;          // tokens in the bucket
 const RECORD_REFILL_PER_SEC = 20; // sustained records/second
 const MAX_TOTAL_CLIENTS = 2_000;
-const MAX_CLIENTS_PER_SPACE = 8;  // two phones, a tablet, spare reconnects
+const MAX_CLIENTS_PER_SPACE = 24; // ten members, two devices each, spare reconnects
 
 /**
  * How often to check that a socket is still attached to a living device.

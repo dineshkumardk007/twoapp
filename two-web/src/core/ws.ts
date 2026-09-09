@@ -76,7 +76,15 @@ function resolveRelayUrl(): string {
   return PRODUCTION_RELAY_URL;
 }
 
-class WebSocketRelayClient {
+/**
+ * One connection to one space.
+ *
+ * Exported because a group is a second space, held open at the same time as
+ * the couple's. Every field below is per-instance and both of the keys it
+ * writes to localStorage - the outbox and the high-water mark - are already
+ * namespaced by space id, so two clients cannot tread on each other.
+ */
+export class WebSocketRelayClient {
   private ws: WebSocket | null = null;
   private creds: SpaceCredentials | null = null;
 
@@ -610,18 +618,45 @@ class WebSocketRelayClient {
   }
 }
 
+/** The couple's space. Unchanged: the same object, on the same code path. */
 export const wsRelay = new WebSocketRelayClient();
+
+/**
+ * Every client that should wake when the tab or the network comes back.
+ *
+ * These listeners used to name wsRelay directly, which was right while it was
+ * the only connection. A group is a second one, and a group that silently
+ * failed to reconnect on returning to the app would look exactly like a group
+ * where nobody was talking.
+ */
+const liveClients = new Set<WebSocketRelayClient>([wsRelay]);
+
+export function registerRelayClient(client: WebSocketRelayClient) {
+  liveClients.add(client);
+}
+
+export function unregisterRelayClient(client: WebSocketRelayClient) {
+  liveClients.delete(client);
+}
+
+function wakeAll() {
+  liveClients.forEach(client => {
+    try {
+      client.reconnectNow();
+    } catch {
+      // One bad client must not stop the others waking.
+    }
+  });
+}
 
 // Immediately wake up and reconnect when returning to the tab on mobile browsers or regaining network
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      wsRelay.reconnectNow();
+      wakeAll();
     }
   });
 }
 if (typeof window !== 'undefined') {
-  window.addEventListener('online', () => {
-    wsRelay.reconnectNow();
-  });
+  window.addEventListener('online', wakeAll);
 }

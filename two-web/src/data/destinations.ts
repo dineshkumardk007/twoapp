@@ -8,7 +8,7 @@ import {
   X, Heart, MessageSquare, Feather, Bed, Sprout, Mic, Map, Radio, Shield, Palette, 
   Handshake, Sparkles, Flame, Star, Compass, Mail, Gift, Hourglass, Coffee, BookMarked, 
   MapPin, Utensils, Smile, Moon, BookOpen, CheckSquare, Layers, DollarSign, Image, Settings, 
-  Wind, Search 
+  Wind, Search, Users 
 } from 'lucide-react';
 
 export interface Destination {
@@ -85,6 +85,7 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
       title: 'Your Space',
       emoji: '⚙️',
       items: [
+        { id: 'groups', name: 'Groups', desc: 'Chat rooms for more than two, kept apart from your sanctuary', icon: Users },
         { id: 'settings', name: 'Settings', desc: 'Devices, link code, backups & how this space is locked', icon: Settings }
       ]
     }

@@ -1,6 +1,25 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, startTransition } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, forStorage, SpaceState } from './core/storage';
 import { AppDock } from './components/AppDock';
+import { GroupDock } from './components/GroupDock';
+import {
+  GROUP_CHAT,
+  GROUP_HELLO,
+  GROUP_READ,
+  GroupSpace,
+  myMemberId,
+  newGroup,
+  withMember,
+  withRead
+} from './core/groups';
+import {
+  connectGroup,
+  disconnectGroup,
+  disconnectAllGroups,
+  sendToGroup,
+  signalToGroup,
+  subscribeGroupStatus
+} from './core/groupRelays';
 import { isAndroidApp, formFactor } from './core/platform';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
@@ -132,6 +151,8 @@ const RitualsGardenView = lazy(() => import('./views/RitualsGardenView').then(m 
 const SanctuaryDirectoryModal = lazy(() => import('./components/SanctuaryDirectoryModal').then(m => ({ default: m.SanctuaryDirectoryModal })));
 const ScrapbookView = lazy(() => import('./views/ScrapbookView').then(m => ({ default: m.ScrapbookView })));
 const ScratchCardsView = lazy(() => import('./views/ScratchCardsView').then(m => ({ default: m.ScratchCardsView })));
+const GroupsView = lazy(() => import('./views/GroupsView').then(m => ({ default: m.GroupsView })));
+const GroupChatView = lazy(() => import('./views/GroupChatView').then(m => ({ default: m.GroupChatView })));
 const SettingsView = lazy(() => import('./views/SettingsView').then(m => ({ default: m.SettingsView })));
 const SoftLandingView = lazy(() => import('./views/SoftLandingView').then(m => ({ default: m.SoftLandingView })));
 const StateOfUnionView = lazy(() => import('./views/StateOfUnionView').then(m => ({ default: m.StateOfUnionView })));
@@ -306,6 +327,12 @@ export const App: React.FC = () => {
   const [shareReceipts, setShareReceipts] = useState(() => readShareReceipts());
   /** Epoch ms of the partner's most recent typing signal; 0 when not typing. */
   const [partnerTypingAt, setPartnerTypingAt] = useState(0);
+
+  /** The group being read right now, or null while in the sanctuary. */
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [groupStatuses, setGroupStatuses] = useState<Record<string, string>>({});
+  /** memberId -> when they were last seen typing, per group. */
+  const [groupTyping, setGroupTyping] = useState<Record<string, Record<string, number>>>({});
   const [passphraseAttempt, setPassphraseAttempt] = useState('');
 
   // Track live WebSocket relay status
@@ -1201,6 +1228,206 @@ export const App: React.FC = () => {
     const timer = setTimeout(() => setPartnerTypingAt(0), TYPING_TTL_MS);
     return () => clearTimeout(timer);
   }, [partnerTypingAt]);
+
+  /**
+   * Applies whatever arrived on a group's connection.
+   *
+   * Kept entirely apart from the couple's message handler: nothing here can
+   * reach state.messages, and nothing there can reach a group.
+   */
+  const handleGroupMessage = (groupId: string, msg: any) => {
+    if (msg?.type === 'REMOTE_SIGNAL' && msg.signal?.type === TYPING_SIGNAL) {
+      if (!readShareReceipts()) return;
+      let who = '';
+      try {
+        who = String(JSON.parse(msg.signal.payload)?.from || '');
+      } catch {
+        return;
+      }
+      if (!who || who === myMemberId()) return;
+      setGroupTyping(prev => ({
+        ...prev,
+        [groupId]: { ...(prev[groupId] || {}), [who]: Date.now() }
+      }));
+      return;
+    }
+
+    if (msg?.type !== 'REMOTE_RECORD' || !msg.record) return;
+    const record = msg.record;
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(record.payload);
+    } catch {
+      return;
+    }
+
+    // The relay's author stamp says only that somebody joined; for a group the
+    // real author travels inside the ciphertext.
+    const from = String(parsed.from || '');
+    if (!from || from === myMemberId()) return;
+
+    setState(prev => ({
+      ...prev,
+      groups: prev.groups.map(g => {
+        if (g.id !== groupId) return g;
+
+        if (record.type === GROUP_HELLO) {
+          return { ...g, members: withMember(g.members, { id: from, name: String(parsed.name || 'Someone'), at: Number(parsed.at) || Date.now() }) };
+        }
+
+        if (record.type === GROUP_READ) {
+          return { ...g, members: withRead(g.members, from, Number(parsed.upTo) || 0) };
+        }
+
+        if (record.type === GROUP_CHAT) {
+          if (g.messages.some(m => m.id === record.id)) return g;
+          const message = {
+            id: record.id,
+            authorId: from,
+            authorName: String(parsed.name || 'Someone'),
+            text: String(parsed.text || ''),
+            sentAt: Number(parsed.at) || Date.now()
+          };
+          return {
+            ...g,
+            members: withMember(g.members, { id: from, name: message.authorName, at: message.sentAt }),
+            messages: [...g.messages, message].slice(-500)
+          };
+        }
+
+        return g;
+      })
+    }));
+  };
+
+  /**
+   * Holds a connection open for every group, alongside the couple's.
+   *
+   * Keyed on the codes rather than the array, so sending a message - which
+   * rewrites state.groups - does not tear the sockets down and rebuild them.
+   */
+  const groupKeys = state.groups.map(g => `${g.id}:${g.code}:${g.joinPhrase || ''}`).join('|');
+  useEffect(() => {
+    if (isLocked) {
+      disconnectAllGroups();
+      return;
+    }
+    state.groups.forEach(group => {
+      void connectGroup(group, handleGroupMessage);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupKeys, isLocked]);
+
+  useEffect(() => {
+    return subscribeGroupStatus((groupId, status) => {
+      setGroupStatuses(prev => (prev[groupId] === status ? prev : { ...prev, [groupId]: status }));
+    });
+  }, []);
+
+  // Announce this device to every group it is in, so the others learn a name
+  // to put on its messages.
+  useEffect(() => {
+    if (isLocked) return;
+    const hello = () => {
+      state.groups.forEach(group => {
+        if (groupStatuses[group.id] !== 'connected') return;
+        sendToGroup(group.id, GROUP_HELLO, {
+          from: myMemberId(),
+          name: state.userName || 'Someone',
+          at: Date.now()
+        });
+      });
+    };
+    const timer = setTimeout(hello, 800);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupKeys, groupStatuses, isLocked, state.userName]);
+
+  /**
+   * Makes "typing…" lapse without editing the map it lapses from.
+   *
+   * The first version pruned expired entries on a timer, which meant the
+   * displayed truth depended on a background loop getting its arithmetic and
+   * its timing right - and when it did not, typing vanished a second after it
+   * appeared. Who is typing is now derived at render from the timestamps, and
+   * this tick exists only to cause the render that lets a stale one fall off.
+   */
+  const [typingTick, setTypingTick] = useState(0);
+  useEffect(() => {
+    const anyRecent = Object.values(groupTyping).some(members =>
+      Object.values(members).some(at => Date.now() - at < TYPING_TTL_MS)
+    );
+    if (!anyRecent) return;
+    const timer = setInterval(() => setTypingTick(n => n + 1), 1000);
+    return () => clearInterval(timer);
+  }, [groupTyping, typingTick]);
+
+  // The code is the one already shown to the user on the create screen.
+  // Generating a fresh one here would have handed out an invite for a room
+  // nobody was standing in.
+  const handleCreateGroup = (name: string, code: string, joinPhrase: string) => {
+    const group = newGroup(name, code, joinPhrase, true);
+    group.members = [{ id: myMemberId(), name: state.userName || 'Someone', lastSeen: Date.now(), readUpTo: 0 }];
+    setState(prev => ({ ...prev, groups: [...prev.groups, group] }));
+    setActiveGroupId(group.id);
+  };
+
+  const handleJoinGroup = (name: string, code: string, joinPhrase: string) => {
+    const group = newGroup(name, code, joinPhrase, false);
+    group.members = [{ id: myMemberId(), name: state.userName || 'Someone', lastSeen: Date.now(), readUpTo: 0 }];
+    setState(prev => ({ ...prev, groups: [...prev.groups, group] }));
+    setActiveGroupId(group.id);
+  };
+
+  const handleLeaveGroup = (groupId: string) => {
+    disconnectGroup(groupId);
+    setActiveGroupId(current => (current === groupId ? null : current));
+    setState(prev => ({ ...prev, groups: prev.groups.filter(g => g.id !== groupId) }));
+  };
+
+  const handleSendGroupMessage = (groupId: string, text: string) => {
+    const at = Date.now();
+    const id = newId('gmsg');
+    const name = state.userName || 'Someone';
+
+    setState(prev => ({
+      ...prev,
+      groups: prev.groups.map(g =>
+        g.id === groupId
+          ? { ...g, messages: [...g.messages, { id, authorId: myMemberId(), authorName: name, text, sentAt: at }].slice(-500) }
+          : g
+      )
+    }));
+
+    sendToGroup(groupId, GROUP_CHAT, { from: myMemberId(), name, text, at });
+  };
+
+  /**
+   * Tells a group what has been read, while it is open on screen.
+   *
+   * Sent as a record rather than a signal: unlike typing, a read position has
+   * to survive the reader closing the app, or the info panel would empty out
+   * the moment everyone went offline.
+   */
+  useEffect(() => {
+    if (!activeGroupId || isLocked || !readShareReceipts()) return;
+    const group = state.groups.find(g => g.id === activeGroupId);
+    if (!group || group.messages.length === 0) return;
+
+    const newest = group.messages.reduce((max, m) => (m.sentAt > max ? m.sentAt : max), 0);
+    const mine = group.members.find(m => m.id === myMemberId());
+    if (!newest || (mine && mine.readUpTo >= newest)) return;
+
+    setState(prev => ({
+      ...prev,
+      groups: prev.groups.map(g =>
+        g.id === activeGroupId ? { ...g, members: withRead(g.members, myMemberId(), newest) } : g
+      )
+    }));
+    sendToGroup(activeGroupId, GROUP_READ, { from: myMemberId(), upTo: newest });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeGroupId, state.groups, isLocked]);
 
   const handleSelectTab = (tabId: string) => {
     // Screens load as separate chunks, so switching tab can suspend. Marked as
@@ -2381,6 +2608,54 @@ export const App: React.FC = () => {
     );
   }
 
+  /**
+   * Group mode.
+   *
+   * An early return rather than a branch inside the sanctuary's render: the
+   * couple's screens, its dock, its header and its modals are all below this
+   * line and none of them run while a group is open. A group cannot reach
+   * them, and they cannot reach a group.
+   */
+  const activeGroup = activeGroupId
+    ? state.groups.find(g => g.id === activeGroupId) || null
+    : null;
+
+  if (activeGroup) {
+    // Derived, never stored: a timestamp older than the window simply stops
+    // counting, so nothing has to remember to delete it.
+    const typingIds = Object.entries(groupTyping[activeGroup.id] || {})
+      .filter(([, at]) => Date.now() - at < TYPING_TTL_MS)
+      .map(([id]) => id);
+    return (
+      <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
+        <main className={`mx-auto px-4 py-4 sm:px-6 ${isTablet ? 'max-w-5xl' : 'max-w-3xl'}`}>
+          <Suspense fallback={<ScreenFallback />}>
+            <GroupChatView
+              group={activeGroup}
+              myId={myMemberId()}
+              connected={groupStatuses[activeGroup.id] === 'connected'}
+              typingIds={typingIds}
+              shareReceipts={shareReceipts}
+              onSend={(text) => handleSendGroupMessage(activeGroup.id, text)}
+              onTyping={() => {
+                if (!readShareReceipts()) return;
+                signalToGroup(activeGroup.id, TYPING_SIGNAL, { from: myMemberId() });
+              }}
+            />
+          </Suspense>
+        </main>
+
+        <GroupDock
+          groups={state.groups}
+          activeGroupId={activeGroup.id}
+          onSelectGroup={(id) => setActiveGroupId(id)}
+          onLeaveGroupMode={() => setActiveGroupId(null)}
+        />
+
+        <SensoryPulseOverlay activeUser={state.activeUser} />
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
@@ -2455,6 +2730,16 @@ export const App: React.FC = () => {
             onOpenTour={showTourCard ? () => setShowStoryTour(true) : undefined}
             onAddMilestone={handleAddMilestone}
             onSaveComfortBox={handleSaveComfortBox}
+          />
+        )}
+
+        {currentTab === 'groups' && (
+          <GroupsView
+            groups={state.groups}
+            onCreate={handleCreateGroup}
+            onJoin={handleJoinGroup}
+            onOpen={(id) => setActiveGroupId(id)}
+            onLeave={handleLeaveGroup}
           />
         )}
 
