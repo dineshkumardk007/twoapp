@@ -79,6 +79,12 @@ import {
   isUnderSuspicion
 } from './core/lockGuard';
 import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting } from './core/autoLock';
+import {
+  PRESENCE_BEAT,
+  BEAT_INTERVAL_MS,
+  readShareLastSeen,
+  writeShareLastSeen
+} from './core/lastSeen';
 
 
 // Screens are fetched the first time they are opened rather than all at once.
@@ -292,6 +298,7 @@ export const App: React.FC = () => {
   /** Seconds still to wait before another PIN may be tried; 0 when free. */
   const [lockoutLeft, setLockoutLeft] = useState(() => lockoutRemaining());
   const [autoLock, setAutoLock] = useState<AutoLockSetting>(() => readAutoLock());
+  const [shareLastSeen, setShareLastSeen] = useState(() => readShareLastSeen());
   const [passphraseAttempt, setPassphraseAttempt] = useState('');
 
   // Track live WebSocket relay status
@@ -521,6 +528,17 @@ export const App: React.FC = () => {
               ...prev,
               partnerReadAt: Math.max(prev.partnerReadAt || 0, upTo)
             }));
+          } else if (record.type === PRESENCE_BEAT) {
+            // Only the partner's beats say anything; our own come back to us
+            // on replay and would otherwise overwrite theirs with our time.
+            if (record.authorId === state.activeUser) return;
+            const at = Number(parsed.at) || 0;
+            if (at > 0) {
+              setState(prev => ({
+                ...prev,
+                partnerLastSeen: Math.max(prev.partnerLastSeen || 0, at)
+              }));
+            }
           } else if (record.type === 'VAULT_NAME') {
             setState(prev => ({ ...prev, vaultName: String(parsed.name || '') }));
           } else if (record.type === 'GRATITUDE_STAR') {
@@ -1122,6 +1140,34 @@ export const App: React.FC = () => {
       onLock: lockNow
     });
   }, [vaultKey, isLocked]);
+
+  /**
+   * Tells the other device this one is awake.
+   *
+   * Sent on connecting, whenever the app comes back to the foreground, and
+   * every couple of minutes in between - but only while actually visible, so
+   * a phone in a pocket does not report itself as being read.
+   *
+   * Nothing is sent at all when sharing is off. That is the whole of the
+   * privacy control: with no beat there is no timestamp, on the relay or on
+   * the partner's device.
+   */
+  useEffect(() => {
+    if (!shareLastSeen || relayStatus !== 'connected' || isLocked) return;
+
+    const beat = () => {
+      if (document.visibilityState !== 'visible') return;
+      wsRelay.broadcastUpdate(PRESENCE_BEAT, { at: Date.now() });
+    };
+
+    beat();
+    const timer = setInterval(beat, BEAT_INTERVAL_MS);
+    document.addEventListener('visibilitychange', beat);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', beat);
+    };
+  }, [shareLastSeen, relayStatus, isLocked]);
 
   const handleSelectTab = (tabId: string) => {
     // Screens load as separate chunks, so switching tab can suspend. Marked as
@@ -2388,6 +2434,10 @@ export const App: React.FC = () => {
             partnerName={state.partnerName || 'Partner'}
             partnerReadAt={state.partnerReadAt}
             relayStatus={relayStatus}
+            partnerOnline={partnerOnline}
+            // Reciprocal, as every messenger does it: hiding your own last
+            // seen hides theirs too, so it cannot become a one-way window.
+            partnerLastSeen={shareLastSeen ? state.partnerLastSeen : 0}
           />
         )}
 
@@ -2705,6 +2755,11 @@ export const App: React.FC = () => {
             onSelectAutoLock={(value) => {
               writeAutoLock(value);
               setAutoLock(value);
+            }}
+            shareLastSeen={shareLastSeen}
+            onToggleShareLastSeen={(value) => {
+              writeShareLastSeen(value);
+              setShareLastSeen(value);
             }}
             decoyOnLaunch={decoyOnLaunch}
             onToggleDecoyOnLaunch={handleToggleDecoyOnLaunch}

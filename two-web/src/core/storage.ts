@@ -98,6 +98,8 @@ export interface SpaceState {
    * forever.
    */
   partnerReadAt: number;
+  /** When the partner's device last said it was awake; 0 when never heard. */
+  partnerLastSeen: number;
   /**
    * True once anything has ever arrived from the partner.
    *
@@ -128,6 +130,7 @@ const DEFAULT_STATE: SpaceState = {
   pinEnabled: false,
   vaultName: '',
   partnerReadAt: 0,
+  partnerLastSeen: 0,
   partnerEverSeen: false,
   knownDevices: [],
   approvedDeviceCount: 1,
@@ -1075,6 +1078,7 @@ export function loadState(): SpaceState {
       pinEnabled: parsed.pinEnabled !== undefined ? parsed.pinEnabled : !!parsed.appPin,
       vaultName: parsed.vaultName || '',
       partnerReadAt: parsed.partnerReadAt || 0,
+      partnerLastSeen: parsed.partnerLastSeen || 0,
       partnerEverSeen: parsed.partnerEverSeen || false,
       knownDevices: parsed.knownDevices || [],
       approvedDeviceCount: parsed.approvedDeviceCount || 1,

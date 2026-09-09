@@ -11,6 +11,17 @@
 
 import { Pool } from 'pg';
 
+/**
+ * A record that says only "this device was here just now".
+ *
+ * Kept to exactly one row per device per space, because it is the current
+ * value that matters and never the history: a beat every couple of minutes
+ * would otherwise add hundreds of rows a day, crowd real messages out of the
+ * 2000-record replay a new device receives, and hand the retention sweep a
+ * pile of noise to carry for ninety days.
+ */
+export const PRESENCE_BEAT = 'PRESENCE_BEAT';
+
 export interface StoredRecord {
   id: string;
   spaceId: string;
@@ -110,6 +121,19 @@ class InMemoryRelayDb implements RelayDb {
   }
 
   async saveRecord(record: StoredRecord) {
+    if (record.type === PRESENCE_BEAT) {
+      this.records = this.records.filter(
+        r =>
+          !(
+            r.type === PRESENCE_BEAT &&
+            r.spaceId === record.spaceId &&
+            r.authorId === record.authorId
+          )
+      );
+      this.records.push(record);
+      return record;
+    }
+
     // Replaying the same record must not duplicate it.
     const existing = this.records.findIndex(r => r.id === record.id);
     if (existing >= 0) {
@@ -289,6 +313,18 @@ class PostgresRelayDb implements RelayDb {
   }
 
   async saveRecord(record: StoredRecord) {
+    // One beat per device: the previous one is worthless the moment a newer
+    // arrives, and each carries a fresh id because the clients dedupe inbound
+    // records by id - a stable id would be applied once and every later beat
+    // silently ignored.
+    if (record.type === PRESENCE_BEAT) {
+      await this.pool.query(
+        `DELETE FROM relay_records
+          WHERE space_id = $1 AND author_id = $2 AND type = $3`,
+        [record.spaceId, record.authorId, PRESENCE_BEAT]
+      );
+    }
+
     await this.pool.query(
       `INSERT INTO relay_records
          (id, space_id, author_id, type, payload, nonce, lamport_clock, client_ts)

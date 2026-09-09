@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage, NeedItem } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
+import { formatLastSeen } from '../core/lastSeen';
 import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, X } from 'lucide-react';
 
 /**
@@ -71,6 +72,15 @@ interface ChatViewProps {
     extra?: { isVoiceMemo?: boolean; audioDataUrl?: string; audioDurationSeconds?: number }
   ) => void;
   onOpenSoftLanding?: () => void;
+  /** True while the partner's device is in the space right now. */
+  partnerOnline?: boolean;
+  /**
+   * When the partner's device was last awake, or 0 when unknown or hidden.
+   *
+   * Already zeroed by the caller when this device has turned its own sharing
+   * off, so there is nothing to decide here.
+   */
+  partnerLastSeen?: number;
   partnerName?: string;
 }
 
@@ -81,10 +91,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
   partnerReadAt = 0,
   relayStatus = 'connected',
   onOpenSoftLanding,
+  partnerOnline = false,
+  partnerLastSeen = 0,
   partnerName = 'Partner'
 }) => {
   const [inputText, setInputText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Re-rendered on a timer only because the wording ages: "today at 23:58"
+  // has to become "yesterday at 23:58" without the screen being touched.
+  const [lastSeenLabel, setLastSeenLabel] = useState(() => formatLastSeen(partnerLastSeen));
+  useEffect(() => {
+    setLastSeenLabel(formatLastSeen(partnerLastSeen));
+    if (!partnerLastSeen) return;
+    const timer = setInterval(() => setLastSeenLabel(formatLastSeen(partnerLastSeen)), 60_000);
+    return () => clearInterval(timer);
+  }, [partnerLastSeen]);
   const [showNeedModal, setShowNeedModal] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -108,17 +130,35 @@ export const ChatView: React.FC<ChatViewProps> = ({
   return (
     <div className="flex flex-col chat-shell bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="px-6 py-3.5 border-b border-linen-border bg-linen-variant/40 flex items-center justify-between">
-        <div>
-          <h3 className="font-serif text-base font-medium text-linen-primary">{partnerName}</h3>
-          <div className="flex items-center text-xs text-linen-secondary space-x-1">
+      <div className="px-4 py-3 border-b border-linen-border bg-linen-variant/40 flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h3 className="font-serif text-base font-medium text-linen-primary truncate">
+            {partnerName}
+          </h3>
+          {/* One line, always. Three separate facts used to sit here as
+              separate spans and, once presence was added, a phone-width header
+              wrapped them into a four-line stack that pushed the conversation
+              down the screen. */}
+          <div className="flex items-center gap-1.5 text-xs text-linen-secondary min-w-0 whitespace-nowrap overflow-hidden">
             {/* Encryption is unconditional, so this dot stays green: it is a
                 statement about the room, not the connection. The connection
                 gets its own words, and only when there is something to say. */}
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-            <span>Encrypted Room</span>
+            <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-500 inline-block" />
+
+            {/* Presence takes the line when there is any, the way a messenger
+                does it. "Encrypted Room" is what the line says when there is
+                nothing else to report - the encryption is unconditional, so it
+                is a statement about the room rather than news. */}
+            <span className="truncate">
+              {partnerOnline ? (
+                <span className="text-emerald-700">online</span>
+              ) : (
+                lastSeenLabel || 'Encrypted Room'
+              )}
+            </span>
+
             {relayStatus !== 'connected' && (
-              <span className="text-amber-700">
+              <span className="shrink-0 text-amber-700">
                 &middot;{' '}
                 {relayStatus === 'connecting' || relayStatus === 'reconnecting'
                   ? 'Connecting'
@@ -127,7 +167,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             )}
           </div>
         </div>
-        <div className="flex items-center space-x-2.5">
+        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
           {onOpenSoftLanding && (
             <button
               onClick={onOpenSoftLanding}
@@ -142,8 +182,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
             onClick={() => setShowNeedModal(true)}
             className="text-xs font-medium text-linen-accent hover:underline flex items-center"
           >
-            <Sparkles className="w-3.5 h-3.5 mr-1" />
-            Ask For What You Need
+            <Sparkles className="w-3.5 h-3.5 mr-1 shrink-0" />
+            {/* The full phrase wrapped onto three lines in a phone-width
+                header, which both made it tall and squeezed the presence line
+                beside it into an ellipsis. Same button, fewer words where
+                there is no room for them. */}
+            <span className="hidden sm:inline">Ask For What You Need</span>
+            <span className="sm:hidden">Ask</span>
           </button>
         </div>
       </div>

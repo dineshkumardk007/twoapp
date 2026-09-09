@@ -63,6 +63,9 @@ interface SettingsViewProps {
   /** How long the app may sit in the background before locking itself. */
   autoLock?: AutoLockSetting;
   onSelectAutoLock?: (value: AutoLockSetting) => void;
+  /** Whether this device tells the other one when it was last awake. */
+  shareLastSeen?: boolean;
+  onToggleShareLastSeen?: (share: boolean) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -88,6 +91,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onUpdatePin,
   autoLock = 60,
   onSelectAutoLock,
+  shareLastSeen = true,
+  onToggleShareLastSeen,
   onToggleActiveUser = () => {},
   decoyCode = '142.85',
   onUpdateDecoyCode,
@@ -482,6 +487,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               names are what each device says about itself &mdash; labels, not proof.
             </p>
           </div>
+
+          {/* Last seen.
+              Reciprocal on purpose, the way every messenger does it: turning
+              yours off turns theirs off too. In a couple that rule is the
+              whole point - without it, one of you could watch the other while
+              staying invisible. */}
+          {onToggleShareLastSeen && (
+            <div className="pt-4 mt-4 border-t border-linen-border/60 space-y-2">
+              <label className="flex items-start justify-between gap-3 cursor-pointer">
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-linen-primary">
+                    Share when I was last here
+                  </span>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-linen-secondary">
+                    Your partner sees &ldquo;online&rdquo; while the app is open, and the time you
+                    last had it open once you close it. Turn this off and you stop sending it
+                    &mdash; and stop seeing theirs.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={shareLastSeen}
+                  onChange={e => onToggleShareLastSeen(e.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 cursor-pointer"
+                />
+              </label>
+            </div>
+          )}
 
           {/* Device lock.
               A PIN belongs to the device it is typed on, not to the space: it
