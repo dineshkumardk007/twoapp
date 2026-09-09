@@ -83,7 +83,11 @@ import {
   PRESENCE_BEAT,
   BEAT_INTERVAL_MS,
   readShareLastSeen,
-  writeShareLastSeen
+  writeShareLastSeen,
+  readShareReceipts,
+  writeShareReceipts,
+  TYPING_SIGNAL,
+  TYPING_TTL_MS
 } from './core/lastSeen';
 
 
@@ -299,6 +303,9 @@ export const App: React.FC = () => {
   const [lockoutLeft, setLockoutLeft] = useState(() => lockoutRemaining());
   const [autoLock, setAutoLock] = useState<AutoLockSetting>(() => readAutoLock());
   const [shareLastSeen, setShareLastSeen] = useState(() => readShareLastSeen());
+  const [shareReceipts, setShareReceipts] = useState(() => readShareReceipts());
+  /** Epoch ms of the partner's most recent typing signal; 0 when not typing. */
+  const [partnerTypingAt, setPartnerTypingAt] = useState(0);
   const [passphraseAttempt, setPassphraseAttempt] = useState('');
 
   // Track live WebSocket relay status
@@ -393,6 +400,16 @@ export const App: React.FC = () => {
   // Listen for remote updates
   useEffect(() => {
     const unsubscribe = wsRelay.subscribe((msg) => {
+      // Signals carry no history and are never stored, so they are handled
+      // before the record path rather than inside it.
+      if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === TYPING_SIGNAL) {
+        // Reciprocal: a device that sends nothing sees nothing.
+        if (!readShareReceipts()) return;
+        if (msg.signal.authorId === state.activeUser) return;
+        setPartnerTypingAt(Date.now());
+        return;
+      }
+
       if (msg.type === 'REMOTE_RECORD') {
         const record = msg.record;
         setLastSyncedAt(Date.now());
@@ -1031,6 +1048,9 @@ export const App: React.FC = () => {
       0
     );
     if (!newest || newest <= lastSentReceiptRef.current) return;
+    // Off means nothing leaves this device - the setting is the send, not a
+    // request that the other end politely declines to display.
+    if (!readShareReceipts()) return;
     lastSentReceiptRef.current = newest;
     wsRelay.broadcastUpdate('READ_RECEIPT', { upTo: newest });
   };
@@ -1168,6 +1188,19 @@ export const App: React.FC = () => {
       document.removeEventListener('visibilitychange', beat);
     };
   }, [shareLastSeen, relayStatus, isLocked]);
+
+  /**
+   * Lets "typing…" lapse.
+   *
+   * The sender repeats every few seconds while they are still writing, so the
+   * absence of a repeat is what means they stopped - there is no "stopped
+   * typing" message to miss, and closing the app cannot fail to send one.
+   */
+  useEffect(() => {
+    if (!partnerTypingAt) return;
+    const timer = setTimeout(() => setPartnerTypingAt(0), TYPING_TTL_MS);
+    return () => clearTimeout(timer);
+  }, [partnerTypingAt]);
 
   const handleSelectTab = (tabId: string) => {
     // Screens load as separate chunks, so switching tab can suspend. Marked as
@@ -2438,6 +2471,14 @@ export const App: React.FC = () => {
             // Reciprocal, as every messenger does it: hiding your own last
             // seen hides theirs too, so it cannot become a one-way window.
             partnerLastSeen={shareLastSeen ? state.partnerLastSeen : 0}
+            partnerTyping={partnerTypingAt > 0}
+            shareReceipts={shareReceipts}
+            onTyping={() => {
+              // Read straight from the setting rather than the render's copy:
+              // off must mean nothing leaves this device, immediately.
+              if (!readShareReceipts()) return;
+              wsRelay.sendSignal(TYPING_SIGNAL, { at: Date.now() });
+            }}
           />
         )}
 
@@ -2760,6 +2801,11 @@ export const App: React.FC = () => {
             onToggleShareLastSeen={(value) => {
               writeShareLastSeen(value);
               setShareLastSeen(value);
+            }}
+            shareReceipts={shareReceipts}
+            onToggleShareReceipts={(value) => {
+              writeShareReceipts(value);
+              setShareReceipts(value);
             }}
             decoyOnLaunch={decoyOnLaunch}
             onToggleDecoyOnLaunch={handleToggleDecoyOnLaunch}

@@ -66,6 +66,9 @@ interface SettingsViewProps {
   /** Whether this device tells the other one when it was last awake. */
   shareLastSeen?: boolean;
   onToggleShareLastSeen?: (share: boolean) => void;
+  /** Whether this device sends read receipts and typing. */
+  shareReceipts?: boolean;
+  onToggleShareReceipts?: (share: boolean) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -93,6 +96,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSelectAutoLock,
   shareLastSeen = true,
   onToggleShareLastSeen,
+  shareReceipts = true,
+  onToggleShareReceipts,
   onToggleActiveUser = () => {},
   decoyCode = '142.85',
   onUpdateDecoyCode,
@@ -510,6 +515,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   type="checkbox"
                   checked={shareLastSeen}
                   onChange={e => onToggleShareLastSeen(e.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 cursor-pointer"
+                />
+              </label>
+            </div>
+          )}
+
+          {/* Read receipts and typing, one switch.
+              They answer the same question - what am I doing in this
+              conversation right now - and separating them would offer a
+              privacy setting that leaks the thing it claims to hide. */}
+          {onToggleShareReceipts && (
+            <div className="pt-4 mt-4 border-t border-linen-border/60 space-y-2">
+              <label className="flex items-start justify-between gap-3 cursor-pointer">
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-linen-primary">
+                    Read receipts &amp; typing
+                  </span>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-linen-secondary">
+                    Blue ticks when you have read a message, and &ldquo;typing&hellip;&rdquo; while
+                    you write. Turn this off and you send neither &mdash; and you stop seeing
+                    theirs. Messages themselves are unaffected.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={shareReceipts}
+                  onChange={e => onToggleShareReceipts(e.target.checked)}
                   className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 cursor-pointer"
                 />
               </label>

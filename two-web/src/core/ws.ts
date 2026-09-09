@@ -212,6 +212,29 @@ class WebSocketRelayClient {
       return;
     }
 
+    if (payload?.type === 'REMOTE_SIGNAL' && payload.signal) {
+      const creds = this.creds;
+      if (!creds) return;
+      const signal = payload.signal;
+      try {
+        const plaintext = await decryptText(
+          signal.payload,
+          signal.nonce,
+          creds.key,
+          signal.id,
+          signal.spaceId,
+          signal.type
+        );
+        // Deliberately not marked as applied: signals carry no history, so
+        // there is nothing a repeat could corrupt, and the dedupe set should
+        // not grow with ids nobody will ever see twice.
+        this.emit({ type: 'REMOTE_SIGNAL', signal: { ...signal, payload: plaintext } });
+      } catch {
+        // Not ours to read: a stale code, or somebody else in the room.
+      }
+      return;
+    }
+
     if (payload?.type !== 'REMOTE_RECORD' || !payload.record) {
       this.emit(payload);
       return;
@@ -253,6 +276,45 @@ class WebSocketRelayClient {
    */
   broadcastUpdate(type: string, data: any, correlationId?: string): void {
     void this.encryptAndSend(type, data, correlationId);
+  }
+
+  /**
+   * Sends something the other side should see now and nobody should keep.
+   *
+   * Same encryption as a record - the relay cannot read it either way - but it
+   * goes down a channel that is never persisted, never replayed and never
+   * acknowledged. Dropped silently when the socket is down: a signal that
+   * arrives late is worse than one that never arrives, so there is no outbox.
+   */
+  sendSignal(type: string, data: any): void {
+    void this.encryptAndSignal(type, data);
+  }
+
+  private async encryptAndSignal(type: string, data: any) {
+    const creds = this.creds;
+    if (!creds || !this.isOpen()) return;
+
+    const id =
+      typeof window.crypto.randomUUID === 'function'
+        ? window.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      const { ciphertext, nonce } = await encryptText(
+        JSON.stringify(data),
+        creds.key,
+        id,
+        creds.spaceId,
+        type
+      );
+
+      this.rawSend({
+        type: 'SIGNAL',
+        signal: { id, spaceId: creds.spaceId, type, payload: ciphertext, nonce }
+      });
+    } catch (e) {
+      console.error('[Relay] Signal encryption failed', e);
+    }
   }
 
   private async encryptAndSend(type: string, data: any, correlationId?: string) {

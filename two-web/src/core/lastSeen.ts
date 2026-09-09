@@ -71,3 +71,39 @@ export function formatLastSeen(at: number, now = Date.now()): string {
   const date = then.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
   return `last seen ${date} at ${time}`;
 }
+
+// --- Read receipts and typing ------------------------------------------------
+
+const RECEIPTS_KEY = 'two_share_receipts_v1';
+
+/** The signal type for "I am writing something", sent and never stored. */
+export const TYPING_SIGNAL = 'TYPING';
+
+/** How long a received "typing" stays true without another arriving. */
+export const TYPING_TTL_MS = 6000;
+
+/** How often a still-typing device repeats itself. */
+export const TYPING_REPEAT_MS = 3000;
+
+/**
+ * Whether this device sends read receipts and typing.
+ *
+ * One switch for both, as WhatsApp has it: they answer the same question -
+ * what am I doing in this conversation right now - and splitting them would
+ * offer a privacy setting that leaks the thing it claims to hide.
+ */
+export function readShareReceipts(): boolean {
+  try {
+    return localStorage.getItem(RECEIPTS_KEY) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
+export function writeShareReceipts(share: boolean) {
+  try {
+    localStorage.setItem(RECEIPTS_KEY, share ? 'true' : 'false');
+  } catch {
+    /* private mode - this run keeps the value it was given */
+  }
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage, NeedItem } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
-import { formatLastSeen } from '../core/lastSeen';
+import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
 import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, X } from 'lucide-react';
 
 /**
@@ -81,6 +81,12 @@ interface ChatViewProps {
    * off, so there is nothing to decide here.
    */
   partnerLastSeen?: number;
+  /** True while the partner is writing something right now. */
+  partnerTyping?: boolean;
+  /** False when this device has switched read receipts and typing off. */
+  shareReceipts?: boolean;
+  /** Called as the composer is typed in; throttled inside. */
+  onTyping?: () => void;
   partnerName?: string;
 }
 
@@ -93,10 +99,31 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onOpenSoftLanding,
   partnerOnline = false,
   partnerLastSeen = 0,
+  partnerTyping = false,
+  shareReceipts = true,
+  onTyping,
   partnerName = 'Partner'
 }) => {
   const [inputText, setInputText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  /**
+   * Announces typing at most once every few seconds.
+   *
+   * A signal per keystroke would be a burst of traffic all saying the same
+   * thing. The receiver holds the state for longer than this gap, so repeating
+   * on a timer is what keeps it true while the writing continues - and letting
+   * it lapse is what ends it, with no "stopped typing" message that closing
+   * the app could fail to send.
+   */
+  const lastTypingSentRef = useRef(0);
+  const announceTyping = () => {
+    if (!onTyping) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < TYPING_REPEAT_MS) return;
+    lastTypingSentRef.current = now;
+    onTyping();
+  };
 
   // Re-rendered on a timer only because the wording ages: "today at 23:58"
   // has to become "yesterday at 23:58" without the screen being touched.
@@ -150,7 +177,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 nothing else to report - the encryption is unconditional, so it
                 is a statement about the room rather than news. */}
             <span className="truncate">
-              {partnerOnline ? (
+              {partnerTyping ? (
+                <span className="font-medium text-linen-accent">typing…</span>
+              ) : partnerOnline ? (
                 <span className="text-emerald-700">online</span>
               ) : (
                 lastSeenLabel || 'Encrypted Room'
@@ -230,7 +259,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </div>
               <span className="text-[10px] text-linen-secondary mt-1 px-1">
                 {isFromCurrentPerspective ? 'You' : partnerName} • {msg.timestamp}
-                {isFromCurrentPerspective && (
+                {isFromCurrentPerspective && shareReceipts && (
                   <span className="ml-1.5 inline-flex items-center align-middle">
                     {msg.sentAt && partnerReadAt >= msg.sentAt ? (
                       <>
@@ -324,7 +353,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <input
               type="text"
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={(e) => {
+                setInputText(e.target.value);
+                announceTyping();
+              }}
               onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
               placeholder={`Write a quiet thought to ${partnerName}...`}
               className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary placeholder:text-linen-secondary/60"

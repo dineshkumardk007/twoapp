@@ -202,6 +202,51 @@ export class WebSocketRelay {
             return;
           }
 
+          /**
+           * A signal: relayed live to the space, never written down.
+           *
+           * "Typing…" is worthless a second after it is sent, and every other
+           * message here is persisted and replayed - so sending typing as a
+           * record would have written a row per keystroke burst, replayed
+           * stale ones to a device that had been away, and let a two-minute
+           * conversation outweigh a year of letters in the record store.
+           *
+           * The payload is ciphertext exactly like a record's; the relay
+           * forwards it without being able to read it, and forgets it the
+           * instant it has.
+           */
+          if (message.type === 'SIGNAL') {
+            if (!currentClient) {
+              this.sendJson(ws, { type: 'ERROR', error: 'JOIN before sending signals' });
+              return;
+            }
+
+            if (!consumeToken(currentClient)) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Rate limit exceeded, slow down' });
+              return;
+            }
+
+            const signal = message.signal as any;
+            if (
+              !signal ||
+              !isNonEmptyString(signal.id) ||
+              !isNonEmptyString(signal.type) ||
+              !isNonEmptyString(signal.payload) ||
+              !isNonEmptyString(signal.nonce) ||
+              signal.spaceId !== currentClient.spaceId
+            ) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Invalid signal' });
+              return;
+            }
+
+            this.broadcastToSpace(currentClient.spaceId, currentClient.connectionId, {
+              type: 'REMOTE_SIGNAL',
+              signal: { ...signal, authorId: currentClient.authorRole }
+            });
+            // No ack: nothing was stored, and there is nothing to be sure of.
+            return;
+          }
+
           if (message.type === 'RECORD') {
             if (!currentClient) {
               this.sendJson(ws, { type: 'ERROR', error: 'JOIN before sending records' });
