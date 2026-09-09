@@ -65,9 +65,13 @@ class InMemoryRelayDb implements RelayDb {
   records: StoredRecord[] = [];
   rendezvousTokens = new Map<string, RendezvousToken>();
 
-  async init() {
-    console.warn('[Relay DB] DATABASE_URL is not set - using in-memory storage. Records are lost on restart.');
-  }
+  // Deliberately silent. This store is never used on its own - it is the
+  // buffer inside ResilientRelayDb, which is constructed on every boot
+  // whether or not Postgres is configured. Announcing "DATABASE_URL is not
+  // set" from here therefore said it on every boot, including the ones that
+  // went on to connect to Postgres two lines later. Whether the relay is
+  // actually durable is ResilientRelayDb's fact to report, and it does.
+  async init() {}
 
   async createUser(user: StoredUser) {
     this.users.set(user.id, user);
@@ -407,7 +411,13 @@ class ResilientRelayDb implements RelayDb {
 
   async init() {
     await this.memory.init();
-    if (!this.postgres) return;
+
+    if (!this.postgres) {
+      console.warn(
+        '[Relay DB] DATABASE_URL is not set - using in-memory storage. Records are lost on restart.'
+      );
+      return;
+    }
 
     try {
       await this.postgres.init();
