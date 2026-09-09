@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Users, Plus, LogIn, ArrowRight, Copy, Check, Trash2 } from 'lucide-react';
-import { GroupSpace, MAX_GROUP_MEMBERS } from '../core/groups';
+import { GroupSpace, MAX_GROUP_MEMBERS, isOverCapacity } from '../core/groups';
 import {
   generatePairingCode,
   generateJoinPhrase,
@@ -248,9 +248,14 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
                   <span className="block truncate text-sm font-medium text-linen-primary">
                     {group.name}
                   </span>
-                  <span className="block text-[11px] text-linen-secondary">
+                  <span
+                    className={`block text-[11px] ${
+                      isOverCapacity(group.members) ? 'text-amber-700' : 'text-linen-secondary'
+                    }`}
+                  >
                     {group.members.length || 1}{' '}
-                    {group.members.length === 1 ? 'member' : 'members'} &middot;{' '}
+                    {group.members.length === 1 ? 'member' : 'members'}
+                    {isOverCapacity(group.members) && ` (over ${MAX_GROUP_MEMBERS})`} &middot;{' '}
                     {group.messages.length} message{group.messages.length === 1 ? '' : 's'}
                   </span>
                 </span>

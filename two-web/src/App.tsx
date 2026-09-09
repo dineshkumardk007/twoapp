@@ -10,7 +10,8 @@ import {
   myMemberId,
   newGroup,
   withMember,
-  withRead
+  withRead,
+  unreadCount
 } from './core/groups';
 import {
   connectGroup,
@@ -330,6 +331,10 @@ export const App: React.FC = () => {
 
   /** The group being read right now, or null while in the sanctuary. */
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  // Read inside the group message handler, which is captured when a group
+  // first connects and would otherwise keep seeing the first value forever.
+  const activeGroupIdRef = useRef<string | null>(null);
+  activeGroupIdRef.current = activeGroupId;
   const [groupStatuses, setGroupStatuses] = useState<Record<string, string>>({});
   /** memberId -> when they were last seen typing, per group. */
   const [groupTyping, setGroupTyping] = useState<Record<string, Record<string, number>>>({});
@@ -1282,6 +1287,19 @@ export const App: React.FC = () => {
 
         if (record.type === GROUP_CHAT) {
           if (g.messages.some(m => m.id === record.id)) return g;
+
+          // Something arriving in a group you are not looking at used to be
+          // silent: the couple's chat raises a toast, groups raised nothing,
+          // so the only way to find out was to go and look.
+          if (activeGroupIdRef.current !== groupId && !isCamouflagedRef.current) {
+            setInAppNotification({
+              id: newId(),
+              title: `${String(parsed.name || 'Someone')} in ${g.name}`,
+              body: String(parsed.text || 'Sent a message'),
+              type: 'chat',
+              tabId: `group:${groupId}`
+            });
+          }
           const message = {
             id: record.id,
             authorId: from,
@@ -2650,6 +2668,9 @@ export const App: React.FC = () => {
           activeGroupId={activeGroup.id}
           onSelectGroup={(id) => setActiveGroupId(id)}
           onLeaveGroupMode={() => setActiveGroupId(null)}
+          unreadByGroup={Object.fromEntries(
+            state.groups.map(g => [g.id, unreadCount(g, myMemberId())])
+          )}
         />
 
         <SensoryPulseOverlay activeUser={state.activeUser} />
@@ -3108,7 +3129,13 @@ export const App: React.FC = () => {
       <InAppNotificationToast
         notification={inAppNotification}
         onDismiss={() => setInAppNotification(null)}
-        onOpenTab={handleSelectTab}
+        onOpenTab={(tabId) => {
+          if (tabId.startsWith('group:')) {
+            setActiveGroupId(tabId.slice('group:'.length));
+            return;
+          }
+          handleSelectTab(tabId);
+        }}
       />
 
       {/* Sanctuary Directory Modal (All 32 Spaces) */}

@@ -17,6 +17,20 @@ import { newId } from './ids';
 /** Ten people, which is what the dock and the read list are shaped for. */
 export const MAX_GROUP_MEMBERS = 10;
 
+/**
+ * The point past which the roster stops growing at all.
+ *
+ * Not a product limit - a guard. Everyone holding the code can announce
+ * themselves, so without a ceiling the member list is a list anybody in the
+ * room can lengthen indefinitely.
+ */
+export const HARD_CEILING = 40;
+
+/** True when a group holds more people than it is meant to. */
+export function isOverCapacity(members: GroupMember[]): boolean {
+  return members.length > MAX_GROUP_MEMBERS;
+}
+
 export interface GroupMember {
   /**
    * The member's device id.
@@ -118,7 +132,15 @@ export function withMember(
   const existing = members.find(m => m.id === incoming.id);
 
   if (!existing) {
-    if (members.length >= MAX_GROUP_MEMBERS) return members;
+    // Deliberately not dropped at MAX_GROUP_MEMBERS.
+    //
+    // It used to be, which produced the worst of both worlds: an eleventh
+    // person's messages appeared in the conversation while they were missing
+    // from the roster, so the read list quietly stopped accounting for
+    // everyone actually in the room. A group being over its intended size is
+    // something to say out loud, not something to half-record. HARD_CEILING
+    // is only there so a hostile room cannot grow this list without end.
+    if (members.length >= HARD_CEILING) return members;
     return [...members, { id: incoming.id, name: incoming.name, lastSeen: at, readUpTo: 0 }];
   }
 
@@ -160,4 +182,17 @@ export function readBreakdown(
   const read = others.filter(m => m.readUpTo >= message.sentAt);
   const unread = others.filter(m => m.readUpTo < message.sentAt);
   return { read, unread, allRead: others.length > 0 && unread.length === 0 };
+}
+
+/**
+ * Messages this device has not read in a group.
+ *
+ * Derived from the read position it already publishes, so nothing has to be
+ * counted as it arrives or reset when a group is opened - the same number the
+ * others see for you is the number shown on the dock.
+ */
+export function unreadCount(group: GroupSpace, myId: string): number {
+  const me = group.members.find(m => m.id === myId);
+  const readUpTo = me?.readUpTo || 0;
+  return group.messages.filter(m => m.authorId !== myId && m.sentAt > readUpTo).length;
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Send, Smile, X, Check, CheckCheck, Info, Users } from 'lucide-react';
-import { GroupSpace, readBreakdown, GroupMessage } from '../core/groups';
+import { GroupSpace, readBreakdown, GroupMessage, isOverCapacity, MAX_GROUP_MEMBERS } from '../core/groups';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
 
 interface GroupChatViewProps {
@@ -111,6 +111,21 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
           {group.members.length || 1}
         </span>
       </div>
+
+      {/* A group past its size is said out loud rather than half-recorded.
+          Everyone holding the code can walk in, so this is the only honest
+          place to notice it. */}
+      {isOverCapacity(group.members) && (
+        <div className="border-b border-amber-300 bg-amber-50 px-4 py-2.5 text-amber-950">
+          <p className="text-xs font-semibold">
+            {group.members.length} people are in this group
+          </p>
+          <p className="mt-0.5 text-[11px] leading-relaxed">
+            It is meant for {MAX_GROUP_MEMBERS}. Anyone with the code and the words can join, and
+            nobody can be removed &mdash; start a new group if this is not who you expected.
+          </p>
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={logRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto scroll-contain p-4">
