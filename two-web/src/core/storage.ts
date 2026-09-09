@@ -38,6 +38,7 @@ import {
 import { loadSpaceSession } from './space';
 import { externalizeMedia, persistMedia } from './media';
 import { newId } from './ids';
+import { GroupSpace } from './groups';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
 
@@ -101,6 +102,15 @@ export interface SpaceState {
   /** When the partner's device last said it was awake; 0 when never heard. */
   partnerLastSeen: number;
   /**
+   * Group spaces this device belongs to.
+   *
+   * Deliberately a separate list rather than a widening of the couple's own
+   * fields: everything above describes one space shared by two people, and a
+   * group is a different room with different members. Keeping them apart is
+   * what lets groups exist without a single couple screen changing.
+   */
+  groups: GroupSpace[];
+  /**
    * True once anything has ever arrived from the partner.
    *
    * A space with an account but no partner looks identical to a broken one:
@@ -131,6 +141,7 @@ const DEFAULT_STATE: SpaceState = {
   vaultName: '',
   partnerReadAt: 0,
   partnerLastSeen: 0,
+  groups: [],
   partnerEverSeen: false,
   knownDevices: [],
   approvedDeviceCount: 1,
@@ -1079,6 +1090,7 @@ export function loadState(): SpaceState {
       vaultName: parsed.vaultName || '',
       partnerReadAt: parsed.partnerReadAt || 0,
       partnerLastSeen: parsed.partnerLastSeen || 0,
+      groups: Array.isArray(parsed.groups) ? parsed.groups : [],
       partnerEverSeen: parsed.partnerEverSeen || false,
       knownDevices: parsed.knownDevices || [],
       approvedDeviceCount: parsed.approvedDeviceCount || 1,
