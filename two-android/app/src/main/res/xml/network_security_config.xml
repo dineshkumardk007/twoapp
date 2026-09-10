@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Plaintext is refused everywhere except a relay running on this desk.
+
+  The app used to carry android:usesCleartextTraffic="true", which permits
+  unencrypted HTTP to any host on the internet. Nothing in the shipped app
+  needs that: the page itself is served from the secure origin
+  https://appassets.androidplatform.net, and the relay is wss://.
+
+  The one real use was development. NetworkConfig.wsRelayUrl deliberately
+  yields ws:// when the relay is pointed at a local address, so removing the
+  flag outright would have quietly ended testing against a relay on this
+  machine - the failure being a socket that never opens, with nothing on screen
+  to say why.
+
+  So cleartext is denied by default and allowed only for the loopback and LAN
+  addresses NetworkConfig already names.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <!-- How an emulator reaches the host machine. -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- NetworkConfig.PHYSICAL_DEVICE_HOST, for a phone on the same Wi-Fi. -->
+        <domain includeSubdomains="true">192.168.29.197</domain>
+    </domain-config>
+</network-security-config>
