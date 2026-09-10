@@ -37,6 +37,7 @@ import {
   getDeviceId,
   describeThisDevice,
   normalizeJoinPhrase,
+  normalizePairingCode,
   deriveSpaceCredentials,
   loadSpaceSession,
   saveSpaceSession,
@@ -1461,12 +1462,50 @@ export const App: React.FC = () => {
     setActiveGroupId(group.id);
   };
 
-  const handleJoinGroup = (code: string, joinPhrase: string) => {
+  /**
+   * Joins a group, or explains why it will not.
+   *
+   * Returns a message rather than throwing, because both refusals are ordinary
+   * mistakes that belong next to the field the code was typed into.
+   *
+   * A room is addressed by its space id, which is derived from the code and
+   * the phrase alone - the role plays no part in it. So a second membership
+   * pointed at a code you already hold is not a second room: it is a second
+   * client on the same one, and the two share every store the relay client
+   * keys by space id, including the outbox of records still waiting to be
+   * acknowledged. They would overwrite each other's queue, and the server,
+   * which evicts an older connection whenever the same device id joins the
+   * same space, would close first one and then the other in turn.
+   *
+   * The couple's own code is the dangerous version of that, and the easiest to
+   * type by accident: it sits on the home screen under "our space link code",
+   * which makes it the most copied string in the app. Pointing a group at it
+   * would put a second client on the conversation this whole app exists for.
+   */
+  const handleJoinGroup = (code: string, joinPhrase: string): string | null => {
+    const wanted = normalizePairingCode(code);
+
+    if (session && normalizePairingCode(session.code) === wanted) {
+      return 'That is your own space link code, not a group code. Joining it here would disturb your private chat.';
+    }
+
+    // Deliberately does not open the group it found. Opening one switches the
+    // whole app into group mode, which unmounts the panel this message is
+    // about to be shown in - so the explanation would be replaced by the
+    // silent, confusing success of arriving somewhere unasked.
+    const already = state.groups.find(g => normalizePairingCode(g.code) === wanted);
+    if (already) {
+      return `You are already in this group${
+        already.nameConfirmed ? ` — "${already.name}"` : ''
+      }. It is in the list below.`;
+    }
+
     // Named "Group" until the founder's hello says otherwise.
     const group = newGroup('', code, joinPhrase, false);
     group.members = [{ id: myMemberId(), name: state.userName || 'Someone', lastSeen: Date.now(), readUpTo: 0 }];
     setState(prev => ({ ...prev, groups: [...prev.groups, group] }));
     setActiveGroupId(group.id);
+    return null;
   };
 
   const handleLeaveGroup = (groupId: string) => {

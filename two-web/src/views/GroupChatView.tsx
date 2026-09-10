@@ -23,6 +23,7 @@ import {
   membersOnline
 } from '../core/groups';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
+import { EmojiPicker } from '../components/EmojiPicker';
 
 interface GroupChatViewProps {
   group: GroupSpace;
@@ -36,18 +37,6 @@ interface GroupChatViewProps {
   onSend: (text: string) => void;
   onTyping: () => void;
 }
-
-/**
- * Written as \u{...} escapes rather than pasted characters.
- *
- * The first version of this list carried Python escapes - \U0001f602 - which
- * JavaScript does not recognise, so ten of the twelve rendered on screen as
- * the literal text "U0001f602".
- */
-const EMOJI = [
-  '\u2764\ufe0f', '\u{1f602}', '\u{1f44d}', '\u{1f64f}', '\u{1f389}', '\u{1f525}',
-  '\u{1f60a}', '\u{1f622}', '\u{1f44f}', '\u2728', '\u{1f37b}', '\u{1f4af}'
-];
 
 /**
  * Group chat.
@@ -418,19 +407,10 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
       )}
 
       {showEmoji && (
-        <div className="border-t border-linen-border bg-linen-surface px-3 py-2">
-          <div className="grid grid-cols-8 gap-0.5">
-            {EMOJI.map(char => (
-              <button
-                key={char}
-                onClick={() => setText(t => t + char)}
-                className="flex h-9 items-center justify-center rounded-xl text-xl hover:bg-linen-variant active:scale-90 transition-all cursor-pointer"
-              >
-                {char}
-              </button>
-            ))}
-          </div>
-        </div>
+        <EmojiPicker
+          onPick={char => setText(t => t + char)}
+          onClose={() => setShowEmoji(false)}
+        />
       )}
 
       {/* Composer */}

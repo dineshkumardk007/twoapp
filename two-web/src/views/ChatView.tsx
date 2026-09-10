@@ -3,57 +3,8 @@ import { ChatMessage, NeedItem } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
-import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, X } from 'lucide-react';
-
-/**
- * The picker's contents, grouped the way you would reach for them.
- *
- * These used to sit in an always-open row above the composer, which spent a
- * permanent strip of a phone screen on ten characters and still could not
- * offer an eleventh. Behind a button the same space holds all of this, and
- * gives it back to the conversation when it is closed.
- */
-const EMOJI_GROUPS: { title: string; chars: string[] }[] = [
-  {
-    title: 'Us',
-    chars: [
-      '❤️', '🥰', '😘', '😍', '🫂', '🤗', '💋', '💕',
-      '💞', '💝', '🧡', '💛', '💚', '💙', '💜', '🤍'
-    ]
-  },
-  {
-    title: 'Faces',
-    chars: [
-      '😂', '🤣', '😅', '😊', '🙂', '🙃', '😜', '😝',
-      '🤩', '🥳', '😎', '🤔', '😐', '😑', '😶', '🙄',
-      '😬', '😥', '😢', '😭', '😩', '🥺', '😨', '😱',
-      '😠', '😡', '😴', '🤤', '🤒', '🤕', '🤧', '🤯'
-    ]
-  },
-  {
-    title: 'Hands',
-    chars: [
-      '👍', '👎', '👏', '🙌', '🙏', '🤝', '✌️', '🤞',
-      '👋', '🤙', '👆', '👇', '💪', '✍️', '👌', '👊'
-    ]
-  },
-  {
-    title: 'Life',
-    chars: [
-      '🌟', '✨', '🔥', '🎉', '🎊', '🎁', '🎂', '🍾',
-      '☕', '🍵', '🍫', '🍓', '🍊', '🍕', '🍜', '🍦',
-      '🌸', '🌻', '🌹', '🌷', '🌱', '🌳', '🌊', '🌄',
-      '🌙', '☀️', '☁️', '🌧️', '❄️', '🌈', '⭐', '💫'
-    ]
-  },
-  {
-    title: 'Things',
-    chars: [
-      '🎵', '🎶', '📷', '📞', '💤', '🛌', '🏠', '✈️',
-      '🚗', '🧳', '📚', '✏️', '📦', '🔑', '⏰', '🧩'
-    ]
-  }
-];
+import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile } from 'lucide-react';
+import { EmojiPicker } from '../components/EmojiPicker';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -292,44 +243,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
           behind it. Tapping appends rather than sends, so several can be
           combined, or wrapped in words, before it goes. */}
       {showEmojiPicker && (
-        <div className="border-t border-linen-border bg-linen-surface">
-          <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
-              Emoji
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(false)}
-              aria-label="Close emoji picker"
-              className="rounded-lg p-1 text-linen-secondary hover:bg-linen-variant active:scale-90 transition-all"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="max-h-44 overflow-y-auto scroll-contain px-3 pb-2">
-            {EMOJI_GROUPS.map(group => (
-              <div key={group.title} className="mb-1.5">
-                <p className="px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-linen-secondary/70">
-                  {group.title}
-                </p>
-                <div className="grid grid-cols-8 gap-0.5">
-                  {group.chars.map(char => (
-                    <button
-                      key={char}
-                      type="button"
-                      onClick={() => setInputText(t => t + char)}
-                      aria-label={`Add ${char}`}
-                      className="flex h-9 items-center justify-center rounded-xl text-xl leading-none hover:bg-linen-variant active:scale-90 transition-all cursor-pointer"
-                    >
-                      {char}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <EmojiPicker
+          onPick={char => setInputText(t => t + char)}
+          onClose={() => setShowEmojiPicker(false)}
+        />
       )}
 
       {/* Input Bar */}

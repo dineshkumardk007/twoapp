@@ -14,8 +14,13 @@ interface GroupsViewProps {
   groups: GroupSpace[];
   /** Given the very code and phrase shown on screen, not a fresh pair. */
   onCreate: (name: string, code: string, joinPhrase: string) => void;
-  /** No name: the group carries the one its creator gave it. */
-  onJoin: (code: string, joinPhrase: string) => void;
+  /**
+   * No name: the group carries the one its creator gave it.
+   *
+   * Returns null when the join went through, or the reason it did not - a
+   * code already held, or the couple's own space code.
+   */
+  onJoin: (code: string, joinPhrase: string) => string | null;
   onOpen: (groupId: string) => void;
   onLeave: (groupId: string) => void;
 }
@@ -90,7 +95,14 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
       );
       return;
     }
-    onJoin(normalizePairingCode(code), phrase);
+    // Refusals leave the panel open with what was typed still in it: the code
+    // is long enough that being made to find and paste it again, for a mistake
+    // as ordinary as tapping an invite twice, would be its own small insult.
+    const refusal = onJoin(normalizePairingCode(code), phrase);
+    if (refusal) {
+      setError(refusal);
+      return;
+    }
     close();
   };
 
