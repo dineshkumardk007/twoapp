@@ -180,12 +180,21 @@ class InMemoryRelayDb implements RelayDb {
     return record;
   }
 
-  async getRecordsForSpace(spaceId: string, sinceLamport = 0, sinceSeq = 0) {
-    if (sinceSeq > 0) {
-      return this.records
-        .filter(r => r.spaceId === spaceId && (r.seq || 0) > sinceSeq)
-        .sort((a, b) => (a.seq || 0) - (b.seq || 0));
-    }
+  /**
+   * Deliberately ignores `sinceSeq` and always resumes by the clock.
+   *
+   * This store numbers from one again every boot, so its seq values mean
+   * nothing to a reader holding a cursor from a previous run - or from
+   * Postgres, when this is standing in during an outage. Answering "everything
+   * above 400" out of a store whose highest number is 12 returns nothing at
+   * all, and the reader is told it is up to date while sitting on a gap.
+   *
+   * The clock is not durable numbering either, but it is at least comparable
+   * across restarts, which is the only property needed here. Records still
+   * carry the seq they were given so live delivery is unaffected; it is only
+   * unsafe as a resume point.
+   */
+  async getRecordsForSpace(spaceId: string, sinceLamport = 0, _sinceSeq = 0) {
     return this.records
       .filter(r => r.spaceId === spaceId && r.lamportClock > sinceLamport)
       .sort((a, b) => a.lamportClock - b.lamportClock);
@@ -660,11 +669,12 @@ class ResilientRelayDb implements RelayDb {
     }
     // Degraded: serve whatever this process still holds rather than nothing.
     //
-    // This store numbers from one each boot, so its seq values sit far below
-    // anything Postgres has issued. Readers only ever raise their cursor, so a
-    // low number is ignored rather than dragging them backwards - a degraded
-    // spell leaves the cursor where it was instead of corrupting it.
-    return this.memory.getRecordsForSpace(spaceId, sinceLamport, sinceSeq);
+    // The seq cursor is dropped on the way in. This store's numbering restarts
+    // with the process and is not the numbering the reader's cursor came from,
+    // so resuming against it would silently under-serve; the clock still works
+    // across both. Readers only ever raise their seq cursor, so nothing here
+    // drags it backwards either.
+    return this.memory.getRecordsForSpace(spaceId, sinceLamport, 0);
   }
 
   private async viaPostgres<T>(op: (db: RelayDb) => Promise<T>, fallback: () => Promise<T>): Promise<T> {

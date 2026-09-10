@@ -102,6 +102,9 @@ export class WebSocketRelayClient {
   private status: RelayStatus = 'idle';
   private lamport = Date.now();
 
+  /** Cursors the last page was asked for at, so a stalled one is not re-asked. */
+  private lastReplayCursor = '';
+
   // Inbound records are decrypted asynchronously; chaining them keeps canvas
   // strokes and chat messages in the order the partner sent them.
   private inboundChain: Promise<void> = Promise.resolve();
@@ -171,6 +174,9 @@ export class WebSocketRelayClient {
         sinceSeq: this.loadSeqCursor(this.creds.spaceId)
       });
 
+      // Each connection pages through history from wherever it left off.
+      this.lastReplayCursor = '';
+
       this.startHeartbeat();
 
       // Deliver anything written while we were offline.
@@ -213,6 +219,16 @@ export class WebSocketRelayClient {
       };
       this.setPartnerOnline(this.presenceInfo.peers > 0, true);
       this.emit(payload);
+      return;
+    }
+
+    if (payload?.type === 'REPLAY_COMPLETE') {
+      this.emit(payload);
+      // A relay that says there is more has capped this batch; ask for the
+      // rest. Ordering is safe because inbound messages are chained, so every
+      // record in this page has already been applied and both cursors moved
+      // before this arrives.
+      if (payload.more) this.requestNextReplayPage();
       return;
     }
 
@@ -586,6 +602,34 @@ export class WebSocketRelayClient {
     } catch {
       /* storage unavailable; replay just starts from zero next time */
     }
+  }
+
+  /**
+   * Asks for the next page of history.
+   *
+   * Guarded on a cursor having actually moved. A page whose records all fail
+   * to decrypt - a rotated code, somebody else's room - advances nothing, and
+   * asking again would fetch the same page for as long as the socket stayed
+   * open. Requiring progress ends that after one wasted round trip, without
+   * needing a page limit that would also cap an honest catch-up.
+   *
+   * Progress means EITHER cursor moving, not whichever one the relay happens
+   * to be resuming from. A relay serving from memory answers by the clock and
+   * leaves the seq cursor untouched, so watching the seq alone would call a
+   * perfectly good catch-up stalled and stop after one page - which is exactly
+   * what it did.
+   */
+  private requestNextReplayPage() {
+    const creds = this.creds;
+    if (!creds || !this.isOpen()) return;
+
+    const since = this.loadHighWaterMark(creds.spaceId);
+    const sinceSeq = this.loadSeqCursor(creds.spaceId);
+    const cursor = `${since}:${sinceSeq}`;
+    if (cursor === this.lastReplayCursor) return;
+    this.lastReplayCursor = cursor;
+
+    this.rawSend({ type: 'REPLAY_MORE', since, sinceSeq });
   }
 
   private scheduleReconnect() {

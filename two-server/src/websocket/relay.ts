@@ -132,7 +132,8 @@ export class WebSocketRelay {
           // Protocol:
           // 1. JOIN: { type, spaceId, userId, since?, sinceSeq? }
           // 2. RECORD: { type, spaceId, record }
-          // 3. PING: { type }
+          // 3. REPLAY_MORE: { type, since?, sinceSeq? }
+          // 4. PING: { type }
 
           if (message.type === 'JOIN') {
             if (!isNonEmptyString(message.spaceId) || !isNonEmptyString(message.userId)) {
@@ -199,6 +200,23 @@ export class WebSocketRelay {
             await this.replayMissedRecords(currentClient, message.since, message.sinceSeq);
             // Tell both sides who is present now.
             this.broadcastPresence(currentClient.spaceId);
+            return;
+          }
+
+          /**
+           * The next page of history, for a reader still catching up.
+           *
+           * Deliberately not a second JOIN, which would work - the handler
+           * above replaces a membership on the same socket - but would also
+           * re-announce presence to everybody and re-run the capacity checks,
+           * none of which has anything to do with reading further back.
+           */
+          if (message.type === 'REPLAY_MORE') {
+            if (!currentClient) {
+              this.sendJson(ws, { type: 'ERROR', error: 'REPLAY_MORE requires a JOIN first' });
+              return;
+            }
+            await this.replayMissedRecords(currentClient, message.since, message.sinceSeq);
             return;
           }
 
@@ -341,16 +359,27 @@ export class WebSocketRelay {
     }
 
     // Replay is filtered by authorship, not by the routing id.
-    const batch = missed
-      .filter(r => r.authorId !== client.authorRole)
-      .slice(0, MAX_REPLAY_RECORDS);
+    const eligible = missed.filter(r => r.authorId !== client.authorRole);
+    const batch = eligible.slice(0, MAX_REPLAY_RECORDS);
 
     for (const record of batch) {
       if (client.ws.readyState !== WebSocket.OPEN) return;
       this.sendJson(client.ws, { type: 'REMOTE_RECORD', record });
     }
 
-    this.sendJson(client.ws, { type: 'REPLAY_COMPLETE', count: batch.length });
+    // `more` is the whole point of the cap being survivable.
+    //
+    // Records come back oldest first, so a cap keeps the oldest and drops the
+    // newest - the opposite of what somebody returning from a fortnight away
+    // wants, and it was not said out loud either. Saying so lets the reader ask
+    // for the next page and work forward to the present, rather than being left
+    // holding old history with the recent part missing and nothing to explain
+    // the gap.
+    this.sendJson(client.ws, {
+      type: 'REPLAY_COMPLETE',
+      count: batch.length,
+      more: eligible.length > batch.length
+    });
   }
 
   /** Fans a record out to every OTHER connection in the space, whatever role it holds. */
