@@ -43,8 +43,6 @@
     <string name="partner_recovery_title">Partner-Assisted Recovery</string>
 
     <!-- Widget Strings -->
-    <string name="widget_partner_mood_name">Partner Mood &amp; Capacity</string>
-    <string name="widget_partner_mood_desc">Shows your partner’s emotional weather, capacity, and unread note status on your home screen.</string>
 
     <!-- Privacy & Emergency -->
     <string name="emergency_quick_exit">Quick Exit</string>

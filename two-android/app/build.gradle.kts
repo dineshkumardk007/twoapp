@@ -131,9 +131,6 @@ dependencies {
     // Background Sync & WorkManager
     implementation(libs.androidx.work.runtime.ktx)
 
-    // Home Screen Glance Widgets
-    implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.glance.material3)
 
     // Security & Biometrics
     implementation(libs.androidx.biometric)
