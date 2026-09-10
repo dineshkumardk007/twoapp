@@ -1,5 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, Smile, X, Check, CheckCheck, Info, Users, Crown } from 'lucide-react';
+import {
+  Send,
+  Smile,
+  X,
+  Check,
+  CheckCheck,
+  Clock,
+  Info,
+  Users,
+  Crown,
+  Copy,
+  Eye,
+  EyeOff,
+  UserPlus
+} from 'lucide-react';
 import {
   GroupSpace,
   readBreakdown,
@@ -57,8 +71,34 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   const [showEmoji, setShowEmoji] = useState(false);
   const [infoFor, setInfoFor] = useState<GroupMessage | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState('');
   const logRef = useRef<HTMLDivElement>(null);
   const lastTypingSentRef = useRef(0);
+
+  // Covered again whenever the panel closes, so the code is never left on
+  // screen from a previous look.
+  useEffect(() => {
+    if (!showMembers) {
+      setShowInvite(false);
+      setCopyError('');
+    }
+  }, [showMembers]);
+
+  const copyInvite = async () => {
+    const phrase = group.joinPhrase ? `\nWords: ${group.joinPhrase}` : '';
+    try {
+      await navigator.clipboard.writeText(
+        `Join "${group.name}" on Two.\nCode: ${group.code}${phrase}`
+      );
+      setCopied(true);
+      setCopyError('');
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopyError('Could not copy — write the code and words down instead.');
+    }
+  };
 
   useEffect(() => {
     const log = logRef.current;
@@ -212,6 +252,51 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
             Names are what each device says about itself, and anyone with the code and the words
             can join. Nobody can be removed.
           </p>
+
+          {/* Adding somebody later.
+              The code and the words used to appear once, on the screen that
+              created the group, and never again - so a group could not be
+              grown after the fact by anyone who had not written them down at
+              the time. They are kept covered because they are the whole
+              secret: showing them by default would put them on screen every
+              time somebody checked who was in the room. */}
+          <div className="mt-3 border-t border-linen-border pt-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-[11px] font-medium text-linen-primary">
+                <UserPlus className="h-3.5 w-3.5 text-linen-accent" />
+                Add someone
+              </span>
+              <button
+                onClick={() => setShowInvite(v => !v)}
+                aria-expanded={showInvite}
+                className="inline-flex items-center gap-1 rounded-lg border border-linen-border bg-linen-surface px-2 py-1 text-[10px] font-medium text-linen-secondary hover:bg-linen-variant hover:text-linen-primary transition-colors cursor-pointer"
+              >
+                {showInvite ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                {showInvite ? 'Hide invite' : 'Show invite'}
+              </button>
+            </div>
+
+            {showInvite && (
+              <div className="mt-2 space-y-1.5 rounded-xl border border-linen-border/70 bg-linen-variant/30 p-2.5">
+                <p className="font-mono text-xs break-all text-linen-primary">{group.code}</p>
+                {group.joinPhrase && (
+                  <p className="text-xs text-linen-primary">{group.joinPhrase}</p>
+                )}
+                <p className="text-[10px] leading-relaxed text-linen-secondary">
+                  Both are needed to get in, and the words are never sent anywhere &mdash; say them
+                  out loud rather than typing them into a message beside the code.
+                </p>
+                <button
+                  onClick={copyInvite}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-linen-border bg-linen-surface px-2.5 py-1.5 text-[10px] font-medium text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
+                >
+                  {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  {copied ? 'Copied' : 'Copy invite'}
+                </button>
+                {copyError && <p className="text-[10px] text-rose-700">{copyError}</p>}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -247,21 +332,39 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                   hour: '2-digit',
                   minute: '2-digit'
                 })}
-                {mine && shareReceipts && (
+                {mine && (
                   <>
-                    {breakdown.allRead ? (
-                      <CheckCheck className="h-3.5 w-3.5 text-sky-600" />
+                    {/* Whether it has left this device is not a receipt about
+                        anybody else, so it shows even with receipts off: a
+                        message that has not reached the relay looked exactly
+                        like one that had, which on a sleeping server is a
+                        fifty-second lie. */}
+                    {msg.delivered === false ? (
+                      <>
+                        <Clock className="h-3 w-3 text-linen-secondary/50" />
+                        <span className="sr-only">Sending</span>
+                      </>
+                    ) : shareReceipts && breakdown.allRead ? (
+                      <>
+                        <CheckCheck className="h-3.5 w-3.5 text-sky-600" />
+                        <span className="sr-only">Read by everyone</span>
+                      </>
                     ) : (
-                      <Check className="h-3.5 w-3.5 text-linen-secondary/70" />
+                      <>
+                        <Check className="h-3.5 w-3.5 text-linen-secondary/70" />
+                        <span className="sr-only">Sent</span>
+                      </>
                     )}
                     {/* Who exactly, for when the tick is not enough. */}
-                    <button
-                      onClick={() => setInfoFor(msg)}
-                      aria-label="Who has read this"
-                      className="rounded p-0.5 text-linen-secondary/70 hover:text-linen-primary transition-colors cursor-pointer"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
+                    {shareReceipts && msg.delivered !== false && (
+                      <button
+                        onClick={() => setInfoFor(msg)}
+                        aria-label="Who has read this"
+                        className="rounded p-0.5 text-linen-secondary/70 hover:text-linen-primary transition-colors cursor-pointer"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </>
                 )}
               </span>

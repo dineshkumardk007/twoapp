@@ -54,6 +54,15 @@ export interface GroupMessage {
   authorName: string;
   text: string;
   sentAt: number;
+  /**
+   * False until the relay acknowledges it; absent on anything received, and on
+   * anything sent before this field existed.
+   *
+   * Only `false` means "still going". A message from before the field was
+   * added has no value here and must not be shown as though it were stuck, so
+   * every reader tests for `=== false` rather than for falsiness.
+   */
+  delivered?: boolean;
 }
 
 export interface GroupSpace {

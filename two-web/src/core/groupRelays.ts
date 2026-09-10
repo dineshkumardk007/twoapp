@@ -108,9 +108,15 @@ export function groupClient(groupId: string): WebSocketRelayClient | null {
   return live.get(groupId)?.client || null;
 }
 
-/** Encrypted broadcast into one group. Silently ignored when not connected. */
-export function sendToGroup(groupId: string, type: string, data: any) {
-  live.get(groupId)?.client.broadcastUpdate(type, data);
+/**
+ * Encrypted broadcast into one group. Silently ignored when not connected.
+ *
+ * `correlationId` comes back on the relay's acknowledgement, which is the only
+ * way a sender can tell which of its own messages has actually landed - the
+ * record id is generated inside the client and never surfaces here.
+ */
+export function sendToGroup(groupId: string, type: string, data: any, correlationId?: string) {
+  live.get(groupId)?.client.broadcastUpdate(type, data, correlationId);
 }
 
 /** Transient signal into one group - typing, and nothing stored. */

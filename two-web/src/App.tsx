@@ -1248,6 +1248,27 @@ export const App: React.FC = () => {
    * reach state.messages, and nothing there can reach a group.
    */
   const handleGroupMessage = (groupId: string, msg: any) => {
+    // The relay confirming a record is what turns a pending message into
+    // "sent", exactly as in the couple's chat. Hellos and read positions are
+    // sent without a correlation id, so their acks fall straight through.
+    if (msg?.type === 'RECORD_ACK' && msg.correlationId) {
+      const acked = String(msg.correlationId);
+      setState(prev => ({
+        ...prev,
+        groups: prev.groups.map(g =>
+          g.id !== groupId
+            ? g
+            : {
+                ...g,
+                messages: g.messages.map(m =>
+                  m.id === acked ? { ...m, delivered: true } : m
+                )
+              }
+        )
+      }));
+      return;
+    }
+
     if (msg?.type === 'REMOTE_SIGNAL' && msg.signal?.type === TYPING_SIGNAL) {
       if (!readShareReceipts()) return;
       let who = '';
@@ -1463,12 +1484,20 @@ export const App: React.FC = () => {
       ...prev,
       groups: prev.groups.map(g =>
         g.id === groupId
-          ? { ...g, messages: [...g.messages, { id, authorId: myMemberId(), authorName: name, text, sentAt: at }].slice(-500) }
+          ? {
+              ...g,
+              messages: [
+                ...g.messages,
+                { id, authorId: myMemberId(), authorName: name, text, sentAt: at, delivered: false }
+              ].slice(-500)
+            }
           : g
       )
     }));
 
-    sendToGroup(groupId, GROUP_CHAT, { from: myMemberId(), name, text, at });
+    // The local message id doubles as the correlation id, so the relay's
+    // acknowledgement can be matched back to this exact bubble.
+    sendToGroup(groupId, GROUP_CHAT, { from: myMemberId(), name, text, at }, id);
   };
 
   /**
