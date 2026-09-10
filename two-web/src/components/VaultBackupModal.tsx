@@ -32,8 +32,15 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (passphrase.length < 8) {
-      setErrorMessage('Passphrase must be at least 8 characters long for cryptographic security.');
+    // Twelve, not eight. This file can be carried off and attacked at leisure
+    // with nothing to slow the guessing down, so length is the only thing
+    // standing in the way - and eight characters of something a person made up
+    // is a short afternoon's work.
+    if (passphrase.length < 12) {
+      setErrorMessage(
+        'Use at least 12 characters. This file can be copied and guessed at offline, ' +
+          'so its length is what protects it — several unrelated words work well.'
+      );
       return;
     }
     if (passphrase !== confirmPassphrase) {

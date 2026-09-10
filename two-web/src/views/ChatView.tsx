@@ -3,6 +3,7 @@ import { ChatMessage, NeedItem } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
+import { MAX_CHAT_MESSAGES } from '../core/storage';
 import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2 } from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
 
@@ -180,6 +181,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {/* Message List */}
       <div ref={messagesRef} className="flex-1 min-h-0 overflow-y-auto scroll-contain p-4 sm:p-6 space-y-4">
+        {/* Said once the device is full rather than never. The oldest fall off
+            to keep the vault inside what a browser will store, which is a fine
+            thing to do and a poor thing to do silently. */}
+        {messages.length >= MAX_CHAT_MESSAGES && (
+          <p className="pb-1 text-center text-[10px] leading-relaxed text-linen-secondary">
+            Only the most recent {MAX_CHAT_MESSAGES.toLocaleString()} messages are kept on this
+            device. Older ones are gone from here &mdash; a backup keeps them.
+          </p>
+        )}
+
         {messages.map(msg => {
           const isFromCurrentPerspective = msg.authorId === activeUser;
           return (

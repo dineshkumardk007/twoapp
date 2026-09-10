@@ -78,6 +78,13 @@ async function sweepExpiredRecords() {
     if (removed > 0) {
       console.log(`[Two Relay Server] Retention sweep removed ${removed} record(s) older than ${RETENTION_DAYS} days`);
     }
+
+    // Depth as well as age: a type can outgrow its usefulness long before it
+    // is old enough to expire.
+    const trimmed = await db.trimCappedTypes();
+    if (trimmed > 0) {
+      console.log(`[Two Relay Server] Retention sweep trimmed ${trimmed} record(s) past their per-type depth`);
+    }
   } catch (err) {
     // Never fatal - failing to trim history must not take the relay down.
     console.error('[Two Relay Server] Retention sweep error:', err);

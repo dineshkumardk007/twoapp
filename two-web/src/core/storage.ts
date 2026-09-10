@@ -1135,6 +1135,17 @@ export function loadState(): SpaceState {
 // the drawing is done, so only a recent window is persisted.
 const MAX_PERSISTED_STROKES = 2000;
 
+/**
+ * How much of the couple's conversation one device keeps.
+ *
+ * There was no limit at all, which is generous right up until the vault stops
+ * fitting in the storage a browser will give it - and the failure then is not
+ * a trimmed history but a save that does not happen. Higher than a group's
+ * two thousand because this is the conversation the app is for, and the chat
+ * says so when it is reached rather than dropping the oldest in silence.
+ */
+export const MAX_CHAT_MESSAGES = 5000;
+
 export interface KnownDevice {
   id: string;
   label: string;

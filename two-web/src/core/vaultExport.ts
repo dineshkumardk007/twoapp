@@ -1,9 +1,31 @@
 // End-to-End Encrypted Vault Export & Import Engine (.two-vault)
 import { SpaceState } from './storage';
 
+/**
+ * How hard it is to turn the passphrase into the key.
+ *
+ * This file is the one thing here built to leave the device - onto cloud
+ * storage, into an email, onto a stick - which makes it the only artefact an
+ * attacker can work on entirely alone: no device to steal, no relay to reach,
+ * nothing to throttle them. It was the cheapest of the three derivations in
+ * the app at 100,000, below both the space key and the device PIN, which had
+ * it exactly backwards. A backup is unlocked once, so the extra fraction of a
+ * second is not felt.
+ */
+const PBKDF2_ITERATIONS = 600_000;
+
+/** What files written before the count was recorded were made with. */
+const LEGACY_PBKDF2_ITERATIONS = 100_000;
+
 export interface EncryptedVaultEnvelope {
   version: string;
   format: 'TWO_ENCRYPTED_VAULT';
+  /**
+   * Absent in files written before this was configurable, which is why import
+   * falls back rather than assuming: a backup that could not be opened again
+   * is worse than a backup nobody made.
+   */
+  iterations?: number;
   saltHex: string;
   ivHex: string;
   ciphertextBase64: string;
@@ -51,7 +73,11 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-async function deriveKeyFromPassphrase(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {
+async function deriveKeyFromPassphrase(
+  passphrase: string,
+  salt: Uint8Array,
+  iterations: number
+): Promise<CryptoKey> {
   const enc = new TextEncoder();
   const keyMaterial = await window.crypto.subtle.importKey(
     'raw',
@@ -65,7 +91,7 @@ async function deriveKeyFromPassphrase(passphrase: string, salt: Uint8Array): Pr
     {
       name: 'PBKDF2',
       salt: salt as any,
-      iterations: 100000,
+      iterations,
       hash: 'SHA-256'
     },
     keyMaterial,
@@ -78,7 +104,7 @@ async function deriveKeyFromPassphrase(passphrase: string, salt: Uint8Array): Pr
 export async function exportVault(state: SpaceState, passphrase: string): Promise<string> {
   const salt = window.crypto.getRandomValues(new Uint8Array(16));
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveKeyFromPassphrase(passphrase, salt);
+  const key = await deriveKeyFromPassphrase(passphrase, salt, PBKDF2_ITERATIONS);
 
   const payload = JSON.stringify(state);
   const enc = new TextEncoder();
@@ -89,8 +115,9 @@ export async function exportVault(state: SpaceState, passphrase: string): Promis
   );
 
   const envelope: EncryptedVaultEnvelope = {
-    version: '1.0',
+    version: '1.1',
     format: 'TWO_ENCRYPTED_VAULT',
+    iterations: PBKDF2_ITERATIONS,
     saltHex: bufferToHex(salt.buffer),
     ivHex: bufferToHex(iv.buffer),
     ciphertextBase64: arrayBufferToBase64(ciphertext),
@@ -123,7 +150,12 @@ export async function importVault(vaultJsonString: string, passphrase: string): 
 
   const salt = hexToBuffer(envelope.saltHex);
   const iv = hexToBuffer(envelope.ivHex);
-  const key = await deriveKeyFromPassphrase(passphrase, salt);
+  // Older files carry no count and were written at the legacy figure.
+  const iterations =
+    Number.isFinite(Number(envelope.iterations)) && Number(envelope.iterations) > 0
+      ? Number(envelope.iterations)
+      : LEGACY_PBKDF2_ITERATIONS;
+  const key = await deriveKeyFromPassphrase(passphrase, salt, iterations);
 
   try {
     const ciphertext = base64ToArrayBuffer(envelope.ciphertextBase64);

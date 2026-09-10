@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, startTransition } from 'react';
-import { loadState, saveState, clearState, pruneForStorage, forStorage, SpaceState } from './core/storage';
+import { loadState, saveState, clearState, pruneForStorage, forStorage, SpaceState, MAX_CHAT_MESSAGES } from './core/storage';
 import { AppDock } from './components/AppDock';
 import { GroupDock } from './components/GroupDock';
 import {
@@ -484,7 +484,10 @@ export const App: React.FC = () => {
               // device on the same role used to show everything typed on the
               // first one as forever sending.
               const applied = parsed.delivered === false ? { ...parsed, delivered: true } : parsed;
-              return { ...prev, messages: insertBySentAt(prev.messages, applied) };
+              return {
+                ...prev,
+                messages: insertBySentAt(prev.messages, applied).slice(-MAX_CHAT_MESSAGES)
+              };
             });
             const isFromPartner = record.authorId !== state.activeUser;
             if (isFromPartner) {
@@ -1782,7 +1785,7 @@ export const App: React.FC = () => {
     wsRelay.broadcastUpdate('CHAT', newMessage, newMessage.id);
     setState(prev => ({
       ...prev,
-      messages: insertBySentAt(prev.messages, newMessage)
+      messages: insertBySentAt(prev.messages, newMessage).slice(-MAX_CHAT_MESSAGES)
     }));
   };
 

@@ -32,6 +32,22 @@ export const PRESENCE_BEAT = 'PRESENCE_BEAT';
  */
 export const LATEST_ONLY_TYPES = new Set([PRESENCE_BEAT, 'GROUP_HELLO', 'GROUP_READ']);
 
+/**
+ * Types kept only to a depth, oldest discarded past it.
+ *
+ * A canvas stroke is one record each and cannot be collapsed the way a
+ * presence beat can - every one is a distinct mark that has to be replayed in
+ * order to redraw the picture. But an afternoon's drawing is hundreds of them,
+ * kept for the full retention period and spending a returning device's replay
+ * on brushwork instead of conversation. The device itself already keeps only
+ * the newest two thousand strokes, so anything past that depth here cannot be
+ * drawn by anybody anyway.
+ *
+ * Trimmed by the daily sweep rather than on every insert: the cost of the
+ * query does not belong in the path a live stroke travels.
+ */
+export const CAPPED_TYPES = new Map<string, number>([['CANVAS_STROKE', 2000]]);
+
 export interface StoredRecord {
   id: string;
   spaceId: string;
@@ -56,19 +72,6 @@ export interface StoredRecord {
   seq?: number;
 }
 
-export interface StoredUser {
-  id: string;
-  authId: string;
-  publicKey: string;
-  encryptedPrivateKey: string;
-}
-
-export interface StoredSpace {
-  id: string;
-  members: string[];
-  sealedKeys: Record<string, string>;
-}
-
 export interface RendezvousToken {
   spaceId: string;
   creatorPublicKey: string;
@@ -78,11 +81,6 @@ export interface RendezvousToken {
 export interface RelayDb {
   readonly kind: 'postgres' | 'memory';
   init(): Promise<void>;
-  createUser(user: StoredUser): Promise<StoredUser>;
-  findUserByAuthId(authId: string): Promise<StoredUser | null>;
-  findUserById(id: string): Promise<StoredUser | null>;
-  createSpace(spaceId: string, creatorId: string, creatorPublicKey: string, sealedKey: string): Promise<StoredSpace>;
-  addMemberToSpace(spaceId: string, memberId: string, sealedKey: string): Promise<StoredSpace>;
   saveRecord(record: StoredRecord): Promise<StoredRecord>;
   getRecordsForSpace(
     spaceId: string,
@@ -91,14 +89,13 @@ export interface RelayDb {
   ): Promise<StoredRecord[]>;
   /** Deletes records older than the retention window. Returns how many went. */
   purgeRecordsOlderThan(days: number): Promise<number>;
+  trimCappedTypes(): Promise<number>;
   rendezvousTokens: Map<string, RendezvousToken>;
 }
 
 class InMemoryRelayDb implements RelayDb {
   readonly kind = 'memory' as const;
 
-  users = new Map<string, StoredUser>();
-  spaces = new Map<string, StoredSpace>();
   records: StoredRecord[] = [];
   /**
    * Numbers records the way Postgres does, so the resume cursor works the same
@@ -115,42 +112,6 @@ class InMemoryRelayDb implements RelayDb {
   // went on to connect to Postgres two lines later. Whether the relay is
   // actually durable is ResilientRelayDb's fact to report, and it does.
   async init() {}
-
-  async createUser(user: StoredUser) {
-    this.users.set(user.id, user);
-    return user;
-  }
-
-  async findUserByAuthId(authId: string) {
-    for (const u of this.users.values()) {
-      if (u.authId === authId) return u;
-    }
-    return null;
-  }
-
-  async findUserById(id: string) {
-    return this.users.get(id) ?? null;
-  }
-
-  async createSpace(spaceId: string, creatorId: string, creatorPublicKey: string, sealedKey: string) {
-    const space: StoredSpace = {
-      id: spaceId,
-      members: [creatorId],
-      sealedKeys: { [creatorId]: sealedKey }
-    };
-    this.spaces.set(spaceId, space);
-    return space;
-  }
-
-  async addMemberToSpace(spaceId: string, memberId: string, sealedKey: string) {
-    const space = this.spaces.get(spaceId);
-    if (!space) throw new Error('Space not found');
-    if (!space.members.includes(memberId)) {
-      space.members.push(memberId);
-    }
-    space.sealedKeys[memberId] = sealedKey;
-    return space;
-  }
 
   async saveRecord(record: StoredRecord) {
     if (LATEST_ONLY_TYPES.has(record.type)) {
@@ -200,6 +161,32 @@ class InMemoryRelayDb implements RelayDb {
       .sort((a, b) => a.lamportClock - b.lamportClock);
   }
 
+  async trimCappedTypes() {
+    let removed = 0;
+    for (const [type, keep] of CAPPED_TYPES) {
+      const bySpace = new Map<string, StoredRecord[]>();
+      for (const r of this.records) {
+        if (r.type !== type) continue;
+        const list = bySpace.get(r.spaceId) || [];
+        list.push(r);
+        bySpace.set(r.spaceId, list);
+      }
+      const doomed = new Set<string>();
+      for (const list of bySpace.values()) {
+        if (list.length <= keep) continue;
+        list
+          .sort((a, b) => (a.seq || 0) - (b.seq || 0))
+          .slice(0, list.length - keep)
+          .forEach(r => doomed.add(r.id));
+      }
+      if (doomed.size) {
+        this.records = this.records.filter(r => !doomed.has(r.id));
+        removed += doomed.size;
+      }
+    }
+    return removed;
+  }
+
   async purgeRecordsOlderThan(days: number) {
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     const before = this.records.length;
@@ -238,6 +225,11 @@ class PostgresRelayDb implements RelayDb {
     // The relay owns a handful of tables and no migration history, so creating
     // them if absent keeps deployment to a single `docker compose up`.
     await this.pool.query(`
+      -- The next three are from the design where Two had accounts, and no
+      -- code reads or writes them any more; their methods have been removed.
+      -- They are still created because dropping a table is not this file's
+      -- decision to make, and because relay_space_members - a sealed key per
+      -- member - is the shape the deferred group revocation work would need.
       CREATE TABLE IF NOT EXISTS relay_users (
         id TEXT PRIMARY KEY,
         auth_id TEXT UNIQUE NOT NULL,
@@ -284,90 +276,6 @@ class PostgresRelayDb implements RelayDb {
     `);
 
     console.log('[Relay DB] PostgreSQL storage ready.');
-  }
-
-  async createUser(user: StoredUser) {
-    await this.pool.query(
-      `INSERT INTO relay_users (id, auth_id, public_key, encrypted_private_key)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (id) DO UPDATE
-         SET public_key = EXCLUDED.public_key,
-             encrypted_private_key = EXCLUDED.encrypted_private_key`,
-      [user.id, user.authId, user.publicKey, user.encryptedPrivateKey]
-    );
-    return user;
-  }
-
-  async findUserByAuthId(authId: string) {
-    const { rows } = await this.pool.query(
-      `SELECT id, auth_id, public_key, encrypted_private_key
-       FROM relay_users WHERE auth_id = $1 LIMIT 1`,
-      [authId]
-    );
-    if (rows.length === 0) return null;
-
-    const r = rows[0];
-    return {
-      id: r.id,
-      authId: r.auth_id,
-      publicKey: r.public_key,
-      encryptedPrivateKey: r.encrypted_private_key
-    };
-  }
-
-  async findUserById(id: string) {
-    const { rows } = await this.pool.query(
-      `SELECT id, auth_id, public_key, encrypted_private_key
-       FROM relay_users WHERE id = $1 LIMIT 1`,
-      [id]
-    );
-    if (rows.length === 0) return null;
-
-    const r = rows[0];
-    return {
-      id: r.id,
-      authId: r.auth_id,
-      publicKey: r.public_key,
-      encryptedPrivateKey: r.encrypted_private_key
-    };
-  }
-
-  async createSpace(spaceId: string, creatorId: string, _creatorPublicKey: string, sealedKey: string) {
-    await this.pool.query(
-      `INSERT INTO relay_spaces (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
-      [spaceId]
-    );
-    await this.pool.query(
-      `INSERT INTO relay_space_members (space_id, member_id, sealed_key)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (space_id, member_id) DO UPDATE SET sealed_key = EXCLUDED.sealed_key`,
-      [spaceId, creatorId, sealedKey]
-    );
-    return this.readSpace(spaceId);
-  }
-
-  async addMemberToSpace(spaceId: string, memberId: string, sealedKey: string) {
-    const { rowCount } = await this.pool.query(`SELECT 1 FROM relay_spaces WHERE id = $1`, [spaceId]);
-    if (!rowCount) throw new Error('Space not found');
-
-    await this.pool.query(
-      `INSERT INTO relay_space_members (space_id, member_id, sealed_key)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (space_id, member_id) DO UPDATE SET sealed_key = EXCLUDED.sealed_key`,
-      [spaceId, memberId, sealedKey]
-    );
-    return this.readSpace(spaceId);
-  }
-
-  private async readSpace(spaceId: string): Promise<StoredSpace> {
-    const { rows } = await this.pool.query(
-      `SELECT member_id, sealed_key FROM relay_space_members WHERE space_id = $1 ORDER BY joined_at`,
-      [spaceId]
-    );
-    const sealedKeys: Record<string, string> = {};
-    for (const r of rows) sealedKeys[r.member_id] = r.sealed_key;
-
-    return { id: spaceId, members: rows.map(r => r.member_id), sealedKeys };
   }
 
   async saveRecord(record: StoredRecord) {
@@ -446,6 +354,33 @@ class PostgresRelayDb implements RelayDb {
       createdAt: new Date(r.created_at).toISOString(),
       seq: r.seq === undefined || r.seq === null ? undefined : Number(r.seq)
     }));
+  }
+
+  /**
+   * Keeps only the newest `keep` of each capped type, per space.
+   *
+   * Ordered by seq, which is this server's own insertion order - the one
+   * number here that cannot be late or wrong, unlike a clock a client chose.
+   */
+  async trimCappedTypes() {
+    let removed = 0;
+    for (const [type, keep] of CAPPED_TYPES) {
+      const { rowCount } = await this.pool.query(
+        `DELETE FROM relay_records r
+          WHERE r.type = $1
+            AND r.seq < (
+              SELECT MIN(seq) FROM (
+                SELECT seq FROM relay_records
+                 WHERE space_id = r.space_id AND type = $1
+                 ORDER BY seq DESC
+                 LIMIT $2
+              ) newest
+            )`,
+        [type, keep]
+      );
+      removed += rowCount || 0;
+    }
+    return removed;
   }
 
   async purgeRecordsOlderThan(days: number) {
@@ -528,6 +463,17 @@ class ResilientRelayDb implements RelayDb {
    * Postgres yet, and deleting from a database we are not currently able to
    * write to is the wrong move while an outage is in progress.
    */
+  async trimCappedTypes() {
+    const inMemory = await this.memory.trimCappedTypes();
+    if (!this.postgres || !this.healthy) return inMemory;
+    try {
+      return await this.postgres.trimCappedTypes();
+    } catch (err) {
+      this.degrade(err);
+      return inMemory;
+    }
+  }
+
   async purgeRecordsOlderThan(days: number) {
     if (!this.postgres || !this.healthy) return 0;
     try {
@@ -688,27 +634,6 @@ class ResilientRelayDb implements RelayDb {
     return fallback();
   }
 
-  createUser(user: StoredUser) {
-    return this.viaPostgres(db => db.createUser(user), () => this.memory.createUser(user));
-  }
-  findUserByAuthId(authId: string) {
-    return this.viaPostgres(db => db.findUserByAuthId(authId), () => this.memory.findUserByAuthId(authId));
-  }
-  findUserById(id: string) {
-    return this.viaPostgres(db => db.findUserById(id), () => this.memory.findUserById(id));
-  }
-  createSpace(spaceId: string, creatorId: string, creatorPublicKey: string, sealedKey: string) {
-    return this.viaPostgres(
-      db => db.createSpace(spaceId, creatorId, creatorPublicKey, sealedKey),
-      () => this.memory.createSpace(spaceId, creatorId, creatorPublicKey, sealedKey)
-    );
-  }
-  addMemberToSpace(spaceId: string, memberId: string, sealedKey: string) {
-    return this.viaPostgres(
-      db => db.addMemberToSpace(spaceId, memberId, sealedKey),
-      () => this.memory.addMemberToSpace(spaceId, memberId, sealedKey)
-    );
-  }
 }
 
 export const db = new ResilientRelayDb();
