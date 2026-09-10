@@ -18,6 +18,8 @@ interface LiveGroup {
   /** The code and phrase this connection was opened for. */
   code: string;
   joinPhrase: string;
+  /** Known once the key has been derived; needed to erase what was stored. */
+  spaceId?: string;
 }
 
 const live = new Map<string, LiveGroup>();
@@ -82,7 +84,33 @@ export async function connectGroup(
   const current = live.get(group.id);
   if (!current || current.client !== client) return;
 
+  current.spaceId = creds.spaceId;
   client.connect(creds);
+}
+
+/**
+ * Leaves a group for good: closes the socket and erases what it kept.
+ *
+ * Separate from disconnectGroup because the two mean opposite things about the
+ * queue. Locking the app disconnects every group and must leave unsent
+ * messages waiting; leaving one is the user saying to be rid of it, and a
+ * pending record and a read cursor sitting in storage afterwards is a room the
+ * app claims to have forgotten and has not.
+ */
+export function forgetGroup(groupId: string) {
+  const entry = live.get(groupId);
+  if (!entry) return;
+  try {
+    entry.client.forgetPersisted(entry.spaceId);
+  } catch {
+    /* nothing kept */
+  }
+  disconnectGroup(groupId);
+}
+
+/** Abandons a queued group record, named by the message it belonged to. */
+export function dropPendingInGroup(groupId: string, correlationId: string): boolean {
+  return live.get(groupId)?.client.dropPending(correlationId) || false;
 }
 
 export function disconnectGroup(groupId: string) {

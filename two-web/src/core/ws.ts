@@ -163,7 +163,12 @@ export class WebSocketRelayClient {
         role: this.creds.authorLabel || this.creds.role,
         // Ask only for what we missed while disconnected, so nothing we have
         // already applied gets replayed and duplicated.
-        since: this.loadHighWaterMark(this.creds.spaceId)
+        since: this.loadHighWaterMark(this.creds.spaceId),
+        // The relay's own numbering, once we have applied a record carrying
+        // one. Zero means "no such cursor yet", and the relay falls back to
+        // the clock above - which is what happens on the first connection
+        // after an upgrade, and for as long as a relay does not number at all.
+        sinceSeq: this.loadSeqCursor(this.creds.spaceId)
       });
 
       this.startHeartbeat();
@@ -269,6 +274,7 @@ export class WebSocketRelayClient {
       // Same shape subscribers have always received: payload is a JSON string.
       this.emit({ type: 'REMOTE_RECORD', record: { ...record, payload: plaintext } });
       this.saveHighWaterMark(creds.spaceId, Number(record.lamportClock));
+      this.saveSeqCursor(creds.spaceId, Number(record.seq));
     } catch {
       // Authentication failed: a stale record from a rotated code, or someone
       // in the room without the key. Dropping it is the correct outcome.
@@ -419,6 +425,41 @@ export class WebSocketRelayClient {
     return entry.correlationId;
   }
 
+  /**
+   * Erases what this client kept for its space: the queue of records still
+   * waiting, and the cursor saying how far it had read.
+   *
+   * For leaving a room, never for locking or disconnecting. A lock closes
+   * every socket and must leave the queue intact, or a message typed just
+   * before the screen went dark would be thrown away instead of sent.
+   */
+  forgetPersisted(spaceIdHint?: string): void {
+    const spaceId = this.creds?.spaceId || spaceIdHint;
+    this.outbox = [];
+    if (!spaceId) return;
+    try {
+      localStorage.removeItem(this.outboxKey(spaceId));
+      localStorage.removeItem(this.highWaterKey(spaceId));
+      localStorage.removeItem(this.seqKey(spaceId));
+    } catch {
+      /* storage unavailable; nothing was written to begin with */
+    }
+  }
+
+  /**
+   * Abandons a record still waiting to be acknowledged.
+   *
+   * Named by the correlation id its sender gave it, because that is the only
+   * handle the rest of the app holds - the record id is generated in here.
+   */
+  dropPending(correlationId: string): boolean {
+    const before = this.outbox.length;
+    this.outbox = this.outbox.filter(e => e.correlationId !== correlationId);
+    if (this.outbox.length === before) return false;
+    this.persistOutbox();
+    return true;
+  }
+
   private outboxKey(spaceId: string) {
     return `two_relay_outbox_${spaceId}`;
   }
@@ -485,6 +526,45 @@ export class WebSocketRelayClient {
   // rather than replaying the whole history.
   private highWaterKey(spaceId: string) {
     return `two_relay_seen_${spaceId}`;
+  }
+
+  /**
+   * Where this space had got to in the relay's own numbering.
+   *
+   * Kept apart from the clock above rather than replacing it, because the two
+   * are not interchangeable and a client can hold one without the other: this
+   * one is absent until a numbered record has actually been applied.
+   */
+  private seqKey(spaceId: string) {
+    return `two_relay_seq_${spaceId}`;
+  }
+
+  private loadSeqCursor(spaceId: string): number {
+    try {
+      const parsed = Number(localStorage.getItem(this.seqKey(spaceId)));
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Only ever raised, never lowered.
+   *
+   * A relay standing on its in-memory store while the database is away numbers
+   * from one again, so its records carry values far below anything already
+   * seen. Refusing to move backwards means such a spell leaves the cursor
+   * untouched instead of winding it back and replaying a history.
+   */
+  private saveSeqCursor(spaceId: string, seq: number) {
+    if (!Number.isFinite(seq) || seq <= 0) return;
+    try {
+      if (seq > this.loadSeqCursor(spaceId)) {
+        localStorage.setItem(this.seqKey(spaceId), String(seq));
+      }
+    } catch {
+      /* storage unavailable; the clock cursor still works */
+    }
   }
 
   private loadHighWaterMark(spaceId: string): number {

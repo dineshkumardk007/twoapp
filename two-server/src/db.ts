@@ -42,6 +42,18 @@ export interface StoredRecord {
   lamportClock: number;
   clientTs: number;
   createdAt: string;
+  /**
+   * The order this relay accepted the record in, assigned here and never by a
+   * client.
+   *
+   * Readers resume from a clock the sender chose, which is only sound while
+   * senders stamp honestly and promptly. A record queued on a sleeping phone
+   * and delivered an hour later arrives behind clocks everyone has already
+   * passed, and is skipped by anyone who was away - silently and for good.
+   * A number this side issues cannot be late, because it is taken when the
+   * record is stored rather than when it was written.
+   */
+  seq?: number;
 }
 
 export interface StoredUser {
@@ -72,7 +84,11 @@ export interface RelayDb {
   createSpace(spaceId: string, creatorId: string, creatorPublicKey: string, sealedKey: string): Promise<StoredSpace>;
   addMemberToSpace(spaceId: string, memberId: string, sealedKey: string): Promise<StoredSpace>;
   saveRecord(record: StoredRecord): Promise<StoredRecord>;
-  getRecordsForSpace(spaceId: string, sinceLamport?: number): Promise<StoredRecord[]>;
+  getRecordsForSpace(
+    spaceId: string,
+    sinceLamport?: number,
+    sinceSeq?: number
+  ): Promise<StoredRecord[]>;
   /** Deletes records older than the retention window. Returns how many went. */
   purgeRecordsOlderThan(days: number): Promise<number>;
   rendezvousTokens: Map<string, RendezvousToken>;
@@ -84,6 +100,12 @@ class InMemoryRelayDb implements RelayDb {
   users = new Map<string, StoredUser>();
   spaces = new Map<string, StoredSpace>();
   records: StoredRecord[] = [];
+  /**
+   * Numbers records the way Postgres does, so the resume cursor works the same
+   * whether this store is standing in or not. It restarts at one each boot,
+   * which is safe precisely because readers only ever raise their cursor.
+   */
+  private seqCounter = 0;
   rendezvousTokens = new Map<string, RendezvousToken>();
 
   // Deliberately silent. This store is never used on its own - it is the
@@ -140,6 +162,7 @@ class InMemoryRelayDb implements RelayDb {
             r.authorId === record.authorId
           )
       );
+      record.seq = ++this.seqCounter;
       this.records.push(record);
       return record;
     }
@@ -147,14 +170,22 @@ class InMemoryRelayDb implements RelayDb {
     // Replaying the same record must not duplicate it.
     const existing = this.records.findIndex(r => r.id === record.id);
     if (existing >= 0) {
+      // Keep the number it was first given; the point of it is not to move.
+      record.seq = this.records[existing].seq;
       this.records[existing] = record;
     } else {
+      record.seq = ++this.seqCounter;
       this.records.push(record);
     }
     return record;
   }
 
-  async getRecordsForSpace(spaceId: string, sinceLamport = 0) {
+  async getRecordsForSpace(spaceId: string, sinceLamport = 0, sinceSeq = 0) {
+    if (sinceSeq > 0) {
+      return this.records
+        .filter(r => r.spaceId === spaceId && (r.seq || 0) > sinceSeq)
+        .sort((a, b) => (a.seq || 0) - (b.seq || 0));
+    }
     return this.records
       .filter(r => r.spaceId === spaceId && r.lamportClock > sinceLamport)
       .sort((a, b) => a.lamportClock - b.lamportClock);
@@ -233,6 +264,14 @@ class PostgresRelayDb implements RelayDb {
 
       CREATE INDEX IF NOT EXISTS relay_records_space_lamport_idx
         ON relay_records (space_id, lamport_clock);
+
+      -- Added after the table existed, so it is an ALTER rather than a column
+      -- in the CREATE above. BIGSERIAL fills the rows already there; their
+      -- exact order does not matter, only that every later insert is higher.
+      ALTER TABLE relay_records ADD COLUMN IF NOT EXISTS seq BIGSERIAL;
+
+      CREATE INDEX IF NOT EXISTS relay_records_space_seq_idx
+        ON relay_records (space_id, seq);
     `);
 
     console.log('[Relay DB] PostgreSQL storage ready.');
@@ -335,11 +374,12 @@ class PostgresRelayDb implements RelayDb {
       );
     }
 
-    await this.pool.query(
+    const inserted = await this.pool.query(
       `INSERT INTO relay_records
          (id, space_id, author_id, type, payload, nonce, lamport_clock, client_ts)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (id) DO NOTHING`,
+       ON CONFLICT (id) DO NOTHING
+       RETURNING seq`,
       [
         record.id,
         record.spaceId,
@@ -351,16 +391,37 @@ class PostgresRelayDb implements RelayDb {
         String(record.clientTs)
       ]
     );
+
+    // No row back means the id was already there and the insert did nothing,
+    // so the number to report is the one that row already carries.
+    if (inserted.rows[0]?.seq !== undefined) {
+      record.seq = Number(inserted.rows[0].seq);
+    } else {
+      const { rows } = await this.pool.query(
+        `SELECT seq FROM relay_records WHERE id = $1`,
+        [record.id]
+      );
+      if (rows[0]?.seq !== undefined) record.seq = Number(rows[0].seq);
+    }
     return record;
   }
 
-  async getRecordsForSpace(spaceId: string, sinceLamport = 0) {
+  async getRecordsForSpace(spaceId: string, sinceLamport = 0, sinceSeq = 0) {
+    // A reader that has never applied a record carrying a seq has nothing to
+    // resume from yet and falls back to the clock, exactly as before. It picks
+    // up seq values from this very batch and uses them from then on.
+    const bySeq = sinceSeq > 0;
     const { rows } = await this.pool.query(
-      `SELECT id, space_id, author_id, type, payload, nonce, lamport_clock, client_ts, created_at
-       FROM relay_records
-       WHERE space_id = $1 AND lamport_clock > $2
-       ORDER BY lamport_clock ASC`,
-      [spaceId, String(sinceLamport)]
+      bySeq
+        ? `SELECT id, space_id, author_id, type, payload, nonce, lamport_clock, client_ts, created_at, seq
+           FROM relay_records
+           WHERE space_id = $1 AND seq > $2
+           ORDER BY seq ASC`
+        : `SELECT id, space_id, author_id, type, payload, nonce, lamport_clock, client_ts, created_at, seq
+           FROM relay_records
+           WHERE space_id = $1 AND lamport_clock > $2
+           ORDER BY lamport_clock ASC`,
+      [spaceId, String(bySeq ? sinceSeq : sinceLamport)]
     );
 
     // BIGINT arrives as a string from pg; JSON needs real numbers.
@@ -373,7 +434,8 @@ class PostgresRelayDb implements RelayDb {
       nonce: r.nonce,
       lamportClock: Number(r.lamport_clock),
       clientTs: Number(r.client_ts),
-      createdAt: new Date(r.created_at).toISOString()
+      createdAt: new Date(r.created_at).toISOString(),
+      seq: r.seq === undefined || r.seq === null ? undefined : Number(r.seq)
     }));
   }
 
@@ -588,16 +650,21 @@ class ResilientRelayDb implements RelayDb {
     return record;
   }
 
-  async getRecordsForSpace(spaceId: string, sinceLamport = 0) {
+  async getRecordsForSpace(spaceId: string, sinceLamport = 0, sinceSeq = 0) {
     if (this.postgres && this.healthy) {
       try {
-        return await this.postgres.getRecordsForSpace(spaceId, sinceLamport);
+        return await this.postgres.getRecordsForSpace(spaceId, sinceLamport, sinceSeq);
       } catch (err) {
         this.degrade(err);
       }
     }
     // Degraded: serve whatever this process still holds rather than nothing.
-    return this.memory.getRecordsForSpace(spaceId, sinceLamport);
+    //
+    // This store numbers from one each boot, so its seq values sit far below
+    // anything Postgres has issued. Readers only ever raise their cursor, so a
+    // low number is ignored rather than dragging them backwards - a degraded
+    // spell leaves the cursor where it was instead of corrupting it.
+    return this.memory.getRecordsForSpace(spaceId, sinceLamport, sinceSeq);
   }
 
   private async viaPostgres<T>(op: (db: RelayDb) => Promise<T>, fallback: () => Promise<T>): Promise<T> {

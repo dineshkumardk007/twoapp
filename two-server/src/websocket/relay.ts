@@ -130,7 +130,7 @@ export class WebSocketRelay {
 
         try {
           // Protocol:
-          // 1. JOIN: { type, spaceId, userId, since? }
+          // 1. JOIN: { type, spaceId, userId, since?, sinceSeq? }
           // 2. RECORD: { type, spaceId, record }
           // 3. PING: { type }
 
@@ -196,7 +196,7 @@ export class WebSocketRelay {
               timestamp: Date.now()
             });
 
-            await this.replayMissedRecords(currentClient, message.since);
+            await this.replayMissedRecords(currentClient, message.since, message.sinceSeq);
             // Tell both sides who is present now.
             this.broadcastPresence(currentClient.spaceId);
             return;
@@ -320,12 +320,21 @@ export class WebSocketRelay {
    * while the partner's screen was off would be lost. The client supplies the
    * highest lamport clock it has already applied.
    */
-  private async replayMissedRecords(client: SpaceClient, since: unknown) {
+  /**
+   * Sends what this reader missed, resuming from whichever cursor it has.
+   *
+   * `sinceSeq` is this relay's own numbering and is preferred whenever the
+   * client has one. `since` is the sender-chosen clock the protocol started
+   * with, kept for a client that has not applied a numbered record yet - its
+   * first connection after an upgrade, and every older build.
+   */
+  private async replayMissedRecords(client: SpaceClient, since: unknown, sinceSeq?: unknown) {
     const sinceLamport = Number.isFinite(Number(since)) ? Number(since) : 0;
+    const seqCursor = Number.isFinite(Number(sinceSeq)) ? Math.max(0, Number(sinceSeq)) : 0;
 
     let missed: StoredRecord[];
     try {
-      missed = await db.getRecordsForSpace(client.spaceId, sinceLamport);
+      missed = await db.getRecordsForSpace(client.spaceId, sinceLamport, seqCursor);
     } catch (err) {
       console.error('[WebSocket Relay] Replay failed', err);
       return;

@@ -3,7 +3,7 @@ import { ChatMessage, NeedItem } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
-import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile } from 'lucide-react';
+import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2 } from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
 
 interface ChatViewProps {
@@ -17,6 +17,8 @@ interface ChatViewProps {
    * a message is queued rather than sent.
    */
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
+  /** Retry or abandon a message that never left this device. */
+  onResolveStuck?: (messageId: string, action: 'retry' | 'delete') => void;
   onSendMessage: (
     text: string,
     isNeed?: boolean,
@@ -45,6 +47,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   messages,
   activeUser,
   onSendMessage,
+  onResolveStuck,
   partnerReadAt = 0,
   relayStatus = 'connected',
   onOpenSoftLanding,
@@ -57,6 +60,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
 }) => {
   const [inputText, setInputText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  /** Which stuck message has its retry/discard choice open. */
+  const [stuckOpen, setStuckOpen] = useState<string | null>(null);
 
   /**
    * Announces typing at most once every few seconds.
@@ -224,13 +229,48 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       </>
                     ) : (
                       <>
-                        <Clock className="w-3 h-3 text-linen-secondary/50" />
+                        {/* The clock is the control: a message that never left
+                            needs somewhere to go, and nothing else on the row
+                            belongs to it. */}
+                        <button
+                          onClick={() =>
+                            onResolveStuck && setStuckOpen(stuckOpen === msg.id ? null : msg.id)
+                          }
+                          aria-label="Still sending"
+                          aria-expanded={stuckOpen === msg.id}
+                          className="rounded p-0.5 text-linen-secondary/60 hover:text-linen-primary transition-colors cursor-pointer"
+                        >
+                          <Clock className="w-3 h-3" />
+                        </button>
                         <span className="sr-only">Sending</span>
                       </>
                     )}
                   </span>
                 )}
               </span>
+
+              {stuckOpen === msg.id && onResolveStuck && (
+                <span className="mt-0.5 flex items-center gap-1.5 px-1">
+                  <button
+                    onClick={() => {
+                      setStuckOpen(null);
+                      onResolveStuck(msg.id, 'retry');
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-linen-border bg-linen-surface px-2 py-1 text-[10px] font-medium text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
+                  >
+                    <RotateCw className="w-3 h-3" /> Send again
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStuckOpen(null);
+                      onResolveStuck(msg.id, 'delete');
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-linen-border bg-linen-surface px-2 py-1 text-[10px] font-medium text-linen-secondary hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" /> Discard
+                  </button>
+                </span>
+              )}
             </div>
           );
         })}

@@ -12,7 +12,10 @@ import {
   Copy,
   Eye,
   EyeOff,
-  UserPlus
+  UserPlus,
+  Pencil,
+  RotateCw,
+  Trash2
 } from 'lucide-react';
 import {
   GroupSpace,
@@ -20,6 +23,7 @@ import {
   GroupMessage,
   isOverCapacity,
   MAX_GROUP_MEMBERS,
+  MAX_GROUP_MESSAGES,
   membersOnline
 } from '../core/groups';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
@@ -36,6 +40,10 @@ interface GroupChatViewProps {
   shareReceipts: boolean;
   onSend: (text: string) => void;
   onTyping: () => void;
+  /** Founders only; absent for everyone else, which is what hides the control. */
+  onRename?: (name: string) => void;
+  /** Retry or abandon a message that never left this device. */
+  onResolveStuck?: (messageId: string, action: 'retry' | 'delete') => void;
 }
 
 /**
@@ -54,13 +62,18 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   typingIds,
   shareReceipts,
   onSend,
-  onTyping
+  onTyping,
+  onRename,
+  onResolveStuck
 }) => {
   const [text, setText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [infoFor, setInfoFor] = useState<GroupMessage | null>(null);
   const [showMembers, setShowMembers] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [renaming, setRenaming] = useState<string | null>(null);
+  /** Which stuck message has its retry/discard choice open. */
+  const [stuckOpen, setStuckOpen] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState('');
   const logRef = useRef<HTMLDivElement>(null);
@@ -72,6 +85,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
     if (!showMembers) {
       setShowInvite(false);
       setCopyError('');
+      setRenaming(null);
     }
   }, [showMembers]);
 
@@ -242,6 +256,64 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
             can join. Nobody can be removed.
           </p>
 
+          {/* Renaming, for the founder alone - the same device whose hello
+              tells everyone else what the group is called, so the new name
+              travels the way the first one did. */}
+          {onRename && (
+            <div className="mt-3 border-t border-linen-border pt-2.5">
+              {renaming === null ? (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-linen-primary">
+                    <Pencil className="h-3.5 w-3.5 shrink-0 text-linen-accent" />
+                    <span className="truncate">{group.name}</span>
+                  </span>
+                  <button
+                    onClick={() => setRenaming(group.name)}
+                    className="shrink-0 rounded-lg border border-linen-border bg-linen-surface px-2 py-1 text-[10px] font-medium text-linen-secondary hover:bg-linen-variant hover:text-linen-primary transition-colors cursor-pointer"
+                  >
+                    Rename
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <input
+                    value={renaming}
+                    onChange={e => setRenaming(e.target.value.slice(0, 40))}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && renaming.trim()) {
+                        onRename(renaming);
+                        setRenaming(null);
+                      }
+                      if (e.key === 'Escape') setRenaming(null);
+                    }}
+                    autoFocus
+                    placeholder="What should this group be called?"
+                    className="w-full rounded-xl border border-linen-border bg-linen-variant/40 px-3 py-2 text-xs text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
+                  />
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => {
+                        if (!renaming.trim()) return;
+                        onRename(renaming);
+                        setRenaming(null);
+                      }}
+                      disabled={!renaming.trim()}
+                      className="rounded-lg bg-linen-primary px-2.5 py-1.5 text-[10px] font-medium text-linen-surface hover:opacity-90 disabled:opacity-40 transition-opacity cursor-pointer"
+                    >
+                      Rename for everyone
+                    </button>
+                    <button
+                      onClick={() => setRenaming(null)}
+                      className="rounded-lg border border-linen-border bg-linen-surface px-2.5 py-1.5 text-[10px] text-linen-secondary hover:bg-linen-variant transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Adding somebody later.
               The code and the words used to appear once, on the screen that
               created the group, and never again - so a group could not be
@@ -297,6 +369,16 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
           </p>
         )}
 
+        {/* Said once the device is full rather than never. The oldest messages
+            fall off to keep this from growing without bound, which is a fine
+            thing to do and a poor thing to do silently. */}
+        {group.messages.length >= MAX_GROUP_MESSAGES && (
+          <p className="pb-1 text-center text-[10px] leading-relaxed text-linen-secondary">
+            Only the most recent {MAX_GROUP_MESSAGES.toLocaleString()} messages are kept on this
+            device. Older ones are gone from here.
+          </p>
+        )}
+
         {group.messages.map(msg => {
           const mine = msg.authorId === myId;
           const breakdown = readBreakdown(group.members, msg);
@@ -330,7 +412,19 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                         fifty-second lie. */}
                     {msg.delivered === false ? (
                       <>
-                        <Clock className="h-3 w-3 text-linen-secondary/50" />
+                        {/* The clock is the control: a message that never left
+                            needs somewhere to go, and nothing else on the row
+                            belongs to it. */}
+                        <button
+                          onClick={() =>
+                            onResolveStuck && setStuckOpen(stuckOpen === msg.id ? null : msg.id)
+                          }
+                          aria-label="Still sending"
+                          aria-expanded={stuckOpen === msg.id}
+                          className="rounded p-0.5 text-linen-secondary/60 hover:text-linen-primary transition-colors cursor-pointer"
+                        >
+                          <Clock className="h-3 w-3" />
+                        </button>
                         <span className="sr-only">Sending</span>
                       </>
                     ) : shareReceipts && breakdown.allRead ? (
@@ -357,6 +451,29 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                   </>
                 )}
               </span>
+
+              {stuckOpen === msg.id && onResolveStuck && (
+                <span className="mt-0.5 flex items-center gap-1.5 px-1">
+                  <button
+                    onClick={() => {
+                      setStuckOpen(null);
+                      onResolveStuck(msg.id, 'retry');
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-linen-border bg-linen-surface px-2 py-1 text-[10px] font-medium text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
+                  >
+                    <RotateCw className="h-3 w-3" /> Send again
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStuckOpen(null);
+                      onResolveStuck(msg.id, 'delete');
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-linen-border bg-linen-surface px-2 py-1 text-[10px] font-medium text-linen-secondary hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="h-3 w-3" /> Discard
+                  </button>
+                </span>
+              )}
             </div>
           );
         })}

@@ -18,6 +18,16 @@ import { newId } from './ids';
 export const MAX_GROUP_MEMBERS = 10;
 
 /**
+ * How much of a group's conversation one device keeps.
+ *
+ * Was 500, and dropped the oldest without a word, so a busy group quietly ate
+ * its own history. Two thousand short messages is a few hundred kilobytes -
+ * cheap enough that the limit is now about not growing without bound rather
+ * than about saving space - and the chat says so once it is reached.
+ */
+export const MAX_GROUP_MESSAGES = 2000;
+
+/**
  * The point past which the roster stops growing at all.
  *
  * Not a product limit - a guard. Everyone holding the code can announce

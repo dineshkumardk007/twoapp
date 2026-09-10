@@ -9,6 +9,7 @@ import {
   GroupSpace,
   myMemberId,
   newGroup,
+  MAX_GROUP_MESSAGES,
   withMember,
   withRead,
   unreadCount
@@ -16,6 +17,8 @@ import {
 import {
   connectGroup,
   disconnectGroup,
+  forgetGroup,
+  dropPendingInGroup,
   disconnectAllGroups,
   sendToGroup,
   signalToGroup,
@@ -464,10 +467,25 @@ export const App: React.FC = () => {
               }
             }
           } else if (record.type === 'CHAT') {
-            setState(prev => ({
-              ...prev,
-              messages: insertBySentAt(prev.messages, parsed)
-            }));
+            setState(prev => {
+              // Arriving twice must not mean appearing twice.
+              //
+              // Until now the only thing standing between a replay and a
+              // duplicated conversation was the resume cursor, because the
+              // applied-id set the relay client keeps lives in memory and is
+              // gone after a reload. That was survivable while the cursor only
+              // ever moved forward, and is not something to keep resting on.
+              if (prev.messages.some(m => m.id === parsed.id)) return prev;
+
+              // A copy of our own message that came back through the relay was,
+              // by definition, delivered - the relay had to store it to send
+              // it. The sender stamps `delivered: false` into the payload and
+              // only its own socket ever hears the acknowledgement, so a second
+              // device on the same role used to show everything typed on the
+              // first one as forever sending.
+              const applied = parsed.delivered === false ? { ...parsed, delivered: true } : parsed;
+              return { ...prev, messages: insertBySentAt(prev.messages, applied) };
+            });
             const isFromPartner = record.authorId !== state.activeUser;
             if (isFromPartner) {
               playMessageChime();
@@ -1353,7 +1371,7 @@ export const App: React.FC = () => {
           return {
             ...g,
             members: withMember(g.members, { id: from, name: message.authorName, at: message.sentAt }),
-            messages: insertBySentAt(g.messages, message).slice(-500)
+            messages: insertBySentAt(g.messages, message).slice(-MAX_GROUP_MESSAGES)
           };
         }
 
@@ -1510,9 +1528,86 @@ export const App: React.FC = () => {
   };
 
   const handleLeaveGroup = (groupId: string) => {
-    disconnectGroup(groupId);
+    // forget, not merely disconnect: leaving must not leave the room's queue
+    // and read cursor behind in storage.
+    forgetGroup(groupId);
     setActiveGroupId(current => (current === groupId ? null : current));
     setState(prev => ({ ...prev, groups: prev.groups.filter(g => g.id !== groupId) }));
+  };
+
+  /**
+   * Renames a group, for everyone.
+   *
+   * Founders only, which is the rule the room already runs on: a joiner's name
+   * is provisional until the founder's hello says what the group is called, and
+   * letting anybody rename would put two devices in a loop overwriting each
+   * other with no way to settle it.
+   *
+   * Announced at once rather than waiting for the next beat, which is a minute
+   * away and only sent while the app is on screen - long enough for the rename
+   * to look like it had not worked.
+   */
+  const handleRenameGroup = (groupId: string, rawName: string) => {
+    const name = rawName.trim().slice(0, 40);
+    if (!name) return;
+
+    setState(prev => ({
+      ...prev,
+      groups: prev.groups.map(g =>
+        g.id === groupId && g.founder ? { ...g, name, nameConfirmed: true } : g
+      )
+    }));
+
+    const group = state.groups.find(g => g.id === groupId);
+    if (!group?.founder) return;
+    sendToGroup(groupId, GROUP_HELLO, {
+      from: myMemberId(),
+      name: state.userName || 'Someone',
+      groupName: name,
+      founder: true,
+      at: Date.now()
+    });
+  };
+
+  /**
+   * Gives up on a message that never left, or sends it again as a new one.
+   *
+   * A record the relay will not accept is retried on every reconnect forever,
+   * so without this a single bad message means a clock on screen that nothing
+   * can clear. Retrying re-sends the text rather than the record: the old one
+   * is abandoned and a fresh id, nonce and encryption go out, because whatever
+   * the relay objected to is in the record itself.
+   */
+  const handleResolveStuck = (
+    scope: { groupId?: string },
+    messageId: string,
+    action: 'retry' | 'delete'
+  ) => {
+    const { groupId } = scope;
+    let text = '';
+
+    if (groupId) {
+      const group = state.groups.find(g => g.id === groupId);
+      text = group?.messages.find(m => m.id === messageId)?.text || '';
+      dropPendingInGroup(groupId, messageId);
+      setState(prev => ({
+        ...prev,
+        groups: prev.groups.map(g =>
+          g.id === groupId ? { ...g, messages: g.messages.filter(m => m.id !== messageId) } : g
+        )
+      }));
+    } else {
+      text = state.messages.find(m => m.id === messageId)?.text || '';
+      wsRelay.dropPending(messageId);
+      setState(prev => ({
+        ...prev,
+        messages: prev.messages.filter(m => m.id !== messageId)
+      }));
+    }
+
+    if (action !== 'retry' || !text) return;
+    if (groupId) handleSendGroupMessage(groupId, text);
+    else handleSendMessage(text);
   };
 
   const handleSendGroupMessage = (groupId: string, text: string) => {
@@ -1533,7 +1628,7 @@ export const App: React.FC = () => {
                 text,
                 sentAt: at,
                 delivered: false
-              }).slice(-500)
+              }).slice(-MAX_GROUP_MESSAGES)
             }
           : g
       )
@@ -2782,6 +2877,14 @@ export const App: React.FC = () => {
                 if (!readShareReceipts()) return;
                 signalToGroup(activeGroup.id, TYPING_SIGNAL, { from: myMemberId() });
               }}
+              onRename={
+                activeGroup.founder
+                  ? (name) => handleRenameGroup(activeGroup.id, name)
+                  : undefined
+              }
+              onResolveStuck={(messageId, action) =>
+                handleResolveStuck({ groupId: activeGroup.id }, messageId, action)
+              }
             />
           </Suspense>
         </main>
@@ -2892,6 +2995,7 @@ export const App: React.FC = () => {
             messages={state.messages}
             activeUser={state.activeUser}
             onSendMessage={handleSendMessage}
+            onResolveStuck={(messageId, action) => handleResolveStuck({}, messageId, action)}
             onOpenSoftLanding={() => setCurrentTab('softlanding')}
             partnerName={state.partnerName || 'Partner'}
             partnerReadAt={state.partnerReadAt}
