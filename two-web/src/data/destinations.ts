@@ -96,3 +96,14 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
 export function allDestinations(unreadChatCount = 0): Destination[] {
   return getDestinations(unreadChatCount).flatMap(g => g.items);
 }
+
+/**
+ * What a destination is called, by its id.
+ *
+ * Here rather than in the caller so there is one list of names in the app: the
+ * dock, the directory sheet and the activity card all say "Kintsugi Scars"
+ * because all three ask this.
+ */
+export function destinationName(tabId: string): string {
+  return allDestinations().find(d => d.id === tabId)?.name || tabId;
+}

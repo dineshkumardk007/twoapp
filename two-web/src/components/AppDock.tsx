@@ -6,6 +6,8 @@ interface AppDockProps {
   currentTab: string;
   onSelectTab: (id: string) => void;
   unreadChatCount?: number;
+  /** Destinations the partner has touched and this device has not looked at. */
+  dotted?: Set<string>;
   /** Roughly how many favourites fit across the bar. */
   isTablet?: boolean;
 }
@@ -40,6 +42,7 @@ export const AppDock: React.FC<AppDockProps> = ({
   currentTab,
   onSelectTab,
   unreadChatCount = 0,
+  dotted,
   isTablet = false
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -247,11 +250,13 @@ export const AppDock: React.FC<AppDockProps> = ({
                               {item.desc}
                             </span>
                           </span>
-                          {item.badge && (
+                          {item.badge ? (
                             <span className="ml-auto shrink-0 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
                               {item.badge}
                             </span>
-                          )}
+                          ) : dotted?.has(item.id) ? (
+                            <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-rose-500" />
+                          ) : null}
                         </button>
                       );
                     })}
@@ -309,7 +314,7 @@ export const AppDock: React.FC<AppDockProps> = ({
                   >
                     {item.name}
                   </span>
-                  {item.badge && (
+                  {(item.badge || dotted?.has(item.id)) && (
                     <span className="absolute right-1/4 top-0.5 h-2 w-2 rounded-full bg-rose-500" />
                   )}
                 </button>

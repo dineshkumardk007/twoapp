@@ -14,6 +14,9 @@ import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
 import { HeartOptionsModal } from '../components/HeartOptionsModal';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
 import { RelationshipMilestone, ComfortBoxData } from '../types';
+import { PartnerActivityCard } from '../components/PartnerActivityCard';
+import { ActivityEvent } from '../core/activity';
+import { destinationName } from '../data/destinations';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -25,6 +28,8 @@ interface HomeViewProps {
   onOpenTour?: () => void;
   onAddMilestone?: (milestone: RelationshipMilestone) => void;
   onSaveComfortBox?: (box: ComfortBoxData) => void;
+  /** Partner changes this device has not looked at yet, newest first. */
+  partnerNews?: ActivityEvent[];
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -36,7 +41,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onSendNeed,
   onOpenTour,
   onAddMilestone = () => {},
-  onSaveComfortBox
+  onSaveComfortBox,
+  partnerNews = []
 }) => {
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [showSoundscapes, setShowSoundscapes] = useState(false);
@@ -133,6 +139,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Above the tour banner and everything else, because it is the only
+          thing here that is time-sensitive and the only reason the screen
+          might need reading twice in a day. */}
+      <PartnerActivityCard
+        news={partnerNews}
+        partnerName={state.partnerName || 'Your partner'}
+        onNavigate={onNavigate}
+        labelFor={destinationName}
+      />
+
       {/* 0. Story Tour Banner */}
       {onOpenTour && (
         <div className="rounded-2xl border border-linen-border bg-gradient-to-r from-linen-variant/60 via-linen-surface to-linen-variant/40 p-4 flex items-center justify-between shadow-xs">

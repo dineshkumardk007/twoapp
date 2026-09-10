@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, startTransition } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, startTransition, useMemo } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, forStorage, SpaceState, MAX_CHAT_MESSAGES } from './core/storage';
 import { AppDock } from './components/AppDock';
 import { GroupDock } from './components/GroupDock';
@@ -49,6 +49,7 @@ import {
 } from './core/space';
 import { localMesh } from './core/localMesh';
 import { insertBySentAt } from './core/ordering';
+import { routeFor, withActivity, unseen, dottedTabs } from './core/activity';
 import {
   ThemeMode,
   NeedItem,
@@ -452,6 +453,34 @@ export const App: React.FC = () => {
         setLastSyncedAt(Date.now());
         // Anything arriving proves a partner exists on the other end.
         setState(prev => (prev.partnerEverSeen ? prev : { ...prev, partnerEverSeen: true }));
+
+        /**
+         * Note what the partner changed, before working out what it was.
+         *
+         * Deliberately one hook above the whole type chain rather than a line
+         * added to each of its forty branches: every feature gets this at once,
+         * a new feature gets it by adding a line to the route table, and none
+         * of the forty handlers had to be touched to make it work.
+         *
+         * Our own records, arriving back from another of our devices, are not
+         * news to us.
+         */
+        if (record.authorId !== state.activeUser) {
+          const route = routeFor(record.type);
+          if (route) {
+            const at = Number(record.clientTs) || Date.now();
+            setState(prev => ({
+              ...prev,
+              activity: withActivity(prev.activity || [], {
+                id: record.id,
+                tabId: route.tab,
+                type: record.type,
+                at
+              })
+            }));
+          }
+        }
+
         try {
           const parsed = JSON.parse(record.payload);
 
@@ -1668,12 +1697,38 @@ export const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeGroupId, state.groups, isLocked]);
 
+  /**
+   * The two surfaces, from one log.
+   *
+   * Nothing here is kept in state of its own: a dot and a home-screen line are
+   * two readings of the same events against the same marks, so they cannot
+   * disagree about what is new.
+   */
+  const partnerDots = useMemo(
+    () => dottedTabs(state.activity || [], state.activitySeen || {}),
+    [state.activity, state.activitySeen]
+  );
+  const partnerNews = useMemo(
+    () => unseen(state.activity || [], state.activitySeen || {}),
+    [state.activity, state.activitySeen]
+  );
+
   const handleSelectTab = (tabId: string) => {
     // Screens load as separate chunks, so switching tab can suspend. Marked as
     // a transition, React keeps the screen you are on until the next one is
     // ready instead of tearing it down for a placeholder - the difference
     // between a tap that feels instant and one that blinks.
     startTransition(() => setCurrentTab(tabId));
+
+    // Opening a destination is what marks it read. Stamped now rather than
+    // from the newest event, so anything that lands while you are sitting on
+    // the screen is already accounted for and does not reappear as news the
+    // moment you leave.
+    setState(prev => ({
+      ...prev,
+      activitySeen: { ...(prev.activitySeen || {}), [tabId]: Date.now() }
+    }));
+
     if (tabId === 'chat') {
       setUnreadChatCount(0);
       sendReadReceipt();
@@ -2975,11 +3030,15 @@ export const App: React.FC = () => {
             spaceCode={session?.code}
             onUpdateReport={handleUpdateReport}
             onToggleUserFlag={handleToggleUserFlag}
-            onNavigate={setCurrentTab}
+            // handleSelectTab, not setCurrentTab: arriving from the activity
+            // card has to mark the destination read, or the line you just
+            // followed would still be sitting there when you came back.
+            onNavigate={handleSelectTab}
             onSendNeed={(need) => handleSendMessage(`I need: ${need.title} — ${need.description}`, true)}
             onOpenTour={showTourCard ? () => setShowStoryTour(true) : undefined}
             onAddMilestone={handleAddMilestone}
             onSaveComfortBox={handleSaveComfortBox}
+            partnerNews={partnerNews}
           />
         )}
 
@@ -3392,6 +3451,7 @@ export const App: React.FC = () => {
           currentTab={currentTab}
           onSelectTab={handleSelectTab}
           unreadChatCount={unreadChatCount}
+          dotted={partnerDots}
           isTablet={isTablet}
         />
       )}

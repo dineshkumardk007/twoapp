@@ -39,6 +39,7 @@ import { loadSpaceSession } from './space';
 import { externalizeMedia, persistMedia } from './media';
 import { newId } from './ids';
 import { GroupSpace } from './groups';
+import { ActivityEvent } from './activity';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
 
@@ -110,6 +111,10 @@ export interface SpaceState {
    * what lets groups exist without a single couple screen changing.
    */
   groups: GroupSpace[];
+  /** What the partner has changed lately, one entry per destination. */
+  activity: ActivityEvent[];
+  /** When this device last looked at each destination. */
+  activitySeen: Record<string, number>;
   /**
    * True once anything has ever arrived from the partner.
    *
@@ -142,6 +147,8 @@ const DEFAULT_STATE: SpaceState = {
   partnerReadAt: 0,
   partnerLastSeen: 0,
   groups: [],
+  activity: [],
+  activitySeen: {},
   partnerEverSeen: false,
   knownDevices: [],
   approvedDeviceCount: 1,
@@ -1093,6 +1100,9 @@ export function loadState(): SpaceState {
       // Groups saved before the creator's name became the shared one have no
       // nameConfirmed; treating them as confirmed keeps the name they already
       // show rather than replacing it with a placeholder.
+      activity: Array.isArray(parsed.activity) ? parsed.activity : [],
+      activitySeen:
+        parsed.activitySeen && typeof parsed.activitySeen === 'object' ? parsed.activitySeen : {},
       groups: Array.isArray(parsed.groups)
         ? parsed.groups.map((g: any) => ({ ...g, nameConfirmed: g.nameConfirmed !== false }))
         : [],
