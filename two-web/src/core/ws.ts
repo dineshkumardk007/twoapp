@@ -375,10 +375,36 @@ export class WebSocketRelayClient {
     this.persistOutbox();
   }
 
-  /** Sends everything still awaiting acknowledgement. Safe to call repeatedly. */
+  /**
+   * Sends everything still awaiting acknowledgement. Safe to call repeatedly.
+   *
+   * Each record's lamport clock is taken again on the way out, because that
+   * clock is what everybody else resumes from. A reader asks the relay for
+   * whatever is newer than the highest clock it has applied, so a record that
+   * waited an hour in here and then arrived carrying the hour-old clock it was
+   * written with would be older than the cursor of anyone who had gone on
+   * talking meanwhile - stored, delivered live to whoever happened to be
+   * connected, and silently skipped forever by anyone who was not. In a group
+   * that is a message some members simply never receive, with nothing on any
+   * screen to say so.
+   *
+   * Re-stamping is only safe because a conversation is now ordered by the
+   * sentAt inside the ciphertext rather than by this clock, so moving it
+   * forward changes what gets replayed without changing what anybody reads.
+   * The id is untouched: acknowledgement, de-duplication and the AAD binding
+   * all rest on it.
+   *
+   * One case stays open. A record the relay stored but could not acknowledge -
+   * the socket dying in between - keeps the clock it was first stored under,
+   * because the insert ignores a repeated id rather than replacing the row.
+   * Closing that needs a sequence the server issues itself, which is the
+   * proper fix and a schema change.
+   */
   private flushOutbox() {
     if (!this.isOpen() || !this.creds) return;
     for (const entry of this.outbox) {
+      this.lamport = Math.max(this.lamport + 1, Date.now());
+      entry.record.lamportClock = this.lamport;
       // Only the record goes on the wire; correlationId is a local concern.
       this.rawSend({ type: 'RECORD', spaceId: entry.record.spaceId, record: entry.record });
     }
