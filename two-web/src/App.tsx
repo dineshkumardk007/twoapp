@@ -45,6 +45,7 @@ import {
   SpaceSession
 } from './core/space';
 import { localMesh } from './core/localMesh';
+import { insertBySentAt } from './core/ordering';
 import {
   ThemeMode,
   NeedItem,
@@ -465,7 +466,7 @@ export const App: React.FC = () => {
           } else if (record.type === 'CHAT') {
             setState(prev => ({
               ...prev,
-              messages: [...prev.messages, parsed]
+              messages: insertBySentAt(prev.messages, parsed)
             }));
             const isFromPartner = record.authorId !== state.activeUser;
             if (isFromPartner) {
@@ -1352,7 +1353,7 @@ export const App: React.FC = () => {
           return {
             ...g,
             members: withMember(g.members, { id: from, name: message.authorName, at: message.sentAt }),
-            messages: [...g.messages, message].slice(-500)
+            messages: insertBySentAt(g.messages, message).slice(-500)
           };
         }
 
@@ -1525,10 +1526,14 @@ export const App: React.FC = () => {
         g.id === groupId
           ? {
               ...g,
-              messages: [
-                ...g.messages,
-                { id, authorId: myMemberId(), authorName: name, text, sentAt: at, delivered: false }
-              ].slice(-500)
+              messages: insertBySentAt(g.messages, {
+                id,
+                authorId: myMemberId(),
+                authorName: name,
+                text,
+                sentAt: at,
+                delivered: false
+              }).slice(-500)
             }
           : g
       )
@@ -1682,7 +1687,7 @@ export const App: React.FC = () => {
     wsRelay.broadcastUpdate('CHAT', newMessage, newMessage.id);
     setState(prev => ({
       ...prev,
-      messages: [...prev.messages, newMessage]
+      messages: insertBySentAt(prev.messages, newMessage)
     }));
   };
 
