@@ -43,6 +43,7 @@ export type ActivityTier = 'for-you' | 'changed';
 const ROUTES: Record<string, { tab: string; tier: ActivityTier }> = {
   // Meant for you.
   CHAT: { tab: 'chat', tier: 'for-you' },
+  CALL_MISSED: { tab: 'chat', tier: 'for-you' },
   LOVE_LETTER: { tab: 'letters', tier: 'for-you' },
   WHISPER_MEMO_UPDATE: { tab: 'whispers', tier: 'for-you' },
   SCRATCH_CARD_UPDATE: { tab: 'scratch', tier: 'for-you' },
@@ -80,6 +81,7 @@ const ROUTES: Record<string, { tab: string; tier: ActivityTier }> = {
 /** How this reads on the home screen. Present tense, the partner as subject. */
 const PHRASES: Record<string, string> = {
   CHAT: 'sent a message',
+  CALL_MISSED: 'tried to call you',
   LOVE_LETTER: 'wrote you a letter',
   WHISPER_MEMO_UPDATE: 'left a whisper',
   SCRATCH_CARD_UPDATE: 'left a scratch card',

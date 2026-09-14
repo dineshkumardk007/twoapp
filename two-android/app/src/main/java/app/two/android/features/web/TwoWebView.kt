@@ -4,6 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.graphics.Color
 import android.view.ViewGroup
 import android.webkit.*
@@ -37,6 +39,41 @@ class AndroidWebBridge(private val context: Context) {
     @JavascriptInterface
     fun isAndroid(): Boolean {
         return true
+    }
+
+    /**
+     * Whether earphones of any kind are connected.
+     *
+     * The call turns echo cancellation off only with earphones, for the more
+     * natural sound - and a WebView cannot see audio outputs reliably enough
+     * to make that call itself. Guessing wrong in the "yes" direction would
+     * send a speaker's output straight back into the microphone.
+     */
+    @JavascriptInterface
+    fun isHeadsetConnected(): Boolean {
+        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return false
+        val earphones = setOf(
+            AudioDeviceInfo.TYPE_WIRED_HEADSET,
+            AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+            AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
+            AudioDeviceInfo.TYPE_USB_HEADSET
+        )
+        return audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any { it.type in earphones }
+    }
+
+    /**
+     * Puts the phone into call mode, and picks earpiece or speaker.
+     *
+     * Without call mode a WebView plays the other voice as media - through the
+     * loudspeaker, at media volume - rather than at your ear.
+     */
+    @Suppress("DEPRECATION")
+    @JavascriptInterface
+    fun setCallAudio(active: Boolean, speaker: Boolean) {
+        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+        audio.mode = if (active) AudioManager.MODE_IN_COMMUNICATION else AudioManager.MODE_NORMAL
+        audio.isSpeakerphoneOn = active && speaker
     }
 }
 

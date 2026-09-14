@@ -4,7 +4,7 @@ import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
 import { MAX_CHAT_MESSAGES } from '../core/storage';
-import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2 } from 'lucide-react';
+import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone } from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
 
 interface ChatViewProps {
@@ -41,6 +41,10 @@ interface ChatViewProps {
   shareReceipts?: boolean;
   /** Called as the composer is typed in; throttled inside. */
   onTyping?: () => void;
+  /** Rings the partner. Absent where calling is not offered. */
+  onStartCall?: () => void;
+  /** True while a call is ringing or live, so a second cannot be started. */
+  callInProgress?: boolean;
   partnerName?: string;
 }
 
@@ -57,6 +61,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   partnerTyping = false,
   shareReceipts = true,
   onTyping,
+  onStartCall,
+  callInProgress = false,
   partnerName = 'Partner'
 }) => {
   const [inputText, setInputText] = useState('');
@@ -154,6 +160,20 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+          {/* Enabled whether or not they are online. A call to somebody who
+              is away cannot connect, but it still leaves a missed call they
+              will see - which is what calling a phone that is off does too. */}
+          {onStartCall && (
+            <button
+              onClick={onStartCall}
+              disabled={callInProgress}
+              aria-label={`Call ${partnerName}`}
+              title={`Call ${partnerName}`}
+              className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant disabled:opacity-40 transition-colors cursor-pointer"
+            >
+              <Phone className="w-4 h-4" />
+            </button>
+          )}
           {onOpenSoftLanding && (
             <button
               onClick={onOpenSoftLanding}

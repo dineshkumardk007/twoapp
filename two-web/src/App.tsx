@@ -49,6 +49,8 @@ import {
 } from './core/space';
 import { localMesh } from './core/localMesh';
 import { insertBySentAt } from './core/ordering';
+import { CallEngine, CallState, IDLE_CALL, CALL_SIGNAL, CALL_MISSED } from './core/call';
+import { CallOverlay } from './components/CallOverlay';
 import { routeFor, withActivity, unseen, dottedTabs } from './core/activity';
 import {
   ThemeMode,
@@ -211,6 +213,29 @@ export const App: React.FC = () => {
    */
   const isCamouflagedRef = useRef(isCamouflaged);
   isCamouflagedRef.current = isCamouflaged;
+
+  /**
+   * The couple's audio call.
+   *
+   * Held in a ref and created once, because a call has to outlive every
+   * screen change - switching tabs, the dock, even the calculator coming up
+   * mid-call - and none of that may tear a live connection down.
+   */
+  const [callState, setCallState] = useState<CallState>(IDLE_CALL);
+  const callEngineRef = useRef<CallEngine | null>(null);
+  useEffect(() => {
+    const engine = new CallEngine({
+      send: signal => wsRelay.sendSignal(CALL_SIGNAL, signal),
+      onChange: setCallState,
+      onMissed: callId => wsRelay.broadcastUpdate(CALL_MISSED, { callId, at: Date.now() }),
+      canRing: () => !isCamouflagedRef.current
+    });
+    callEngineRef.current = engine;
+    return () => {
+      engine.destroy();
+      callEngineRef.current = null;
+    };
+  }, []);
   const [showStoryTour, setShowStoryTour] = useState(false);
 
   /**
@@ -440,6 +465,18 @@ export const App: React.FC = () => {
     const unsubscribe = wsRelay.subscribe((msg) => {
       // Signals carry no history and are never stored, so they are handled
       // before the record path rather than inside it.
+      if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === CALL_SIGNAL) {
+        let signal: any;
+        try {
+          signal = JSON.parse(msg.signal.payload);
+        } catch {
+          return;
+        }
+        // Not gated on receipts: whether a call rings is not a read receipt.
+        callEngineRef.current?.handleSignal(signal, msg.signal.authorId === state.activeUser);
+        return;
+      }
+
       if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === TYPING_SIGNAL) {
         // Reciprocal: a device that sends nothing sees nothing.
         if (!readShareReceipts()) return;
@@ -479,6 +516,24 @@ export const App: React.FC = () => {
               })
             }));
           }
+        }
+
+        // A missed call gets a toast as well as its line on the home screen -
+        // but only a fresh one. Replay delivers old records on every reconnect,
+        // and a toast for a call from yesterday is a false alarm.
+        if (
+          record.type === CALL_MISSED &&
+          record.authorId !== state.activeUser &&
+          !isCamouflagedRef.current &&
+          Date.now() - (Number(record.clientTs) || 0) < 2 * 60 * 1000
+        ) {
+          setInAppNotification({
+            id: newId(),
+            title: partnerNameRef.current || 'Partner',
+            body: 'Tried to call you',
+            type: 'chat',
+            tabId: 'chat'
+          });
         }
 
         try {
@@ -1246,7 +1301,9 @@ export const App: React.FC = () => {
    */
   useEffect(() => {
     return watchForAbsence({
-      enabled: () => !!vaultKey && !isLocked,
+      // Not during a call: locking reloads the app, which would hang up
+      // on somebody who only switched apps to look something up.
+      enabled: () => !!vaultKey && !isLocked && !callEngineRef.current?.busy,
       getSetting: () => readAutoLock(),
       onLock: lockNow
     });
@@ -2513,6 +2570,19 @@ export const App: React.FC = () => {
     terracotta: 'bg-terracotta-bg text-terracotta-primary'
   }[theme];
 
+  const callOverlay = (
+    <CallOverlay
+      call={callState}
+      partnerName={state.partnerName || 'Partner'}
+      partnerOnline={partnerOnline}
+      onAccept={() => void callEngineRef.current?.accept()}
+      onDecline={() => callEngineRef.current?.decline()}
+      onHangup={() => callEngineRef.current?.hangup()}
+      onToggleMute={() => callEngineRef.current?.toggleMute()}
+      onToggleSpeaker={() => callEngineRef.current?.toggleSpeaker()}
+    />
+  );
+
   if (isCamouflaged) {
     return (
       <CalculatorDecoy
@@ -2947,6 +3017,10 @@ export const App: React.FC = () => {
           </Suspense>
         </main>
 
+        {/* A couple call can ring while a group is open, so group mode
+            carries the call screen too. */}
+        {callOverlay}
+
         <GroupDock
           groups={state.groups}
           activeGroupId={activeGroup.id}
@@ -3058,6 +3132,8 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onSendMessage={handleSendMessage}
             onResolveStuck={(messageId, action) => handleResolveStuck({}, messageId, action)}
+            onStartCall={() => void callEngineRef.current?.start()}
+            callInProgress={callState.phase !== 'idle'}
             onOpenSoftLanding={() => setCurrentTab('softlanding')}
             partnerName={state.partnerName || 'Partner'}
             partnerReadAt={state.partnerReadAt}
@@ -3413,6 +3489,8 @@ export const App: React.FC = () => {
         )}
         </Suspense>
       </main>
+
+      {callOverlay}
 
       {/* In-App Notification Toast for Messages & Letters */}
       <InAppNotificationToast
