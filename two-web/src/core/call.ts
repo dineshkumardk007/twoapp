@@ -46,6 +46,18 @@ export type EndReason =
   | 'mic-denied'
   | 'answered-elsewhere';
 
+/** How the network is treating the call right now, from what arrives. */
+export type LinkQuality = 'excellent' | 'good' | 'poor';
+
+/**
+ * How much audio a call is allowed to spend.
+ *
+ * Per device, because the data belongs to whoever is holding the phone. If
+ * either side asks for the saver, both directions use it: the voice you send
+ * is data the other phone has to receive.
+ */
+export type CallQuality = 'high' | 'saver';
+
 export interface CallState {
   phase: CallPhase;
   callId: string | null;
@@ -60,6 +72,9 @@ export interface CallState {
   headset: boolean;
   /** The ceiling this side is sending at. */
   kbps: number;
+  /** What is actually arriving, measured; 0 until the first sample. */
+  measuredKbps: number;
+  link: LinkQuality | null;
 }
 
 export const IDLE_CALL: CallState = {
@@ -72,18 +87,18 @@ export const IDLE_CALL: CallState = {
   muted: false,
   speaker: false,
   headset: false,
-  kbps: 0
+  kbps: 0,
+  measuredKbps: 0,
+  link: null
 };
-
-type NetType = 'wifi' | 'cellular' | 'unknown';
 
 export interface CallSignal {
   kind: 'offer' | 'answer' | 'ice' | 'hangup' | 'decline' | 'cancel';
   callId: string;
   sdp?: string;
   candidate?: RTCIceCandidateInit;
-  /** The sender's connection, so both ends can settle on who is paying. */
-  net?: NetType;
+  /** The sender's data preference, so both ends settle on the same rate. */
+  quality?: CallQuality;
   busy?: boolean;
 }
 
@@ -97,14 +112,42 @@ const ENDED_LINGER_MS = 2_500;
 /**
  * What the call sends at.
  *
- * Whoever is on mobile data pays for both directions: their own voice going
- * out, and the other voice coming in. So the rate follows the metered side.
- * Forty-eight kilobits of Opus with nothing stripped away is already a fuller
- * voice than a WhatsApp call, at roughly WhatsApp's data cost; ninety-six is
- * for when neither of you is paying for it.
+ * Ninety-six kilobits is the ceiling on purpose, not a compromise. Opus carries
+ * a single speaking voice at full band essentially transparently well before
+ * that; past it, extra bits buy nothing a person can hear and cost the phone
+ * on mobile data twice over - once for the voice it sends, once for the voice
+ * it receives. Forty-eight is still a fuller voice than a WhatsApp call.
  */
-const KBPS_METERED = 48;
-const KBPS_UNMETERED = 96;
+const KBPS_HIGH = 96;
+const KBPS_SAVER = 48;
+
+/**
+ * A floor under the receiving jitter buffer.
+ *
+ * On mobile data packets arrive unevenly, and a buffer that runs too close to
+ * empty plays the gaps as crackles and robotic stretches. Sixty milliseconds
+ * of standing room removes most of that for a delay nobody notices in
+ * conversation. The buffer still grows by itself when the network gets worse.
+ */
+const JITTER_BUFFER_MS = 60;
+
+const QUALITY_KEY = 'two_call_quality_v1';
+
+export function readCallQuality(): CallQuality {
+  try {
+    return localStorage.getItem(QUALITY_KEY) === 'saver' ? 'saver' : 'high';
+  } catch {
+    return 'high';
+  }
+}
+
+export function writeCallQuality(quality: CallQuality) {
+  try {
+    localStorage.setItem(QUALITY_KEY, quality);
+  } catch {
+    /* storage unavailable; the call falls back to high */
+  }
+}
 
 /**
  * STUN only, for now.
@@ -117,14 +160,6 @@ const KBPS_UNMETERED = 96;
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }
 ];
-
-function localNet(): NetType {
-  const type = (navigator as any).connection?.type;
-  if (type === 'wifi' || type === 'ethernet') return 'wifi';
-  if (type === 'cellular') return 'cellular';
-  // Unknown is treated as paid for. Guessing "free" is the expensive mistake.
-  return 'unknown';
-}
 
 /**
  * Whether earphones of any kind are connected.
@@ -144,12 +179,35 @@ function headsetConnected(): boolean {
   return false;
 }
 
-/** Puts Android into call mode, and chooses earpiece or speaker. */
-function routeAudio(active: boolean, speaker: boolean) {
+/**
+ * Tells Android where the call's audio should go.
+ *
+ * With earphones the call stays off the phone's voice-call path, which many
+ * phones process and band-limit the way they would a cellular call - the very
+ * sound this is trying to get away from. That path is only needed for the
+ * earpiece, and for the phone's own echo cancellation on speaker.
+ */
+function routeAudio(active: boolean, speaker: boolean, headset: boolean) {
   try {
-    (window as any).AndroidBridge?.setCallAudio?.(active, speaker);
+    const bridge = (window as any).AndroidBridge;
+    if (typeof bridge?.setCallAudioRoute === 'function') {
+      bridge.setCallAudioRoute(active, speaker, headset);
+    } else {
+      bridge?.setCallAudio?.(active, speaker);
+    }
   } catch {
     /* no bridge: the browser routes audio on its own */
+  }
+}
+
+/** Gives received audio room to arrive unevenly without breaking up. */
+function steadyPlayout(receiver: RTCRtpReceiver) {
+  const r = receiver as any;
+  try {
+    if ('jitterBufferTarget' in r) r.jitterBufferTarget = JITTER_BUFFER_MS;
+    else if ('playoutDelayHint' in r) r.playoutDelayHint = JITTER_BUFFER_MS / 1000;
+  } catch {
+    /* an older engine without either knob manages its own buffer */
   }
 }
 
@@ -226,11 +284,13 @@ export class CallEngine {
   private audioEl: HTMLAudioElement | null = null;
   private pendingOffer: CallSignal | null = null;
   private pendingIce: RTCIceCandidateInit[] = [];
-  private remoteNet: NetType = 'unknown';
+  private remoteQuality: CallQuality = 'high';
   private timers: ReturnType<typeof setTimeout>[] = [];
   private ringTimer: ReturnType<typeof setTimeout> | null = null;
   private recoverTimer: ReturnType<typeof setTimeout> | null = null;
   private headsetPoll: ReturnType<typeof setInterval> | null = null;
+  private statsPoll: ReturnType<typeof setInterval> | null = null;
+  private lastStats: { at: number; bytes: number; lost: number; received: number } | null = null;
   private ringing: { stop: () => void } | null = null;
   /** Whether the live microphone track was opened with echo cancellation. */
   private echoCancelling = true;
@@ -255,7 +315,7 @@ export class CallEngine {
   async start() {
     if (this.busy) return;
     const callId = newCallId();
-    this.remoteNet = 'unknown';
+    this.remoteQuality = 'high';
     this.set({ ...IDLE_CALL, phase: 'outgoing', callId, direction: 'out' });
 
     let stream: MediaStream;
@@ -266,7 +326,7 @@ export class CallEngine {
       return;
     }
     // Cancelled while the microphone prompt was up.
-    if (this.state.callId !== callId || this.state.phase !== 'outgoing') {
+    if (this.snapshot.callId !== callId || this.snapshot.phase !== 'outgoing') {
       stream.getTracks().forEach(t => t.stop());
       return;
     }
@@ -277,7 +337,7 @@ export class CallEngine {
       const offer = await pc.createOffer();
       const sdp = tuneOpus(offer.sdp || '', this.receiveKbps());
       await pc.setLocalDescription({ type: 'offer', sdp });
-      this.opts.send({ kind: 'offer', callId, sdp, net: localNet() });
+      this.opts.send({ kind: 'offer', callId, sdp, quality: readCallQuality() });
     } catch {
       this.finish('failed', false);
       return;
@@ -323,7 +383,7 @@ export class CallEngine {
       const answer = await pc.createAnswer();
       const sdp = tuneOpus(answer.sdp || '', this.receiveKbps());
       await pc.setLocalDescription({ type: 'answer', sdp });
-      this.opts.send({ kind: 'answer', callId, sdp, net: localNet() });
+      this.opts.send({ kind: 'answer', callId, sdp, quality: readCallQuality() });
       this.pendingOffer = null;
       this.armConnectTimeout(callId);
     } catch {
@@ -365,7 +425,7 @@ export class CallEngine {
   toggleSpeaker() {
     const speaker = !this.state.speaker;
     this.set({ speaker });
-    routeAudio(this.busy, speaker);
+    routeAudio(this.busy, speaker, this.state.headset);
     void this.reconcileEcho();
   }
 
@@ -440,7 +500,7 @@ export class CallEngine {
       if (this.state.phase === 'outgoing' && (this.state.callId || '') > signal.callId) {
         this.teardown();
         this.pendingOffer = signal;
-        this.remoteNet = signal.net || 'unknown';
+        this.remoteQuality = signal.quality === 'saver' ? 'saver' : 'high';
         this.set({ ...IDLE_CALL, phase: 'incoming', callId: signal.callId, direction: 'in' });
         void this.accept();
         return;
@@ -456,7 +516,7 @@ export class CallEngine {
 
     this.pendingOffer = signal;
     this.pendingIce = [];
-    this.remoteNet = signal.net || 'unknown';
+    this.remoteQuality = signal.quality === 'saver' ? 'saver' : 'high';
     this.set({ ...IDLE_CALL, phase: 'incoming', callId: signal.callId, direction: 'in' });
     this.startRinging();
 
@@ -477,7 +537,7 @@ export class CallEngine {
       clearTimeout(this.ringTimer);
       this.ringTimer = null;
     }
-    this.remoteNet = signal.net || 'unknown';
+    this.remoteQuality = signal.quality === 'saver' ? 'saver' : 'high';
     this.set({ phase: 'connecting' });
     try {
       await pc.setRemoteDescription({ type: 'answer', sdp: signal.sdp });
@@ -528,6 +588,7 @@ export class CallEngine {
     };
 
     pc.ontrack = event => {
+      steadyPlayout(event.receiver);
       this.playRemote(event.streams[0] || new MediaStream([event.track]));
     };
 
@@ -558,19 +619,29 @@ export class CallEngine {
     }
     if (this.state.phase === 'active') return;
     this.set({ phase: 'active', connectedAt: Date.now() });
-    this.applyBitrate();
-    routeAudio(true, this.state.speaker);
+    this.applySendParameters();
+    routeAudio(true, this.state.speaker, this.state.headset);
     this.startHeadsetPoll();
+    this.startStatsPoll();
   }
 
-  /** Caps what this side sends, by whoever is paying for it. */
-  private applyBitrate() {
-    const kbps = localNet() === 'wifi' && this.remoteNet === 'wifi' ? KBPS_UNMETERED : KBPS_METERED;
+  /**
+   * What this side sends at, and how the network should treat it.
+   *
+   * The rate drops to the saver if either phone asked for it. Priority high
+   * marks the packets for networks that honour it - home Wi-Fi mostly - so a
+   * download running in the next room does not get to shove a voice aside.
+   */
+  private applySendParameters() {
+    const kbps = readCallQuality() === 'high' && this.remoteQuality === 'high' ? KBPS_HIGH : KBPS_SAVER;
     const sender = this.pc?.getSenders().find(s => s.track?.kind === 'audio');
     if (sender) {
       const params = sender.getParameters();
       if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
-      params.encodings[0].maxBitrate = kbps * 1000;
+      const encoding = params.encodings[0] as RTCRtpEncodingParameters & { networkPriority?: string };
+      encoding.maxBitrate = kbps * 1000;
+      encoding.priority = 'high';
+      encoding.networkPriority = 'high';
       sender.setParameters(params).catch(() => undefined);
     }
     this.set({ kbps });
@@ -578,7 +649,7 @@ export class CallEngine {
 
   /** What this side would like to receive at, by what it is paying. */
   private receiveKbps(): number {
-    return localNet() === 'wifi' ? KBPS_UNMETERED : KBPS_METERED;
+    return readCallQuality() === 'high' ? KBPS_HIGH : KBPS_SAVER;
   }
 
   /**
@@ -652,9 +723,77 @@ export class CallEngine {
       const headset = headsetConnected();
       if (headset !== this.state.headset) {
         this.set({ headset });
+        routeAudio(true, this.state.speaker, headset);
         void this.reconcileEcho();
       }
     }, 2_000);
+  }
+
+  /**
+   * Measures the call every two seconds.
+   *
+   * What arrives, not what was asked for: a ceiling of ninety-six says nothing
+   * about a train going under a bridge. Loss, jitter and round-trip time turn
+   * into one word on the call screen, so a bad moment can be told apart from a
+   * fault - a weak connection is the network, and the saver may help it.
+   */
+  private startStatsPoll() {
+    if (this.statsPoll) clearInterval(this.statsPoll);
+    this.lastStats = null;
+    this.statsPoll = setInterval(() => void this.sampleStats(), 2_000);
+  }
+
+  private async sampleStats() {
+    const pc = this.pc;
+    if (!pc || this.state.phase !== 'active') return;
+
+    let inbound: any = null;
+    let rttSeconds = 0;
+    try {
+      const report = await pc.getStats();
+      report.forEach((r: any) => {
+        if (r.type === 'inbound-rtp' && r.kind === 'audio') inbound = r;
+        if (
+          r.type === 'candidate-pair' &&
+          r.state === 'succeeded' &&
+          r.nominated &&
+          typeof r.currentRoundTripTime === 'number'
+        ) {
+          rttSeconds = r.currentRoundTripTime;
+        }
+      });
+    } catch {
+      return;
+    }
+    if (!inbound || this.pc !== pc) return;
+
+    const now = Date.now();
+    const previous = this.lastStats;
+    const current = {
+      at: now,
+      bytes: inbound.bytesReceived || 0,
+      lost: inbound.packetsLost || 0,
+      received: inbound.packetsReceived || 0
+    };
+    this.lastStats = current;
+    if (!previous) return;
+
+    const seconds = Math.max(0.5, (now - previous.at) / 1000);
+    const measuredKbps = Math.round(((current.bytes - previous.bytes) * 8) / seconds / 1000);
+    const lost = Math.max(0, current.lost - previous.lost);
+    const received = Math.max(0, current.received - previous.received);
+    const lossPct = lost + received > 0 ? (lost / (lost + received)) * 100 : 0;
+    const jitterMs = (inbound.jitter || 0) * 1000;
+    const rttMs = rttSeconds * 1000;
+
+    const link: LinkQuality =
+      lossPct < 1 && jitterMs < 30 && rttMs < 250
+        ? 'excellent'
+        : lossPct < 5 && jitterMs < 60 && rttMs < 500
+          ? 'good'
+          : 'poor';
+
+    this.set({ measuredKbps, link });
   }
 
   private armConnectTimeout(callId: string) {
@@ -762,6 +901,9 @@ export class CallEngine {
     this.recoverTimer = null;
     if (this.headsetPoll) clearInterval(this.headsetPoll);
     this.headsetPoll = null;
+    if (this.statsPoll) clearInterval(this.statsPoll);
+    this.statsPoll = null;
+    this.lastStats = null;
     this.stopRinging();
 
     try {
@@ -782,6 +924,6 @@ export class CallEngine {
 
     this.pendingOffer = null;
     this.pendingIce = [];
-    routeAudio(false, false);
+    routeAudio(false, false, false);
   }
 }

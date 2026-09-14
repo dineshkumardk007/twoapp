@@ -75,6 +75,25 @@ class AndroidWebBridge(private val context: Context) {
         audio.mode = if (active) AudioManager.MODE_IN_COMMUNICATION else AudioManager.MODE_NORMAL
         audio.isSpeakerphoneOn = active && speaker
     }
+
+    /**
+     * Call audio routing that knows about earphones.
+     *
+     * Call mode sends the other voice through the phone's voice-call path,
+     * which on many phones is processed and band-limited the way a cellular
+     * call is - the sound this app is trying to get away from. That mode is
+     * only needed for the earpiece, and for the phone's own echo cancellation
+     * on speaker. With earphones there is neither, so the call stays on the
+     * media path and plays at full fidelity.
+     */
+    @Suppress("DEPRECATION")
+    @JavascriptInterface
+    fun setCallAudioRoute(active: Boolean, speaker: Boolean, headset: Boolean) {
+        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+        val voicePath = active && (speaker || !headset)
+        audio.mode = if (voicePath) AudioManager.MODE_IN_COMMUNICATION else AudioManager.MODE_NORMAL
+        audio.isSpeakerphoneOn = voicePath && speaker
+    }
 }
 
 /**

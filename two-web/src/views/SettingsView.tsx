@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { readCallQuality, writeCallQuality } from '../core/call';
 import { AUTO_LOCK_CHOICES, AutoLockSetting } from '../core/autoLock';
 import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode, generateJoinPhrase, checkJoinPhrase, getDeviceId } from '../core/space';
 import { SpaceState } from '../core/storage';
@@ -198,6 +199,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const [rotationPhrase, setRotationPhrase] = useState('');
   const rotationPhraseCheck = checkJoinPhrase(rotationPhrase);
+  // Read once and kept here: the setting belongs to this device alone, so it
+  // has no business travelling through the app's shared state.
+  const [callSaver, setCallSaver] = useState(() => readCallQuality() === 'saver');
   const [rotateMode, setRotateMode] = useState<'idle' | 'new' | 'join'>('idle');
   const [rotateCode, setRotateCode] = useState('');
   const [joinRotation, setJoinRotation] = useState('');
@@ -547,6 +551,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </label>
             </div>
           )}
+
+          {/* Call data.
+              Per device, because the data belongs to whoever holds the phone.
+              Whoever is on mobile data pays for both directions of a call -
+              the voice they send and the voice they receive - so the numbers
+              below are for that phone, and either phone choosing the saver
+              is enough to make the whole call use it. */}
+          <div className="pt-4 mt-4 border-t border-linen-border/60 space-y-2">
+            <label className="flex items-start justify-between gap-3 cursor-pointer">
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-linen-primary">
+                  Data saver for calls
+                </span>
+                <span className="mt-1 block text-[11px] leading-relaxed text-linen-secondary">
+                  Calls use high quality by default, roughly 100 MB an hour on mobile data.
+                  Data saver halves the audio rate, to roughly 60 MB an hour, and can steady a
+                  weak connection. If either phone has it on, the whole call uses it.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={callSaver}
+                onChange={e => {
+                  setCallSaver(e.target.checked);
+                  writeCallQuality(e.target.checked ? 'saver' : 'high');
+                }}
+                className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 cursor-pointer"
+              />
+            </label>
+          </div>
 
           {/* Device lock.
               A PIN belongs to the device it is typed on, not to the space: it

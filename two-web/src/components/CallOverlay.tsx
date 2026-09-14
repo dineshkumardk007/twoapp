@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Phone, PhoneOff, Mic, MicOff, Volume2, Headphones, Ear } from 'lucide-react';
-import { CallState, EndReason } from '../core/call';
+import { CallState, EndReason, LinkQuality } from '../core/call';
 
 interface CallOverlayProps {
   call: CallState;
@@ -53,6 +53,12 @@ function endLine(reason: EndReason | null, direction: CallState['direction']): {
   }
 }
 
+const LINK: Record<LinkQuality, { label: string; dot: string }> = {
+  excellent: { label: 'Excellent connection', dot: 'bg-emerald-400' },
+  good: { label: 'Good connection', dot: 'bg-amber-300' },
+  poor: { label: 'Weak connection', dot: 'bg-rose-400' }
+};
+
 /**
  * The call screen.
  *
@@ -93,6 +99,8 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
 
   const ended = call.phase === 'ended' ? endLine(call.endReason, call.direction) : null;
   const route = call.headset ? 'Earphones' : call.speaker ? 'Speaker' : 'Earpiece';
+  // What is actually arriving once measured; the ceiling until then.
+  const shownKbps = call.measuredKbps > 0 ? call.measuredKbps : call.kbps;
 
   return (
     <div
@@ -130,9 +138,22 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
         )}
 
         {call.phase === 'active' && (
-          <p className="mt-3 text-[11px] text-linen-surface/50">
-            {route} &middot; {call.kbps} kbps &middot; end-to-end encrypted
-          </p>
+          <>
+            <p className="mt-3 text-[11px] text-linen-surface/50 tabular-nums">
+              {route} &middot; {shownKbps} kbps &middot; end-to-end encrypted
+            </p>
+            {call.link && (
+              <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-linen-surface/70">
+                <span className={`h-1.5 w-1.5 rounded-full ${LINK[call.link].dot}`} />
+                {LINK[call.link].label}
+              </p>
+            )}
+            {call.link === 'poor' && (
+              <p className="mt-1 max-w-xs text-[10px] leading-relaxed text-linen-surface/50">
+                Audio may break up. Turning on data saver for calls in Settings can steady it.
+              </p>
+            )}
+          </>
         )}
       </div>
 
