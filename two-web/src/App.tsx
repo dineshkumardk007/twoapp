@@ -215,6 +215,19 @@ export const App: React.FC = () => {
   isCamouflagedRef.current = isCamouflaged;
 
   /**
+   * The disguise ends any call.
+   *
+   * The calculator replaces everything, the call screen included, so a call
+   * left running would go on talking out of a phone showing a calculator with
+   * no way to hang up short of unlocking it in front of whoever made you reach
+   * for the disguise. However it went up - the button, leaving the app - the
+   * call goes with it.
+   */
+  useEffect(() => {
+    if (isCamouflaged) callEngineRef.current?.endForDisguise();
+  }, [isCamouflaged]);
+
+  /**
    * The couple's audio call.
    *
    * Held in a ref and created once, because a call has to outlive every
@@ -228,7 +241,8 @@ export const App: React.FC = () => {
       send: signal => wsRelay.sendSignal(CALL_SIGNAL, signal),
       onChange: setCallState,
       onMissed: callId => wsRelay.broadcastUpdate(CALL_MISSED, { callId, at: Date.now() }),
-      canRing: () => !isCamouflagedRef.current
+      canRing: () => !isCamouflagedRef.current,
+      nudgeRelay: () => wsRelay.reconnectNow()
     });
     callEngineRef.current = engine;
     return () => {
@@ -1813,6 +1827,9 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (!autoCamouflageOnBlur) return;
     const handleBlur = () => {
+      // Android's microphone permission dialog takes focus like leaving the
+      // app does. Disguising for it would end the first call before it rang.
+      if (callEngineRef.current?.askingForMic) return;
       setIsCamouflaged(true);
     };
     window.addEventListener('blur', handleBlur);

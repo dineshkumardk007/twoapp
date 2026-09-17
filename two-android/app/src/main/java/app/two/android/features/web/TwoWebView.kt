@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.os.Build
+import android.os.PowerManager
 import android.graphics.Color
 import android.view.ViewGroup
 import android.webkit.*
@@ -68,12 +70,9 @@ class AndroidWebBridge(private val context: Context) {
      * Without call mode a WebView plays the other voice as media - through the
      * loudspeaker, at media volume - rather than at your ear.
      */
-    @Suppress("DEPRECATION")
     @JavascriptInterface
     fun setCallAudio(active: Boolean, speaker: Boolean) {
-        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-        audio.mode = if (active) AudioManager.MODE_IN_COMMUNICATION else AudioManager.MODE_NORMAL
-        audio.isSpeakerphoneOn = active && speaker
+        setCallAudioRoute(active, speaker, false)
     }
 
     /**
@@ -86,13 +85,76 @@ class AndroidWebBridge(private val context: Context) {
      * on speaker. With earphones there is neither, so the call stays on the
      * media path and plays at full fidelity.
      */
-    @Suppress("DEPRECATION")
     @JavascriptInterface
     fun setCallAudioRoute(active: Boolean, speaker: Boolean, headset: Boolean) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
         val voicePath = active && (speaker || !headset)
         audio.mode = if (voicePath) AudioManager.MODE_IN_COMMUNICATION else AudioManager.MODE_NORMAL
-        audio.isSpeakerphoneOn = voicePath && speaker
+        routeToSpeaker(audio, voicePath && speaker)
+    }
+
+    /**
+     * Loudspeaker on or off for call audio.
+     *
+     * From Android 12 the old speakerphone switch is deprecated, and on many
+     * phones it is quietly ignored while in call mode - the Speaker button
+     * would light up and the voice would stay at the earpiece. The replacement
+     * picks the call's output device directly.
+     */
+    private fun routeToSpeaker(audio: AudioManager, on: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val loudspeaker = if (on) {
+                audio.availableCommunicationDevices.firstOrNull {
+                    it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+                }
+            } else {
+                null
+            }
+            if (loudspeaker != null) {
+                audio.setCommunicationDevice(loudspeaker)
+            } else {
+                audio.clearCommunicationDevice()
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            audio.isSpeakerphoneOn = on
+        }
+    }
+
+    private var proximityLock: PowerManager.WakeLock? = null
+
+    /**
+     * Darkens the screen while the phone is held to an ear.
+     *
+     * What the phone's own dialer does, and what a WebView cannot do for
+     * itself: without it the screen stays lit against a cheek, which presses
+     * End or Mute mid-sentence. The lock only darkens the screen when the
+     * sensor is covered; away from the face the screen works as normal.
+     */
+    @JavascriptInterface
+    fun setProximityLock(on: Boolean) {
+        val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
+        synchronized(this) {
+            if (on) {
+                if (proximityLock?.isHeld == true) return
+                if (!power.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) return
+                proximityLock = power.newWakeLock(
+                    PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                    "two:call-proximity"
+                ).apply {
+                    setReferenceCounted(false)
+                    // A ceiling, in case the page never says the call ended.
+                    acquire(4 * 60 * 60 * 1000L)
+                }
+            } else {
+                proximityLock?.let {
+                    // Wait for the phone to leave the face, or the screen would
+                    // light up against a cheek the moment the call ends.
+                    if (it.isHeld) it.release(PowerManager.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY)
+                }
+                proximityLock = null
+            }
+        }
     }
 }
 

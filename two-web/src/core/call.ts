@@ -42,6 +42,8 @@ export type EndReason =
   | 'cancelled'
   | 'missed'
   | 'failed'
+  /** Connected, then lost and not recovered - distinct from never connecting. */
+  | 'dropped'
   | 'busy'
   | 'mic-denied'
   | 'answered-elsewhere';
@@ -75,6 +77,8 @@ export interface CallState {
   /** What is actually arriving, measured; 0 until the first sample. */
   measuredKbps: number;
   link: LinkQuality | null;
+  /** Connected before, lost the network, and trying to get it back. */
+  reconnecting: boolean;
 }
 
 export const IDLE_CALL: CallState = {
@@ -89,11 +93,16 @@ export const IDLE_CALL: CallState = {
   headset: false,
   kbps: 0,
   measuredKbps: 0,
-  link: null
+  link: null,
+  reconnecting: false
 };
 
 export interface CallSignal {
-  kind: 'offer' | 'answer' | 'ice' | 'hangup' | 'decline' | 'cancel';
+  /**
+   * An 'offer' or 'answer' carrying the callId of the call already under way
+   * is a reconnection, not a new call. 'restart' asks the caller to make one.
+   */
+  kind: 'offer' | 'answer' | 'ice' | 'hangup' | 'decline' | 'cancel' | 'restart';
   callId: string;
   sdp?: string;
   candidate?: RTCIceCandidateInit;
@@ -105,8 +114,16 @@ export interface CallSignal {
 /** Long enough to find a phone in another room; short enough to give up. */
 export const RING_TIMEOUT_MS = 45_000;
 const CONNECT_TIMEOUT_MS = 20_000;
-/** A dropped connection gets this long to come back before the call ends. */
-const RECOVER_MS = 8_000;
+/**
+ * A lost connection gets this long to come back before the call ends.
+ *
+ * Long enough to walk out of the house onto mobile data: the phone has to
+ * notice the Wi-Fi is gone, the relay has to reconnect to carry the new
+ * route, and the two phones then have to find each other again.
+ */
+const RECOVER_MS = 20_000;
+/** How often a reconnection is tried again while the connection is down. */
+const RESTART_EVERY_MS = 4_000;
 const ENDED_LINGER_MS = 2_500;
 
 /**
@@ -198,6 +215,13 @@ function routeAudio(active: boolean, speaker: boolean, headset: boolean) {
   } catch {
     /* no bridge: the browser routes audio on its own */
   }
+  // At the ear, the screen goes dark so a cheek cannot press End or Mute.
+  // Not on speaker or with earphones, where the phone is in a hand.
+  try {
+    (window as any).AndroidBridge?.setProximityLock?.(active && !speaker && !headset);
+  } catch {
+    /* no proximity sensor, or an older app without the method */
+  }
 }
 
 /** Gives received audio room to arrive unevenly without breaking up. */
@@ -247,6 +271,13 @@ export function tuneOpus(sdp: string, kbps: number): string {
   return sdp.replace(line, `$1\r\na=fmtp:${pt} ${params}`);
 }
 
+/** A microphone opened for a call, and the conditions it was opened under. */
+interface OpenedMic {
+  stream: MediaStream;
+  echoCancellation: boolean;
+  headset: boolean;
+}
+
 function newCallId(): string {
   return typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
@@ -267,6 +298,12 @@ interface CallEngineOptions {
    * call record is what tells this side later.
    */
   canRing: () => boolean;
+  /**
+   * The call's connection was lost. Reconnecting needs the relay to carry the
+   * new route, and after a network change the relay may itself still be
+   * waiting out a backoff.
+   */
+  nudgeRelay?: () => void;
 }
 
 /**
@@ -288,6 +325,9 @@ export class CallEngine {
   private timers: ReturnType<typeof setTimeout>[] = [];
   private ringTimer: ReturnType<typeof setTimeout> | null = null;
   private recoverTimer: ReturnType<typeof setTimeout> | null = null;
+  private restartTimer: ReturnType<typeof setInterval> | null = null;
+  /** Microphone requests still waiting on an answer, possibly a permission prompt. */
+  private micRequests = 0;
   private headsetPoll: ReturnType<typeof setInterval> | null = null;
   private statsPoll: ReturnType<typeof setInterval> | null = null;
   private lastStats: { at: number; bytes: number; lost: number; received: number } | null = null;
@@ -306,6 +346,18 @@ export class CallEngine {
     return this.state;
   }
 
+  /**
+   * True while the microphone is being asked for.
+   *
+   * The first call on a phone raises Android's permission dialog, which takes
+   * focus from the app exactly like leaving it does. Anything that reacts to
+   * leaving - the disguise - must not treat that as leaving, or the very first
+   * call would hang itself up.
+   */
+  get askingForMic(): boolean {
+    return this.micRequests > 0;
+  }
+
   private set(patch: Partial<CallState>) {
     this.state = { ...this.state, ...patch };
     this.opts.onChange(this.state);
@@ -318,18 +370,21 @@ export class CallEngine {
     this.remoteQuality = 'high';
     this.set({ ...IDLE_CALL, phase: 'outgoing', callId, direction: 'out' });
 
-    let stream: MediaStream;
+    let mic: OpenedMic;
     try {
-      stream = await this.acquireMic();
+      mic = await this.openMic();
     } catch {
-      this.finish('mic-denied', false);
+      // Only if this is still the call being made: a glare while the prompt
+      // was up may have replaced it with the other side's call.
+      if (this.snapshot.callId === callId) this.finish('mic-denied', false);
       return;
     }
-    // Cancelled while the microphone prompt was up.
+    // Cancelled, or replaced, while the microphone prompt was up.
     if (this.snapshot.callId !== callId || this.snapshot.phase !== 'outgoing') {
-      stream.getTracks().forEach(t => t.stop());
+      mic.stream.getTracks().forEach(t => t.stop());
       return;
     }
+    const stream = this.adoptMic(mic);
 
     try {
       const pc = this.createPeer(callId);
@@ -339,9 +394,12 @@ export class CallEngine {
       await pc.setLocalDescription({ type: 'offer', sdp });
       this.opts.send({ kind: 'offer', callId, sdp, quality: readCallQuality() });
     } catch {
-      this.finish('failed', false);
+      // A glare that yielded closed this peer on purpose; that is not a
+      // failure of the call that replaced it.
+      if (this.snapshot.callId === callId) this.finish('failed', false);
       return;
     }
+    if (this.snapshot.callId !== callId) return;
 
     this.ringTimer = setTimeout(() => {
       if (this.state.phase !== 'outgoing' || this.state.callId !== callId) return;
@@ -360,10 +418,11 @@ export class CallEngine {
     this.stopRinging();
     this.set({ phase: 'connecting' });
 
-    let stream: MediaStream;
+    let mic: OpenedMic;
     try {
-      stream = await this.acquireMic();
+      mic = await this.openMic();
     } catch {
+      if (this.snapshot.callId !== callId) return;
       this.opts.send({ kind: 'decline', callId });
       this.finish('mic-denied', false);
       return;
@@ -371,9 +430,10 @@ export class CallEngine {
     // Read through the snapshot: `this.state` was narrowed to 'incoming' by the
     // guard above, and TypeScript cannot see that set() has moved it on since.
     if (this.snapshot.callId !== callId || this.snapshot.phase !== 'connecting') {
-      stream.getTracks().forEach(t => t.stop());
+      mic.stream.getTracks().forEach(t => t.stop());
       return;
     }
+    const stream = this.adoptMic(mic);
 
     try {
       const pc = this.createPeer(callId);
@@ -387,7 +447,7 @@ export class CallEngine {
       this.pendingOffer = null;
       this.armConnectTimeout(callId);
     } catch {
-      this.finish('failed', true);
+      if (this.snapshot.callId === callId) this.finish('failed', true);
     }
   }
 
@@ -412,6 +472,21 @@ export class CallEngine {
       this.opts.send({ kind: 'hangup', callId });
       this.finish('hangup', false);
     }
+  }
+
+  /**
+   * The disguise went up. Nothing about a call may carry on behind it - no
+   * voice from a phone that is showing a calculator.
+   *
+   * A call still ringing here is stopped without a word, the same as one that
+   * arrives while the disguise is already up: the caller rings out and leaves
+   * a missed call, rather than hearing that it was declined.
+   */
+  endForDisguise() {
+    const { phase, callId } = this.state;
+    if (!callId) return;
+    if (phase === 'incoming') this.finish('missed', false);
+    else this.hangup();
   }
 
   toggleMute() {
@@ -470,6 +545,18 @@ export class CallEngine {
           this.finish('missed', false);
         }
         return;
+      case 'restart':
+        // The other side lost the connection and cannot reconnect on its own:
+        // only the caller makes offers, so the two never offer across each other.
+        if (
+          signal.callId === this.state.callId &&
+          this.state.direction === 'out' &&
+          this.state.phase === 'active' &&
+          this.pc
+        ) {
+          void this.restartIce(this.pc, signal.callId);
+        }
+        return;
       case 'hangup':
         if (
           signal.callId === this.state.callId &&
@@ -491,7 +578,14 @@ export class CallEngine {
     if (!signal.sdp) return;
 
     if (this.busy) {
-      if (signal.callId === this.state.callId) return;
+      if (signal.callId === this.state.callId) {
+        // The caller reconnecting a call already under way.
+        const pc = this.pc;
+        if (pc?.remoteDescription && (this.state.phase === 'active' || this.state.phase === 'connecting')) {
+          void this.onReoffer(pc, signal);
+        }
+        return;
+      }
 
       // Both of you pressed call at the same moment. Exactly one call must
       // survive, and both sides have to agree which without talking about it,
@@ -530,9 +624,41 @@ export class CallEngine {
     );
   }
 
+  /** Answers the caller's reconnection offer on the same connection. */
+  private async onReoffer(pc: RTCPeerConnection, signal: CallSignal) {
+    const callId = signal.callId;
+    try {
+      await pc.setRemoteDescription({ type: 'offer', sdp: signal.sdp! });
+      await this.flushIce();
+      const answer = await pc.createAnswer();
+      const sdp = tuneOpus(answer.sdp || '', this.receiveKbps());
+      await pc.setLocalDescription({ type: 'answer', sdp });
+      if (this.pc === pc && this.state.callId === callId) {
+        this.opts.send({ kind: 'answer', callId, sdp, quality: readCallQuality() });
+      }
+    } catch {
+      /* superseded by a newer attempt, which the caller is already sending */
+    }
+  }
+
   private async onAnswer(signal: CallSignal) {
     const pc = this.pc;
-    if (!pc || !signal.sdp || this.state.phase !== 'outgoing' || signal.callId !== this.state.callId) return;
+    if (!pc || !signal.sdp || signal.callId !== this.state.callId) return;
+
+    // The answer to a reconnection. Only one that matches an offer still
+    // waiting counts; a late answer to an attempt already rolled back does not.
+    if (this.state.phase === 'active' || this.state.phase === 'connecting') {
+      if (pc.signalingState !== 'have-local-offer') return;
+      try {
+        await pc.setRemoteDescription({ type: 'answer', sdp: signal.sdp });
+        await this.flushIce();
+      } catch {
+        /* the next attempt tries again */
+      }
+      return;
+    }
+
+    if (this.state.phase !== 'outgoing') return;
     if (this.ringTimer) {
       clearTimeout(this.ringTimer);
       this.ringTimer = null;
@@ -553,6 +679,15 @@ export class CallEngine {
     // Candidates can arrive before the description they belong to. Adding one
     // early throws, and a dropped candidate can be the only route that works.
     if (!this.pc || !this.pc.remoteDescription) {
+      this.pendingIce.push(signal.candidate);
+      return;
+    }
+    // The same during a reconnection: a candidate for the new route can
+    // overtake the offer that introduces it, and would be rejected as
+    // belonging to nothing. It waits for that offer instead.
+    const ufrag = /a=ice-ufrag:(\S+)/.exec(this.pc.remoteDescription.sdp)?.[1];
+    const theirs = signal.candidate.usernameFragment;
+    if (ufrag && theirs && theirs !== ufrag) {
       this.pendingIce.push(signal.candidate);
       return;
     }
@@ -597,27 +732,84 @@ export class CallEngine {
       const s = pc.connectionState;
       if (s === 'connected') {
         this.onConnected();
+      } else if (this.state.phase === 'active' && (s === 'disconnected' || s === 'failed')) {
+        // A call that was working: a lift, a tunnel, or walking out of the
+        // house onto mobile data. Worth getting back rather than ending.
+        this.recover(pc);
       } else if (s === 'failed') {
+        // Never connected in the first place. The connect timeout covers a
+        // connection that is merely slow.
         this.finish('failed', true);
-      } else if (s === 'disconnected') {
-        // Often a network handover - Wi-Fi to mobile, a lift, a tunnel - that
-        // recovers on its own within seconds.
-        if (this.recoverTimer) clearTimeout(this.recoverTimer);
-        this.recoverTimer = setTimeout(() => {
-          if (this.pc === pc && pc.connectionState !== 'connected') this.finish('failed', true);
-        }, RECOVER_MS);
       }
     };
 
     return pc;
   }
 
-  private onConnected() {
-    if (this.recoverTimer) {
-      clearTimeout(this.recoverTimer);
-      this.recoverTimer = null;
+  /**
+   * Gets a lost call back.
+   *
+   * A network change - Wi-Fi to mobile data - gives a phone a new address, and
+   * the old route will never work again however long it waits. Only an ICE
+   * restart finds a new one. The caller makes the offers, so the two phones
+   * never cross offers; the other side asks the caller to, in case only it
+   * noticed the loss. Both repeat, because right after a network change the
+   * relay carrying these messages is often still reconnecting itself.
+   */
+  private recover(pc: RTCPeerConnection) {
+    if (this.recoverTimer || this.pc !== pc) return;
+    const callId = this.state.callId;
+    if (!callId) return;
+
+    this.set({ reconnecting: true });
+    this.opts.nudgeRelay?.();
+
+    this.recoverTimer = setTimeout(() => {
+      if (this.pc === pc && pc.connectionState !== 'connected') this.finish('dropped', true);
+    }, RECOVER_MS);
+
+    const attempt = () => {
+      if (this.pc !== pc || this.state.callId !== callId) return;
+      if (this.state.direction === 'out') void this.restartIce(pc, callId);
+      else this.opts.send({ kind: 'restart', callId });
+    };
+    attempt();
+    if (this.restartTimer) clearInterval(this.restartTimer);
+    this.restartTimer = setInterval(attempt, RESTART_EVERY_MS);
+  }
+
+  /** One reconnection offer. A previous one still unanswered is withdrawn. */
+  private async restartIce(pc: RTCPeerConnection, callId: string) {
+    if (this.pc !== pc || this.state.callId !== callId) return;
+    try {
+      if (pc.signalingState === 'have-local-offer') {
+        await pc.setLocalDescription({ type: 'rollback' });
+      }
+      if (pc.signalingState !== 'stable') return;
+      const offer = await pc.createOffer({ iceRestart: true });
+      const sdp = tuneOpus(offer.sdp || '', this.receiveKbps());
+      await pc.setLocalDescription({ type: 'offer', sdp });
+      if (this.pc === pc && this.state.callId === callId) {
+        this.opts.send({ kind: 'offer', callId, sdp, quality: readCallQuality() });
+      }
+    } catch {
+      /* the next attempt tries again */
     }
-    if (this.state.phase === 'active') return;
+  }
+
+  private stopRecovering() {
+    if (this.recoverTimer) clearTimeout(this.recoverTimer);
+    this.recoverTimer = null;
+    if (this.restartTimer) clearInterval(this.restartTimer);
+    this.restartTimer = null;
+  }
+
+  private onConnected() {
+    this.stopRecovering();
+    if (this.state.phase === 'active') {
+      if (this.state.reconnecting) this.set({ reconnecting: false });
+      return;
+    }
     this.set({ phase: 'active', connectedAt: Date.now() });
     this.applySendParameters();
     routeAudio(true, this.state.speaker, this.state.headset);
@@ -662,26 +854,46 @@ export class CallEngine {
    * themselves a moment late - so it is off only with earphones, where there is
    * no speaker to leak from.
    */
-  private async acquireMic(): Promise<MediaStream> {
+  private async openMic(): Promise<OpenedMic> {
     const headset = headsetConnected();
     const echoCancellation = this.state.speaker || !headset;
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation,
-        noiseSuppression: false,
-        autoGainControl: false,
-        channelCount: 1,
-        sampleRate: 48000
-      },
-      video: false
-    });
-    this.local = stream;
-    this.echoCancelling = echoCancellation;
-    stream.getAudioTracks().forEach(track => {
+    this.micRequests++;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 1,
+          sampleRate: 48000
+        },
+        video: false
+      });
+      return { stream, echoCancellation, headset };
+    } finally {
+      this.micRequests--;
+    }
+  }
+
+  /**
+   * Makes an opened microphone the call's own.
+   *
+   * Separate from opening it, and done only once the caller has checked that
+   * its call is still the current one. When both of you press call in the same
+   * second, two microphone requests are in flight at once; whichever finished
+   * last used to become the one mute and hang-up acted on, even if it belonged
+   * to the call that had just been abandoned - leaving the live microphone
+   * unmutable, and still open after the call ended.
+   */
+  private adoptMic(mic: OpenedMic): MediaStream {
+    if (this.local && this.local !== mic.stream) this.local.getTracks().forEach(t => t.stop());
+    this.local = mic.stream;
+    this.echoCancelling = mic.echoCancellation;
+    mic.stream.getAudioTracks().forEach(track => {
       track.enabled = !this.state.muted;
     });
-    this.set({ headset });
-    return stream;
+    this.set({ headset: mic.headset });
+    return mic.stream;
   }
 
   /**
@@ -712,6 +924,10 @@ export class CallEngine {
       this.local?.getTracks().forEach(t => t.stop());
       this.local = fresh;
       this.echoCancelling = want;
+      // Say the route again. Opening a microphone can make Android's WebView
+      // put the phone back into call mode on its own, which with earphones
+      // would undo the full-quality media path chosen a moment ago.
+      if (this.busy) routeAudio(true, this.state.speaker, this.state.headset);
     } catch {
       /* keep the track that is working */
     }
@@ -897,8 +1113,7 @@ export class CallEngine {
     this.timers = [];
     if (this.ringTimer) clearTimeout(this.ringTimer);
     this.ringTimer = null;
-    if (this.recoverTimer) clearTimeout(this.recoverTimer);
-    this.recoverTimer = null;
+    this.stopRecovering();
     if (this.headsetPoll) clearInterval(this.headsetPoll);
     this.headsetPoll = null;
     if (this.statsPoll) clearInterval(this.statsPoll);

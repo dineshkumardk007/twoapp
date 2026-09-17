@@ -40,6 +40,13 @@ function endLine(reason: EndReason | null, direction: CallState['direction']): {
       };
     case 'answered-elsewhere':
       return { title: 'Answered on another device' };
+    case 'dropped':
+      // Not the "couldn't connect" wording: these two phones did reach each
+      // other, so blaming their networks for never meeting would be untrue.
+      return {
+        title: 'Call dropped',
+        detail: 'The connection was lost and did not come back. Calling again usually works.'
+      };
     case 'failed':
       // Said plainly, because the likeliest cause is not a fault anyone can
       // fix by tapping again: two phones that cannot reach each other directly.
@@ -98,7 +105,9 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
   }
 
   const ended = call.phase === 'ended' ? endLine(call.endReason, call.direction) : null;
-  const route = call.headset ? 'Earphones' : call.speaker ? 'Speaker' : 'Earpiece';
+  // Speaker first: pressing it with earphones in really does move the sound
+  // to the loudspeaker, so the label has to say so.
+  const route = call.speaker ? 'Speaker' : call.headset ? 'Earphones' : 'Earpiece';
   // What is actually arriving once measured; the ceiling until then.
   const shownKbps = call.measuredKbps > 0 ? call.measuredKbps : call.kbps;
 
@@ -142,13 +151,18 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
             <p className="mt-3 text-[11px] text-linen-surface/50 tabular-nums">
               {route} &middot; {shownKbps} kbps &middot; end-to-end encrypted
             </p>
-            {call.link && (
+            {call.reconnecting ? (
+              <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-linen-surface/70" role="status">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300" />
+                Reconnecting…
+              </p>
+            ) : call.link && (
               <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-linen-surface/70">
                 <span className={`h-1.5 w-1.5 rounded-full ${LINK[call.link].dot}`} />
                 {LINK[call.link].label}
               </p>
             )}
-            {call.link === 'poor' && (
+            {call.link === 'poor' && !call.reconnecting && (
               <p className="mt-1 max-w-xs text-[10px] leading-relaxed text-linen-surface/50">
                 Audio may break up. Turning on data saver for calls in Settings can steady it.
               </p>
@@ -225,10 +239,10 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
                       call.speaker ? 'bg-linen-surface text-linen-primary' : 'bg-linen-surface/10'
                     }`}
                   >
-                    {call.headset ? (
-                      <Headphones className="h-6 w-6" />
-                    ) : call.speaker ? (
+                    {call.speaker ? (
                       <Volume2 className="h-6 w-6" />
+                    ) : call.headset ? (
+                      <Headphones className="h-6 w-6" />
                     ) : (
                       <Ear className="h-6 w-6" />
                     )}
