@@ -59,6 +59,7 @@ const ROUTES: Record<string, { tab: string; tier: ActivityTier }> = {
   STATE_OF_UNION_SEAL: { tab: 'stateofunion', tier: 'for-you' },
   JOURNAL_SHARED: { tab: 'journal', tier: 'for-you' },
   AGREEMENT_ADD: { tab: 'repair', tier: 'for-you' },
+  MEMORY_ADD: { tab: 'timeline', tier: 'for-you' },
 
   // Worth knowing, not worth interrupting for.
   LIST_ITEM: { tab: 'lists', tier: 'changed' },
@@ -122,6 +123,7 @@ const PHRASES: Record<string, string> = {
   WEATHER: 'changed their weather',
   JOURNAL_SHARED: 'shared a journal entry',
   AGREEMENT_ADD: 'added an agreement',
+  MEMORY_ADD: 'added a memory',
   CHORE_ADD: 'logged a chore',
   EXPENSE_ADD: 'added an expense',
   EXPENSES_SETTLED: 'settled up',

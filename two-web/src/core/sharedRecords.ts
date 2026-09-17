@@ -26,6 +26,7 @@ import {
   CycleSharingLevel,
   ExpenseItem,
   JournalEntry,
+  MemoryItem,
   QuoteItem
 } from '../types';
 import type { SpaceState } from './storage';
@@ -38,6 +39,7 @@ export const QUOTE_ADD = 'QUOTE_ADD';
 export const AGREEMENT_ADD = 'AGREEMENT_ADD';
 export const CYCLE_RECORD = 'CYCLE_RECORD';
 export const CYCLE_SHARING = 'CYCLE_SHARING';
+export const MEMORY_ADD = 'MEMORY_ADD';
 
 export const SHARED_RECORD_TYPES = new Set([
   CHORE_ADD,
@@ -47,7 +49,8 @@ export const SHARED_RECORD_TYPES = new Set([
   QUOTE_ADD,
   AGREEMENT_ADD,
   CYCLE_RECORD,
-  CYCLE_SHARING
+  CYCLE_SHARING,
+  MEMORY_ADD
 ]);
 
 type Role = 'user' | 'partner';
@@ -120,7 +123,22 @@ export function cycleRecordToWire(record: CycleRecord, level: CycleSharingLevel)
   };
 }
 
+export function memoryToWire(memory: MemoryItem, activeUser: Role) {
+  return {
+    id: memory.id,
+    title: memory.title,
+    date: memory.date,
+    tag: memory.tag,
+    desc: memory.desc,
+    imageDataUrl: memory.imageDataUrl,
+    lockedUntil: memory.lockedUntil,
+    authorId: memory.authorId || activeUser
+  };
+}
+
 // --- Incoming ----------------------------------------------------------------
+
+const MEMORY_TAGS = new Set(['Milestone', 'Trip', 'Moment', 'Anniversary', 'Whisper']);
 
 const PHASES = new Set(['MENSTRUAL', 'FOLLICULAR', 'OVULATORY', 'LUTEAL']);
 const LEVELS = new Set(['private', 'phase_only', 'phase_and_energy', 'full']);
@@ -226,6 +244,30 @@ export function applySharedRecord(
         loggedDate: isText(payload.loggedDate) ? payload.loggedDate : ''
       };
       return { ...prev, cycleRecords: prependUnique(prev.cycleRecords, record) };
+    }
+
+    case MEMORY_ADD: {
+      if (!isText(payload.title) || !isText(payload.desc)) return null;
+      // Only a photo carried inside the memory itself. A web address here
+      // would make the other phone fetch it - telling some server when a
+      // memory was opened, and from where.
+      const image =
+        isText(payload.imageDataUrl) && payload.imageDataUrl.startsWith('data:image/')
+          ? payload.imageDataUrl
+          : undefined;
+      const author: Role = payload.authorId === 'user' || payload.authorId === 'partner' ? payload.authorId : (authorId as Role);
+      const memory: MemoryItem = {
+        id: payload.id,
+        title: payload.title,
+        date: isText(payload.date) ? payload.date : '',
+        tag: MEMORY_TAGS.has(payload.tag) ? payload.tag : 'Moment',
+        desc: payload.desc,
+        imageDataUrl: image,
+        lockedUntil: isText(payload.lockedUntil) && /^\d{4}-\d{2}-\d{2}$/.test(payload.lockedUntil) ? payload.lockedUntil : undefined,
+        authorId: author,
+        authorName: fromRole(author, me)
+      };
+      return { ...prev, memories: prependUnique(prev.memories || [], memory) };
     }
 
     case CYCLE_SHARING: {

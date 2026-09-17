@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, startTransition, useMemo } from 'react';
-import { loadState, saveState, clearState, pruneForStorage, forStorage, SpaceState, MAX_CHAT_MESSAGES } from './core/storage';
+import { loadState, saveState, clearState, pruneForStorage, forStorage, upgradeState, SpaceState, MAX_CHAT_MESSAGES } from './core/storage';
 import { AppDock } from './components/AppDock';
 import { GroupDock } from './components/GroupDock';
 import {
@@ -59,6 +59,7 @@ import {
   JournalEntry,
   AgreementItem,
   QuoteItem,
+  MemoryItem,
   ListItem,
   ChoreItem,
   ExpenseItem,
@@ -108,6 +109,8 @@ import {
   quoteToWire,
   journalToWire,
   cycleRecordToWire,
+  memoryToWire,
+  MEMORY_ADD,
   CHORE_ADD,
   EXPENSE_ADD,
   EXPENSES_SETTLED,
@@ -2056,6 +2059,15 @@ export const App: React.FC = () => {
     }));
   };
 
+  const handleAddMemory = (memory: Omit<MemoryItem, 'id' | 'authorId' | 'authorName'>) => {
+    const created: MemoryItem = { ...memory, id: newId(), authorId: state.activeUser, authorName: 'You' };
+    shareUpdate(MEMORY_ADD, memoryToWire(created, state.activeUser));
+    setState(prev => ({
+      ...prev,
+      memories: [created, ...(prev.memories || [])]
+    }));
+  };
+
   const handleAddQuote = (quoteText: string) => {
     // "You" on the phone that wrote it; the other phone reads it as Partner.
     const quote: QuoteItem = { id: newId(), quote: quoteText, author: 'You', isCustom: true };
@@ -2800,7 +2812,9 @@ export const App: React.FC = () => {
             setLockoutLeft(0);
             // The vault carries the same references localStorage does.
             setMediaReady(!containsMediaRefs(opened.payload.state));
-            setState(opened.payload.state);
+            // Upgraded like a localStorage load is: new fields filled in, and
+            // the old sample content taken out.
+            setState(upgradeState(opened.payload.state));
             setSession(opened.payload.session);
             setVaultKey(opened.key);
             setIsLocked(false);
@@ -3494,8 +3508,10 @@ export const App: React.FC = () => {
         {currentTab === 'timeline' && (
           <TimelineView
             quotes={state.quotes}
+            memories={state.memories || []}
             activeUser={state.activeUser}
             onAddQuote={handleAddQuote}
+            onAddMemory={handleAddMemory}
           />
         )}
 

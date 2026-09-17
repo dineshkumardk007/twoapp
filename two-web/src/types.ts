@@ -584,3 +584,18 @@ export interface KintsugiVesselItem {
 
 
 
+
+/** A Timeline & Quotes memory. */
+export interface MemoryItem {
+  id: string;
+  title: string;
+  date: string;
+  tag: 'Milestone' | 'Trip' | 'Moment' | 'Anniversary' | 'Whisper';
+  desc: string;
+  imageDataUrl?: string;
+  lockedUntil?: string; // ISO date string e.g. "2026-10-14"
+  /** Who added it, as the role in the space; shown as You or Your partner. */
+  authorId?: 'user' | 'partner';
+  /** Kept for memories saved before authorId existed. */
+  authorName: string;
+}

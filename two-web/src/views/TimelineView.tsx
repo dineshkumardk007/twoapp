@@ -1,33 +1,78 @@
 import React, { useState } from 'react';
-import { QuoteItem } from '../types';
+import { QuoteItem, MemoryItem } from '../types';
 import { Quote, Plus, Sparkles, Image as ImageIcon, Lock, Unlock, Calendar, Clock, Heart, Camera, X } from 'lucide-react';
-import { newId } from '../core/ids';
 
-export interface MemoryItem {
-  id: string;
-  title: string;
-  date: string;
-  tag: 'Milestone' | 'Trip' | 'Moment' | 'Anniversary' | 'Whisper';
-  desc: string;
-  imageDataUrl?: string;
-  lockedUntil?: string; // ISO date string e.g. "2026-10-14"
-  authorName: string;
+export type { MemoryItem };
+
+/** Today, written the way a person would date a memory. */
+function todayLabel(): string {
+  return new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+/**
+ * Shrinks a photo before it becomes part of a memory.
+ *
+ * A memory travels to your partner's phone inside one encrypted record, and
+ * the relay refuses any record over 256 KB - so the photo has to fit, not just
+ * be smaller. It starts at 1600 pixels on the long side, sharp full-screen on a
+ * phone, and steps down in size and quality only as far as it must.
+ */
+const MAX_PHOTO_CHARS = 150_000; // leaves room for encryption's base64 growth and the rest of the record
+
+function shrinkPhoto(file: File): Promise<string> {
+  const STEPS: Array<[number, number]> = [
+    [1600, 0.85], [1600, 0.72], [1280, 0.72], [1280, 0.6], [1024, 0.6], [800, 0.6], [640, 0.55]
+  ];
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('no canvas'));
+      let dataUrl = '';
+      for (const [edge, quality] of STEPS) {
+        const scale = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
+        canvas.width = Math.round(img.naturalWidth * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        dataUrl = canvas.toDataURL('image/jpeg', quality);
+        if (dataUrl.length <= MAX_PHOTO_CHARS) break;
+      }
+      resolve(dataUrl);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('not an image'));
+    };
+    img.src = url;
+  });
 }
 
 interface TimelineViewProps {
   quotes: QuoteItem[];
+  memories: MemoryItem[];
   activeUser: 'user' | 'partner';
   onAddQuote: (quote: string) => void;
+  onAddMemory: (memory: Omit<MemoryItem, 'id' | 'authorId' | 'authorName'>) => void;
 }
 
-export const TimelineView: React.FC<TimelineViewProps> = ({ quotes, activeUser, onAddQuote }) => {
+export const TimelineView: React.FC<TimelineViewProps> = ({
+  quotes,
+  memories,
+  activeUser,
+  onAddQuote,
+  onAddMemory
+}) => {
   const [tab, setTab] = useState<'timeline' | 'quotes'>('timeline');
   const [newQuoteText, setNewQuoteText] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 
   // New Memory Form States
   const [newTitle, setNewTitle] = useState('');
-  const [newDate, setNewDate] = useState('Today');
+  // A real date rather than "Today", which would still say today next year.
+  const [newDate, setNewDate] = useState(todayLabel);
   const [newTag, setNewTag] = useState<MemoryItem['tag']>('Moment');
   const [newDesc, setNewDesc] = useState('');
   const [newImage, setNewImage] = useState<string | undefined>(undefined);
@@ -36,63 +81,26 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ quotes, activeUser, 
 
   const partnerName = activeUser === 'user' ? 'Partner' : 'You';
 
-  const [memories, setMemories] = useState<MemoryItem[]>([
-    {
-      id: '1',
-      title: 'Our First Apartment Key Handover',
-      date: 'October 14',
-      tag: 'Milestone',
-      desc: 'Sitting on the carpet eating pizza out of the box with rain outside. No chairs yet, just quiet laughter.',
-      authorName: 'Together',
-      imageDataUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80'
-    },
-    {
-      id: '2',
-      title: 'Late Summer Ridge Hike',
-      date: 'July 22',
-      tag: 'Trip',
-      desc: 'We lost the trail for forty minutes, laughed until our stomachs hurt, and reached the summit just as the sky turned lavender.',
-      authorName: 'You',
-      imageDataUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&auto=format&fit=crop&q=80'
-    },
-    {
-      id: '3',
-      title: 'Future Anniversary Secret Capsule',
-      date: 'Locked until October 14, 2026',
-      tag: 'Anniversary',
-      desc: 'A secret anniversary surprise recorded and sealed during our trip to the coast.',
-      authorName: 'Partner',
-      lockedUntil: '2026-10-14',
-      imageDataUrl: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=600&auto=format&fit=crop&q=80'
-    }
-  ]);
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setNewImage(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      shrinkPhoto(file)
+        .then(setNewImage)
+        .catch(() => setNewImage(undefined));
     }
   };
 
   const handleSaveMemory = () => {
     if (!newTitle.trim() || !newDesc.trim()) return;
 
-    const created: MemoryItem = {
-      id: newId(),
+    onAddMemory({
       title: newTitle.trim(),
-      date: newDate.trim() || 'Today',
+      date: newDate.trim() || todayLabel(),
       tag: newTag,
       desc: newDesc.trim(),
       imageDataUrl: newImage,
-      lockedUntil: isTimeCapsule ? lockDate : undefined,
-      authorName: 'You'
-    };
-
-    setMemories([created, ...memories]);
+      lockedUntil: isTimeCapsule ? lockDate : undefined
+    });
     setShowAddModal(false);
     setNewTitle('');
     setNewDesc('');
@@ -109,7 +117,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ quotes, activeUser, 
   const isMemoryLocked = (item: MemoryItem): boolean => {
     if (!item.lockedUntil) return false;
     const lockTime = new Date(item.lockedUntil).getTime();
-    const now = new Date('2026-09-05').getTime();
+    // The real clock. This was a fixed date, so a capsule sealed "until next
+    // week" would never have opened.
+    const now = Date.now();
     return lockTime > now;
   };
 
@@ -183,7 +193,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ quotes, activeUser, 
                           Unlocks on {item.lockedUntil}
                         </span>
                         <span className="text-[10px] opacity-75 mt-2 bg-white/15 px-2.5 py-0.5 rounded-full">
-                          🔒 Cryptographically Locked
+                          🔒 Sealed until then
                         </span>
                       </div>
                     )}
@@ -210,7 +220,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ quotes, activeUser, 
                   </div>
 
                   <div className="pt-3 border-t border-linen-border/50 flex items-center justify-between text-[11px] text-linen-secondary">
-                    <span>Added by {item.authorName}</span>
+                    <span>
+                      Added by{' '}
+                      {item.authorId ? (item.authorId === activeUser ? 'you' : 'your partner') : item.authorName}
+                    </span>
                     {locked ? (
                       <span className="text-amber-600 font-medium flex items-center">
                         <Lock className="w-3 h-3 mr-1" /> Time Capsule
