@@ -111,10 +111,28 @@ export async function encryptText(
     enc.encode(text)
   );
 
-  const ciphertext = btoa(String.fromCharCode(...new Uint8Array(ciphertextBuffer)));
-  const nonceBase64 = btoa(String.fromCharCode(...nonce));
+  const ciphertext = bytesToBase64(new Uint8Array(ciphertextBuffer));
+  const nonceBase64 = bytesToBase64(nonce);
 
   return { ciphertext, nonce: nonceBase64 };
+}
+
+/**
+ * Base64 in chunks.
+ *
+ * Spreading the whole ciphertext into one String.fromCharCode call passes
+ * every byte as a separate argument, and past roughly a hundred kilobytes that
+ * overflows the call stack. It threw inside encryption, was caught and logged,
+ * and the record was simply never sent - so anything large enough to matter,
+ * a photo in a memory or a voice memo, vanished without a word on screen.
+ */
+function bytesToBase64(bytes: Uint8Array): string {
+  const CHUNK = 0x8000;
+  let out = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    out += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(out);
 }
 
 export async function decryptText(
