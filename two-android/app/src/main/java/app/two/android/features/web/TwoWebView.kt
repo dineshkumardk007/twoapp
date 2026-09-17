@@ -121,6 +121,15 @@ class AndroidWebBridge(private val context: Context) {
         }
     }
 
+    /**
+     * Keeps a call's microphone alive with the screen off or the app left.
+     * See CallKeepAliveService for why this needs a notification.
+     */
+    @JavascriptInterface
+    fun setCallKeepAlive(on: Boolean) {
+        if (on) CallKeepAliveService.start(context) else CallKeepAliveService.stop(context)
+    }
+
     private var proximityLock: PowerManager.WakeLock? = null
 
     /**

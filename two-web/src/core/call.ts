@@ -224,6 +224,22 @@ function routeAudio(active: boolean, speaker: boolean, headset: boolean) {
   }
 }
 
+/**
+ * Keeps the microphone alive while the call is off screen.
+ *
+ * Android gives an app that is not on screen a silent microphone: lock the
+ * phone mid-call and the other person would hear nothing. The app runs a
+ * service for the length of the call to prevent that, which Android shows as
+ * an ongoing notification.
+ */
+function keepAlive(on: boolean) {
+  try {
+    (window as any).AndroidBridge?.setCallKeepAlive?.(on);
+  } catch {
+    /* no bridge: a browser tab has no such restriction to work around */
+  }
+}
+
 /** Gives received audio room to arrive unevenly without breaking up. */
 function steadyPlayout(receiver: RTCRtpReceiver) {
   const r = receiver as any;
@@ -335,7 +351,11 @@ export class CallEngine {
   /** Whether the live microphone track was opened with echo cancellation. */
   private echoCancelling = true;
 
-  constructor(private readonly opts: CallEngineOptions) {}
+  constructor(private readonly opts: CallEngineOptions) {
+    // A fresh page has no call. A notification left over from one the page
+    // was reloaded out of - the panic button, a lock - is cleared here.
+    keepAlive(false);
+  }
 
   /** True from the first ring until the call has fully ended. */
   get busy(): boolean {
@@ -893,6 +913,9 @@ export class CallEngine {
       track.enabled = !this.state.muted;
     });
     this.set({ headset: mic.headset });
+    // From the moment the microphone is the call's: while ringing out counts,
+    // since a phone put down to wait for an answer is often locked.
+    keepAlive(true);
     return mic.stream;
   }
 
@@ -1140,5 +1163,6 @@ export class CallEngine {
     this.pendingOffer = null;
     this.pendingIce = [];
     routeAudio(false, false, false);
+    keepAlive(false);
   }
 }
