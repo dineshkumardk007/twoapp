@@ -57,6 +57,8 @@ const ROUTES: Record<string, { tab: string; tier: ActivityTier }> = {
   COMFORT_BOX: { tab: 'softlanding', tier: 'for-you' },
   GRATITUDE_STAR: { tab: 'constellation', tier: 'for-you' },
   STATE_OF_UNION_SEAL: { tab: 'stateofunion', tier: 'for-you' },
+  JOURNAL_SHARED: { tab: 'journal', tier: 'for-you' },
+  AGREEMENT_ADD: { tab: 'repair', tier: 'for-you' },
 
   // Worth knowing, not worth interrupting for.
   LIST_ITEM: { tab: 'lists', tier: 'changed' },
@@ -75,7 +77,13 @@ const ROUTES: Record<string, { tab: string; tier: ActivityTier }> = {
   MIDNIGHT_RADIO_SYNC: { tab: 'radio', tier: 'changed' },
   NIGHTSTAND_UPDATE: { tab: 'nightstand', tier: 'changed' },
   CO_PRESENCE_STATUS: { tab: 'presence', tier: 'changed' },
-  WEATHER: { tab: 'home', tier: 'changed' }
+  WEATHER: { tab: 'home', tier: 'changed' },
+  CHORE_ADD: { tab: 'chores', tier: 'changed' },
+  EXPENSE_ADD: { tab: 'money', tier: 'changed' },
+  EXPENSES_SETTLED: { tab: 'money', tier: 'changed' },
+  QUOTE_ADD: { tab: 'timeline', tier: 'changed' },
+  CYCLE_RECORD: { tab: 'cycle', tier: 'changed' },
+  CYCLE_SHARING: { tab: 'cycle', tier: 'changed' }
 };
 
 /** How this reads on the home screen. Present tense, the partner as subject. */
@@ -111,7 +119,15 @@ const PHRASES: Record<string, string> = {
   CARE_COMPASS: 'updated the care compass',
   SOFT_LANDING_UPDATE: 'changed a soft landing',
   CO_PRESENCE_STATUS: 'is sitting with you',
-  WEATHER: 'changed their weather'
+  WEATHER: 'changed their weather',
+  JOURNAL_SHARED: 'shared a journal entry',
+  AGREEMENT_ADD: 'added an agreement',
+  CHORE_ADD: 'logged a chore',
+  EXPENSE_ADD: 'added an expense',
+  EXPENSES_SETTLED: 'settled up',
+  QUOTE_ADD: 'left a note in the quote jar',
+  CYCLE_RECORD: 'updated their cycle',
+  CYCLE_SHARING: 'changed what they share of their cycle'
 };
 
 /** Where a record belongs, or null when it is plumbing. */

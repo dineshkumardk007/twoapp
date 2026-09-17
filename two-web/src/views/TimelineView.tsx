@@ -89,7 +89,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ quotes, activeUser, 
       desc: newDesc.trim(),
       imageDataUrl: newImage,
       lockedUntil: isTimeCapsule ? lockDate : undefined,
-      authorName: activeUser === 'user' ? 'You' : 'Partner'
+      authorName: 'You'
     };
 
     setMemories([created, ...memories]);
@@ -254,7 +254,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ quotes, activeUser, 
                 </p>
                 <div className="text-right">
                   <span className={`text-xs ${q.isCustom ? 'text-linen-accent font-medium' : 'text-linen-secondary'}`}>
-                    — {q.author} {q.isCustom && '(From Partner)'}
+                    — {q.isCustom ? (q.author === 'You' ? 'You' : 'Your partner') : q.author}
                   </span>
                 </div>
               </div>

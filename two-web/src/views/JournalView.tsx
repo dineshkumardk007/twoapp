@@ -20,7 +20,8 @@ export const JournalView: React.FC<JournalViewProps> = ({
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
 
-  const currentAuthorName = activeUser === 'user' ? 'You' : 'Partner';
+  // Always "You" on the phone that writes it; the other phone reads it as Partner.
+  const currentAuthorName = 'You';
 
   // Filter entries:
   // Shared: isPrivate === false

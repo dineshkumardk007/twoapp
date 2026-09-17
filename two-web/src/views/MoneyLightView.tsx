@@ -19,7 +19,8 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState('You');
 
-  const partnerName = activeUser === 'user' ? 'Partner' : 'You';
+  // "Paid by You" is always the person holding this phone, on either side.
+  const partnerName = 'Partner';
 
   const totalPaidByMe = expenses.filter(e => e.paidBy === 'You').reduce((sum, e) => sum + e.amount, 0);
   const totalPaidByPartner = expenses.filter(e => e.paidBy === 'Partner').reduce((sum, e) => sum + e.amount, 0);

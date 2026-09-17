@@ -58,6 +58,7 @@ import {
   ChatMessage,
   JournalEntry,
   AgreementItem,
+  QuoteItem,
   ListItem,
   ChoreItem,
   ExpenseItem,
@@ -99,6 +100,23 @@ import { Locale } from './core/i18n';
 import { Lock } from 'lucide-react';
 import { CURATED_DILEMMAS } from './data/dilemmas';
 import { newId } from './core/ids';
+import {
+  SHARED_RECORD_TYPES,
+  applySharedRecord,
+  choreToWire,
+  expenseToWire,
+  quoteToWire,
+  journalToWire,
+  cycleRecordToWire,
+  CHORE_ADD,
+  EXPENSE_ADD,
+  EXPENSES_SETTLED,
+  JOURNAL_SHARED,
+  QUOTE_ADD,
+  AGREEMENT_ADD,
+  CYCLE_RECORD,
+  CYCLE_SHARING
+} from './core/sharedRecords';
 import { hydrateMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
 import {
   lockoutRemaining,
@@ -553,6 +571,12 @@ export const App: React.FC = () => {
         try {
           const parsed = JSON.parse(record.payload);
 
+          // Chores, expenses, journal, quotes, agreements, cycle: one reducer
+          // for all of them, shared with the local network path below.
+          if (SHARED_RECORD_TYPES.has(record.type)) {
+            setState(prev => applySharedRecord(prev, record.type, parsed, record.authorId) ?? prev);
+          }
+
           if (record.type === 'NAME_EXCHANGE') {
             if (parsed.name && typeof parsed.name === 'string') {
               setState(prev => ({
@@ -925,6 +949,9 @@ export const App: React.FC = () => {
     // Also listen to local offline mesh transport
     const unsubscribeMesh = localMesh.subscribe((packet) => {
       if (packet.type === 'LOCAL_MESH_PACKET' && packet.authorId !== state.activeUser) {
+        if (SHARED_RECORD_TYPES.has(packet.subType)) {
+          setState(prev => applySharedRecord(prev, packet.subType, packet.payload, packet.authorId) ?? prev);
+        }
         if (packet.subType === 'LOVE_LETTER') {
           setState(prev => ({
             ...prev,
@@ -1918,11 +1945,19 @@ export const App: React.FC = () => {
     }));
   };
 
+  /** Sends one change to the other phone: over the relay, and the local network when there is one. */
+  const shareUpdate = (type: string, payload: unknown) => {
+    wsRelay.broadcastUpdate(type, payload);
+    localMesh.broadcastLocally(type, payload, state.activeUser);
+  };
+
   const handleAddJournalEntry = (entry: Omit<JournalEntry, 'id'>) => {
     const newEntry: JournalEntry = {
       ...entry,
       id: newId()
     };
+    // A private entry never leaves this phone, not even encrypted.
+    if (!newEntry.isPrivate) shareUpdate(JOURNAL_SHARED, journalToWire(newEntry));
     setState(prev => ({
       ...prev,
       journalEntries: [newEntry, ...prev.journalEntries]
@@ -1930,6 +1965,8 @@ export const App: React.FC = () => {
   };
 
   const handlePromoteJournalEntry = (id: string) => {
+    const entry = state.journalEntries.find(e => e.id === id);
+    if (entry) shareUpdate(JOURNAL_SHARED, journalToWire({ ...entry, isPrivate: false }));
     setState(prev => ({
       ...prev,
       journalEntries: prev.journalEntries.map(e =>
@@ -1943,6 +1980,7 @@ export const App: React.FC = () => {
       ...agreement,
       id: newId()
     };
+    shareUpdate(AGREEMENT_ADD, newAgreement);
     setState(prev => ({
       ...prev,
       agreements: [newAgreement, ...prev.agreements]
@@ -1987,6 +2025,7 @@ export const App: React.FC = () => {
       ...chore,
       id: newId()
     };
+    shareUpdate(CHORE_ADD, choreToWire(newChore, state.activeUser));
     setState(prev => ({
       ...prev,
       chores: [newChore, ...prev.chores]
@@ -1998,6 +2037,7 @@ export const App: React.FC = () => {
       ...expense,
       id: newId()
     };
+    shareUpdate(EXPENSE_ADD, expenseToWire(newExpense, state.activeUser));
     setState(prev => ({
       ...prev,
       expenses: [newExpense, ...prev.expenses]
@@ -2005,28 +2045,33 @@ export const App: React.FC = () => {
   };
 
   const handleSettleUpExpenses = () => {
+    // Settles what is on the tab now, by id, so an expense the other phone is
+    // adding at the same moment is not wiped along with it.
+    const ids = state.expenses.map(e => e.id);
+    shareUpdate(EXPENSES_SETTLED, { ids });
+    const settled = new Set(ids);
     setState(prev => ({
       ...prev,
-      expenses: []
+      expenses: prev.expenses.filter(e => !settled.has(e.id))
     }));
   };
 
   const handleAddQuote = (quoteText: string) => {
+    // "You" on the phone that wrote it; the other phone reads it as Partner.
+    const quote: QuoteItem = { id: newId(), quote: quoteText, author: 'You', isCustom: true };
+    shareUpdate(QUOTE_ADD, quoteToWire(quote, state.activeUser));
     setState(prev => ({
       ...prev,
-      quotes: [
-        {
-          id: newId(),
-          quote: quoteText,
-          author: prev.activeUser === 'user' ? 'You' : 'Partner',
-          isCustom: true
-        },
-        ...prev.quotes
-      ]
+      quotes: [quote, ...prev.quotes]
     }));
   };
 
   const handleUpdateCycleSharingLevel = (level: CycleSharingLevel) => {
+    // The latest record goes with it, cut to the new level: widening sharing
+    // shows your partner where you are now, narrowing it takes back what their
+    // phone was holding.
+    const latest = state.cycleRecords[0];
+    shareUpdate(CYCLE_SHARING, { level, latest: latest ? cycleRecordToWire(latest, level) : null });
     setState(prev => ({
       ...prev,
       cycleSharingLevel: level,
@@ -2048,6 +2093,8 @@ export const App: React.FC = () => {
       ...record,
       id: newId()
     };
+    const wire = cycleRecordToWire(newRecord, state.cycleSharingLevel);
+    if (wire) shareUpdate(CYCLE_RECORD, wire);
     setState(prev => ({
       ...prev,
       cycleRecords: [newRecord, ...prev.cycleRecords]
