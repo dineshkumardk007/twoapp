@@ -30,10 +30,23 @@ const corsOrigin = process.env.CORS_ORIGIN
 app.use(cors({ origin: corsOrigin }));
 app.use(express.json({ limit: '10mb' }));
 
+/** A health check waits this long for the database before calling it unreachable. */
+const HEALTH_PING_TIMEOUT_MS = 10_000;
+
 // Healthcheck & Zero-Knowledge Verification
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  // Reaching the database is the point of this route being called on a
+  // schedule, so the check is a real query rather than a cached flag - and it
+  // is bounded, because a database that has gone away answers slowly or not
+  // at all.
+  const reached = await Promise.race([
+    db.ping(),
+    new Promise<boolean>(resolve => setTimeout(() => resolve(false), HEALTH_PING_TIMEOUT_MS))
+  ]).catch(() => false);
+
   res.json({
-    status: db.isDurable || db.kind === 'memory' ? 'ok' : 'degraded',
+    status: reached && (db.isDurable || db.kind === 'memory') ? 'ok' : 'degraded',
+    db: reached ? 'ok' : 'unreachable',
     app: 'Two Zero-Knowledge Relay',
     timestamp: new Date().toISOString(),
     storage: db.kind,

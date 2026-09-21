@@ -1,0 +1,81 @@
+# Keeps the free hosting from going to sleep on its own.
+#
+# Two separate timers were running against this couple:
+#
+# - Supabase pauses a free database after seven days without activity. A
+#   paused database cannot be woken by the app - somebody has to restore it
+#   from a dashboard - so a quiet week would have ended with messages that
+#   could not be stored until one of them noticed and went looking.
+# - Render spins a free service down after fifteen minutes idle. That one
+#   fixes itself on the next connection, at the cost of about a minute.
+#
+# One request a day answers both: /health runs a real query against Postgres,
+# which is the activity Supabase counts, and reaching the service at all is
+# what wakes it. If the request fails, or the relay says its database is not
+# answering, this job fails and GitHub emails the owner - which is the whole
+# point of it running on a schedule rather than being noticed in the app.
+#
+# GitHub disables scheduled workflows in a repository with no pushes for 60
+# days, and says so by email. If that mail arrives, push anything, or run this
+# from the Actions tab.
+name: Keep relay awake
+
+on:
+  schedule:
+    # 06:17 UTC daily. Not on the hour: GitHub's scheduler is busiest then and
+    # delays the jobs that ask for it.
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping the relay and its database
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call /health
+        env:
+          # Overridable without touching this file, for a relay that moves.
+          RELAY_URL: ${{ vars.RELAY_URL || 'https://twoapp-tfj8.onrender.com' }}
+        run: |
+          set -euo pipefail
+
+          # A sleeping instance takes about a minute to come back, so the
+          # first attempt is expected to be slow rather than wrong.
+          body="$(curl --silent --show-error --fail-with-body \
+            --retry 5 --retry-delay 20 --retry-all-errors \
+            --max-time 120 \
+            "$RELAY_URL/health")"
+
+          echo "$body"
+
+          status="$(printf '%s' "$body" | jq -r '.status')"
+          database="$(printf '%s' "$body" | jq -r '.db')"
+          storage="$(printf '%s' "$body" | jq -r '.storage')"
+          durable="$(printf '%s' "$body" | jq -r '.durable')"
+
+          # A relay from before /health checked the database says nothing about
+          # `db`. Rather than call that a failure - which it is not, and which
+          # would mean an alarming email for a deploy that simply has not
+          # landed yet - fall back to what that version does report.
+          if [ "$database" = "null" ] && [ "$durable" = "true" ]; then
+            echo "Older relay without a database check; its own report says durable."
+            database="ok"
+            status="ok"
+          fi
+
+          if [ "$storage" = "memory" ]; then
+            echo "::error::The relay is running without a database - records are being kept in memory and will be lost when it restarts."
+            exit 1
+          fi
+
+          if [ "$status" != "ok" ] || [ "$database" != "ok" ]; then
+            echo "::error::The relay answered but its database did not (status=$status db=$database). If Supabase has paused the project, restore it from the dashboard."
+            exit 1
+          fi
+
+          echo "Relay awake, database answering."

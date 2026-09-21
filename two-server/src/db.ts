@@ -89,11 +89,25 @@ export interface RelayDb {
   ): Promise<StoredRecord[]>;
   /** Deletes records older than the retention window. Returns how many went. */
   purgeRecordsOlderThan(days: number): Promise<number>;
+  /**
+   * One cheap query, to prove the database is actually answering.
+   *
+   * Not the same question as `isDurable`, which is the last thing that
+   * happened to be tried. Supabase pauses a free database after a week
+   * without activity, so something has to reach it on purpose - see the
+   * keep-alive workflow.
+   */
+  ping(): Promise<boolean>;
   trimCappedTypes(): Promise<number>;
   rendezvousTokens: Map<string, RendezvousToken>;
 }
 
 class InMemoryRelayDb implements RelayDb {
+  async ping() {
+    // Nothing to reach: this store is the process's own memory.
+    return true;
+  }
+
   readonly kind = 'memory' as const;
 
   records: StoredRecord[] = [];
@@ -199,6 +213,11 @@ class InMemoryRelayDb implements RelayDb {
 }
 
 class PostgresRelayDb implements RelayDb {
+  async ping() {
+    await this.pool.query('SELECT 1');
+    return true;
+  }
+
   readonly kind = 'postgres' as const;
 
   // Pairing rendezvous is short-lived and cheap to redo, so it stays in memory.
@@ -418,6 +437,24 @@ function isPermanentWriteError(err: any): boolean {
 }
 
 class ResilientRelayDb implements RelayDb {
+  /**
+   * Touches Postgres, and says whether it answered.
+   *
+   * A failure is reported the same way any other failed query is, so a
+   * database that has gone away still ends up retried rather than silently
+   * assumed well.
+   */
+  async ping() {
+    if (!this.postgres) return true;
+    try {
+      await this.postgres.ping();
+      return true;
+    } catch (err) {
+      this.degrade(err);
+      return false;
+    }
+  }
+
   private postgres: RelayDb | null;
   private memory = new InMemoryRelayDb();
 
