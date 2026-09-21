@@ -51,6 +51,7 @@ import { localMesh } from './core/localMesh';
 import { insertBySentAt } from './core/ordering';
 import { CallEngine, CallState, IDLE_CALL, CALL_SIGNAL, CALL_MISSED } from './core/call';
 import { CallOverlay } from './components/CallOverlay';
+import { RelayStorageWarning } from './components/RelayStorageWarning';
 import { routeFor, withActivity, unseen, dottedTabs } from './core/activity';
 import {
   ThemeMode,
@@ -318,6 +319,20 @@ export const App: React.FC = () => {
   // Session & relay connection state
   const [session, setSession] = useState<SpaceSession | null>(loadSpaceSession);
   const [relayStatus, setRelayStatus] = useState<RelayStatus>(() => wsRelay.getStatus());
+  /**
+   * Whether the relay is keeping what it is sent. Null until it says.
+   *
+   * Worth a line on screen because the failure is invisible otherwise: a
+   * database that has gone away still lets two phones talk to each other, and
+   * silently keeps nothing for the one that is off.
+   */
+  const [relayDurable, setRelayDurable] = useState<boolean | null>(null);
+  const [storageWarningDismissed, setStorageWarningDismissed] = useState(false);
+  useEffect(() => wsRelay.subscribeDurable(durable => {
+    setRelayDurable(durable);
+    // A fresh problem is worth showing again, even if the last one was waved away.
+    if (!durable) setStorageWarningDismissed(false);
+  }), []);
 
   // PIN lock protection state
   // When a PIN is set the vault is encrypted, so nothing can be read until it is
@@ -500,6 +515,30 @@ export const App: React.FC = () => {
     const unsubscribe = wsRelay.subscribe((msg) => {
       // Signals carry no history and are never stored, so they are handled
       // before the record path rather than inside it.
+      if (msg.type === 'RECORD_TOO_LARGE') {
+        const mb = (Number(msg.bytes) / (1024 * 1024)).toFixed(1);
+        const isChat = msg.recordType === 'CHAT';
+        setInAppNotification({
+          id: newId(),
+          title: isChat ? 'Message too large to send' : 'Too large to send',
+          body: isChat
+            ? `That one is ${mb} MB, past the 1 MB a single message can carry. A shorter voice memo will go through.`
+            : `That one is ${mb} MB, past the 1 MB a single message can carry.`,
+          type: 'general',
+          tabId: isChat ? 'chat' : currentTabRef.current || 'home'
+        });
+        // The bubble was added the moment it was written. It never left this
+        // phone and never will, so it does not get to sit in the conversation
+        // looking sent.
+        if (isChat && msg.correlationId) {
+          setState(prev => ({
+            ...prev,
+            messages: prev.messages.filter(m => m.id !== msg.correlationId)
+          }));
+        }
+        return;
+      }
+
       if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === CALL_SIGNAL) {
         let signal: any;
         try {
@@ -3518,6 +3557,7 @@ export const App: React.FC = () => {
         {currentTab === 'settings' && (
           <SettingsView
             state={state}
+            relayDurable={relayDurable}
             spaceCode={session?.code}
             currentTheme={theme}
             onSelectTheme={setTheme}
@@ -3569,6 +3609,11 @@ export const App: React.FC = () => {
         )}
         </Suspense>
       </main>
+
+      {/* Shown wherever they are in the sanctuary, not only on one screen. */}
+      {!storageWarningDismissed && (
+        <RelayStorageWarning durable={relayDurable} onDismiss={() => setStorageWarningDismissed(true)} />
+      )}
 
       {callOverlay}
 

@@ -27,6 +27,17 @@ type PresenceCallback = (partnerOnline: boolean, info: PresenceInfo) => void;
 
 const RELAY_DEV_PORT = 4000;
 const MAX_OUTBOX = 500;
+
+/**
+ * The largest record the relay accepts, matched here so an oversized one is
+ * refused where somebody can be told about it.
+ *
+ * It used to be sent anyway: the relay replied with an error carrying no
+ * record id, nothing listened for it, and the record sat in the outbox being
+ * retried forever. A voice memo of a few minutes did that, and the screen
+ * said it had been sent.
+ */
+const MAX_RECORD_BYTES = 1024 * 1024;
 const MAX_APPLIED_IDS = 4_000;
 const HEARTBEAT_MS = 25_000;
 const RECONNECT_BASE_MS = 1_000;
@@ -91,6 +102,15 @@ export class WebSocketRelayClient {
   private listeners = new Set<MessageCallback>();
   private statusListeners = new Set<StatusCallback>();
   private presenceListeners = new Set<PresenceCallback>();
+  private durableListeners = new Set<(durable: boolean) => void>();
+
+  /**
+   * Whether the relay is keeping what it is given.
+   *
+   * Null until it says. False means messages still reach a partner who is
+   * online now, but nothing is being stored for a phone that is not.
+   */
+  private durable: boolean | null = null;
   private partnerOnline = false;
   private presenceInfo: PresenceInfo = { peers: 0, ownDevices: 0, total: 0 };
 
@@ -194,6 +214,7 @@ export class WebSocketRelayClient {
     socket.onclose = () => {
       this.stopHeartbeat();
       this.setPartnerOnline(false);
+      this.durable = null;
       if (this.ws === socket) this.ws = null;
       if (this.stopped) return;
       this.scheduleReconnect();
@@ -209,6 +230,11 @@ export class WebSocketRelayClient {
       payload = JSON.parse(raw);
     } catch {
       return;
+    }
+
+    if (payload?.type === 'JOINED' || payload?.type === 'RELAY_STATUS') {
+      this.setDurable(payload.storage === 'memory' ? false : payload.durable !== false);
+      if (payload.type === 'RELAY_STATUS') return;
     }
 
     if (payload?.type === 'PRESENCE') {
@@ -379,6 +405,15 @@ export class WebSocketRelayClient {
         clientTs: Date.now(),
         createdAt: new Date().toISOString()
       };
+
+      const bytes = new TextEncoder().encode(JSON.stringify(record)).length;
+      if (bytes > MAX_RECORD_BYTES) {
+        // Not queued: the relay would refuse it, and a queue full of records
+        // that can never be accepted blocks nothing but is retried forever.
+        console.error(`[Relay] ${type} is ${bytes} bytes, over the ${MAX_RECORD_BYTES} limit - not sent`);
+        this.emit({ type: 'RECORD_TOO_LARGE', recordType: type, bytes, correlationId });
+        return;
+      }
 
       // If the relay ever echoes this back, ignore it: we already applied it
       // locally when the user performed the action.
@@ -730,6 +765,32 @@ export class WebSocketRelayClient {
         /* ignore */
       }
     });
+  }
+
+  private setDurable(durable: boolean) {
+    if (this.durable === durable) return;
+    this.durable = durable;
+    this.durableListeners.forEach(cb => {
+      try {
+        cb(durable);
+      } catch {
+        /* ignore */
+      }
+    });
+  }
+
+  /**
+   * Notifies when the relay starts or stops keeping what it is sent.
+   *
+   * Called immediately with what is known, which may be null - not yet
+   * connected, and so nothing to report either way.
+   */
+  subscribeDurable(callback: (durable: boolean) => void) {
+    this.durableListeners.add(callback);
+    if (this.durable !== null) callback(this.durable);
+    return () => {
+      this.durableListeners.delete(callback);
+    };
   }
 
   /** Notifies when the partner's device joins or leaves the space. */

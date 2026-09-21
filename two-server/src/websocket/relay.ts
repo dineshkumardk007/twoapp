@@ -33,8 +33,19 @@ function consumeToken(client: SpaceClient): boolean {
   return true;
 }
 
-// A single record is a chat line, a mood, or a canvas stroke - never media.
-const MAX_RECORD_BYTES = 256 * 1024;
+/**
+ * The biggest single message the relay will take.
+ *
+ * Most records are a chat line or a canvas stroke and nowhere near this. The
+ * ceiling exists so one client cannot hand the relay something enormous, and
+ * it used to be 256 KB - under which a photo in a memory or a voice memo of
+ * any length did not fit. Worse, the record was refused with an error the app
+ * ignored, so it simply never arrived and nothing said so.
+ *
+ * A megabyte holds a photo or a few minutes of voice, while still being a
+ * bound. The app refuses anything larger before sending, and says why.
+ */
+const MAX_RECORD_BYTES = 1024 * 1024;
 
 // Cap on how much history one JOIN may replay. Raised from 500 because a fresh
 // device signs in with no history at all and refills entirely from here: at 500
@@ -67,7 +78,15 @@ export class WebSocketRelay {
   private clients = new Set<SpaceClient>();
   private nextConnectionId = 1;
 
+  /** Tells every connected phone when durability comes or goes. */
+  private announceDurability = (durable: boolean) => {
+    for (const client of this.clients) {
+      this.sendJson(client.ws, { type: 'RELAY_STATUS', durable, storage: db.kind });
+    }
+  };
+
   constructor(wss: WebSocketServer) {
+    db.onHealthChange(this.announceDurability);
     this.wss = wss;
     this.setupServer();
     this.startLivenessChecks();
@@ -194,7 +213,10 @@ export class WebSocketRelay {
             this.sendJson(ws, {
               type: 'JOINED',
               spaceId: message.spaceId,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              // So a phone can say whether what it sends is being kept.
+              durable: db.isDurable,
+              storage: db.kind
             });
 
             await this.replayMissedRecords(currentClient, message.since, message.sinceSeq);

@@ -67,6 +67,16 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
     };
   }, []);
 
+/**
+ * How long a memo may run.
+ *
+ * A memo travels as one encrypted record, and the relay takes a megabyte.
+ * Recorded audio runs at roughly 32 kbit/s, and base64 adds a third again, so
+ * four minutes is about the ceiling - three leaves room and is longer than
+ * anyone speaks into one of these.
+ */
+const MAX_MEMO_SECONDS = 180;
+
   const startRecording = async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -127,7 +137,20 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
       setRecordingSeconds(0);
 
       recordingTimerRef.current = setInterval(() => {
-        setRecordingSeconds(prev => prev + 1);
+        setRecordingSeconds(prev => {
+          // Stopped here rather than at the point of sending: a memo too big
+          // for one relay message cannot be sent at all, and finding that out
+          // after pouring five minutes into it is the wrong moment to learn it.
+          //
+          // Through the refs rather than stopRecording(), which tests a piece
+          // of state captured before recording began and would decline.
+          if (prev + 1 >= MAX_MEMO_SECONDS) {
+            if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+            if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+            setIsRecording(false);
+          }
+          return prev + 1;
+        });
       }, 1000);
     } catch (err) {
       console.warn('Microphone error or permission denied, using procedural memo:', err);

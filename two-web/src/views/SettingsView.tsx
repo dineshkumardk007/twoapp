@@ -10,6 +10,12 @@ import { Shield, Download, Trash2, Palette, Lock, KeyRound, Globe, Calculator, E
 
 interface SettingsViewProps {
   state: SpaceState;
+  /**
+   * Whether the relay is storing what it is sent; null when not connected.
+   * Shown because "connected" and "keeping your history" are not the same
+   * thing, and the difference is otherwise invisible from a phone.
+   */
+  relayDurable?: boolean | null;
   spaceCode?: string;
   currentTheme: ThemeMode;
   onSelectTheme: (theme: ThemeMode) => void;
@@ -74,6 +80,7 @@ interface SettingsViewProps {
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   state,
+  relayDurable = null,
   spaceCode,
   currentTheme,
   onSelectTheme,
@@ -904,6 +911,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span>App Lock:</span>
             <span className="text-linen-primary font-medium">
               {state.pinEnabled ? 'Protected with 4-Digit PIN' : 'Instant Open (No PIN)'}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center text-linen-secondary">
+            <span>Server storage:</span>
+            <span
+              className={`font-medium ${
+                relayDurable === false ? 'text-amber-700' : 'text-linen-primary'
+              }`}
+            >
+              {relayDurable === null
+                ? 'Not connected right now'
+                : relayDurable
+                  ? 'Keeping your history'
+                  : 'Not saving - history at risk'}
             </span>
           </div>
 

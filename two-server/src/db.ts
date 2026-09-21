@@ -461,6 +461,34 @@ class ResilientRelayDb implements RelayDb {
   /** False while Postgres is unreachable. Reported by /health. */
   private healthy = true;
 
+  /**
+   * Told when durability comes and goes.
+   *
+   * The relay passes it on to the couple. A database that has gone away is
+   * invisible from a phone otherwise - messages still arrive, so nothing
+   * looks wrong, while what is being kept for the next device is not being
+   * kept at all.
+   */
+  private healthListeners = new Set<(durable: boolean) => void>();
+
+  onHealthChange(listener: (durable: boolean) => void) {
+    this.healthListeners.add(listener);
+    return () => this.healthListeners.delete(listener);
+  }
+
+  private setHealthy(healthy: boolean) {
+    if (this.healthy === healthy) return;
+    this.healthy = healthy;
+    const durable = this.isDurable;
+    this.healthListeners.forEach(listener => {
+      try {
+        listener(durable);
+      } catch {
+        /* a listener is never allowed to take the database down with it */
+      }
+    });
+  }
+
   /** Records accepted while degraded, replayed into Postgres on recovery. */
   private pending: StoredRecord[] = [];
   private static readonly MAX_PENDING = 10_000;
@@ -533,7 +561,7 @@ class ResilientRelayDb implements RelayDb {
 
     try {
       await this.postgres.init();
-      this.healthy = true;
+      this.setHealthy(true);
       console.log('[Relay DB] PostgreSQL connected.');
     } catch (err: any) {
       this.healthy = false;
@@ -550,7 +578,7 @@ class ResilientRelayDb implements RelayDb {
       this.retryTimer = null;
       try {
         await this.postgres!.init();
-        this.healthy = true;
+        this.setHealthy(true);
         this.retryDelayMs = 5_000;
         console.log('[Relay DB] PostgreSQL recovered.');
         await this.drainPending();
@@ -605,7 +633,7 @@ class ResilientRelayDb implements RelayDb {
     if (this.healthy) {
       console.error('[Relay DB] Write failed, entering degraded mode:', (err as any)?.message || err);
     }
-    this.healthy = false;
+    this.setHealthy(false);
     this.scheduleRetry();
   }
 
