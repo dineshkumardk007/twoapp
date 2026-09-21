@@ -111,7 +111,13 @@ import {
   journalToWire,
   cycleRecordToWire,
   memoryToWire,
+  ritualToWire,
   MEMORY_ADD,
+  LIST_ITEM_SET,
+  LIST_ITEM_DELETE,
+  RITUAL_ADD,
+  MILESTONE_ADD,
+  LETTER_OPENED,
   CHORE_ADD,
   EXPENSE_ADD,
   EXPENSES_SETTLED,
@@ -2030,11 +2036,15 @@ export const App: React.FC = () => {
   };
 
   const handleToggleListItem = (id: string) => {
+    const item = state.lists.find(i => i.id === id);
+    // A hidden item is a surprise the other phone has never been told about,
+    // and ticking one is not the moment to mention it.
+    if (item && !item.isHiddenFromPartner) {
+      shareUpdate(LIST_ITEM_SET, { id, isCompleted: !item.isCompleted });
+    }
     setState(prev => ({
       ...prev,
-      lists: prev.lists.map(item =>
-        item.id === id ? { ...item, isCompleted: !item.isCompleted } : item
-      )
+      lists: prev.lists.map(i => (i.id === id ? { ...i, isCompleted: !i.isCompleted } : i))
     }));
   };
 
@@ -2056,6 +2066,8 @@ export const App: React.FC = () => {
   };
 
   const handleDeleteListItem = (id: string) => {
+    const item = state.lists.find(i => i.id === id);
+    if (item && !item.isHiddenFromPartner) shareUpdate(LIST_ITEM_DELETE, { id });
     setState(prev => ({
       ...prev,
       lists: prev.lists.filter(i => i.id !== id)
@@ -2192,6 +2204,7 @@ export const App: React.FC = () => {
   };
 
   const handleAddRitual = (newRitual: RitualItem) => {
+    shareUpdate(RITUAL_ADD, ritualToWire(newRitual));
     setState(prev => ({
       ...prev,
       rituals: [...prev.rituals, newRitual]
@@ -2208,6 +2221,12 @@ export const App: React.FC = () => {
   };
 
   const handleOpenLetter = (letterId: string) => {
+    const letter = state.letters.find(l => l.id === letterId);
+    // Sent only for a letter written by the other side: whether you opened
+    // your own is nobody's news.
+    if (letter && !letter.isOpened && letter.authorId !== state.activeUser) {
+      shareUpdate(LETTER_OPENED, { id: letterId, openedDate: 'Today' });
+    }
     setState(prev => ({
       ...prev,
       letters: prev.letters.map(l => l.id === letterId ? { ...l, isOpened: true, openedDate: 'Today' } : l)
@@ -2580,6 +2599,7 @@ export const App: React.FC = () => {
   };
 
   const handleAddMilestone = (newMs: RelationshipMilestone) => {
+    shareUpdate(MILESTONE_ADD, newMs);
     setState(prev => ({
       ...prev,
       milestones: [...prev.milestones, newMs]

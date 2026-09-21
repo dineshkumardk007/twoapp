@@ -22,6 +22,9 @@
 import {
   AgreementItem,
   ChoreItem,
+  LoveLetter,
+  RelationshipMilestone,
+  RitualItem,
   CycleRecord,
   CycleSharingLevel,
   ExpenseItem,
@@ -40,6 +43,11 @@ export const AGREEMENT_ADD = 'AGREEMENT_ADD';
 export const CYCLE_RECORD = 'CYCLE_RECORD';
 export const CYCLE_SHARING = 'CYCLE_SHARING';
 export const MEMORY_ADD = 'MEMORY_ADD';
+export const LIST_ITEM_SET = 'LIST_ITEM_SET';
+export const LIST_ITEM_DELETE = 'LIST_ITEM_DELETE';
+export const RITUAL_ADD = 'RITUAL_ADD';
+export const MILESTONE_ADD = 'MILESTONE_ADD';
+export const LETTER_OPENED = 'LETTER_OPENED';
 
 export const SHARED_RECORD_TYPES = new Set([
   CHORE_ADD,
@@ -50,7 +58,12 @@ export const SHARED_RECORD_TYPES = new Set([
   AGREEMENT_ADD,
   CYCLE_RECORD,
   CYCLE_SHARING,
-  MEMORY_ADD
+  MEMORY_ADD,
+  LIST_ITEM_SET,
+  LIST_ITEM_DELETE,
+  RITUAL_ADD,
+  MILESTONE_ADD,
+  LETTER_OPENED
 ]);
 
 type Role = 'user' | 'partner';
@@ -136,9 +149,28 @@ export function memoryToWire(memory: MemoryItem, activeUser: Role) {
   };
 }
 
+/**
+ * A ritual as it starts life on the other phone.
+ *
+ * Whose streak it is does not need translating - a ritual is completed by the
+ * two roles of the space, not by "you" - but the tally travels at zero either
+ * way, because a ritual arrives new to the person receiving it.
+ */
+export function ritualToWire(ritual: RitualItem) {
+  return {
+    id: ritual.id,
+    title: ritual.title,
+    subtitle: ritual.subtitle,
+    duration: ritual.duration,
+    category: ritual.category
+  };
+}
+
 // --- Incoming ----------------------------------------------------------------
 
 const MEMORY_TAGS = new Set(['Milestone', 'Trip', 'Moment', 'Anniversary', 'Whisper']);
+const RITUAL_CATEGORIES = new Set(['affection', 'presence', 'reflection', 'play']);
+const MILESTONE_CATEGORIES = new Set(['first', 'home', 'trip', 'growth', 'commitment']);
 
 const PHASES = new Set(['MENSTRUAL', 'FOLLICULAR', 'OVULATORY', 'LUTEAL']);
 const LEVELS = new Set(['private', 'phase_only', 'phase_and_energy', 'full']);
@@ -268,6 +300,63 @@ export function applySharedRecord(
         authorName: fromRole(author, me)
       };
       return { ...prev, memories: prependUnique(prev.memories || [], memory) };
+    }
+
+    case LIST_ITEM_SET: {
+      // The resulting state, not "toggle". A flip applied twice - a replay, a
+      // second device - would land back where it started and tick an item
+      // nobody ticked.
+      const done = payload.isCompleted === true;
+      return {
+        ...prev,
+        lists: prev.lists.map(item => (item.id === payload.id ? { ...item, isCompleted: done } : item))
+      };
+    }
+
+    case LIST_ITEM_DELETE: {
+      return { ...prev, lists: prev.lists.filter(item => item.id !== payload.id) };
+    }
+
+    case RITUAL_ADD: {
+      if (!isText(payload.title)) return null;
+      const ritual: RitualItem = {
+        id: payload.id,
+        title: payload.title,
+        subtitle: isText(payload.subtitle) ? payload.subtitle : '',
+        duration: isText(payload.duration) ? payload.duration : '',
+        category: RITUAL_CATEGORIES.has(payload.category) ? payload.category : 'presence',
+        completedTodayByUser: false,
+        completedTodayByPartner: false,
+        streakDays: 0
+      };
+      if (prev.rituals.some(r => r.id === ritual.id)) return null;
+      return { ...prev, rituals: [...prev.rituals, ritual] };
+    }
+
+    case MILESTONE_ADD: {
+      if (!isText(payload.title)) return null;
+      const milestone: RelationshipMilestone = {
+        id: payload.id,
+        title: payload.title,
+        date: isText(payload.date) ? payload.date : '',
+        category: MILESTONE_CATEGORIES.has(payload.category) ? payload.category : 'growth',
+        description: isText(payload.description) ? payload.description : '',
+        photoUrl: isText(payload.photoUrl) && payload.photoUrl.startsWith('data:image/') ? payload.photoUrl : undefined
+      };
+      if (prev.milestones.some(m => m.id === milestone.id)) return null;
+      return { ...prev, milestones: [...prev.milestones, milestone] };
+    }
+
+    case LETTER_OPENED: {
+      // Only ever sets opened. A letter cannot become unread, and nothing
+      // should be able to make it look that way.
+      let changed = false;
+      const letters: LoveLetter[] = prev.letters.map(letter => {
+        if (letter.id !== payload.id || letter.isOpened) return letter;
+        changed = true;
+        return { ...letter, isOpened: true, openedDate: isText(payload.openedDate) ? payload.openedDate : 'Today' };
+      });
+      return changed ? { ...prev, letters } : null;
     }
 
     case CYCLE_SHARING: {

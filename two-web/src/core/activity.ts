@@ -84,7 +84,12 @@ const ROUTES: Record<string, { tab: string; tier: ActivityTier }> = {
   EXPENSES_SETTLED: { tab: 'money', tier: 'changed' },
   QUOTE_ADD: { tab: 'timeline', tier: 'changed' },
   CYCLE_RECORD: { tab: 'cycle', tier: 'changed' },
-  CYCLE_SHARING: { tab: 'cycle', tier: 'changed' }
+  CYCLE_SHARING: { tab: 'cycle', tier: 'changed' },
+  LIST_ITEM_SET: { tab: 'lists', tier: 'changed' },
+  LIST_ITEM_DELETE: { tab: 'lists', tier: 'changed' },
+  RITUAL_ADD: { tab: 'rituals', tier: 'changed' },
+  MILESTONE_ADD: { tab: 'timeline', tier: 'changed' },
+  LETTER_OPENED: { tab: 'letters', tier: 'changed' }
 };
 
 /** How this reads on the home screen. Present tense, the partner as subject. */
@@ -129,7 +134,12 @@ const PHRASES: Record<string, string> = {
   EXPENSES_SETTLED: 'settled up',
   QUOTE_ADD: 'left a note in the quote jar',
   CYCLE_RECORD: 'updated their cycle',
-  CYCLE_SHARING: 'changed what they share of their cycle'
+  CYCLE_SHARING: 'changed what they share of their cycle',
+  LIST_ITEM_SET: 'ticked something off a list',
+  LIST_ITEM_DELETE: 'took something off a list',
+  RITUAL_ADD: 'added a ritual',
+  MILESTONE_ADD: 'added a milestone',
+  LETTER_OPENED: 'opened your letter'
 };
 
 /** Where a record belongs, or null when it is plumbing. */
