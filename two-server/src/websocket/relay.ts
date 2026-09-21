@@ -380,8 +380,23 @@ export class WebSocketRelay {
       return;
     }
 
-    // Replay is filtered by authorship, not by the routing id.
-    const eligible = missed.filter(r => r.authorId !== client.authorRole);
+    /**
+     * Whose records come back.
+     *
+     * A reader that is resuming already holds everything it wrote itself, so
+     * its own records are skipped - they would arrive as duplicates of what is
+     * already on screen.
+     *
+     * A reader with no cursor at all is a different thing entirely: a phone
+     * that has just been set up, or reinstalled, or wiped. It holds nothing.
+     * Until now it was still refused its own side, so somebody restoring after
+     * a lost phone got their partner's half of the conversation and none of
+     * their own - every letter they wrote, every memo they left, missing, with
+     * nothing to say why. A reader starting from nothing gets everything the
+     * relay is holding for the space.
+     */
+    const fromScratch = sinceLamport === 0 && seqCursor === 0;
+    const eligible = fromScratch ? missed : missed.filter(r => r.authorId !== client.authorRole);
     const batch = eligible.slice(0, MAX_REPLAY_RECORDS);
 
     for (const record of batch) {

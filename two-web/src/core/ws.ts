@@ -111,6 +111,20 @@ export class WebSocketRelayClient {
    * online now, but nothing is being stored for a phone that is not.
    */
   private durable: boolean | null = null;
+
+  /**
+   * True between asking for history and being told there is no more of it.
+   *
+   * Records arriving inside that window are history rather than news, which is
+   * the difference between a quiet restore and four hundred message chimes.
+   */
+  private replaying = false;
+
+  /**
+   * True when this device asked for history from nothing - a reinstall, a new
+   * phone. Everything it receives is being restored, not happening now.
+   */
+  private restoring = false;
   private partnerOnline = false;
   private presenceInfo: PresenceInfo = { peers: 0, ownDevices: 0, total: 0 };
 
@@ -178,6 +192,11 @@ export class WebSocketRelayClient {
       this.reconnectAttempts = 0;
       this.setStatus('connected');
 
+      const highWater = this.loadHighWaterMark(this.creds.spaceId);
+      const seqCursor = this.loadSeqCursor(this.creds.spaceId);
+      this.replaying = true;
+      this.restoring = highWater === 0 && seqCursor === 0;
+
       this.rawSend({
         type: 'JOIN',
         spaceId: this.creds.spaceId,
@@ -186,12 +205,12 @@ export class WebSocketRelayClient {
         role: this.creds.authorLabel || this.creds.role,
         // Ask only for what we missed while disconnected, so nothing we have
         // already applied gets replayed and duplicated.
-        since: this.loadHighWaterMark(this.creds.spaceId),
+        since: highWater,
         // The relay's own numbering, once we have applied a record carrying
         // one. Zero means "no such cursor yet", and the relay falls back to
         // the clock above - which is what happens on the first connection
         // after an upgrade, and for as long as a relay does not number at all.
-        sinceSeq: this.loadSeqCursor(this.creds.spaceId)
+        sinceSeq: seqCursor
       });
 
       // Each connection pages through history from wherever it left off.
@@ -249,7 +268,11 @@ export class WebSocketRelayClient {
     }
 
     if (payload?.type === 'REPLAY_COMPLETE') {
-      this.emit(payload);
+      if (!payload.more) {
+        this.replaying = false;
+        this.restoring = false;
+      }
+      this.emit({ ...payload, restoring: this.restoring });
       // A relay that says there is more has capped this batch; ask for the
       // rest. Ordering is safe because inbound messages are chained, so every
       // record in this page has already been applied and both cursors moved
@@ -314,7 +337,13 @@ export class WebSocketRelayClient {
         record.type
       );
       // Same shape subscribers have always received: payload is a JSON string.
-      this.emit({ type: 'REMOTE_RECORD', record: { ...record, payload: plaintext } });
+      this.emit({
+        type: 'REMOTE_RECORD',
+        record: { ...record, payload: plaintext },
+        // History, not news: the screen treats the two differently.
+        replay: this.replaying,
+        restoring: this.restoring
+      });
       this.saveHighWaterMark(creds.spaceId, Number(record.lamportClock));
       this.saveSeqCursor(creds.spaceId, Number(record.seq));
     } catch {

@@ -582,7 +582,10 @@ export const App: React.FC = () => {
          * Our own records, arriving back from another of our devices, are not
          * news to us.
          */
-        if (record.authorId !== state.activeUser) {
+        // Not while restoring: a phone rebuilding its whole history would
+        // otherwise open on every destination marked unread, with a hundred
+        // lines of news about things that happened months ago.
+        if (record.authorId !== state.activeUser && !msg.restoring) {
           const route = routeFor(record.type);
           if (route) {
             const at = Number(record.clientTs) || Date.now();
@@ -626,6 +629,9 @@ export const App: React.FC = () => {
           }
 
           if (record.type === 'NAME_EXCHANGE') {
+            // Our own name, coming back from another of our devices or from a
+            // restore, would otherwise be adopted as the partner's.
+            if (record.authorId === state.activeUser) return;
             if (parsed.name && typeof parsed.name === 'string') {
               setState(prev => ({
                 ...prev,
@@ -659,7 +665,7 @@ export const App: React.FC = () => {
                 messages: insertBySentAt(prev.messages, applied).slice(-MAX_CHAT_MESSAGES)
               };
             });
-            const isFromPartner = record.authorId !== state.activeUser;
+            const isFromPartner = record.authorId !== state.activeUser && !msg.replay;
             if (isFromPartner) {
               playMessageChime();
               triggerHaptic([35, 45, 35]);
@@ -712,7 +718,7 @@ export const App: React.FC = () => {
               ...prev,
               letters: [parsed, ...prev.letters.filter(l => l.id !== parsed.id)]
             }));
-            const isFromPartner = record.authorId !== state.activeUser;
+            const isFromPartner = record.authorId !== state.activeUser && !msg.replay;
             if (isFromPartner) {
               playLetterChime();
               triggerHaptic([45, 55, 45]);
