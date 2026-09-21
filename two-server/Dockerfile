@@ -6,7 +6,6 @@ WORKDIR /app
 COPY package*.json tsconfig.json ./
 RUN npm ci
 
-COPY prisma ./prisma
 COPY src ./src
 
 RUN npx tsc
@@ -20,9 +19,8 @@ ENV NODE_ENV=production
 ENV PORT=4000
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
-COPY prisma ./prisma
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 4000
