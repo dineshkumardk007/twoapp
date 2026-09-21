@@ -18,7 +18,18 @@ const PORT = Number(process.env.PORT || 4000);
  * far back can a new phone catch up", and the cost of a longer window is
  * database size.
  */
-const RETENTION_DAYS = Number(process.env.RETENTION_DAYS || 90);
+/**
+ * How far back the relay can rebuild a phone.
+ *
+ * Ninety days was chosen when replay was only ever a reconnecting device
+ * catching up on a fortnight away. Now a phone that has lost everything is
+ * restored from here, and this is the ceiling on what "everything" means - at
+ * ninety days, somebody restoring in a year's time would find their first
+ * nine months missing. A year, with the whole-state records collapsed to
+ * their newest (see LATEST_ONLY_TYPES), is far less than ninety days of the
+ * old duplicates.
+ */
+const RETENTION_DAYS = Number(process.env.RETENTION_DAYS || 365);
 const SWEEP_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 // In production, pin this to the deployed origin via CORS_ORIGIN. The default

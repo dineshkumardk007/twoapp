@@ -30,7 +30,30 @@ export const PRESENCE_BEAT = 'PRESENCE_BEAT';
  * duplicate. Collapsing them keeps a chatty group from burying its own
  * messages in the 2000-record replay a new device receives.
  */
-export const LATEST_ONLY_TYPES = new Set([PRESENCE_BEAT, 'GROUP_HELLO', 'GROUP_READ']);
+export const LATEST_ONLY_TYPES = new Set([
+  PRESENCE_BEAT,
+  'GROUP_HELLO',
+  'GROUP_READ',
+  // Each of these carries the whole of something rather than a change to it:
+  // the entire capsule list, the whole garden, this week's check-in. The app
+  // applies one by replacing what it holds, so an older copy is not history,
+  // it is the same thing with less in it. Keeping every copy stored a
+  // couple's scrapbook once per edit - and for whisper memos, once per edit
+  // with all of the audio inside it.
+  'ADVENTURE_UPDATE',
+  'TIME_CAPSULE_UPDATE',
+  'SCRATCH_CARD_UPDATE',
+  'WHISPER_MEMO_UPDATE',
+  'COORDINATES_UPDATE',
+  'GARDEN_UPDATE',
+  'NIGHTSTAND_UPDATE',
+  'MIDNIGHT_RADIO_SYNC',
+  'SOFT_LANDING_UPDATE',
+  'STATE_OF_UNION_UPDATE',
+  'CARE_COMPASS',
+  'NOT_ABOUT_YOU',
+  'WEATHER'
+]);
 
 /**
  * Types kept only to a depth, oldest discarded past it.
@@ -46,7 +69,12 @@ export const LATEST_ONLY_TYPES = new Set([PRESENCE_BEAT, 'GROUP_HELLO', 'GROUP_R
  * Trimmed by the daily sweep rather than on every insert: the cost of the
  * query does not belong in the path a live stroke travels.
  */
-export const CAPPED_TYPES = new Map<string, number>([['CANVAS_STROKE', 2000]]);
+export const CAPPED_TYPES = new Map<string, number>([
+  ['CANVAS_STROKE', 2000],
+  // One record each, and each can carry a voice recording. A year of them is
+  // worth keeping; an unbounded pile of them on a free database is not.
+  ['WHISPER_MEMO', 500]
+]);
 
 export interface StoredRecord {
   id: string;

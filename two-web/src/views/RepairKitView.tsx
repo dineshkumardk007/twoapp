@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AgreementItem } from '../types';
 import { Handshake, Search, Clock, Lock, Sparkles, Heart, Play, Pause, RotateCcw, CheckCircle } from 'lucide-react';
+import { whenLabel } from '../core/when';
 
 interface RepairKitViewProps {
   agreements: AgreementItem[];
@@ -93,7 +94,8 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
       title: newTitle.trim(),
       trigger: newTrigger.trim() || 'Emotional friction or stress',
       resolution: newResolution.trim(),
-      date: 'Today'
+      date: 'Today',
+      at: Date.now()
     });
     setNewTitle('');
     setNewTrigger('');
@@ -419,7 +421,7 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
                 <div key={item.id} className="p-5 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-2">
                   <div className="flex items-center justify-between text-xs text-linen-secondary">
                     <span className="font-semibold text-linen-primary text-sm">{item.title}</span>
-                    <span className="font-mono text-[11px]">{item.date}</span>
+                    <span className="font-mono text-[11px]">{whenLabel(item.at, item.date)}</span>
                   </div>
                   <p className="text-xs text-linen-secondary">
                     <strong>Trigger Situation:</strong> {item.trigger}

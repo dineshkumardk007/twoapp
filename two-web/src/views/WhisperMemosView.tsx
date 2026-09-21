@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { WhisperMemoItem, WhisperCategory } from '../types';
 import { Mic, Square, Play, Pause, RotateCcw, Volume2, Plus, Sparkles, Heart, MessageSquare, Clock, Check, Radio, Trash2, X, Send } from 'lucide-react';
 import { newId } from '../core/ids';
+import { whenLabel } from '../core/when';
 
 interface WhisperMemosViewProps {
   memos: WhisperMemoItem[];
@@ -18,6 +19,16 @@ const CATEGORY_META: Record<WhisperCategory, { label: string; icon: string; colo
   love_letter: { label: 'Audio Love Letter', icon: '💌', color: 'bg-rose-50 text-rose-800 border-rose-200' },
   comfort: { label: 'Comfort & Safety', icon: '🧸', color: 'bg-teal-50 text-teal-800 border-teal-200' }
 };
+
+/**
+ * How long a memo may run.
+ *
+ * A memo travels as one encrypted record, and the relay takes a megabyte.
+ * Recorded audio runs at roughly 32 kbit/s, and base64 adds a third again, so
+ * four minutes is about the ceiling - three leaves room and is longer than
+ * anyone speaks into one of these.
+ */
+const MAX_MEMO_SECONDS = 180;
 
 export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
   memos,
@@ -66,16 +77,6 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
       }
     };
   }, []);
-
-/**
- * How long a memo may run.
- *
- * A memo travels as one encrypted record, and the relay takes a megabyte.
- * Recorded audio runs at roughly 32 kbit/s, and base64 adds a third again, so
- * four minutes is about the ceiling - three leaves room and is longer than
- * anyone speaks into one of these.
- */
-const MAX_MEMO_SECONDS = 180;
 
   const startRecording = async () => {
     try {
@@ -196,6 +197,7 @@ const MAX_MEMO_SECONDS = 180;
       authorId: activeUser,
       authorName,
       recipientId,
+      at: Date.now(),
       recordedAt: 'Just now',
       durationSeconds: duration,
       audioDataUrl: recordedAudioUrl || undefined,
@@ -422,7 +424,7 @@ const MAX_MEMO_SECONDS = 180;
                     </span>
 
                     <div className="flex items-center space-x-2 text-[11px] text-linen-secondary">
-                      <span>{memo.recordedAt}</span>
+                      <span>{whenLabel(memo.at, memo.recordedAt)}</span>
                       {memo.isListened && (
                         <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md text-[10px] font-medium border border-emerald-200">
                           ✓ Heard

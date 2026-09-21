@@ -35,6 +35,8 @@ export interface ChatMessage {
 
 export interface JournalEntry {
   id: string;
+  /** When it was written. Absent on entries from before this was recorded. */
+  at?: number;
   authorId: string;
   authorName: string;
   title: string;
@@ -45,6 +47,7 @@ export interface JournalEntry {
 
 export interface AgreementItem {
   id: string;
+  at?: number;
   title: string;
   trigger: string;
   resolution: string;
@@ -68,6 +71,7 @@ export interface ChoreItem {
 
 export interface ExpenseItem {
   id: string;
+  at?: number;
   title: string;
   amount: number;
   paidBy: string;
@@ -82,6 +86,7 @@ export interface QuoteItem {
 }
 
 export interface ConsentLog {
+  at?: number;
   id: string;
   kind: 'location' | 'cycle' | 'export' | 'ai_refinement';
   action: 'grant' | 'revoke' | 'access';
@@ -131,6 +136,7 @@ export type LetterCondition = 'none' | 'date' | 'anxious' | 'night' | 'travel';
 
 export interface LoveLetter {
   id: string;
+  at?: number;
   authorId: string;
   authorName: string;
   title: string;
@@ -381,7 +387,7 @@ export interface HearthGardenState {
   totalWaterings: number;
   totalSunbaths: number;
   blossoms: GardenBlossom[];
-  growthLog: { id: string; event: string; timestamp: string }[];
+  growthLog: { id: string; event: string; timestamp: string; at?: number }[];
 }
 
 export type SoftLandingPhase = 'idle' | 'breather_active' | 'nvc_reflection' | 'ready_to_reconnect' | 'resolved';
@@ -412,6 +418,7 @@ export type WhisperCategory = 'morning' | 'midnight' | 'coffee' | 'love_letter' 
 
 export interface WhisperMemoItem {
   id: string;
+  at?: number;
   title: string;
   category: WhisperCategory;
   authorId: 'user' | 'partner';

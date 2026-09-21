@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ExpenseItem } from '../types';
 import { DollarSign, Plus, CheckCircle2 } from 'lucide-react';
+import { whenLabel } from '../core/when';
 
 interface MoneyLightViewProps {
   expenses: ExpenseItem[];
@@ -30,6 +31,7 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
     const num = parseFloat(amount);
     if (!title.trim() || isNaN(num) || num <= 0) return;
     onAddExpense({
+      at: Date.now(),
       title: title.trim(),
       amount: num,
       paidBy,
@@ -111,7 +113,7 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
           <div key={e.id} className="p-4 rounded-2xl border border-linen-border bg-linen-surface shadow-xs flex items-center justify-between">
             <div>
               <span className="font-medium text-sm text-linen-primary block">{e.title}</span>
-              <span className="text-xs text-linen-secondary">Paid by {e.paidBy} • {e.date}</span>
+              <span className="text-xs text-linen-secondary">Paid by {e.paidBy} • {whenLabel(e.at, e.date)}</span>
             </div>
             <span className="font-serif text-base font-medium text-linen-accent">${e.amount.toFixed(2)}</span>
           </div>

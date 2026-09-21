@@ -7,6 +7,7 @@ import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
 import { Shield, Download, Trash2, Palette, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw } from 'lucide-react';
+import { whenLabel } from '../core/when';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -1200,7 +1201,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </span>
                 <span className="text-linen-secondary">{log.details}</span>
               </div>
-              <span className="text-[10px] text-linen-secondary">{log.timestamp}</span>
+              <span className="text-[10px] text-linen-secondary">{whenLabel(log.at, log.timestamp)}</span>
             </div>
           ))}
         </div>

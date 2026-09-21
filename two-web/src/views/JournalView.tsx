@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { JournalEntry } from '../types';
 import { Lock, Globe, Plus, Share2, Shield } from 'lucide-react';
+import { whenLabel } from '../core/when';
 
 interface JournalViewProps {
   entries: JournalEntry[];
@@ -33,6 +34,7 @@ export const JournalView: React.FC<JournalViewProps> = ({
   const handleSave = () => {
     if (!newTitle.trim() || !newContent.trim()) return;
     onAddEntry({
+      at: Date.now(),
       authorId: activeUser,
       authorName: currentAuthorName,
       title: newTitle.trim(),
@@ -153,7 +155,7 @@ export const JournalView: React.FC<JournalViewProps> = ({
             >
               <div className="flex items-center justify-between text-xs text-linen-secondary">
                 <span className="font-medium text-linen-primary">{entry.authorName}</span>
-                <span>{entry.date}</span>
+                <span>{whenLabel(entry.at, entry.date)}</span>
               </div>
               <h3 className="font-serif text-lg font-medium text-linen-primary">{entry.title}</h3>
               <p className="text-sm text-linen-secondary leading-relaxed whitespace-pre-wrap">{entry.content}</p>

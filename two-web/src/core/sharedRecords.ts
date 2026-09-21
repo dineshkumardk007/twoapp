@@ -48,6 +48,8 @@ export const LIST_ITEM_DELETE = 'LIST_ITEM_DELETE';
 export const RITUAL_ADD = 'RITUAL_ADD';
 export const MILESTONE_ADD = 'MILESTONE_ADD';
 export const LETTER_OPENED = 'LETTER_OPENED';
+export const WHISPER_MEMO = 'WHISPER_MEMO';
+export const WHISPER_MEMO_HEARD = 'WHISPER_MEMO_HEARD';
 
 export const SHARED_RECORD_TYPES = new Set([
   CHORE_ADD,
@@ -63,7 +65,9 @@ export const SHARED_RECORD_TYPES = new Set([
   LIST_ITEM_DELETE,
   RITUAL_ADD,
   MILESTONE_ADD,
-  LETTER_OPENED
+  LETTER_OPENED,
+  WHISPER_MEMO,
+  WHISPER_MEMO_HEARD
 ]);
 
 type Role = 'user' | 'partner';
@@ -108,6 +112,7 @@ export function quoteToWire(quote: QuoteItem, activeUser: Role) {
 export function journalToWire(entry: JournalEntry) {
   return {
     id: entry.id,
+    at: entry.at,
     authorId: entry.authorId,
     title: entry.title,
     content: entry.content,
@@ -227,6 +232,7 @@ export function applySharedRecord(
       const author = payload.authorId === 'user' || payload.authorId === 'partner' ? payload.authorId : authorId;
       const entry: JournalEntry = {
         id: payload.id,
+        at: Number.isFinite(Number(payload.at)) ? Number(payload.at) : undefined,
         authorId: author,
         authorName: fromRole(author, me),
         title: payload.title,
@@ -357,6 +363,32 @@ export function applySharedRecord(
         return { ...letter, isOpened: true, openedDate: isText(payload.openedDate) ? payload.openedDate : 'Today' };
       });
       return changed ? { ...prev, letters } : null;
+    }
+
+    case WHISPER_MEMO: {
+      if (!isText(payload.title)) return null;
+      // Whatever the memo carries, minus anything that would make the other
+      // phone fetch something: a recording is embedded or it is not there.
+      const audio =
+        isText(payload.audioDataUrl) && payload.audioDataUrl.startsWith('data:audio/')
+          ? payload.audioDataUrl
+          : undefined;
+      const memo = {
+        ...payload,
+        audioDataUrl: audio,
+        isListened: payload.isListened === true
+      } as SpaceState['whisperMemos'][number];
+      return { ...prev, whisperMemos: prependUnique(prev.whisperMemos, memo) };
+    }
+
+    case WHISPER_MEMO_HEARD: {
+      let changed = false;
+      const whisperMemos = prev.whisperMemos.map(memo => {
+        if (memo.id !== payload.id || memo.isListened) return memo;
+        changed = true;
+        return { ...memo, isListened: true, listenedAt: 'Just now' };
+      });
+      return changed ? { ...prev, whisperMemos } : null;
     }
 
     case CYCLE_SHARING: {

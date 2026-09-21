@@ -3,6 +3,7 @@ import { HearthGardenState, GardenBlossom, BlossomType } from '../types';
 import { HearthGardenCanvas, playWaterDropSound, playSunlightChime, playBlossomPopSound } from '../components/HearthGardenCanvas';
 import { Sprout, Droplets, Sun, Heart, Sparkles, Scissors, Clock, Plus, X, MessageSquare, History, ShieldCheck } from 'lucide-react';
 import { newId } from '../core/ids';
+import { whenLabel } from '../core/when';
 
 interface HearthGardenViewProps {
   garden: HearthGardenState;
@@ -61,7 +62,8 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
         {
           id: newId('log'),
           event: `${authorName} watered the bonsai with morning dew. Vitality raised to ${newVitality}%.`,
-          timestamp: 'Just now'
+          timestamp: 'Just now',
+          at: Date.now()
         },
         ...garden.growthLog
       ]
@@ -90,7 +92,8 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
         {
           id: newId('log'),
           event: `${authorName} opened the window shutters to bask the canopy in warm sunlight.`,
-          timestamp: 'Just now'
+          timestamp: 'Just now',
+          at: Date.now()
         },
         ...garden.growthLog
       ]
@@ -111,7 +114,8 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
         {
           id: newId('log'),
           event: `${authorName} mindfully pruned old twigs and cleared mental noise.`,
-          timestamp: 'Just now'
+          timestamp: 'Just now',
+          at: Date.now()
         },
         ...garden.growthLog
       ]
@@ -153,7 +157,8 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
         {
           id: newId('log'),
           event: `${authorName} sprouted a ${blossomType.replace('_', ' ')} blossom: "${blossomNote.trim()}".`,
-          timestamp: 'Just now'
+          timestamp: 'Just now',
+          at: Date.now()
         },
         ...garden.growthLog
       ]
@@ -369,7 +374,9 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
               <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
               <div className="flex-1">
                 <p className="text-linen-primary">{log.event}</p>
-                <span className="text-[11px] text-linen-secondary mt-0.5 block">{log.timestamp}</span>
+                <span className="text-[11px] text-linen-secondary mt-0.5 block">
+                  {whenLabel(log.at, log.timestamp)}
+                </span>
               </div>
             </div>
           ))}

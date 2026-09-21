@@ -112,6 +112,8 @@ import {
   cycleRecordToWire,
   memoryToWire,
   ritualToWire,
+  WHISPER_MEMO,
+  WHISPER_MEMO_HEARD,
   MEMORY_ADD,
   LIST_ITEM_SET,
   LIST_ITEM_DELETE,
@@ -1951,7 +1953,11 @@ export const App: React.FC = () => {
   };
 
   const handleUpdateReport = (updatedFields: any) => {
-    wsRelay.broadcastUpdate('WEATHER', updatedFields);
+    // The whole report, not the field that changed. The relay keeps only the
+    // newest of these now, and a newest that says "capacity 3" and nothing
+    // about the weather would lose the weather.
+    const mine = state.activeUser === 'user' ? state.userReport : state.partnerReport;
+    wsRelay.broadcastUpdate('WEATHER', { ...mine, ...updatedFields });
     setState(prev => {
       const isMe = prev.activeUser === 'user';
       return {
@@ -2148,6 +2154,7 @@ export const App: React.FC = () => {
         {
           id: newId(),
           kind: 'cycle',
+          at: Date.now(),
           action: level === 'private' ? 'revoke' : 'grant',
           details: `Cycle sharing level updated to: ${level}`,
           timestamp: 'Just now'
@@ -2366,25 +2373,28 @@ export const App: React.FC = () => {
     }));
   };
 
+  /**
+   * One memo per message, rather than the whole letterbox each time.
+   *
+   * Every memo carries its own recording, so sending the list meant sending
+   * every recording again on every change - past a few memos that is more
+   * than a single relay message can hold, and the memo simply did not arrive.
+   */
   const handleAddWhisperMemo = (newMemo: WhisperMemoItem) => {
-    setState(prev => {
-      const updated = [newMemo, ...prev.whisperMemos];
-      wsRelay.broadcastUpdate('WHISPER_MEMO_UPDATE', updated);
-      localMesh.broadcastLocally('WHISPER_MEMO_UPDATE', updated, prev.activeUser);
-      return {
-        ...prev,
-        whisperMemos: updated
-      };
-    });
+    shareUpdate(WHISPER_MEMO, newMemo);
+    setState(prev => ({
+      ...prev,
+      whisperMemos: [newMemo, ...prev.whisperMemos]
+    }));
   };
 
   const handleMarkWhisperListened = (memoId: string) => {
+    // Just the fact that it was heard - not the recording all over again.
+    shareUpdate(WHISPER_MEMO_HEARD, { id: memoId, at: Date.now() });
     setState(prev => {
       const updated = prev.whisperMemos.map(m =>
         m.id === memoId ? { ...m, isListened: true, listenedAt: 'Just now' } : m
       );
-      wsRelay.broadcastUpdate('WHISPER_MEMO_UPDATE', updated);
-      localMesh.broadcastLocally('WHISPER_MEMO_UPDATE', updated, prev.activeUser);
       return {
         ...prev,
         whisperMemos: updated

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LoveLetter, WaxColor, LetterCondition } from '../types';
 import { Mail, Feather, Heart, Sparkles, Lock, Unlock, Calendar, Moon, Plane, Shield, X, CheckCircle2 } from 'lucide-react';
 import { newId } from '../core/ids';
+import { whenLabel } from '../core/when';
 
 interface LettersViewProps {
   letters: LoveLetter[];
@@ -55,6 +56,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
       waxColor,
       conditionType,
       conditionDetail: conditionDetail.trim() || undefined,
+      at: Date.now(),
       sentDate: 'Today',
       isOpened: false
     };
@@ -172,7 +174,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-linen-accent">
-                    From {letter.authorName} • {letter.sentDate}
+                    From {letter.authorName} • {whenLabel(letter.at, letter.sentDate)}
                   </span>
                   <h3 className="font-serif text-lg font-medium text-linen-primary group-hover:text-linen-accent transition-colors">
                     {letter.title}
@@ -253,7 +255,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
             <div className="border-b border-[#D8CEB0] pb-4 space-y-1">
               <div className="flex items-center justify-between text-xs text-[#736357]">
                 <span className="font-mono uppercase tracking-wider">From: {selectedLetter.authorName}</span>
-                <span>{selectedLetter.sentDate}</span>
+                <span>{whenLabel(selectedLetter.at, selectedLetter.sentDate)}</span>
               </div>
               <h3 className="font-serif text-2xl font-medium tracking-tight text-[#2B231D]">
                 {selectedLetter.title}
