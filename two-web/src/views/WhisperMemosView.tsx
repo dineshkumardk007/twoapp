@@ -3,6 +3,7 @@ import { WhisperMemoItem, WhisperCategory } from '../types';
 import { Mic, Square, Play, Pause, RotateCcw, Volume2, Plus, Sparkles, Heart, MessageSquare, Clock, Check, Radio, Trash2, X, Send } from 'lucide-react';
 import { newId } from '../core/ids';
 import { whenLabel } from '../core/when';
+import { MAX_RECORD_BYTES, recordSizeOf } from '../core/ws';
 
 interface WhisperMemosViewProps {
   memos: WhisperMemoItem[];
@@ -23,12 +24,37 @@ const CATEGORY_META: Record<WhisperCategory, { label: string; icon: string; colo
 /**
  * How long a memo may run.
  *
- * A memo travels as one encrypted record, and the relay takes a megabyte.
- * Recorded audio runs at roughly 32 kbit/s, and base64 adds a third again, so
- * four minutes is about the ceiling - three leaves room and is longer than
- * anyone speaks into one of these.
+ * A memo travels as one encrypted record, and the relay takes a megabyte. The
+ * recording is base64 inside the memo, and the encrypted memo is base64 again
+ * on the way out, so what is sent is about 1.8 times the recording. At
+ * VOICE_BITS_PER_SECOND three minutes is about 360 KB of audio - 640 KB sent.
  */
 const MAX_MEMO_SECONDS = 180;
+
+/**
+ * Asked of the recorder: speech quality, the rate voice notes are usually sent
+ * at. Left to itself a phone records at several times this, and a memo over
+ * about a minute and a half then became too big to send.
+ */
+const VOICE_BITS_PER_SECOND = 16_000;
+
+/**
+ * The most audio a memo may hold - about 960 KB once sent. Recording stops
+ * here even inside the time limit, for a phone that ignores the rate above.
+ */
+const MAX_AUDIO_BYTES = 540_000;
+
+/** Opus in WebM where the phone has it; otherwise whatever it records by default. */
+function openRecorder(stream: MediaStream): MediaRecorder {
+  const mimeType = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'].find(
+    type => typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(type)
+  );
+  try {
+    return new MediaRecorder(stream, { mimeType, audioBitsPerSecond: VOICE_BITS_PER_SECOND });
+  } catch {
+    return new MediaRecorder(stream);
+  }
+}
 
 export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
   memos,
@@ -47,6 +73,8 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
   const [liveVolumeBars, setLiveVolumeBars] = useState<number[]>([0.2, 0.4, 0.3, 0.5, 0.7, 0.4, 0.6]);
   const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
   const [recordedWaveform, setRecordedWaveform] = useState<number[]>([]);
+  /** Why recording stopped by itself, or why a memo could not be sent. */
+  const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
   // Form State
   const [memoTitle, setMemoTitle] = useState('');
@@ -99,10 +127,22 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
         return;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      // One channel: a phone's second is a copy of the first, at twice the size.
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
+      const mediaRecorder = openRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
+      setLimitNotice(null);
+      let audioBytes = 0;
+
+      // Through the refs rather than stopRecording(), which tests a piece of
+      // state captured before recording began and would decline.
+      const stopAtLimit = () => {
+        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        setIsRecording(false);
+        setLimitNotice('Stopped here - the longest a memo can be.');
+      };
 
       // Setup Web Audio Analyser for live visual bars
       try {
@@ -127,11 +167,15 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
       } catch (_) {}
 
       mediaRecorder.ondataavailable = e => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        if (e.data.size === 0) return;
+        audioChunksRef.current.push(e.data);
+        audioBytes += e.data.size;
+        if (audioBytes >= MAX_AUDIO_BYTES && mediaRecorder.state === 'recording') stopAtLimit();
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        // The type the recorder actually used - not every phone records WebM.
+        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
         const reader = new FileReader();
         reader.onloadend = () => {
           setRecordedAudioUrl(reader.result as string);
@@ -156,14 +200,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
           // Stopped here rather than at the point of sending: a memo too big
           // for one relay message cannot be sent at all, and finding that out
           // after pouring five minutes into it is the wrong moment to learn it.
-          //
-          // Through the refs rather than stopRecording(), which tests a piece
-          // of state captured before recording began and would decline.
-          if (prev + 1 >= MAX_MEMO_SECONDS) {
-            if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-            if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-            setIsRecording(false);
-          }
+          if (prev + 1 >= MAX_MEMO_SECONDS && mediaRecorder.state === 'recording') stopAtLimit();
           return prev + 1;
         });
       }, 1000);
@@ -220,7 +257,16 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
       waveformData: recordedWaveform.length ? recordedWaveform : [0.3, 0.5, 0.7, 0.8, 0.6, 0.4, 0.7, 0.9, 0.7, 0.4, 0.2]
     };
 
+    // The last word, whatever the recorder did: a memo the relay would refuse
+    // is kept here with the choice to re-record, not added to the letterbox
+    // looking sent while it never arrives.
+    if (recordSizeOf(newMemo) > MAX_RECORD_BYTES) {
+      setLimitNotice('This memo is too long to send. Re-record a shorter one.');
+      return;
+    }
+
     onAddMemo(newMemo);
+    setLimitNotice(null);
     setShowRecordModal(false);
 
     // Reset form
@@ -591,6 +637,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                       onClick={() => {
                         setRecordedAudioUrl(null);
                         setRecordingSeconds(0);
+                        setLimitNotice(null);
                       }}
                       className="px-3 py-1.5 rounded-lg bg-stone-800 text-stone-300 text-xs hover:bg-stone-700 transition-colors flex items-center space-x-1"
                     >
@@ -599,6 +646,12 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                     </button>
                     <span className="text-xs text-emerald-400">✓ Recorded ({formatSeconds(recordingSeconds)})</span>
                   </div>
+                )}
+
+                {limitNotice && (
+                  <p role="status" className="mt-3 text-center text-[11px] text-amber-300">
+                    {limitNotice}
+                  </p>
                 )}
               </div>
 

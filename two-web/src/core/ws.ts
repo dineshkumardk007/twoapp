@@ -37,7 +37,21 @@ const MAX_OUTBOX = 500;
  * retried forever. A voice memo of a few minutes did that, and the screen
  * said it had been sent.
  */
-const MAX_RECORD_BYTES = 1024 * 1024;
+export const MAX_RECORD_BYTES = 1024 * 1024;
+
+/** Everything in a record besides its payload: ids, nonce, clocks, field names. */
+const RECORD_ENVELOPE_BYTES = 600;
+
+/**
+ * How big `data` will be once encrypted and wrapped as a record - the number
+ * MAX_RECORD_BYTES applies to. Mirrors encryptAndSend: the JSON is encrypted
+ * (plus a 16-byte tag) and the ciphertext is sent as base64, so anything that
+ * is already base64 inside it - a photo, a recording - grows by a third twice.
+ */
+export function recordSizeOf(data: unknown): number {
+  const plain = new TextEncoder().encode(JSON.stringify(data)).length;
+  return Math.ceil((plain + 16) / 3) * 4 + RECORD_ENVELOPE_BYTES;
+}
 const MAX_APPLIED_IDS = 4_000;
 const HEARTBEAT_MS = 25_000;
 const RECONNECT_BASE_MS = 1_000;
@@ -111,6 +125,14 @@ export class WebSocketRelayClient {
    * online now, but nothing is being stored for a phone that is not.
    */
   private durable: boolean | null = null;
+
+  /**
+   * Call relay (TURN) logins, handed over by the relay. Null until it does,
+   * or when it has none to give - a call then uses STUN alone, as it always
+   * did.
+   */
+  private iceServers: { servers: RTCIceServer[]; expiresAt: number } | null = null;
+  private iceWaiters: Array<() => void> = [];
 
   /**
    * True between asking for history and being told there is no more of it.
@@ -254,6 +276,18 @@ export class WebSocketRelayClient {
     if (payload?.type === 'JOINED' || payload?.type === 'RELAY_STATUS') {
       this.setDurable(payload.storage === 'memory' ? false : payload.durable !== false);
       if (payload.type === 'RELAY_STATUS') return;
+    }
+
+    if (payload?.type === 'ICE_SERVERS') {
+      const servers = Array.isArray(payload.iceServers) ? (payload.iceServers as RTCIceServer[]) : null;
+      const expiresAt = Number(payload.expiresAt);
+      if (servers && servers.length > 0 && Number.isFinite(expiresAt)) {
+        this.iceServers = { servers, expiresAt };
+      }
+      const waiters = this.iceWaiters;
+      this.iceWaiters = [];
+      waiters.forEach(done => done());
+      return;
     }
 
     if (payload?.type === 'PRESENCE') {
@@ -820,6 +854,38 @@ export class WebSocketRelayClient {
     return () => {
       this.durableListeners.delete(callback);
     };
+  }
+
+  /**
+   * Call relay servers for a call about to connect, or null for none.
+   *
+   * Uses what the relay handed over on joining while it has comfortably
+   * longer to run than any call; otherwise asks again. Never waits longer
+   * than `timeoutMs` - a relay that has not answered by then, or an older one
+   * that does not know the question, leaves the call exactly as it was before
+   * there was any TURN at all.
+   */
+  async getIceServers(timeoutMs = 2_000): Promise<RTCIceServer[] | null> {
+    const fresh = () =>
+      this.iceServers && this.iceServers.expiresAt - Date.now() > 60 * 60 * 1000 ? this.iceServers.servers : null;
+    if (fresh()) return fresh();
+    if (!this.isOpen() || !this.creds) return this.usableIceServers();
+
+    await new Promise<void>(resolve => {
+      const timer = setTimeout(done, timeoutMs);
+      function done() {
+        clearTimeout(timer);
+        resolve();
+      }
+      this.iceWaiters.push(done);
+      this.rawSend({ type: 'ICE_SERVERS_REQUEST' });
+    });
+    return this.usableIceServers();
+  }
+
+  /** Whatever is held and not yet expired - old logins still beat none. */
+  private usableIceServers(): RTCIceServer[] | null {
+    return this.iceServers && this.iceServers.expiresAt > Date.now() ? this.iceServers.servers : null;
   }
 
   /** Notifies when the partner's device joins or leaves the space. */
