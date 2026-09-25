@@ -6,6 +6,7 @@ import {
   Search, Filter, Camera, Heart, BookOpen, Stamp
 } from 'lucide-react';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface AdventuresViewProps {
   adventures: AdventureItem[];
@@ -33,9 +34,8 @@ const SEASONS: { id: AdventureSeason | 'all'; label: string }[] = [
 
 function playTickSound(pitch = 600) {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
@@ -52,9 +52,8 @@ function playTickSound(pitch = 600) {
 
 function playStampSuccessSound() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
     
     // Thump

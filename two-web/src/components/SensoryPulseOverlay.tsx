@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Heart, Sparkles } from 'lucide-react';
 import { wsRelay } from '../core/ws';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface SensoryPulseOverlayProps {
   activeUser: 'user' | 'partner';
@@ -9,10 +10,8 @@ interface SensoryPulseOverlayProps {
 // Web Audio API acoustic synthesis (Warm 528Hz Solfeggio Love frequency harmonic)
 function playGentleHarmonicChime() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     if (ctx.state === 'suspended') {
       ctx.resume();
     }

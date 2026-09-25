@@ -67,11 +67,25 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
 
   const activeAudioElementRef = useRef<HTMLAudioElement | null>(null);
 
+  /**
+   * The recorder's context is its own, because the microphone is wired into
+   * it - and it is closed the moment recording ends. Left open, each memo
+   * held one of the handful of contexts a phone allows, until every sound in
+   * the app stopped.
+   */
+  const releaseLiveBars = () => {
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    analyserRef.current = null;
+    const ctx = audioContextRef.current;
+    audioContextRef.current = null;
+    if (ctx && ctx.state !== 'closed') ctx.close().catch(() => {});
+  };
+
   // Clean up on unmount
   useEffect(() => {
     return () => {
       if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      releaseLiveBars();
       if (activeAudioElementRef.current) {
         activeAudioElementRef.current.pause();
       }
@@ -130,7 +144,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
 
         // Stop stream tracks
         stream.getTracks().forEach(t => t.stop());
-        if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+        releaseLiveBars();
       };
 
       mediaRecorder.start(100);

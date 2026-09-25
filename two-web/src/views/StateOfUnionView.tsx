@@ -19,6 +19,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface StateOfUnionViewProps {
   activeSession: StateOfUnionSession | null;
@@ -32,8 +33,8 @@ interface StateOfUnionViewProps {
 // Procedural Tibetan Singing Bowl chime for sealing
 function playSingingBowlChime() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     // Harmonic singing bowl frequencies (fundamental + overtones)

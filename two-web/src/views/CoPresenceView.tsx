@@ -14,6 +14,7 @@ import {
   Flame, CloudRain, Volume2, VolumeX, Heart, Sparkles, Clock, 
   Send, Users, Smile, Play, Pause, RefreshCw, Eye
 } from 'lucide-react';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface CoPresenceViewProps {
   activeUser: 'user' | 'partner';
@@ -81,9 +82,8 @@ const ACTIVITIES: Record<CoPresenceActivity, { id: CoPresenceActivity; label: st
 
 function playInteractionSound(type: string) {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     if (type === 'tea') {

@@ -21,6 +21,7 @@ import {
   Maximize2
 } from 'lucide-react';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface CanvasOfUsViewProps {
   canvasState: SharedDrawingCanvasState;
@@ -35,8 +36,8 @@ interface CanvasOfUsViewProps {
 // Procedural sketch sound effect using gentle filtered white noise bursts
 function playSketchSound() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const bufferSize = ctx.sampleRate * 0.08;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);

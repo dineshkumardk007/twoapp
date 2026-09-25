@@ -6,6 +6,7 @@ import {
 import { ComfortBoxData } from '../types';
 import { triggerGlobalPulse } from './SensoryPulseOverlay';
 import { CoRegulationModal } from './CoRegulationModal';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface ComfortBoxModalProps {
   isOpen: boolean;
@@ -36,10 +37,8 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
   // Calming Audio Chime for Breath Transitions
   const playSomaticTone = (freq: number, duration: number) => {
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
-      if (ctx.state === 'suspended') ctx.resume();
+      const ctx = getAudioContext();
+      if (!ctx) return;
 
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();

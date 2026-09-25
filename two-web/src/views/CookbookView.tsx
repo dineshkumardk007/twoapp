@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { SecretRecipe } from '../types';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface CookbookViewProps {
   recipes: SecretRecipe[];
@@ -50,10 +51,8 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
   // Bell chime for kitchen timer
   const playTimerChime = () => {
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
-      if (ctx.state === 'suspended') ctx.resume();
+      const ctx = getAudioContext();
+      if (!ctx) return;
       const now = ctx.currentTime;
 
       [587.33, 880, 1174.66].forEach((freq, i) => {

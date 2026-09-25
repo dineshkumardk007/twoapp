@@ -1,11 +1,31 @@
 // Web Audio API acoustic chimes and haptic feedback for Two.
 // Pure client-side synthesis: zero external MP3s, instant loading, warm sound.
 
-function getAudioContext(): AudioContext | null {
+let sharedContext: AudioContext | null = null;
+
+/**
+ * The one AudioContext every short sound in the app plays through.
+ *
+ * Each chime used to open a context of its own and never close it. Browsers
+ * allow only a handful at once - Chrome on Android about six - and after that
+ * `new AudioContext()` throws, so every sound in the app went quiet for the
+ * rest of the session, the incoming-call ring included. One context, reused,
+ * can play any number of them.
+ *
+ * Resumed on each use: a context created before the first tap starts out
+ * suspended, and Android suspends it again when the app goes to the background.
+ */
+export function getAudioContext(): AudioContext | null {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return null;
-    return new AudioContextClass();
+    if (!sharedContext || sharedContext.state === 'closed') {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return null;
+      sharedContext = new AudioContextClass() as AudioContext;
+    }
+    if (sharedContext.state === 'suspended') {
+      sharedContext.resume().catch(() => {});
+    }
+    return sharedContext;
   } catch {
     return null;
   }

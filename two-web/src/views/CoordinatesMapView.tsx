@@ -20,6 +20,7 @@ import {
   Crosshair
 } from 'lucide-react';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface CoordinatesMapViewProps {
   pins: MemoryCoordinatePin[];
@@ -33,8 +34,8 @@ interface CoordinatesMapViewProps {
 // Audio chime for pins
 function playPinPing(frequency = 660) {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();

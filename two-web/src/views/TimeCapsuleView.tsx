@@ -6,6 +6,7 @@ import {
   Eye, EyeOff
 } from 'lucide-react';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface TimeCapsuleViewProps {
   capsules: TimeCapsuleItem[];
@@ -48,9 +49,8 @@ const SEAL_META: Record<CapsuleSealType, { name: string; emoji: string; icon: an
 
 function playUnsealChime() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     // Harmonic arpeggio (C# minor / 528Hz Solfeggio sequence)

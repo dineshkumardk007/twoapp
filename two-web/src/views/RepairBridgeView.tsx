@@ -18,6 +18,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface RepairBridgeViewProps {
   repairLetters: RepairLetter[];
@@ -71,8 +72,8 @@ const APOLOGY_LANGUAGES_META: Record<
 // Procedural Web Audio 528Hz Reconciliation Chime
 function playReconciliationChime() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     // Harmonic triad: 528Hz, 660Hz, 792Hz

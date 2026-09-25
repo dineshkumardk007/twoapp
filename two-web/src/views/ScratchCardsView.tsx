@@ -3,6 +3,7 @@ import { ScratchCardItem, ScratchFoilType, ScratchCardCategory } from '../types'
 import { ScratchCardCanvas } from '../components/ScratchCardCanvas';
 import { Gift, Ticket, Sparkles, Heart, Plus, Check, MessageSquare, Clock, Award, X, RefreshCw, Send, ShieldCheck, Star } from 'lucide-react';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface ScratchCardsViewProps {
   cards: ScratchCardItem[];
@@ -60,9 +61,8 @@ const PRESET_CARDS = [
 
 function playStampRedemptionSound() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     // Firm rubber stamp thud + bright celebratory resonance

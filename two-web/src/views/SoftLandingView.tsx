@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SoftLandingSession, SoftLandingReflection } from '../types';
 import { Shield, Heart, Clock, Volume2, VolumeX, Sparkles, Check, MessageSquare, History, X, Handshake, AlertCircle } from 'lucide-react';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface SoftLandingViewProps {
   activeSession: SoftLandingSession | null;
@@ -113,9 +114,8 @@ const audioEngine = new SoftLandingAudioEngine();
 
 function playReconnectionChime() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     // Harmonic Tibetan Bell (528Hz + 1056Hz shimmer)

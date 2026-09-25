@@ -6,6 +6,7 @@ import {
 import { CURATED_DILEMMAS } from '../data/dilemmas';
 import { IntuitionDilemma, IntuitionGameRound } from '../types';
 import { newId } from '../core/ids';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface IntuitionGameViewProps {
   currentRound: IntuitionGameRound;
@@ -30,10 +31,8 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
   // Sound effects for reveal
   const playCelebrationChord = (isMatch: boolean) => {
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
-      if (ctx.state === 'suspended') ctx.resume();
+      const ctx = getAudioContext();
+      if (!ctx) return;
       const now = ctx.currentTime;
 
       const notes = isMatch ? [523.25, 659.25, 783.99, 1046.50] : [440, 554.37, 659.25];

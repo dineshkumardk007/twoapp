@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { HearthGardenState, GardenBlossom } from '../types';
 import { Sparkles, Heart, Droplets, Sun, X } from 'lucide-react';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface HearthGardenCanvasProps {
   garden: HearthGardenState;
@@ -12,9 +13,8 @@ interface HearthGardenCanvasProps {
 
 export function playWaterDropSound() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     [0, 0.08, 0.18, 0.28].forEach((delay, idx) => {
@@ -42,9 +42,8 @@ export function playWaterDropSound() {
 
 export function playSunlightChime() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     // Harmonic warm drone (G major: 392Hz, 493.88Hz, 587.33Hz, 783.99Hz)
@@ -71,9 +70,8 @@ export function playSunlightChime() {
 
 export function playBlossomPopSound() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     const osc = ctx.createOscillator();

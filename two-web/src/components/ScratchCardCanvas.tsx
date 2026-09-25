@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ScratchFoilType } from '../types';
+import { getAudioContext } from '../core/audioAlerts';
 
 interface ScratchCardCanvasProps {
   foilType: ScratchFoilType;
@@ -10,9 +11,8 @@ interface ScratchCardCanvasProps {
 
 function playScratchFrictionSound() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     // Filtered pink noise burst simulating scratch texture
@@ -47,9 +47,8 @@ function playScratchFrictionSound() {
 
 function playRevealChime() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     [528, 660, 792, 1056].forEach((f, i) => {
