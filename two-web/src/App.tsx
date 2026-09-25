@@ -273,7 +273,8 @@ export const App: React.FC = () => {
       onChange: setCallState,
       onMissed: callId => wsRelay.broadcastUpdate(CALL_MISSED, { callId, at: Date.now() }),
       canRing: () => !isCamouflagedRef.current,
-      nudgeRelay: () => wsRelay.reconnectNow()
+      nudgeRelay: () => wsRelay.reconnectNow(),
+      iceServers: () => wsRelay.getIceServers()
     });
     callEngineRef.current = engine;
     return () => {

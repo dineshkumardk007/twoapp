@@ -5,6 +5,7 @@ import http from 'http';
 import { WebSocketServer } from 'ws';
 import { WebSocketRelay } from './websocket/relay.js';
 import { db } from './db.js';
+import { turnConfigured } from './turn.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -65,6 +66,8 @@ app.get('/health', async (req, res) => {
     // the relay still forwards messages, but they are buffered in memory.
     durable: db.isDurable,
     pending_writes: db.pendingCount,
+    // Whether calls can fall back to a relay when a direct route is blocked.
+    turn: turnConfigured ? 'configured' : 'off',
     // Pairing codes are typed by the couple and never reach this server, so the
     // keys are derived somewhere the operator cannot see. Records arrive and
     // are stored as ciphertext.

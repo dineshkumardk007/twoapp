@@ -167,12 +167,13 @@ export function writeCallQuality(quality: CallQuality) {
 }
 
 /**
- * STUN only, for now.
+ * Always used: how each phone learns the address the other can reach it on.
  *
- * Enough when at least one side has an ordinary home router. Not enough when
- * both sides sit behind carrier NAT, and a call between two such phones will
- * reach "Couldn't connect". The fix is a TURN server, which is infrastructure
- * with a bill, and deliberately not pretended into existence here.
+ * Enough when at least one side has an ordinary home router. Not enough when a
+ * mobile carrier's NAT refuses anything the phone did not start itself - then
+ * the call rings, is answered, and reaches "Couldn't connect". For that, the
+ * relay hands over TURN logins (see `iceServers` below) and they are added to
+ * these; without them, this is what a call has.
  */
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }
@@ -320,7 +321,19 @@ interface CallEngineOptions {
    * waiting out a backoff.
    */
   nudgeRelay?: () => void;
+  /**
+   * TURN servers to add for this call, or null for none. Asked for while the
+   * microphone opens, and not waited on for longer than that already takes
+   * plus a little: see ICE_WAIT_MS.
+   */
+  iceServers?: () => Promise<RTCIceServer[] | null>;
 }
+
+/**
+ * The most a call waits for TURN logins beyond opening the microphone. Past
+ * this it goes ahead on STUN alone, which is how every call worked before.
+ */
+const ICE_WAIT_MS = 2_500;
 
 /**
  * One call at a time, from ring to hang-up.
@@ -389,6 +402,7 @@ export class CallEngine {
     const callId = newCallId();
     this.remoteQuality = 'high';
     this.set({ ...IDLE_CALL, phase: 'outgoing', callId, direction: 'out' });
+    const iceServers = this.fetchIceServers();
 
     let mic: OpenedMic;
     try {
@@ -399,6 +413,7 @@ export class CallEngine {
       if (this.snapshot.callId === callId) this.finish('mic-denied', false);
       return;
     }
+    const servers = await iceServers;
     // Cancelled, or replaced, while the microphone prompt was up.
     if (this.snapshot.callId !== callId || this.snapshot.phase !== 'outgoing') {
       mic.stream.getTracks().forEach(t => t.stop());
@@ -407,7 +422,7 @@ export class CallEngine {
     const stream = this.adoptMic(mic);
 
     try {
-      const pc = this.createPeer(callId);
+      const pc = this.createPeer(callId, servers);
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
       const offer = await pc.createOffer();
       const sdp = tuneOpus(offer.sdp || '', this.receiveKbps());
@@ -437,6 +452,7 @@ export class CallEngine {
 
     this.stopRinging();
     this.set({ phase: 'connecting' });
+    const iceServers = this.fetchIceServers();
 
     let mic: OpenedMic;
     try {
@@ -447,6 +463,7 @@ export class CallEngine {
       this.finish('mic-denied', false);
       return;
     }
+    const servers = await iceServers;
     // Read through the snapshot: `this.state` was narrowed to 'incoming' by the
     // guard above, and TypeScript cannot see that set() has moved it on since.
     if (this.snapshot.callId !== callId || this.snapshot.phase !== 'connecting') {
@@ -456,7 +473,7 @@ export class CallEngine {
     const stream = this.adoptMic(mic);
 
     try {
-      const pc = this.createPeer(callId);
+      const pc = this.createPeer(callId, servers);
       await pc.setRemoteDescription({ type: 'offer', sdp: offer.sdp });
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
       await this.flushIce();
@@ -732,8 +749,22 @@ export class CallEngine {
     }
   }
 
-  private createPeer(callId: string): RTCPeerConnection {
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS, bundlePolicy: 'max-bundle' });
+  /** STUN, plus TURN when the relay has some to give. Never rejects. */
+  private async fetchIceServers(): Promise<RTCIceServer[]> {
+    if (!this.opts.iceServers) return ICE_SERVERS;
+    try {
+      const turn = await Promise.race([
+        this.opts.iceServers(),
+        new Promise<null>(resolve => setTimeout(() => resolve(null), ICE_WAIT_MS))
+      ]);
+      return turn && turn.length > 0 ? [...ICE_SERVERS, ...turn] : ICE_SERVERS;
+    } catch {
+      return ICE_SERVERS;
+    }
+  }
+
+  private createPeer(callId: string, iceServers: RTCIceServer[] = ICE_SERVERS): RTCPeerConnection {
+    const pc = new RTCPeerConnection({ iceServers, bundlePolicy: 'max-bundle' });
     this.pc = pc;
 
     pc.onicecandidate = event => {

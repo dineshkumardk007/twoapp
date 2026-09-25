@@ -1,5 +1,6 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { db, StoredRecord } from '../db.js';
+import { getIceServers, turnConfigured } from '../turn.js';
 
 interface SpaceClient {
   ws: WebSocket;
@@ -79,6 +80,16 @@ export class WebSocketRelay {
   private nextConnectionId = 1;
 
   /** Tells every connected phone when durability comes or goes. */
+  /** Always answers, with null when there is nothing to give, so no phone waits out its timeout. */
+  private async sendIceServers(ws: WebSocket) {
+    const set = await getIceServers();
+    this.sendJson(ws, {
+      type: 'ICE_SERVERS',
+      iceServers: set?.iceServers ?? null,
+      expiresAt: set?.expiresAt ?? null
+    });
+  }
+
   private announceDurability = (durable: boolean) => {
     for (const client of this.clients) {
       this.sendJson(client.ws, { type: 'RELAY_STATUS', durable, storage: db.kind });
@@ -219,9 +230,33 @@ export class WebSocketRelay {
               storage: db.kind
             });
 
+            // Handed over now so a call made later does not wait for them.
+            // Not awaited: a slow answer from Cloudflare must not hold up the
+            // history this phone is about to be sent.
+            if (turnConfigured) void this.sendIceServers(ws);
+
             await this.replayMissedRecords(currentClient, message.since, message.sinceSeq);
             // Tell both sides who is present now.
             this.broadcastPresence(currentClient.spaceId);
+            return;
+          }
+
+          /**
+           * Fresh call relay logins, asked for as a call starts or is answered.
+           *
+           * Only for a phone that has joined a space: the logins let whoever
+           * holds them send traffic through a relay this server pays for.
+           */
+          if (message.type === 'ICE_SERVERS_REQUEST') {
+            if (!currentClient) {
+              this.sendJson(ws, { type: 'ERROR', error: 'JOIN before asking for call servers' });
+              return;
+            }
+            if (!consumeToken(currentClient)) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Rate limit exceeded, slow down' });
+              return;
+            }
+            await this.sendIceServers(ws);
             return;
           }
 
