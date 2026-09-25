@@ -52,7 +52,10 @@ export const LATEST_ONLY_TYPES = new Set([
   'STATE_OF_UNION_UPDATE',
   'CARE_COMPASS',
   'NOT_ABOUT_YOU',
-  'WEATHER'
+  'WEATHER',
+  // The whole comfort box - note, photos, exercise - on every save. There is
+  // one box, so the newest copy from each of you is all a restore needs.
+  'COMFORT_BOX'
 ]);
 
 /**
