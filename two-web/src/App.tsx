@@ -52,6 +52,7 @@ import { insertBySentAt } from './core/ordering';
 import { CallEngine, CallState, IDLE_CALL, CALL_SIGNAL, CALL_MISSED } from './core/call';
 import { CallOverlay } from './components/CallOverlay';
 import { RelayStorageWarning } from './components/RelayStorageWarning';
+import { UpdateReadyToast } from './components/UpdateReadyToast';
 import { routeFor, withActivity, unseen, dottedTabs } from './core/activity';
 import {
   ThemeMode,
@@ -3650,6 +3651,8 @@ export const App: React.FC = () => {
       {!storageWarningDismissed && (
         <RelayStorageWarning durable={relayDurable} onDismiss={() => setStorageWarningDismissed(true)} />
       )}
+
+      <UpdateReadyToast suppressed={callState.phase !== 'idle'} />
 
       {callOverlay}
 
