@@ -84,13 +84,29 @@ jobs:
         run: |
           export TWO_KEYSTORE_FILE="$RUNNER_TEMP/two-release.p12"
           printf '%s' "$TWO_KEYSTORE_BASE64" | base64 --decode > "$TWO_KEYSTORE_FILE"
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          set +e
+          ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee "$RUNNER_TEMP/gradle.log"
+          status=${PIPESTATUS[0]}
+          set -e
           rm -f "$TWO_KEYSTORE_FILE"
+          if [ "$status" -ne 0 ]; then
+            # The log is only visible when signed in; the reason also goes into
+            # an annotation, which the run's public summary shows.
+            reason=$(grep -A12 -E "What went wrong|Error: |ERROR: " "$RUNNER_TEMP/gradle.log" | head -40 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Release build failed::${reason:-see the step log}"
+            exit "$status"
+          fi
+
           # Refuse to hand over anything unsigned or signed with another key.
           APK=$(ls app/build/outputs/apk/release/*.apk)
           case "$APK" in *unsigned*) echo "::error::Release APK is unsigned"; exit 1;; esac
-          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
-          "$APKSIGNER" verify --print-certs "$APK" | grep -m1 "Signer #1 certificate DN"
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee "$RUNNER_TEMP/certs.txt"
+          if ! grep -q "CN=Two" "$RUNNER_TEMP/certs.txt"; then
+            echo "::error title=Wrong signing key::The release APK is not signed with the Two key"
+            exit 1
+          fi
+          echo "::notice title=Signed release APK::$(basename "$APK") is signed with the Two key"
         working-directory: two-android
 
       - name: Upload Release APK
