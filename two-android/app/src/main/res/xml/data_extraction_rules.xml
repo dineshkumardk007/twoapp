@@ -1,9 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nothing of Two leaves the phone through Android: not to a Google backup, and
+  not to a new phone during setup. Keys, the vault and the WebView's storage
+  stay where they are; a new phone links with the code and the relay restores
+  the shared history instead.
+
+  Every storage area is named. An exclude without a domain is invalid, and
+  Android ignores the whole rule - which is how this file used to be, so on
+  Android 12+ (where allowBackup="false" no longer covers device-to-device
+  transfer) nothing was actually excluded from a phone-to-phone move.
+-->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude path="." />
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+        <exclude domain="device_root" path="." />
+        <exclude domain="device_file" path="." />
+        <exclude domain="device_database" path="." />
+        <exclude domain="device_sharedpref" path="." />
     </cloud-backup>
     <device-transfer>
-        <exclude path="." />
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+        <exclude domain="device_root" path="." />
+        <exclude domain="device_file" path="." />
+        <exclude domain="device_database" path="." />
+        <exclude domain="device_sharedpref" path="." />
     </device-transfer>
 </data-extraction-rules>
