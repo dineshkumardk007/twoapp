@@ -7,8 +7,12 @@ on:
 
 jobs:
   build-apk:
-    name: Build & Export Debug APK
+    name: Build & Export APK
     runs-on: ubuntu-latest
+    env:
+      # A release build once the signing key is in the repository's secrets,
+      # and the debug build until then - so a missing key never breaks a build.
+      HAS_RELEASE_KEY: ${{ secrets.TWO_KEYSTORE_BASE64 != '' }}
 
     steps:
       - name: Checkout Code
@@ -55,12 +59,44 @@ jobs:
         working-directory: two-android
 
       - name: Build Debug APK
+        if: env.HAS_RELEASE_KEY != 'true'
         run: ./gradlew assembleDebug --no-daemon --stacktrace
         working-directory: two-android
 
       - name: Upload Debug APK
+        if: env.HAS_RELEASE_KEY != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: two-android-debug-apk
           path: two-android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30
+
+      # Signed with the one key only its owner holds: not debuggable, so the
+      # app's data cannot be copied off a phone over USB, and every build
+      # installs over the last one instead of being refused as a stranger.
+      - name: Build Release APK
+        if: env.HAS_RELEASE_KEY == 'true'
+        env:
+          TWO_KEYSTORE_BASE64: ${{ secrets.TWO_KEYSTORE_BASE64 }}
+          TWO_KEYSTORE_PASSWORD: ${{ secrets.TWO_KEYSTORE_PASSWORD }}
+          TWO_KEY_ALIAS: ${{ secrets.TWO_KEY_ALIAS }}
+          TWO_KEY_PASSWORD: ${{ secrets.TWO_KEY_PASSWORD }}
+        run: |
+          export TWO_KEYSTORE_FILE="$RUNNER_TEMP/two-release.p12"
+          printf '%s' "$TWO_KEYSTORE_BASE64" | base64 --decode > "$TWO_KEYSTORE_FILE"
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          rm -f "$TWO_KEYSTORE_FILE"
+          # Refuse to hand over anything unsigned or signed with another key.
+          APK=$(ls app/build/outputs/apk/release/*.apk)
+          case "$APK" in *unsigned*) echo "::error::Release APK is unsigned"; exit 1;; esac
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          "$APKSIGNER" verify --print-certs "$APK" | grep -m1 "Signer #1 certificate DN"
+        working-directory: two-android
+
+      - name: Upload Release APK
+        if: env.HAS_RELEASE_KEY == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: two-android-release-apk
+          path: two-android/app/build/outputs/apk/release/*.apk
           retention-days: 30

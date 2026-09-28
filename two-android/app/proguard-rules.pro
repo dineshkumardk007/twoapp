@@ -23,3 +23,13 @@
 # Keep data models
 -keep class app.two.android.core.database.** { *; }
 -keep class app.two.android.core.crypto.** { *; }
+
+# The WebView bridge.
+# The web app calls these methods by name from JavaScript, which the shrinker
+# cannot see - without this it removes or renames every one of them, and the
+# release app loses speaker switching, headset detection, the call keep-alive
+# and the proximity sensor without a single error anywhere.
+-keepattributes JavascriptInterface
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
