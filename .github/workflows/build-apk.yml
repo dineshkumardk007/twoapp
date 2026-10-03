@@ -51,6 +51,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.11.1'
+          # The open-source cache (GitHub's own actions/cache). The default
+          # "enhanced" one is a closed-source add-on under separate terms, and
+          # one more service to reach: a build once failed on a dropped
+          # connection while it restored.
+          cache-provider: basic
 
       - name: Generate Gradle Wrapper
         run: gradle wrapper --gradle-version 8.11.1
