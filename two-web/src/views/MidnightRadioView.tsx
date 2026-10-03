@@ -350,6 +350,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
     const updatedRadio: MidnightRadioState = {
       ...radio,
       band: 'live',
+      liveForStationId: radio.stationId,
       liveStation: station,
       isPlaying: true,
       ...listening(true),

@@ -176,7 +176,20 @@ class LiveRadioPlayer {
       this.armWatchdog(this.generation, STALL_TIMEOUT_MS);
     };
     audio.addEventListener('waiting', stalled);
-    audio.addEventListener('stalled', stalled);
+    // 'stalled' only says no data has arrived for a few seconds - the element
+    // may be playing on from what it has. It counts only if playback stopped.
+    audio.addEventListener('stalled', () => {
+      if (audio.paused || audio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) stalled();
+    });
+    // Playing again without a 'playing' event (it only follows a real stop):
+    // back to on air, and the watchdog stands down.
+    audio.addEventListener('timeupdate', () => {
+      if (this.status !== 'buffering' || this.retryTimer || audio.paused) return;
+      if (audio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) return;
+      this.clearWatchdog();
+      this.attempt = 0;
+      this.setStatus('playing');
+    });
     const dropped = () => {
       // Errors from emptying the element on a stop or a reconnect are not drops.
       if (this.status !== 'idle' && audio.getAttribute('src') !== null) this.retry(this.generation);

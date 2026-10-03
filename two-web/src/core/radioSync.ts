@@ -52,35 +52,53 @@ export function mergeFavorites(
   return { liveFavorites: starred.slice(0, MAX_FAVORITES), liveFavoritesRemoved: removed.slice(0, MAX_REMOVED) };
 }
 
-/** Stars or unstars a station, now. */
+/**
+ * Stars or unstars a station, now - or, if the other phone's clock is ahead
+ * and its last word on this station is stamped later than now, just after
+ * that, so the tap always takes effect.
+ */
 export function toggleFavorite(radio: MidnightRadioState, station: LiveRadioStation, now = Date.now()): MidnightRadioState {
   const current = favorites(radio.liveFavorites);
-  const starred = current.some(f => sameStation(f, station));
-  const change: Pick<MidnightRadioState, 'liveFavorites' | 'liveFavoritesRemoved'> = starred
-    ? { liveFavorites: [], liveFavoritesRemoved: [{ url: station.url, at: now }] }
-    : { liveFavorites: [{ ...station, starredAt: now }], liveFavoritesRemoved: [] };
+  const mine = current.find(f => sameStation(f, station));
+  const lastAt = Math.max(
+    mine?.starredAt ?? 0,
+    ...removals(radio.liveFavoritesRemoved).filter(r => r.url === station.url).map(r => r.at)
+  );
+  const at = Math.max(now, lastAt + 1);
+  const change: Pick<MidnightRadioState, 'liveFavorites' | 'liveFavoritesRemoved'> = mine
+    ? { liveFavorites: [], liveFavoritesRemoved: [{ url: station.url, at }] }
+    : { liveFavorites: [{ ...station, starredAt: at }], liveFavoritesRemoved: [] };
   return { ...radio, ...mergeFavorites(radio, change) };
 }
 
+/** Whispers from both, once each, newest first: they are only ever added. */
+function mergeWhispers(a: MidnightRadioState['whispers'] | undefined, b: MidnightRadioState['whispers'] | undefined) {
+  const byId = new Map<string, MidnightRadioState['whispers'][number]>();
+  for (const w of [...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])]) {
+    if (w && typeof w.id === 'string' && !byId.has(w.id)) byId.set(w.id, w);
+  }
+  return [...byId.values()].sort((x, y) => (y.timestamp ?? 0) - (x.timestamp ?? 0));
+}
+
 /**
- * Takes in the partner's radio: theirs for what is playing, merged for the
- * favourites.
+ * Takes in the partner's radio: theirs for what is playing; merged for the
+ * favourites and the whispers, which a late update must not take away.
  *
  * One more thing, for a partner still on an older version of the app: it
  * knows nothing of the live band, so picking one of Two's own stations
- * changes the station but leaves the band at 'live'. This version always sets
- * the band with the station, so a station change with the band still live
- * can only mean that - and is read as a switch to Two's stations.
+ * changes the station but leaves the band at 'live'. Live radio is always
+ * chosen with a note of which of Two's stations was on at the time
+ * (liveForStationId); an older app passes that note along unchanged, so
+ * when it no longer matches the station, the band is Two's. Decided from
+ * the update alone, so every later update from that phone reads the same.
  */
 export function mergeIncomingRadio(prev: MidnightRadioState | undefined, incoming: MidnightRadioState): MidnightRadioState {
-  const merged: MidnightRadioState = { ...incoming, ...mergeFavorites(prev, incoming) };
-  if (
-    prev &&
-    incoming.band === 'live' &&
-    prev.band === 'live' &&
-    incoming.stationId !== prev.stationId &&
-    sameStation(cleanStation(incoming.liveStation), cleanStation(prev.liveStation))
-  ) {
+  const merged: MidnightRadioState = {
+    ...incoming,
+    ...mergeFavorites(prev, incoming),
+    whispers: mergeWhispers(prev?.whispers, incoming.whispers)
+  };
+  if (incoming.band === 'live' && incoming.liveForStationId !== undefined && incoming.liveForStationId !== incoming.stationId) {
     merged.band = 'two';
   }
   return merged;

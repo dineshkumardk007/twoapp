@@ -510,6 +510,13 @@ export interface MidnightRadioState {
   band?: 'two' | 'live';
   /** The live station on the dial, shared so the two of you can tune in together. */
   liveStation?: LiveRadioStation | null;
+  /**
+   * Two's station that was on when live radio was chosen. An older version of
+   * the app knows nothing of the live band: picking one of Two's stations
+   * there changes the station but leaves the band at 'live' - and this no
+   * longer matching is how that is recognised.
+   */
+  liveForStationId?: MidnightRadioStationId;
   /** Live stations the two of you have starred. */
   liveFavorites?: LiveRadioStation[];
   /** Stations unstarred, and when - so an older copy of the list cannot bring them back. */
