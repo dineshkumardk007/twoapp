@@ -3,13 +3,15 @@ import {
   generateJoinPhrase,
   checkJoinPhrase,
   generatePairingCode,
-  normalizePairingCode,
   isPlausiblePairingCode,
-  getLastSpaceCode,
+  extractPairingCode,
+  findTwoCode,
+  getLastSpace,
   saveSpaceSession,
   loadSpaceSession,
   SpaceSession,
-  SpaceRole
+  SpaceRole,
+  LastSpace
 } from '../core/space';
 import { ArrowRight, Copy, Check, Link2, UserPlus, Heart, Lock, Clipboard, Share2, Sparkles, KeyRound, RotateCcw, ShieldCheck } from 'lucide-react';
 
@@ -21,14 +23,31 @@ interface OnboardingViewProps {
     /** What the couple called their space; shown in the header for both. */
     vaultName?: string
   ) => void;
+  /**
+   * The space to offer "Rejoin" for, when the app holds it somewhere other
+   * than plain storage - inside the encrypted vault, on a device with a PIN.
+   */
+  rememberedSpace?: LastSpace | null;
+  /**
+   * True while an encrypted vault is in use. Nothing is written to plain
+   * storage then: the session goes into the vault, which is the point of
+   * having one.
+   */
+  vaultActive?: boolean;
 }
 
 type OnboardingStep = 'name' | 'pair' | 'pin';
 type PairMode = 'choose' | 'create' | 'join';
 
-export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) => {
-  const existingSession = loadSpaceSession();
-  const lastCode = getLastSpaceCode();
+export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, rememberedSpace, vaultActive }) => {
+  const existingSession = vaultActive ? null : loadSpaceSession();
+  const lastSpace = rememberedSpace ?? (vaultActive ? null : getLastSpace());
+  const lastCode = lastSpace?.code || null;
+
+  /** Writes the session to plain storage - except under a vault. See vaultActive. */
+  const persistSession = (s: SpaceSession) => {
+    if (!vaultActive) saveSpaceSession(s);
+  };
 
   const [step, setStep] = useState<OnboardingStep>('name');
   const [userName, setUserName] = useState(() => {
@@ -45,7 +64,10 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
    * arrives somewhere else entirely.
    */
   const [joinPhrase, setJoinPhrase] = useState('');
-  const [joinPhraseInput, setJoinPhraseInput] = useState('');
+  // The code field starts with the remembered code, so the phrase starts with
+  // the phrase that goes with it. A remembered code with its phrase missing is
+  // a different room - the very thing Rejoin had to stop doing.
+  const [joinPhraseInput, setJoinPhraseInput] = useState(() => lastSpace?.joinPhrase || '');
   const phraseCheck = checkJoinPhrase(joinPhraseInput);
   const [createdCode, setCreatedCode] = useState(() => {
     return existingSession?.role === 'user' ? existingSession.code : '';
@@ -53,7 +75,16 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
   const [joinCode, setJoinCode] = useState(() => {
     return lastCode || '';
   });
-  const [joinRole, setJoinRole] = useState<SpaceRole>('partner');
+  /**
+   * Chosen, never assumed.
+   *
+   * It defaulted to Partner, which is right for a partner joining for the first
+   * time and wrong for the person who created the space reconnecting a new
+   * phone - who then sat in the same seat as their partner. Two devices in one
+   * seat cannot tell each other apart: what was sent while one was off never
+   * reaches it, calls do not ring, and each shows the other as offline.
+   */
+  const [joinRole, setJoinRole] = useState<SpaceRole | null>(null);
   const [copied, setCopied] = useState(false);
   const [session, setSession] = useState<SpaceSession | null>(existingSession);
   const [pinInput, setPinInput] = useState('');
@@ -84,7 +115,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
       userName: userName.trim() || 'You',
       joinPhrase: joinPhrase || undefined
     };
-    saveSpaceSession(draftSession);
+    persistSession(draftSession);
     setSession(draftSession);
   };
 
@@ -96,24 +127,24 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
       userName: userName.trim() || 'You',
       joinPhrase: joinPhrase || undefined
     };
-    saveSpaceSession(newSession);
+    persistSession(newSession);
     setSession(newSession);
     onComplete(newSession, userName.trim() || 'You', null, vaultNameDraft.trim());
   };
 
   const confirmJoin = () => {
-    if (!isPlausiblePairingCode(joinCode)) return;
+    const cleanCode = extractPairingCode(joinCode);
+    if (!cleanCode || !joinRole) return;
     // A half-typed phrase is worse than none: it derives a room nobody else is
     // in, and nothing on screen would ever say so.
     if (joinPhraseInput.trim() && !phraseCheck.complete) return;
-    const cleanCode = normalizePairingCode(joinCode);
     const newSession: SpaceSession = {
       code: cleanCode,
       role: joinRole,
       userName: userName.trim() || (joinRole === 'user' ? 'You' : 'Partner'),
       joinPhrase: phraseCheck.complete ? phraseCheck.words.join(' ') : undefined
     };
-    saveSpaceSession(newSession);
+    persistSession(newSession);
     setSession(newSession);
     onComplete(newSession, userName.trim() || (joinRole === 'user' ? 'You' : 'Partner'), null);
   };
@@ -133,7 +164,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
       role: 'user',
       userName: userName.trim() || 'You'
     };
-    saveSpaceSession(demoSession);
+    persistSession(demoSession);
     onComplete(demoSession, userName.trim() || 'You', null);
   };
 
@@ -165,9 +196,40 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
     try {
       const text = await navigator.clipboard.readText();
       if (text && text.trim()) {
-        setJoinCode(text.trim().toUpperCase());
+        // The shared message is a whole sentence; only the code goes in.
+        setJoinCode(extractPairingCode(text) ?? text.trim().toUpperCase());
       }
     } catch {}
+  };
+
+  /**
+   * Rejoins the space this device was last in, as whoever it was then.
+   *
+   * It used to come back with the code alone: the spoken phrase was dropped,
+   * which is a different room, and without a remembered session the role was
+   * guessed as Creator, which put a partner's phone in the creator's seat.
+   * Where the role was never recorded - a device last used before it was -
+   * the code is filled in and the choice is left to the person.
+   */
+  const handleRejoin = () => {
+    if (!lastSpace) return;
+    const effectiveName = userName.trim() || existingSession?.userName || 'You';
+    if (!lastSpace.role) {
+      setJoinCode(lastSpace.code);
+      setJoinPhraseInput(lastSpace.joinPhrase || '');
+      setJoinRole(null);
+      setStep('pair');
+      setPairMode('join');
+      return;
+    }
+    const sess: SpaceSession = {
+      code: lastSpace.code,
+      role: lastSpace.role,
+      userName: effectiveName,
+      joinPhrase: lastSpace.joinPhrase || undefined
+    };
+    persistSession(sess);
+    onComplete(sess, effectiveName, null);
   };
 
   return (
@@ -200,21 +262,14 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                   </span>
                 </div>
                 <p className="text-xs text-linen-secondary leading-snug">
-                  You previously used code <strong className="text-linen-primary font-mono">{lastCode}</strong>. Would you like to rejoin?
+                  You previously used code <strong className="text-linen-primary font-mono">{lastCode}</strong>
+                  {lastSpace?.role === 'user' && ' as the person who created it'}
+                  {lastSpace?.role === 'partner' && ' as the partner who joined'}. Would you like to rejoin?
                 </p>
                 <div className="flex space-x-2 pt-0.5">
                   <button
                     type="button"
-                    onClick={() => {
-                      const effectiveName = userName.trim() || existingSession?.userName || 'You';
-                      const sess: SpaceSession = {
-                        code: lastCode,
-                        role: existingSession?.role || 'user',
-                        userName: effectiveName
-                      };
-                      saveSpaceSession(sess);
-                      onComplete(sess, effectiveName, null);
-                    }}
+                    onClick={handleRejoin}
                     className="flex-1 py-2.5 px-3 bg-linen-primary text-linen-surface text-xs font-medium rounded-xl hover:opacity-95 transition-opacity text-center cursor-pointer shadow-2xs flex items-center justify-center"
                   >
                     <span>Rejoin {lastCode}</span>
@@ -254,7 +309,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                 onClick={() => {
                   setStep('pair');
                   setPairMode('join');
-                  setJoinRole('partner');
+                  setJoinRole(null);
                 }}
                 className="w-full py-2.5 text-xs text-linen-accent hover:text-linen-primary font-medium transition-colors flex items-center justify-center cursor-pointer"
               >
@@ -293,7 +348,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                 <button
                   onClick={() => {
                     setPairMode('join');
-                    setJoinRole('partner');
+                    setJoinRole(null);
                   }}
                   className="w-full py-4 px-5 bg-linen-variant/70 text-linen-primary font-medium rounded-2xl border border-linen-border hover:bg-linen-variant transition-all flex items-center shadow-xs cursor-pointer"
                 >
@@ -476,10 +531,31 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                     type="text"
                     autoFocus
                     value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    placeholder="e.g. TWO-8492"
+                    // A complete code, wherever it appears in what was typed or
+                    // pasted, replaces the field with just the code - grouped the
+                    // way it was made, which is the only form that reaches the
+                    // right room.
+                    onChange={(e) => {
+                      const next = findTwoCode(e.target.value) ?? e.target.value.toUpperCase();
+                      setJoinCode(next);
+                      // The remembered phrase belongs to the remembered code only.
+                      if (lastSpace?.joinPhrase && next !== lastSpace.code && joinPhraseInput === lastSpace.joinPhrase) {
+                        setJoinPhraseInput('');
+                      }
+                    }}
+                    placeholder="TWO-XXXX-XXXX-XXXX"
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
                     className="w-full px-4 py-3.5 rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary text-lg font-mono text-center tracking-wider"
                   />
+                  {joinCode.trim().length >= 4 && !extractPairingCode(joinCode) && (
+                    <p className="text-[11px] text-rose-600 leading-relaxed">
+                      That is not a complete code yet. It looks like{' '}
+                      <span className="font-mono font-semibold">TWO-XXXX-XXXX-XXXX</span> &mdash; twelve
+                      letters and numbers after TWO.
+                    </p>
+                  )}
 
 
                   {/* The phrase, if there is one. Checked word by word as it is
@@ -528,8 +604,12 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                   {/* Device / Role Selector to avoid duplicate partner roles */}
                   <div className="space-y-1.5 pt-1">
                     <label className="text-[11px] font-semibold uppercase tracking-wider text-linen-secondary block">
-                      Select your role for this device:
+                      Who created this space?
                     </label>
+                    <p className="text-[11px] text-linen-secondary leading-relaxed">
+                      Pick what is true for you, even on a new phone. If you both pick the same, your
+                      phones cannot tell you apart.
+                    </p>
                     
                     <div className="grid grid-cols-2 gap-2">
                       <button
@@ -571,6 +651,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
                   // nothing afterwards would say so. Better to refuse now.
                   disabled={
                     !isPlausiblePairingCode(joinCode) ||
+                    !joinRole ||
                     (!!joinPhraseInput.trim() && !phraseCheck.complete)
                   }
                   className="w-full py-3.5 bg-linen-primary text-linen-surface font-medium rounded-xl hover:opacity-95 disabled:opacity-50 transition-all flex items-center justify-center shadow-xs cursor-pointer"

@@ -479,6 +479,25 @@ export interface RadioWhisper {
   timestamp: number;
 }
 
+/** A real radio station, streamed live over the internet. */
+export interface LiveRadioStation {
+  /** Ours for the hand-picked ones; 'rb:' and the directory's id for ones found in search. */
+  id: string;
+  name: string;
+  /** The stream itself - always https. */
+  url: string;
+  /** Where it broadcasts from: 'Chennai', 'Singapore'. */
+  place?: string;
+  /** Who runs it: 'All India Radio', 'Mediacorp'. */
+  broadcaster?: string;
+  /** Its FM frequency, where known: '100.5 FM'. */
+  frequency?: string;
+  /** An HLS stream (a playlist of short pieces) rather than one continuous stream. */
+  hls?: boolean;
+  /** When it was starred, for a favourite: the later of a star and an unstar wins. */
+  starredAt?: number;
+}
+
 export interface MidnightRadioState {
   isPlaying: boolean;
   stationId: MidnightRadioStationId;
@@ -487,6 +506,14 @@ export interface MidnightRadioState {
   userListening: boolean;
   partnerListening: boolean;
   whispers: RadioWhisper[];
+  /** Which band is on: Two's own generated stations, or live radio. Absent means Two's own. */
+  band?: 'two' | 'live';
+  /** The live station on the dial, shared so the two of you can tune in together. */
+  liveStation?: LiveRadioStation | null;
+  /** Live stations the two of you have starred. */
+  liveFavorites?: LiveRadioStation[];
+  /** Stations unstarred, and when - so an older copy of the list cannot bring them back. */
+  liveFavoritesRemoved?: { url: string; at: number }[];
 }
 
 export interface PartnerCheckInContent {

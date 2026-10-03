@@ -17,8 +17,18 @@ android {
         applicationId = "app.two.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        /*
+         * Numbered by the CI build that made it, so two phones can tell
+         * whether they are running the same build (Android settings -> Apps
+         * -> Two shows it). GitHub's run number only ever goes up, which is
+         * also what Android needs to accept each build as an update - so
+         * keep the workflow file's name: a new one would count from 1 again
+         * and phones would refuse its builds as downgrades. A build on a
+         * developer's machine has no run number and stays at 1.
+         */
+        val buildNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+        versionCode = buildNumber
+        versionName = "1.0.$buildNumber"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

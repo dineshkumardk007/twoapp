@@ -37,6 +37,7 @@ import {
   MemoryItem
 } from '../types';
 import { loadSpaceSession } from './space';
+import type { LastSpace } from './space';
 import { externalizeMedia, persistMedia } from './media';
 import { newId } from './ids';
 import { GroupSpace } from './groups';
@@ -132,6 +133,14 @@ export interface SpaceState {
    * is instead of leaving you guessing.
    */
   partnerEverSeen: boolean;
+  /**
+   * The space to offer "Rejoin" for after leaving it, on a device with a PIN.
+   *
+   * Without a PIN this is kept in plain storage (see getLastSpace). With one,
+   * plain storage is exactly where the code must not be, so it lives here,
+   * inside the encrypted vault.
+   */
+  rejoinSpace?: LastSpace;
   /**
    * Devices this space has been told about, and whether you have vouched for
    * them.

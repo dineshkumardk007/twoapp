@@ -1,11 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { SpaceState } from '../core/storage';
 import {
+  LiveRadioStation,
   MidnightRadioState,
   MidnightRadioStationId,
   RadioWhisper
 } from '../types';
 import { ambientAudioCoordinator } from '../core/ambientAudioCoordinator';
+import { liveRadio, LiveRadioStatus } from '../core/liveRadio';
+import { TAMIL_FM, cleanStation, sameStation, searchTamilStations } from '../core/liveStations';
+import { toggleFavorite } from '../core/radioSync';
+import { Session, liveContext } from '../core/ambient/kit';
+import { startPreset } from '../core/ambient/presets';
 import {
   Radio,
   Play,
@@ -24,7 +30,11 @@ import {
   Flame,
   CloudRain,
   Coffee,
-  Disc
+  Disc,
+  Star,
+  Search,
+  Loader2,
+  SkipForward
 } from 'lucide-react';
 
 interface MidnightRadioViewProps {
@@ -88,393 +98,40 @@ const STATIONS: StationDefinition[] = [
   }
 ];
 
-// Procedural Lo-Fi & Generative Music Synthesizer with 100% leak-free tracking
+/**
+ * The radio: four stations of live, never-repeating music - a lo-fi electric
+ * piano in the rain, fingerpicked guitar by a fire, a deep meditative pad,
+ * and a Sunday-morning cafe. Built in ambient/ (see presets.ts and music.ts)
+ * and played through the shared context.
+ *
+ * Every note used to be kept in a list until the station was stopped, so an
+ * evening of radio held thousands of finished oscillators. Notes now let go
+ * of themselves when they end.
+ */
 class ProceduralRadioSynthesizer {
-  private ctx: AudioContext | null = null;
-  private isRunning = false;
-  private currentStation: MidnightRadioStationId = 'tokyo_rain';
-  private masterGain: GainNode | null = null;
-  private activeSources: (AudioBufferSourceNode | OscillatorNode)[] = [];
-  private activeIntervals: any[] = [];
-  private generationId = 0;
+  private session: Session | null = null;
   private currentVolume = 0.6;
-
-  private initCtx() {
-    if (!this.ctx) {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      this.ctx = new AudioContextClass();
-    }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
-    }
-    if (!this.masterGain && this.ctx) {
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
-      this.masterGain.connect(this.ctx.destination);
-    }
-  }
 
   public setVolume(vol: number) {
     this.currentVolume = Math.max(0, Math.min(1, vol));
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
-    }
+    this.session?.bus.setVolume(this.currentVolume);
   }
 
   public stop(immediate = true) {
-    this.isRunning = false;
-    this.generationId++;
-
-    // Clear all interval and timeout timers
-    this.activeIntervals.forEach(t => clearInterval(t));
-    this.activeIntervals = [];
-
-    // Stop and disconnect every active oscillator and noise source immediately
-    this.activeSources.forEach(src => {
-      try {
-        if ('stop' in src) (src as any).stop();
-        src.disconnect();
-      } catch (e) {}
-    });
-    this.activeSources = [];
-
-    if (this.masterGain && this.ctx) {
-      try {
-        if (immediate) {
-          this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
-        } else {
-          this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.ctx.currentTime);
-          this.masterGain.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.08);
-        }
-      } catch (e) {}
-    }
-
+    // Even "immediate" fades for a moment: a hard stop is a click.
+    this.session?.stop(immediate ? 0.08 : 0.8);
+    this.session = null;
     ambientAudioCoordinator.notifyStopped('midnight_radio');
   }
 
   public start(station: MidnightRadioStationId, volume = 0.6) {
-    this.stop(true);
-    this.initCtx();
-    if (!this.ctx) return;
-
-    this.isRunning = true;
-    this.currentStation = station;
+    this.session?.stop(0.5);
+    this.session = null;
+    const ctx = liveContext();
+    if (!ctx) return;
     this.currentVolume = volume;
-    const thisGen = ++this.generationId;
-
-    if (!this.masterGain) {
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.connect(this.ctx.destination);
-    }
-    const now = this.ctx.currentTime;
-    this.masterGain.gain.setValueAtTime(0.001, now);
-    this.masterGain.gain.linearRampToValueAtTime(volume, now + 0.3);
-
+    this.session = startPreset(ctx, station, volume, 1.2);
     ambientAudioCoordinator.notifyRadioPlaying();
-
-    if (station === 'tokyo_rain') {
-      this.startTokyoRain(thisGen);
-    } else if (station === 'hearthside') {
-      this.startHearthside(thisGen);
-    } else if (station === 'cosmic_528') {
-      this.startCosmic528(thisGen);
-    } else if (station === 'sunday_cafe') {
-      this.startSundayCafe(thisGen);
-    }
-  }
-
-  // Station 1: Tokyo Midnight Rain (Vinyl crackle + rain + Rhodes jazz chords)
-  private startTokyoRain(gen: number) {
-    if (!this.ctx || !this.masterGain) return;
-
-    // 1. Rain and Vinyl Noise Bed
-    const bufferSize = this.ctx.sampleRate * 4;
-    const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = noiseBuffer.getChannelData(0);
-    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      b0 = 0.99886 * b0 + white * 0.0555179;
-      b1 = 0.99332 * b1 + white * 0.0750759;
-      b2 = 0.96900 * b2 + white * 0.1538520;
-      b3 = 0.86650 * b3 + white * 0.3104856;
-      b4 = 0.55000 * b4 + white * 0.5329522;
-      b5 = -0.7616 * b5 - white * 0.0168980;
-      const vinylCrackle = Math.random() < 0.0015 ? (Math.random() * 2 - 1) * 0.3 : 0;
-      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04 + vinylCrackle;
-      b6 = white * 0.115926;
-    }
-
-    const noiseSource = this.ctx.createBufferSource();
-    noiseSource.buffer = noiseBuffer;
-    noiseSource.loop = true;
-
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(750, this.ctx.currentTime);
-
-    noiseSource.connect(filter);
-    filter.connect(this.masterGain);
-    noiseSource.start();
-    this.activeSources.push(noiseSource);
-
-    // 2. Repeating Jazz Chord Progression: Fmaj9 -> Em9 -> Dm9 -> Cmaj7 -> G13 -> Am9
-    const chords = [
-      [174.61, 220.0, 261.63, 329.63, 392.0], // Fmaj9
-      [164.81, 196.0, 246.94, 293.66, 370.0], // Em9
-      [146.83, 174.61, 220.0, 261.63, 329.63], // Dm9
-      [130.81, 164.81, 196.0, 246.94, 293.66], // Cmaj9
-      [196.0, 246.94, 293.66, 349.23, 440.0],  // G13
-      [220.0, 261.63, 329.63, 392.0, 493.88]   // Am9
-    ];
-
-    let chordIdx = 0;
-    const playChord = () => {
-      if (this.generationId !== gen || !this.ctx || !this.isRunning || !this.masterGain) return;
-      const notes = chords[chordIdx];
-      chordIdx = (chordIdx + 1) % chords.length;
-
-      const now = this.ctx.currentTime;
-      notes.forEach((freq, i) => {
-        if (!this.ctx || !this.masterGain || this.generationId !== gen) return;
-        try {
-          const osc = this.ctx.createOscillator();
-          const chordGain = this.ctx.createGain();
-
-          osc.type = i === 0 ? 'sine' : 'triangle';
-          osc.frequency.setValueAtTime(freq, now + i * 0.04);
-
-          chordGain.gain.setValueAtTime(0.0001, now);
-          chordGain.gain.linearRampToValueAtTime(0.045, now + 0.15 + i * 0.04);
-          chordGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.8);
-
-          osc.connect(chordGain);
-          chordGain.connect(this.masterGain);
-
-          osc.start(now);
-          osc.stop(now + 4.0);
-          this.activeSources.push(osc);
-        } catch (e) {}
-      });
-    };
-
-    playChord();
-    const chordInterval = setInterval(playChord, 4200);
-    this.activeIntervals.push(chordInterval);
-  }
-
-  // Station 2: Cottage Hearthside (Wood crackle + acoustic fingerpicking)
-  private startHearthside(gen: number) {
-    if (!this.ctx || !this.masterGain) return;
-
-    // Fireplace crackle bed
-    const bufferSize = this.ctx.sampleRate * 3;
-    const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = noiseBuffer.getChannelData(0);
-    let last = 0;
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      data[i] = (last + (0.02 * white)) / 1.02;
-      last = data[i];
-      const pop = Math.random() < 0.003 ? (Math.random() * 2 - 1) * 0.4 : 0;
-      data[i] = data[i] * 1.5 + pop;
-    }
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = noiseBuffer;
-    noise.loop = true;
-
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(950, this.ctx.currentTime);
-    filter.Q.setValueAtTime(1.6, this.ctx.currentTime);
-
-    noise.connect(filter);
-    filter.connect(this.masterGain);
-    noise.start();
-    this.activeSources.push(noise);
-
-    // Folk Acoustic Plucks (D - A - Bm - G arpeggios)
-    const arpeggios = [
-      [146.83, 220.0, 293.66, 369.99, 440.0],
-      [110.0, 164.81, 220.0, 277.18, 329.63],
-      [123.47, 185.0, 246.94, 293.66, 369.99],
-      [98.0, 146.83, 196.0, 246.94, 293.66]
-    ];
-
-    let patternIdx = 0;
-    const playPluckSequence = () => {
-      if (this.generationId !== gen || !this.ctx || !this.isRunning || !this.masterGain) return;
-      const notes = arpeggios[patternIdx];
-      patternIdx = (patternIdx + 1) % arpeggios.length;
-
-      const baseNow = this.ctx.currentTime;
-      notes.forEach((freq, idx) => {
-        if (!this.ctx || !this.masterGain || this.generationId !== gen) return;
-        try {
-          const noteTime = baseNow + idx * 0.38;
-          const osc = this.ctx.createOscillator();
-          const noteGain = this.ctx.createGain();
-
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, noteTime);
-
-          noteGain.gain.setValueAtTime(0.0001, noteTime);
-          noteGain.gain.linearRampToValueAtTime(0.045, noteTime + 0.03);
-          noteGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 1.2);
-
-          osc.connect(noteGain);
-          noteGain.connect(this.masterGain);
-
-          osc.start(noteTime);
-          osc.stop(noteTime + 1.3);
-          this.activeSources.push(osc);
-        } catch (e) {}
-      });
-    };
-
-    playPluckSequence();
-    const pluckInterval = setInterval(playPluckSequence, 3400);
-    this.activeIntervals.push(pluckInterval);
-  }
-
-  // Station 3: Cosmic Resonance (528Hz Solfeggio Love Frequency & Deep Pad)
-  private startCosmic528(gen: number) {
-    if (!this.ctx || !this.masterGain) return;
-
-    // 528Hz primary sine oscillator + binaural delta beat + sub
-    const osc1 = this.ctx.createOscillator();
-    const osc2 = this.ctx.createOscillator();
-    const subOsc = this.ctx.createOscillator();
-    const highOsc = this.ctx.createOscillator();
-
-    osc1.type = 'sine';
-    osc2.type = 'sine';
-    subOsc.type = 'sine';
-    highOsc.type = 'sine';
-
-    osc1.frequency.setValueAtTime(528, this.ctx.currentTime); // 528Hz Solfeggio
-    osc2.frequency.setValueAtTime(530.5, this.ctx.currentTime); // 2.5Hz binaural wave
-    subOsc.frequency.setValueAtTime(132, this.ctx.currentTime); // 2 octaves down sub
-    highOsc.frequency.setValueAtTime(1056, this.ctx.currentTime); // 1 octave up gentle harmonic
-
-    const padGain = this.ctx.createGain();
-    padGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-
-    const highGain = this.ctx.createGain();
-    highGain.gain.setValueAtTime(0.015, this.ctx.currentTime);
-
-    osc1.connect(padGain);
-    osc2.connect(padGain);
-    subOsc.connect(padGain);
-    padGain.connect(this.masterGain);
-
-    highOsc.connect(highGain);
-    highGain.connect(this.masterGain);
-
-    osc1.start();
-    osc2.start();
-    subOsc.start();
-    highOsc.start();
-
-    // Track ALL 4 oscillators so they stop cleanly!
-    this.activeSources.push(osc1, osc2, subOsc, highOsc);
-
-    // Periodic soft celestial bell overtone
-    const bellPitches = [792, 1056, 1320, 1584];
-    const ringBell = () => {
-      if (this.generationId !== gen || !this.ctx || !this.isRunning || !this.masterGain) return;
-      try {
-        const pitch = bellPitches[Math.floor(Math.random() * bellPitches.length)];
-        const now = this.ctx.currentTime;
-        const bOsc = this.ctx.createOscillator();
-        const bGain = this.ctx.createGain();
-
-        bOsc.type = 'sine';
-        bOsc.frequency.setValueAtTime(pitch, now);
-
-        bGain.gain.setValueAtTime(0.0001, now);
-        bGain.gain.linearRampToValueAtTime(0.025, now + 0.1);
-        bGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.0);
-
-        bOsc.connect(bGain);
-        bGain.connect(this.masterGain);
-
-        bOsc.start(now);
-        bOsc.stop(now + 3.1);
-        this.activeSources.push(bOsc);
-      } catch (e) {}
-    };
-
-    ringBell();
-    const bellInterval = setInterval(ringBell, 4500);
-    this.activeIntervals.push(bellInterval);
-  }
-
-  // Station 4: Sunday Morning Cafe (Warm Rhodes & Room Presence)
-  private startSundayCafe(gen: number) {
-    if (!this.ctx || !this.masterGain) return;
-
-    // Gentle room presence
-    const bufferSize = this.ctx.sampleRate * 3;
-    const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * 0.015;
-    }
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = noiseBuffer;
-    noise.loop = true;
-
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(500, this.ctx.currentTime);
-
-    noise.connect(filter);
-    filter.connect(this.masterGain);
-    noise.start();
-    this.activeSources.push(noise);
-
-    // Warm Sunday Chords (Gmaj7 -> Cmaj7 -> Am7 -> D7)
-    const chords = [
-      [196.0, 246.94, 293.66, 369.99],
-      [130.81, 164.81, 196.0, 246.94],
-      [220.0, 261.63, 329.63, 392.0],
-      [146.83, 185.0, 220.0, 261.63]
-    ];
-
-    let idx = 0;
-    const playMorningChord = () => {
-      if (this.generationId !== gen || !this.ctx || !this.isRunning || !this.masterGain) return;
-      const notes = chords[idx];
-      idx = (idx + 1) % chords.length;
-
-      const now = this.ctx.currentTime;
-      notes.forEach((f, i) => {
-        if (!this.ctx || !this.masterGain || this.generationId !== gen) return;
-        try {
-          const osc = this.ctx.createOscillator();
-          const g = this.ctx.createGain();
-
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(f, now + i * 0.05);
-
-          g.gain.setValueAtTime(0.0001, now);
-          g.gain.linearRampToValueAtTime(0.04, now + 0.12);
-          g.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
-
-          osc.connect(g);
-          g.connect(this.masterGain);
-
-          osc.start(now);
-          osc.stop(now + 3.4);
-          this.activeSources.push(osc);
-        } catch (e) {}
-      });
-    };
-
-    playMorningChord();
-    const cafeInterval = setInterval(playMorningChord, 3800);
-    this.activeIntervals.push(cafeInterval);
   }
 }
 
@@ -500,33 +157,91 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
   const isUserListening = state.activeUser === 'user' ? radio.userListening : radio.partnerListening;
   const isPartnerListening = state.activeUser === 'user' ? radio.partnerListening : radio.userListening;
 
+  // Live radio: the station and favourites come from the shared state - from
+  // the partner's phone, possibly - so they are checked before use.
+  const band = radio.band === 'live' ? 'live' : 'two';
+  const liveStation = useMemo(() => cleanStation(radio.liveStation), [radio.liveStation]);
+  const liveFavorites = useMemo(
+    () => (Array.isArray(radio.liveFavorites) ? radio.liveFavorites : []).map(cleanStation).filter((s): s is LiveRadioStation => !!s),
+    [radio.liveFavorites]
+  );
+  const onLive = band === 'live' && !!liveStation;
+
   const [whisperInput, setWhisperInput] = useState('');
   const [volume, setVolume] = useState<number>(radio.volume || 0.6);
   const [sleepMinutesRemaining, setSleepMinutesRemaining] = useState<number | null>(null);
   const [isLocalTunedIn, setIsLocalTunedIn] = useState<boolean>(false);
+  /** Which band's stations are on show; follows the shared band when it changes. */
+  const [viewBand, setViewBand] = useState<'two' | 'live'>(band);
+  const [liveStatus, setLiveStatus] = useState<LiveRadioStatus>(liveRadio.state);
 
   // Equalizer spectrum visualization state
   const [eqHeights, setEqHeights] = useState<number[]>(new Array(20).fill(6));
 
   const currentStationMeta = STATIONS.find(s => s.id === radio.stationId) || STATIONS[0];
+  const nowName = onLive ? liveStation!.name : currentStationMeta.name;
+  const soundOn = isLocalTunedIn && (!onLive || liveStatus === 'playing');
+
+  /** What this phone is playing right now, so a repeat of the same request changes nothing. */
+  const playingRef = useRef<string | null>(null);
+  /** The radio as it is now, for what runs from a timer set up earlier (the sleep timer). */
+  const radioRef = useRef(radio);
+  radioRef.current = radio;
+
+  const listening = (on: boolean): Pick<MidnightRadioState, 'userListening' | 'partnerListening'> => ({
+    userListening: state.activeUser === 'user' ? on : radio.userListening,
+    partnerListening: state.activeUser !== 'user' ? on : radio.partnerListening
+  });
+
+  /** Plays whatever the dial says - Two's own station, or the live one. */
+  const startLocal = (target: MidnightRadioState = radio) => {
+    const live = target.band === 'live' ? cleanStation(target.liveStation) : null;
+    const key = live ? `live:${live.url}` : `two:${target.stationId}`;
+    if (playingRef.current === key) {
+      // Already on. A live station off air, or waiting for a tap, is tried
+      // again; one playing carries on (the player knows the difference).
+      if (live) liveRadio.play(live, volume);
+      return;
+    }
+    playingRef.current = key;
+    if (live) {
+      radioSynth.stop(true);
+      liveRadio.play(live, volume);
+    } else {
+      liveRadio.stop();
+      radioSynth.start(target.stationId, volume);
+    }
+  };
+
+  const stopLocal = () => {
+    playingRef.current = null;
+    radioSynth.stop(true);
+    liveRadio.stop();
+  };
 
   // Register with ambientAudioCoordinator and cleanup on unmount
   useEffect(() => {
     ambientAudioCoordinator.registerRadio(() => {
       setIsLocalTunedIn(false);
-      radioSynth.stop(true);
+      stopLocal();
     });
 
     return () => {
-      radioSynth.stop(true);
+      stopLocal();
       setIsLocalTunedIn(false);
     };
   }, []);
 
+  useEffect(() => liveRadio.subscribe(status => setLiveStatus(status)), []);
+
+  useEffect(() => {
+    setViewBand(band);
+  }, [band]);
+
   // Equalizer animation loop when playing
   useEffect(() => {
     let animId: any;
-    if (isLocalTunedIn) {
+    if (soundOn) {
       const animate = () => {
         setEqHeights(prev =>
           prev.map(() => Math.floor(Math.random() * 55) + 15)
@@ -540,7 +255,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
     return () => {
       if (animId) clearTimeout(animId);
     };
-  }, [isLocalTunedIn]);
+  }, [soundOn]);
 
   // Handle sleep timer countdown
   useEffect(() => {
@@ -561,18 +276,17 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
     };
   }, [isLocalTunedIn, sleepMinutesRemaining]);
 
-  // If station changes remotely or locally while user is actively tuned in, update synthesis
+  // If the station changes - here or on the partner's phone - while this
+  // phone is tuned in, follow it: that is listening together.
   useEffect(() => {
-    if (isLocalTunedIn) {
-      radioSynth.start(radio.stationId, volume);
-    }
-  }, [radio.stationId]);
+    if (isLocalTunedIn) startLocal();
+  }, [radio.stationId, band, liveStation?.url]);
 
   // If radio is stopped from remote partner, disengage local audio
   useEffect(() => {
     if (!radio.isPlaying && isLocalTunedIn) {
       setIsLocalTunedIn(false);
-      radioSynth.stop(true);
+      stopLocal();
     }
   }, [radio.isPlaying]);
 
@@ -581,16 +295,15 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
     setIsLocalTunedIn(nextTunedIn);
 
     if (nextTunedIn) {
-      radioSynth.start(radio.stationId, volume);
+      startLocal();
     } else {
-      radioSynth.stop(true);
+      stopLocal();
     }
 
     const updatedRadio: MidnightRadioState = {
       ...radio,
       isPlaying: nextTunedIn,
-      userListening: state.activeUser === 'user' ? nextTunedIn : radio.userListening,
-      partnerListening: state.activeUser !== 'user' ? nextTunedIn : radio.partnerListening,
+      ...listening(nextTunedIn),
       startedAt: nextTunedIn ? Date.now() : radio.startedAt
     };
     onUpdateRadio(updatedRadio);
@@ -602,9 +315,9 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
 
   const handleStopRadio = () => {
     setIsLocalTunedIn(false);
-    radioSynth.stop(true);
+    stopLocal();
     const updatedRadio: MidnightRadioState = {
-      ...radio,
+      ...radioRef.current,
       isPlaying: false,
       userListening: false,
       partnerListening: false
@@ -619,22 +332,54 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
     const updatedRadio: MidnightRadioState = {
       ...radio,
       stationId,
+      band: 'two',
       isPlaying: true,
-      userListening: true,
+      ...listening(true),
       startedAt: Date.now()
     };
     onUpdateRadio(updatedRadio);
     setIsLocalTunedIn(true);
-    radioSynth.start(stationId, volume);
+    startLocal(updatedRadio);
 
     if ('vibrate' in navigator) {
       navigator.vibrate([80]);
     }
   };
 
+  const handleSelectLive = (station: LiveRadioStation) => {
+    const updatedRadio: MidnightRadioState = {
+      ...radio,
+      band: 'live',
+      liveStation: station,
+      isPlaying: true,
+      ...listening(true),
+      startedAt: Date.now()
+    };
+    onUpdateRadio(updatedRadio);
+    setIsLocalTunedIn(true);
+    startLocal(updatedRadio);
+
+    if ('vibrate' in navigator) {
+      navigator.vibrate([80]);
+    }
+  };
+
+  /** The next hand-picked station after this one: what to offer when a station is off air. */
+  const nextLive = (station: LiveRadioStation | null): LiveRadioStation => {
+    const i = station ? TAMIL_FM.findIndex(s => sameStation(s, station)) : -1;
+    return TAMIL_FM[(i + 1) % TAMIL_FM.length];
+  };
+
+  const isFavorite = (station: LiveRadioStation) => liveFavorites.some(f => sameStation(f, station));
+
+  const handleToggleFavorite = (station: LiveRadioStation) => {
+    onUpdateRadio(toggleFavorite(radio, station));
+  };
+
   const handleVolumeChange = (newVol: number) => {
     setVolume(newVol);
     radioSynth.setVolume(newVol);
+    liveRadio.setVolume(newVol);
     onUpdateRadio({
       ...radio,
       volume: newVol
@@ -668,7 +413,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
             Midnight Radio
           </h2>
           <p className="text-xs text-linen-secondary mt-0.5">
-            Private synchronized lo-fi & atmospheric soundscapes. Both lovers listening to the exact same chord, in real-time.
+            Two's own never-repeating stations, or live Tamil FM. Both of you on the same station, at the same time.
           </p>
         </div>
 
@@ -692,7 +437,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
             ) : isLocalTunedIn ? (
               <span>You are tuned in • Waiting for {partnerName}</span>
             ) : radio.isPlaying ? (
-              <span className="text-amber-800 font-medium">📻 {partnerName} is tuned in • Tap Tune In to join</span>
+              <span className="text-amber-800 font-medium">📻 {partnerName} is on {nowName} • Tap play to join</span>
             ) : (
               <span className="text-linen-secondary">Tuned off • Tap Play to start shared session</span>
             )}
@@ -727,25 +472,58 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
               </div>
             </div>
 
-            <div className="flex items-baseline justify-between relative z-10">
-              <div>
-                <h3 className="font-mono text-3xl sm:text-4xl font-light text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]">
-                  {currentStationMeta.frequency}
-                </h3>
-                <p className="font-serif text-sm sm:text-base text-amber-100 font-medium mt-0.5">
-                  {currentStationMeta.name}
-                </p>
-              </div>
+            {onLive ? (
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 sm:gap-3 relative z-10">
+                <div className="min-w-0">
+                  <h3 className="font-mono text-3xl sm:text-4xl font-light text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.5)] flex items-center gap-2 whitespace-nowrap">
+                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isLocalTunedIn && liveStatus === 'playing' ? 'bg-rose-500 animate-pulse' : 'bg-rose-950'}`} />
+                    {liveStation!.frequency ?? 'LIVE'}
+                  </h3>
+                  <p className="font-serif text-sm sm:text-base text-amber-100 font-medium mt-0.5 truncate">
+                    {liveStation!.name}{liveStation!.place ? ` · ${liveStation!.place}` : ''}
+                  </p>
+                </div>
 
-              <div className="text-right">
-                <span className="text-xs font-serif px-2.5 py-1 rounded-full border border-amber-500/30 bg-amber-950/60 text-amber-300">
-                  {currentStationMeta.genre}
-                </span>
-                <p className="text-[11px] text-amber-500/70 font-serif italic mt-1 max-w-[200px] hidden sm:block">
-                  {currentStationMeta.tagline}
-                </p>
+                <div className="flex sm:block items-center gap-2 sm:text-right shrink-0">
+                  <span className="text-xs font-serif px-2.5 py-1 rounded-full border border-rose-500/30 bg-rose-950/40 text-rose-200 whitespace-nowrap">
+                    {liveStation!.broadcaster ?? 'Live radio'}
+                  </span>
+                  <p className="text-[11px] text-amber-500/70 font-serif italic sm:mt-1" aria-live="polite">
+                    {!isLocalTunedIn
+                      ? 'Live Tamil FM'
+                      : liveStatus === 'tuning'
+                        ? 'Tuning in…'
+                        : liveStatus === 'buffering'
+                          ? 'Reconnecting…'
+                          : liveStatus === 'off-air'
+                            ? 'Off air right now'
+                            : liveStatus === 'needs-tap'
+                              ? 'Tap to listen'
+                              : 'On air'}
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-baseline justify-between relative z-10">
+                <div>
+                  <h3 className="font-mono text-3xl sm:text-4xl font-light text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]">
+                    {currentStationMeta.frequency}
+                  </h3>
+                  <p className="font-serif text-sm sm:text-base text-amber-100 font-medium mt-0.5">
+                    {currentStationMeta.name}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-xs font-serif px-2.5 py-1 rounded-full border border-amber-500/30 bg-amber-950/60 text-amber-300">
+                    {currentStationMeta.genre}
+                  </span>
+                  <p className="text-[11px] text-amber-500/70 font-serif italic mt-1 max-w-[200px] hidden sm:block">
+                    {currentStationMeta.tagline}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Floating Live Radio Whisper Ticker */}
             {radio.whispers && radio.whispers.length > 0 && (
@@ -781,14 +559,41 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
 
         {/* Center: Interactive Tuner Ribbon */}
         <div className="py-6">
-          <div className="text-[11px] font-mono text-amber-600/80 uppercase tracking-widest mb-2 flex items-center justify-between">
-            <span>Analog Station Frequency Band</span>
-            <span>AM / FM Dial</span>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <span className="text-[11px] font-mono text-amber-600/80 uppercase tracking-widest">Band</span>
+            <div className="inline-flex rounded-2xl border border-amber-950/60 bg-neutral-950/70 p-1" role="tablist" aria-label="Radio band">
+              {([['two', "Two's stations"], ['live', 'Tamil FM · Live']] as const).map(([id, label]) => (
+                <button
+                  key={id}
+                  role="tab"
+                  aria-selected={viewBand === id}
+                  onClick={() => setViewBand(id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-serif transition-colors cursor-pointer ${
+                    viewBand === id ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40' : 'text-amber-600/80 hover:text-amber-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
+          {viewBand === 'live' ? (
+            <LiveBand
+              current={onLive ? liveStation : null}
+              tunedIn={isLocalTunedIn}
+              status={liveStatus}
+              favorites={liveFavorites}
+              isFavorite={isFavorite}
+              onPlay={handleSelectLive}
+              onToggleFavorite={handleToggleFavorite}
+              onNext={() => handleSelectLive(nextLive(liveStation))}
+              onRetry={() => liveStation && handleSelectLive(liveStation)}
+            />
+          ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {STATIONS.map(station => {
-              const isCurrent = station.id === radio.stationId;
+              const isCurrent = !onLive && station.id === radio.stationId;
               const IconComponent = station.icon;
               return (
                 <button
@@ -814,6 +619,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
               );
             })}
           </div>
+          )}
         </div>
 
         {/* Bottom Bar: Spectrum Equalizer + Transport Controls */}
@@ -826,7 +632,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
                 className="w-1.5 rounded-t-sm transition-all duration-100"
                 style={{
                   height: `${h}%`,
-                  backgroundColor: isLocalTunedIn ? currentStationMeta.themeColor : '#451a03'
+                  backgroundColor: soundOn ? (onLive ? '#fb7185' : currentStationMeta.themeColor) : '#451a03'
                 }}
               />
             ))}
@@ -893,7 +699,11 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
 
             {onSendToChat && (
               <button
-                onClick={() => onSendToChat(`📻 Listening to "${currentStationMeta.name}" (${currentStationMeta.frequency}) on Midnight Radio. Come listen with me.`)}
+                onClick={() => onSendToChat(
+                  onLive
+                    ? `📻 Listening to ${liveStation!.name}${liveStation!.place ? ` (${liveStation!.place})` : ''}, live on Midnight Radio. Come listen with me.`
+                    : `📻 Listening to "${currentStationMeta.name}" (${currentStationMeta.frequency}) on Midnight Radio. Come listen with me.`
+                )}
                 className="p-2 rounded-2xl border border-amber-950/60 bg-neutral-950/60 text-amber-500 hover:text-amber-300 hover:bg-neutral-900 transition-colors cursor-pointer"
                 title="Share Station in Chat"
               >
@@ -962,6 +772,173 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+interface LiveBandProps {
+  current: LiveRadioStation | null;
+  tunedIn: boolean;
+  status: LiveRadioStatus;
+  favorites: LiveRadioStation[];
+  isFavorite: (station: LiveRadioStation) => boolean;
+  onPlay: (station: LiveRadioStation) => void;
+  onToggleFavorite: (station: LiveRadioStation) => void;
+  onNext: () => void;
+  /** Tunes the current station again - in a tap, which is also what an iPhone needs to play it. */
+  onRetry: () => void;
+}
+
+/** The live band: Tamil FM stations, the two of you's favourites, and a search for more. */
+const LiveBand: React.FC<LiveBandProps> = ({ current, tunedIn, status, favorites, isFavorite, onPlay, onToggleFavorite, onNext, onRetry }) => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<LiveRadioStation[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+
+  // The hand-picked stations a search matches, shown first: the directory
+  // search leaves them out, as they are already on the dial.
+  const needle = query.trim().toLowerCase();
+  const ownMatches = needle.length < 2
+    ? []
+    : TAMIL_FM.filter(s => [s.name, s.place, s.broadcaster, s.frequency].some(v => v?.toLowerCase().includes(needle)));
+
+  // Searched as you type, a moment after you stop.
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setResults(null);
+      setSearching(false);
+      setSearchError(false);
+      return;
+    }
+    const abort = new AbortController();
+    const timer = setTimeout(() => {
+      setSearching(true);
+      setSearchError(false);
+      searchTamilStations(q, abort.signal)
+        .then(found => setResults(found.slice(0, 20)))
+        .catch(() => {
+          if (!abort.signal.aborted) setSearchError(true);
+        })
+        .finally(() => {
+          if (!abort.signal.aborted) setSearching(false);
+        });
+    }, 450);
+    return () => {
+      clearTimeout(timer);
+      abort.abort();
+    };
+  }, [query]);
+
+  const card = (station: LiveRadioStation) => {
+    const isCurrent = sameStation(station, current);
+    const starred = isFavorite(station);
+    return (
+      <div
+        key={station.url}
+        className={`relative rounded-2xl border transition-all ${
+          isCurrent
+            ? 'text-rose-200 border-rose-500/40 bg-rose-950/30 shadow-md'
+            : 'border-amber-950/60 bg-neutral-950/60 hover:bg-neutral-900/60 text-amber-600/70'
+        }`}
+      >
+        <button onClick={() => onPlay(station)} className="w-full p-3 pr-9 text-left cursor-pointer">
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="font-mono text-xs font-semibold truncate">{station.frequency ?? station.place ?? 'Live'}</span>
+            {isCurrent && tunedIn && status === 'playing' && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />}
+          </div>
+          <h4 className="font-serif text-sm font-medium text-amber-100 truncate">{station.name}</h4>
+          <p className="text-[10px] text-amber-500/70 truncate mt-0.5">
+            {[station.frequency ? station.place : null, station.broadcaster].filter(Boolean).join(' · ') || 'Tamil'}
+          </p>
+        </button>
+        <button
+          onClick={() => onToggleFavorite(station)}
+          className="absolute top-2 right-2 p-1 rounded-lg text-amber-500/70 hover:text-amber-300 cursor-pointer"
+          aria-label={starred ? `Remove ${station.name} from favourites` : `Add ${station.name} to favourites`}
+          aria-pressed={starred}
+        >
+          <Star className={`w-3.5 h-3.5 ${starred ? 'fill-amber-400 text-amber-400' : ''}`} />
+        </button>
+      </div>
+    );
+  };
+
+  const heading = (text: string) => (
+    <h5 className="text-[10px] font-mono uppercase tracking-widest text-amber-600/80 mb-2">{text}</h5>
+  );
+
+  return (
+    <div className="space-y-4">
+      {current && tunedIn && status === 'off-air' && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-rose-900/50 bg-rose-950/30 px-3 py-2 text-xs font-serif text-rose-200">
+          <span>{current.name} is off air right now: the station may be down, or your connection.</span>
+          <div className="flex gap-2">
+            <button onClick={onRetry} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-500/20 border border-rose-500/40 hover:bg-rose-500/30 cursor-pointer">
+              Try again
+            </button>
+            <button onClick={onNext} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-500/20 border border-rose-500/40 hover:bg-rose-500/30 cursor-pointer">
+              <SkipForward className="w-3.5 h-3.5" />
+              Next station
+            </button>
+          </div>
+        </div>
+      )}
+
+      {current && tunedIn && status === 'needs-tap' && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-amber-700/50 bg-amber-950/40 px-3 py-2 text-xs font-serif text-amber-200">
+          <span>Your phone wants a tap before it plays {current.name}.</span>
+          <button onClick={onRetry} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 cursor-pointer">
+            <Play className="w-3.5 h-3.5" />
+            Listen
+          </button>
+        </div>
+      )}
+
+      {favorites.length > 0 && (
+        <div>
+          {heading('Your favourites')}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">{favorites.map(card)}</div>
+        </div>
+      )}
+
+      <div>
+        {heading('Tamil FM')}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">{TAMIL_FM.map(card)}</div>
+      </div>
+
+      <div>
+        <label className="flex items-center gap-2 rounded-2xl border border-amber-950/60 bg-neutral-950/70 px-3 py-2 focus-within:border-amber-600">
+          <Search className="w-4 h-4 text-amber-600/80 shrink-0" />
+          <input
+            type="search"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search more Tamil stations"
+            className="flex-1 bg-transparent text-xs text-amber-100 placeholder-amber-700/80 focus:outline-none"
+            aria-label="Search more Tamil stations"
+          />
+          {searching && <Loader2 className="w-4 h-4 text-amber-500 animate-spin shrink-0" />}
+        </label>
+        {searchError && (
+          <p className="mt-2 text-[11px] font-serif text-rose-300">The station directory could not be reached. Check your connection and try again.</p>
+        )}
+        {(ownMatches.length > 0 || (results && results.length > 0)) && (
+          <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {[...ownMatches, ...(results ?? [])].map(card)}
+          </div>
+        )}
+        {results && !searching && !searchError && results.length === 0 && ownMatches.length === 0 && (
+          <p className="mt-2 text-[11px] font-serif text-amber-500/70">No Tamil stations by that name.</p>
+        )}
+      </div>
+
+      <p className="text-[10px] leading-relaxed font-serif text-amber-600/70">
+        Live radio comes straight from each station over the internet: about 30 to 60 MB an hour on mobile data.
+        The station can see your connection, as with any radio app; search goes to the radio-browser.info directory.
+        Your messages and your space stay where they are.
+      </p>
     </div>
   );
 };

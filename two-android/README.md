@@ -90,4 +90,13 @@ two-android/
    C:\Users\dines\.gemini\antigravity\scratch\two-android
    ```
 3. Allow Gradle to sync dependencies from `gradle/libs.versions.toml`.
-4. Run on an Android Emulator or physical device (Android 8.0+ / API 26+).
+4. Put the web app inside it. The app shows `two-web`'s build from
+   `app/src/main/assets/www/`, which is not kept in git (CI builds it fresh for
+   every APK), so a local build needs it copied in first:
+   ```
+   cd two-web && npm run build
+   rm -rf ../two-android/app/src/main/assets/www
+   cp -r dist/. ../two-android/app/src/main/assets/www/
+   ```
+   Without this the app opens to a blank screen.
+5. Run on an Android Emulator or physical device (Android 8.0+ / API 26+).

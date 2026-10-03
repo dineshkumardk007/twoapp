@@ -1,5 +1,6 @@
 // End-to-End Encrypted Vault Export & Import Engine (.two-vault)
 import { SpaceState } from './storage';
+import { saveFile } from './saveFile';
 
 /**
  * How hard it is to turn the passphrase into the key.
@@ -179,14 +180,8 @@ export async function importVault(vaultJsonString: string, passphrase: string): 
   }
 }
 
+/** Saves the sealed backup - on the phone through its own save screen; see saveFile. */
 export function downloadVaultFile(content: string, filename: string = 'two-space-backup.two-vault') {
   const blob = new Blob([content], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  return saveFile(blob, filename);
 }

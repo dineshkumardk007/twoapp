@@ -54,6 +54,15 @@ export function recordSizeOf(data: unknown): number {
 }
 const MAX_APPLIED_IDS = 4_000;
 const HEARTBEAT_MS = 25_000;
+
+/**
+ * How long a record sent on this connection waits for its acknowledgement
+ * before it is sent again. Far longer than an acknowledgement takes - even
+ * with the relay and its database on different continents it is well under
+ * a second - so only a record that was genuinely lost, refused by the rate
+ * limit or swallowed by a dying socket, goes out twice.
+ */
+const RESEND_AFTER_MS = 15_000;
 const RECONNECT_BASE_MS = 1_000;
 const RECONNECT_MAX_MS = 30_000;
 
@@ -147,6 +156,28 @@ export class WebSocketRelayClient {
    * phone. Everything it receives is being restored, not happening now.
    */
   private restoring = false;
+
+  /**
+   * True while history is being fetched again after a seat switch - see
+   * CATCH_UP_TYPES in seats.ts. Records arriving in that replay are marked,
+   * so the screen applies only what is safe to apply twice.
+   */
+  private catchingUp = false;
+
+  /**
+   * Bumped whenever the read position is wound back.
+   *
+   * A record is handed to the screen first and its position saved after -
+   * and the screen can wind the position back from inside that handover (a
+   * name heard from the other seat ends a clash, and fetches everything
+   * again). Saving the position afterwards would put it straight back past
+   * what the rewind was for, so a record handed over before a rewind does
+   * not get to save one.
+   */
+  private cursorGeneration = 0;
+
+  /** A flush waiting to retry records the relay turned away for coming too fast. */
+  private retryFlushTimer: ReturnType<typeof setTimeout> | null = null;
   private partnerOnline = false;
   private presenceInfo: PresenceInfo = { peers: 0, ownDevices: 0, total: 0 };
 
@@ -171,6 +202,18 @@ export class WebSocketRelayClient {
   // not cost the user a message.
   private outbox: any[] = [];
 
+  /**
+   * When each waiting record last went out on the current socket, by id.
+   *
+   * Every new record used to send the entire outbox along with it, so three
+   * messages typed while the first was still unacknowledged went out as six,
+   * and a burst of drawing as a triangle number of them - each one a database
+   * write and a broadcast on the relay, at exactly the moment it was busiest.
+   * Cleared whenever a socket opens, so a new connection still sends
+   * everything that was waiting. Not persisted: it describes one socket.
+   */
+  private sentOnSocket = new Map<string, number>();
+
 
   // Because the outbox re-sends, the partner can legitimately receive the same
   // record twice. Handlers like CHAT append blindly, so duplicates are filtered
@@ -180,10 +223,17 @@ export class WebSocketRelayClient {
 
   connect(creds: SpaceCredentials) {
     const switchingSpace = this.creds?.spaceId !== creds.spaceId;
+    // The seat is announced once, when the socket joins. A device switched to
+    // the other seat kept its open socket - and with it the old seat, which
+    // the relay uses to decide what to replay and who counts as the partner -
+    // until something happened to reconnect it.
+    const previousSeat = this.creds ? this.creds.authorLabel || this.creds.role : null;
+    const switchingSeat =
+      !switchingSpace && previousSeat !== null && previousSeat !== (creds.authorLabel || creds.role);
     this.creds = creds;
     this.stopped = false;
 
-    if (this.ws && !switchingSpace) {
+    if (this.ws && !switchingSpace && !switchingSeat) {
       const state = this.ws.readyState;
       if (state === WebSocket.OPEN || state === WebSocket.CONNECTING) return;
     }
@@ -191,8 +241,60 @@ export class WebSocketRelayClient {
     if (switchingSpace) {
       this.teardownSocket();
       this.restoreOutbox(creds.spaceId);
+    } else if (switchingSeat) {
+      this.teardownSocket();
+      this.takeNewSeat(creds);
     }
     this.open();
+  }
+
+  /**
+   * Moves what this client holds over to the seat it has just taken.
+   *
+   * Records still waiting to go were written for the old seat and would be
+   * sent under it - where the phone that still sits there takes them for its
+   * own. The author is not part of what the encryption binds (the record id,
+   * space and type are), so it can be corrected without re-encrypting.
+   *
+   * And the read position is wound back to the start. While two phones shared
+   * a seat, the relay withheld from each everything the other wrote while it
+   * was away, and the position had already moved past all of it. Fetching the
+   * history again is the only way to get it; what is safe to apply from it is
+   * decided on the other side (see catchingUp).
+   */
+  private takeNewSeat(creds: SpaceCredentials) {
+    const seat = creds.authorLabel || creds.role;
+    for (const entry of this.outbox) entry.record.authorId = seat;
+    this.persistOutbox();
+    this.cursorGeneration++;
+    try {
+      localStorage.removeItem(this.highWaterKey(creds.spaceId));
+      localStorage.removeItem(this.seqKey(creds.spaceId));
+    } catch {
+      /* storage unavailable: nothing to wind back */
+    }
+    this.catchingUp = true;
+  }
+
+  /**
+   * Fetches the history again for a phone that kept its seat through a clash.
+   *
+   * While both phones sat in one seat, everything the other person wrote was
+   * filed under this phone's own seat - and the relay never replays a seat's
+   * own records back to it. Once the other phone has moved, those records are
+   * still only reachable by asking for everything; the phone that moved does
+   * the same thing as part of moving (see takeNewSeat).
+   */
+  catchUpAfterClash() {
+    if (!this.creds || this.stopped) return;
+    this.teardownSocket();
+    this.takeNewSeat(this.creds);
+    this.open();
+  }
+
+  /** The seat this client is connected (or connecting) in, or null with none. */
+  currentSeat(): string | null {
+    return this.creds ? this.creds.authorLabel || this.creds.role : null;
   }
 
   private open() {
@@ -208,6 +310,8 @@ export class WebSocketRelayClient {
       return;
     }
     this.ws = socket;
+    // Nothing has been sent on this socket yet.
+    this.sentOnSocket.clear();
 
     socket.onopen = () => {
       if (this.stopped || !this.creds) return;
@@ -305,6 +409,7 @@ export class WebSocketRelayClient {
       if (!payload.more) {
         this.replaying = false;
         this.restoring = false;
+        this.catchingUp = false;
       }
       this.emit({ ...payload, restoring: this.restoring });
       // A relay that says there is more has capped this batch; ask for the
@@ -313,6 +418,15 @@ export class WebSocketRelayClient {
       // before this arrives.
       if (payload.more) this.requestNextReplayPage();
       return;
+    }
+
+    if (payload?.type === 'ERROR' && typeof payload.recordId === 'string') {
+      // The relay turned this record away for arriving too fast. It is not on
+      // its way after all, so it goes back to being unsent - and the next
+      // flush sends it in its place in the queue, ahead of anything newer,
+      // instead of a newer copy of the same thing overtaking it.
+      this.sentOnSocket.delete(payload.recordId);
+      this.scheduleRetryFlush();
     }
 
     if (payload?.type === 'RECORD_ACK' && payload.recordId) {
@@ -370,16 +484,22 @@ export class WebSocketRelayClient {
         record.spaceId,
         record.type
       );
+      const generation = this.cursorGeneration;
       // Same shape subscribers have always received: payload is a JSON string.
       this.emit({
         type: 'REMOTE_RECORD',
         record: { ...record, payload: plaintext },
         // History, not news: the screen treats the two differently.
         replay: this.replaying,
-        restoring: this.restoring
+        restoring: this.restoring,
+        catchUp: this.catchingUp && this.replaying
       });
-      this.saveHighWaterMark(creds.spaceId, Number(record.lamportClock));
-      this.saveSeqCursor(creds.spaceId, Number(record.seq));
+      // Not if the position was wound back while this record was being
+      // handled - see cursorGeneration.
+      if (generation === this.cursorGeneration) {
+        this.saveHighWaterMark(creds.spaceId, Number(record.lamportClock));
+        this.saveSeqCursor(creds.spaceId, Number(record.seq));
+      }
     } catch {
       // Authentication failed: a stale record from a rotated code, or someone
       // in the room without the key. Dropping it is the correct outcome.
@@ -522,9 +642,21 @@ export class WebSocketRelayClient {
    */
   private flushOutbox() {
     if (!this.isOpen() || !this.creds) return;
+    const now = Date.now();
     for (const entry of this.outbox) {
+      // Already on its way over this socket, and not long enough ago to count
+      // as lost. See sentOnSocket.
+      const sentAt = this.sentOnSocket.get(entry.record.id);
+      if (sentAt !== undefined && now - sentAt < RESEND_AFTER_MS) continue;
+      // Sent before but not acknowledged: worth repeating only once the socket
+      // has actually finished sending. A photo going up a slow connection can
+      // take longer than the wait above, and repeating it then just queues the
+      // same megabyte behind itself.
+      if (sentAt !== undefined && (this.ws?.bufferedAmount ?? 0) > 0) continue;
+
       this.lamport = Math.max(this.lamport + 1, Date.now());
       entry.record.lamportClock = this.lamport;
+      this.sentOnSocket.set(entry.record.id, now);
       // Only the record goes on the wire; correlationId is a local concern.
       this.rawSend({ type: 'RECORD', spaceId: entry.record.spaceId, record: entry.record });
     }
@@ -534,6 +666,7 @@ export class WebSocketRelayClient {
   private ackRecord(recordId: string): string | undefined {
     const entry = this.outbox.find(e => e.record.id === recordId);
     if (!entry) return undefined;
+    this.sentOnSocket.delete(recordId);
     this.outbox = this.outbox.filter(e => e.record.id !== recordId);
     this.persistOutbox();
     return entry.correlationId;
@@ -746,10 +879,25 @@ export class WebSocketRelayClient {
     }, delay);
   }
 
+  /** Flushes again shortly - after the relay's rate limit has had time to refill. */
+  private scheduleRetryFlush() {
+    if (this.retryFlushTimer) return;
+    this.retryFlushTimer = setTimeout(() => {
+      this.retryFlushTimer = null;
+      this.flushOutbox();
+    }, 1_500);
+  }
+
   private startHeartbeat() {
     this.stopHeartbeat();
     // Idle WebSockets get culled by proxies; a periodic ping keeps the pipe warm.
-    this.heartbeatTimer = setInterval(() => this.rawSend({ type: 'PING' }), HEARTBEAT_MS);
+    // It is also when a record that never got its acknowledgement - refused by
+    // the rate limit, say, which says so without naming the record - goes out
+    // again, instead of waiting for the next thing somebody happens to send.
+    this.heartbeatTimer = setInterval(() => {
+      this.rawSend({ type: 'PING' });
+      this.flushOutbox();
+    }, HEARTBEAT_MS);
   }
 
   private stopHeartbeat() {
@@ -761,6 +909,10 @@ export class WebSocketRelayClient {
 
   private teardownSocket() {
     this.stopHeartbeat();
+    if (this.retryFlushTimer) {
+      clearTimeout(this.retryFlushTimer);
+      this.retryFlushTimer = null;
+    }
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;

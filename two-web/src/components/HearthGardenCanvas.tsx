@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { HearthGardenState, GardenBlossom } from '../types';
 import { Sparkles, Heart, Droplets, Sun, X } from 'lucide-react';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface HearthGardenCanvasProps {
   garden: HearthGardenState;
@@ -12,84 +13,15 @@ interface HearthGardenCanvasProps {
 }
 
 export function playWaterDropSound() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    [0, 0.08, 0.18, 0.28].forEach((delay, idx) => {
-      const t = now + delay;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      const baseFreq = 950 + idx * 120;
-      osc.frequency.setValueAtTime(baseFreq, t);
-      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, t + 0.09);
-
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.18, t + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.085);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(t);
-      osc.stop(t + 0.09);
-    });
-  } catch (_) {}
+  playSound('water-drop');
 }
 
 export function playSunlightChime() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    // Harmonic warm drone (G major: 392Hz, 493.88Hz, 587.33Hz, 783.99Hz)
-    const chord = [392, 493.88, 587.33, 783.99];
-    chord.forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.05);
-
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.15 + idx * 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now + idx * 0.05);
-      osc.stop(now + 1.2);
-    });
-  } catch (_) {}
+  playSound('sunlight');
 }
 
 export function playBlossomPopSound() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(528, now); // Love frequency 528Hz
-    osc.frequency.exponentialRampToValueAtTime(1056, now + 0.12);
-
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.35);
-  } catch (_) {}
+  playSound('blossom-pop');
 }
 
 export const HearthGardenCanvas: React.FC<HearthGardenCanvasProps> = ({

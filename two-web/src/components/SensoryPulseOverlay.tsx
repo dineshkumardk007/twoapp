@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Heart, Sparkles } from 'lucide-react';
 import { wsRelay } from '../core/ws';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface SensoryPulseOverlayProps {
   activeUser: 'user' | 'partner';
@@ -9,44 +10,7 @@ interface SensoryPulseOverlayProps {
 
 // Web Audio API acoustic synthesis (Warm 528Hz Solfeggio Love frequency harmonic)
 function playGentleHarmonicChime() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
-
-    const now = ctx.currentTime;
-
-    // Root 528Hz Oscillator
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(528, now); // Solfeggio 528Hz "Transformation & Miracles"
-    gain1.gain.setValueAtTime(0.001, now);
-    gain1.gain.exponentialRampToValueAtTime(0.2, now + 0.1);
-    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-
-    // Sub-harmonic 264Hz warm lower octave
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(264, now);
-    gain2.gain.setValueAtTime(0.001, now);
-    gain2.gain.exponentialRampToValueAtTime(0.12, now + 0.15);
-    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-
-    osc1.start(now);
-    osc2.start(now);
-    osc1.stop(now + 2.0);
-    osc2.stop(now + 2.4);
-  } catch (e) {
-    // Graceful fallback if browser restricts audio autoplay
-  }
+  playSound('gentle-chime');
 }
 
 export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({ activeUser }) => {

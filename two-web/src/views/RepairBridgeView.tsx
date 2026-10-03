@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface RepairBridgeViewProps {
   repairLetters: RepairLetter[];
@@ -69,34 +70,9 @@ const APOLOGY_LANGUAGES_META: Record<
   }
 };
 
-// Procedural Web Audio 528Hz Reconciliation Chime
+// Two singing bowls a fifth apart: coming back together.
 function playReconciliationChime() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    // Harmonic triad: 528Hz, 660Hz, 792Hz
-    [528, 660, 792, 1056].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + i * 0.08);
-
-      gain.gain.setValueAtTime(0.0001, now + i * 0.08);
-      gain.gain.linearRampToValueAtTime(0.09 / (i + 1), now + i * 0.08 + 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 3.0);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now + i * 0.08);
-      osc.stop(now + i * 0.08 + 3.2);
-    });
-  } catch (e) {
-    // ignore
-  }
+  playSound('reconcile');
 }
 
 export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({

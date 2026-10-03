@@ -4,6 +4,7 @@ import { ScratchCardCanvas } from '../components/ScratchCardCanvas';
 import { Gift, Ticket, Sparkles, Heart, Plus, Check, MessageSquare, Clock, Award, X, RefreshCw, Send, ShieldCheck, Star } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface ScratchCardsViewProps {
   cards: ScratchCardItem[];
@@ -60,36 +61,7 @@ const PRESET_CARDS = [
 ];
 
 function playStampRedemptionSound() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    // Firm rubber stamp thud + bright celebratory resonance
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(140, now);
-    osc.frequency.exponentialRampToValueAtTime(50, now + 0.12);
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.15);
-
-    // Chime overtone
-    const bell = ctx.createOscillator();
-    const bellGain = ctx.createGain();
-    bell.type = 'triangle';
-    bell.frequency.setValueAtTime(880, now + 0.05);
-    bellGain.gain.setValueAtTime(0.12, now + 0.05);
-    bellGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-    bell.connect(bellGain);
-    bellGain.connect(ctx.destination);
-    bell.start(now + 0.05);
-    bell.stop(now + 0.5);
-  } catch (_) {}
+  playSound('redeem');
 }
 
 export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({

@@ -43,3 +43,7 @@ pnpm-debug.log*
 keystore.properties
 *.jks
 *.keystore
+
+# two-web's build, copied into the Android app by CI for every APK. Kept out
+# of git: a committed copy only ever went stale, and nothing read it.
+two-android/app/src/main/assets/www/

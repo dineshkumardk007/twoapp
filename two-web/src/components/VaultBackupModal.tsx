@@ -52,8 +52,12 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
     try {
       const vaultJson = await exportVault(state, passphrase);
       const dateStr = new Date().toISOString().split('T')[0];
-      downloadVaultFile(vaultJson, `two-vault-${dateStr}.two-vault`);
-      setSuccessMessage('Encrypted vault exported and downloaded successfully!');
+      const how = await downloadVaultFile(vaultJson, `two-vault-${dateStr}.two-vault`);
+      setSuccessMessage(
+        how === 'saved'
+          ? 'Backup sealed. Choose where to keep it on the screen that just opened.'
+          : 'Encrypted vault exported and downloaded successfully!'
+      );
       setPassphrase('');
       setConfirmPassphrase('');
     } catch (err: any) {

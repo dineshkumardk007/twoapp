@@ -192,9 +192,94 @@ export function normalizePairingCode(raw: string): string {
 }
 
 export function isPlausiblePairingCode(raw: string): boolean {
-  const clean = normalizePairingCode(raw);
-  return clean.length >= 4;
+  return extractPairingCode(raw) !== null;
 }
+
+/** One symbol of a current code, as a character class: CODE_ALPHABET exactly. */
+const CODE_SYMBOL = '[2-9A-HJKMNP-TV-Z]';
+
+/** The prefixes the short legacy codes were made with, always followed by four digits. */
+const LEGACY_PREFIXES = ['TWO', 'LOVE', 'HEART', 'MOON', 'SOUL', 'STAR', 'DEAR', 'EDEN'];
+
+/**
+ * A current-format code anywhere in `raw`, canonically grouped - or null.
+ *
+ * Finds it inside whatever was pasted: "Send to Partner" shares a whole
+ * sentence, and a phone pastes all of it. Separators are optional, so a code
+ * typed without its dashes is found too.
+ *
+ * Only the symbols a code can contain are matched. Without that, a group
+ * invite for "Two Moms Book Club" offered TWO-MOMS-BOOK-CLUB before the real
+ * code; with it, O, I, L, U, 0 and 1 rule such words out. Where several still
+ * match, the last is taken, because an invite names the group first and gives
+ * the code after it.
+ *
+ * No lookbehind: Safari before 16.4 cannot parse one, and the join screen
+ * calls this while it renders.
+ */
+export function findTwoCode(raw: string): string | null {
+  const pattern = new RegExp(
+    `(?:^|[^A-Z0-9])TWO[\\s_-]*(${CODE_SYMBOL}{4})[\\s_-]*(${CODE_SYMBOL}{4})[\\s_-]*(${CODE_SYMBOL}{4})(?![A-Z0-9])`,
+    'g'
+  );
+  let found: string | null = null;
+  for (const match of (raw || '').toUpperCase().matchAll(pattern)) {
+    found = `TWO-${match[1]}-${match[2]}-${match[3]}`;
+  }
+  return found;
+}
+
+/**
+ * The pairing code in what somebody typed or pasted, or null if there is none.
+ *
+ * Getting this wrong never fails loudly. The room is derived from the exact
+ * string, so a pasted sentence ("Hey, here is our link code for Two: TWO-...")
+ * became a room named after the sentence, and a code typed without its dashes
+ * became a different room from the same code with them. Both were accepted,
+ * and both left the two of you in separate empty rooms with nothing on screen
+ * to say why.
+ *
+ * So only the shapes a code has ever had are accepted, each returned in the
+ * exact form it was made in - which is the form its room was derived from:
+ *
+ *   - current codes, TWO-XXXX-XXXX-XXXX, found anywhere in the text, and also
+ *     without the TWO, since that part never changes and is easy to leave off;
+ *   - short legacy codes, a word from LEGACY_PREFIXES and four digits;
+ *   - legacy eight-word codes, every word from the code word list.
+ *
+ * Everything else - a sentence, a code with symbols missing or extra, a 0
+ * typed for an O - is refused, rather than becoming a room nobody else is in.
+ */
+export function extractPairingCode(raw: string): string | null {
+  const modern = findTwoCode(raw);
+  if (modern) return modern;
+
+  const trimmed = (raw || '').trim();
+  // A code is letters and digits in groups. Punctuation means a sentence.
+  if (!/^[A-Za-z0-9]+([\s_-]+[A-Za-z0-9]+)*$/.test(trimmed)) return null;
+  const upper = trimmed.toUpperCase();
+  const symbols = upper.replace(/[\s_-]/g, '');
+
+  // A current code with its constant TWO left off.
+  if (new RegExp(`^${CODE_SYMBOL}{12}$`).test(symbols)) {
+    return `TWO-${symbols.slice(0, 4)}-${symbols.slice(4, 8)}-${symbols.slice(8, 12)}`;
+  }
+
+  // PREFIX-NNNN, the form the short legacy generator always produced.
+  const short = symbols.match(/^([A-Z]+)([0-9]{4})$/);
+  if (short && LEGACY_PREFIXES.includes(short[1])) return `${short[1]}-${short[2]}`;
+
+  // Eight words from the list, dash-joined: the legacy word code.
+  const words = upper.split(/[\s_-]+/).filter(Boolean);
+  if (words.length === PAIRING_WORD_COUNT && words.every(w => CODE_WORDS.has(w))) {
+    return words.join('-');
+  }
+
+  return null;
+}
+
+/** The code word list, upper case, for recognising legacy word codes. */
+const CODE_WORDS = new Set(BIP39_WORDS.map(w => w.toUpperCase()));
 
 async function importCodeMaterial(code: string): Promise<CryptoKey> {
   return window.crypto.subtle.importKey(
@@ -276,13 +361,59 @@ export async function deriveSpaceCredentials(
   return { spaceId, key, role };
 }
 
-const LAST_CODE_KEY = 'two_last_space_code_v1';
+/** The code alone, as earlier builds kept it. Read for compatibility, never written. */
+const LEGACY_LAST_CODE_KEY = 'two_last_space_code_v1';
+const LAST_SPACE_KEY = 'two_last_space_v2';
 
-export function getLastSpaceCode(): string | null {
+/** What this device needs to find its way back into the space it last left. */
+export interface LastSpace {
+  code: string;
+  /** Unknown for a device last used before it was recorded. */
+  role?: SpaceRole;
+  joinPhrase?: string;
+}
+
+/**
+ * The space to offer "Rejoin" for.
+ *
+ * Only the code used to be kept, and the code is not enough: the spoken phrase
+ * is part of the room's address, and the role decides which seat this device
+ * takes. Rejoining with the code alone landed in a different room whenever
+ * there was a phrase, and in the creator's seat whenever the session was gone.
+ */
+export function getLastSpace(): LastSpace | null {
   try {
-    return localStorage.getItem(LAST_CODE_KEY);
+    const raw = localStorage.getItem(LAST_SPACE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<LastSpace>;
+      if (parsed && typeof parsed.code === 'string' && parsed.code) {
+        return {
+          code: parsed.code,
+          role: parsed.role === 'user' || parsed.role === 'partner' ? parsed.role : undefined,
+          joinPhrase: typeof parsed.joinPhrase === 'string' && parsed.joinPhrase ? parsed.joinPhrase : undefined
+        };
+      }
+    }
+    const legacy = localStorage.getItem(LEGACY_LAST_CODE_KEY);
+    return legacy ? { code: legacy } : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Forgets the space offered for rejoining, in both the current and old form.
+ *
+ * Exported for unlocking: a device that turned on a PIN under an older build
+ * still has the code sitting in plain storage under the old key, and nothing
+ * else would ever remove it.
+ */
+export function forgetLastSpace() {
+  try {
+    localStorage.removeItem(LAST_SPACE_KEY);
+    localStorage.removeItem(LEGACY_LAST_CODE_KEY);
+  } catch {
+    /* storage unavailable; nothing was kept */
   }
 }
 
@@ -362,13 +493,36 @@ export function saveSpaceSession(session: SpaceSession) {
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     if (session.code) {
-      localStorage.setItem(LAST_CODE_KEY, session.code);
+      const last: LastSpace = {
+        code: session.code,
+        role: session.role,
+        joinPhrase: session.joinPhrase || undefined
+      };
+      localStorage.setItem(LAST_SPACE_KEY, JSON.stringify(last));
+      localStorage.removeItem(LEGACY_LAST_CODE_KEY);
     }
   } catch (e) {
     console.error('[Space] Could not persist session', e);
   }
 }
 
-export function clearSpaceSession() {
-  localStorage.removeItem(SESSION_KEY);
+/**
+ * Removes the stored session - and, unless told to keep it, the record that
+ * offers to rejoin.
+ *
+ * Every caller but one is getting rid of the code on purpose: the panic
+ * button, starting fresh, and turning on a PIN, which moves the session into
+ * the encrypted vault precisely so the code is not sitting here in the clear.
+ * All three left the rejoin record behind, so the code was still in plain
+ * storage - and after the panic button the welcome screen offered it back to
+ * whoever picked the phone up. Leaving a space is the one case that keeps it,
+ * because offering a way back is the point.
+ */
+export function clearSpaceSession(options: { keepRejoin?: boolean } = {}) {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+  if (!options.keepRejoin) forgetLastSpace();
 }

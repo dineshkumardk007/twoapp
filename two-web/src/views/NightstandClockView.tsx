@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SpaceState } from '../core/storage';
 import { NightstandState, SleepPartnerStatus } from '../types';
 import { ambientAudioCoordinator } from '../core/ambientAudioCoordinator';
+import { Session, liveContext } from '../core/ambient/kit';
+import { startPreset } from '../core/ambient/presets';
+import { playSound } from '../core/sounds';
 import {
   Moon,
   Sun,
@@ -91,36 +94,20 @@ function getMoonPhase(date: Date = new Date()): { phaseName: string; illuminatio
   return { phaseName, illumination, phaseIndex };
 }
 
-// Procedural Audio Engine for Nightstand Bedside Sleep with 100% leak-free lifecycle
+/**
+ * Bedside sleep sounds: rain, a theta pad, a campfire, the sea - the same
+ * rain, fire and sea as the soundscapes, built in ambient/ and played through
+ * the shared context. Only one ambience plays at a time across the app; the
+ * coordinator is told when this one starts and stops.
+ */
 class NightstandAudioEngine {
-  private ctx: AudioContext | null = null;
-  private masterGain: GainNode | null = null;
-  private activeSources: (AudioBufferSourceNode | OscillatorNode)[] = [];
-  private activeIntervals: any[] = [];
+  private session: Session | null = null;
   private currentTrack: 'none' | 'rain' | 'theta' | 'campfire' | 'ocean' = 'none';
-  private generationId = 0;
   private currentVolume = 0.6;
-
-  private initCtx() {
-    if (!this.ctx) {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      this.ctx = new AudioContextClass();
-    }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
-    }
-    if (!this.masterGain && this.ctx) {
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
-      this.masterGain.connect(this.ctx.destination);
-    }
-  }
 
   public setVolume(vol: number) {
     this.currentVolume = Math.max(0, Math.min(1, vol));
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(this.currentVolume, this.ctx.currentTime);
-    }
+    this.session?.bus.setVolume(this.currentVolume);
   }
 
   public getTrack() {
@@ -129,284 +116,26 @@ class NightstandAudioEngine {
 
   public stopSoundscape(immediate = true) {
     this.currentTrack = 'none';
-    this.generationId++;
-
-    // 1. Clear all interval timers (e.g. rain drops, crackle pops)
-    this.activeIntervals.forEach(t => clearInterval(t));
-    this.activeIntervals = [];
-
-    // 2. Stop and disconnect all active audio nodes immediately
-    this.activeSources.forEach(src => {
-      try {
-        if ('stop' in src) (src as any).stop();
-        src.disconnect();
-      } catch (e) {}
-    });
-    this.activeSources = [];
-
-    // 3. Immediately silence master gain
-    if (this.masterGain && this.ctx) {
-      try {
-        if (immediate) {
-          this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
-        } else {
-          this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.ctx.currentTime);
-          this.masterGain.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.08);
-        }
-      } catch (e) {}
-    }
-
+    // Even "immediate" fades for a moment: a hard stop is a click.
+    this.session?.stop(immediate ? 0.08 : 0.8);
+    this.session = null;
     ambientAudioCoordinator.notifyStopped('nightstand');
   }
 
   public playSoundscape(type: 'rain' | 'theta' | 'campfire' | 'ocean', volume: number = 0.6) {
-    this.stopSoundscape(true);
-    this.initCtx();
-    if (!this.ctx) return;
-
+    this.session?.stop(0.6);
+    this.session = null;
+    const ctx = liveContext();
+    if (!ctx) return;
     this.currentTrack = type;
     this.currentVolume = volume;
-    const thisGen = ++this.generationId;
-
-    if (!this.masterGain) {
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.connect(this.ctx.destination);
-    }
-    const now = this.ctx.currentTime;
-    this.masterGain.gain.setValueAtTime(0.001, now);
-    this.masterGain.gain.linearRampToValueAtTime(volume, now + 0.25);
-
+    this.session = startPreset(ctx, `night-${type}`, volume, 1.5);
     ambientAudioCoordinator.notifyNightstandPlaying();
-
-    if (type === 'rain') {
-      this.startRain(thisGen);
-    } else if (type === 'theta') {
-      this.startTheta(thisGen);
-    } else if (type === 'campfire') {
-      this.startCampfire(thisGen);
-    } else if (type === 'ocean') {
-      this.startOcean(thisGen);
-    }
   }
 
-  // 1. Rain Soundscape: Pink noise bed + skylight lowpass filter + organic raindrops
-  private startRain(gen: number) {
-    if (!this.ctx || !this.masterGain) return;
-    const bufferSize = this.ctx.sampleRate * 4;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      b0 = 0.99886 * b0 + white * 0.0555179;
-      b1 = 0.99332 * b1 + white * 0.0750759;
-      b2 = 0.96900 * b2 + white * 0.1538520;
-      b3 = 0.86650 * b3 + white * 0.3104856;
-      b4 = 0.55000 * b4 + white * 0.5329522;
-      b5 = -0.7616 * b5 - white * 0.0168980;
-      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.09;
-      b6 = white * 0.115926;
-    }
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(750, this.ctx.currentTime);
-    filter.Q.setValueAtTime(0.8, this.ctx.currentTime);
-
-    noise.connect(filter);
-    filter.connect(this.masterGain);
-    noise.start();
-    this.activeSources.push(noise);
-
-    // Random soft droplets
-    const dropInterval = setInterval(() => {
-      if (this.generationId !== gen || !this.ctx || !this.masterGain) return;
-      try {
-        const drop = this.ctx.createOscillator();
-        const dropGain = this.ctx.createGain();
-        const t = this.ctx.currentTime;
-        const freq = 1250 + Math.random() * 1100;
-        drop.type = 'sine';
-        drop.frequency.setValueAtTime(freq, t);
-        drop.frequency.exponentialRampToValueAtTime(freq * 0.65, t + 0.04);
-
-        dropGain.gain.setValueAtTime(0.0001, t);
-        dropGain.gain.linearRampToValueAtTime(0.025 + Math.random() * 0.02, t + 0.008);
-        dropGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-
-        drop.connect(dropGain);
-        dropGain.connect(this.masterGain);
-        drop.start(t);
-        drop.stop(t + 0.06);
-        this.activeSources.push(drop);
-      } catch (e) {}
-    }, 420);
-    this.activeIntervals.push(dropInterval);
-  }
-
-  // 2. Theta Soundscape: 432Hz harmonic sleep wave + 4.5Hz delta brainwave frequency
-  private startTheta(gen: number) {
-    if (!this.ctx || !this.masterGain) return;
-    const osc1 = this.ctx.createOscillator();
-    const osc2 = this.ctx.createOscillator();
-    const subOsc = this.ctx.createOscillator();
-    const highOsc = this.ctx.createOscillator();
-
-    osc1.type = 'sine';
-    osc2.type = 'sine';
-    subOsc.type = 'sine';
-    highOsc.type = 'sine';
-
-    osc1.frequency.setValueAtTime(108, this.ctx.currentTime);
-    osc2.frequency.setValueAtTime(112.5, this.ctx.currentTime); // 4.5Hz delta wave difference
-    subOsc.frequency.setValueAtTime(54, this.ctx.currentTime); // deep sub-bass anchor
-    highOsc.frequency.setValueAtTime(432, this.ctx.currentTime); // 432Hz sleep resonance
-
-    const thetaGain = this.ctx.createGain();
-    thetaGain.gain.setValueAtTime(0.65, this.ctx.currentTime);
-
-    const highGain = this.ctx.createGain();
-    highGain.gain.setValueAtTime(0.018, this.ctx.currentTime);
-
-    osc1.connect(thetaGain);
-    osc2.connect(thetaGain);
-    subOsc.connect(thetaGain);
-    thetaGain.connect(this.masterGain);
-
-    highOsc.connect(highGain);
-    highGain.connect(this.masterGain);
-
-    osc1.start();
-    osc2.start();
-    subOsc.start();
-    highOsc.start();
-
-    this.activeSources.push(osc1, osc2, subOsc, highOsc);
-  }
-
-  // 3. Campfire Soundscape: Deep wood rumble + organic crackling timber pops
-  private startCampfire(gen: number) {
-    if (!this.ctx || !this.masterGain) return;
-    const bufferSize = this.ctx.sampleRate * 3;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    let last = 0;
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      data[i] = (last + (0.02 * white)) / 1.02;
-      last = data[i];
-      data[i] *= 1.9;
-    }
-    const brownSource = this.ctx.createBufferSource();
-    brownSource.buffer = buffer;
-    brownSource.loop = true;
-
-    const lowFilter = this.ctx.createBiquadFilter();
-    lowFilter.type = 'lowpass';
-    lowFilter.frequency.setValueAtTime(200, this.ctx.currentTime);
-
-    brownSource.connect(lowFilter);
-    lowFilter.connect(this.masterGain);
-    brownSource.start();
-    this.activeSources.push(brownSource);
-
-    // Crackle pops
-    const popInterval = setInterval(() => {
-      if (this.generationId !== gen || !this.ctx || !this.masterGain) return;
-      if (Math.random() < 0.6) {
-        try {
-          const pop = this.ctx.createOscillator();
-          const popGain = this.ctx.createGain();
-          const t = this.ctx.currentTime;
-          pop.type = 'triangle';
-          pop.frequency.setValueAtTime(320 + Math.random() * 950, t);
-          popGain.gain.setValueAtTime(0.001, t);
-          popGain.gain.linearRampToValueAtTime(0.045 + Math.random() * 0.04, t + 0.005);
-          popGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03 + Math.random() * 0.04);
-          pop.connect(popGain);
-          popGain.connect(this.masterGain);
-          pop.start(t);
-          pop.stop(t + 0.08);
-          this.activeSources.push(pop);
-        } catch (e) {}
-      }
-    }, 240);
-    this.activeIntervals.push(popInterval);
-  }
-
-  // 4. Ocean Soundscape: Rhythmic tidal surf with 7-second breath ebb and flow
-  private startOcean(gen: number) {
-    if (!this.ctx || !this.masterGain) return;
-    const bufferSize = this.ctx.sampleRate * 4;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      b0 = 0.99886 * b0 + white * 0.0555179;
-      b1 = 0.99332 * b1 + white * 0.0750759;
-      b2 = 0.96900 * b2 + white * 0.1538520;
-      b3 = 0.86650 * b3 + white * 0.3104856;
-      b4 = 0.55000 * b4 + white * 0.5329522;
-      b5 = -0.7616 * b5 - white * 0.0168980;
-      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.13;
-      b6 = white * 0.115926;
-    }
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-
-    const waveFilter = this.ctx.createBiquadFilter();
-    waveFilter.type = 'lowpass';
-    waveFilter.frequency.setValueAtTime(450, this.ctx.currentTime);
-
-    const waveGain = this.ctx.createGain();
-    waveGain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-
-    const lfo = this.ctx.createOscillator();
-    const lfoGain = this.ctx.createGain();
-    lfo.frequency.setValueAtTime(0.14, this.ctx.currentTime); // ~7.1 seconds cycle
-    lfoGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-    lfo.connect(lfoGain);
-    lfoGain.connect(waveGain.gain);
-
-    const lfoFilterGain = this.ctx.createGain();
-    lfoFilterGain.gain.setValueAtTime(300, this.ctx.currentTime);
-    lfo.connect(lfoFilterGain);
-    lfoFilterGain.connect(waveFilter.frequency);
-
-    noise.connect(waveFilter);
-    waveFilter.connect(waveGain);
-    waveGain.connect(this.masterGain);
-
-    noise.start();
-    lfo.start();
-    this.activeSources.push(noise, lfo);
-  }
-
+  /** A goodnight kiss sent across: two soft notes and a glint of glass. */
   public playKissChime() {
-    this.initCtx();
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(528, now);
-    osc.frequency.exponentialRampToValueAtTime(792, now + 0.3);
-    osc.frequency.exponentialRampToValueAtTime(528, now + 0.8);
-
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(0.12, now + 0.1);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
-
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start(now);
-    osc.stop(now + 2.3);
+    playSound('kiss');
   }
 }
 

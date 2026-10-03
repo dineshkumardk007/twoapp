@@ -90,7 +90,14 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
       if (msg.type === 'REMOTE_RECORD' && msg.record?.type === 'BREATH_SYNC') {
         try {
           const data = JSON.parse(msg.record.payload);
-          if (msg.record.authorId !== activeUser) {
+          // A session already over (an old record replayed on reconnect) is
+          // not one to join: it would only start and stop again at once.
+          // (0 cycles is a session with no end.)
+          const pattern = PATTERNS[data.pattern as BreathPatternType];
+          const cycles = typeof data.targetCycles === 'number' ? data.targetCycles : 6;
+          const over = !!data.isActive && !!pattern && !!data.startedAt && cycles > 0 &&
+            Date.now() > data.startedAt + cycles * pattern.totalDuration * 1000;
+          if (msg.record.authorId !== activeUser && !over) {
             setPartnerActive(data.isActive);
             if (data.isActive && !isActive) {
               setPatternType(data.pattern);
@@ -109,9 +116,15 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
     return () => unsub();
   }, [activeUser, isActive]);
 
+  // Every sound here plays only while the exercise is on screen. The modal
+  // stays mounted when closed (in Navigation and on Home), and still follows
+  // a partner's session so it opens in step - but it used to play that
+  // session's drone and chimes out loud, unseen, and the drone now stops
+  // whatever else is playing.
+
   // Handle Heartbeat Audio Interval (~60 bpm = 1000ms)
   useEffect(() => {
-    if (isActive && heartbeatEnabled && soundEnabled) {
+    if (isOpen && isActive && heartbeatEnabled && soundEnabled) {
       heartbeatIntervalRef.current = setInterval(() => {
         coRegulationAudio.playHeartbeat();
       }, 1000);
@@ -127,10 +140,12 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
         clearInterval(heartbeatIntervalRef.current);
       }
     };
-  }, [isActive, heartbeatEnabled, soundEnabled]);
+  }, [isOpen, isActive, heartbeatEnabled, soundEnabled]);
 
-  // Handle Theta Drone Audio
+  // Handle Theta Drone Audio. A closed modal leaves the drone alone entirely:
+  // the drone is shared, and another instance of this modal may be the open one.
   useEffect(() => {
+    if (!isOpen) return;
     if (isActive && thetaDroneEnabled && soundEnabled) {
       coRegulationAudio.startThetaDrone();
     } else {
@@ -140,7 +155,7 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
     return () => {
       coRegulationAudio.stopThetaDrone();
     };
-  }, [isActive, thetaDroneEnabled, soundEnabled]);
+  }, [isOpen, isActive, thetaDroneEnabled, soundEnabled]);
 
   // High-frequency animation loop & phase transition detector
   useEffect(() => {
@@ -156,9 +171,9 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
       setCompletedCycles(currentCycleIndex);
 
       if (targetCycles > 0 && currentCycleIndex >= targetCycles) {
+        // The drone effect stops the drone, if this is the open modal.
         setIsActive(false);
         setIsFinished(true);
-        coRegulationAudio.stopThetaDrone();
         broadcastBreathState(false, 0, patternType);
         return;
       }
@@ -203,10 +218,10 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
       // Phase change transition trigger (audio chime + mobile haptic)
       if (lastPhaseRef.current !== phase) {
         lastPhaseRef.current = phase;
-        if (soundEnabled) {
+        if (soundEnabled && isOpen) {
           coRegulationAudio.playPhaseChime(phase);
         }
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        if (isOpen && typeof navigator !== 'undefined' && navigator.vibrate) {
           try {
             if (phase === 'inhale') navigator.vibrate([60]);
             else if (phase === 'holdIn') navigator.vibrate([30, 40, 30]);
@@ -222,7 +237,7 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
     animFrame = requestAnimationFrame(tick);
 
     return () => cancelAnimationFrame(animFrame);
-  }, [isActive, startTime, currentPattern, targetCycles, patternType, soundEnabled]);
+  }, [isActive, startTime, currentPattern, targetCycles, patternType, soundEnabled, isOpen]);
 
   const handleToggleSession = () => {
     if (!isActive) {

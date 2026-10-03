@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ScratchFoilType } from '../types';
 import { getAudioContext } from '../core/audioAlerts';
+import { playOneOf, playSound } from '../core/sounds';
 
 interface ScratchCardCanvasProps {
   foilType: ScratchFoilType;
@@ -9,63 +10,14 @@ interface ScratchCardCanvasProps {
   children: React.ReactNode;
 }
 
+// One grain of the scratch, a different take each time, very slightly
+// re-pitched, so a long scratch never sounds like a loop.
 function playScratchFrictionSound() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    // Filtered pink noise burst simulating scratch texture
-    const bufferSize = ctx.sampleRate * 0.05;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * 0.2;
-    }
-
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(2200, now);
-    filter.Q.setValueAtTime(3.0, now);
-
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
-
-    source.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-
-    source.start(now);
-    source.stop(now + 0.05);
-  } catch (_) {}
+  playOneOf(['scratch-1', 'scratch-2', 'scratch-3'], { rate: 0.94 + Math.random() * 0.12 });
 }
 
 function playRevealChime() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    [528, 660, 792, 1056].forEach((f, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const t = now + i * 0.08;
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(f, t);
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.15, t + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 1.3);
-    });
-  } catch (_) {}
+  playSound('reveal');
 }
 
 /**

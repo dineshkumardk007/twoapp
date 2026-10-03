@@ -3,6 +3,10 @@ import { SoftLandingSession, SoftLandingReflection } from '../types';
 import { Shield, Heart, Clock, Volume2, VolumeX, Sparkles, Check, MessageSquare, History, X, Handshake, AlertCircle } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
+import { Session, liveContext } from '../core/ambient/kit';
+import { startPreset } from '../core/ambient/presets';
+import { ambientAudioCoordinator } from '../core/ambientAudioCoordinator';
 
 interface SoftLandingViewProps {
   activeSession: SoftLandingSession | null;
@@ -46,98 +50,33 @@ const REQUEST_PRESETS = [
   'Can we take turns speaking slowly in soft voices, with zero interruptions?'
 ];
 
-// Procedural 432Hz Calm Drone Engine
+/**
+ * The settling drone under Soft Landing: a warm, low pad on D with a 4 Hz
+ * beat between the ears (see ambient/presets.ts). It used to be two bare
+ * sines at 432 and 436 Hz, in both ears at once.
+ */
 class SoftLandingAudioEngine {
-  private ctx: AudioContext | null = null;
-  private osc1: OscillatorNode | null = null;
-  private osc2: OscillatorNode | null = null;
-  private gainNode: GainNode | null = null;
-  private isPlaying = false;
+  private session: Session | null = null;
 
   start() {
-    if (this.isPlaying) return;
-    try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      this.ctx = new AudioContextClass();
-
-      const now = this.ctx.currentTime;
-      this.gainNode = this.ctx.createGain();
-      this.gainNode.gain.setValueAtTime(0.0001, now);
-      this.gainNode.gain.exponentialRampToValueAtTime(0.08, now + 2.0);
-
-      // 432Hz Base Root
-      this.osc1 = this.ctx.createOscillator();
-      this.osc1.type = 'sine';
-      this.osc1.frequency.setValueAtTime(432, now);
-
-      // 436Hz Binaural theta difference (4Hz theta wave for deep parasympathetic relaxation)
-      this.osc2 = this.ctx.createOscillator();
-      this.osc2.type = 'sine';
-      this.osc2.frequency.setValueAtTime(436, now);
-
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(800, now);
-
-      this.osc1.connect(filter);
-      this.osc2.connect(filter);
-      filter.connect(this.gainNode);
-      this.gainNode.connect(this.ctx.destination);
-
-      this.osc1.start(now);
-      this.osc2.start(now);
-      this.isPlaying = true;
-    } catch (_) {}
+    if (this.session) return;
+    const ctx = liveContext();
+    if (!ctx) return;
+    ambientAudioCoordinator.notifyPlaying('soft_landing');
+    this.session = startPreset(ctx, 'soft-landing', 1, 2.5);
   }
 
   stop() {
-    if (!this.isPlaying || !this.ctx || !this.gainNode) return;
-    try {
-      const now = this.ctx.currentTime;
-      this.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 1.0);
-      setTimeout(() => {
-        try {
-          this.osc1?.stop();
-          this.osc2?.stop();
-          this.ctx?.close();
-        } catch (_) {}
-        this.isPlaying = false;
-      }, 1000);
-    } catch (_) {
-      this.isPlaying = false;
-    }
+    this.session?.stop(1.2);
+    this.session = null;
+    ambientAudioCoordinator.notifyStopped('soft_landing');
   }
 }
 
 const audioEngine = new SoftLandingAudioEngine();
 
 function playReconnectionChime() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    // Harmonic Tibetan Bell (528Hz + 1056Hz shimmer)
-    [528, 792, 1056].forEach((f, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const t = now + i * 0.08;
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(f, t);
-
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.2 / (i + 1), t + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(t);
-      osc.stop(t + 2.5);
-    });
-  } catch (_) {}
+  playSound('reconnect');
 }
 
 export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
@@ -162,6 +101,17 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
 
   // Countdown timer state
   const [secondsRemaining, setSecondsRemaining] = useState<number>(0);
+
+  // The drone belongs to this screen: it stops when the screen goes, rather
+  // than playing on unseen with the toggle showing it off on return. And
+  // another ambience starting stops it.
+  useEffect(() => {
+    ambientAudioCoordinator.register('soft_landing', () => {
+      audioEngine.stop();
+      setIsAudioPlaying(false);
+    });
+    return () => audioEngine.stop();
+  }, []);
 
   useEffect(() => {
     if (!activeSession) {

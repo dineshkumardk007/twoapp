@@ -18,6 +18,8 @@
 //   that a direct connection cannot cross, and there is no TURN relay yet to
 //   carry the audio when that happens.
 
+import { playSound, type Playing } from './sounds';
+
 /** The signal type every call message travels under. */
 export const CALL_SIGNAL = 'CALL';
 
@@ -1089,37 +1091,24 @@ export class CallEngine {
     }
   }
 
-  /** A soft two-note ring and a vibration, repeating. */
+  /**
+   * The ringtone and a vibration, repeating every 2.2 s.
+   *
+   * The ringtone is a designed sound file (see sounds.ts), timed to finish
+   * just before the next ring begins. Stopping the ring fades whatever is
+   * still sounding rather than cutting it mid-note.
+   */
   private startRinging() {
     this.stopRinging();
-    let ctx: AudioContext | null = null;
+    let current: Playing | null = null;
     const pulse = () => {
       try {
         navigator.vibrate?.([350, 180, 350]);
       } catch {
         /* no vibrator */
       }
-      try {
-        ctx = ctx || new AudioContext();
-        const now = ctx.currentTime;
-        [
-          { at: 0, hz: 523.25 },
-          { at: 0.45, hz: 659.25 }
-        ].forEach(({ at, hz }) => {
-          const osc = ctx!.createOscillator();
-          const gain = ctx!.createGain();
-          osc.type = 'sine';
-          osc.frequency.value = hz;
-          gain.gain.setValueAtTime(0.0001, now + at);
-          gain.gain.exponentialRampToValueAtTime(0.12, now + at + 0.03);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + at + 0.38);
-          osc.connect(gain).connect(ctx!.destination);
-          osc.start(now + at);
-          osc.stop(now + at + 0.4);
-        });
-      } catch {
-        /* audio not allowed yet; the vibration still says it */
-      }
+      // Never throws; if audio is not allowed yet, the vibration still says it.
+      current = playSound('ringtone');
     };
     pulse();
     const id = setInterval(pulse, 2_200);
@@ -1131,11 +1120,7 @@ export class CallEngine {
         } catch {
           /* no vibrator */
         }
-        try {
-          void ctx?.close();
-        } catch {
-          /* already closed */
-        }
+        current?.stop();
       }
     };
   }

@@ -1,8 +1,27 @@
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
+/**
+ * Lists the files the build makes that its manifest leaves out - Web
+ * Workers (the ambient sound renderer) - in sw-precache.json, which the
+ * service worker reads to precache them with everything else. Otherwise the
+ * worker was cached only once fetched, and a first ambience started offline
+ * had to render on the main thread.
+ */
+function precacheExtras(): Plugin {
+  return {
+    name: 'two-precache-extras',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle(_, bundle) {
+      const files = Object.keys(bundle).filter(f => /\.worker-[\w-]+\.js$/.test(f));
+      this.emitFile({ type: 'asset', fileName: 'sw-precache.json', source: JSON.stringify(files) });
+    }
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), precacheExtras()],
   base: './',
   server: {
     port: 3000,

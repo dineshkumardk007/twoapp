@@ -181,16 +181,43 @@ const PHASES = new Set(['MENSTRUAL', 'FOLLICULAR', 'OVULATORY', 'LUTEAL']);
 const LEVELS = new Set(['private', 'phase_only', 'phase_and_energy', 'full']);
 
 /** Applies one of the records above, or returns null if it is not well formed. */
+/**
+ * Where each adding type puts what it adds - for applying it add-only.
+ *
+ * These replace an item that already has the id, which is right for a record
+ * arriving once, in order. A catch-up replays history onto a phone that
+ * already holds most of it, and there a replace can put back an item's
+ * original over changes made to it since.
+ */
+const ADDED_TO: Record<string, keyof SpaceState> = {
+  [CHORE_ADD]: 'chores',
+  [EXPENSE_ADD]: 'expenses',
+  [JOURNAL_SHARED]: 'journalEntries',
+  [QUOTE_ADD]: 'quotes',
+  [AGREEMENT_ADD]: 'agreements',
+  [CYCLE_RECORD]: 'cycleRecords',
+  [MEMORY_ADD]: 'memories',
+  [WHISPER_MEMO]: 'whisperMemos'
+};
+
 export function applySharedRecord(
   prev: SpaceState,
   type: string,
   payload: any,
-  authorId: string
+  authorId: string,
+  options: { addOnly?: boolean } = {}
 ): SpaceState | null {
   if (!payload || typeof payload !== 'object') return null;
   // Everything that adds an item names it; the two that change a whole list do not.
   const needsId = type !== CYCLE_SHARING && type !== EXPENSES_SETTLED;
   if (needsId && !isText(payload.id)) return null;
+
+  // Add-only: something already here is left exactly as it is.
+  const collection = ADDED_TO[type];
+  if (options.addOnly && collection) {
+    const existing = (prev[collection] as Array<{ id?: string }> | undefined) || [];
+    if (existing.some(item => item.id === payload.id)) return null;
+  }
   const me = prev.activeUser as Role;
 
   switch (type) {

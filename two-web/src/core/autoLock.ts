@@ -63,11 +63,23 @@ export function lockNow() {
   window.location.reload();
 }
 
+/**
+ * Something that keeps the app open while it lasts - live radio playing with
+ * the screen off. Locking reloads the app, which would cut it off.
+ */
+export interface Hold {
+  /** Whether it is holding the app open right now. */
+  active(): boolean;
+  /** Calls back whenever that may have changed; returns a way to stop listening. */
+  subscribe(onChange: () => void): () => void;
+}
+
 interface WatchOptions {
   /** False while there is no vault to lock, or the app is already locked. */
   enabled: () => boolean;
   getSetting: () => AutoLockSetting;
   onLock: () => void;
+  hold?: Hold;
 }
 
 /**
@@ -80,10 +92,16 @@ interface WatchOptions {
  *     screen already in place rather than a flash of the conversation;
  *   - a check on the way back in, comparing wall clock against when we left,
  *     which catches the case where the timer was frozen.
+ *
+ * While a hold lasts, nothing counts. The absence starts when it ends - so
+ * radio left playing in a pocket keeps the app open for as long as it plays,
+ * and the usual minute runs from the moment it stops (the sleep timer, the
+ * station dropping out), not from when the screen went off.
  */
-export function watchForAbsence({ enabled, getSetting, onLock }: WatchOptions): () => void {
+export function watchForAbsence({ enabled, getSetting, onLock, hold }: WatchOptions): () => void {
   let hiddenAt = 0;
   let timer: ReturnType<typeof setTimeout> | null = null;
+  const held = () => !!hold?.active();
 
   const cancel = () => {
     if (timer !== null) {
@@ -92,22 +110,32 @@ export function watchForAbsence({ enabled, getSetting, onLock }: WatchOptions): 
     }
   };
 
-  const onHidden = () => {
-    if (!enabled()) return;
+  /** The absence starts now. */
+  const startCounting = () => {
     const setting = getSetting();
     if (setting === 'off') return;
-
     hiddenAt = Date.now();
     cancel();
     timer = setTimeout(() => {
       timer = null;
-      if (document.visibilityState === 'hidden' && enabled()) onLock();
+      if (document.visibilityState === 'hidden' && enabled() && !held()) onLock();
     }, setting * 1000);
+  };
+
+  const onHidden = () => {
+    if (!enabled() || getSetting() === 'off') return;
+    if (held()) {
+      // Counting starts when the hold ends (see below).
+      cancel();
+      hiddenAt = 0;
+      return;
+    }
+    startCounting();
   };
 
   const onVisible = () => {
     cancel();
-    if (!hiddenAt || !enabled()) {
+    if (!hiddenAt || !enabled() || held()) {
       hiddenAt = 0;
       return;
     }
@@ -122,12 +150,25 @@ export function watchForAbsence({ enabled, getSetting, onLock }: WatchOptions): 
     else onVisible();
   };
 
+  // The hold changing while the app is away: ended, the count starts; begun
+  // again (the radio back on), it stops.
+  const unhold = hold?.subscribe(() => {
+    if (document.visibilityState !== 'hidden' || !enabled()) return;
+    if (held()) {
+      cancel();
+      hiddenAt = 0;
+    } else if (!hiddenAt) {
+      startCounting();
+    }
+  });
+
   document.addEventListener('visibilitychange', onVisibilityChange);
   // Some Android WebViews report a pagehide without a visibilitychange.
   window.addEventListener('pagehide', onHidden);
 
   return () => {
     cancel();
+    unhold?.();
     document.removeEventListener('visibilitychange', onVisibilityChange);
     window.removeEventListener('pagehide', onHidden);
   };

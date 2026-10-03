@@ -1,0 +1,7 @@
+<!doctype html><meta charset="utf-8"><title>ambient harness</title>
+<script>
+  // ?noworker: as on a WebView where workers cannot start - everything renders on the main thread.
+  if (location.search.includes('noworker')) window.Worker = class { constructor() { throw new Error('no workers here'); } };
+</script>
+<script type="module" src="./harness.ts"></script>
+<button id="wake" onclick="wakeAudio().then(s => this.textContent = s)">wake audio</button> <button id="wake44" onclick="wakeAudio(44100).then(s => this.textContent = s)">wake audio at 44.1 kHz</button>

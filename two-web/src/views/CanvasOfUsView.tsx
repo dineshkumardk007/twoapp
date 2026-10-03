@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
+import { playOneOf } from '../core/sounds';
 
 interface CanvasOfUsViewProps {
   canvasState: SharedDrawingCanvasState;
@@ -33,38 +34,9 @@ interface CanvasOfUsViewProps {
   onSendToChat?: (text: string) => void;
 }
 
-// Procedural sketch sound effect using gentle filtered white noise bursts
+// A pencil touching the paper, a different take each stroke.
 function playSketchSound() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const bufferSize = ctx.sampleRate * 0.08;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * 0.02;
-    }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(2400, ctx.currentTime);
-    filter.Q.setValueAtTime(1.5, ctx.currentTime);
-
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.001, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.07);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-
-    noise.start();
-  } catch (e) {
-    // ignore
-  }
+  playOneOf(['sketch-1', 'sketch-2', 'sketch-3'], { rate: 0.95 + Math.random() * 0.1 });
 }
 
 const PALETTE_COLORS = [

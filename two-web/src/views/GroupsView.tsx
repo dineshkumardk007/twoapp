@@ -7,7 +7,8 @@ import {
   checkJoinPhrase,
   isPlausiblePairingCode,
   normalizePairingCode,
-  formatCodeInput
+  formatCodeInput,
+  findTwoCode
 } from '../core/space';
 
 interface GroupsViewProps {
@@ -208,7 +209,9 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
               code rather than decoration. */}
           <input
             value={code}
-            onChange={e => setCode(formatCodeInput(e.target.value))}
+            // A pasted invite is a sentence with the code in it; take the
+            // code, rather than formatting the whole sentence into one.
+            onChange={e => setCode(findTwoCode(e.target.value) ?? formatCodeInput(e.target.value))}
             autoCapitalize="characters"
             autoCorrect="off"
             spellCheck={false}

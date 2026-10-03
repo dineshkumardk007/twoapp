@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface AdventuresViewProps {
   adventures: AdventureItem[];
@@ -32,55 +33,14 @@ const SEASONS: { id: AdventureSeason | 'all'; label: string }[] = [
   { id: 'anytime', label: '✨ Anytime' },
 ];
 
+// The roulette's tick, rising in pitch as it spins: one wooden tick, played
+// faster for higher - 600 is the tick as recorded.
 function playTickSound(pitch = 600) {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(pitch, ctx.currentTime);
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.06);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.08);
-  } catch (_) {}
+  playSound('tick', { rate: pitch / 600 });
 }
 
 function playStampSuccessSound() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    
-    // Thump
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.frequency.setValueAtTime(120, now);
-    osc1.frequency.exponentialRampToValueAtTime(45, now + 0.2);
-    gain1.gain.setValueAtTime(0.25, now);
-    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start();
-    osc1.stop(now + 0.3);
-
-    // Chime
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(528, now + 0.1);
-    gain2.gain.setValueAtTime(0.0001, now + 0.1);
-    gain2.gain.exponentialRampToValueAtTime(0.18, now + 0.15);
-    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(now + 0.1);
-    osc2.stop(now + 1.0);
-  } catch (_) {}
+  playSound('stamp');
 }
 
 export const AdventuresView: React.FC<AdventuresViewProps> = ({

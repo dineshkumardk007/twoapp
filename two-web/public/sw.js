@@ -36,6 +36,17 @@ async function cacheAllChunks(cache) {
     for (const entry of Object.values(manifest)) {
       if (entry.file) files.add(entry.file);
       for (const css of entry.css || []) files.add(css);
+      // The app's sounds are files too; a chime never played before would
+      // otherwise be the one thing silent offline.
+      for (const asset of entry.assets || []) files.add(asset);
+    }
+    // And what the manifest leaves out: the ambient sound renderer's worker
+    // (listed by vite.config.ts at build time).
+    try {
+      const extra = await fetch('sw-precache.json', { cache: 'no-cache' });
+      if (extra.ok) for (const file of await extra.json()) files.add(file);
+    } catch (e) {
+      // An older build without the list: the worker is cached when first used.
     }
 
     // Individually, so one missing file cannot fail the whole install the way

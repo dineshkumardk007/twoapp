@@ -329,18 +329,6 @@ class PostgresRelayDb implements RelayDb {
   }
 
   async saveRecord(record: StoredRecord) {
-    // One beat per device: the previous one is worthless the moment a newer
-    // arrives, and each carries a fresh id because the clients dedupe inbound
-    // records by id - a stable id would be applied once and every later beat
-    // silently ignored.
-    if (LATEST_ONLY_TYPES.has(record.type)) {
-      await this.pool.query(
-        `DELETE FROM relay_records
-          WHERE space_id = $1 AND author_id = $2 AND type = $3`,
-        [record.spaceId, record.authorId, record.type]
-      );
-    }
-
     const inserted = await this.pool.query(
       `INSERT INTO relay_records
          (id, space_id, author_id, type, payload, nonce, lamport_clock, client_ts)
@@ -369,6 +357,35 @@ class PostgresRelayDb implements RelayDb {
         [record.id]
       );
       if (rows[0]?.seq !== undefined) record.seq = Number(rows[0].seq);
+    }
+
+    /*
+     * Only the newest of these is kept per author - and it is the insert above
+     * that comes first, then everything older than the newest goes.
+     *
+     * It used to be the other way round: delete the old copy, then insert.
+     * The relay handles a phone's messages concurrently, so a burst of saves
+     * - seven garden updates inside half a second - all ran their deletes
+     * before any had inserted, and all seven copies survived.
+     *
+     * This order cannot leave two behind, however saves interleave. Each
+     * cleanup runs after its own row is committed and keeps only the highest
+     * seq it can see. For any older row, either the newest row's cleanup ran
+     * after it was committed and saw it, or it was committed after that, and
+     * then its own cleanup sees the newest row and removes it. No lock, and
+     * no more round trips than before - which matters with the database an
+     * ocean away from the relay.
+     */
+    if (LATEST_ONLY_TYPES.has(record.type)) {
+      await this.pool.query(
+        `DELETE FROM relay_records
+          WHERE space_id = $1 AND author_id = $2 AND type = $3
+            AND seq < (
+              SELECT MAX(seq) FROM relay_records
+               WHERE space_id = $1 AND author_id = $2 AND type = $3
+            )`,
+        [record.spaceId, record.authorId, record.type]
+      );
     }
     return record;
   }

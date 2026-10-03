@@ -45,6 +45,7 @@ import {
   loadSpaceSession,
   saveSpaceSession,
   clearSpaceSession,
+  forgetLastSpace,
   SpaceSession
 } from './core/space';
 import { localMesh } from './core/localMesh';
@@ -52,6 +53,17 @@ import { insertBySentAt } from './core/ordering';
 import { CallEngine, CallState, IDLE_CALL, CALL_SIGNAL, CALL_MISSED } from './core/call';
 import { CallOverlay } from './components/CallOverlay';
 import { RelayStorageWarning } from './components/RelayStorageWarning';
+import { RoleClashDialog } from './components/RoleClashDialog';
+import { preloadSounds } from './core/sounds';
+import { mergeIncomingRadio } from './core/radioSync';
+import { liveRadioHold } from './core/liveRadio';
+import {
+  isRealName,
+  isOwnDeviceName,
+  rememberOwnDeviceName,
+  CATCH_UP_TYPES,
+  addOnce
+} from './core/seats';
 import { UpdateReadyToast } from './components/UpdateReadyToast';
 import { routeFor, withActivity, unseen, dottedTabs } from './core/activity';
 import {
@@ -325,6 +337,34 @@ export const App: React.FC = () => {
   currentTabRef.current = currentTab;
   const partnerNameRef = useRef(state.partnerName);
   partnerNameRef.current = state.partnerName;
+  // Read inside the relay handler, which only re-subscribes when the role
+  // changes and would otherwise compare against a name from before a rename.
+  const userNameRef = useRef(state.userName);
+  userNameRef.current = state.userName;
+
+  /**
+   * Set when another phone announces itself from this phone's own seat.
+   *
+   * Both phones holding the same role is silent otherwise - see
+   * RoleClashDialog for what it breaks.
+   */
+  const [roleClash, setRoleClash] = useState<{ name: string } | null>(null);
+  /**
+   * Whether this phone has answered a clash with its own name yet.
+   *
+   * Only the phone that was already online hears the other announce itself,
+   * so it says its name back once - and the other phone, hearing a different
+   * name from its own seat, asks the same question. Once, because two phones
+   * that answered every announcement with one would never stop.
+   */
+  const clashAnnouncedRef = useRef(false);
+  /**
+   * The name last heard clashing with this phone's seat - kept after the
+   * dialog is closed, unlike roleClash. When that name is next heard from the
+   * other seat, the other phone has moved, and this one fetches what the
+   * clash hid from it (see catchUpAfterClash).
+   */
+  const clashNameRef = useRef<string | null>(null);
 
   // Session & relay connection state
   const [session, setSession] = useState<SpaceSession | null>(loadSpaceSession);
@@ -431,6 +471,12 @@ export const App: React.FC = () => {
   const [groupTyping, setGroupTyping] = useState<Record<string, Record<string, number>>>({});
   const [passphraseAttempt, setPassphraseAttempt] = useState('');
 
+  // The sounds heard most - a message, a letter, a heartbeat, a call - are
+  // decoded ahead of time, so the first of the day plays the moment it should.
+  useEffect(() => {
+    preloadSounds();
+  }, []);
+
   // Track live WebSocket relay status
   useEffect(() => {
     return wsRelay.subscribeStatus((status) => {
@@ -440,6 +486,11 @@ export const App: React.FC = () => {
 
   // Broadcast user name to partner whenever relay connects
   useEffect(() => {
+    // Only once the connection is sitting in the seat this phone now claims.
+    // Straight after a seat switch the old socket is still the one connected,
+    // and an announcement sent on it went out under the seat being left - which
+    // the phone still in that seat took as a second clash.
+    if (wsRelay.currentSeat() !== state.activeUser) return;
     if (relayStatus === 'connected' && state.userName && state.userName !== 'You') {
       wsRelay.broadcastUpdate('NAME_EXCHANGE', { name: state.userName, role: state.activeUser });
     }
@@ -571,6 +622,9 @@ export const App: React.FC = () => {
 
       if (msg.type === 'REMOTE_RECORD') {
         const record = msg.record;
+        // History fetched again after a seat switch: only what can safely be
+        // applied twice. See CATCH_UP_TYPES.
+        if (msg.catchUp && !CATCH_UP_TYPES.has(record.type)) return;
         setLastSyncedAt(Date.now());
         // Anything arriving proves a partner exists on the other end.
         setState(prev => (prev.partnerEverSeen ? prev : { ...prev, partnerEverSeen: true }));
@@ -629,14 +683,58 @@ export const App: React.FC = () => {
           // Chores, expenses, journal, quotes, agreements, cycle: one reducer
           // for all of them, shared with the local network path below.
           if (SHARED_RECORD_TYPES.has(record.type)) {
-            setState(prev => applySharedRecord(prev, record.type, parsed, record.authorId) ?? prev);
+            setState(
+              prev =>
+                applySharedRecord(prev, record.type, parsed, record.authorId, { addOnly: !!msg.catchUp }) ?? prev
+            );
           }
 
           if (record.type === 'NAME_EXCHANGE') {
             // Our own name, coming back from another of our devices or from a
             // restore, would otherwise be adopted as the partner's.
-            if (record.authorId === state.activeUser) return;
+            if (record.authorId === state.activeUser) {
+              // ...unless it is not our name. Another phone announcing a
+              // different name from this phone's seat is the partner, set up
+              // on the same side - which breaks catching up, calls and
+              // presence without a word. Live only: a replay can carry this
+              // phone's own name from before it was changed.
+              const announced = typeof parsed.name === 'string' ? parsed.name.trim() : '';
+              const mine = (userNameRef.current || '').trim();
+              // Live means written moments ago and not part of a restore. The
+              // replaying flag is too broad for this: it stays up through a
+              // whole multi-page catch-up, and the other phone's one reply
+              // would be lost inside it.
+              const live =
+                !msg.restoring && Date.now() - (Number(record.clientTs) || 0) < 2 * 60 * 1000;
+              // Placeholders ('You', 'Partner') say nothing about who is
+              // holding the phone, and a name this phone was told is its owner
+              // on another device is not a clash.
+              if (
+                live &&
+                isRealName(announced) &&
+                isRealName(mine) &&
+                announced.toLowerCase() !== mine.toLowerCase() &&
+                !isOwnDeviceName(announced)
+              ) {
+                setRoleClash({ name: announced });
+                clashNameRef.current = announced;
+                if (!clashAnnouncedRef.current) {
+                  clashAnnouncedRef.current = true;
+                  wsRelay.broadcastUpdate('NAME_EXCHANGE', { name: mine, role: state.activeUser });
+                }
+              }
+              return;
+            }
             if (parsed.name && typeof parsed.name === 'string') {
+              // The phone we were asking about, now heard from the other seat:
+              // it has moved, and there is nothing left to ask.
+              const heard = parsed.name.trim().toLowerCase();
+              setRoleClash(prev => (prev && prev.name.trim().toLowerCase() === heard ? null : prev));
+              if (clashNameRef.current && clashNameRef.current.trim().toLowerCase() === heard) {
+                clashNameRef.current = null;
+                clashAnnouncedRef.current = false;
+                wsRelay.catchUpAfterClash();
+              }
               setState(prev => ({
                 ...prev,
                 partnerName: parsed.name
@@ -715,13 +813,18 @@ export const App: React.FC = () => {
           } else if (record.type === 'LIST_ITEM') {
             setState(prev => ({
               ...prev,
-              lists: [parsed, ...prev.lists]
+              lists: addOnce(prev.lists, parsed)
             }));
           } else if (record.type === 'LOVE_LETTER') {
-            setState(prev => ({
-              ...prev,
-              letters: [parsed, ...prev.letters.filter(l => l.id !== parsed.id)]
-            }));
+            setState(prev =>
+              // Add-only during a catch-up: see CATCH_UP_TYPES.
+              msg.catchUp && prev.letters.some(l => l.id === parsed.id)
+                ? prev
+                : {
+                    ...prev,
+                    letters: [parsed, ...prev.letters.filter(l => l.id !== parsed.id)]
+                  }
+            );
             const isFromPartner = record.authorId !== state.activeUser && !msg.replay;
             if (isFromPartner) {
               playLetterChime();
@@ -894,14 +997,14 @@ export const App: React.FC = () => {
           } else if (record.type === 'MIDNIGHT_RADIO_SYNC') {
             setState(prev => ({
               ...prev,
-              midnightRadio: parsed
+              midnightRadio: mergeIncomingRadio(prev.midnightRadio, parsed)
             }));
           } else if (record.type === 'MIDNIGHT_RADIO_WHISPER') {
             setState(prev => ({
               ...prev,
               midnightRadio: {
                 ...prev.midnightRadio,
-                whispers: [parsed, ...(prev.midnightRadio.whispers || [])]
+                whispers: addOnce(prev.midnightRadio.whispers, parsed)
               }
             }));
             if ('vibrate' in navigator) {
@@ -916,14 +1019,14 @@ export const App: React.FC = () => {
             setState(prev => ({
               ...prev,
               activeStateOfUnion: null,
-              stateOfUnionHistory: [parsed, ...prev.stateOfUnionHistory]
+              stateOfUnionHistory: addOnce(prev.stateOfUnionHistory, parsed)
             }));
           } else if (record.type === 'CANVAS_STROKE') {
             setState(prev => ({
               ...prev,
               sharedCanvas: {
                 ...prev.sharedCanvas,
-                strokes: [...(prev.sharedCanvas?.strokes || []), parsed],
+                strokes: addOnce(prev.sharedCanvas?.strokes, parsed, 'end'),
                 lastUpdated: Date.now()
               }
             }));
@@ -950,7 +1053,7 @@ export const App: React.FC = () => {
               ...prev,
               sharedCanvas: {
                 ...prev.sharedCanvas,
-                savedSketches: [parsed, ...(prev.sharedCanvas?.savedSketches || [])]
+                savedSketches: addOnce(prev.sharedCanvas?.savedSketches, parsed)
               }
             }));
           } else if (record.type === 'REPAIR_BRIDGE_SEND') {
@@ -1127,7 +1230,7 @@ export const App: React.FC = () => {
         } else if (packet.subType === 'MIDNIGHT_RADIO_SYNC') {
           setState(prev => ({
             ...prev,
-            midnightRadio: packet.payload
+            midnightRadio: mergeIncomingRadio(prev.midnightRadio, packet.payload)
           }));
         } else if (packet.subType === 'MIDNIGHT_RADIO_WHISPER') {
           setState(prev => ({
@@ -1255,21 +1358,61 @@ export const App: React.FC = () => {
     }
   }, [state, session, vaultKey, isLocked]);
 
-  const toggleActiveUser = () => {
-    setState(prev => {
-      const nextUser = prev.activeUser === 'user' ? 'partner' : 'user';
-      const curSession = loadSpaceSession();
-      if (curSession) {
-        const updated: SpaceSession = { ...curSession, role: nextUser };
-        saveSpaceSession(updated);
-        setSession(updated);
-      }
-      return {
-        ...prev,
-        activeUser: nextUser
-      };
-    });
+  /**
+   * Puts this phone in the given seat of the space.
+   *
+   * The seat lives in two places that must agree: the session, which the relay
+   * connection is made from, and activeUser, which decides what on screen is
+   * "you". This used to read the session back from plain storage - which is
+   * empty whenever a PIN is set, because the session then lives inside the
+   * encrypted vault. With a PIN, switching changed the screen and not the
+   * connection, so the phone went on talking from the old seat while showing
+   * its own messages as the partner's. The session held in memory is the one
+   * that is current either way, and the vault is rewritten from it.
+   */
+  const setDeviceRole = (nextRole: SpaceRole) => {
+    setRoleClash(null);
+    clashAnnouncedRef.current = false;
+    // Moving seat fetches the hidden history itself (ws.takeNewSeat).
+    clashNameRef.current = null;
+    if (state.activeUser === nextRole && session?.role === nextRole) return;
+    setState(prev => ({ ...prev, activeUser: nextRole }));
+    if (session) {
+      const updated: SpaceSession = { ...session, role: nextRole };
+      setSession(updated);
+      if (!vaultKey) saveSpaceSession(updated);
+    }
     setSpaceVersion(v => v + 1);
+  };
+
+  const toggleActiveUser = () => setDeviceRole(state.activeUser === 'user' ? 'partner' : 'user');
+
+  /** The answer to RoleClashDialog. */
+  const handleRoleClashAnswer = (role: SpaceRole) => {
+    const otherName = roleClash?.name || 'Your partner';
+    if (role === state.activeUser) {
+      // This phone was right; the other one has to move, and it is asking the
+      // same question. Free to answer it once more if it announces again.
+      setRoleClash(null);
+      clashAnnouncedRef.current = false;
+      setInAppNotification({
+        id: newId(),
+        title: 'Then the other phone needs to change',
+        body: `${otherName}'s phone is asking the same question - they should answer that ${otherName} joined with your code.`,
+        type: 'general',
+        tabId: currentTabRef.current || 'home'
+      });
+      return;
+    }
+    setDeviceRole(role);
+  };
+
+  /** "That's me, on another device": not a clash, and never asked about again. */
+  const handleRoleClashSamePerson = () => {
+    if (roleClash) rememberOwnDeviceName(roleClash.name);
+    setRoleClash(null);
+    clashAnnouncedRef.current = false;
+    clashNameRef.current = null;
   };
 
   /**
@@ -1404,7 +1547,10 @@ export const App: React.FC = () => {
       // on somebody who only switched apps to look something up.
       enabled: () => !!vaultKey && !isLocked && !callEngineRef.current?.busy,
       getSetting: () => readAutoLock(),
-      onLock: lockNow
+      onLock: lockNow,
+      // Nor while live radio plays: listening with the screen off is the
+      // point of it. The lock's countdown starts when the radio stops.
+      hold: liveRadioHold
     });
   }, [vaultKey, isLocked]);
 
@@ -2850,10 +2996,20 @@ export const App: React.FC = () => {
 
   const handleUnpair = () => {
     if (window.confirm('Are you sure you want to disconnect from this space? You can reconnect anytime using your Space Link Code.')) {
-      clearSpaceSession();
+      // Kept for "Rejoin": coming back is what this message promises. With a
+      // PIN it is kept inside the vault, with everything else - never in plain
+      // storage, where enabling the PIN was meant to stop the code being.
+      clearSpaceSession({ keepRejoin: true });
       wsRelay.disconnect();
+      const remembered = session
+        ? { code: session.code, role: session.role, joinPhrase: session.joinPhrase || undefined }
+        : undefined;
       setSession(null);
-      setState(prev => ({ ...prev, isPaired: false }));
+      setState(prev => ({
+        ...prev,
+        isPaired: false,
+        rejoinSpace: vaultKey ? remembered ?? prev.rejoinSpace : undefined
+      }));
       setSpaceVersion(v => v + 1);
     }
   };
@@ -2894,6 +3050,9 @@ export const App: React.FC = () => {
             setState(upgradeState(opened.payload.state));
             setSession(opened.payload.session);
             setVaultKey(opened.key);
+            // A PIN set under an older build left the code behind in plain
+            // storage, under a key nothing else would ever remove.
+            forgetLastSpace();
             setIsLocked(false);
             setPinAttempt('');
             setPassphraseAttempt('');
@@ -3089,7 +3248,9 @@ export const App: React.FC = () => {
             isPaired: true,
             activeUser: newSession.role,
             userName: enteredName,
-            pinEnabled: !!chosenPin,
+            // Still protected if a vault was already in use: joining again
+            // does not take the PIN away.
+            pinEnabled: !!chosenPin || !!vaultKey,
             vaultName: chosenVaultName?.trim() || state.vaultName
           };
 
@@ -3118,10 +3279,14 @@ export const App: React.FC = () => {
                 setState(prev => ({ ...prev, pinEnabled: false }));
                 saveSpaceSession(namedSession);
               });
-          } else {
+          } else if (!vaultKey) {
             saveSpaceSession(namedSession);
           }
+          // With a vault already in use the session goes into it, through the
+          // persistence effect, and nowhere else.
         }}
+        rememberedSpace={vaultKey ? state.rejoinSpace ?? null : null}
+        vaultActive={!!vaultKey}
       />
       </Suspense>
     );
@@ -3647,6 +3812,18 @@ export const App: React.FC = () => {
         )}
         </Suspense>
       </main>
+
+      {roleClash && (
+        <RoleClashDialog
+          otherName={roleClash.name}
+          onChoose={handleRoleClashAnswer}
+          onSamePerson={handleRoleClashSamePerson}
+          onDismiss={() => {
+            setRoleClash(null);
+            clashAnnouncedRef.current = false;
+          }}
+        />
+      )}
 
       {/* Shown wherever they are in the sanctuary, not only on one screen. */}
       {!storageWarningDismissed && (

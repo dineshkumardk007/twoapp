@@ -7,6 +7,7 @@ import { ComfortBoxData } from '../types';
 import { triggerGlobalPulse } from './SensoryPulseOverlay';
 import { CoRegulationModal } from './CoRegulationModal';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface ComfortBoxModalProps {
   isOpen: boolean;
@@ -34,27 +35,10 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
   const [breathSeconds, setBreathSeconds] = useState(4);
   const [cyclesCompleted, setCyclesCompleted] = useState(0);
 
-  // Calming Audio Chime for Breath Transitions
-  const playSomaticTone = (freq: number, duration: number) => {
-    try {
-      const ctx = getAudioContext();
-      if (!ctx) return;
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const now = ctx.currentTime;
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + duration);
-    } catch (e) {}
+  // Breathing cues on a singing bowl. Called with the frequency the phase used
+  // to be tuned to: 432 entering hold, 324 entering the out-breath, 528 the in-breath.
+  const playSomaticTone = (freq: number, _duration: number) => {
+    playSound(freq === 432 ? 'breath-hold' : freq === 324 ? 'breath-out' : 'breath-in');
   };
 
   useEffect(() => {

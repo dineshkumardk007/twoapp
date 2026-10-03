@@ -1,55 +1,35 @@
 // Ambient Audio Coordinator for Two
-// Coordinates audio playback across Midnight Radio, Nightstand Soundscape, and Modal Soundscapes.
-// Prevents overlapping playback, eliminates phantom oscillators, and provides instant master mute.
+// Keeps one ambience playing at a time across the app: the soundscapes, the
+// Nightstand, Midnight Radio, and the drones under Soft Landing and the
+// breathing exercise. Whichever starts stops whichever was playing.
+//
+// It used to know only the Nightstand and the radio - which App shows one at
+// a time anyway - while the ones that really could overlap (a soundscape
+// started from anywhere, the two drones, each with its own beat between the
+// ears) all played on top of each other.
 
-type AudioSourceType = 'nightstand' | 'midnight_radio' | 'ambient_modal' | 'none';
+type AudioSourceType = 'nightstand' | 'midnight_radio' | 'ambient_modal' | 'soft_landing' | 'co_regulation' | 'none';
 
 class AmbientAudioCoordinator {
   private activeSource: AudioSourceType = 'none';
-  private stopNightstandCb: (() => void) | null = null;
-  private stopRadioCb: (() => void) | null = null;
-  private stopModalCb: (() => void) | null = null;
+  private stoppers = new Map<AudioSourceType, () => void>();
 
-  public registerNightstand(stopFn: () => void) {
-    this.stopNightstandCb = stopFn;
+  /** How to stop this source when another starts. The latest registration wins. */
+  public register(source: Exclude<AudioSourceType, 'none'>, stopFn: () => void) {
+    this.stoppers.set(source, stopFn);
   }
 
-  public registerRadio(stopFn: () => void) {
-    this.stopRadioCb = stopFn;
-  }
-
-  public registerModal(stopFn: () => void) {
-    this.stopModalCb = stopFn;
-  }
-
-  public notifyNightstandPlaying() {
-    if (this.activeSource === 'midnight_radio' && this.stopRadioCb) {
-      this.stopRadioCb();
+  /** This source has started: whichever other one was playing is stopped. */
+  public notifyPlaying(source: Exclude<AudioSourceType, 'none'>) {
+    const previous = this.activeSource;
+    if (previous !== 'none' && previous !== source) {
+      try {
+        this.stoppers.get(previous)?.();
+      } catch {
+        /* it was stopping anyway */
+      }
     }
-    if (this.activeSource === 'ambient_modal' && this.stopModalCb) {
-      this.stopModalCb();
-    }
-    this.activeSource = 'nightstand';
-  }
-
-  public notifyRadioPlaying() {
-    if (this.activeSource === 'nightstand' && this.stopNightstandCb) {
-      this.stopNightstandCb();
-    }
-    if (this.activeSource === 'ambient_modal' && this.stopModalCb) {
-      this.stopModalCb();
-    }
-    this.activeSource = 'midnight_radio';
-  }
-
-  public notifyModalPlaying() {
-    if (this.activeSource === 'nightstand' && this.stopNightstandCb) {
-      this.stopNightstandCb();
-    }
-    if (this.activeSource === 'midnight_radio' && this.stopRadioCb) {
-      this.stopRadioCb();
-    }
-    this.activeSource = 'ambient_modal';
+    this.activeSource = source;
   }
 
   public notifyStopped(source: AudioSourceType) {
@@ -58,15 +38,37 @@ class AmbientAudioCoordinator {
     }
   }
 
+  public registerNightstand(stopFn: () => void) {
+    this.register('nightstand', stopFn);
+  }
+
+  public registerRadio(stopFn: () => void) {
+    this.register('midnight_radio', stopFn);
+  }
+
+  public registerModal(stopFn: () => void) {
+    this.register('ambient_modal', stopFn);
+  }
+
+  public notifyNightstandPlaying() {
+    this.notifyPlaying('nightstand');
+  }
+
+  public notifyRadioPlaying() {
+    this.notifyPlaying('midnight_radio');
+  }
+
+  public notifyModalPlaying() {
+    this.notifyPlaying('ambient_modal');
+  }
+
   public stopAll() {
-    if (this.stopNightstandCb) {
-      try { this.stopNightstandCb(); } catch (e) {}
-    }
-    if (this.stopRadioCb) {
-      try { this.stopRadioCb(); } catch (e) {}
-    }
-    if (this.stopModalCb) {
-      try { this.stopModalCb(); } catch (e) {}
+    for (const stop of this.stoppers.values()) {
+      try {
+        stop();
+      } catch {
+        /* keep stopping the rest */
+      }
     }
     this.activeSource = 'none';
   }

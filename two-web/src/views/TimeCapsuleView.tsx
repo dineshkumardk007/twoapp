@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface TimeCapsuleViewProps {
   capsules: TimeCapsuleItem[];
@@ -48,27 +49,7 @@ const SEAL_META: Record<CapsuleSealType, { name: string; emoji: string; icon: an
 };
 
 function playUnsealChime() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    // Harmonic arpeggio (C# minor / 528Hz Solfeggio sequence)
-    [528, 660, 792, 1056].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const t = now + i * 0.12;
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, t);
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.2, t + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 1.8);
-    });
-  } catch (_) {}
+  playSound('unseal');
 }
 
 export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({

@@ -79,7 +79,6 @@ export class WebSocketRelay {
   private clients = new Set<SpaceClient>();
   private nextConnectionId = 1;
 
-  /** Tells every connected phone when durability comes or goes. */
   /** Always answers, with null when there is nothing to give, so no phone waits out its timeout. */
   private async sendIceServers(ws: WebSocket) {
     const set = await getIceServers();
@@ -90,6 +89,7 @@ export class WebSocketRelay {
     });
   }
 
+  /** Tells every connected phone when durability comes or goes. */
   private announceDurability = (durable: boolean) => {
     for (const client of this.clients) {
       this.sendJson(client.ws, { type: 'RELAY_STATUS', durable, storage: db.kind });
@@ -329,7 +329,11 @@ export class WebSocketRelay {
             }
 
             if (!consumeToken(currentClient)) {
-              this.sendJson(ws, { type: 'ERROR', error: 'Rate limit exceeded, slow down' });
+              // Naming the record lets the phone send it again promptly, in its
+              // place in the queue. Without the id it could only wait and
+              // guess, and a newer copy of the same thing could overtake it.
+              const refusedId = typeof message.record?.id === 'string' ? message.record.id : undefined;
+              this.sendJson(ws, { type: 'ERROR', error: 'Rate limit exceeded, slow down', recordId: refusedId });
               return;
             }
 

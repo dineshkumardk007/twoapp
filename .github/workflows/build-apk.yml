@@ -8,7 +8,9 @@ on:
 jobs:
   build-apk:
     name: Build & Export APK
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest, which moves to a new Ubuntu on
+    # GitHub's schedule - a build should only change when this file does.
+    runs-on: ubuntu-24.04
     env:
       # A release build once the signing key is in the repository's secrets,
       # and the debug build until then - so a missing key never breaks a build.
@@ -16,16 +18,16 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: 'npm'
@@ -46,7 +48,7 @@ jobs:
           cp -r two-web/dist/. two-android/app/src/main/assets/www/
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.11.1'
 
@@ -65,7 +67,7 @@ jobs:
 
       - name: Upload Debug APK
         if: env.HAS_RELEASE_KEY != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: two-android-debug-apk
           path: two-android/app/build/outputs/apk/debug/*.apk
@@ -109,10 +111,12 @@ jobs:
           echo "::notice title=Signed release APK::$(basename "$APK") is signed with the Two key"
         working-directory: two-android
 
+      # Uploaded as the .apk itself rather than inside a zip, so it installs
+      # straight from a phone's downloads.
       - name: Upload Release APK
         if: env.HAS_RELEASE_KEY == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: two-android-release-apk
-          path: two-android/app/build/outputs/apk/release/*.apk
+          path: two-android/app/build/outputs/apk/release/app-release.apk
+          archive: false
           retention-days: 30

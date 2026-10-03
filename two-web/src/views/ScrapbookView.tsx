@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SpaceState } from '../core/storage';
 import { ScrapbookSettings } from '../types';
 import { BookOpen, Printer, Download, Sliders, Check, Star, Mail, MapPin, Heart, Utensils, Gift, Hourglass, Flame, Sparkles, X, ChevronRight, Calendar, ShieldCheck } from 'lucide-react';
+import { saveFile } from '../core/saveFile';
 
 interface ScrapbookViewProps {
   state: SpaceState;
@@ -37,7 +38,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
     window.print();
   };
 
-  const handleExportJSON = () => {
+  const handleExportJSON = async () => {
     const archiveData = {
       title: settings.bookTitle,
       subtitle: settings.subtitle,
@@ -56,16 +57,9 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
     };
 
     const blob = new Blob([JSON.stringify(archiveData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `two-keepsake-scrapbook-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const how = await saveFile(blob, `two-keepsake-scrapbook-${new Date().toISOString().slice(0, 10)}.json`);
 
-    setExportNotice('Archive JSON downloaded successfully!');
+    setExportNotice(how === 'saved' ? 'Choose where to keep the archive.' : 'Archive JSON downloaded successfully!');
     setTimeout(() => setExportNotice(null), 4000);
   };
 

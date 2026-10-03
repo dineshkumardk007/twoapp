@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface CoordinatesMapViewProps {
   pins: MemoryCoordinatePin[];
@@ -32,31 +33,10 @@ interface CoordinatesMapViewProps {
 }
 
 // Audio chime for pins
+// A pin dropping: one glass ping, pitched per kind of pin. 700 is the ping as
+// recorded; the others are the same ping played faster or slower.
 function playPinPing(frequency = 660) {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(frequency, now);
-    osc.frequency.exponentialRampToValueAtTime(frequency * 1.5, now + 0.15);
-    osc.frequency.exponentialRampToValueAtTime(frequency, now + 0.4);
-
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(0.1, now + 0.04);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 1.3);
-  } catch (e) {
-    // ignore
-  }
+  playSound('pin', { rate: frequency / 700 });
 }
 
 // Equirectangular projection helpers

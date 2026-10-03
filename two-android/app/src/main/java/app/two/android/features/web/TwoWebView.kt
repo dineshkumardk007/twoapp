@@ -2,15 +2,22 @@
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
+import android.provider.DocumentsContract
 import android.graphics.Color
+import android.util.Base64
 import android.view.ViewGroup
 import android.webkit.*
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,8 +33,37 @@ import app.two.android.core.network.NetworkConfig
 
 /**
  * JavaScript interface exposed to the embedded Web application as window.AndroidBridge
+ *
+ * [onSaveFile] is handed a file the page wants saved, on the main thread.
  */
-class AndroidWebBridge(private val context: Context) {
+class AndroidWebBridge(
+    private val context: Context,
+    private val onSaveFile: (name: String, mimeType: String, bytes: ByteArray) -> Unit = { _, _, _ -> }
+) {
+    /**
+     * Saves a file the page made - a backup, an export.
+     *
+     * A WebView ignores download links unless the app handles them, and this
+     * one did not, so every export in the app did nothing on the phone. The
+     * page now passes the bytes here instead, and the phone's own "save to"
+     * screen lets the person choose where they go.
+     *
+     * Returns false only when the bytes could not be read, so the page can
+     * say so rather than assume the file was saved.
+     */
+    @JavascriptInterface
+    fun saveFile(filename: String, mimeType: String, base64: String): Boolean {
+        val bytes = try {
+            Base64.decode(base64, Base64.DEFAULT)
+        } catch (_: IllegalArgumentException) {
+            return false
+        }
+        // Bridge calls arrive on a background thread; the save screen opens
+        // from the main one.
+        ContextCompat.getMainExecutor(context).execute { onSaveFile(filename, mimeType, bytes) }
+        return true
+    }
+
     @JavascriptInterface
     fun getRelayUrl(): String {
         return NetworkConfig.wsRelayUrl
@@ -202,6 +238,68 @@ fun TwoWebView(
      * anybody has tried to record anything, is the prompt people deny without
      * reading.
      */
+    /*
+     * Files the page asks to open: a photo for a memory, a backup to restore.
+     *
+     * A WebView shows no file picker of its own. Without onShowFileChooser
+     * the page's file inputs did nothing at all on the phone - tapping "add a
+     * photo" or "select backup file" simply had no effect.
+     */
+    val pendingFiles = remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+    val pickFiles = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val callback = pendingFiles.value
+        pendingFiles.value = null
+        // Null when cancelled - and it must still be answered, or the page
+        // keeps waiting and its file input never opens again.
+        callback?.onReceiveValue(pickedUris(result.resultCode, result.data))
+    }
+
+    /* Files the page asks to save, held until the person picks a place. */
+    val pendingSave = remember { mutableStateOf<ByteArray?>(null) }
+    val createDocument = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val bytes = pendingSave.value
+        pendingSave.value = null
+        val target = result.data?.data
+        // Backing out of the save screen is a choice, not a failure.
+        if (result.resultCode != Activity.RESULT_OK || target == null) {
+            return@rememberLauncherForActivityResult
+        }
+        if (bytes == null) {
+            // The save screen has already made an empty file by now. The bytes
+            // are gone - Android stopped the app while the screen was open -
+            // so take the empty file away and say so, rather than leave a
+            // backup that is 0 bytes and fails the day it is needed.
+            discardDocument(hostContext, target)
+            return@rememberLauncherForActivityResult
+        }
+        writeDocument(hostContext, target, bytes)
+    }
+
+    val saveThroughPicker: (String, String, ByteArray) -> Unit = saver@{ name, mimeType, bytes ->
+        // One save screen at a time: a second would take this one's bytes,
+        // and whichever answered last would write into the wrong file.
+        if (pendingSave.value != null) {
+            Toast.makeText(hostContext, "Finish saving the first file", Toast.LENGTH_SHORT).show()
+            return@saver
+        }
+        pendingSave.value = bytes
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = documentType(name, mimeType)
+            putExtra(Intent.EXTRA_TITLE, name)
+        }
+        try {
+            createDocument.launch(intent)
+        } catch (_: ActivityNotFoundException) {
+            pendingSave.value = null
+            Toast.makeText(hostContext, "No app on this phone can save files", Toast.LENGTH_LONG).show()
+        }
+    }
+
     val pendingMedia = remember { mutableStateOf<PermissionRequest?>(null) }
     val pendingGeo = remember {
         mutableStateOf<Pair<String, GeolocationPermissions.Callback>?>(null)
@@ -294,7 +392,7 @@ fun TwoWebView(
                     layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 }
 
-                addJavascriptInterface(AndroidWebBridge(context), "AndroidBridge")
+                addJavascriptInterface(AndroidWebBridge(context, saveThroughPicker), "AndroidBridge")
 
                 webViewClient = object : WebViewClient() {
                     override fun shouldInterceptRequest(
@@ -358,6 +456,26 @@ fun TwoWebView(
                             askAndroid.launch(arrayOf(fine, coarse))
                         }
                     }
+
+                    override fun onShowFileChooser(
+                        webView: WebView?,
+                        filePathCallback: ValueCallback<Array<Uri>>?,
+                        fileChooserParams: FileChooserParams?
+                    ): Boolean {
+                        if (filePathCallback == null) return false
+                        // A picker still open from a double tap is answered
+                        // with nothing first, or the page waits on it forever.
+                        pendingFiles.value?.onReceiveValue(null)
+                        pendingFiles.value = filePathCallback
+                        return try {
+                            pickFiles.launch(filePickerIntent(fileChooserParams))
+                            true
+                        } catch (_: ActivityNotFoundException) {
+                            pendingFiles.value = null
+                            filePathCallback.onReceiveValue(null)
+                            true
+                        }
+                    }
                 }
 
                 loadUrl("https://appassets.androidplatform.net/assets/www/index.html")
@@ -369,4 +487,111 @@ fun TwoWebView(
             canGoBackState = it.canGoBack()
         }
     )
+}
+
+/**
+ * A picker for what the page's file input accepts.
+ *
+ * Not FileChooserParams.createIntent, which uses the first accept entry as the
+ * MIME type whatever it is - and the backup input accepts ".two-vault,.json",
+ * which are file extensions, not types. Handed one of those, the picker
+ * filters for a type that does not exist and shows nothing.
+ */
+private fun filePickerIntent(params: WebChromeClient.FileChooserParams?): Intent {
+    val mimeTypes = params?.acceptTypes.orEmpty()
+        .map { it.trim().lowercase() }
+        .filter { it.contains('/') }
+        .distinct()
+    return Intent(Intent.ACTION_GET_CONTENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = if (mimeTypes.size == 1) mimeTypes[0] else "*/*"
+        if (mimeTypes.size > 1) putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes.toTypedArray())
+        putExtra(
+            Intent.EXTRA_ALLOW_MULTIPLE,
+            params?.mode == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE
+        )
+    }
+}
+
+/** What the picker returned, in the shape the page's callback takes; null if nothing. */
+private fun pickedUris(resultCode: Int, data: Intent?): Array<Uri>? {
+    if (resultCode != Activity.RESULT_OK || data == null) return null
+    val clip = data.clipData
+    if (clip != null && clip.itemCount > 0) {
+        return Array(clip.itemCount) { clip.getItemAt(it).uri }
+    }
+    return data.data?.let { arrayOf(it) }
+}
+
+/**
+ * The type to save a file as, chosen from its name.
+ *
+ * The save screen adds the extension it associates with the type when the
+ * name does not already end in it, so a backup offered as JSON would be saved
+ * as "two-vault-....two-vault.json". A name whose extension maps to a known
+ * type keeps that type; anything else - the .two-vault backup - goes as plain
+ * bytes, which the save screen leaves the name of alone.
+ */
+private fun documentType(name: String, fallback: String): String {
+    val extension = name.substringAfterLast('.', "").lowercase()
+    val known = if (extension.isEmpty()) null
+    else MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+    return known ?: if (extension.isEmpty() && fallback.isNotBlank()) fallback else "application/octet-stream"
+}
+
+/** Writes a saved file off the main thread, then says how it went. */
+private fun writeDocument(context: Context, target: Uri, bytes: ByteArray) {
+    val appContext = context.applicationContext
+    Thread {
+        val saved = try {
+            openTruncating(appContext, target)?.use { it.write(bytes) } != null
+        } catch (_: Exception) {
+            false
+        }
+        ContextCompat.getMainExecutor(appContext).execute {
+            Toast.makeText(
+                appContext,
+                if (saved) "Saved" else "Could not save the file",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }.start()
+}
+
+/**
+ * Opens a document for writing from its first byte, cutting off whatever was
+ * there.
+ *
+ * Plain "w" does not truncate on Android 10 and later. The save screen lets
+ * the person pick an existing file and overwrite it, and a new backup shorter
+ * than the old one then kept the old one's tail - a file that no longer
+ * parses, reported as saved. "wt" truncates; a provider that does not know it
+ * is asked for "w" instead.
+ */
+private fun openTruncating(context: Context, target: Uri): java.io.OutputStream? =
+    try {
+        context.contentResolver.openOutputStream(target, "wt")
+    } catch (_: IllegalArgumentException) {
+        context.contentResolver.openOutputStream(target, "w")
+    } catch (_: java.io.FileNotFoundException) {
+        context.contentResolver.openOutputStream(target, "w")
+    }
+
+/** Removes a document the save screen created but nothing could be written into. */
+private fun discardDocument(context: Context, target: Uri) {
+    val appContext = context.applicationContext
+    Thread {
+        try {
+            DocumentsContract.deleteDocument(appContext.contentResolver, target)
+        } catch (_: Exception) {
+            // Not every provider lets the app delete; the message still matters.
+        }
+        ContextCompat.getMainExecutor(appContext).execute {
+            Toast.makeText(
+                appContext,
+                "Saving was interrupted - please export again",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }.start()
 }

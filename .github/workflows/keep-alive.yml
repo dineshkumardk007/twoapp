@@ -34,7 +34,9 @@ concurrency:
 jobs:
   ping:
     name: Ping the relay and its database
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest, which moves to a new Ubuntu on
+    # GitHub's schedule - a build should only change when this file does.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Call /health

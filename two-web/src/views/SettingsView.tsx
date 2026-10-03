@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { readCallQuality, writeCallQuality } from '../core/call';
 import { AUTO_LOCK_CHOICES, AutoLockSetting } from '../core/autoLock';
-import { generatePairingCode, normalizePairingCode, isPlausiblePairingCode, generateJoinPhrase, checkJoinPhrase, getDeviceId } from '../core/space';
+import { generatePairingCode, isPlausiblePairingCode, extractPairingCode, findTwoCode, generateJoinPhrase, checkJoinPhrase, getDeviceId } from '../core/space';
 import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
 import { Shield, Download, Trash2, Palette, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw } from 'lucide-react';
 import { whenLabel } from '../core/when';
+import { saveFile } from '../core/saveFile';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -261,8 +262,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const applyRotation = (code: string, phrase?: string) => {
-    const clean = normalizePairingCode(code);
-    if (!isPlausiblePairingCode(clean)) return;
+    // The same rule as joining: a sentence or a code missing symbols is a
+    // different room, so it is refused rather than switched to.
+    const clean = extractPairingCode(code);
+    if (!clean) return;
     onRotateCode(clean, phrase);
     setRotateMode('idle');
     setRotateCode('');
@@ -287,13 +290,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const t = getTranslation(currentLocale);
 
   const handleExportData = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `two_space_export_${new Date().toISOString().slice(0, 10)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    void saveFile(blob, `two_space_export_${new Date().toISOString().slice(0, 10)}.json`);
   };
 
   const handleOpenPartnerWindow = () => {
@@ -763,7 +761,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </label>
                   <p className="text-[11px] leading-relaxed text-linen-secondary">
                     Locking the instant you switch away costs a PIN every time you glance at a
-                    notification. A minute covers the glance and not the walk away.
+                    notification. A minute covers the glance and not the walk away. During a call,
+                    and while live radio is playing, the app stays open; the countdown starts when
+                    the radio stops.
                   </p>
                 </div>
               )}
@@ -827,10 +827,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <input
                     type="text"
                     value={joinRotation}
-                    onChange={(e) => setJoinRotation(e.target.value)}
+                    onChange={(e) => setJoinRotation(findTwoCode(e.target.value) ?? e.target.value.toUpperCase())}
                     placeholder="TWO-XXXX-XXXX-XXXX"
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
                     className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface font-mono text-sm text-linen-primary"
                   />
+                  {joinRotation.trim().length >= 4 && !isPlausiblePairingCode(joinRotation) && (
+                    <p className="text-[11px] text-rose-600">
+                      Not a complete code yet &mdash; it looks like TWO-XXXX-XXXX-XXXX.
+                    </p>
+                  )}
                   <input
                     type="text"
                     value={rotationPhrase}

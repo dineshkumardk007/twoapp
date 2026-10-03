@@ -15,6 +15,7 @@ import {
   Send, Users, Smile, Play, Pause, RefreshCw, Eye
 } from 'lucide-react';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface CoPresenceViewProps {
   activeUser: 'user' | 'partner';
@@ -81,53 +82,7 @@ const ACTIVITIES: Record<CoPresenceActivity, { id: CoPresenceActivity; label: st
 };
 
 function playInteractionSound(type: string) {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    if (type === 'tea') {
-      // Ceramic clink
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1400, now);
-      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(now + 0.16);
-    } else if (type === 'glance') {
-      // Gentle warm chime
-      [660, 880].forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const t = now + i * 0.1;
-        osc.frequency.setValueAtTime(freq, t);
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.12, t + 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.9);
-      });
-    } else {
-      // Soft touch tone
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.setValueAtTime(432, now);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.15, now + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(now + 1.3);
-    }
-  } catch (_) {}
+  playSound(type === 'tea' ? 'tea' : type === 'glance' ? 'glance' : 'presence');
 }
 
 export const CoPresenceView: React.FC<CoPresenceViewProps> = ({ 
@@ -168,19 +123,36 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
 
   const currentRoom = useMemo(() => ROOMS[selectedRoomId], [selectedRoomId]);
 
-  // Audio Ambience management
+  // Audio Ambience management. The volume has an effect of its own: in the
+  // one below, every step of the slider stopped the room's sound and started
+  // it again, fading out and back in, so dragging it went nearly silent.
+  const soundOnRef = useRef(false);
+
   useEffect(() => {
+    if (soundEnabled) soundscapeEngine.setVolume(volume);
+  }, [soundEnabled, volume]);
+
+  useEffect(() => {
+    soundOnRef.current = soundEnabled;
     if (soundEnabled) {
-      soundscapeEngine.setVolume(volume);
       soundscapeEngine.play(currentRoom.soundscapeId);
     } else {
       soundscapeEngine.pause();
     }
+  }, [soundEnabled, currentRoom]);
 
-    return () => {
-      soundscapeEngine.pause();
-    };
-  }, [soundEnabled, currentRoom, volume]);
+  // Another ambience starting (the radio, a drone, a sleep timer running out)
+  // stops the room's sound; the toggle follows, rather than showing it on.
+  // Declared before the unmount pause below, so it has stopped listening by then.
+  useEffect(() => {
+    let wasPlaying = soundscapeEngine.getState().isPlaying;
+    return soundscapeEngine.subscribe(state => {
+      if (wasPlaying && !state.isPlaying && soundOnRef.current) setSoundEnabled(false);
+      wasPlaying = state.isPlaying;
+    });
+  }, []);
+
+  useEffect(() => () => soundscapeEngine.pause(), []);
 
   // Real-time wall-clock countdown tick (zero drift across network)
   useEffect(() => {

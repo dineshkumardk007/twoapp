@@ -6,6 +6,7 @@ import {
 import { SecretRecipe } from '../types';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface CookbookViewProps {
   recipes: SecretRecipe[];
@@ -50,25 +51,7 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
 
   // Bell chime for kitchen timer
   const playTimerChime = () => {
-    try {
-      const ctx = getAudioContext();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-
-      [587.33, 880, 1174.66].forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + i * 0.15);
-        gain.gain.setValueAtTime(0.001, now + i * 0.15);
-        gain.gain.exponentialRampToValueAtTime(0.12, now + i * 0.15 + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.15 + 1.2);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + i * 0.15);
-        osc.stop(now + i * 0.15 + 1.3);
-      });
-    } catch (e) {}
+    playSound('timer');
   };
 
   useEffect(() => {

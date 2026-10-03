@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
+import { playSound } from '../core/sounds';
 
 interface StateOfUnionViewProps {
   activeSession: StateOfUnionSession | null;
@@ -30,35 +31,9 @@ interface StateOfUnionViewProps {
   onSendToChat?: (text: string) => void;
 }
 
-// Procedural Tibetan Singing Bowl chime for sealing
+// A struck singing bowl, for sealing the check-in.
 function playSingingBowlChime() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    // Harmonic singing bowl frequencies (fundamental + overtones)
-    const freqs = [216, 432, 648, 864, 1296];
-    freqs.forEach((f, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(f, now);
-
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.linearRampToValueAtTime(0.12 / (i + 1), now + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.5 + i * 0.5);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + 4.5);
-    });
-  } catch (e) {
-    // ignore
-  }
+  playSound('singing-bowl');
 }
 
 export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
