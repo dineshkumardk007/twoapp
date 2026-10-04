@@ -28,6 +28,7 @@ import {
 } from '../core/groups';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
 import { EmojiPicker } from '../components/EmojiPicker';
+import { copyTextOrThrow } from '../core/clipboard';
 
 interface GroupChatViewProps {
   group: GroupSpace;
@@ -92,7 +93,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   const copyInvite = async () => {
     const phrase = group.joinPhrase ? `\nWords: ${group.joinPhrase}` : '';
     try {
-      await navigator.clipboard.writeText(
+      await copyTextOrThrow(
         `Join "${group.name}" on Two.\nCode: ${group.code}${phrase}`
       );
       setCopied(true);

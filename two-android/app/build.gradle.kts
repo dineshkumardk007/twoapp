@@ -146,6 +146,11 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.webkit)
 
+    // Live radio that keeps playing with the app in the background
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.exoplayer.hls)
+    implementation(libs.androidx.media3.session)
+
     implementation(libs.zxing.core)
 
     // Coroutines & Serialization

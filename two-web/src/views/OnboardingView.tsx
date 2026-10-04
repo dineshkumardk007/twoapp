@@ -14,6 +14,7 @@ import {
   LastSpace
 } from '../core/space';
 import { ArrowRight, Copy, Check, Link2, UserPlus, Heart, Lock, Clipboard, Share2, Sparkles, KeyRound, RotateCcw, ShieldCheck } from 'lucide-react';
+import { copyTextOrThrow, readClipboardText } from '../core/clipboard';
 
 interface OnboardingViewProps {
   onComplete: (
@@ -170,7 +171,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, reme
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(createdCode);
+      await copyTextOrThrow(createdCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -194,7 +195,8 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, reme
 
   const handlePaste = async () => {
     try {
-      const text = await navigator.clipboard.readText();
+      // Read by Android in the app: the WebView cannot read the clipboard itself.
+      const text = await readClipboardText();
       if (text && text.trim()) {
         // The shared message is a whole sentence; only the code goes in.
         setJoinCode(extractPairingCode(text) ?? text.trim().toUpperCase());

@@ -17,6 +17,7 @@ import { RelationshipMilestone, ComfortBoxData } from '../types';
 import { PartnerActivityCard } from '../components/PartnerActivityCard';
 import { ActivityEvent } from '../core/activity';
 import { destinationName } from '../data/destinations';
+import { copyTextOrThrow } from '../core/clipboard';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -75,7 +76,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const handleCopyCode = async () => {
     if (!spaceCode) return;
     try {
-      await navigator.clipboard.writeText(spaceCode);
+      await copyTextOrThrow(spaceCode);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
     } catch {}

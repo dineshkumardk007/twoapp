@@ -9,6 +9,7 @@ import { VaultBackupModal } from '../components/VaultBackupModal';
 import { Shield, Download, Trash2, Palette, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw } from 'lucide-react';
 import { whenLabel } from '../core/when';
 import { saveFile } from '../core/saveFile';
+import { copyTextOrThrow } from '../core/clipboard';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -222,7 +223,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const handleCopyCode = async () => {
     if (!spaceCode) return;
     try {
-      await navigator.clipboard.writeText(spaceCode);
+      await copyTextOrThrow(spaceCode);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
     } catch {}

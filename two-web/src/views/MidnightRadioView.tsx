@@ -118,8 +118,9 @@ class ProceduralRadioSynthesizer {
   }
 
   public stop(immediate = true) {
+    if (!this.session) return;
     // Even "immediate" fades for a moment: a hard stop is a click.
-    this.session?.stop(immediate ? 0.08 : 0.8);
+    this.session.stop(immediate ? 0.08 : 0.8);
     this.session = null;
     ambientAudioCoordinator.notifyStopped('midnight_radio');
   }
@@ -167,10 +168,16 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
   );
   const onLive = band === 'live' && !!liveStation;
 
+  // Live radio plays on when you leave this screen (and, in the Android app,
+  // with the app in the background); coming back, the dial picks it up.
+  const liveAlreadyOn = onLive && liveRadio.state !== 'idle' && sameStation(liveRadio.current, liveStation);
+
   const [whisperInput, setWhisperInput] = useState('');
   const [volume, setVolume] = useState<number>(radio.volume || 0.6);
-  const [sleepMinutesRemaining, setSleepMinutesRemaining] = useState<number | null>(null);
-  const [isLocalTunedIn, setIsLocalTunedIn] = useState<boolean>(false);
+  const [sleepMinutesRemaining, setSleepMinutesRemaining] = useState<number | null>(() =>
+    liveAlreadyOn && liveRadio.sleepsAt ? Math.max(1, Math.ceil((liveRadio.sleepsAt - Date.now()) / 60_000)) : null
+  );
+  const [isLocalTunedIn, setIsLocalTunedIn] = useState<boolean>(liveAlreadyOn);
   /** Which band's stations are on show; follows the shared band when it changes. */
   const [viewBand, setViewBand] = useState<'two' | 'live'>(band);
   const [liveStatus, setLiveStatus] = useState<LiveRadioStatus>(liveRadio.state);
@@ -183,10 +190,14 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
   const soundOn = isLocalTunedIn && (!onLive || liveStatus === 'playing');
 
   /** What this phone is playing right now, so a repeat of the same request changes nothing. */
-  const playingRef = useRef<string | null>(null);
-  /** The radio as it is now, for what runs from a timer set up earlier (the sleep timer). */
+  const playingRef = useRef<string | null>(liveAlreadyOn ? `live:${liveStation!.url}` : null);
+  /** The radio as it is now, for what runs from a timer or a callback set up earlier. */
   const radioRef = useRef(radio);
   radioRef.current = radio;
+  const onUpdateRadioRef = useRef(onUpdateRadio);
+  onUpdateRadioRef.current = onUpdateRadio;
+  const activeUserRef = useRef(state.activeUser);
+  activeUserRef.current = state.activeUser;
 
   const listening = (on: boolean): Pick<MidnightRadioState, 'userListening' | 'partnerListening'> => ({
     userListening: state.activeUser === 'user' ? on : radio.userListening,
@@ -194,13 +205,15 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
   });
 
   /** Plays whatever the dial says - Two's own station, or the live one. */
-  const startLocal = (target: MidnightRadioState = radio) => {
+  const startLocal = (target: MidnightRadioState = radio, fromTap = true) => {
     const live = target.band === 'live' ? cleanStation(target.liveStation) : null;
     const key = live ? `live:${live.url}` : `two:${target.stationId}`;
     if (playingRef.current === key) {
       // Already on. A live station off air, or waiting for a tap, is tried
       // again; one playing carries on (the player knows the difference).
-      if (live) liveRadio.play(live, volume);
+      // One paused from outside - headphones pulled out, say - waits for a
+      // tap here: opening this screen must not start it out loud.
+      if (live && (fromTap || liveRadio.state !== 'paused')) liveRadio.play(live, volume);
       return;
     }
     playingRef.current = key;
@@ -227,12 +240,36 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
     });
 
     return () => {
-      stopLocal();
-      setIsLocalTunedIn(false);
+      // Two's own stations stop with the screen. Live radio plays on - that
+      // is the point of a radio - until it is stopped here, from the
+      // notification, by the sleep timer, or by another ambience starting.
+      radioSynth.stop(true);
+      if (playingRef.current?.startsWith('two:')) playingRef.current = null;
     };
   }, []);
 
-  useEffect(() => liveRadio.subscribe(status => setLiveStatus(status)), []);
+  useEffect(
+    () =>
+      liveRadio.subscribe(status => {
+        setLiveStatus(status);
+        // Stopped from outside this screen - the notification swiped away,
+        // the sleep timer running out while the screen was closed: the dial
+        // follows, and the partner is told this phone is no longer listening.
+        if (status === 'idle' && playingRef.current?.startsWith('live:')) {
+          playingRef.current = null;
+          setIsLocalTunedIn(false);
+          setSleepMinutesRemaining(null);
+          const r = radioRef.current;
+          const mine = activeUserRef.current === 'user';
+          onUpdateRadioRef.current({
+            ...r,
+            userListening: mine ? false : r.userListening,
+            partnerListening: mine ? r.partnerListening : false
+          });
+        }
+      }),
+    []
+  );
 
   useEffect(() => {
     setViewBand(band);
@@ -279,7 +316,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
   // If the station changes - here or on the partner's phone - while this
   // phone is tuned in, follow it: that is listening together.
   useEffect(() => {
-    if (isLocalTunedIn) startLocal();
+    if (isLocalTunedIn) startLocal(radio, false);
   }, [radio.stationId, band, liveStation?.url]);
 
   // If radio is stopped from remote partner, disengage local audio
@@ -291,6 +328,11 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
   }, [radio.isPlaying]);
 
   const handleTogglePlay = (forceState?: boolean) => {
+    // Paused from the lock screen or a headset: the button resumes it.
+    if (forceState === undefined && isLocalTunedIn && onLive && liveStatus === 'paused') {
+      startLocal();
+      return;
+    }
     const nextTunedIn = forceState !== undefined ? forceState : !isLocalTunedIn;
     setIsLocalTunedIn(nextTunedIn);
 
@@ -500,7 +542,9 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
                             ? 'Off air right now'
                             : liveStatus === 'needs-tap'
                               ? 'Tap to listen'
-                              : 'On air'}
+                              : liveStatus === 'paused'
+                                ? 'Paused'
+                                : 'On air'}
                   </p>
                 </div>
               </div>
@@ -644,9 +688,9 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
             <button
               onClick={() => handleTogglePlay()}
               className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-neutral-950 flex items-center justify-center shadow-lg shadow-amber-900/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              title={isLocalTunedIn ? 'Pause Station' : 'Broadcast Live Station'}
+              title={isLocalTunedIn && !(onLive && liveStatus === 'paused') ? 'Pause Station' : 'Broadcast Live Station'}
             >
-              {isLocalTunedIn ? (
+              {isLocalTunedIn && !(onLive && liveStatus === 'paused') ? (
                 <Pause className="w-6 h-6 fill-current" />
               ) : (
                 <Play className="w-6 h-6 fill-current ml-0.5" />
@@ -687,7 +731,12 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
           {/* Sleep Timer Preset & Send Station to Chat */}
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setSleepMinutesRemaining(prev => (prev === 30 ? null : 30))}
+              onClick={() => {
+                const next = sleepMinutesRemaining === 30 ? null : 30;
+                setSleepMinutesRemaining(next);
+                // Live radio keeps its own timer, so it still ends after you leave this screen.
+                liveRadio.sleepIn(onLive ? next : null);
+              }}
               className={`px-3 py-2 rounded-2xl border text-xs font-serif transition-colors cursor-pointer flex items-center space-x-1.5 ${
                 sleepMinutesRemaining !== null
                   ? 'border-amber-400 bg-amber-500/20 text-amber-200'

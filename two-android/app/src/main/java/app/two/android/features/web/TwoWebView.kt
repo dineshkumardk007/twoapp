@@ -4,13 +4,18 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.provider.DocumentsContract
 import android.graphics.Color
@@ -30,6 +35,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.webkit.WebViewAssetLoader
 import app.two.android.core.network.NetworkConfig
+import app.two.android.features.radio.RadioRemote
 
 /**
  * JavaScript interface exposed to the embedded Web application as window.AndroidBridge
@@ -63,6 +69,65 @@ class AndroidWebBridge(
         ContextCompat.getMainExecutor(context).execute { onSaveFile(filename, mimeType, bytes) }
         return true
     }
+
+    /**
+     * The text on the clipboard, for the page's Paste buttons.
+     *
+     * The page cannot read it itself: the browser's clipboard reader needs a
+     * permission a WebView has no way to ask for, so Paste did nothing in
+     * the app. Android lets an app read the clipboard while it is on screen,
+     * which it is when someone taps Paste; newer versions show a short
+     * "pasted from your clipboard" notice.
+     */
+    @JavascriptInterface
+    fun readClipboard(): String {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+            ?: return ""
+        val clip = clipboard.primaryClip ?: return ""
+        if (clip.itemCount == 0) return ""
+        return clip.getItemAt(0).coerceToText(context)?.toString().orEmpty()
+    }
+
+    /** Puts text on the clipboard, for when the page's own copy is refused. */
+    @JavascriptInterface
+    fun copyText(text: String) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return
+        Handler(Looper.getMainLooper()).post {
+            clipboard.setPrimaryClip(ClipData.newPlainText("Two", text))
+        }
+    }
+
+    /*
+     * Live radio, played by the radio service rather than the page, so it
+     * keeps going with the screen off (see RadioPlaybackService). The page
+     * hears back through window.__twoRadio (see RadioRemote).
+     */
+
+    /** Plays a station: JSON with url, name, subtitle and hls. */
+    @JavascriptInterface
+    fun radioPlay(stationJson: String, volume: Double) {
+        RadioRemote.play(stationJson, volume)
+    }
+
+    @JavascriptInterface
+    fun radioStop() {
+        RadioRemote.stop()
+    }
+
+    @JavascriptInterface
+    fun radioSetVolume(volume: Double) {
+        RadioRemote.setVolume(volume)
+    }
+
+    /** Stops the radio at this time (epoch milliseconds); 0 for never. */
+    @JavascriptInterface
+    fun radioSleep(atEpochMs: Double) {
+        RadioRemote.sleepAt(atEpochMs)
+    }
+
+    /** What the radio is doing, as JSON, for a page that has just loaded. */
+    @JavascriptInterface
+    fun radioStatus(): String = RadioRemote.status()
 
     @JavascriptInterface
     fun getRelayUrl(): String {
@@ -372,15 +437,29 @@ fun TwoWebView(
                 setFitsSystemWindows(false)
                 overScrollMode = WebView.OVER_SCROLL_NEVER
 
+                // A debug build may talk to a relay on this desk over plain
+                // ws://; the release app never needs anything insecure.
+                val debuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
                 settings.apply {
                     javaScriptEnabled = true
                     domStorageEnabled = true
                     databaseEnabled = true
                     mediaPlaybackRequiresUserGesture = false
                     setGeolocationEnabled(true)
-                    allowFileAccess = true
+                    // The app is served from https://appassets.androidplatform.net,
+                    // never from a file: no page needs to read the phone's files.
+                    allowFileAccess = false
                     allowContentAccess = true
-                    mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                    // Insecure (http) content inside the app's secure page is
+                    // refused. It used to be allowed always, which let anything
+                    // fetched over plain http - readable and changeable by anyone
+                    // on the same Wi-Fi - run inside the app.
+                    mixedContentMode = if (debuggable) {
+                        WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                    } else {
+                        WebSettings.MIXED_CONTENT_NEVER_ALLOW
+                    }
                     useWideViewPort = true
                     loadWithOverviewMode = true
                     setSupportZoom(false)
@@ -393,8 +472,36 @@ fun TwoWebView(
                 }
 
                 addJavascriptInterface(AndroidWebBridge(context, saveThroughPicker), "AndroidBridge")
+                // The radio service reports to this page from now on.
+                val page = this
+                RadioRemote.attach(context) { js -> page.evaluateJavascript(js, null) }
 
                 webViewClient = object : WebViewClient() {
+                    /**
+                     * Only the app's own pages open inside the app. A link to
+                     * anywhere else opens in the phone's browser instead: a
+                     * page loaded in here would be handed the bridge to the
+                     * phone (window.AndroidBridge) along with everything else.
+                     */
+                    override fun shouldOverrideUrlLoading(
+                        view: WebView?,
+                        request: WebResourceRequest?
+                    ): Boolean {
+                        val url = request?.url ?: return true
+                        val scheme = url.scheme?.lowercase() ?: return true
+                        if (scheme == "https" && url.host == APP_HOST) return false
+                        if (scheme == "https" || scheme == "http" || scheme == "mailto" || scheme == "tel") {
+                            try {
+                                view?.context?.startActivity(
+                                    Intent(Intent.ACTION_VIEW, url).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                )
+                            } catch (_: ActivityNotFoundException) {
+                                // Nothing on the phone opens it; the page stays put.
+                            }
+                        }
+                        return true
+                    }
+
                     override fun shouldInterceptRequest(
                         view: WebView?,
                         request: WebResourceRequest?
@@ -478,7 +585,7 @@ fun TwoWebView(
                     }
                 }
 
-                loadUrl("https://appassets.androidplatform.net/assets/www/index.html")
+                loadUrl("https://$APP_HOST/assets/www/index.html")
                 webViewRef = this
             }
         },
@@ -488,6 +595,9 @@ fun TwoWebView(
         }
     )
 }
+
+/** Where the app's own pages are served from (see WebViewAssetLoader). */
+private const val APP_HOST = "appassets.androidplatform.net"
 
 /**
  * A picker for what the page's file input accepts.

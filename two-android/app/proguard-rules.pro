@@ -33,3 +33,11 @@
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
+
+# Media3 (live radio) brings Guava, whose compile-time-only annotations are
+# not on the runtime classpath; R8 would otherwise stop on the missing classes.
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn com.google.j2objc.annotations.**
+-dontwarn org.checkerframework.**
+-dontwarn javax.annotation.**
+-dontwarn org.codehaus.mojo.animal_sniffer.**

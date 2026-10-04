@@ -10,6 +10,7 @@ import {
   formatCodeInput,
   findTwoCode
 } from '../core/space';
+import { copyTextOrThrow } from '../core/clipboard';
 
 interface GroupsViewProps {
   groups: GroupSpace[];
@@ -110,7 +111,7 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
   const copyInvite = async () => {
     if (!generated) return;
     try {
-      await navigator.clipboard.writeText(
+      await copyTextOrThrow(
         `Join our group on Two.\nCode: ${generated.code}\nWords: ${generated.phrase}`
       );
       setCopied(true);

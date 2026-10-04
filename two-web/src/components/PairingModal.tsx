@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { computeSafetyNumber } from '../core/crypto';
 import { QrCode, Shield, Check, Copy, X, Key, Lock, ArrowRight, Smartphone } from 'lucide-react';
+import { copyText } from '../core/clipboard';
 
 interface PairingModalProps {
   isOpen: boolean;
@@ -43,7 +44,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
   if (!isOpen) return null;
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(inviteCode);
+    void copyText(inviteCode);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
