@@ -22,10 +22,13 @@ import {
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
 import { playSound } from '../core/sounds';
+import { who } from '../core/who';
 
 interface CoordinatesMapViewProps {
   pins: MemoryCoordinatePin[];
   activeUser: 'user' | 'partner';
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
   onAddPin: (pin: MemoryCoordinatePin) => void;
   onDeletePin: (pinId: string) => void;
   onToggleFavorite: (pinId: string) => void;
@@ -114,6 +117,7 @@ const CATEGORY_META: Record<
 export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
   pins,
   activeUser,
+  partnerName,
   onAddPin,
   onDeletePin,
   onToggleFavorite,
@@ -610,7 +614,8 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
           </div>
 
           <div className="mt-4 pt-4 border-t border-linen-border flex items-center justify-between text-xs text-linen-secondary">
-            <span>Pinned with tender care by {selectedPin.authorName}</span>
+            {/* Worked out here from the pin's seat; the stored name said "You" on both phones. */}
+            <span>Pinned with tender care by {who(selectedPin.authorId, activeUser, partnerName, selectedPin.authorName)}</span>
             {onSendToChat && (
               <button
                 onClick={() => onSendToChat(`Remembering our secret coordinates: “${selectedPin.title}” at ${selectedPin.locationName}. ${selectedPin.story}`)}

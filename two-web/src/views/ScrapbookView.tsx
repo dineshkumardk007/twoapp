@@ -3,6 +3,7 @@ import { SpaceState } from '../core/storage';
 import { ScrapbookSettings } from '../types';
 import { BookOpen, Printer, Download, Sliders, Check, Star, Mail, MapPin, Heart, Utensils, Gift, Hourglass, Flame, Sparkles, X, ChevronRight, Calendar, ShieldCheck } from 'lucide-react';
 import { saveFile } from '../core/saveFile';
+import { who } from '../core/who';
 
 interface ScrapbookViewProps {
   state: SpaceState;
@@ -30,6 +31,13 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
   activeUser,
   onNavigate
 }) => {
+  // Every name in the book is worked out here, from the seat stored on the
+  // record. The names stored with them were decided on the phone that wrote
+  // each one, so the same letter said "You" in both phones' books.
+  const nameOf = (seat: string | undefined, storedName?: string) =>
+    who(seat, activeUser, state.partnerName, storedName);
+  const partnerLabel = nameOf(activeUser === 'user' ? 'partner' : 'user');
+
   const [settings, setSettings] = useState<ScrapbookSettings>(DEFAULT_SETTINGS);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
@@ -166,7 +174,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
             <span className="hidden sm:inline">·</span>
             <span>{totalMemoriesCount} Captured Memories</span>
             <span className="hidden sm:inline">·</span>
-            <span>You & Partner</span>
+            <span>You & {partnerLabel}</span>
           </div>
 
           <div className="mt-12 text-[10px] text-[#a89b8c] uppercase tracking-wider flex items-center space-x-1">
@@ -201,7 +209,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       <Star className="w-3 h-3 text-amber-600 mr-1 fill-amber-600/20" />
                       {star.category}
                     </span>
-                    <span>{star.authorName}</span>
+                    <span>{nameOf(star.authorId, star.authorName)}</span>
                   </div>
                   <p className="font-serif text-sm text-[#38312a] leading-relaxed italic">
                     “{star.note}”
@@ -240,7 +248,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                     <div>
                       <h3 className="font-serif text-lg font-medium text-[#221e1a]">{letter.title}</h3>
                       <div className="text-xs text-[#8e7e6b] font-serif mt-0.5">
-                        Penned by {letter.authorName} · Sealed with {letter.waxColor} wax
+                        Penned by {nameOf(letter.authorId, letter.authorName)} · Sealed with {letter.waxColor} wax
                       </div>
                     </div>
                     <div className="text-[11px] text-[#8e7e6b] font-serif">
@@ -248,7 +256,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                     </div>
                   </div>
 
-                  <p className="font-serif text-sm sm:text-base text-[#38312a] leading-relaxed whitespace-pre-line italic">
+                  <p className="font-serif text-sm sm:text-base text-[#38312a] leading-relaxed whitespace-pre-line italic select-text">
                     {letter.body}
                   </p>
                 </div>
@@ -444,7 +452,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                   className="p-4 rounded-xl border border-dashed border-[#c4b5a2] bg-[#fcfaf7] print:border-[#999] print:bg-white print:break-inside-avoid relative"
                 >
                   <div className="text-[10px] font-serif uppercase tracking-wider text-[#8e7e6b] mb-1">
-                    {card.foilType} Foil Coupon · {card.authorId === 'user' ? 'From You' : 'From Partner'}
+                    {card.foilType} Foil Coupon · From {nameOf(card.authorId, card.authorName)}
                   </div>
                   <h3 className="font-serif text-sm font-medium text-[#221e1a] mb-1.5">
                     {card.title}
@@ -453,7 +461,8 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                     “{card.revealedContent}”
                   </p>
                   <div className="mt-3 inline-block border border-rose-700/60 rounded px-2 py-0.5 text-[10px] font-bold text-rose-800 uppercase tracking-widest">
-                    ✓ Redeemed & Loved ({card.redeemedAt || 'Archived'})
+                    {/* Cards were stored as redeemed "Just now" for good - no real moment to show for those. */}
+                    ✓ Redeemed & Loved{card.redeemedAt && card.redeemedAt !== 'Just now' ? ` (${card.redeemedAt})` : ''}
                   </div>
                 </div>
               ))}

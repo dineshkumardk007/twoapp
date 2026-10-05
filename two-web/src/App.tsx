@@ -3532,6 +3532,7 @@ export const App: React.FC = () => {
             stars={state.constellationStars}
             onAddStar={handleAddStar}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
           />
         )}
 
@@ -3549,6 +3550,7 @@ export const App: React.FC = () => {
           <LettersView
             letters={state.letters}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onSendLetter={handleSendLetter}
             onOpenLetter={handleOpenLetter}
           />
@@ -3558,6 +3560,7 @@ export const App: React.FC = () => {
           <WhisperMemosView
             memos={state.whisperMemos}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onAddMemo={handleAddWhisperMemo}
             onMarkListened={handleMarkWhisperListened}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
@@ -3568,6 +3571,7 @@ export const App: React.FC = () => {
           <CoordinatesMapView
             pins={state.coordinatePins}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onAddPin={handleAddPin}
             onDeletePin={handleDeletePin}
             onToggleFavorite={handleToggleFavoritePin}
@@ -3599,6 +3603,7 @@ export const App: React.FC = () => {
           <CanvasOfUsView
             canvasState={state.sharedCanvas}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onAddStroke={handleAddCanvasStroke}
             onClearCanvas={handleClearCanvas}
             onUndoStroke={handleUndoCanvasStroke}
@@ -3611,6 +3616,7 @@ export const App: React.FC = () => {
           <RepairBridgeView
             repairLetters={state.repairLetters}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onSendRepair={handleSendRepair}
             onRespondRepair={handleRespondRepair}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
@@ -3621,6 +3627,7 @@ export const App: React.FC = () => {
           <KintsugiMomentsView
             moments={state.kintsugiMoments}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onAddMoment={handleAddKintsugiMoment}
             onCherishMoment={handleCherishKintsugiMoment}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
@@ -3631,6 +3638,7 @@ export const App: React.FC = () => {
           <ScratchCardsView
             cards={state.scratchCards}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onScratchCard={handleScratchCardComplete}
             onRedeemCard={handleRedeemScratchCard}
             onAddCard={handleAddScratchCard}
@@ -3642,6 +3650,7 @@ export const App: React.FC = () => {
           <TimeCapsuleView
             capsules={state.timeCapsules}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onAddCapsule={handleAddTimeCapsule}
             onOpenCapsule={handleOpenTimeCapsule}
             onSendToChat={(msg) => handleSendMessage(msg, false)}

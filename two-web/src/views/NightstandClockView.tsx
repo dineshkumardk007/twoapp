@@ -5,6 +5,7 @@ import { ambientAudioCoordinator } from '../core/ambientAudioCoordinator';
 import { Session, liveContext } from '../core/ambient/kit';
 import { startPreset } from '../core/ambient/presets';
 import { playSound } from '../core/sounds';
+import { who, whose } from '../core/who';
 import {
   Moon,
   Sun,
@@ -165,7 +166,14 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
     ? nightstand.partnerStatus
     : nightstand.userStatus;
 
-  const partnerName = state.activeUser === 'user' ? 'Partner' : 'You';
+  // The other person, by their name. This used to be worked out from the seat
+  // as 'Partner' or 'You', so the phone that joined the space read "You is
+  // resting in dreamland" about the person it was looking at.
+  const partnerSeat = state.activeUser === 'user' ? 'partner' : 'user';
+  const partnerName = who(partnerSeat, state.activeUser, state.partnerName);
+  const partnerPossessive = whose(partnerSeat, state.activeUser, state.partnerName);
+  // "You are", "<their name> is" - whichever name ends up in the sentence.
+  const isOrAre = (name: string) => (name === 'You' ? 'are' : 'is');
 
   // Local clock state
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -470,12 +478,12 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
           <span className="text-xs font-serif tracking-wide text-amber-200/90">
             {partnerSleep?.isSleeping ? (
               <>
-                <span className="font-semibold text-indigo-300">{partnerName}</span> is resting in dreamland{' '}
+                <span className="font-semibold text-indigo-300">{partnerName}</span> {isOrAre(partnerName)} resting in dreamland{' '}
                 <span className={theme.subtext}>({getSleepingDuration(partnerSleep.sleptAt)})</span>
               </>
             ) : (
               <>
-                <span className="font-semibold text-emerald-300">{partnerName}</span> is still awake beside the lamp
+                <span className="font-semibold text-emerald-300">{partnerName}</span> {isOrAre(partnerName)} still awake beside the lamp
               </>
             )}
           </span>
@@ -510,7 +518,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
               “{partnerSleep.goodnightNote}”
             </p>
             <span className="text-[10px] uppercase tracking-wider text-amber-600/70 mt-0.5 block">
-              — {partnerName}'s pillow note
+              — {partnerPossessive} pillow note
             </span>
           </div>
         )}
@@ -536,8 +544,8 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
 
           <p className="text-xs font-serif text-amber-400/70">
             {isUserSleeping
-              ? 'Your presence is resting. Partner can see you are safe in dreamland.'
-              : 'Tap to mark yourself asleep so your partner knows you are resting.'}
+              ? `Your presence is resting. ${partnerName} can see you are safe in dreamland.`
+              : `Tap to mark yourself asleep so ${partnerName} knows you are resting.`}
           </p>
 
           {showNoteInput ? (
@@ -627,7 +635,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
               <>
                 Last exchanged{' '}
                 {new Date(nightstand.lastMidnightKissAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}{' '}
-                by {nightstand.lastMidnightKissFrom === state.activeUser ? 'You' : partnerName}
+                by {nightstand.lastMidnightKissFrom === state.activeUser ? 'you' : partnerName}
               </>
             ) : (
               'Tap to exchange your midnight kiss'

@@ -283,6 +283,8 @@ export interface TimeCapsuleItem {
   teaserHint: string;
   authorId: 'user' | 'partner';
   authorName: string;
+  /** When it was sealed. Absent on capsules from before this was recorded. */
+  at?: number;
   createdAt: string;
   unlockAt: number; // epoch ms
   unlockDateFormatted: string;
@@ -338,6 +340,8 @@ export interface ScratchCardItem {
   authorId: 'user' | 'partner';
   authorName: string;
   recipientId: 'user' | 'partner';
+  /** When it was made. Absent on cards from before this was recorded. */
+  at?: number;
   createdAt: string;
   teaserHeadline: string;
   revealedContent: string;
@@ -560,6 +564,8 @@ export interface CanvasSavedSketch {
   title: string;
   date: string;
   dataUrl: string;
+  /** Whose sketch it is. Absent on sketches saved before this was recorded. */
+  authorId?: 'user' | 'partner';
   authorName: string;
 }
 

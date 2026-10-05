@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { Sparkles, Star, Plus, X, Heart, Eye, Filter, Info, Shield } from 'lucide-react';
 import { GratitudeStar, StarCategory } from '../types';
 import { newId } from '../core/ids';
+import { who } from '../core/who';
 
 interface ConstellationViewProps {
   stars: GratitudeStar[];
   onAddStar: (star: GratitudeStar) => void;
   activeUser: 'user' | 'partner';
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
 }
 
 const CATEGORIES: { id: StarCategory; label: string; color: string; stroke: string; emoji: string }[] = [
@@ -20,7 +23,8 @@ const CATEGORIES: { id: StarCategory; label: string; color: string; stroke: stri
 export const ConstellationView: React.FC<ConstellationViewProps> = ({
   stars,
   onAddStar,
-  activeUser
+  activeUser,
+  partnerName
 }) => {
   const [selectedStar, setSelectedStar] = useState<GratitudeStar | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<StarCategory | 'all'>('all');
@@ -242,7 +246,8 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
                     {CATEGORIES.find(c => c.id === selectedStar.category)?.label}
                   </span>
                   <div className="text-xs text-stone-400">
-                    {selectedStar.authorName} • {new Date(selectedStar.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {/* Worked out here from the star's seat; the stored name said "You" on both phones. */}
+                    {who(selectedStar.authorId, activeUser, partnerName, selectedStar.authorName)} • {new Date(selectedStar.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </div>
                 </div>
               </div>

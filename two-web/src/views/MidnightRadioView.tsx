@@ -10,6 +10,7 @@ import { ambientAudioCoordinator } from '../core/ambientAudioCoordinator';
 import { liveRadio, LiveRadioStatus } from '../core/liveRadio';
 import { TAMIL_FM, cleanStation, sameStation, searchTamilStations } from '../core/liveStations';
 import { toggleFavorite } from '../core/radioSync';
+import { who } from '../core/who';
 import { Session, liveContext } from '../core/ambient/kit';
 import { startPreset } from '../core/ambient/presets';
 import {
@@ -575,7 +576,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
               <div className="mt-3 pt-2 border-t border-amber-900/50 flex items-center space-x-2 text-xs font-serif text-amber-200/90 animate-fade-in relative z-10">
                 <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500 shrink-0 animate-pulse" />
                 <span className="truncate">
-                  <strong className="text-amber-400">{radio.whispers[0].senderName}:</strong> “{radio.whispers[0].text}”
+                  <strong className="text-amber-400">{who(radio.whispers[0].senderId, state.activeUser, state.partnerName, radio.whispers[0].senderName)}:</strong> “{radio.whispers[0].text}”
                 </span>
               </div>
             )}
@@ -810,7 +811,8 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
                   className="p-2.5 rounded-xl bg-linen-variant/40 border border-linen-border/60 flex items-center justify-between text-xs"
                 >
                   <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-linen-primary">{whisper.senderName}:</span>
+                    {/* From the seat, on this phone: the stored name said "You" on both phones. */}
+                    <span className="font-semibold text-linen-primary">{who(whisper.senderId, state.activeUser, state.partnerName, whisper.senderName)}:</span>
                     <span className="font-serif italic text-linen-secondary">“{whisper.text}”</span>
                   </div>
                   <span className="text-[10px] text-linen-secondary shrink-0">
