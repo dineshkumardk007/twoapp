@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SpaceState } from '../core/storage';
 import { exportVault, importVault, downloadVaultFile } from '../core/vaultExport';
 import { X, Shield, Download, Upload, Key, CheckCircle, AlertTriangle, FileArchive } from 'lucide-react';
+import { useBackLayer } from '../core/backStack';
 
 interface VaultBackupModalProps {
   isOpen: boolean;
@@ -25,6 +26,9 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
 
   if (!isOpen) return null;
 

@@ -6,6 +6,7 @@ import {
   MapPin, Utensils, Smile, Moon, BookOpen, CheckSquare, Layers, DollarSign, Image, Settings, 
   Wind, Search 
 } from 'lucide-react';
+import { useBackLayer } from '../core/backStack';
 
 interface SanctuaryDirectoryModalProps {
   isOpen: boolean;
@@ -31,6 +32,9 @@ export const SanctuaryDirectoryModal: React.FC<SanctuaryDirectoryModalProps> = (
   unreadChatCount = 0
 }) => {
   const [search, setSearch] = useState('');
+
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
 
   if (!isOpen) return null;
 

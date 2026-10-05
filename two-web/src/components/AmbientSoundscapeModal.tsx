@@ -8,6 +8,7 @@ import {
 } from '../core/soundscapes';
 import { wsRelay } from '../core/ws';
 import { localMesh } from '../core/localMesh';
+import { useBackLayer } from '../core/backStack';
 
 interface AmbientSoundscapeModalProps {
   isOpen: boolean;
@@ -142,6 +143,9 @@ export const AmbientSoundscapeModal: React.FC<AmbientSoundscapeModalProps> = ({
     const s = seconds % 60;
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
+
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
 
   if (!isOpen) return null;
 

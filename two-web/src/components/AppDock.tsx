@@ -1,6 +1,8 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronUp, X, Search } from 'lucide-react';
 import { getDestinations, allDestinations } from '../data/destinations';
+import { useBackLayer } from '../core/backStack';
+import { haptic } from '../core/haptics';
 
 interface AppDockProps {
   currentTab: string;
@@ -140,19 +142,18 @@ export const AppDock: React.FC<AppDockProps> = ({
     });
   }, [currentTab, rail]);
 
-  // The sheet is a navigation layer, not a page: hardware back should close it.
-  useEffect(() => {
-    if (!expanded) return;
-    const onPop = (e: PopStateEvent) => {
-      e.preventDefault();
-      setExpanded(false);
-    };
-    window.history.pushState({ dock: true }, '');
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, [expanded]);
+  // The sheet is a layer on top, not a page: the phone's Back closes it.
+  //
+  // It used to push a browser history entry and wait for popstate. Nothing
+  // took that entry off again when the sheet was closed by a tap - on an
+  // item, the X or the backdrop - so each one left a dead entry behind for a
+  // later Back to land on and do nothing visible. The Android app also never
+  // sent Back into the page's history at all. See core/backStack.ts.
+  useBackLayer(expanded, () => setExpanded(false));
 
   const go = (id: string) => {
+    // A light tick, the way the phone's own tab bars answer a tap.
+    haptic('tick');
     onSelectTab(id);
     setExpanded(false);
     setSearch('');
