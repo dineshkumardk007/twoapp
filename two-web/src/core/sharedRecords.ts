@@ -33,6 +33,7 @@ import {
   QuoteItem
 } from '../types';
 import type { SpaceState } from './storage';
+import { cleanOurDates, newerOurDates } from './ourDates';
 
 export const CHORE_ADD = 'CHORE_ADD';
 export const EXPENSE_ADD = 'EXPENSE_ADD';
@@ -50,6 +51,15 @@ export const MILESTONE_ADD = 'MILESTONE_ADD';
 export const LETTER_OPENED = 'LETTER_OPENED';
 export const WHISPER_MEMO = 'WHISPER_MEMO';
 export const WHISPER_MEMO_HEARD = 'WHISPER_MEMO_HEARD';
+/**
+ * The couple's dates, whole: the day it began and the day you celebrate.
+ *
+ * One value for the pair, set from either phone, so the newest setting wins
+ * (see newerOurDates) - which also makes it safe to apply twice, in any
+ * order, as a catch-up does. A phone on an older version does not know the
+ * type and passes over it.
+ */
+export const OUR_DATES = 'OUR_DATES';
 
 export const SHARED_RECORD_TYPES = new Set([
   CHORE_ADD,
@@ -67,7 +77,8 @@ export const SHARED_RECORD_TYPES = new Set([
   MILESTONE_ADD,
   LETTER_OPENED,
   WHISPER_MEMO,
-  WHISPER_MEMO_HEARD
+  WHISPER_MEMO_HEARD,
+  OUR_DATES
 ]);
 
 type Role = 'user' | 'partner';
@@ -208,8 +219,9 @@ export function applySharedRecord(
   options: { addOnly?: boolean } = {}
 ): SpaceState | null {
   if (!payload || typeof payload !== 'object') return null;
-  // Everything that adds an item names it; the two that change a whole list do not.
-  const needsId = type !== CYCLE_SHARING && type !== EXPENSES_SETTLED;
+  // Everything that adds an item names it; the two that change a whole list,
+  // and the dates, which are one value rather than a list, do not.
+  const needsId = type !== CYCLE_SHARING && type !== EXPENSES_SETTLED && type !== OUR_DATES;
   if (needsId && !isText(payload.id)) return null;
 
   // Add-only: something already here is left exactly as it is.
@@ -416,6 +428,16 @@ export function applySharedRecord(
         return { ...memo, isListened: true, listenedAt: 'Just now' };
       });
       return changed ? { ...prev, whisperMemos } : null;
+    }
+
+    case OUR_DATES: {
+      // Either of you may set them, so who sent it does not matter - only
+      // whether it is newer than what this phone holds. An older setting
+      // arriving late (a replay, a phone that was offline) changes nothing.
+      const incoming = cleanOurDates(payload);
+      if (!incoming) return null;
+      const ourDates = newerOurDates(incoming, prev.ourDates);
+      return ourDates ? { ...prev, ourDates } : null;
     }
 
     case CYCLE_SHARING: {

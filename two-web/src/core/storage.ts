@@ -34,7 +34,8 @@ import {
   DrawStroke,
   RepairLetter,
   KintsugiVesselItem,
-  MemoryItem
+  MemoryItem,
+  OurDates
 } from '../types';
 import { loadSpaceSession } from './space';
 import type { LastSpace } from './space';
@@ -87,6 +88,15 @@ export interface SpaceState {
   kintsugiMoments: KintsugiVesselItem[];
   /** Timeline & Quotes memories. They used to live only in the screen, gone on leaving it. */
   memories: MemoryItem[];
+  /**
+   * The day the story began and the day you celebrate, shared by both phones.
+   *
+   * Absent until one of you sets them. It used to be two made-up numbers
+   * instead: a sample couple's 2022 start and October anniversary, and a
+   * "Day N" counted from the first time each phone opened Home - so the two
+   * phones disagreed, and a reinstall started the count again.
+   */
+  ourDates?: OurDates;
   /**
    * Set once the sample content older versions shipped with has been taken
    * out of this space. See core/sampleData.ts.
@@ -467,6 +477,12 @@ export function loadState(): SpaceState {
       repairLetters: parsed.repairLetters || DEFAULT_STATE.repairLetters,
       kintsugiMoments: parsed.kintsugiMoments || DEFAULT_STATE.kintsugiMoments,
       memories: Array.isArray(parsed.memories) ? parsed.memories : [],
+      // A vault saved before dates existed simply has none, which is what a
+      // couple who has not set them should see.
+      ourDates:
+        parsed.ourDates && typeof parsed.ourDates === 'object' && Number.isFinite(parsed.ourDates.at)
+          ? parsed.ourDates
+          : undefined,
     };
     return withoutSampleData(loaded, !parsed.sampleDataRemoved);
   } catch (e) {

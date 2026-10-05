@@ -177,6 +177,29 @@ export interface RelationshipMilestone {
   photoUrl?: string;
 }
 
+/**
+ * The couple's own dates, as the two of them entered them.
+ *
+ * Nothing here is ever filled in for them: a space starts with no dates at
+ * all, and Home asks rather than guessing. One value for the pair, not one
+ * per phone - either of you can set or change it, and the newest change
+ * (`at`) is what both phones show.
+ *
+ * Dates are calendar dates, not moments: 'YYYY-MM-DD', read in the phone's
+ * own time zone, so the day count turns over at local midnight.
+ */
+export interface OurDates {
+  /** The day the story began, 'YYYY-MM-DD'. */
+  togetherSince?: string;
+  /**
+   * The day you celebrate, when it is not the day it began - a wedding, say.
+   * 'YYYY-MM-DD', or 'MM-DD' when the year is not known.
+   */
+  anniversary?: string;
+  /** When this was last set, on the phone that set it. The newest wins. */
+  at: number;
+}
+
 export interface SensoryPulseEvent {
   senderId: string;
   timestamp: number;
