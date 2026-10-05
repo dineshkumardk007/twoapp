@@ -417,7 +417,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, reme
                 </div>
 
                 <p className="text-xs text-linen-secondary leading-relaxed text-center px-3">
-                  Send this code to your partner. You can enter your sanctuary right now — your space code is also displayed on your Home screen.
+                  Send this code to your partner. You can enter your sanctuary right now — you can find your space code again in Settings.
                 </p>
 
                 {/* Naming it here is what makes the header say who you are with,
@@ -430,7 +430,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, reme
                     type="text"
                     value={vaultNameDraft}
                     onChange={(e) => setVaultNameDraft(e.target.value)}
-                    placeholder="Ravi &amp; Priya, Our Little World…"
+                    placeholder="Dinesh &amp; Priya, Our Little World…"
                     maxLength={40}
                     className="w-full px-4 py-3 rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary text-base"
                   />
