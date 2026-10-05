@@ -297,13 +297,14 @@ export const App: React.FC = () => {
   const [showStoryTour, setShowStoryTour] = useState(false);
 
   /**
-   * The home screen's tour card, shown on a first run and never again.
+   * The home screen's tour card, shown until it has been seen once.
    *
-   * Captured once at mount rather than read on every render, so the card cannot
-   * vanish underneath you the moment the flag is written - it stays for the
-   * whole of this run and is gone on the next launch.
+   * It goes the moment the tour is opened from it, or when home is left
+   * after the card was on screen - not the instant it appears, so it cannot
+   * vanish underneath you while you are reading it. Either way it never comes
+   * back; the tour itself stays in Tools.
    */
-  const [showTourCard] = useState(() => {
+  const [showTourCard, setShowTourCard] = useState(() => {
     try {
       return localStorage.getItem(TOUR_CARD_SEEN_KEY) !== 'true';
     } catch {
@@ -312,14 +313,22 @@ export const App: React.FC = () => {
     }
   });
 
-  // Written only once home has actually been on screen. Opening the app
+  /** Whether the card has been on screen in this run. */
+  const tourCardSeenRef = useRef(false);
+
+  // Seen only once home has actually been on screen. Opening the app
   // straight into chat and closing it again should not burn the one showing.
   useEffect(() => {
-    if (!showTourCard || currentTab !== 'home') return;
-    try {
-      localStorage.setItem(TOUR_CARD_SEEN_KEY, 'true');
-    } catch {
-      /* private mode - nothing to remember it with */
+    if (!showTourCard) return;
+    if (currentTab === 'home') {
+      tourCardSeenRef.current = true;
+      try {
+        localStorage.setItem(TOUR_CARD_SEEN_KEY, 'true');
+      } catch {
+        /* private mode - nothing to remember it with */
+      }
+    } else if (tourCardSeenRef.current) {
+      setShowTourCard(false);
     }
   }, [showTourCard, currentTab]);
   const [locale, setLocale] = useState<Locale>('en');
@@ -1831,8 +1840,8 @@ export const App: React.FC = () => {
    * same space, would close first one and then the other in turn.
    *
    * The couple's own code is the dangerous version of that, and the easiest to
-   * type by accident: it sits on the home screen under "our space link code",
-   * which makes it the most copied string in the app. Pointing a group at it
+   * type by accident: it sits in Settings under "Space link code", ready to
+   * copy, which makes it the most copied string in the app. Pointing a group at it
    * would put a second client on the conversation this whole app exists for.
    */
   const handleJoinGroup = (code: string, joinPhrase: string): string | null => {
@@ -3421,7 +3430,6 @@ export const App: React.FC = () => {
         {currentTab === 'home' && (
           <HomeView
             state={state}
-            spaceCode={session?.code}
             onUpdateReport={handleUpdateReport}
             onToggleUserFlag={handleToggleUserFlag}
             // handleSelectTab, not setCurrentTab: arriving from the activity
@@ -3429,7 +3437,14 @@ export const App: React.FC = () => {
             // followed would still be sitting there when you came back.
             onNavigate={handleSelectTab}
             onSendNeed={(need) => handleSendMessage(`I need: ${need.title} — ${need.description}`, true)}
-            onOpenTour={showTourCard ? () => setShowStoryTour(true) : undefined}
+            onOpenTour={
+              showTourCard
+                ? () => {
+                    setShowTourCard(false);
+                    setShowStoryTour(true);
+                  }
+                : undefined
+            }
             onAddMilestone={handleAddMilestone}
             onSaveComfortBox={handleSaveComfortBox}
             partnerNews={partnerNews}
