@@ -115,9 +115,15 @@ export interface RitualItem {
   subtitle: string;
   duration: string;
   category: 'affection' | 'presence' | 'reflection' | 'play';
-  completedTodayByUser: boolean;
-  completedTodayByPartner: boolean;
-  streakDays: number;
+  /**
+   * The calendar days ('YYYY-MM-DD', the phone's own date) each seat did this
+   * ritual, oldest first and the most recent 90 at most. Done today means
+   * today is in your list; streaks are counted from these. See core/rituals.ts.
+   *
+   * Replaces completedTodayByUser / completedTodayByPartner, which had no day
+   * and so never reset, and streakDays, which counted taps.
+   */
+  doneOn: { user: string[]; partner: string[] };
 }
 
 export interface PebbleStone {
