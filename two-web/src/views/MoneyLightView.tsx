@@ -1,7 +1,31 @@
 import React, { useState } from 'react';
 import { ExpenseItem } from '../types';
-import { DollarSign, Plus, CheckCircle2 } from 'lucide-react';
+import { IndianRupee, CheckCircle2 } from 'lucide-react';
 import { whenLabel } from '../core/when';
+
+// Rupees, the Indian way: ₹1,25,000 rather than $125,000.00. Whole amounts
+// drop the paise, because "₹450.00" for a dosa dinner is noise; anything with
+// paise in it - often half of an odd total - keeps both digits.
+//
+// Both fraction limits are given on purpose. Naming only the maximum is an
+// error on older WebViews, which still hold INR to its default of two.
+const WHOLE_RUPEES = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+});
+const RUPEES_AND_PAISE = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+
+function rupees(amount: number): string {
+  const rounded = Math.round((Number(amount) || 0) * 100) / 100;
+  return Number.isInteger(rounded) ? WHOLE_RUPEES.format(rounded) : RUPEES_AND_PAISE.format(rounded);
+}
 
 interface MoneyLightViewProps {
   expenses: ExpenseItem[];
@@ -50,12 +74,15 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
 
       {/* Balance Card */}
       <div className="p-8 rounded-3xl bg-linen-surface border border-linen-border text-center shadow-xs space-y-3">
-        <span className="text-xs font-semibold text-linen-secondary uppercase tracking-wider">Current Running Balance</span>
+        <span className="inline-flex items-center text-xs font-semibold text-linen-secondary uppercase tracking-wider">
+          <IndianRupee className="w-3.5 h-3.5 mr-1 text-linen-accent" />
+          Current Running Balance
+        </span>
         <div className="font-serif text-3xl font-medium text-linen-primary">
           {diff > 0
-            ? `${partnerName} owes you $${diff.toFixed(2)}`
+            ? `${partnerName} owes you ${rupees(diff)}`
             : diff < 0
-            ? `You owe ${partnerName} $${Math.abs(diff).toFixed(2)}`
+            ? `You owe ${partnerName} ${rupees(Math.abs(diff))}`
             : "Your tab is completely settled"}
         </div>
         <div>
@@ -85,7 +112,7 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
             step="0.01"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="Amount ($)"
+            placeholder="Amount (₹)"
             className="px-4 py-2.5 text-sm rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary"
           />
           <select
@@ -115,7 +142,7 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
               <span className="font-medium text-sm text-linen-primary block">{e.title}</span>
               <span className="text-xs text-linen-secondary">Paid by {e.paidBy} • {whenLabel(e.at, e.date)}</span>
             </div>
-            <span className="font-serif text-base font-medium text-linen-accent">${e.amount.toFixed(2)}</span>
+            <span className="font-serif text-base font-medium text-linen-accent">{rupees(e.amount)}</span>
           </div>
         ))}
       </div>

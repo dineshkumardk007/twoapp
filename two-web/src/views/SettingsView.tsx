@@ -6,8 +6,9 @@ import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
-import { Shield, Download, Trash2, Palette, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw } from 'lucide-react';
+import { Shield, Download, Trash2, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw } from 'lucide-react';
 import { whenLabel } from '../core/when';
+import { isAndroidApp } from '../core/platform';
 import { saveFile } from '../core/saveFile';
 import { copyTextOrThrow } from '../core/clipboard';
 
@@ -20,8 +21,14 @@ interface SettingsViewProps {
    */
   relayDurable?: boolean | null;
   spaceCode?: string;
-  currentTheme: ThemeMode;
-  onSelectTheme: (theme: ThemeMode) => void;
+  /**
+   * The theme and language pickers are gone from this screen (see where they
+   * used to sit, below the space card). These stay accepted so the caller
+   * does not have to change in step; nothing here reads the theme or sets
+   * either of them any more.
+   */
+  currentTheme?: ThemeMode;
+  onSelectTheme?: (theme: ThemeMode) => void;
   onEmergencyWipe: () => void;
   onRestoreState?: (restoredState: SpaceState) => void;
   currentLocale?: Locale;
@@ -85,12 +92,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   state,
   relayDurable = null,
   spaceCode,
-  currentTheme,
-  onSelectTheme,
   onEmergencyWipe,
   onRestoreState = () => {},
   currentLocale = 'en',
-  onSelectLocale = () => {},
   onToggleCamouflage = () => {},
   onUnpair = () => {},
   onRotateCode = () => {},
@@ -127,6 +131,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const thisDeviceId = getDeviceId();
   const knownDevices = state.knownDevices || [];
+
+  /**
+   * Inside the Android app, two cards on this screen are for whoever runs the
+   * website, not for the two of you.
+   *
+   * The relay address comes from the app itself, so a field to type another
+   * one in only offers a way to break the connection. And the side-by-side
+   * demonstration cannot open a second window in a phone's WebView: it
+   * reloaded Two in place as the other person, and everything sent after that
+   * went out stamped as theirs. Both stay on the website, where they work.
+   */
+  const [inApp] = useState(isAndroidApp);
 
   /**
    * Whether more sockets are connected than there are devices you have ever
@@ -300,22 +316,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     window.open(partnerUrl, 'TwoPartnerSync', 'width=540,height=840,menubar=no,toolbar=no');
   };
 
-  const themes: { id: ThemeMode; name: string; desc: string; bg: string }[] = [
-    { id: 'linen', name: 'Warm Linen', desc: 'Analogue paper & warm charcoal', bg: 'bg-[#FAF8F5]' },
-    { id: 'slate', name: 'Midnight Slate', desc: 'Deep indigo & soft starlight', bg: 'bg-[#121518]' },
-    { id: 'forest', name: 'Forest Mist', desc: 'Grounding moss & deep pine', bg: 'bg-[#F4F6F4]' },
-    { id: 'terracotta', name: 'Kyoto Terracotta', desc: 'Earthen clay & warm cedar', bg: 'bg-[#FBF7F4]' }
-  ];
-
-  const languages: { id: Locale; name: string; nativeName: string; flag: string }[] = [
-    { id: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
-    { id: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
-    { id: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
-    { id: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
-    { id: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
-    { id: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
-  ];
-
   return (
     <div className="space-y-6">
       <div>
@@ -343,7 +343,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <span className="block text-[10px] uppercase tracking-wider font-semibold text-linen-accent">
                   Space Link Code
                 </span>
-                <span className="font-mono text-sm font-bold text-linen-primary">{spaceCode}</span>
+                {/* select-text: the code is the one thing on this screen worth
+                    long-pressing to copy, so it keeps selection on where the
+                    rest of the app's chrome turns it off. */}
+                <span className="font-mono text-sm font-bold text-linen-primary select-text">{spaceCode}</span>
               </div>
               <div className="flex items-center space-x-1.5">
                 <button
@@ -793,7 +796,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     Your new code. Read it to your partner, then switch. Anything already on this
                     device stays; messages sent under the old code stop arriving once you both move.
                   </p>
-                  <div className="font-mono text-sm font-bold text-linen-primary text-center bg-linen-surface border border-linen-border rounded-lg py-2">
+                  <div className="font-mono text-sm font-bold text-linen-primary text-center bg-linen-surface border border-linen-border rounded-lg py-2 select-text">
                     {rotateCode}
                   </div>
                   <div className="flex space-x-1.5">
@@ -959,57 +962,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       </div>
 
-      {/* Language & Locale Picker */}
-      <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-4">
-        <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
-          <Globe className="w-4 h-4 text-linen-accent" />
-          <span>{t.settings.languageTitle}</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-          {languages.map(lang => (
-            <button
-              key={lang.id}
-              onClick={() => onSelectLocale(lang.id)}
-              className={`p-3 rounded-xl border text-left transition-all flex items-center space-x-2.5 ${
-                currentLocale === lang.id
-                  ? 'border-linen-primary ring-2 ring-linen-primary/20 bg-linen-variant/70 font-semibold'
-                  : 'border-linen-border hover:bg-linen-variant/40'
-              }`}
-            >
-              <span className="text-xl">{lang.flag}</span>
-              <div>
-                <div className="text-xs text-linen-primary font-medium">{lang.nativeName}</div>
-                <div className="text-[10px] text-linen-secondary">{lang.name}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Theme Picker */}
-      <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-4">
-        <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
-          <Palette className="w-4 h-4 text-linen-accent" />
-          <span>{t.settings.themeTitle}</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {themes.map(tItem => (
-            <button
-              key={tItem.id}
-              onClick={() => onSelectTheme(tItem.id)}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
-                currentTheme === tItem.id
-                  ? 'border-linen-primary ring-2 ring-linen-primary/20 bg-linen-variant/60'
-                  : 'border-linen-border hover:bg-linen-variant/30'
-              }`}
-            >
-              <div className={`w-6 h-6 rounded-md border border-linen-border ${tItem.bg} mb-2`} />
-              <div className="font-medium text-xs text-linen-primary">{tItem.name}</div>
-              <div className="text-[10px] text-linen-secondary mt-0.5">{tItem.desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* The language and theme pickers used to sit here. Neither worked: no
+          choice survived the next launch, Midnight Slate left headings dark
+          grey on near-black, and the languages on offer did not include
+          Tamil while translating only a handful of labels. They come back
+          when they do what they say; until then the app is linen and
+          English, which is what it always fell back to anyway. */}
 
       {/* Camouflage / Decoy Mode (Discreet Calculator) */}
       <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-4">
@@ -1126,7 +1084,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* Cloud Relay Server (Internet Sync) */}
+      {/* Cloud Relay Server (Internet Sync). Website only - see inApp. */}
+      {!inApp && (
       <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
         <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
           <Globe className="w-4 h-4 text-linen-accent" />
@@ -1151,8 +1110,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
       </div>
+      )}
 
-      {/* Dual-Window Live Sync Demonstration */}
+      {/* Dual-Window Live Sync Demonstration. Website only - see inApp. */}
+      {!inApp && (
       <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
         <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
           <ExternalLink className="w-4 h-4 text-linen-accent" />
@@ -1171,6 +1132,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
       </div>
+      )}
 
       {/* Sovereign Encrypted Vault Backup (.two-vault) */}
       <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
