@@ -391,7 +391,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                 </span>
               )}
               <div
-                className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
+                className={`select-text max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
                   mine
                     ? 'bg-linen-primary text-linen-surface'
                     : 'border border-linen-border bg-linen-variant/40 text-linen-primary'

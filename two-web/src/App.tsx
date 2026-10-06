@@ -511,6 +511,20 @@ export const App: React.FC = () => {
     }
   }, [relayStatus, state.userName, state.activeUser]);
 
+  // The couple's dates go out again on every connection, as the name does. A
+  // phone still on the previous version when they were set read past the
+  // record without keeping it, and would never see it again after updating.
+  // The repeat keeps its original stamp, so the newest setting still wins on
+  // both phones, and a phone that already holds it changes nothing.
+  useEffect(() => {
+    if (wsRelay.currentSeat() !== state.activeUser) return;
+    if (relayStatus === 'connected' && state.ourDates) {
+      wsRelay.broadcastUpdate(OUR_DATES, state.ourDates);
+    }
+    // Only on connecting: a change made here is sent by handleSetOurDates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relayStatus, state.activeUser]);
+
   // Check URL parameters for dual-window live sync demonstration.
   //
   // Website only. In the app there is no second window to open: the WebView

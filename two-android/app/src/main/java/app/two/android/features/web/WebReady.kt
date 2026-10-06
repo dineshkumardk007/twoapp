@@ -16,4 +16,13 @@ object WebReady {
     fun markReady() {
         ready = true
     }
+
+    /**
+     * A new activity loads the page afresh - after being swiped from Recents
+     * while the radio kept the app alive, say - so it waits for that page's
+     * own first screen, not the one before it.
+     */
+    fun reset() {
+        ready = false
+    }
 }

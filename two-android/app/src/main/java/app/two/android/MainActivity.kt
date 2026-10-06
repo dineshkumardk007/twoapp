@@ -62,6 +62,7 @@ class MainActivity : FragmentActivity() {
         // phone, still gets its blank-then-app start rather than a leaf that
         // never goes away.
         val launchedAt = SystemClock.uptimeMillis()
+        WebReady.reset()
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         splashScreen.setKeepOnScreenCondition {
