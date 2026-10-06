@@ -3,10 +3,13 @@ import { LoveLetter, WaxColor, LetterCondition } from '../types';
 import { Mail, Feather, Heart, Sparkles, Lock, Unlock, Calendar, Moon, Plane, Shield, X, CheckCircle2 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { whenLabel } from '../core/when';
+import { who } from '../core/who';
 
 interface LettersViewProps {
   letters: LoveLetter[];
   activeUser: 'user' | 'partner';
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
   onSendLetter: (newLetter: LoveLetter) => void;
   onOpenLetter: (letterId: string) => void;
 }
@@ -14,6 +17,7 @@ interface LettersViewProps {
 export const LettersView: React.FC<LettersViewProps> = ({
   letters,
   activeUser,
+  partnerName,
   onSendLetter,
   onOpenLetter
 }) => {
@@ -31,6 +35,11 @@ export const LettersView: React.FC<LettersViewProps> = ({
 
   const receivedLetters = letters.filter(l => l.authorId !== activeUser);
   const sentLetters = letters.filter(l => l.authorId === activeUser);
+
+  // Who wrote it is worked out here, from the seat on the letter. The name
+  // stored with it was decided on the phone that wrote it, so a letter that
+  // said "From You" there arrived on the other phone still saying "From You".
+  const fromName = (letter: LoveLetter) => who(letter.authorId, activeUser, partnerName, letter.authorName);
 
   const handleOpenLetterClick = (letter: LoveLetter) => {
     setSelectedLetter(letter);
@@ -174,7 +183,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-linen-accent">
-                    From {letter.authorName} • {whenLabel(letter.at, letter.sentDate)}
+                    From {fromName(letter)} • {whenLabel(letter.at, letter.sentDate)}
                   </span>
                   <h3 className="font-serif text-lg font-medium text-linen-primary group-hover:text-linen-accent transition-colors">
                     {letter.title}
@@ -254,7 +263,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
             {/* Letter Header */}
             <div className="border-b border-[#D8CEB0] pb-4 space-y-1">
               <div className="flex items-center justify-between text-xs text-[#736357]">
-                <span className="font-mono uppercase tracking-wider">From: {selectedLetter.authorName}</span>
+                <span className="font-mono uppercase tracking-wider">From: {fromName(selectedLetter)}</span>
                 <span>{whenLabel(selectedLetter.at, selectedLetter.sentDate)}</span>
               </div>
               <h3 className="font-serif text-2xl font-medium tracking-tight text-[#2B231D]">
@@ -267,8 +276,8 @@ export const LettersView: React.FC<LettersViewProps> = ({
               )}
             </div>
 
-            {/* Letter Parchment Body */}
-            <div className="font-serif text-base leading-relaxed text-[#2F2721] whitespace-pre-wrap min-h-[140px]">
+            {/* Letter Parchment Body - selectable, so a line can be long-pressed and kept */}
+            <div className="font-serif text-base leading-relaxed text-[#2F2721] whitespace-pre-wrap min-h-[140px] select-text">
               {selectedLetter.body}
             </div>
 

@@ -3,11 +3,14 @@ import { WhisperMemoItem, WhisperCategory } from '../types';
 import { Mic, Square, Play, Pause, RotateCcw, Volume2, Plus, Sparkles, Heart, MessageSquare, Clock, Check, Radio, Trash2, X, Send } from 'lucide-react';
 import { newId } from '../core/ids';
 import { whenLabel } from '../core/when';
+import { who } from '../core/who';
 import { MAX_RECORD_BYTES, recordSizeOf } from '../core/ws';
 
 interface WhisperMemosViewProps {
   memos: WhisperMemoItem[];
   activeUser: 'user' | 'partner';
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
   onAddMemo: (memo: WhisperMemoItem) => void;
   onMarkListened: (memoId: string) => void;
   onSendToChat?: (message: string) => void;
@@ -59,10 +62,15 @@ function openRecorder(stream: MediaStream): MediaRecorder {
 export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
   memos,
   activeUser,
+  partnerName,
   onAddMemo,
   onMarkListened,
   onSendToChat
 }) => {
+  // Names are worked out here, from the seat on each memo. The name stored with
+  // a memo was decided on the phone that recorded it, so it said "You" on both.
+  const partnerLabel = who(activeUser === 'user' ? 'partner' : 'user', activeUser, partnerName);
+
   const [filterCategory, setFilterCategory] = useState<WhisperCategory | 'all'>('all');
   const [filterRecipient, setFilterRecipient] = useState<'all' | 'for_you' | 'from_you'>('all');
   const [showRecordModal, setShowRecordModal] = useState(false);
@@ -484,7 +492,8 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                     </span>
 
                     <div className="flex items-center space-x-2 text-[11px] text-linen-secondary">
-                      <span>{whenLabel(memo.at, memo.recordedAt)}</span>
+                      {/* Memos from before `at` was kept were stored as "Just now" for good: say nothing for those. */}
+                      <span>{whenLabel(memo.at, memo.recordedAt === 'Just now' ? '' : memo.recordedAt)}</span>
                       {memo.isListened && (
                         <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md text-[10px] font-medium border border-emerald-200">
                           ✓ Heard
@@ -498,7 +507,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                     {memo.title}
                   </h3>
                   <div className="text-xs text-linen-secondary mt-0.5 mb-3">
-                    Penned by <strong className="text-linen-primary font-medium">{memo.authorName}</strong> · {formatSeconds(memo.durationSeconds)} duration
+                    Penned by <strong className="text-linen-primary font-medium">{who(memo.authorId, activeUser, partnerName, memo.authorName)}</strong> · {formatSeconds(memo.durationSeconds)} duration
                   </div>
 
                   {/* Waveform Player Bar */}
@@ -541,7 +550,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                 {/* Footer Controls */}
                 <div className="pt-2 border-t border-linen-border/40 flex items-center justify-between text-xs text-linen-secondary">
                   <span className="text-[11px]">
-                    {memo.authorId === activeUser ? 'From you to partner' : 'From partner to you'}
+                    {memo.authorId === activeUser ? `From you to ${partnerLabel}` : `From ${partnerLabel} to you`}
                   </span>
 
                   {onSendToChat && (

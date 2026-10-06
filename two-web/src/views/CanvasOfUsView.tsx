@@ -23,15 +23,33 @@ import {
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
 import { playOneOf } from '../core/sounds';
+import { who } from '../core/who';
 
 interface CanvasOfUsViewProps {
   canvasState: SharedDrawingCanvasState;
   activeUser: 'user' | 'partner';
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
   onAddStroke: (stroke: DrawStroke) => void;
   onClearCanvas: () => void;
   onUndoStroke: () => void;
   onSaveSketch: (sketch: CanvasSavedSketch) => void;
   onSendToChat?: (text: string) => void;
+}
+
+/**
+ * Whose seat a saved sketch came from.
+ *
+ * Sketches carry `authorId` now. Older ones only have the name they were saved
+ * with, and that name was only ever "You" (written from the 'user' seat) or
+ * "Partner" (from the 'partner' seat) - so the seat can still be read off it,
+ * and the sketch named correctly on both phones.
+ */
+function sketchSeat(sketch: CanvasSavedSketch): 'user' | 'partner' | undefined {
+  if (sketch.authorId) return sketch.authorId;
+  if (sketch.authorName === 'You') return 'user';
+  if (sketch.authorName === 'Partner') return 'partner';
+  return undefined;
 }
 
 // A pencil touching the paper, a different take each stroke.
@@ -137,14 +155,13 @@ function tracePath(
 export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   canvasState,
   activeUser,
+  partnerName,
   onAddStroke,
   onClearCanvas,
   onUndoStroke,
   onSaveSketch,
   onSendToChat
 }) => {
-  const partnerName = activeUser === 'user' ? 'Partner' : 'You';
-
   const [activeTool, setActiveTool] = useState<CanvasTool>('pen');
   const [activeColor, setActiveColor] = useState<string>('#f43f5e');
   const [brushSize, setBrushSize] = useState<number>(4);
@@ -397,6 +414,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
       title: `Love Sketch #${(canvasState.savedSketches?.length || 0) + 1}`,
       date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
       dataUrl,
+      authorId: activeUser,
       authorName: activeUser === 'user' ? 'You' : 'Partner'
     };
 
@@ -619,7 +637,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
                     {sketch.title}
                   </h4>
                   <p className="text-[10px] text-linen-secondary mt-0.5">
-                    {sketch.date} • {sketch.authorName}
+                    {sketch.date} • {who(sketchSeat(sketch), activeUser, partnerName, sketch.authorName)}
                   </p>
                 </div>
               </div>

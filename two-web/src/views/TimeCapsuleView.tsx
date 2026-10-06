@@ -8,10 +8,14 @@ import {
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
 import { playSound } from '../core/sounds';
+import { who } from '../core/who';
+import { whenLabel } from '../core/when';
 
 interface TimeCapsuleViewProps {
   capsules: TimeCapsuleItem[];
   activeUser: 'user' | 'partner';
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
   onAddCapsule: (capsule: TimeCapsuleItem) => void;
   onOpenCapsule: (capsuleId: string) => void;
   onSendToChat?: (message: string) => void;
@@ -52,9 +56,22 @@ function playUnsealChime() {
   playSound('unseal');
 }
 
+/**
+ * When a capsule was sealed, said from today - or nothing at all.
+ *
+ * Capsules used to be stored with the words "Just now" and said so for as
+ * long as they existed. Those have no real moment left to describe, so they
+ * say nothing rather than something untrue. Newer ones carry `at`, and a
+ * plain date in `createdAt` for a phone still on the previous version.
+ */
+function sealedWhen(capsule: TimeCapsuleItem): string {
+  return whenLabel(capsule.at, capsule.createdAt === 'Just now' ? '' : capsule.createdAt);
+}
+
 export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
   capsules,
   activeUser,
+  partnerName,
   onAddCapsule,
   onOpenCapsule,
   onSendToChat
@@ -92,6 +109,11 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
   const unsealedCapsules = useMemo(() => {
     return capsules.filter(c => c.isOpened);
   }, [capsules]);
+
+  // Worked out on this phone from the seat on the capsule. The name stored
+  // with it was decided on the phone that sealed it, and read "You" on both.
+  const authorOf = (capsule: TimeCapsuleItem) =>
+    who(capsule.authorId, activeUser, partnerName, capsule.authorName);
 
   const calculateTimeRemaining = (unlockAt: number) => {
     const diff = unlockAt - now;
@@ -136,7 +158,8 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
       teaserHint: newTeaser.trim() || 'A secret love message sealed until the right moment.',
       authorId: activeUser,
       authorName: activeUser === 'user' ? 'You' : 'Partner',
-      createdAt: 'Just now',
+      at: Date.now(),
+      createdAt: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }),
       unlockAt: unlockMs,
       unlockDateFormatted: formatted,
       sealType: newSeal,
@@ -268,7 +291,8 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
                           {capsule.title}
                         </h3>
                         <p className="text-xs text-stone-400 mt-1">
-                          Sealed by <strong className="text-stone-300">{capsule.authorName}</strong> • {capsule.createdAt}
+                          Sealed by <strong className="text-stone-300">{authorOf(capsule)}</strong>
+                          {sealedWhen(capsule) && <> • {sealedWhen(capsule)}</>}
                         </p>
                       </div>
 
@@ -375,7 +399,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
                         {capsule.title}
                       </h3>
                       <p className="text-xs text-linen-secondary">
-                        From <strong className="text-linen-primary">{capsule.authorName}</strong>
+                        From <strong className="text-linen-primary">{authorOf(capsule)}</strong>
                       </p>
 
                       <p className="text-xs text-linen-secondary leading-relaxed font-serif italic line-clamp-3">
@@ -413,7 +437,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
                 <div>
                   <h3 className="font-serif text-xl font-semibold text-linen-primary">{readingCapsule.title}</h3>
                   <p className="text-xs text-linen-secondary">
-                    Written by {readingCapsule.authorName} • Unsealed on {readingCapsule.unlockDateFormatted}
+                    Written by {authorOf(readingCapsule)} • Unsealed on {readingCapsule.unlockDateFormatted}
                   </p>
                 </div>
               </div>
@@ -427,7 +451,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
 
             {/* Letter Parchment View */}
             <div className="p-6 rounded-3xl bg-amber-50/50 border border-amber-200/70 space-y-4">
-              <p className="font-serif text-sm sm:text-base text-linen-primary leading-relaxed whitespace-pre-wrap">
+              <p className="font-serif text-sm sm:text-base text-linen-primary leading-relaxed whitespace-pre-wrap select-text">
                 {readingCapsule.content}
               </p>
 

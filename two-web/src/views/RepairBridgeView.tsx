@@ -20,10 +20,13 @@ import {
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
 import { playSound } from '../core/sounds';
+import { who } from '../core/who';
 
 interface RepairBridgeViewProps {
   repairLetters: RepairLetter[];
   activeUser: 'user' | 'partner';
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
   onSendRepair: (letter: RepairLetter) => void;
   onRespondRepair: (letterId: string, status: RepairStatus, note?: string) => void;
   onSendToChat?: (text: string) => void;
@@ -78,11 +81,11 @@ function playReconciliationChime() {
 export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
   repairLetters,
   activeUser,
+  partnerName,
   onSendRepair,
   onRespondRepair,
   onSendToChat
 }) => {
-  const partnerName = activeUser === 'user' ? 'Partner' : 'You';
   const partnerId = activeUser === 'user' ? 'partner' : 'user';
 
   const [activeTab, setActiveTab] = useState<'received' | 'sent' | 'compose'>('received');
@@ -391,7 +394,8 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
                 {selectedLetter.title}
               </h3>
               <p className="text-xs text-linen-secondary mt-0.5">
-                From: <strong>{selectedLetter.authorName}</strong>
+                {/* Worked out here from the letter's seat; the stored name said "You" on both phones. */}
+                From: <strong>{who(selectedLetter.authorId, activeUser, partnerName, selectedLetter.authorName)}</strong>
               </p>
             </div>
 

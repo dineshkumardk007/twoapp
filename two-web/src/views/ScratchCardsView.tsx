@@ -5,10 +5,14 @@ import { Gift, Ticket, Sparkles, Heart, Plus, Check, MessageSquare, Clock, Award
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
 import { playSound } from '../core/sounds';
+import { who } from '../core/who';
+import { whenLabel } from '../core/when';
 
 interface ScratchCardsViewProps {
   cards: ScratchCardItem[];
   activeUser: 'user' | 'partner';
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
   onScratchCard: (cardId: string) => void;
   onRedeemCard: (cardId: string) => void;
   onAddCard: (card: ScratchCardItem) => void;
@@ -64,9 +68,24 @@ function playStampRedemptionSound() {
   playSound('redeem');
 }
 
+/**
+ * A word some cards were stored with that was never true for long.
+ *
+ * Cards used to be saved as made, scratched and redeemed "Just now", and kept
+ * saying it. There is no real moment left behind those words, so they are
+ * shown as nothing rather than as something untrue.
+ */
+const STALE_WORD = 'Just now';
+
+/** When a card was made, said from today - or nothing for the older cards. */
+function madeWhen(card: ScratchCardItem): string {
+  return whenLabel(card.at, card.createdAt === STALE_WORD ? '' : card.createdAt);
+}
+
 export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
   cards,
   activeUser,
+  partnerName,
   onScratchCard,
   onRedeemCard,
   onAddCard,
@@ -80,7 +99,12 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<ScratchCardCategory>('coupon');
   const [foilType, setFoilType] = useState<ScratchFoilType>('gold');
-  const [recipient, setRecipient] = useState<'partner' | 'user'>('partner');
+  // Seats, not words: "the other person" is the 'user' seat on the phone that
+  // joined. The picker used to offer the literal 'partner' seat as "For
+  // Partner", which on that phone meant a card addressed to herself.
+  const otherSeat: 'user' | 'partner' = activeUser === 'user' ? 'partner' : 'user';
+  const partnerLabel = who(otherSeat, activeUser, partnerName);
+  const [recipient, setRecipient] = useState<'partner' | 'user'>(otherSeat);
   const [teaserHeadline, setTeaserHeadline] = useState('');
   const [revealedContent, setRevealedContent] = useState('');
   const [revealedPhotoUrl, setRevealedPhotoUrl] = useState('');
@@ -117,7 +141,9 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
       authorId: activeUser,
       authorName: activeUser === 'user' ? 'You' : 'Partner',
       recipientId: recipient,
-      createdAt: 'Just now',
+      at: Date.now(),
+      // A plain date for a phone still on the previous version, which shows this word as-is.
+      createdAt: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }),
       teaserHeadline: teaserHeadline.trim() || 'Scratch with love to reveal what’s inside',
       revealedContent: revealedContent.trim(),
       revealedPhotoUrl: revealedPhotoUrl.trim() || undefined,
@@ -280,6 +306,8 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredCards.map(card => {
             const isRecipient = card.recipientId === activeUser;
+            const made = madeWhen(card);
+            const redeemedWhen = card.redeemedAt && card.redeemedAt !== STALE_WORD ? card.redeemedAt : '';
 
             return (
               <div
@@ -298,19 +326,21 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                     </span>
                   </div>
 
-                  <div className="text-[11px] text-linen-secondary flex items-center space-x-1">
-                    <Clock className="w-3 h-3" />
-                    <span>{card.createdAt}</span>
-                  </div>
+                  {made && (
+                    <div className="text-[11px] text-linen-secondary flex items-center space-x-1">
+                      <Clock className="w-3 h-3" />
+                      <span>{made}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Card Header */}
                 <div className="px-5 pt-4 pb-2">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-linen-secondary">
-                      {card.authorId === activeUser ? 'From you' : 'From partner'}{' '}
+                      {card.authorId === activeUser ? 'From you' : `From ${partnerLabel}`}{' '}
                       <span className="text-linen-secondary/60">→</span>{' '}
-                      {isRecipient ? 'to you' : 'to partner'}
+                      {isRecipient ? 'to you' : `to ${partnerLabel}`}
                     </span>
                     {card.isRedeemed && (
                       <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
@@ -345,7 +375,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                               REDEEMED & LOVED
                             </span>
                             <div className="text-[10px] tracking-normal font-sans text-rose-600/90 text-center mt-0.5">
-                              {card.redeemedAt || 'Cherished memory'}
+                              {redeemedWhen || 'Cherished memory'}
                             </div>
                           </div>
                         </div>
@@ -525,8 +555,8 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                     onChange={e => setRecipient(e.target.value as 'partner' | 'user')}
                     className="w-full px-3 py-2 rounded-xl bg-linen-variant/50 border border-linen-border text-linen-primary text-xs focus:outline-hidden"
                   >
-                    <option value="partner">For Partner</option>
-                    <option value="user">For You</option>
+                    <option value={otherSeat}>For {partnerLabel}</option>
+                    <option value={activeUser}>For You</option>
                   </select>
                 </div>
               </div>

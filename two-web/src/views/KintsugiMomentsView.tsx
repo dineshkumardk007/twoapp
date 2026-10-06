@@ -17,10 +17,13 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { newId } from '../core/ids';
+import { who } from '../core/who';
 
 interface KintsugiMomentsViewProps {
   moments: KintsugiVesselItem[];
   activeUser: 'user' | 'partner';
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
   onAddMoment: (moment: KintsugiVesselItem) => void;
   onCherishMoment: (momentId: string, note?: string) => void;
   onSendToChat?: (text: string) => void;
@@ -73,10 +76,17 @@ const SEAM_CONFIGS = [
 export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
   moments,
   activeUser,
+  partnerName,
   onAddMoment,
   onCherishMoment,
   onSendToChat
 }) => {
+  // Who inscribed a moment, worked out on this phone from the seat stored with
+  // it. The stored name was decided on the phone that wrote it, so it read
+  // "You" on both phones.
+  const inscriberOf = (moment: KintsugiVesselItem) =>
+    who(moment.inscribedBy, activeUser, partnerName, moment.inscribedByName);
+
   const [selectedSeamIndex, setSelectedSeamIndex] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'vessel' | 'chronicle'>('vessel');
   const [filterTag, setFilterTag] = useState<string>('all');
@@ -529,7 +539,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                 {/* Sign-off & Cherish Section */}
                 <div className="pt-3 border-t border-linen-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="text-xs text-linen-secondary">
-                    Inscribed by <span className="font-medium text-linen-primary">{selectedMoment.inscribedByName}</span>
+                    Inscribed by <span className="font-medium text-linen-primary">{inscriberOf(selectedMoment)}</span>
                   </div>
 
                   {selectedMoment.isCherished ? (
@@ -661,7 +671,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
 
                 <div className="pt-2 border-t border-linen-border/60 flex items-center justify-between text-xs">
                   <span className="text-linen-secondary text-[11px]">
-                    Inscribed by {moment.inscribedByName}
+                    Inscribed by {inscriberOf(moment)}
                   </span>
                   <div className="flex items-center space-x-2">
                     {moment.isCherished ? (
