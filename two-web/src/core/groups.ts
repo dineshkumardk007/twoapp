@@ -73,6 +73,23 @@ export interface GroupMessage {
    * every reader tests for `=== false` rather than for falsiness.
    */
   delivered?: boolean;
+  /**
+   * A voice note: the recording travels inside the message, as in the
+   * couple's chat (see core/voice.ts), and `text` carries its label
+   * ("Voice note · 0:12") for the notification and for a phone on an older
+   * version.
+   */
+  isVoiceMemo?: boolean;
+  audioDataUrl?: string;
+  audioDurationSeconds?: number;
+  /** The note's waveform, 0-100 each. */
+  audioPeaks?: number[];
+  /**
+   * This device has played the voice note. Local only: a group has no
+   * per-note receipts, so it is never sent and never taken from the wire -
+   * it only clears the "new" dot and decides what plays next by itself.
+   */
+  heard?: boolean;
 }
 
 export interface GroupSpace {

@@ -5,6 +5,7 @@ import { newId } from '../core/ids';
 import { whenLabel } from '../core/when';
 import { who } from '../core/who';
 import { MAX_RECORD_BYTES, recordSizeOf } from '../core/ws';
+import { openRecorder, VOICE_MAX_AUDIO_BYTES } from '../core/voice';
 
 interface WhisperMemosViewProps {
   memos: WhisperMemoItem[];
@@ -30,34 +31,15 @@ const CATEGORY_META: Record<WhisperCategory, { label: string; icon: string; colo
  * A memo travels as one encrypted record, and the relay takes a megabyte. The
  * recording is base64 inside the memo, and the encrypted memo is base64 again
  * on the way out, so what is sent is about 1.8 times the recording. At
- * VOICE_BITS_PER_SECOND three minutes is about 360 KB of audio - 640 KB sent.
+ * the speech rate openRecorder asks for (VOICE_BITS_PER_SECOND) three minutes
+ * is about 360 KB of audio - 640 KB sent.
+ *
+ * The recorder, and the most audio a memo may hold (VOICE_MAX_AUDIO_BYTES,
+ * where recording stops even inside the time limit, for a phone that ignores
+ * the rate), are the chat's voice notes' own (core/voice.ts): a memo and a
+ * note are made the same way and fit the same record.
  */
 const MAX_MEMO_SECONDS = 180;
-
-/**
- * Asked of the recorder: speech quality, the rate voice notes are usually sent
- * at. Left to itself a phone records at several times this, and a memo over
- * about a minute and a half then became too big to send.
- */
-const VOICE_BITS_PER_SECOND = 16_000;
-
-/**
- * The most audio a memo may hold - about 960 KB once sent. Recording stops
- * here even inside the time limit, for a phone that ignores the rate above.
- */
-const MAX_AUDIO_BYTES = 540_000;
-
-/** Opus in WebM where the phone has it; otherwise whatever it records by default. */
-function openRecorder(stream: MediaStream): MediaRecorder {
-  const mimeType = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'].find(
-    type => typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(type)
-  );
-  try {
-    return new MediaRecorder(stream, { mimeType, audioBitsPerSecond: VOICE_BITS_PER_SECOND });
-  } catch {
-    return new MediaRecorder(stream);
-  }
-}
 
 export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
   memos,
@@ -178,7 +160,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
         if (e.data.size === 0) return;
         audioChunksRef.current.push(e.data);
         audioBytes += e.data.size;
-        if (audioBytes >= MAX_AUDIO_BYTES && mediaRecorder.state === 'recording') stopAtLimit();
+        if (audioBytes >= VOICE_MAX_AUDIO_BYTES && mediaRecorder.state === 'recording') stopAtLimit();
       };
 
       mediaRecorder.onstop = () => {

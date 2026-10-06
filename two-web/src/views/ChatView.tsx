@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { ChatMessage } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
-import { VoiceMemoPlayer } from '../components/VoiceMemoPlayer';
+import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
+import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
+import { voiceFieldsOf, voiceNoteLabel, type VoiceFields } from '../core/voice';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
 import { MAX_CHAT_MESSAGES } from '../core/storage';
 import { who } from '../core/who';
@@ -22,11 +24,14 @@ interface ChatViewProps {
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
   /** Retry or abandon a message that never left this device. */
   onResolveStuck?: (messageId: string, action: 'retry' | 'delete') => void;
-  onSendMessage: (
-    text: string,
-    isNeed?: boolean,
-    extra?: { isVoiceMemo?: boolean; audioDataUrl?: string; audioDurationSeconds?: number }
-  ) => void;
+  /** `extra` makes it a voice note; `text` is then the note's label. */
+  onSendMessage: (text: string, isNeed?: boolean, extra?: VoiceFields) => void;
+  /**
+   * The partner's voice note has just been played for the first time on this
+   * phone. Whether that is told to them is the caller's business (it follows
+   * the read-receipt setting).
+   */
+  onVoiceHeard?: (messageId: string) => void;
   onOpenSoftLanding?: () => void;
   /** True while the partner's device is in the space right now. */
   partnerOnline?: boolean;
@@ -159,10 +164,25 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onTyping,
   onStartCall,
   callInProgress = false,
-  partnerName = 'Partner'
+  partnerName = 'Partner',
+  onVoiceHeard
 }) => {
   const [inputText, setInputText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  /**
+   * Hold-to-talk. The mic takes Send's place while the text box is empty, and
+   * the strip lies over the composer while a note is under way. Not during a
+   * call: the call has the microphone, and its sound would be in the note.
+   */
+  const rec = useVoiceRecorder({
+    onSend: note => onSendMessage(voiceNoteLabel(note.durationSeconds), false, voiceFieldsOf(note)),
+    disabled: callInProgress,
+    onActiveChange: active => {
+      if (active) setShowEmojiPicker(false);
+    }
+  });
+  const showMic = rec.supported && (!inputText.trim() || rec.active);
   /** Which stuck message has its retry/discard choice open. */
   const [stuckOpen, setStuckOpen] = useState<string | null>(null);
 
@@ -340,6 +360,33 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const resolveStuckRef = useRef(onResolveStuck);
   resolveStuckRef.current = onResolveStuck;
   const canResolveStuck = !!onResolveStuck;
+  const voiceHeardRef = useRef(onVoiceHeard);
+  voiceHeardRef.current = onVoiceHeard;
+
+  /**
+   * The partner's next voice note, started by itself when the one before it
+   * finished - so several notes in a row are heard as one, the way they were
+   * said. `signal` only ever grows: each value is a new request to play.
+   */
+  const [autoPlay, setAutoPlay] = useState<{ id: string; signal: number } | null>(null);
+  const latestMessagesRef = useRef(messages);
+  latestMessagesRef.current = messages;
+  const activeUserRef = useRef(activeUser);
+  activeUserRef.current = activeUser;
+  /**
+   * Called when a note plays to its end. Looks at the conversation as it is
+   * now, not as it was when the bubble was drawn: the next note may have been
+   * heard, or a message may have arrived between them, in the meantime.
+   */
+  const playNextAfter = (id: string) => {
+    const list = latestMessagesRef.current;
+    const i = list.findIndex(m => m.id === id);
+    const next = i >= 0 ? list[i + 1] : undefined;
+    if (!next || !next.isVoiceMemo || next.authorId === activeUserRef.current || next.heard) return;
+    setAutoPlay(prev => ({ id: next.id, signal: (prev?.signal ?? 0) + 1 }));
+  };
+  const playNextAfterRef = useRef(playNextAfter);
+  playNextAfterRef.current = playNextAfter;
 
   /**
    * The bubbles themselves.
@@ -378,7 +425,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
             <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'} ${spacing}`}>
               <div
-                className={`max-w-[85%] sm:max-w-md rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${shape} ${
+                className={`sm:max-w-md rounded-2xl ${
+                  // A little tighter around a player, which has its own
+                  // breathing room, than around words - and a little more of
+                  // the width, so its 200px fits a 320px phone.
+                  msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : 'max-w-[85%] px-4 py-2.5'
+                } text-sm leading-relaxed ${shape} ${
                   msg.isNeedCard
                     ? 'bg-gold-50 border border-gold-500/40 text-linen-primary'
                     : mine
@@ -394,10 +446,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 )}
 
                 {msg.isVoiceMemo ? (
-                  <VoiceMemoPlayer
+                  // The player stands for the note; its label ("Voice note ·
+                  // 0:12") is for notifications and older phones, not here.
+                  // Heard marks on your own notes follow read receipts, as the
+                  // ticks do; the "new" dot on the partner's is this phone's
+                  // own business and always shows.
+                  <VoiceNotePlayer
+                    id={msg.id}
                     audioDataUrl={msg.audioDataUrl}
-                    durationSeconds={msg.audioDurationSeconds || 8}
-                    isFromCurrentPerspective={mine}
+                    durationSeconds={msg.audioDurationSeconds}
+                    peaks={msg.audioPeaks}
+                    tone={mine ? 'mine' : 'theirs'}
+                    heard={!!msg.heard}
+                    showHeard={mine ? shareReceipts : true}
+                    onFirstPlay={mine ? undefined : () => voiceHeardRef.current?.(msg.id)}
+                    onEnded={() => playNextAfterRef.current(msg.id)}
+                    playSignal={autoPlay?.id === msg.id ? autoPlay.signal : undefined}
                   />
                 ) : (
                   // Selectable on purpose: the rest of the app is not, so a
@@ -477,7 +541,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </React.Fragment>
         );
       }),
-    [rows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck]
+    [rows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay]
   );
 
   return (
@@ -602,8 +666,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </div>
       )}
 
-      {/* Input Bar */}
-      <div className="p-4 pt-2 border-t-0 bg-linen-surface flex items-end gap-2">
+      {/* Input Bar. Positioned, so a voice note under way can lie over the
+          emoji button and the text box (which stay mounted underneath, the
+          text box focused if it was, so the keyboard does not drop) while the
+          mic - the last control - stays where the thumb is. */}
+      <div className="relative p-4 pt-2 border-t-0 bg-linen-surface flex items-end gap-2">
+            <VoiceRecordingStrip rec={rec} className="pl-4 pt-2 pb-4" />
+
             {/* Deliberately the leftmost control, which is exactly where the
                 first emoji of the old row sat - the character you reached for
                 is still under the same thumb, it just opens the rest now. */}
@@ -644,17 +713,25 @@ export const ChatView: React.FC<ChatViewProps> = ({
               className="flex-1 min-w-0 resize-none overflow-y-hidden px-4 py-2.5 text-sm leading-5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary placeholder:text-linen-secondary/60 select-text"
             />
 
-            <button
-              type="button"
-              onPointerDown={keepComposerFocus}
-              onMouseDown={keepComposerFocus}
-              onClick={handleSendText}
-              disabled={!inputText.trim()}
-              aria-label="Send"
-              className="h-[42px] w-[42px] shrink-0 flex items-center justify-center rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 disabled:opacity-40 transition-all"
-            >
-              <Send className="w-4 h-4" />
-            </button>
+            {/* One slot: Send while there is something written, the mic while
+                there is not - and the mic for as long as a note is under way,
+                where it is the note's own Send. A phone that cannot record
+                keeps the Send button here, greyed until there is text. */}
+            {showMic ? (
+              <VoiceMicButton rec={rec} />
+            ) : (
+              <button
+                type="button"
+                onPointerDown={keepComposerFocus}
+                onMouseDown={keepComposerFocus}
+                onClick={handleSendText}
+                disabled={!inputText.trim()}
+                aria-label="Send"
+                className="h-[42px] w-[42px] shrink-0 flex items-center justify-center rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 disabled:opacity-40 transition-all"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            )}
       </div>
 
       <NeedMenuModal

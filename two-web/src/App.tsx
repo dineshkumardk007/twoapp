@@ -6,6 +6,7 @@ import {
   GROUP_CHAT,
   GROUP_HELLO,
   GROUP_READ,
+  GroupMessage,
   GroupSpace,
   myMemberId,
   newGroup,
@@ -28,7 +29,9 @@ import { isAndroidApp, formFactor } from './core/platform';
 import { withoutSampleAdventures } from './core/sampleData';
 import { setBackFallback } from './core/backStack';
 import { haptic } from './core/haptics';
-import { wsRelay, RelayStatus } from './core/ws';
+import { wsRelay, RelayStatus, recordSizeOf, MAX_RECORD_BYTES } from './core/ws';
+import { cleanVoiceFields, voiceFieldsOf, voiceNoteLabel, type VoiceFields } from './core/voice';
+import { isVoiceRecorderAskingForMic } from './components/VoiceRecorder';
 import {
   hasEncryptedVault,
   unlockVault,
@@ -180,6 +183,49 @@ function formatWait(seconds: number): string {
 
 /** Set the first time the home screen shows the tour card. */
 const TOUR_CARD_SEEN_KEY = 'two_story_tour_card_seen_v1';
+
+/**
+ * The partner has played one of your voice notes: `{ messageId }`.
+ *
+ * Sent only while the listener shares read receipts - hearing a note is
+ * reading it. A phone on an older version does not know the type and passes
+ * over it, as it does any record it has no branch for.
+ */
+const VOICE_HEARD = 'VOICE_HEARD';
+
+/**
+ * What is said when a message is too big for one record: the relay takes a
+ * megabyte. Said by the relay client when it refuses to send one, and before
+ * that by the senders of voice notes, which check first.
+ */
+function tooLargeNotice(bytes: number, isChat: boolean, tabId: string): InAppNotification {
+  const mb = (Number(bytes) / (1024 * 1024)).toFixed(1);
+  return {
+    id: newId(),
+    title: isChat ? 'Message too large to send' : 'Too large to send',
+    body: isChat
+      ? `That one is ${mb} MB, past the 1 MB a single message can carry. A shorter voice note will go through.`
+      : `That one is ${mb} MB, past the 1 MB a single message can carry.`,
+    type: 'general',
+    tabId
+  };
+}
+
+/**
+ * A chat message from the partner's phone, made safe to keep.
+ *
+ * A recording is kept only as cleanVoiceFields accepts it - an audio data:
+ * URL, nothing that would be fetched from anywhere. A message that claims to
+ * be a voice note and fails loses the claim, and shows as its text: the label
+ * every note carries ("Voice note · 0:12"). `heard` is never taken from the
+ * wire; it is this phone's own record of who has played what.
+ */
+function chatFromWire(parsed: any): ChatMessage {
+  // Taken off whatever they say, so only the checked copies below go back on.
+  const { isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard, ...rest } = parsed;
+  const voice = cleanVoiceFields(parsed);
+  return voice ? { ...rest, ...voice } : rest;
+}
 
 const AdventuresView = lazy(() => import('./views/AdventuresView').then(m => ({ default: m.AdventuresView })));
 const CanvasOfUsView = lazy(() => import('./views/CanvasOfUsView').then(m => ({ default: m.CanvasOfUsView })));
@@ -620,17 +666,10 @@ export const App: React.FC = () => {
       // Signals carry no history and are never stored, so they are handled
       // before the record path rather than inside it.
       if (msg.type === 'RECORD_TOO_LARGE') {
-        const mb = (Number(msg.bytes) / (1024 * 1024)).toFixed(1);
         const isChat = msg.recordType === 'CHAT';
-        setInAppNotification({
-          id: newId(),
-          title: isChat ? 'Message too large to send' : 'Too large to send',
-          body: isChat
-            ? `That one is ${mb} MB, past the 1 MB a single message can carry. A shorter voice memo will go through.`
-            : `That one is ${mb} MB, past the 1 MB a single message can carry.`,
-          type: 'general',
-          tabId: isChat ? 'chat' : currentTabRef.current || 'home'
-        });
+        setInAppNotification(
+          tooLargeNotice(msg.bytes, isChat, isChat ? 'chat' : currentTabRef.current || 'home')
+        );
         // The bubble was added the moment it was written. It never left this
         // phone and never will, so it does not get to sit in the conversation
         // looking sent.
@@ -788,6 +827,10 @@ export const App: React.FC = () => {
               }
             }
           } else if (record.type === 'CHAT') {
+            // Not a message at all; there is nothing to keep.
+            if (!parsed || typeof parsed !== 'object') return;
+            // A voice note's recording checked, `heard` dropped (chatFromWire).
+            const incoming = chatFromWire(parsed);
             setState(prev => {
               // Arriving twice must not mean appearing twice.
               //
@@ -796,7 +839,7 @@ export const App: React.FC = () => {
               // applied-id set the relay client keeps lives in memory and is
               // gone after a reload. That was survivable while the cursor only
               // ever moved forward, and is not something to keep resting on.
-              if (prev.messages.some(m => m.id === parsed.id)) return prev;
+              if (prev.messages.some(m => m.id === incoming.id)) return prev;
 
               // A copy of our own message that came back through the relay was,
               // by definition, delivered - the relay had to store it to send
@@ -804,7 +847,7 @@ export const App: React.FC = () => {
               // only its own socket ever hears the acknowledgement, so a second
               // device on the same role used to show everything typed on the
               // first one as forever sending.
-              const applied = parsed.delivered === false ? { ...parsed, delivered: true } : parsed;
+              const applied = incoming.delivered === false ? { ...incoming, delivered: true } : incoming;
               return {
                 ...prev,
                 messages: insertBySentAt(prev.messages, applied).slice(-MAX_CHAT_MESSAGES)
@@ -930,6 +973,24 @@ export const App: React.FC = () => {
               ...prev,
               partnerReadAt: Math.max(prev.partnerReadAt || 0, upTo)
             }));
+          } else if (record.type === VOICE_HEARD) {
+            // The partner has played one of this phone's voice notes. Like a
+            // read receipt, only the partner's say so counts - not one of our
+            // own devices - and only about a note this phone wrote. An id it
+            // does not hold (a note since dropped, or not yet arrived) is
+            // passed over; marking twice changes nothing.
+            if (record.authorId === state.activeUser) return;
+            const heardId = typeof parsed?.messageId === 'string' ? parsed.messageId : '';
+            if (!heardId) return;
+            setState(prev => {
+              let changed = false;
+              const messages = prev.messages.map(m => {
+                if (m.id !== heardId || m.authorId !== prev.activeUser || !m.isVoiceMemo || m.heard) return m;
+                changed = true;
+                return { ...m, heard: true };
+              });
+              return changed ? { ...prev, messages } : prev;
+            });
           } else if (record.type === PRESENCE_BEAT) {
             // Only the partner's beats say anything; our own come back to us
             // on replay and would otherwise overwrite theirs with our time.
@@ -1696,6 +1757,26 @@ export const App: React.FC = () => {
       return;
     }
 
+    // The group's client refused to send something past the relay's limit.
+    // Its bubble never left this phone and never will, so it does not get to
+    // sit in the conversation looking as if it might - the same as the
+    // couple's chat. Normally a voice note is checked before it is shown at
+    // all (handleSendGroupMessage); this is the last line behind that.
+    if (msg?.type === 'RECORD_TOO_LARGE') {
+      const isChat = msg.recordType === GROUP_CHAT;
+      setInAppNotification(tooLargeNotice(msg.bytes, isChat, `group:${groupId}`));
+      if (isChat && msg.correlationId) {
+        const refused = String(msg.correlationId);
+        setState(prev => ({
+          ...prev,
+          groups: prev.groups.map(g =>
+            g.id !== groupId ? g : { ...g, messages: g.messages.filter(m => m.id !== refused) }
+          )
+        }));
+      }
+      return;
+    }
+
     if (msg?.type === 'REMOTE_SIGNAL' && msg.signal?.type === TYPING_SIGNAL) {
       if (!readShareReceipts()) return;
       let who = '';
@@ -1768,12 +1849,18 @@ export const App: React.FC = () => {
               tabId: `group:${groupId}`
             });
           }
-          const message = {
+          // Built field by field, as ever, so nothing arrives that was not
+          // asked for - `heard` included. A voice note's recording is kept
+          // only as cleanVoiceFields accepts it; one that fails shows as its
+          // text, the note's label.
+          const voice = cleanVoiceFields(parsed);
+          const message: GroupMessage = {
             id: record.id,
             authorId: from,
             authorName: String(parsed.name || 'Someone'),
             text: String(parsed.text || ''),
-            sentAt: Number(parsed.at) || Date.now()
+            sentAt: Number(parsed.at) || Date.now(),
+            ...(voice || {})
           };
           return {
             ...g,
@@ -1991,11 +2078,30 @@ export const App: React.FC = () => {
     action: 'retry' | 'delete'
   ) => {
     const { groupId } = scope;
-    let text = '';
+    const stuck: ChatMessage | GroupMessage | undefined = groupId
+      ? state.groups.find(g => g.id === groupId)?.messages.find(m => m.id === messageId)
+      : state.messages.find(m => m.id === messageId);
+
+    // A voice note goes again as a voice note - its recording, length and
+    // shape - not as the label that stands in for it as text.
+    const voice = stuck?.isVoiceMemo ? cleanVoiceFields(stuck) : null;
+    if (action === 'retry' && stuck?.isVoiceMemo && !voice) {
+      // Its recording did not come back from this phone's storage, so there
+      // is nothing to send again - and its label sent as a text message
+      // would only look like a note that cannot be played. Left where it
+      // is, to be discarded.
+      setInAppNotification({
+        id: newId(),
+        title: "Can't send that voice note again",
+        body: 'Its recording is no longer on this phone. Discard it and record it again.',
+        type: 'general',
+        tabId: groupId ? `group:${groupId}` : 'chat'
+      });
+      return;
+    }
+    const text = stuck?.text || (voice ? voiceNoteLabel(voice.audioDurationSeconds) : '');
 
     if (groupId) {
-      const group = state.groups.find(g => g.id === groupId);
-      text = group?.messages.find(m => m.id === messageId)?.text || '';
       dropPendingInGroup(groupId, messageId);
       setState(prev => ({
         ...prev,
@@ -2004,7 +2110,6 @@ export const App: React.FC = () => {
         )
       }));
     } else {
-      text = state.messages.find(m => m.id === messageId)?.text || '';
       wsRelay.dropPending(messageId);
       setState(prev => ({
         ...prev,
@@ -2013,14 +2118,28 @@ export const App: React.FC = () => {
     }
 
     if (action !== 'retry' || !text) return;
-    if (groupId) handleSendGroupMessage(groupId, text);
-    else handleSendMessage(text);
+    if (groupId) handleSendGroupMessage(groupId, text, voice ?? undefined);
+    else handleSendMessage(text, false, voice ?? undefined);
   };
 
-  const handleSendGroupMessage = (groupId: string, text: string) => {
+  /** `voice` makes it a voice note; `text` is then the note's label. */
+  const handleSendGroupMessage = (groupId: string, text: string, voice?: VoiceFields) => {
     const at = Date.now();
     const id = newId('gmsg');
     const name = state.userName || 'Someone';
+    const payload = { from: myMemberId(), name, text, at, ...voice };
+
+    // A voice note is measured against the relay's limit before it is shown.
+    // The group's client refuses an oversized record too, but only once it
+    // holds the group's key, so until then a bubble would sit there for a
+    // note that can never go. Refused here, where somebody can be told.
+    if (voice) {
+      const bytes = recordSizeOf(payload);
+      if (bytes > MAX_RECORD_BYTES) {
+        setInAppNotification(tooLargeNotice(bytes, true, `group:${groupId}`));
+        return;
+      }
+    }
 
     setState(prev => ({
       ...prev,
@@ -2034,7 +2153,8 @@ export const App: React.FC = () => {
                 authorName: name,
                 text,
                 sentAt: at,
-                delivered: false
+                delivered: false,
+                ...voice
               }).slice(-MAX_GROUP_MESSAGES)
             }
           : g
@@ -2043,7 +2163,28 @@ export const App: React.FC = () => {
 
     // The local message id doubles as the correlation id, so the relay's
     // acknowledgement can be matched back to this exact bubble.
-    sendToGroup(groupId, GROUP_CHAT, { from: myMemberId(), name, text, at }, id);
+    sendToGroup(groupId, GROUP_CHAT, payload, id);
+  };
+
+  /**
+   * Somebody else's voice note in a group has been played on this device:
+   * its "new" dot goes, and it no longer plays by itself after the note
+   * before it. Kept here only - a group has no per-note receipts.
+   */
+  const handleGroupVoicePlayed = (groupId: string, messageId: string) => {
+    setState(prev => {
+      let changed = false;
+      const groups = prev.groups.map(g => {
+        if (g.id !== groupId) return g;
+        const messages = g.messages.map(m => {
+          if (m.id !== messageId || m.heard) return m;
+          changed = true;
+          return { ...m, heard: true };
+        });
+        return changed ? { ...g, messages } : g;
+      });
+      return changed ? { ...prev, groups } : prev;
+    });
   };
 
   /**
@@ -2226,8 +2367,10 @@ export const App: React.FC = () => {
     if (!autoCamouflageOnBlur) return;
     const handleBlur = () => {
       // Android's microphone permission dialog takes focus like leaving the
-      // app does. Disguising for it would end the first call before it rang.
-      if (callEngineRef.current?.askingForMic) return;
+      // app does. Disguising for it would end the first call before it rang,
+      // and hide the chat behind the calculator in the middle of the first
+      // voice note.
+      if (callEngineRef.current?.askingForMic || isVoiceRecorderAskingForMic()) return;
       setIsCamouflaged(true);
     };
     window.addEventListener('blur', handleBlur);
@@ -2295,11 +2438,8 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleSendMessage = (
-    text: string,
-    isNeedCard: boolean = false,
-    extra?: { isVoiceMemo?: boolean; audioDataUrl?: string; audioDurationSeconds?: number }
-  ) => {
+  /** `extra` makes it a voice note; `text` is then the note's label. */
+  const handleSendMessage = (text: string, isNeedCard: boolean = false, extra?: VoiceFields) => {
     const newMessage: ChatMessage = {
       id: newId(),
       authorId: state.activeUser,
@@ -2311,6 +2451,17 @@ export const App: React.FC = () => {
       isNeedCard,
       ...extra
     };
+    // A voice note is measured against the relay's limit before it is shown.
+    // The relay client refuses an oversized record too, but only once it
+    // holds the space's key, so until then a bubble would sit there for a
+    // note that can never go. Refused here, where somebody can be told.
+    if (extra?.isVoiceMemo) {
+      const bytes = recordSizeOf(newMessage);
+      if (bytes > MAX_RECORD_BYTES) {
+        setInAppNotification(tooLargeNotice(bytes, true, 'chat'));
+        return;
+      }
+    }
     // The message id doubles as the correlation id, so the relay's ack can be
     // matched back to this exact bubble.
     wsRelay.broadcastUpdate('CHAT', newMessage, newMessage.id);
@@ -2318,6 +2469,24 @@ export const App: React.FC = () => {
       ...prev,
       messages: insertBySentAt(prev.messages, newMessage).slice(-MAX_CHAT_MESSAGES)
     }));
+  };
+
+  /**
+   * The partner's voice note has just been played here for the first time.
+   *
+   * Marked heard on this phone whatever the setting: that is what takes its
+   * "new" dot away and keeps it from playing by itself again after the note
+   * before it. The partner is told only while read receipts are shared -
+   * hearing a note is reading it, and off means nothing leaves this phone.
+   */
+  const handleVoiceHeard = (messageId: string) => {
+    const note = state.messages.find(m => m.id === messageId);
+    if (!note || !note.isVoiceMemo || note.authorId === state.activeUser || note.heard) return;
+    setState(prev => ({
+      ...prev,
+      messages: prev.messages.map(m => (m.id === messageId ? { ...m, heard: true } : m))
+    }));
+    if (readShareReceipts()) wsRelay.broadcastUpdate(VOICE_HEARD, { messageId });
   };
 
   /** Sends one change to the other phone: over the relay, and the local network when there is one. */
@@ -3542,6 +3711,15 @@ export const App: React.FC = () => {
               typingIds={typingIds}
               shareReceipts={shareReceipts}
               onSend={(text) => handleSendGroupMessage(activeGroup.id, text)}
+              onSendVoice={(note) =>
+                handleSendGroupMessage(
+                  activeGroup.id,
+                  voiceNoteLabel(note.durationSeconds),
+                  voiceFieldsOf(note)
+                )
+              }
+              onVoicePlayed={(messageId) => handleGroupVoicePlayed(activeGroup.id, messageId)}
+              callInProgress={callState.phase !== 'idle'}
               onTyping={() => {
                 if (!readShareReceipts()) return;
                 signalToGroup(activeGroup.id, TYPING_SIGNAL, { from: myMemberId() });
@@ -3561,6 +3739,18 @@ export const App: React.FC = () => {
         {/* A couple call can ring while a group is open, so group mode
             carries the call screen too. */}
         {callOverlay}
+
+        {/* Notices about groups - a message in another group, a voice note
+            too large to send in this one - are shown here too, or they would
+            wait unseen until group mode was left. The couple's own keep
+            waiting for the sanctuary, as they always have. */}
+        <InAppNotificationToast
+          notification={inAppNotification?.tabId.startsWith('group:') ? inAppNotification : null}
+          onDismiss={() => setInAppNotification(null)}
+          onOpenTab={(tabId) => {
+            if (tabId.startsWith('group:')) setActiveGroupId(tabId.slice('group:'.length));
+          }}
+        />
 
         <GroupDock
           groups={state.groups}
@@ -3694,6 +3884,7 @@ export const App: React.FC = () => {
             partnerLastSeen={shareLastSeen ? state.partnerLastSeen : 0}
             partnerTyping={partnerTypingAt > 0}
             shareReceipts={shareReceipts}
+            onVoiceHeard={handleVoiceHeard}
             onTyping={() => {
               // Read straight from the setting rather than the render's copy:
               // off must mean nothing leaves this device, immediately.

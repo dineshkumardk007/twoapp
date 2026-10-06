@@ -31,6 +31,19 @@ export interface ChatMessage {
   isVoiceMemo?: boolean;
   audioDataUrl?: string;
   audioDurationSeconds?: number;
+  /**
+   * A voice note's waveform: a few dozen levels, 0-100, sampled while it was
+   * recorded. Absent on notes from before notes kept their shape.
+   */
+  audioPeaks?: number[];
+  /**
+   * A voice note has been listened to. On my own notes: the partner has
+   * played it (they said so with VOICE_HEARD, which they send only while
+   * they share read receipts). On the partner's: I have played it, on this
+   * phone. Kept on this phone only - never sent with a message, and never
+   * taken from one that arrives.
+   */
+  heard?: boolean;
 }
 
 export interface JournalEntry {

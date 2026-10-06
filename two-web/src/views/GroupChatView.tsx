@@ -28,6 +28,9 @@ import {
 } from '../core/groups';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
 import { EmojiPicker } from '../components/EmojiPicker';
+import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
+import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
+import type { VoiceNote } from '../core/voice';
 import { copyTextOrThrow } from '../core/clipboard';
 
 interface GroupChatViewProps {
@@ -40,6 +43,15 @@ interface GroupChatViewProps {
   /** False when this device has receipts and typing switched off. */
   shareReceipts: boolean;
   onSend: (text: string) => void;
+  /** A recorded voice note, to be sent to the group. */
+  onSendVoice: (note: VoiceNote) => void;
+  /** Somebody else's voice note has been played for the first time on this device. */
+  onVoicePlayed: (messageId: string) => void;
+  /**
+   * True while a call with the partner is ringing or live - it can, with a
+   * group open. The call has the microphone, so no note is recorded meanwhile.
+   */
+  callInProgress?: boolean;
   onTyping: () => void;
   /** Founders only; absent for everyone else, which is what hides the control. */
   onRename?: (name: string) => void;
@@ -63,12 +75,41 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   typingIds,
   shareReceipts,
   onSend,
+  onSendVoice,
+  onVoicePlayed,
+  callInProgress = false,
   onTyping,
   onRename,
   onResolveStuck
 }) => {
   const [text, setText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
+
+  /** Hold-to-talk, as in the couple's chat: the mic sits in Send's place while nothing is written. */
+  const rec = useVoiceRecorder({
+    onSend: note => onSendVoice(note),
+    disabled: callInProgress,
+    onActiveChange: active => {
+      if (active) setShowEmoji(false);
+    }
+  });
+  const showMic = rec.supported && (!text.trim() || rec.active);
+
+  /**
+   * The next voice note from somebody else, started by itself when the one
+   * before it finished. `signal` only ever grows: each value is a new request.
+   */
+  const [autoPlay, setAutoPlay] = useState<{ id: string; signal: number } | null>(null);
+  /** Looks at the conversation as it is when the note ends, not as it was drawn. */
+  const messagesNowRef = useRef(group.messages);
+  messagesNowRef.current = group.messages;
+  const playNextAfter = (id: string) => {
+    const list = messagesNowRef.current;
+    const i = list.findIndex(m => m.id === id);
+    const next = i >= 0 ? list[i + 1] : undefined;
+    if (!next || !next.isVoiceMemo || next.authorId === myId || next.heard) return;
+    setAutoPlay(prev => ({ id: next.id, signal: (prev?.signal ?? 0) + 1 }));
+  };
   const [infoFor, setInfoFor] = useState<GroupMessage | null>(null);
   const [showMembers, setShowMembers] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
@@ -391,13 +432,36 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                 </span>
               )}
               <div
-                className={`select-text max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
+                className={`${
+                  // A voice note takes a little more of the width, so its
+                  // player (200px at the least) fits a 320px phone.
+                  msg.isVoiceMemo ? 'max-w-[90%] px-3' : 'max-w-[80%] select-text px-3.5'
+                } rounded-2xl py-2 text-sm ${
                   mine
                     ? 'bg-linen-primary text-linen-surface'
                     : 'border border-linen-border bg-linen-variant/40 text-linen-primary'
                 }`}
               >
-                {msg.text}
+                {msg.isVoiceMemo ? (
+                  // The player stands for the note; its label is for the
+                  // notification and older phones. A group keeps no receipts
+                  // per note, so your own carry no heard mark - only the
+                  // "new" dot on somebody else's, until this device plays it.
+                  <VoiceNotePlayer
+                    id={msg.id}
+                    audioDataUrl={msg.audioDataUrl}
+                    durationSeconds={msg.audioDurationSeconds}
+                    peaks={msg.audioPeaks}
+                    tone={mine ? 'mine' : 'theirs'}
+                    heard={!!msg.heard}
+                    showHeard={!mine}
+                    onFirstPlay={mine ? undefined : () => onVoicePlayed(msg.id)}
+                    onEnded={() => playNextAfter(msg.id)}
+                    playSignal={autoPlay?.id === msg.id ? autoPlay.signal : undefined}
+                  />
+                ) : (
+                  msg.text
+                )}
               </div>
               <span className="mt-1 flex items-center gap-1 px-1 text-[10px] text-linen-secondary">
                 {new Date(msg.sentAt).toLocaleTimeString(undefined, {
@@ -531,8 +595,11 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
         />
       )}
 
-      {/* Composer */}
-      <div className="flex items-center gap-2 border-t border-linen-border bg-linen-surface px-3 pb-1.5 pt-2">
+      {/* Composer. Positioned, so a voice note under way can lie over the
+          emoji button and the text box, which stay mounted underneath, while
+          the mic - the last control - stays where the thumb is. */}
+      <div className="relative flex items-center gap-2 border-t border-linen-border bg-linen-surface px-3 pb-1.5 pt-2">
+        <VoiceRecordingStrip rec={rec} className="pl-3 pt-2 pb-1.5" />
         <button
           onClick={() => setShowEmoji(v => !v)}
           aria-expanded={showEmoji}
@@ -553,15 +620,23 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
           }}
           onKeyDown={e => e.key === 'Enter' && send()}
           placeholder={`Message ${group.name}…`}
-          className="flex-1 rounded-xl border border-linen-border bg-linen-variant/30 px-4 py-2.5 text-sm text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary"
+          className="min-w-0 flex-1 rounded-xl border border-linen-border bg-linen-variant/30 px-4 py-2.5 text-sm text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary"
         />
-        <button
-          onClick={send}
-          disabled={!text.trim()}
-          className="rounded-xl bg-linen-primary p-2.5 text-linen-surface transition-all hover:opacity-90 disabled:opacity-40"
-        >
-          <Send className="h-4 w-4" />
-        </button>
+        {/* One slot: Send while something is written, the mic while nothing
+            is (and for as long as a note is under way). The same size as the
+            mic, so the text box does not shift when one replaces the other. */}
+        {showMic ? (
+          <VoiceMicButton rec={rec} />
+        ) : (
+          <button
+            onClick={send}
+            disabled={!text.trim()}
+            aria-label="Send"
+            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-linen-primary text-linen-surface transition-all hover:opacity-90 disabled:opacity-40"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </div>
   );

@@ -70,6 +70,8 @@ export function rememberOwnDeviceName(name: string) {
  */
 export const CATCH_UP_TYPES = new Set<string>([
   'CHAT',
+  // Marks one voice note heard; marking it again changes nothing.
+  'VOICE_HEARD',
   'LOVE_LETTER',
   'GRATITUDE_STAR',
   'INTUITION_ROUND',
