@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { AdventureItem, EnergyTier, AdventureCategory, AdventureSeason } from '../types';
 import { 
   Compass, Sparkles, Home, Palette, TreePine, Utensils, CheckCircle2, 
-  Plus, Send, Shuffle, DollarSign, X, MapPin, Calendar, Award, 
+  Plus, Send, Shuffle, X, MapPin, Calendar, Award, 
   Search, Filter, Camera, Heart, BookOpen, Stamp
 } from 'lucide-react';
 import { newId } from '../core/ids';
@@ -23,6 +23,21 @@ const CATEGORY_META: Record<AdventureCategory, { label: string; icon: any; color
   outdoors: { label: 'Places to Wander', icon: TreePine, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
   food: { label: 'Delicious Feasts', icon: Utensils, color: 'text-rose-600 bg-rose-50 border-rose-200' },
 };
+
+/**
+ * How a cost reads, in rupees.
+ *
+ * Stored as 'Free', '$' or '$$', because those are the values a phone still on
+ * the previous version writes and expects to read back; only what is shown has
+ * changed. Anything else is shown as it came rather than dropped.
+ */
+const COST_LABELS: Record<string, { short: string; long: string }> = {
+  Free: { short: 'Free', long: 'Free' },
+  $: { short: '₹', long: '₹ (easy on the pocket)' },
+  $$: { short: '₹₹', long: '₹₹ (a special night out)' }
+};
+
+const costShort = (cost: string) => COST_LABELS[cost]?.short ?? cost;
 
 const SEASONS: { id: AdventureSeason | 'all'; label: string }[] = [
   { id: 'all', label: '💫 All Seasons' },
@@ -122,7 +137,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
   };
 
   const handleProposeInChat = (item: AdventureItem) => {
-    onSendToChat(`✨ Date Proposal: "${item.title}" — ${item.description} (${item.energyTier.toUpperCase()} Energy • Cost: ${item.estimatedCost}${item.location ? ` • 📍 ${item.location}` : ''})`);
+    onSendToChat(`✨ Date Proposal: "${item.title}" — ${item.description} (${item.energyTier.toUpperCase()} Energy • Cost: ${costShort(item.estimatedCost)}${item.location ? ` • 📍 ${item.location}` : ''})`);
     setProposedToast(true);
     setTimeout(() => setProposedToast(false), 2500);
   };
@@ -251,7 +266,32 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
       </div>
 
       {/* VIEW 1: DREAM MAP / BUCKET LIST */}
-      {activeTab === 'bucketlist' && (
+      {/* Nothing added yet. Adventures used to open already full of somebody
+          else's date ideas; now it starts empty, so the first thing it says
+          is what it is for and how to begin. Filters over an empty list
+          would only be furniture, so they wait until there is something. */}
+      {activeTab === 'bucketlist' && adventures.length === 0 && (
+        <div className="text-center py-12 px-6 rounded-3xl border border-dashed border-linen-border bg-linen-surface shadow-xs space-y-3">
+          <div className="w-14 h-14 rounded-3xl bg-linen-variant border border-linen-border mx-auto flex items-center justify-center text-linen-accent">
+            <MapPin className="w-6 h-6" />
+          </div>
+          <h4 className="font-serif text-xl font-medium text-linen-primary">Nothing on your map yet</h4>
+          <p className="text-xs text-linen-secondary leading-relaxed max-w-sm mx-auto">
+            This is where the two of you keep the things you want to do together, big or
+            small: a weekend away, a place you keep meaning to eat at, a sunrise you have
+            not caught yet. Add the first one and it shows up for both of you.
+          </p>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center px-4 py-2.5 rounded-2xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            Add the first one
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'bucketlist' && adventures.length > 0 && (
         <div className="space-y-5">
           {/* Filter & Search Bar */}
           <div className="p-4 rounded-3xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
@@ -368,7 +408,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                             {SEASONS.find(s => s.id === adv.season)?.label}
                           </span>
                         )}
-                        <span className="text-[11px] font-mono text-linen-secondary ml-auto">{adv.estimatedCost}</span>
+                        <span className="text-[11px] font-mono text-linen-secondary ml-auto">{costShort(adv.estimatedCost)}</span>
                       </div>
 
                       <div>
@@ -475,7 +515,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                   </span>
                   {getEnergyBadge(currentDraw.energyTier)}
                   <span className="text-xs px-2 py-0.5 rounded-full bg-linen-variant text-linen-secondary font-mono">
-                    {currentDraw.estimatedCost}
+                    {costShort(currentDraw.estimatedCost)}
                   </span>
                 </div>
 
@@ -525,7 +565,11 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                   Ready to spark tonight's adventure?
                 </h3>
                 <p className="text-xs text-linen-secondary leading-relaxed">
-                  Tap the wheel to draw a spontaneous date idea tailored to your mutual energy, taking away the chore of deciding.
+                  {roulettePool.length === 0
+                    ? adventures.length === 0
+                      ? 'The wheel draws from your own dream map. Add a few ideas there first, and it will pick one for you on a night neither of you can decide.'
+                      : 'Nothing left to draw at this energy. Try another level, or add a new idea to your dream map.'
+                    : 'Tap the wheel to draw a spontaneous date idea tailored to your mutual energy, taking away the chore of deciding.'}
                 </p>
                 <button
                   onClick={handleSpinRoulette}
@@ -665,7 +709,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                   rows={3}
                   value={stampReflection}
                   onChange={e => setStampReflection(e.target.value)}
-                  placeholder="e.g. We laughed so hard when the rain started, and had hot cocoa by the radiator..."
+                  placeholder="e.g. We laughed so hard when the rain started, and waited it out at a tea stall..."
                   className="w-full text-xs p-3 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-none focus:ring-1 focus:ring-linen-primary"
                 />
               </div>
@@ -678,7 +722,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                   type="url"
                   value={stampPhotoUrl}
                   onChange={e => setStampPhotoUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
+                  placeholder="https://..."
                   className="w-full text-xs p-2.5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-none focus:ring-1 focus:ring-linen-primary"
                 />
               </div>
@@ -723,7 +767,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                 <label className="text-xs font-medium text-linen-primary block mb-1">Dream / Adventure Title</label>
                 <input
                   type="text"
-                  placeholder="e.g. Rent a lakeside glass cabin for a weekend"
+                  placeholder="e.g. A long weekend in Kodaikanal"
                   value={newTitle}
                   onChange={e => setNewTitle(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-none focus:ring-1 focus:ring-linen-primary"
@@ -735,7 +779,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                 <label className="text-xs font-medium text-linen-primary block mb-1">Destination / Location (Optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Lake Como, Italy or Living Room"
+                  placeholder="e.g. Mahabalipuram, or our terrace"
                   value={newLocation}
                   onChange={e => setNewLocation(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-none focus:ring-1 focus:ring-linen-primary"
@@ -746,7 +790,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                 <label className="text-xs font-medium text-linen-primary block mb-1">Details & Shared Inspiration</label>
                 <textarea
                   rows={2}
-                  placeholder="e.g. Wake up to misty mountain views, sip pour-over coffee, read books on the deck..."
+                  placeholder="e.g. Misty mornings, filter coffee on the balcony, nowhere to be..."
                   value={newDesc}
                   onChange={e => setNewDesc(e.target.value)}
                   className="w-full text-xs p-2.5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-none focus:ring-1 focus:ring-linen-primary"
@@ -805,9 +849,9 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                     onChange={e => setNewCost(e.target.value as any)}
                     className="w-full text-xs p-2 rounded-xl border border-linen-border bg-linen-variant/30"
                   >
-                    <option value="Free">Free</option>
-                    <option value="$">$ (Budget friendly)</option>
-                    <option value="$$">$$ (Special date)</option>
+                    {(['Free', '$', '$$'] as const).map(cost => (
+                      <option key={cost} value={cost}>{COST_LABELS[cost].long}</option>
+                    ))}
                   </select>
                 </div>
               </div>

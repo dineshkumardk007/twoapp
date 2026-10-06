@@ -7,7 +7,7 @@
 import { 
   X, Heart, MessageSquare, Feather, Bed, Sprout, Mic, Map, Radio, Shield, Palette, 
   Handshake, Sparkles, Flame, Star, Compass, Mail, Gift, Hourglass, Coffee, BookMarked, 
-  MapPin, Utensils, Smile, Moon, BookOpen, CheckSquare, Layers, DollarSign, Image, Settings, 
+  MapPin, Utensils, Smile, Moon, BookOpen, CheckSquare, Layers, IndianRupee, Image, Settings, 
   Wind, Search, Users 
 } from 'lucide-react';
 
@@ -60,6 +60,9 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
         { id: 'capsules', name: 'Time Capsule', desc: 'Bury letters and photos to open on future anniversaries', icon: Hourglass },
         { id: 'scratch', name: 'Scratch Cards', desc: 'Interactive scratch-off love coupons & secrets', icon: Gift },
         { id: 'coordinates', name: 'Coordinates Map', desc: 'Pinned physical places that hold special meaning', icon: Map },
+        // Only ever reachable from a tile on Home, which is going; without a
+        // line here it would have no way in at all.
+        { id: 'adventures', name: 'Adventures', desc: 'Places and plans you want to share, and the ones you have lived', icon: MapPin },
         { id: 'radio', name: 'Midnight Radio', desc: 'Shared radio station & voice whispers', icon: Radio },
         { id: 'decks', name: 'Conversation Decks', desc: 'Curated card decks for deep midnight talks', icon: Sparkles },
         { id: 'intuition', name: 'Intuition Game', desc: 'Guess what your partner would choose in dilemmas', icon: Smile },
@@ -73,7 +76,7 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
         { id: 'rituals', name: 'Daily Rituals', desc: 'Shared micro-habits & daily grounding moments', icon: Flame },
         { id: 'lists', name: 'Shared Lists', desc: 'Groceries, trip wishlists & secret gift items', icon: CheckSquare },
         { id: 'chores', name: 'Chore Split', desc: 'Invisible labor balance & appreciative chore splits', icon: Layers },
-        { id: 'money', name: 'Money Light', desc: 'Gentle expense sharing with zero awkwardness', icon: DollarSign },
+        { id: 'money', name: 'Money Light', desc: 'Gentle expense sharing with zero awkwardness', icon: IndianRupee },
         { id: 'recipes', name: 'Secret Recipes', desc: 'Our favorite dishes, ingredients & cook notes', icon: Utensils },
         { id: 'journal', name: 'Shared Journal', desc: 'Shared reflections & joint writing prompts', icon: BookOpen },
         { id: 'cycle', name: 'Cycle Compass', desc: 'Private hormonal cycle tracking & support compass', icon: Moon },

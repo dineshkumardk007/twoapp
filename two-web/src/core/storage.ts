@@ -187,8 +187,8 @@ const DEFAULT_STATE: SpaceState = {
   // Starts empty. Everything below used to arrive pre-filled with an invented
   // couple's life - see core/sampleData.ts, which takes it back out of spaces
   // created before this. What remains is starter material that does not
-  // pretend to be yours: two quotes by their authors, a list of rituals to try
-  // with no streaks, and date ideas nobody has done yet.
+  // pretend to be yours: two quotes by their authors, and a list of rituals to
+  // try with no streaks.
   journalEntries: [],
   agreements: [],
   lists: [],
@@ -254,96 +254,10 @@ const DEFAULT_STATE: SpaceState = {
   ],
   pebbles: [],
   letters: [],
-  adventures: [
-    {
-      id: 'adv-1',
-      title: 'Living Room Blanket Fort & Vinyl Night',
-      description: 'Build an elaborate blanket fort with couch cushions and string lights. Listen to a full album from start to finish in the dark without checking phones.',
-      energyTier: 'low',
-      category: 'home',
-      estimatedCost: 'Free',
-      season: 'winter',
-      location: 'Living Room Hearth',
-      isCompleted: false
-    },
-    {
-      id: 'adv-2',
-      title: 'Dark Chocolate & Tea Tasting Flight',
-      description: 'Gather 3 different single-origin dark chocolates and 3 herbal teas. Conduct a sensory tasting together, blindfolding each other.',
-      energyTier: 'low',
-      category: 'home',
-      estimatedCost: '$',
-      season: 'anytime',
-      location: 'Kitchen Island',
-      isCompleted: false
-    },
-    {
-      id: 'adv-3',
-      title: 'Cook a 3-Course Feast from a New Country',
-      description: 'Pick a nation neither of us has ever visited. Spend the afternoon finding special spices and cooking traditional recipes together with regional music playing.',
-      energyTier: 'medium',
-      category: 'food',
-      estimatedCost: '$$',
-      season: 'fall',
-      location: 'Our Kitchen',
-      isCompleted: false
-    },
-    {
-      id: 'adv-4',
-      title: 'Thrift Store $10 Outfit Challenge',
-      description: 'Head to a local vintage shop with a strict $10 budget each. Pick out an outfit for each other to wear directly to dinner tonight.',
-      energyTier: 'medium',
-      category: 'creative',
-      estimatedCost: '$',
-      season: 'spring',
-      location: 'Vintage Alley',
-      isCompleted: false
-    },
-    {
-      id: 'adv-5',
-      title: 'Midnight Stargazing Drive with Hot Cider',
-      description: 'Drive 30 minutes outside city lights with two thermoses of warm cinnamon apple cider and a thick blanket. Stargaze from the car hood.',
-      energyTier: 'high',
-      category: 'outdoors',
-      estimatedCost: '$',
-      season: 'fall',
-      location: 'Pine Crest Ridge',
-      isCompleted: false
-    },
-    {
-      id: 'adv-6',
-      title: 'Sunrise Breakfast Picnic at the Overlook',
-      description: 'Set alarms before dawn, bundle into sweaters, grab fresh bakery croissants, and watch the sun break over the horizon together.',
-      energyTier: 'high',
-      category: 'outdoors',
-      estimatedCost: '$',
-      season: 'summer',
-      location: 'Eastern Bluffs',
-      isCompleted: false
-    },
-    {
-      id: 'adv-7',
-      title: 'Aurora Borealis in a Glass Igloo',
-      description: 'Fall asleep under a ceiling of pure starlight and dancing green northern lights while a wood fire crackles in Lapland.',
-      energyTier: 'high',
-      category: 'outdoors',
-      estimatedCost: '$$',
-      season: 'winter',
-      location: 'Lapland, Finland',
-      isCompleted: false
-    },
-    {
-      id: 'adv-8',
-      title: 'Tuscan Farmhouse Handmade Pasta Workshop',
-      description: 'Spend an afternoon rolling fresh tagliatelle and ravioli from scratch with a local nonna, sipping Chianti overlooking rolling vineyards.',
-      energyTier: 'medium',
-      category: 'food',
-      estimatedCost: '$$',
-      season: 'summer',
-      location: 'Val d’Orcia, Tuscany',
-      isCompleted: false
-    }
-  ],
+  // Empty, for the two of you to fill. It used to open with eight borrowed
+  // date ideas - Lapland, Tuscany, prices in dollars - which sampleData.ts now
+  // takes back out of older spaces, as long as neither of you touched them.
+  adventures: [],
   milestones: [],
   constellationStars: [],
   careCompass: {

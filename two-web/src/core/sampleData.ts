@@ -82,6 +82,49 @@ const SAMPLE_GROWTH_LOG: Array<[string, string]> = [
   ['log-3', 'Nourished with Morning Dew: Vitality reached 88%']
 ];
 
+/**
+ * The date ideas every space used to open with, by id and original title.
+ *
+ * Borrowed from somebody else's life - a glass igloo in Lapland, a pasta class
+ * in Tuscany, a $10 thrift-shop challenge, hot cider on a ridge - and priced in
+ * dollars. Adventures now starts empty, for the two of you to fill.
+ */
+const SAMPLE_ADVENTURES: Array<[string, string]> = [
+  ['adv-1', 'Living Room Blanket Fort & Vinyl Night'],
+  ['adv-2', 'Dark Chocolate & Tea Tasting Flight'],
+  ['adv-3', 'Cook a 3-Course Feast from a New Country'],
+  ['adv-4', 'Thrift Store $10 Outfit Challenge'],
+  ['adv-5', 'Midnight Stargazing Drive with Hot Cider'],
+  ['adv-6', 'Sunrise Breakfast Picnic at the Overlook'],
+  ['adv-7', 'Aurora Borealis in a Glass Igloo'],
+  ['adv-8', 'Tuscan Farmhouse Handmade Pasta Workshop']
+];
+
+/**
+ * Whether an adventure is one of the samples, exactly as it was handed out.
+ *
+ * The id and the whole title must both match, and nothing may have been done
+ * with it: ticked off, a reflection written, a photo added. Any one of those
+ * means one of you made it yours, and it stays - igloo and all.
+ */
+function isUntouchedSampleAdventure(a: any): boolean {
+  if (!a || !SAMPLE_ADVENTURES.some(([id, title]) => a.id === id && a.title === title)) return false;
+  return !a.isCompleted && !a.completedDate && !a.personalNotes && !a.photoUrl;
+}
+
+/**
+ * An adventures list with the untouched samples taken out.
+ *
+ * Exported for the sync path as well as for loading: a phone still on the
+ * previous version keeps the samples and sends its whole list whenever either
+ * of you adds or stamps one, and without this they would arrive straight back.
+ * Anything that is not a list is handed back as it came.
+ */
+export function withoutSampleAdventures<T>(list: T): T {
+  if (!Array.isArray(list) || !list.some(isUntouchedSampleAdventure)) return list;
+  return list.filter(a => !isUntouchedSampleAdventure(a)) as unknown as T;
+}
+
 /** The streaks each sample ritual started with, invented rather than earned. */
 const SAMPLE_RITUAL_STREAKS: Record<string, number> = { 'r-1': 14, 'r-2': 8, 'r-3': 5, 'r-4': 21, 'r-5': 4 };
 
@@ -136,12 +179,14 @@ export function withoutSampleData(state: SpaceState, firstTime: boolean): SpaceS
   }
 
   // A sample date idea marked as done, with a night the two of you never had.
+  // Undone first, so the line below sees it as the untouched sample it is.
   if (Array.isArray(next.adventures)) {
     next.adventures = next.adventures.map((a: any) =>
       matches(a, 'adv-1', 'personalNotes', 'We played Rumours on vinyl')
         ? { ...a, isCompleted: false, completedDate: undefined, personalNotes: undefined }
         : a
     );
+    next.adventures = withoutSampleAdventures(next.adventures);
   }
 
   // A sample game round, "answered" by a partner who never played it.

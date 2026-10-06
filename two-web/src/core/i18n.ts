@@ -97,7 +97,7 @@ export const translations: Record<Locale, Translations> = {
     },
     settings: {
       title: 'Space Settings & Sovereignty',
-      subtitle: 'Tactile themes, discreet camouflage, consent audit logs, and exit safety.',
+      subtitle: 'Your link code and devices, the app lock, camouflage, backups and exit safety.',
       themeTitle: 'Tactile Aesthetic Theme',
       languageTitle: 'Language & Locale',
       camouflageTitle: 'Discreet Camouflage / Decoy Mode',

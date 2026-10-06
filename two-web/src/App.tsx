@@ -25,6 +25,7 @@ import {
   subscribeGroupStatus
 } from './core/groupRelays';
 import { isAndroidApp, formFactor } from './core/platform';
+import { withoutSampleAdventures } from './core/sampleData';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
   hasEncryptedVault,
@@ -507,8 +508,15 @@ export const App: React.FC = () => {
     }
   }, [relayStatus, state.userName, state.activeUser]);
 
-  // Check URL parameters for dual-window live sync demonstration
+  // Check URL parameters for dual-window live sync demonstration.
+  //
+  // Website only. In the app there is no second window to open: the WebView
+  // loaded the link in place, the phone took the other person's seat, and
+  // everything sent from it afterwards arrived as theirs. An auto-lock reload
+  // keeps the address, so it stayed that way until the app was killed. The
+  // seat on a phone comes from its pairing and nothing else.
   useEffect(() => {
+    if (isAndroidApp()) return;
     const params = new URLSearchParams(window.location.search);
     const perspective = params.get('perspective');
     if (perspective === 'partner' || perspective === 'user') {
@@ -957,9 +965,11 @@ export const App: React.FC = () => {
               intuitionRounds: [parsed, ...prev.intuitionRounds.filter(r => r.id !== parsed.id)]
             }));
           } else if (record.type === 'ADVENTURE_UPDATE') {
+            // The whole list travels each time, and a phone still on the
+            // previous version still carries the borrowed sample ideas.
             setState(prev => ({
               ...prev,
-              adventures: parsed
+              adventures: withoutSampleAdventures(parsed)
             }));
           } else if (record.type === 'TIME_CAPSULE_UPDATE') {
             setState(prev => ({
@@ -1192,7 +1202,7 @@ export const App: React.FC = () => {
         } else if (packet.subType === 'ADVENTURE_UPDATE') {
           setState(prev => ({
             ...prev,
-            adventures: packet.payload
+            adventures: withoutSampleAdventures(packet.payload)
           }));
         } else if (packet.subType === 'TIME_CAPSULE_UPDATE') {
           setState(prev => ({
