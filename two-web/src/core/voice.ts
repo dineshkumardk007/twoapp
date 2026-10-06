@@ -296,6 +296,10 @@ export function makeSeekable(audio: HTMLAudioElement): Promise<void> {
       done = true;
       audio.removeEventListener('durationchange', onChange);
       audio.removeEventListener('timeupdate', onChange);
+      // The wait for the file to open, too: if it opens only after the
+      // fallback below has given up, the jump to the end must not happen -
+      // by then the note may be playing, and it would skip straight to the end.
+      audio.removeEventListener('loadedmetadata', start);
       clearTimeout(timer);
       try {
         audio.currentTime = 0;
@@ -310,13 +314,19 @@ export function makeSeekable(audio: HTMLAudioElement): Promise<void> {
     const timer = setTimeout(finish, 2000);
     audio.addEventListener('durationchange', onChange);
     audio.addEventListener('timeupdate', onChange);
-    const start = () => {
+    function start() {
+      if (done) return;
+      // A file that turned out to know its length once opened needs no walk.
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        finish();
+        return;
+      }
       try {
         audio.currentTime = 1e101;
       } catch {
         finish();
       }
-    };
+    }
     if (audio.readyState >= 1) start();
     else audio.addEventListener('loadedmetadata', start, { once: true });
   });
@@ -424,6 +434,9 @@ export async function startVoiceRecording(options: StartOptions = {}): Promise<V
       }
     }, LEVEL_EVERY_MS);
   } catch {
+    // Closed rather than dropped: a phone allows only a handful of live
+    // audio contexts, and one left open by every failed note would use them up.
+    if (context) void context.close().catch(() => {});
     context = null;
   }
 
