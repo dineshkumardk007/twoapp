@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -20,6 +21,7 @@ import android.os.PowerManager
 import android.provider.DocumentsContract
 import android.graphics.Color
 import android.util.Base64
+import android.view.HapticFeedbackConstants
 import android.view.ViewGroup
 import android.webkit.*
 import android.widget.Toast
@@ -41,11 +43,59 @@ import app.two.android.features.radio.RadioRemote
  * JavaScript interface exposed to the embedded Web application as window.AndroidBridge
  *
  * [onSaveFile] is handed a file the page wants saved, on the main thread.
+ * [webView] is the page's own view, for the touch feedback it asks for
+ * (see [haptic]).
  */
 class AndroidWebBridge(
     private val context: Context,
+    private val webView: WebView? = null,
     private val onSaveFile: (name: String, mimeType: String, bytes: ByteArray) -> Unit = { _, _, _ -> }
 ) {
+    /**
+     * A short tick under the thumb: a dock tab, a PIN key, a message sent, a
+     * wrong PIN.
+     *
+     * The page used to buzz the vibration motor itself, which ignores the
+     * phone's touch-feedback setting and feels like a pager. The view's own
+     * haptic feedback is the click the phone's keyboard makes - tuned for
+     * the motor in this phone, and off when the person has turned touch
+     * feedback off.
+     *
+     * Bridge calls arrive on a background thread; the view is touched only
+     * from the main one.
+     */
+    @JavascriptInterface
+    fun haptic(kind: String?) {
+        val view = webView ?: return
+        val feedback = when (kind) {
+            "tick" -> HapticFeedbackConstants.CLOCK_TICK
+            "key" -> HapticFeedbackConstants.KEYBOARD_TAP
+            "confirm" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                HapticFeedbackConstants.CONFIRM
+            } else {
+                HapticFeedbackConstants.CONTEXT_CLICK
+            }
+            "reject" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                HapticFeedbackConstants.REJECT
+            } else {
+                HapticFeedbackConstants.LONG_PRESS
+            }
+            else -> return
+        }
+        Handler(Looper.getMainLooper()).post {
+            view.performHapticFeedback(feedback)
+        }
+    }
+
+    /**
+     * The page has drawn its first real screen - the lock screen, the
+     * first-run screens or the app - so the launch splash can step aside.
+     */
+    @JavascriptInterface
+    fun appReady() {
+        WebReady.markReady()
+    }
+
     /**
      * Saves a file the page made - a backup, an export.
      *
@@ -280,7 +330,6 @@ fun TwoWebView(
 ) {
     val hostContext = LocalContext.current
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
-    var canGoBackState by remember { mutableStateOf(false) }
 
     /*
      * A page asking for the microphone or for where you are needs two yeses,
@@ -400,9 +449,29 @@ fun TwoWebView(
         ContextCompat.checkSelfPermission(hostContext, permission) ==
             PackageManager.PERMISSION_GRANTED
 
-    BackHandler(enabled = canGoBackState) {
-        if (webViewRef?.canGoBack() == true) {
-            webViewRef?.goBack()
+    /*
+     * Back is answered by the page, which is the only one that knows what is
+     * open: a popup to close, a screen to leave for Home.
+     *
+     * This used to step back through the WebView's history - but the page
+     * never navigates, so there was no history, the handler stayed disabled,
+     * and every Back press left the app from wherever you were.
+     *
+     * The page answers true when it did something (window.__twoBack, see
+     * core/backStack.ts). Anything else - it is at Home, it has not loaded,
+     * it is an older page without the hook - sends the app to the background
+     * rather than closing it, as the Home button would: the WebView stays
+     * alive, so a call in progress, the radio and the unlocked page are all
+     * still there when the app is opened again.
+     */
+    BackHandler {
+        val page = webViewRef
+        if (page == null) {
+            hostContext.findActivity()?.moveTaskToBack(true)
+            return@BackHandler
+        }
+        page.evaluateJavascript("window.__twoBack ? window.__twoBack() : false") { result ->
+            if (result != "true") hostContext.findActivity()?.moveTaskToBack(true)
         }
     }
 
@@ -471,7 +540,7 @@ fun TwoWebView(
                     layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 }
 
-                addJavascriptInterface(AndroidWebBridge(context, saveThroughPicker), "AndroidBridge")
+                addJavascriptInterface(AndroidWebBridge(context, this, saveThroughPicker), "AndroidBridge")
                 // The radio service reports to this page from now on.
                 val page = this
                 RadioRemote.attach(context) { js -> page.evaluateJavascript(js, null) }
@@ -508,11 +577,6 @@ fun TwoWebView(
                     ): WebResourceResponse? {
                         val url = request?.url ?: return null
                         return assetLoader.shouldInterceptRequest(url)
-                    }
-
-                    override fun onPageFinished(view: WebView?, url: String?) {
-                        super.onPageFinished(view, url)
-                        canGoBackState = view?.canGoBack() == true
                     }
                 }
 
@@ -591,13 +655,25 @@ fun TwoWebView(
         },
         update = {
             webViewRef = it
-            canGoBackState = it.canGoBack()
         }
     )
 }
 
 /** Where the app's own pages are served from (see WebViewAssetLoader). */
 private const val APP_HOST = "appassets.androidplatform.net"
+
+/**
+ * The Activity behind a Compose context, which may be wrapped (a theme, a
+ * locale) any number of times; null if there is none.
+ */
+private fun Context.findActivity(): Activity? {
+    var current: Context? = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
+}
 
 /**
  * A picker for what the page's file input accepts.

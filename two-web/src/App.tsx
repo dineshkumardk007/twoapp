@@ -26,6 +26,8 @@ import {
 } from './core/groupRelays';
 import { isAndroidApp, formFactor } from './core/platform';
 import { withoutSampleAdventures } from './core/sampleData';
+import { setBackFallback } from './core/backStack';
+import { haptic } from './core/haptics';
 import { wsRelay, RelayStatus } from './core/ws';
 import {
   hasEncryptedVault,
@@ -2065,6 +2067,97 @@ export const App: React.FC = () => {
     }
   };
 
+  /**
+   * Every screen opens at its top.
+   *
+   * The page is one long document, and changing screen only swapped what was
+   * in it - so a screen reached from the bottom of Home opened partway down,
+   * or at its own bottom, instead of at its title. Done here, after the new
+   * screen is in place and before it is painted, rather than in
+   * handleSelectTab: there it would jerk the old screen to the top while the
+   * new one was still loading, and it would miss the screens that are opened
+   * by setting the tab directly (Home's cards, Soft Landing). Leaving a group
+   * is a change of screen too.
+   */
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [currentTab, activeGroupId]);
+
+  /**
+   * The phone's Back button once nothing is open on top (see core/backStack).
+   *
+   * Back leaves a group for the couple's space, then any screen for Home, and
+   * only at Home does it say no, so that the phone can put the app in the
+   * background. On the lock screen, the calculator and the first-run screens
+   * there is nowhere to go back to, so it says no straight away.
+   *
+   * Registered once and read through refs, so it always sees the screen as it
+   * is now rather than as it was on the first render.
+   */
+  const selectTabRef = useRef(handleSelectTab);
+  selectTabRef.current = handleSelectTab;
+  const inSpaceRef = useRef(false);
+  inSpaceRef.current = !isLocked && !isCamouflaged && mediaReady && !!session && state.isPaired;
+
+  useEffect(() => {
+    setBackFallback(() => {
+      if (!inSpaceRef.current) return false;
+      if (activeGroupIdRef.current) {
+        setActiveGroupId(null);
+        return true;
+      }
+      if (currentTabRef.current !== 'home') {
+        selectTabRef.current('home');
+        return true;
+      }
+      return false;
+    });
+    return () => setBackFallback(null);
+  }, []);
+
+  /**
+   * Tells the Android app that the first real screen is up - the lock screen,
+   * the calculator, the first-run screens or the space itself - so its launch
+   * splash steps aside for that rather than for an empty cream page.
+   *
+   * Once per page load. Screens that load as their own chunk show an empty
+   * placeholder first (ScreenFallback, marked aria-busy), so this waits until
+   * none is left, for a few seconds at most. Then one frame for the screen to
+   * be painted - with a timer alongside, because while the splash is up the
+   * phone may not be drawing the page's frames at all. The media spinner is
+   * not counted: it is the splash's own leaf, still waiting.
+   */
+  const appReadySentRef = useRef(false);
+  const firstScreenUp = isCamouflaged || isLocked || mediaReady;
+  useEffect(() => {
+    if (appReadySentRef.current || !firstScreenUp) return;
+    const started = Date.now();
+    let timer = 0;
+    let frame = 0;
+    const send = () => {
+      if (appReadySentRef.current) return;
+      appReadySentRef.current = true;
+      try {
+        (window as unknown as { AndroidBridge?: { appReady?: () => void } }).AndroidBridge?.appReady?.();
+      } catch {
+        /* an older app without the hook: its splash has its own time limit */
+      }
+    };
+    const check = () => {
+      if (document.querySelector('[aria-busy="true"]') && Date.now() - started < 4000) {
+        timer = window.setTimeout(check, 50);
+        return;
+      }
+      frame = requestAnimationFrame(send);
+      timer = window.setTimeout(send, 120);
+    };
+    check();
+    return () => {
+      window.clearTimeout(timer);
+      cancelAnimationFrame(frame);
+    };
+  }, [firstScreenUp]);
+
   // Reset unread title if user focuses tab while on chat
   useEffect(() => {
     const handleFocus = () => {
@@ -3050,6 +3143,32 @@ export const App: React.FC = () => {
 
 
   if (isLocked) {
+    /**
+     * A wrong PIN, felt and seen: a refusing buzz, and the four boxes shake
+     * their heads the way the phone's own lock screen does. The red boxes on
+     * their own were easy to miss with a thumb over them.
+     *
+     * The shake is skipped for anyone who has asked their phone for less
+     * motion; the buzz and the red stay.
+     */
+    const refusePin = () => {
+      haptic('reject');
+      const dots = document.querySelector<HTMLElement>('[data-pin-dots]');
+      if (!dots || typeof dots.animate !== 'function') return;
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+      dots.animate(
+        [
+          { transform: 'translateX(0)' },
+          { transform: 'translateX(-10px)' },
+          { transform: 'translateX(8px)' },
+          { transform: 'translateX(-6px)' },
+          { transform: 'translateX(3px)' },
+          { transform: 'translateX(0)' }
+        ],
+        { duration: 380, easing: 'ease-out' }
+      );
+    };
+
     const attemptUnlock = (secret: string) => {
       if (!secret || isUnlocking) return;
 
@@ -3059,6 +3178,7 @@ export const App: React.FC = () => {
       const waiting = lockoutRemaining();
       if (waiting > 0) {
         setLockoutLeft(waiting);
+        refusePin();
         setPinError(true);
         setTimeout(() => {
           setPinAttempt('');
@@ -3090,6 +3210,7 @@ export const App: React.FC = () => {
           } else {
             const penalty = registerFailure();
             setLockoutLeft(penalty);
+            refusePin();
             setPinError(true);
             setTimeout(() => {
               setPinAttempt('');
@@ -3127,6 +3248,9 @@ export const App: React.FC = () => {
 
     const handlePinInput = (val: string) => {
       if (isUnlocking || lockoutLeft > 0) return;
+      // The click the phone's own keyboard gives, so each digit is felt as
+      // well as seen.
+      haptic('key');
       const next = (pinAttempt + val).slice(0, 4);
       setPinAttempt(next);
       setPinError(false);
@@ -3168,7 +3292,7 @@ export const App: React.FC = () => {
             </div>
           )}
 
-          <div className="flex justify-center space-x-3 py-2">
+          <div data-pin-dots className="flex justify-center space-x-3 py-2">
             {[0, 1, 2, 3].map((idx) => (
               <div
                 key={idx}
@@ -3192,9 +3316,11 @@ export const App: React.FC = () => {
               <button
                 key={btn}
                 onClick={() => {
-                  if (btn === 'C') setPinAttempt('');
-                  else if (btn === '⌫') setPinAttempt(prev => prev.slice(0, -1));
-                  else handlePinInput(btn);
+                  if (btn === 'C' || btn === '⌫') {
+                    haptic('key');
+                    if (btn === 'C') setPinAttempt('');
+                    else setPinAttempt(prev => prev.slice(0, -1));
+                  } else handlePinInput(btn);
                 }}
                 disabled={lockoutLeft > 0}
                 className="py-3.5 rounded-xl border border-linen-border bg-linen-variant/40 hover:bg-linen-variant text-linen-primary text-lg font-medium transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-linen-variant/40"

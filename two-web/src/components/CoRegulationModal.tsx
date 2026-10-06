@@ -3,6 +3,7 @@ import { X, Volume2, VolumeX, Heart, Sparkles, Wind, Users, Activity, Play, Paus
 import { BreathPatternType, BreathPatternConfig, CoRegulationSession } from '../types';
 import { coRegulationAudio } from '../core/coRegulationAudio';
 import { wsRelay } from '../core/ws';
+import { useBackLayer } from '../core/backStack';
 
 interface CoRegulationModalProps {
   isOpen: boolean;
@@ -268,6 +269,14 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
       broadcastBreathState(true, now, newPattern);
     }
   };
+
+  // The phone's Back button closes this the way its X does: a session in
+  // progress is ended first, and the other phone is told, rather than left
+  // breathing along with nobody.
+  useBackLayer(isOpen, () => {
+    if (isActive) handleToggleSession();
+    onClose();
+  });
 
   if (!isOpen) return null;
 

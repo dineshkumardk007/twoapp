@@ -8,6 +8,7 @@ import { triggerGlobalPulse } from './SensoryPulseOverlay';
 import { CoRegulationModal } from './CoRegulationModal';
 import { getAudioContext } from '../core/audioAlerts';
 import { playSound } from '../core/sounds';
+import { useBackLayer } from '../core/backStack';
 
 interface ComfortBoxModalProps {
   isOpen: boolean;
@@ -100,6 +101,9 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
     });
     setIsEditing(false);
   };
+
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
 
   if (!isOpen) return null;
 

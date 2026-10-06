@@ -1,6 +1,7 @@
 import React from 'react';
 import { NeedItem } from '../types';
 import { Ear, Wrench, Heart, Hourglass, Smile, Sparkles, X } from 'lucide-react';
+import { useBackLayer } from '../core/backStack';
 
 interface NeedMenuModalProps {
   isOpen: boolean;
@@ -48,6 +49,9 @@ export const NEED_OPTIONS: NeedItem[] = [
 ];
 
 export const NeedMenuModal: React.FC<NeedMenuModalProps> = ({ isOpen, onClose, onSelectNeed }) => {
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (

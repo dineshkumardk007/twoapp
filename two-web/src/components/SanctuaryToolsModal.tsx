@@ -3,6 +3,7 @@ import {
   X, Moon, Wind, Heart, Radio, Calculator, Shield, LogOut, 
   Sparkles, Check, Compass, Wifi, EyeOff, Activity, Settings 
 } from 'lucide-react';
+import { useBackLayer } from '../core/backStack';
 
 interface SanctuaryToolsModalProps {
   isOpen: boolean;
@@ -44,6 +45,9 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   vaultName = '',
   partnerOnline = false
 }) => {
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const tools = [

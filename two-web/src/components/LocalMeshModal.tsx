@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { localMesh } from '../core/localMesh';
 import { Plane, Radio, Shield, Wifi, WifiOff, Sparkles, CheckCircle2, X } from 'lucide-react';
+import { useBackLayer } from '../core/backStack';
 
 interface LocalMeshModalProps {
   isOpen: boolean;
@@ -19,6 +20,9 @@ export const LocalMeshModal: React.FC<LocalMeshModalProps> = ({
   useEffect(() => {
     setMeshStatus(localMesh.getConnectivityStatus());
   }, [isOpen]);
+
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
 
   if (!isOpen) return null;
 

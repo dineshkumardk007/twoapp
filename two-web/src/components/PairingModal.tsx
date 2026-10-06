@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { computeSafetyNumber } from '../core/crypto';
 import { QrCode, Shield, Check, Copy, X, Key, Lock, ArrowRight, Smartphone } from 'lucide-react';
 import { copyText } from '../core/clipboard';
+import { useBackLayer } from '../core/backStack';
 
 interface PairingModalProps {
   isOpen: boolean;
@@ -40,6 +41,9 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
       loadSafety();
     }
   }, [isOpen]);
+
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
 
   if (!isOpen) return null;
 

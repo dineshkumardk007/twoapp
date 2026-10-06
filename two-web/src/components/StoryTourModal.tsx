@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, Sun, ShieldAlert, HeartHandshake, Mic, Clock, ArrowRight, ArrowLeft, X, CheckCircle2 } from 'lucide-react';
+import { useBackLayer } from '../core/backStack';
 
 interface StoryTourModalProps {
   isOpen: boolean;
@@ -26,6 +27,9 @@ export const StoryTourModal: React.FC<StoryTourModalProps> = ({
   onNavigateTab
 }) => {
   const [currentActIndex, setCurrentActIndex] = useState(0);
+
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
 
   if (!isOpen) return null;
 

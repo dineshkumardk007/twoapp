@@ -1,6 +1,7 @@
 import React from 'react';
 import { Users } from 'lucide-react';
 import type { SpaceRole } from '../core/space';
+import { useBackLayer } from '../core/backStack';
 
 interface RoleClashDialogProps {
   /** The name the other phone announced, in this phone's own seat. */
@@ -26,6 +27,11 @@ interface RoleClashDialogProps {
  */
 export const RoleClashDialog: React.FC<RoleClashDialogProps> = ({ otherName, onChoose, onSamePerson, onDismiss }) => {
   const name = otherName.trim() || 'Your partner';
+
+  // Shown only while there is a clash, so it is open whenever it is mounted.
+  // The phone's Back button answers "Not now"; the question comes back if
+  // the phones still clash the next time they hear from each other.
+  useBackLayer(true, onDismiss);
 
   return (
     <div

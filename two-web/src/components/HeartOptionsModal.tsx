@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Heart, Sparkles, X, Send, Smartphone, Volume2, Smile, Check } from 'lucide-react';
 import { triggerGlobalPulse } from './SensoryPulseOverlay';
 import { playHeartbeatSound } from '../core/audioAlerts';
+import { useBackLayer } from '../core/backStack';
 
 interface HeartOptionsModalProps {
   isOpen: boolean;
@@ -101,6 +102,9 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
   const [customNote, setCustomNote] = useState('');
   const [lastSentText, setLastSentText] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'expressions' | 'custom'>('expressions');
+
+  // The phone's Back button closes this, the same as its X.
+  useBackLayer(isOpen, onClose);
 
   if (!isOpen) return null;
 
