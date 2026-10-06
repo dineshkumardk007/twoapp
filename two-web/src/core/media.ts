@@ -303,6 +303,10 @@ export async function collectMediaGarbage(liveValue: unknown): Promise<number> {
     if (isMediaRef(s)) live.add(refToId(s));
     return s;
   });
+  // And whatever this session has stored or read back is in use, whatever
+  // the value handed in says: a save may have written something new since
+  // that value was taken, and its bytes must not go out from under it.
+  knownMedia.forEach(id => live.add(id));
 
   try {
     const keys = await tx<IDBValidKey[]>('readonly', store => store.getAllKeys());

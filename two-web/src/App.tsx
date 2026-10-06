@@ -424,7 +424,14 @@ export const App: React.FC = () => {
         setMediaReady(true);
         // The live set of references is only known once everything is loaded,
         // so this is the moment to drop stored media nothing points at.
-        void collectMediaGarbage(hydrated);
+        //
+        // Measured against the vault as it was loaded - with its references -
+        // and not against `hydrated`, in which every reference has already
+        // been swapped back for its bytes. Swept against that, nothing looked
+        // referenced and every stored photo and recording was deleted on each
+        // launch; the next save kept the references (the bytes were known by
+        // then) and the launch after found nothing behind them.
+        void collectMediaGarbage(state);
       })
       .catch(() => {
         // Showing the space without its photos beats not showing it at all.
