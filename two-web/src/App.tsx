@@ -1452,6 +1452,10 @@ export const App: React.FC = () => {
    */
   const lastSentReceiptRef = useRef(0);
   const sendReadReceipt = () => {
+    // Read means looked at. A phone locked with the chat as its last screen
+    // keeps its connection (the radio holds the app awake), and without this
+    // every message that landed in the pocket was ticked read on arrival.
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
     const newest = state.messages.reduce(
       (max, m) => (m.authorId !== state.activeUser && m.sentAt && m.sentAt > max ? m.sentAt : max),
       0
@@ -1464,12 +1468,32 @@ export const App: React.FC = () => {
     wsRelay.broadcastUpdate('READ_RECEIPT', { upTo: newest });
   };
 
-  // Opening the chat is not the only way to read something: a message arriving
-  // while the chat is already open has also been seen.
+  /**
+   * Whether this page is actually on screen.
+   *
+   * Kept as state so read receipts can wait for it: whatever arrived while the
+   * phone was locked or the app was behind another is read when it is looked
+   * at again, not when it landed.
+   */
+  const [pageVisible, setPageVisible] = useState(
+    () => typeof document === 'undefined' || document.visibilityState === 'visible'
+  );
   useEffect(() => {
-    if (currentTab === 'chat') sendReadReceipt();
+    const update = () => setPageVisible(document.visibilityState === 'visible');
+    document.addEventListener('visibilitychange', update);
+    return () => document.removeEventListener('visibilitychange', update);
+  }, []);
+
+  // Opening the chat is not the only way to read something: a message arriving
+  // while the chat is already open has also been seen - when the chat is what
+  // is really in front of you, and not a group, the lock screen or the
+  // calculator. Coming back to it counts as opening it.
+  const chatOnScreen =
+    pageVisible && currentTab === 'chat' && !activeGroupId && !isLocked && !isCamouflaged;
+  useEffect(() => {
+    if (chatOnScreen) sendReadReceipt();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.messages.length, currentTab]);
+  }, [state.messages.length, chatOnScreen]);
 
   /**
    * Publishes the real height of everything above the main column.
@@ -2010,6 +2034,9 @@ export const App: React.FC = () => {
    */
   useEffect(() => {
     if (!activeGroupId || isLocked || !readShareReceipts()) return;
+    // The same rule as the couple's chat: a group left open on a locked phone,
+    // or behind the calculator, has not been read. Re-run on coming back.
+    if (!pageVisible || isCamouflaged) return;
     const group = state.groups.find(g => g.id === activeGroupId);
     if (!group || group.messages.length === 0) return;
 
@@ -2025,7 +2052,7 @@ export const App: React.FC = () => {
     }));
     sendToGroup(activeGroupId, GROUP_READ, { from: myMemberId(), upTo: newest });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeGroupId, state.groups, isLocked]);
+  }, [activeGroupId, state.groups, isLocked, pageVisible, isCamouflaged]);
 
   /**
    * The two surfaces, from one log.
@@ -3524,7 +3551,7 @@ export const App: React.FC = () => {
           )}
         />
 
-        <SensoryPulseOverlay activeUser={state.activeUser} />
+        <SensoryPulseOverlay activeUser={state.activeUser} partnerName={state.partnerName} />
       </div>
     );
   }
@@ -4078,8 +4105,8 @@ export const App: React.FC = () => {
         </Suspense>
       )}
 
-      {/* Real-Time Sensory Haptic Pulse Overlay */}
-      <SensoryPulseOverlay activeUser={state.activeUser} />
+      {/* A heart from the partner, and the small "Sent" line for your own. */}
+      <SensoryPulseOverlay activeUser={state.activeUser} partnerName={state.partnerName} />
     </div>
   );
 };
