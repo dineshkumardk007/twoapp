@@ -1,57 +1,141 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { RitualItem, PebbleStone } from '../types';
-import { wsRelay } from '../core/ws';
-import { Heart, Sparkles, CheckCircle2, Clock, Plus, Flame, Info, RotateCcw, Award } from 'lucide-react';
+import { Heart, Sparkles, CheckCircle2, Clock, Plus, Flame } from 'lucide-react';
 import { newId } from '../core/ids';
+import { localDay, isDoneOn, ritualStreak, togetherStreak } from '../core/rituals';
+import { who } from '../core/who';
+import { haptic } from '../core/haptics';
+import { useBackLayer } from '../core/backStack';
 
 interface RitualsGardenViewProps {
   rituals: RitualItem[];
   pebbles: PebbleStone[];
   activeUser: 'user' | 'partner';
-  onToggleRitual: (ritualId: string) => void;
+  partnerName?: string;
+  /** Ticks (true) or un-ticks (false) a ritual for today, for this phone's seat. */
+  onSetRitualDone: (ritualId: string, done: boolean) => void;
   onAddRitual: (newRitual: RitualItem) => void;
+}
+
+/** "1 day together", "4 days in a row together" - only ever shown for a run of one or more. */
+const togetherLabel = (days: number) => (days === 1 ? '1 day together' : `${days} days in a row together`);
+
+/** What the end of the kiss timer did: ticked the kiss off, found it already ticked, or had no kiss ritual to tick. */
+type KissResult = 'ticked' | 'already' | 'held';
+
+/**
+ * Today's date on this phone, kept current while the screen stays open.
+ *
+ * "Done today" is worked out from it, so it has to move on at midnight - and
+ * when the phone wakes up the next morning with this screen still open, which
+ * a midnight timer alone would miss: a sleeping WebView does not run timers.
+ */
+function useToday(): [string, () => string] {
+  const [today, setToday] = useState(() => localDay());
+
+  useEffect(() => {
+    const now = new Date();
+    const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+    const timer = window.setTimeout(() => setToday(localDay()), nextMidnight.getTime() - now.getTime());
+    return () => window.clearTimeout(timer);
+  }, [today]);
+
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') setToday(localDay());
+    };
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, []);
+
+  const refreshNow = () => {
+    const now = localDay();
+    setToday(now);
+    return now;
+  };
+  return [today, refreshNow];
 }
 
 export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
   rituals,
   pebbles,
   activeUser,
-  onToggleRitual,
+  partnerName,
+  onSetRitualDone,
   onAddRitual
 }) => {
   const [kissTimerActive, setKissTimerActive] = useState(false);
   const [kissSecondsLeft, setKissSecondsLeft] = useState(6);
-  const [kissSuccess, setKissSuccess] = useState(false);
+  const [kissResult, setKissResult] = useState<KissResult | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newSubtitle, setNewSubtitle] = useState('');
   const [newDuration, setNewDuration] = useState('5 mins');
   const [newCategory, setNewCategory] = useState<'affection' | 'presence' | 'reflection' | 'play'>('presence');
+  const [today, refreshToday] = useToday();
 
-  // 6-second kiss timer handler
+  useBackLayer(showAddModal, () => setShowAddModal(false));
+
+  const otherSeat = activeUser === 'user' ? 'partner' : 'user';
+  const partnerLabel = who(otherSeat, activeUser, partnerName);
+  const streak = togetherStreak(rituals, today);
+  const doneByMeToday = rituals.filter(r => isDoneOn(r, activeUser, today)).length;
+
+  // Read by the timer when it finishes, which may be several renders after it
+  // started: the latest rituals and handler, not the ones it began with.
+  const ritualsRef = useRef(rituals);
+  ritualsRef.current = rituals;
+  const setDoneRef = useRef(onSetRitualDone);
+  setDoneRef.current = onSetRitualDone;
+  const seatRef = useRef(activeUser);
+  seatRef.current = activeUser;
+
+  // The 6-second kiss: one tick a second, and at the end the kiss ritual is
+  // marked done for today - only ever marked, never un-ticked. It used to be
+  // toggled, so holding a kiss already ticked off took the tick away.
   useEffect(() => {
-    let interval: any = null;
-    if (kissTimerActive && kissSecondsLeft > 0) {
-      interval = setInterval(() => {
-        setKissSecondsLeft(prev => prev - 1);
-      }, 1000);
-    } else if (kissTimerActive && kissSecondsLeft === 0) {
-      setKissTimerActive(false);
-      setKissSuccess(true);
-      // Auto-toggle the 6-second kiss ritual if not yet done
-      const kissRitual = rituals.find(r => r.title.includes('6-Second'));
-      if (kissRitual) {
-        onToggleRitual(kissRitual.id);
-      }
-      setTimeout(() => setKissSuccess(false), 3500);
+    if (!kissTimerActive) return;
+    if (kissSecondsLeft > 0) {
+      const tick = window.setTimeout(() => setKissSecondsLeft(s => s - 1), 1000);
+      return () => window.clearTimeout(tick);
     }
-    return () => clearInterval(interval);
-  }, [kissTimerActive, kissSecondsLeft, rituals, onToggleRitual]);
+    setKissTimerActive(false);
+    const kiss = ritualsRef.current.find(r => r.title.toLowerCase().includes('6-second'));
+    if (!kiss) {
+      setKissResult('held');
+    } else if (isDoneOn(kiss, seatRef.current, localDay())) {
+      setKissResult('already');
+    } else {
+      setDoneRef.current(kiss.id, true);
+      setKissResult('ticked');
+    }
+    haptic('confirm');
+  }, [kissTimerActive, kissSecondsLeft]);
+
+  // Its own effect, so the message is not cut short by the timer's cleanup.
+  useEffect(() => {
+    if (!kissResult) return;
+    const hide = window.setTimeout(() => setKissResult(null), 3500);
+    return () => window.clearTimeout(hide);
+  }, [kissResult]);
 
   const startKissTimer = () => {
     setKissSecondsLeft(6);
-    setKissSuccess(false);
+    setKissResult(null);
     setKissTimerActive(true);
+  };
+
+  const toggleRitual = (ritual: RitualItem) => {
+    // The day as it is now, not as it was when the screen last drew: a tap
+    // just after midnight is about the new day.
+    const day = refreshToday();
+    const done = !isDoneOn(ritual, activeUser, day);
+    haptic(done ? 'confirm' : 'tick');
+    onSetRitualDone(ritual.id, done);
   };
 
   const handleCreateRitual = (e: React.FormEvent) => {
@@ -64,9 +148,8 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
       subtitle: newSubtitle.trim() || 'A private shared moment for the two of us.',
       duration: newDuration,
       category: newCategory,
-      completedTodayByUser: true,
-      completedTodayByPartner: false,
-      streakDays: 1
+      // Not done by either of you yet - planting a ritual is not doing it.
+      doneOn: { user: [], partner: [] }
     };
 
     onAddRitual(created);
@@ -136,9 +219,13 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
             <Heart className={`w-3.5 h-3.5 mr-1.5 ${kissTimerActive ? 'text-rose-600 fill-rose-600' : 'text-rose-500'}`} />
             {kissTimerActive ? `Holding Kiss: ${kissSecondsLeft}s...` : 'Start 6-Second Kiss Timer'}
           </button>
-          {kissSuccess && (
-            <span className="text-xs font-medium text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200 animate-bounce">
-              ✨ 6 Seconds of Oxytocin complete! Pebble stacked in garden.
+          {kissResult && (
+            <span role="status" className="text-xs font-medium text-linen-primary bg-linen-variant px-3 py-1 rounded-full border border-linen-border animate-fade-in">
+              {kissResult === 'ticked'
+                ? 'Six seconds. The kiss is ticked off for today.'
+                : kissResult === 'already'
+                ? 'Six seconds. Already ticked off today.'
+                : 'Six seconds, held.'}
             </span>
           )}
         </div>
@@ -154,13 +241,25 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
               Each completed ritual balances an organic river stone in our shared sanctuary.
             </p>
           </div>
-          <div className="flex items-center space-x-3 text-xs">
-            <div className="px-3 py-1.5 rounded-xl bg-linen-variant/70 border border-linen-border text-linen-primary font-medium">
-              🪨 <strong className="ml-1">{pebbles.length}</strong> Stones Stacked
+          <div className="flex flex-col items-start sm:items-end gap-1.5">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <div className="px-3 py-1.5 rounded-xl bg-linen-variant/70 border border-linen-border text-linen-primary font-medium">
+                <strong>{pebbles.length}</strong> {pebbles.length === 1 ? 'stone' : 'stones'} stacked
+              </div>
+              {/* Counted from the days each of you actually ticked, and not
+                  shown at all until there is a run to show. */}
+              {streak > 0 && (
+                <div className="inline-flex items-center px-3 py-1.5 rounded-xl bg-linen-variant/70 border border-linen-border text-linen-primary font-medium">
+                  <Flame className="w-3.5 h-3.5 mr-1.5 text-linen-accent" />
+                  {togetherLabel(streak)}
+                </div>
+              )}
             </div>
-            <div className="px-3 py-1.5 rounded-xl bg-linen-variant/70 border border-linen-border text-linen-primary font-medium">
-              🔥 <strong className="ml-1">14 Days</strong> Continuous Streak
-            </div>
+            {streak > 0 && (
+              <span className="text-[11px] text-linen-secondary">
+                A day counts when you both do at least one ritual.
+              </span>
+            )}
           </div>
         </div>
 
@@ -214,23 +313,28 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-serif text-lg font-medium text-linen-primary">Today's Micro-Rituals</h3>
-          <span className="text-xs text-linen-secondary">
-            Perspective: <strong>{activeUser === 'user' ? 'You' : 'Partner'}</strong>
-          </span>
+          {rituals.length > 0 && (
+            <span className="text-xs text-linen-secondary">
+              You've done <strong>{doneByMeToday}</strong> of {rituals.length} today
+            </span>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {rituals.map(ritual => {
-            const isDoneByMe = activeUser === 'user' ? ritual.completedTodayByUser : ritual.completedTodayByPartner;
-            const isDoneByPartner = activeUser === 'user' ? ritual.completedTodayByPartner : ritual.completedTodayByUser;
-            const isBothDone = ritual.completedTodayByUser && ritual.completedTodayByPartner;
+            // Done today means today is among the days ticked - so these are
+            // all clear again each morning without anything resetting them.
+            const isDoneByMe = isDoneOn(ritual, activeUser, today);
+            const isDoneByPartner = isDoneOn(ritual, otherSeat, today);
+            const isBothDone = isDoneByMe && isDoneByPartner;
+            const run = ritualStreak(ritual, today);
 
             return (
               <div
                 key={ritual.id}
                 className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
                   isBothDone
-                    ? 'border-emerald-200 bg-emerald-50/40 shadow-xs'
+                    ? 'border-linen-accent/50 bg-linen-variant/50 shadow-xs'
                     : isDoneByMe
                     ? 'border-linen-primary/30 bg-linen-surface shadow-xs'
                     : 'border-linen-border bg-linen-surface hover:border-linen-accent/40'
@@ -255,22 +359,27 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-linen-border/40 mt-3 flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5 text-[11px]">
-                    <Flame className="w-3.5 h-3.5 text-amber-600" />
-                    <span className="text-linen-secondary">{ritual.streakDays} day streak</span>
+                <div className="pt-4 border-t border-linen-border/40 mt-3 flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] min-w-0">
+                    {run > 0 && (
+                      <span className="inline-flex items-center text-linen-secondary">
+                        <Flame className="w-3.5 h-3.5 mr-1 text-linen-accent" />
+                        {togetherLabel(run)}
+                      </span>
+                    )}
                     {isDoneByPartner && (
-                      <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-linen-variant text-linen-accent">
-                        Partner done ✓
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-linen-variant text-linen-accent">
+                        {partnerLabel} did it today
                       </span>
                     )}
                   </div>
 
                   <button
-                    onClick={() => onToggleRitual(ritual.id)}
-                    className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                    onClick={() => toggleRitual(ritual)}
+                    aria-pressed={isDoneByMe}
+                    className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
                       isDoneByMe
-                        ? 'bg-emerald-600 text-white shadow-xs'
+                        ? 'bg-linen-primary text-linen-surface shadow-xs'
                         : 'bg-linen-variant hover:bg-linen-border text-linen-primary border border-linen-border'
                     }`}
                   >

@@ -131,6 +131,7 @@ import {
   LIST_ITEM_SET,
   LIST_ITEM_DELETE,
   RITUAL_ADD,
+  RITUAL_SET,
   MILESTONE_ADD,
   LETTER_OPENED,
   CHORE_ADD,
@@ -142,6 +143,7 @@ import {
   CYCLE_RECORD,
   CYCLE_SHARING
 } from './core/sharedRecords';
+import { localDay, isDoneOn, withRitualDay } from './core/rituals';
 import { hydrateMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
 import {
   lockoutRemaining,
@@ -849,19 +851,23 @@ export const App: React.FC = () => {
               }
             }
           } else if (record.type === 'RITUAL_COMPLETE') {
-            setState(prev => {
-              const updatedRituals = prev.rituals.map(r => {
-                if (r.id === parsed.ritualId) {
-                  return {
-                    ...r,
-                    completedTodayByPartner: parsed.activeUser === 'partner' ? true : r.completedTodayByPartner,
-                    completedTodayByUser: parsed.activeUser === 'user' ? true : r.completedTodayByUser
-                  };
-                }
-                return r;
+            // From a phone still on the previous version, which sent this for
+            // every tap - ticking and un-ticking alike - with no day and no
+            // "done". All it can honestly be read as is done, on the day it
+            // was sent (not today: a restore replays months of these).
+            //
+            // A phone on this version sends one too, beside the RITUAL_SET
+            // that carries the real change, so the previous version still
+            // hears about ticks. That copy has a date, and is left to the
+            // RITUAL_SET.
+            const seat = parsed.activeUser === 'user' || parsed.activeUser === 'partner' ? parsed.activeUser : record.authorId;
+            if (typeof parsed.date !== 'string' && typeof parsed.ritualId === 'string' && (seat === 'user' || seat === 'partner')) {
+              const day = localDay(Number(record.clientTs) || Date.now());
+              setState(prev => {
+                const rituals = withRitualDay(prev.rituals, parsed.ritualId, seat, day, true);
+                return rituals ? { ...prev, rituals } : prev;
               });
-              return { ...prev, rituals: updatedRituals };
-            });
+            }
           } else if (record.type === 'DEVICE_HELLO') {
             const id = String(parsed.deviceId || '');
             if (id && id !== getDeviceId()) {
@@ -2334,43 +2340,48 @@ export const App: React.FC = () => {
     }));
   };
 
-  const handleToggleRitual = (ritualId: string) => {
-    setState(prev => {
-      const isMe = prev.activeUser === 'user';
-      let ritualTitle = '';
-      const updated = prev.rituals.map(r => {
-        if (r.id === ritualId) {
-          ritualTitle = r.title;
-          return {
-            ...r,
-            completedTodayByUser: isMe ? !r.completedTodayByUser : r.completedTodayByUser,
-            completedTodayByPartner: !isMe ? !r.completedTodayByPartner : r.completedTodayByPartner,
-            streakDays: r.streakDays + 1
-          };
-        }
-        return r;
-      });
+  /**
+   * Ticks or un-ticks a ritual for today, for whoever holds this phone.
+   *
+   * `done` is what it should become, not "flip it": the kiss timer asks for
+   * done and must never un-tick a kiss already ticked, and a tap that lands
+   * before the screen has caught up asks for the same thing twice.
+   */
+  const handleSetRitualDone = (ritualId: string, done: boolean) => {
+    const seat = state.activeUser;
+    const day = localDay();
+    const ritual = state.rituals.find(r => r.id === ritualId);
+    if (!ritual || isDoneOn(ritual, seat, day) === done) return;
 
-      const pebbleColors = ['#D4A373', '#B5A895', '#C48B71', '#8F9E8B', '#938581', '#C9ADA7'];
-      const newPebble: PebbleStone = {
-        id: newId('peb'),
-        color: pebbleColors[Math.floor(Math.random() * pebbleColors.length)],
-        size: Math.floor(Math.random() * 35) + 50,
-        height: Math.floor(Math.random() * 8) + 18,
-        rotation: Math.floor(Math.random() * 6) - 3,
-        placedAt: 'Just now',
-        ritualTitle: ritualTitle || 'Micro-Ritual'
-      };
+    shareUpdate(RITUAL_SET, { ritualId, seat, date: day, done });
+    // Said the old way too, ticks only, for a phone still on the previous
+    // version: it knows nothing else, and puts "completed a ritual" on the
+    // home screen from it. The date marks this as the RITUAL_SET's companion,
+    // which a phone on this version leaves alone.
+    if (done) wsRelay.broadcastUpdate('RITUAL_COMPLETE', { ritualId, activeUser: seat, date: day });
 
-      wsRelay.broadcastUpdate('RITUAL_COMPLETE', { ritualId, activeUser: prev.activeUser });
-      localMesh.broadcastLocally('RITUAL_COMPLETE', { ritualId }, prev.activeUser);
+    // One stone per ritual, per person, per day. Ticking sets it on the cairn
+    // and un-ticking lifts that same stone off, so tapping back and forth no
+    // longer piles them up.
+    const pebbleId = `peb-${ritualId}-${seat}-${day}`;
+    const pebbleColors = ['#D4A373', '#B5A895', '#C48B71', '#8F9E8B', '#938581', '#C9ADA7'];
+    const stone: PebbleStone = {
+      id: pebbleId,
+      color: pebbleColors[Math.floor(Math.random() * pebbleColors.length)],
+      size: Math.floor(Math.random() * 35) + 50,
+      height: Math.floor(Math.random() * 8) + 18,
+      rotation: Math.floor(Math.random() * 6) - 3,
+      // Shown beside the stone for as long as it stays, so a date rather
+      // than "Just now".
+      placedAt: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
+      ritualTitle: ritual.title || 'Ritual'
+    };
 
-      return {
-        ...prev,
-        rituals: updated,
-        pebbles: [...prev.pebbles, newPebble]
-      };
-    });
+    setState(prev => ({
+      ...prev,
+      rituals: withRitualDay(prev.rituals, ritualId, seat, day, done) ?? prev.rituals,
+      pebbles: done ? addOnce(prev.pebbles, stone, 'end') : prev.pebbles.filter(p => p.id !== pebbleId)
+    }));
   };
 
   const handleAddRitual = (newRitual: RitualItem) => {
@@ -3513,7 +3524,8 @@ export const App: React.FC = () => {
             rituals={state.rituals}
             pebbles={state.pebbles}
             activeUser={state.activeUser}
-            onToggleRitual={handleToggleRitual}
+            partnerName={state.partnerName}
+            onSetRitualDone={handleSetRitualDone}
             onAddRitual={handleAddRitual}
           />
         )}

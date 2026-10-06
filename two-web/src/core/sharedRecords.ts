@@ -33,6 +33,7 @@ import {
   QuoteItem
 } from '../types';
 import type { SpaceState } from './storage';
+import { isLocalDay, withRitualDay } from './rituals';
 
 export const CHORE_ADD = 'CHORE_ADD';
 export const EXPENSE_ADD = 'EXPENSE_ADD';
@@ -46,6 +47,14 @@ export const MEMORY_ADD = 'MEMORY_ADD';
 export const LIST_ITEM_SET = 'LIST_ITEM_SET';
 export const LIST_ITEM_DELETE = 'LIST_ITEM_DELETE';
 export const RITUAL_ADD = 'RITUAL_ADD';
+/**
+ * One person's tick on a ritual for one day: { ritualId, seat, date, done }.
+ *
+ * Replaces RITUAL_COMPLETE, which carried no day and no "done" - it was sent
+ * for every tap, un-ticking included, and could only ever be applied as
+ * ticked. That one is still read from phones on the previous version, in App.
+ */
+export const RITUAL_SET = 'RITUAL_SET';
 export const MILESTONE_ADD = 'MILESTONE_ADD';
 export const LETTER_OPENED = 'LETTER_OPENED';
 export const WHISPER_MEMO = 'WHISPER_MEMO';
@@ -64,6 +73,7 @@ export const SHARED_RECORD_TYPES = new Set([
   LIST_ITEM_SET,
   LIST_ITEM_DELETE,
   RITUAL_ADD,
+  RITUAL_SET,
   MILESTONE_ADD,
   LETTER_OPENED,
   WHISPER_MEMO,
@@ -157,9 +167,8 @@ export function memoryToWire(memory: MemoryItem, activeUser: Role) {
 /**
  * A ritual as it starts life on the other phone.
  *
- * Whose streak it is does not need translating - a ritual is completed by the
- * two roles of the space, not by "you" - but the tally travels at zero either
- * way, because a ritual arrives new to the person receiving it.
+ * Only what it is, never who has done it: a new ritual starts un-ticked for
+ * both of you, and every tick after that travels as its own RITUAL_SET.
  */
 export function ritualToWire(ritual: RitualItem) {
   return {
@@ -208,8 +217,9 @@ export function applySharedRecord(
   options: { addOnly?: boolean } = {}
 ): SpaceState | null {
   if (!payload || typeof payload !== 'object') return null;
-  // Everything that adds an item names it; the two that change a whole list do not.
-  const needsId = type !== CYCLE_SHARING && type !== EXPENSES_SETTLED;
+  // Everything that adds an item names it; the two that change a whole list do
+  // not, and a ritual tick names the ritual it is for instead.
+  const needsId = type !== CYCLE_SHARING && type !== EXPENSES_SETTLED && type !== RITUAL_SET;
   if (needsId && !isText(payload.id)) return null;
 
   // Add-only: something already here is left exactly as it is.
@@ -358,12 +368,22 @@ export function applySharedRecord(
         subtitle: isText(payload.subtitle) ? payload.subtitle : '',
         duration: isText(payload.duration) ? payload.duration : '',
         category: RITUAL_CATEGORIES.has(payload.category) ? payload.category : 'presence',
-        completedTodayByUser: false,
-        completedTodayByPartner: false,
-        streakDays: 0
+        doneOn: { user: [], partner: [] }
       };
       if (prev.rituals.some(r => r.id === ritual.id)) return null;
       return { ...prev, rituals: [...prev.rituals, ritual] };
+    }
+
+    case RITUAL_SET: {
+      // The resulting state for that seat on that day, not "toggle" - see
+      // withRitualDay. The day is the one on the phone that ticked it, so a
+      // tick sent just before midnight and heard just after still lands on
+      // the evening it was done.
+      if (!isText(payload.ritualId) || !isLocalDay(payload.date)) return null;
+      const seat = payload.seat === 'user' || payload.seat === 'partner' ? payload.seat : authorId;
+      if (seat !== 'user' && seat !== 'partner') return null;
+      const rituals = withRitualDay(prev.rituals, payload.ritualId, seat, payload.date, payload.done === true);
+      return rituals ? { ...prev, rituals } : null;
     }
 
     case MILESTONE_ADD: {

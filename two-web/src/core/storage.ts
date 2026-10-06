@@ -43,6 +43,7 @@ import { newId } from './ids';
 import { GroupSpace } from './groups';
 import { ActivityEvent } from './activity';
 import { withoutSampleData, NEUTRAL_CARE_PROFILE, FRESH_GARDEN } from './sampleData';
+import { upgradeRituals } from './rituals';
 
 const STORAGE_KEY = 'two_encrypted_vault_state';
 
@@ -216,9 +217,7 @@ const DEFAULT_STATE: SpaceState = {
       subtitle: 'Oxytocin reunion reset before opening laptops or tasks',
       duration: '6 seconds',
       category: 'affection',
-      completedTodayByUser: false,
-      completedTodayByPartner: false,
-      streakDays: 0
+      doneOn: { user: [], partner: [] }
     },
     {
       id: 'r-2',
@@ -226,9 +225,7 @@ const DEFAULT_STATE: SpaceState = {
       subtitle: 'Gentle shared presence before outside notifications start',
       duration: '10 mins',
       category: 'presence',
-      completedTodayByUser: false,
-      completedTodayByPartner: false,
-      streakDays: 0
+      doneOn: { user: [], partner: [] }
     },
     {
       id: 'r-3',
@@ -236,9 +233,7 @@ const DEFAULT_STATE: SpaceState = {
       subtitle: '10-minute transition stroll to leave work baggage outside',
       duration: '10 mins',
       category: 'presence',
-      completedTodayByUser: false,
-      completedTodayByPartner: false,
-      streakDays: 0
+      doneOn: { user: [], partner: [] }
     },
     {
       id: 'r-4',
@@ -246,9 +241,7 @@ const DEFAULT_STATE: SpaceState = {
       subtitle: 'One specific, quiet detail appreciated about each other',
       duration: '2 mins',
       category: 'reflection',
-      completedTodayByUser: false,
-      completedTodayByPartner: false,
-      streakDays: 0
+      doneOn: { user: [], partner: [] }
     },
     {
       id: 'r-5',
@@ -256,9 +249,7 @@ const DEFAULT_STATE: SpaceState = {
       subtitle: 'Protected uninterrupted face-to-face dinner or tea',
       duration: '60 mins',
       category: 'play',
-      completedTodayByUser: false,
-      completedTodayByPartner: false,
-      streakDays: 0
+      doneOn: { user: [], partner: [] }
     }
   ],
   pebbles: [],
@@ -442,7 +433,8 @@ export function loadState(): SpaceState {
       partnerEverSeen: parsed.partnerEverSeen || false,
       knownDevices: parsed.knownDevices || [],
       approvedDeviceCount: parsed.approvedDeviceCount || 1,
-      rituals: parsed.rituals || DEFAULT_STATE.rituals,
+      // Rituals saved before days were kept: see upgradeRitual.
+      rituals: upgradeRituals(parsed.rituals) || DEFAULT_STATE.rituals,
       pebbles: parsed.pebbles || DEFAULT_STATE.pebbles,
       letters: parsed.letters || DEFAULT_STATE.letters,
       adventures: parsed.adventures || DEFAULT_STATE.adventures,
@@ -485,7 +477,8 @@ export function upgradeState(opened: any): SpaceState {
   const merged: SpaceState = {
     ...DEFAULT_STATE,
     ...opened,
-    memories: Array.isArray(opened?.memories) ? opened.memories : []
+    memories: Array.isArray(opened?.memories) ? opened.memories : [],
+    rituals: upgradeRituals(opened?.rituals) || DEFAULT_STATE.rituals
   };
   return withoutSampleData(merged, !opened?.sampleDataRemoved);
 }
