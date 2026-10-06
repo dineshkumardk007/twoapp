@@ -315,7 +315,12 @@ export default {
       aspectRatio: {
         '4/3': '4 / 3',
       },
+      // Named rather than written as duration-[250ms]: an arbitrary value
+      // matches both Tailwind's duration and the animation timing above,
+      // and an ambiguous class produces no CSS at all.
       transitionDuration: {
+        250: '250ms',
+        400: '400ms',
         1500: '1500ms',
       },
       // Tailwind 4's bg-radial, fed by the usual from-/via-/to- stops.

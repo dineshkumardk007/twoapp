@@ -288,7 +288,9 @@ export const Navigation: React.FC<NavigationProps> = ({
             </button>
           </div>
 
-          {/* Action Menu Buttons: Tour, Heart, Spaces, Tools (All match the Tour button design!) */}
+          {/* Action Menu Buttons: Tour, Heart, Spaces, Tools. On a phone-width
+              website they are icons only (each keeps its title), so the row
+              fits the screen instead of widening the whole page. */}
           <div className="flex items-center space-x-1.5 sm:space-x-2.5">
             {/* 1. Interactive Story Tour button */}
             {onOpenStoryTour && (
@@ -297,8 +299,8 @@ export const Navigation: React.FC<NavigationProps> = ({
                 className="inline-flex items-center text-xs font-medium text-linen-accent px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs shrink-0"
                 title="Interactive 5-Act Walkthrough: A Day in the Life with Two"
               >
-                <Sparkles className="w-3.5 h-3.5 mr-1 text-linen-accent shrink-0" />
-                <span>Tour</span>
+                <Sparkles className="w-3.5 h-3.5 sm:mr-1 text-linen-accent shrink-0" />
+                <span className="hidden sm:inline">Tour</span>
               </button>
             )}
 
@@ -308,8 +310,8 @@ export const Navigation: React.FC<NavigationProps> = ({
               className="inline-flex items-center text-xs font-medium text-rose-600 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/90 transition-colors cursor-pointer shadow-2xs shrink-0 group"
               title="Heart Touch: Send sensory pulse & loving presence"
             >
-              <Heart className="w-3.5 h-3.5 mr-1 text-rose-500 fill-rose-500 shrink-0 group-hover:scale-110 transition-transform animate-pulse" />
-              <span>Heart</span>
+              <Heart className="w-3.5 h-3.5 sm:mr-1 text-rose-500 fill-rose-500 shrink-0 group-hover:scale-110 transition-transform animate-pulse" />
+              <span className="hidden sm:inline">Heart</span>
             </button>
 
             {/* 3. Sanctuary Spaces Explorer button */}
@@ -319,8 +321,8 @@ export const Navigation: React.FC<NavigationProps> = ({
                 className="inline-flex items-center text-xs font-medium text-linen-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs shrink-0"
                 title="Sanctuary Explorer (Browse All 32 Spaces)"
               >
-                <LayoutGrid className="w-3.5 h-3.5 mr-1 text-linen-accent shrink-0" />
-                <span>Spaces</span>
+                <LayoutGrid className="w-3.5 h-3.5 sm:mr-1 text-linen-accent shrink-0" />
+                <span className="hidden sm:inline">Spaces</span>
               </button>
             )}
 
@@ -330,8 +332,8 @@ export const Navigation: React.FC<NavigationProps> = ({
               className="inline-flex items-center text-xs font-medium text-linen-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs shrink-0"
               title="Sanctuary Tools (Soundscapes, Breathing, Camouflage, Mesh & More)"
             >
-              <Compass className="w-3.5 h-3.5 mr-1 text-linen-accent shrink-0" />
-              <span>Tools</span>
+              <Compass className="w-3.5 h-3.5 sm:mr-1 text-linen-accent shrink-0" />
+              <span className="hidden sm:inline">Tools</span>
             </button>
 
             {/* Emergency Exit button */}

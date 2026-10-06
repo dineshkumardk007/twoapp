@@ -415,7 +415,7 @@ const Bloom: React.FC<{
     <div
       // Taps go through until it is really there, and again once it is going.
       className={`${interactive && shown ? 'pointer-events-auto' : 'pointer-events-none'} max-w-full transition-[opacity,transform] motion-reduce:transform-none ${
-        leaving ? 'duration-[400ms] ease-in' : 'duration-[250ms] ease-out'
+        leaving ? 'duration-400 ease-in' : 'duration-250 ease-out'
       } ${shown ? 'opacity-100 scale-100' : 'opacity-0 scale-[.85]'}`}
     >
       {children}
