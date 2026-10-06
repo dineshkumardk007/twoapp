@@ -52,6 +52,8 @@ export type LiveRadioStatus =
 type Listener = (status: LiveRadioStatus, station: LiveRadioStation | null) => void;
 
 const RETRY_DELAYS_MS = [2000, 5000, 12000];
+/** How far the radio is turned down while a voice note records or plays. */
+const DUCK_LEVEL = 0.15;
 /** How long a connection may take before it counts as failed. */
 const CONNECT_TIMEOUT_MS = 25_000;
 /** How long a stream may stall before it is reconnected. */
@@ -114,6 +116,8 @@ class LiveRadioPlayer {
   private hls: HlsType | null = null;
   private station: LiveRadioStation | null = null;
   private volume = 0.6;
+  /** Voice notes recording or playing right now; the radio is quieter while any are. */
+  private duckers = 0;
   private status: LiveRadioStatus = 'idle';
   private attempt = 0;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -202,11 +206,19 @@ class LiveRadioPlayer {
 
   setVolume(volume: number) {
     this.volume = clamp(volume);
-    if (this.native) {
-      if (this.status !== 'idle') this.native.radioSetVolume(this.volume);
-    } else if (this.audio) {
-      this.applyVolume(this.audio);
-    }
+    this.applyCurrentVolume();
+  }
+
+  /**
+   * Turns the radio down while a voice note is recorded or played, and back
+   * up once none is - so the station is neither in the recording nor over the
+   * voice. Counted, because a note can play while another is being recorded.
+   * The volume the listener chose is left as it was.
+   */
+  duck(on: boolean) {
+    const before = this.duckers > 0;
+    this.duckers = Math.max(0, this.duckers + (on ? 1 : -1));
+    if (before !== this.duckers > 0) this.applyCurrentVolume();
   }
 
   /**
@@ -233,10 +245,30 @@ class LiveRadioPlayer {
     }
   }
 
+  /** What is actually played: the chosen volume, lowered while a voice note has the floor. */
+  private effectiveVolume(): number {
+    return this.duckers > 0 ? this.volume * DUCK_LEVEL : this.volume;
+  }
+
+  private applyCurrentVolume() {
+    if (this.native) {
+      if (this.status !== 'idle') {
+        try {
+          this.native.radioSetVolume(this.effectiveVolume());
+        } catch {
+          /* an older bridge */
+        }
+      }
+    } else if (this.audio) {
+      this.applyVolume(this.audio);
+    }
+  }
+
   private applyVolume(audio: HTMLAudioElement) {
-    audio.volume = this.volume;
+    const volume = this.effectiveVolume();
+    audio.volume = volume;
     // iPhones ignore volume on a media element, but do honour muted.
-    audio.muted = this.volume === 0;
+    audio.muted = volume === 0;
   }
 
   private setStatus(status: LiveRadioStatus) {
@@ -408,7 +440,7 @@ class LiveRadioPlayer {
 
     if (this.native) {
       try {
-        this.native.radioPlay(JSON.stringify({ ...station, subtitle: subtitleOf(station) }), this.volume);
+        this.native.radioPlay(JSON.stringify({ ...station, subtitle: subtitleOf(station) }), this.effectiveVolume());
       } catch {
         this.retry(gen);
       }
