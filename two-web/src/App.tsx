@@ -147,6 +147,7 @@ import {
   CYCLE_SHARING
 } from './core/sharedRecords';
 import { localDay, isDoneOn, withRitualDay } from './core/rituals';
+import { OUR_DATES } from './core/sharedRecords';
 import { hydrateMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
 import {
   lockoutRemaining,
@@ -2893,6 +2894,22 @@ export const App: React.FC = () => {
     }));
   };
 
+  /**
+   * Sets the couple's dates on both phones.
+   *
+   * Sent whole and stamped, so the newest setting is the one both phones
+   * keep (see OUR_DATES). Stamped just after whatever this phone already
+   * holds when the other phone's clock runs ahead, so a change made here
+   * always takes. Applied here through the same reducer the other phone
+   * uses, so both arrive at exactly the same value.
+   */
+  const handleSetOurDates = (dates: { togetherSince?: string; anniversary?: string }) => {
+    const at = Math.max(Date.now(), (state.ourDates?.at ?? 0) + 1);
+    const record = { ...dates, at };
+    shareUpdate(OUR_DATES, record);
+    setState(prev => applySharedRecord(prev, OUR_DATES, record, prev.activeUser) ?? prev);
+  };
+
   const handleAddStar = (newStar: GratitudeStar) => {
     wsRelay.broadcastUpdate('GRATITUDE_STAR', newStar);
     localMesh.broadcastLocally('GRATITUDE_STAR', newStar, state.activeUser);
@@ -3583,7 +3600,10 @@ export const App: React.FC = () => {
             // card has to mark the destination read, or the line you just
             // followed would still be sitting there when you came back.
             onNavigate={handleSelectTab}
-            onSendNeed={(need) => handleSendMessage(`I need: ${need.title} — ${need.description}`, true)}
+            // An ordinary message, not a need card: it is a question to
+            // talk over, and arrived as "I need: Daily Question [DEEP]".
+            onSendQuestion={(prompt) => handleSendMessage(`Today's question: “${prompt}”`, false)}
+            onSetOurDates={handleSetOurDates}
             onOpenTour={
               showTourCard
                 ? () => {
