@@ -4,7 +4,7 @@ import { EmotionalWeatherCard } from '../components/EmotionalWeatherCard';
 import { NotAboutYouBanner } from '../components/NotAboutYouBanner';
 import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote, LiteraryQuote } from '../data/quotes';
-import { Sparkles, Quote, Send, Heart, Wind, ChevronRight } from 'lucide-react';
+import { Sparkles, Quote, Send, Heart, Wind, ChevronRight, Flame } from 'lucide-react';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
 import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
@@ -16,6 +16,7 @@ import { PartnerActivityCard } from '../components/PartnerActivityCard';
 import { ActivityEvent } from '../core/activity';
 import { destinationName } from '../data/destinations';
 import { localDateKey } from '../core/ourDates';
+import { useBackLayer } from '../core/backStack';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -55,6 +56,29 @@ function quoteFor(day: string, weather: WeatherState, capacity: number): Literar
   return quote;
 }
 
+/** Which daily question this phone last sent to the chat, and on what day. */
+const SENT_QUESTION_KEY = 'two_daily_question_sent';
+
+function readSentQuestion(): string | null {
+  try {
+    return localStorage.getItem(SENT_QUESTION_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The daily question's tier, for its badge: one quiet badge in the theme's
+ * colours. The four tiers used to come in four colours of their own, amber to
+ * rose, on a screen meant to be calm.
+ */
+const TIER_LABELS: Record<string, string> = {
+  playful: 'Playful',
+  curious: 'Curious',
+  deep: 'Deep',
+  spicy: 'Spicy'
+};
+
 /**
  * Home: what changed, your days together, how you both are, and one
  * question for today.
@@ -79,9 +103,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showCoRegulation, setShowCoRegulation] = useState(false);
   const [showHeartModal, setShowHeartModal] = useState(false);
   const [optInSpicy, setOptInSpicy] = useState(false);
-  // Which question was sent, so the button says so instead of inviting a
-  // second copy of the same message.
-  const [sentQuestionId, setSentQuestionId] = useState<string | null>(null);
+  // Which question was sent today, so the button says so instead of
+  // inviting a second copy of the same message - still true after a visit to
+  // another screen and back.
+  const [sentQuestion, setSentQuestion] = useState<string | null>(readSentQuestion);
+  // The phone's Back button closes whichever of these is open, rather than
+  // leaving Home underneath it.
+  useBackLayer(showComfortBox, () => setShowComfortBox(false));
+  useBackLayer(showCoRegulation, () => setShowCoRegulation(false));
+  useBackLayer(showHeartModal, () => setShowHeartModal(false));
 
   const isUserFlagActive = state.activeUser === 'user'
     ? state.userReport.notAboutYouActive
@@ -92,35 +122,40 @@ export const HomeView: React.FC<HomeViewProps> = ({
     : state.userReport.notAboutYouActive;
 
   const partnerName = state.partnerName || 'Partner';
-  const heavyDay = state.userReport.capacity <= 2 || state.partnerReport.capacity <= 2 || isPartnerFlagActive;
+  // userReport is the creator's seat, not "you": this phone's own report is
+  // the one for its seat.
+  const myReport = state.activeUser === 'user' ? state.userReport : state.partnerReport;
+  const theirReport = state.activeUser === 'user' ? state.partnerReport : state.userReport;
+  const myHeavyDay = myReport.capacity <= 2;
+  const heavyDay = myHeavyDay || theirReport.capacity <= 2 || isPartnerFlagActive;
 
   const dayIndex = new Date().getDate();
   const dailyQuestion = getDailyQuestion(dayIndex, optInSpicy);
   const today = localDateKey();
-  // This phone's own weather: userReport is the creator's seat, not "you".
-  const { weather, capacity } = state.activeUser === 'user' ? state.userReport : state.partnerReport;
+  // This phone's own weather, for the quote tuned to it.
+  const { weather, capacity } = myReport;
   const resurfacedQuote = useMemo(() => quoteFor(today, weather, capacity), [today, weather, capacity]);
 
+  // Today's date as well as the question: the same question comes round
+  // again on the same day next month.
+  const questionKey = `${today}|${dailyQuestion.id}`;
   const handleSendQuestionToChat = () => {
     onSendQuestion(dailyQuestion.prompt);
-    setSentQuestionId(dailyQuestion.id);
-  };
-  const questionSent = sentQuestionId === dailyQuestion.id;
-
-  const getTierBadge = (tier: string) => {
-    switch (tier) {
-      case 'playful':
-        return <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">Playful</span>;
-      case 'curious':
-        return <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">Curious</span>;
-      case 'deep':
-        return <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-50 text-purple-800 border border-purple-200">Deep</span>;
-      case 'spicy':
-        return <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200">Spicy (Mutual)</span>;
-      default:
-        return null;
+    setSentQuestion(questionKey);
+    try {
+      localStorage.setItem(SENT_QUESTION_KEY, questionKey);
+    } catch {
+      /* storage unavailable: the button simply forgets on leaving Home */
     }
   };
+  const questionSent = sentQuestion === questionKey;
+
+  const getTierBadge = (tier: string) =>
+    TIER_LABELS[tier] ? (
+      <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-linen-variant text-linen-secondary border border-linen-border">
+        {TIER_LABELS[tier]}
+      </span>
+    ) : null;
 
   return (
     <div className="space-y-6">
@@ -146,15 +181,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <Sparkles className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-linen-accent">Interactive Story Tour</h4>
-              <p className="text-xs text-linen-primary font-serif font-medium">A Day in the Life with Two • 5-Act Relational Walkthrough</p>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-linen-accent">A short tour</h4>
+              <p className="text-xs text-linen-primary font-serif font-medium">A day with Two, in five short scenes</p>
             </div>
           </div>
           <button
             onClick={onOpenTour}
             className="inline-flex items-center px-3 py-1.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer shrink-0"
           >
-            Start Tour →
+            Start tour
           </button>
         </div>
       )}
@@ -192,22 +227,30 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <ChevronRight className="w-4 h-4 shrink-0 text-linen-secondary" />
         </button>
       )}
+      {/* The button has a row of its own, as on the card below: beside the
+          words it left them a column a few letters wide on a phone. */}
       {heavyDay && (
-        <div className="rounded-2xl border border-rose-200/90 bg-gradient-to-r from-rose-50/90 via-linen-surface to-rose-50/60 p-4 flex items-center justify-between gap-3 shadow-xs animate-fade-in">
-          <div className="flex items-center space-x-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 shadow-xs shrink-0">
-              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+        <div className="rounded-2xl border border-linen-accent/30 bg-linen-variant/50 p-4 shadow-xs space-y-3 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-linen-surface border border-linen-border text-linen-accent shrink-0">
+              <Heart className="w-4 h-4 fill-current" />
             </div>
-            <div className="min-w-0">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-rose-700">Tender Sanctuary Ready</h4>
-              <p className="text-xs text-linen-primary font-serif">Holding heavy feelings? Your Emergency Comfort Box is waiting with zero demands.</p>
+            <div className="min-w-0 flex-1">
+              <h4 className="font-serif text-base font-medium text-linen-primary">
+                {myHeavyDay ? 'Go gently today' : `A heavy day for ${partnerName}`}
+              </h4>
+              <p className="text-xs text-linen-secondary mt-0.5">
+                {myHeavyDay
+                  ? 'Your comfort box is ready, with nothing asked of you.'
+                  : 'Something kind in the comfort box might help.'}
+              </p>
             </div>
           </div>
           <button
             onClick={() => setShowComfortBox(true)}
-            className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-medium hover:bg-rose-500 transition-colors shadow-xs cursor-pointer shrink-0"
+            className="w-full px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
           >
-            Open Comfort Box
+            Open the comfort box
           </button>
         </div>
       )}
@@ -260,14 +303,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
           <button
             onClick={() => setOptInSpicy(!optInSpicy)}
-            className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border transition-all ${
+            aria-pressed={optInSpicy}
+            className={`inline-flex shrink-0 items-center gap-1 text-[11px] px-2.5 py-1 rounded-full border transition-all ${
               optInSpicy
-                ? 'bg-rose-50 text-rose-700 border-rose-200 font-medium'
+                ? 'bg-linen-variant text-linen-primary border-linen-accent/40 font-medium'
                 : 'text-linen-secondary border-linen-border hover:bg-linen-variant'
             }`}
-            title="Spicy questions require mutual opt-in"
+            title="Spicy questions are for when you both want them"
           >
-            {optInSpicy ? '🌶️ Spicy Tier: On' : '🌶️ Spicy: Off'}
+            <Flame className={`w-3 h-3 shrink-0 ${optInSpicy ? 'text-linen-accent' : ''}`} />
+            {optInSpicy ? 'Spicy: on' : 'Spicy: off'}
           </button>
         </div>
 
