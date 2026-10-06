@@ -120,6 +120,8 @@ android {
 dependencies {
     // Core & Lifecycle
     implementation(libs.androidx.core.ktx)
+    // The launch screen: the leaf on linen, held until the page has drawn
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)

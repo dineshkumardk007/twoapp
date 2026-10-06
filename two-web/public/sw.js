@@ -94,10 +94,16 @@ function isDevRequest(url) {
   );
 }
 
-/** Build output is content-hashed, so a given filename can never change. */
+/**
+ * Build output is content-hashed, so a given filename can never change.
+ *
+ * The fonts are build output too (src/assets/fonts, hashed by Vite). Left to
+ * the refresh-in-the-background path below, each one was downloaded again on
+ * every visit for no reason.
+ */
 function isImmutableAsset(url) {
   // Vite emits `name-HASH.ext`, so the hash is preceded by a hyphen, not a dot.
-  return url.includes('/assets/') && /[-.][0-9a-zA-Z_-]{8,}\.(js|css)$/.test(url);
+  return url.includes('/assets/') && /[-.][0-9a-zA-Z_-]{8,}\.(js|css|woff2)$/.test(url);
 }
 
 self.addEventListener('fetch', (event) => {
@@ -148,12 +154,12 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cached) => {
       const network = fetch(event.request)
         .then((response) => {
+          // Only this site's own files. (Google Fonts used to be cached here
+          // too; the fonts ship with the app now.)
           if (
             response &&
             response.status === 200 &&
-            (event.request.url.startsWith(self.location.origin) ||
-              event.request.url.includes('fonts.googleapis.com') ||
-              event.request.url.includes('fonts.gstatic.com'))
+            event.request.url.startsWith(self.location.origin)
           ) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));

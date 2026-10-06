@@ -157,8 +157,11 @@ export const JournalView: React.FC<JournalViewProps> = ({
                 <span className="font-medium text-linen-primary">{entry.authorName}</span>
                 <span>{whenLabel(entry.at, entry.date)}</span>
               </div>
-              <h3 className="font-serif text-lg font-medium text-linen-primary">{entry.title}</h3>
-              <p className="text-sm text-linen-secondary leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+              {/* select-text: the app turns long-press selection off for
+                  buttons and labels (index.css); an entry is writing someone
+                  may want to copy, so it keeps it. */}
+              <h3 className="font-serif text-lg font-medium text-linen-primary select-text">{entry.title}</h3>
+              <p className="text-sm text-linen-secondary leading-relaxed whitespace-pre-wrap select-text">{entry.content}</p>
 
               {entry.isPrivate && (
                 <div className="pt-2 flex justify-end">
