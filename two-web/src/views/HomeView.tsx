@@ -16,7 +16,6 @@ import { PartnerActivityCard } from '../components/PartnerActivityCard';
 import { ActivityEvent } from '../core/activity';
 import { destinationName } from '../data/destinations';
 import { localDateKey } from '../core/ourDates';
-import { useBackLayer } from '../core/backStack';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -107,11 +106,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
   // inviting a second copy of the same message - still true after a visit to
   // another screen and back.
   const [sentQuestion, setSentQuestion] = useState<string | null>(readSentQuestion);
-  // The phone's Back button closes whichever of these is open, rather than
-  // leaving Home underneath it.
-  useBackLayer(showComfortBox, () => setShowComfortBox(false));
-  useBackLayer(showCoRegulation, () => setShowCoRegulation(false));
-  useBackLayer(showHeartModal, () => setShowHeartModal(false));
+  // The phone's Back button closes these popups through the popups themselves
+  // (each registers its own layer), so the breathing one can end its session
+  // and tell the other phone, as its close button does.
 
   const isUserFlagActive = state.activeUser === 'user'
     ? state.userReport.notAboutYouActive
