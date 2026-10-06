@@ -2,11 +2,114 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   Fonts
+   ---------------------------------------------------------------------------
+   Inter for the interface and Lora for the reading text, shipped inside the
+   app rather than fetched from Google Fonts. The stylesheet link used to hold
+   up the first paint until fonts.googleapis.com answered, which on a weak
+   signal meant a blank screen; offline the app fell back to the phone's own
+   fonts and looked like a different app; and both phones checked in with
+   Google every day, which a private space should not do.
+
+   Variable fonts, so one file per style covers every weight in use (Inter
+   300-600, Lora 400-600 upright and italic). Only the Latin and Latin
+   Extended subsets: English, the European languages in the language list and
+   romanised Tamil. Tamil script was never in either font and still comes from
+   the phone's own Tamil font. unicode-range means the extended file is only
+   fetched when a page actually uses one of its letters.
+
+   Both are under the SIL Open Font License 1.1, which allows bundling them;
+   the notice travels inside each file's metadata. Inter by Rasmus Andersson,
+   Lora by Cyreal. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url('./assets/fonts/inter-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url('./assets/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('./assets/fonts/lora-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('./assets/fonts/lora-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('./assets/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('./assets/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @layer base {
+  /* The translucent grey box Chrome flashes over anything tapped. Buttons
+     here already answer a press themselves (they sink with active:scale), so
+     the flash only doubled it and made a tap look like a web page's. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     margin: 0;
     padding: 0;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* On a phone, a long press on a tab, a card title or a PIN key used to
+     select its text and open Android's Copy / Share / Select all bar. Labels
+     and buttons are not something anyone copies, so the interface is not
+     selectable; what people do copy opts back in.
+
+     `in-app` is set on <html> by main.tsx inside the Android app and on touch
+     phones, so the website on a computer keeps ordinary selection. */
+  html.in-app body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Opting back in: anything you type into, and text marked select-text -
+     messages, letters, journal entries, the link code. Fields say so
+     explicitly because some WebViews otherwise inherit `none` from the body
+     and stop placing the caret or the selection handles.
+
+     Wrapped in :where() so it carries no weight of its own: a select-none or
+     select-all class on one of these elements still has the last word. */
+  :where(html.in-app)
+    :where(input, textarea, [contenteditable]:not([contenteditable='false']), .select-text) {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
 }
 
