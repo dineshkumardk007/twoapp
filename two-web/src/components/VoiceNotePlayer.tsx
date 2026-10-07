@@ -659,8 +659,10 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
             tabIndex={0}
             aria-label="Position in voice note"
             aria-valuemin={0}
-            aria-valuemax={Math.max(1, Math.round(progressTotal || shownTotal))}
-            aria-valuenow={Math.round(seconds)}
+            // Whole seconds, rounded down the way the visible "0:03" is, so a
+            // screen reader hears the same numbers the label shows.
+            aria-valuemax={Math.max(1, Math.floor(progressTotal || shownTotal))}
+            aria-valuenow={Math.min(Math.floor(seconds), Math.max(1, Math.floor(progressTotal || shownTotal)))}
             aria-valuetext={`${formatVoiceDuration(seconds)} of ${formatVoiceDuration(shownTotal || progressTotal)}`}
             onPointerDown={onWavePointerDown}
             onPointerMove={onWavePointerMove}
