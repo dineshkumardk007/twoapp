@@ -473,16 +473,19 @@ export const App: React.FC = () => {
     // without waiting for this, and a message it delivered meanwhile would
     // otherwise be thrown away - after the relay had already moved past it.
     resolveMediaRefs(state, vaultKey)
-      .then(resolved => {
+      .then(({ resolved, unreadable }) => {
         if (cancelled) return;
         setState(prev => withResolvedMedia(prev, resolved));
         setMediaReady(true);
+        // A start that could not read some of what is stored is no time to
+        // decide what is unused: the references it kept are still wanted.
+        if (unreadable > 0) return;
         // The live set of references is only known once everything is loaded,
         // so this is the moment to drop stored media nothing points at.
         //
         // Measured against the vault as it was loaded - with its references -
-        // and not against `hydrated`, in which every reference has already
-        // been swapped back for its bytes. Swept against that, nothing looked
+        // and not against a copy in which every reference has already been
+        // swapped back for its bytes. Swept against that, nothing looked
         // referenced and every stored photo and recording was deleted on each
         // launch; the next save kept the references (the bytes were known by
         // then) and the launch after found nothing behind them.
@@ -3714,6 +3717,14 @@ export const App: React.FC = () => {
         <main className={`mx-auto px-4 py-4 sm:px-6 ${isTablet ? 'max-w-5xl' : 'max-w-3xl'}`}>
           <Suspense fallback={<ScreenFallback />}>
             <GroupChatView
+              // One screen per group, not one screen re-pointed at another.
+              // Switching groups then leaves the old one behind entirely: a
+              // voice note being recorded or listened back is discarded and
+              // the microphone let go, instead of carrying over and being
+              // sent - into a room it was never meant for - by the next tap
+              // on Send. Half-typed text is left behind the same way, rather
+              // than following you into the next group's box.
+              key={activeGroup.id}
               group={activeGroup}
               myId={myMemberId()}
               connected={groupStatuses[activeGroup.id] === 'connected'}

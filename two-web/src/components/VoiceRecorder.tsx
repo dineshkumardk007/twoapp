@@ -6,6 +6,7 @@ import {
   VOICE_WARN_SECONDS,
   canRecordVoice,
   formatVoiceDuration,
+  claimVoicePlayback,
   markWaitingForMic,
   startVoiceRecording,
   type VoiceLimit,
@@ -312,6 +313,16 @@ class RecorderEngine {
           recording.cancel();
           return;
         }
+        // The app went out of sight while the microphone was being asked for.
+        // Leaving the screen stops a note, and this one has not begun: it
+        // must not start recording in the background, where nothing on
+        // screen says the microphone is on.
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+          recording.cancel();
+          this.session++;
+          this.toIdle();
+          return;
+        }
         if (mode === 'hold') {
           const press = this.press;
           const fingerDown = !!press && press.kind === 'record' && press.session === session;
@@ -489,8 +500,25 @@ class RecorderEngine {
     if (document.visibilityState === 'hidden') this.interrupt();
   };
 
+  /**
+   * A call starting. The microphone is the call's now, so anything holding or
+   * waiting for it lets go - a recording long enough to keep is kept, to be
+   * listened to and sent afterwards, not thrown away. A note already waiting
+   * to be sent needs no microphone and simply waits, its playback paused.
+   */
   onDisabled() {
-    if (this.state !== 'idle') this.cancel();
+    switch (this.state) {
+      case 'starting':
+        this.cancel();
+        return;
+      case 'holding':
+      case 'locked':
+        this.interrupt();
+        return;
+      case 'review':
+        claimVoicePlayback('__call__', () => {})();
+        return;
+    }
   }
 
   // ------------------------------------------------------------- the button
@@ -992,6 +1020,11 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
           ref={rootRef}
           role="group"
           aria-label="Voice note"
+          // A thumb landing between the buttons - on the timer, the waveform
+          // - must not take focus from the text box, or the keyboard drops
+          // and the whole panel jumps.
+          onPointerDown={keepFocus}
+          onMouseDown={keepFocus}
           className={`absolute inset-y-0 left-0 z-10 flex min-w-0 items-center gap-2 bg-linen-surface pr-2 animate-in fade-in slide-in-from-right-2 duration-200 ${className}`}
           style={{ right: right ?? MIC_SLOT_PX }}
         >

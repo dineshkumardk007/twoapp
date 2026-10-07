@@ -257,7 +257,7 @@ async function decryptEntry(id: string, record: StoredMedia, key: CryptoKey | nu
  */
 export async function hydrateMedia<T>(value: T, key?: CryptoKey | null): Promise<T> {
   if (!containsMediaRefs(value)) return value;
-  const resolved = await resolveMediaRefs(value, key);
+  const { resolved } = await resolveMediaRefs(value, key);
   return withResolvedMedia(value, resolved);
 }
 
@@ -279,13 +279,27 @@ export function withResolvedMedia<T>(value: T, resolved: Map<string, string>): T
 }
 
 /**
- * Reads the bytes behind every reference in a value: id -> data URL, or ''
- * for one that cannot be read (so an <img> renders as nothing rather than
- * trying to fetch a URL that means nothing to the browser).
+ * Reads the bytes behind every reference in a value.
+ *
+ * `resolved` maps id -> data URL, or '' for bytes that are gone from this
+ * phone (so an <img> renders as nothing rather than trying to fetch a URL
+ * that means nothing to the browser).
+ *
+ * Bytes that are there but cannot be read right now - the store would not
+ * open, which an Android WebView does now and then when storage is low, or
+ * the key to them is not in hand - are left out of `resolved`, and counted in
+ * `unreadable`. Their references then stay in the vault and are tried again
+ * next launch. Writing '' over them instead used to be saved straight back,
+ * and every photo and recording on the phone was cut loose for good by one
+ * bad start.
  */
-export async function resolveMediaRefs(value: unknown, key?: CryptoKey | null): Promise<Map<string, string>> {
+export async function resolveMediaRefs(
+  value: unknown,
+  key?: CryptoKey | null
+): Promise<{ resolved: Map<string, string>; unreadable: number }> {
   const resolved = new Map<string, string>();
-  if (!containsMediaRefs(value)) return resolved;
+  let unreadable = 0;
+  if (!containsMediaRefs(value)) return { resolved, unreadable };
 
   const wanted = new Set<string>();
   mapStrings(value, s => {
@@ -297,25 +311,32 @@ export async function resolveMediaRefs(value: unknown, key?: CryptoKey | null): 
     try {
       const stored = await tx<StoredMedia | string | undefined>('readonly', store => store.get(id));
 
+      // Gone from this phone: nothing a later launch could find either.
+      if (stored === undefined || stored === null) {
+        resolved.set(id, '');
+        continue;
+      }
+
       // A bare string is an entry written before media was given an envelope.
-      const dataUrl =
-        typeof stored === 'string'
-          ? stored
-          : stored
-          ? await decryptEntry(id, stored, key)
-          : '';
+      const dataUrl = typeof stored === 'string' ? stored : await decryptEntry(id, stored, key);
+
+      // There, but not readable now (no key, or damaged): keep the reference.
+      if (!dataUrl) {
+        unreadable++;
+        continue;
+      }
 
       resolved.set(id, dataUrl);
 
       // Remember what these bytes are already called, so the next save does not
       // store a second copy of them under a new id.
-      if (dataUrl) knownMedia.set(dataUrl, id);
+      knownMedia.set(dataUrl, id);
     } catch {
-      resolved.set(id, '');
+      unreadable++;
     }
   }
 
-  return resolved;
+  return { resolved, unreadable };
 }
 
 /**

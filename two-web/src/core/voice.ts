@@ -461,14 +461,12 @@ export async function startVoiceRecording(options: StartOptions = {}): Promise<V
     context = null;
   }
 
-  const startedAt = performance.now();
-  const timeLimit = setTimeout(() => sayLimit('time'), VOICE_MAX_SECONDS * 1000);
-  recorder.start(250);
-
+  let timeLimit: ReturnType<typeof setTimeout> | null = null;
   let finished = false;
   let finalElapsed = 0;
   const release = () => {
-    clearTimeout(timeLimit);
+    if (timeLimit) clearTimeout(timeLimit);
+    timeLimit = null;
     if (sampler) clearInterval(sampler);
     sampler = null;
     stream.getTracks().forEach(t => t.stop());
@@ -477,6 +475,21 @@ export async function startVoiceRecording(options: StartOptions = {}): Promise<V
     releaseRadio();
     releasePlayback();
   };
+
+  // A recorder that will not start - the microphone went away between being
+  // granted and being used, or the encoder refused - lets go of everything it
+  // took on the way: the microphone, the radio it turned down, the level
+  // meter. Otherwise the phone's microphone light stays on and the radio
+  // stays quiet for the rest of the session.
+  try {
+    recorder.start(250);
+  } catch (e) {
+    finished = true;
+    release();
+    throw e;
+  }
+  const startedAt = performance.now();
+  timeLimit = setTimeout(() => sayLimit('time'), VOICE_MAX_SECONDS * 1000);
 
   const stopRecorder = (): Promise<void> =>
     new Promise(resolve => {
