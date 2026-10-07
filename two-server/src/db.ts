@@ -79,6 +79,25 @@ export const CAPPED_TYPES = new Map<string, number>([
   ['WHISPER_MEMO', 500]
 ]);
 
+/**
+ * Messages that carry a recording - a voice note in the couple's chat or a
+ * group - kept to a budget of bytes per space rather than a count.
+ *
+ * They cannot be capped like the types above: the same record type carries
+ * every text message, and those must all stay. What sets a voice note apart
+ * is its size. A text message is a few hundred bytes; a voice note is tens or
+ * hundreds of kilobytes. So per space the newest recordings are kept up to
+ * the budget and older ones beyond it are dropped, while text is never
+ * touched. The phones keep every note they have received; the relay's copy is
+ * only for a phone being restored, and for a free database that must not fill
+ * up within the year.
+ */
+export const RECORDING_TYPES = ['CHAT', 'GROUP_CHAT'];
+/** Encrypted payloads past this many characters are recordings; text never comes close. */
+export const RECORDING_MIN_CHARS = 64 * 1024;
+/** Per space, the newest recordings up to this much are kept. About five hundred typical notes. */
+export const RECORDING_BUDGET_CHARS = 60 * 1024 * 1024;
+
 export interface StoredRecord {
   id: string;
   spaceId: string;
@@ -228,6 +247,29 @@ class InMemoryRelayDb implements RelayDb {
         this.records = this.records.filter(r => !doomed.has(r.id));
         removed += doomed.size;
       }
+    }
+
+    // Recordings, by bytes - see RECORDING_BUDGET_CHARS.
+    const recordings = new Map<string, StoredRecord[]>();
+    for (const r of this.records) {
+      if (!RECORDING_TYPES.includes(r.type) || r.payload.length <= RECORDING_MIN_CHARS) continue;
+      const list = recordings.get(r.spaceId) || [];
+      list.push(r);
+      recordings.set(r.spaceId, list);
+    }
+    const overBudget = new Set<string>();
+    for (const list of recordings.values()) {
+      let newer = 0;
+      list
+        .sort((a, b) => (b.seq || 0) - (a.seq || 0))
+        .forEach(r => {
+          newer += r.payload.length;
+          if (newer > RECORDING_BUDGET_CHARS) overBudget.add(r.id);
+        });
+    }
+    if (overBudget.size) {
+      this.records = this.records.filter(r => !overBudget.has(r.id));
+      removed += overBudget.size;
     }
     return removed;
   }
@@ -447,6 +489,24 @@ class PostgresRelayDb implements RelayDb {
       );
       removed += rowCount || 0;
     }
+
+    // Recordings, by bytes - see RECORDING_BUDGET_CHARS. Newest first by seq,
+    // this server's own order; a row is dropped once the recordings newer
+    // than it, itself included, come to more than the budget.
+    const { rowCount: overBudget } = await this.pool.query(
+      `DELETE FROM relay_records
+        WHERE id IN (
+          SELECT id FROM (
+            SELECT id,
+                   SUM(length(payload)) OVER (PARTITION BY space_id ORDER BY seq DESC) AS newer
+              FROM relay_records
+             WHERE type = ANY($1::text[]) AND length(payload) > $2
+          ) ranked
+          WHERE newer > $3
+        )`,
+      [RECORDING_TYPES, RECORDING_MIN_CHARS, RECORDING_BUDGET_CHARS]
+    );
+    removed += overBudget || 0;
     return removed;
   }
 
