@@ -30,8 +30,13 @@ import { withoutSampleAdventures } from './core/sampleData';
 import { setBackFallback } from './core/backStack';
 import { haptic } from './core/haptics';
 import { wsRelay, RelayStatus, recordSizeOf, MAX_RECORD_BYTES } from './core/ws';
-import { cleanVoiceFields, voiceFieldsOf, voiceNoteLabel, type VoiceFields } from './core/voice';
-import { isVoiceRecorderAskingForMic } from './components/VoiceRecorder';
+import {
+  cleanVoiceFields,
+  isVoiceRecorderAskingForMic,
+  voiceFieldsOf,
+  voiceNoteLabel,
+  type VoiceFields
+} from './core/voice';
 import {
   hasEncryptedVault,
   unlockVault,
@@ -151,7 +156,7 @@ import {
 } from './core/sharedRecords';
 import { localDay, isDoneOn, withRitualDay } from './core/rituals';
 import { OUR_DATES } from './core/sharedRecords';
-import { hydrateMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
+import { resolveMediaRefs, withResolvedMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
 import {
   lockoutRemaining,
   registerFailure,
@@ -463,10 +468,14 @@ export const App: React.FC = () => {
     if (mediaReady) return;
     let cancelled = false;
 
-    hydrateMedia(state, vaultKey)
-      .then(hydrated => {
+    // The bytes are read first and put in through an update, not by replacing
+    // the vault with a copy taken before the read began: the relay connects
+    // without waiting for this, and a message it delivered meanwhile would
+    // otherwise be thrown away - after the relay had already moved past it.
+    resolveMediaRefs(state, vaultKey)
+      .then(resolved => {
         if (cancelled) return;
-        setState(hydrated);
+        setState(prev => withResolvedMedia(prev, resolved));
         setMediaReady(true);
         // The live set of references is only known once everything is loaded,
         // so this is the moment to drop stored media nothing points at.

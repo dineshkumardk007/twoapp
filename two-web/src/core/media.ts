@@ -257,6 +257,35 @@ async function decryptEntry(id: string, record: StoredMedia, key: CryptoKey | nu
  */
 export async function hydrateMedia<T>(value: T, key?: CryptoKey | null): Promise<T> {
   if (!containsMediaRefs(value)) return value;
+  const resolved = await resolveMediaRefs(value, key);
+  return withResolvedMedia(value, resolved);
+}
+
+/**
+ * Swaps references for the bytes they stand for, from what resolveMediaRefs
+ * found. References it did not look up are left as they are.
+ *
+ * Synchronous on purpose, so it can run inside a state update: the vault can
+ * change while the media is still being read - a message arriving on launch -
+ * and putting back a copy taken before that would lose it.
+ */
+export function withResolvedMedia<T>(value: T, resolved: Map<string, string>): T {
+  if (resolved.size === 0 || !containsMediaRefs(value)) return value;
+  return mapStrings(value, s => {
+    if (!isMediaRef(s)) return s;
+    const bytes = resolved.get(refToId(s));
+    return bytes === undefined ? s : bytes;
+  });
+}
+
+/**
+ * Reads the bytes behind every reference in a value: id -> data URL, or ''
+ * for one that cannot be read (so an <img> renders as nothing rather than
+ * trying to fetch a URL that means nothing to the browser).
+ */
+export async function resolveMediaRefs(value: unknown, key?: CryptoKey | null): Promise<Map<string, string>> {
+  const resolved = new Map<string, string>();
+  if (!containsMediaRefs(value)) return resolved;
 
   const wanted = new Set<string>();
   mapStrings(value, s => {
@@ -264,7 +293,6 @@ export async function hydrateMedia<T>(value: T, key?: CryptoKey | null): Promise
     return s;
   });
 
-  const resolved = new Map<string, string>();
   for (const id of wanted) {
     try {
       const stored = await tx<StoredMedia | string | undefined>('readonly', store => store.get(id));
@@ -287,7 +315,7 @@ export async function hydrateMedia<T>(value: T, key?: CryptoKey | null): Promise
     }
   }
 
-  return mapStrings(value, s => (isMediaRef(s) ? resolved.get(refToId(s)) ?? '' : s));
+  return resolved;
 }
 
 /**

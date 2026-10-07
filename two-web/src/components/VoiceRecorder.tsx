@@ -6,6 +6,7 @@ import {
   VOICE_WARN_SECONDS,
   canRecordVoice,
   formatVoiceDuration,
+  markWaitingForMic,
   startVoiceRecording,
   type VoiceLimit,
   type VoiceNote,
@@ -83,18 +84,8 @@ function prefersReducedMotion(): boolean {
   }
 }
 
-/**
- * How many recorders are waiting for the microphone right now.
- *
- * The first time, that wait is Android's permission prompt, which takes focus
- * from the page the way leaving the app does. Anything that acts on the page
- * losing focus - the disguise that switches on when you leave - asks this
- * first, as it already does of a call that is asking for the microphone.
- */
-let waitingForMic = 0;
-export function isVoiceRecorderAskingForMic(): boolean {
-  return waitingForMic > 0;
-}
+// Whether a recorder is waiting for the microphone lives in core/voice.ts
+// (isVoiceRecorderAskingForMic), so App can ask without loading this file.
 
 type PressKind = 'record' | 'tap' | 'none';
 
@@ -299,12 +290,12 @@ class RecorderEngine {
     this.draft = null;
     this.setState('starting');
 
-    waitingForMic++;
+    markWaitingForMic(true);
     let settled = false;
     const settle = () => {
       if (settled) return;
       settled = true;
-      waitingForMic = Math.max(0, waitingForMic - 1);
+      markWaitingForMic(false);
     };
 
     startVoiceRecording({

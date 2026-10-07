@@ -58,6 +58,27 @@ export interface VoiceFields {
   audioPeaks?: number[];
 }
 
+/**
+ * How many recorders are waiting for the microphone right now.
+ *
+ * The first time, that wait is Android's permission prompt, which takes focus
+ * from the page the way leaving the app does. Anything that acts on the page
+ * losing focus - the disguise that switches on when you leave - asks this
+ * first, as it already does of a call that is asking for the microphone.
+ *
+ * Kept here rather than in the recorder so that asking does not load the
+ * recorder's screens into the app's first download.
+ */
+let waitingForMic = 0;
+
+export function markWaitingForMic(waiting: boolean) {
+  waitingForMic = Math.max(0, waitingForMic + (waiting ? 1 : -1));
+}
+
+export function isVoiceRecorderAskingForMic(): boolean {
+  return waitingForMic > 0;
+}
+
 /** Whether this browser - or this WebView - can record at all. */
 export function canRecordVoice(): boolean {
   try {
