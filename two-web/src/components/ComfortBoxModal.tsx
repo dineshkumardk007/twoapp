@@ -16,6 +16,10 @@ interface ComfortBoxModalProps {
   boxData: ComfortBoxData;
   activeUser: 'user' | 'partner';
   onSaveBox: (data: ComfortBoxData) => void;
+  /** The other person's name, for whose note this is. */
+  partnerName?: string;
+  /** This person's own name, saved with a note they write. */
+  myName?: string;
 }
 
 export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
@@ -23,8 +27,16 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
   onClose,
   boxData,
   activeUser,
-  onSaveBox
+  onSaveBox,
+  partnerName,
+  myName
 }) => {
+  const partner = partnerName?.trim() || 'Partner';
+  const hasNote = !!boxData.reassuranceNote?.trim();
+  // The seat on the box says who wrote it; worked out here, on the phone
+  // showing it, so each of you sees the other's name on the other's note.
+  const fromMe = boxData.authorId === activeUser;
+
   const [isEditing, setIsEditing] = useState(false);
   const [note, setNote] = useState(boxData.reassuranceNote);
   const [photoUrlInput, setPhotoUrlInput] = useState(boxData.photoUrls.join('\n'));
@@ -95,11 +107,24 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
 
     onSaveBox({
       ...boxData,
+      // Whoever saves it wrote it. Keeping the earlier author's seat and name
+      // labelled a note you had just written as theirs.
+      authorId: activeUser,
+      // A name rather than "You": a phone on an older version shows this
+      // as it is, under the note, on the other person's screen.
+      authorName: myName?.trim() || (activeUser === 'user' ? 'You' : 'Partner'),
       reassuranceNote: note,
       photoUrls: urls,
-      updatedAt: 'Just now'
+      updatedAt: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
     });
     setIsEditing(false);
+  };
+
+  /** Opens the editor on what the box holds now, not on what it held when this first appeared. */
+  const startEditing = () => {
+    setNote(boxData.reassuranceNote || '');
+    setPhotoUrlInput((boxData.photoUrls || []).join('\n'));
+    setIsEditing(true);
   };
 
   // The phone's Back button closes this, the same as its X.
@@ -130,7 +155,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
           </div>
           <div className="flex items-center space-x-1">
             <button
-              onClick={() => setIsEditing(!isEditing)}
+              onClick={() => (isEditing ? setIsEditing(false) : startEditing())}
               className="p-2 rounded-xl text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
               title="Edit Comfort Box contents"
             >
@@ -194,19 +219,39 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
           ) : (
             /* View & Comfort Mode */
             <>
-              {/* Partner's Unconditional Love Note */}
-              <div className="relative p-6 rounded-3xl bg-rose-50/50 border border-rose-100 text-linen-primary shadow-xs">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-rose-700 mb-1 flex items-center space-x-1.5">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>A Message from Your Partner</span>
+              {/* The note in the box - or, until one of you writes it, an
+                  honest empty box. */}
+              {hasNote ? (
+                <div className="relative p-6 rounded-3xl bg-rose-50/50 border border-rose-100 text-linen-primary shadow-xs">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-rose-700 mb-1 flex items-center space-x-1.5">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>{fromMe ? `Your note for ${partner}` : `A message from ${partner}`}</span>
+                  </div>
+                  <p className="select-text font-serif text-base sm:text-lg text-linen-primary leading-relaxed italic mt-2">
+                    “{boxData.reassuranceNote}”
+                  </p>
+                  {!fromMe && (
+                    <div className="text-right mt-3 text-xs text-linen-secondary font-serif">
+                      — Always with you, {partner}
+                    </div>
+                  )}
                 </div>
-                <p className="font-serif text-base sm:text-lg text-linen-primary leading-relaxed italic mt-2">
-                  “{boxData.reassuranceNote}”
-                </p>
-                <div className="text-right mt-3 text-xs text-linen-secondary font-serif">
-                  — Always with you, {boxData.authorName}
+              ) : (
+                <div className="p-6 rounded-3xl bg-linen-variant/40 border border-linen-border text-center space-y-3">
+                  <p className="font-serif text-base text-linen-primary">Nothing in the box yet</p>
+                  <p className="text-xs text-linen-secondary leading-relaxed">
+                    Leave a few words for {partner} to find on a heavy day. They will be here whenever
+                    the box is opened.
+                  </p>
+                  <button
+                    onClick={startEditing}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    Write a note
+                  </button>
                 </div>
-              </div>
+              )}
 
               {/* 4-7-8 Somatic Relaxation Breath Guide */}
               <div className="p-5 rounded-3xl bg-linen-variant/40 border border-linen-border flex flex-col items-center text-center space-y-3">

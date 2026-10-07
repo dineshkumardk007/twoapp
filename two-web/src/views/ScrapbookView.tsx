@@ -43,6 +43,13 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
   const [exportNotice, setExportNotice] = useState<string | null>(null);
 
   const handlePrint = () => {
+    // In the Android app the WebView has no print of its own; Android's print
+    // screen (which also saves a PDF) is reached through the bridge.
+    const bridge = (window as unknown as { AndroidBridge?: { printPage?: (name: string) => void } }).AndroidBridge;
+    if (bridge && typeof bridge.printPage === 'function') {
+      bridge.printPage(settings.bookTitle || 'Our memoir');
+      return;
+    }
     window.print();
   };
 

@@ -345,6 +345,22 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
     };
   }, [sendHeart]);
 
+  // How a heart feels and looks arriving - on this phone only. The heart
+  // picker's "Test on Device" used to send a real heart to the other person.
+  useEffect(() => {
+    (window as any).__previewSensoryPulse = () => {
+      feelHeart(false);
+      showCard({
+        title: 'This is how a heart arrives',
+        meta: 'Only on this phone - nothing was sent',
+        canReply: false
+      });
+    };
+    return () => {
+      delete (window as any).__previewSensoryPulse;
+    };
+  }, [showCard]);
+
   const sendOneBack = () => {
     sendHeart('Thinking of you too', { reply: true });
     closeCard();
@@ -353,14 +369,17 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
   return (
     <>
       {card && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center px-4">
+        // Above popups (z-50) - a heart arriving while one is open, or the
+        // heart picker's own preview, must not land behind it - and below a
+        // call (z-[70]) and the calculator (z-[100]).
+        <div className="fixed inset-0 z-[65] pointer-events-none flex items-center justify-center px-4">
           <HeartCard key={card.key} card={card} leaving={cardLeaving} onReply={sendOneBack} onClose={closeCard} />
         </div>
       )}
 
       {toast && (
         <div
-          className="fixed inset-x-0 z-50 pointer-events-none flex justify-center px-4"
+          className="fixed inset-x-0 z-[65] pointer-events-none flex justify-center px-4"
           style={{ bottom: 'calc(max(var(--two-dock-h, 0px), env(safe-area-inset-bottom, 0px)) + 0.75rem)' }}
         >
           <Bloom key={toast.key} leaving={toastLeaving} interactive={false}>
@@ -464,5 +483,12 @@ const HeartCard: React.FC<{
 export const triggerGlobalPulse = (note?: string) => {
   if (typeof window !== 'undefined' && (window as any).__triggerSensoryPulse) {
     (window as any).__triggerSensoryPulse(note);
+  }
+};
+
+/** Shows and plays an arriving heart on this phone alone; nothing is sent. */
+export const previewGlobalPulse = () => {
+  if (typeof window !== 'undefined' && (window as any).__previewSensoryPulse) {
+    (window as any).__previewSensoryPulse();
   }
 };

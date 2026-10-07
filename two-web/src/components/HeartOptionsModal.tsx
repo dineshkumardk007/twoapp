@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, Sparkles, X, Send, Smartphone, Volume2, Smile, Check } from 'lucide-react';
-import { triggerGlobalPulse } from './SensoryPulseOverlay';
+import { triggerGlobalPulse, previewGlobalPulse } from './SensoryPulseOverlay';
 import { playHeartbeatSound } from '../core/audioAlerts';
 import { useBackLayer } from '../core/backStack';
 
@@ -119,9 +119,10 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
     }, 2400);
   };
 
+  // A preview, felt and seen only here. It used to call triggerGlobalPulse,
+  // which sends a real heart - so testing it reached the other phone.
   const handleTestOnDevice = () => {
-    playHeartbeatSound();
-    triggerGlobalPulse('Test touch on your device');
+    previewGlobalPulse();
   };
 
   return (

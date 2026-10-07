@@ -32,20 +32,27 @@ interface MoneyLightViewProps {
   activeUser: 'user' | 'partner';
   onAddExpense: (expense: Omit<ExpenseItem, 'id'>) => void;
   onSettleUp: () => void;
+  /** The other person's name. */
+  partnerName?: string;
 }
 
 export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
   expenses,
   activeUser,
   onAddExpense,
-  onSettleUp
+  onSettleUp,
+  partnerName: givenPartnerName
 }) => {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState('You');
 
-  // "Paid by You" is always the person holding this phone, on either side.
-  const partnerName = 'Partner';
+  // "Paid by You" is always the person holding this phone, on either side,
+  // and "Partner" is the other person - shown by name. The stored words stay
+  // "You" and "Partner": they are turned around for each phone on the way
+  // across (see expenseToWire), so only what is shown changes here.
+  const partnerName = givenPartnerName?.trim() || 'Partner';
+  const payerLabel = (paidBy: string) => (paidBy === 'Partner' ? partnerName : paidBy);
 
   const totalPaidByMe = expenses.filter(e => e.paidBy === 'You').reduce((sum, e) => sum + e.amount, 0);
   const totalPaidByPartner = expenses.filter(e => e.paidBy === 'Partner').reduce((sum, e) => sum + e.amount, 0);
@@ -121,7 +128,7 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
             className="px-3 py-2.5 text-sm rounded-xl border border-linen-border bg-linen-surface"
           >
             <option value="You">Paid by You</option>
-            <option value="Partner">Paid by Partner</option>
+            <option value="Partner">Paid by {partnerName}</option>
           </select>
         </div>
 
@@ -140,7 +147,7 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
           <div key={e.id} className="p-4 rounded-2xl border border-linen-border bg-linen-surface shadow-xs flex items-center justify-between">
             <div>
               <span className="font-medium text-sm text-linen-primary block">{e.title}</span>
-              <span className="text-xs text-linen-secondary">Paid by {e.paidBy} • {whenLabel(e.at, e.date)}</span>
+              <span className="text-xs text-linen-secondary">Paid by {payerLabel(e.paidBy)} • {whenLabel(e.at, e.date)}</span>
             </div>
             <span className="font-serif text-base font-medium text-linen-accent">{rupees(e.amount)}</span>
           </div>

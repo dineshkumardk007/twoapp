@@ -18,6 +18,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.print.PrintAttributes
+import android.print.PrintManager
 import android.provider.DocumentsContract
 import android.graphics.Color
 import android.util.Base64
@@ -84,6 +86,26 @@ class AndroidWebBridge(
         }
         Handler(Looper.getMainLooper()).post {
             view.performHapticFeedback(feedback)
+        }
+    }
+
+    /**
+     * Prints the page - the Memoir Book's "Print / Save PDF". A WebView has
+     * no window.print(), so the button did nothing in the app; Android's own
+     * print screen does it, and offers "Save as PDF" as well as printers.
+     */
+    @JavascriptInterface
+    fun printPage(jobName: String?) {
+        val view = webView ?: return
+        val name = jobName?.trim()?.take(80).takeUnless { it.isNullOrEmpty() } ?: "Two"
+        Handler(Looper.getMainLooper()).post {
+            val activity = context.findActivity() ?: return@post
+            val printManager = activity.getSystemService(Context.PRINT_SERVICE) as? PrintManager ?: return@post
+            try {
+                printManager.print(name, view.createPrintDocumentAdapter(name), PrintAttributes.Builder().build())
+            } catch (_: Exception) {
+                // No print service on this phone, or the page went away.
+            }
         }
     }
 

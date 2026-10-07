@@ -358,16 +358,21 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <ComfortBoxModal
         isOpen={showComfortBox}
         onClose={() => setShowComfortBox(false)}
+        // Nothing invented: until one of you fills the box it is empty, and
+        // says so. It used to open on a made-up note signed "Partner" that
+        // neither of you had written.
         boxData={state.comfortBoxes[0] || {
           id: 'cb-1',
-          authorId: 'partner',
-          authorName: 'Partner',
-          reassuranceNote: 'Breathe, my love. You are more than enough. You do not have to carry everything alone today. I am right here with you.',
+          authorId: state.activeUser,
+          authorName: '',
+          reassuranceNote: '',
           photoUrls: [],
           calmingExercise: '4-7-8',
-          updatedAt: 'Today'
+          updatedAt: ''
         }}
         activeUser={state.activeUser}
+        partnerName={state.partnerName}
+        myName={state.userName}
         onSaveBox={(newBox) => onSaveComfortBox && onSaveComfortBox(newBox)}
       />
 

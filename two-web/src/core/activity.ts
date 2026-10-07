@@ -68,7 +68,9 @@ const ROUTES: Record<string, { tab: string; tier: ActivityTier }> = {
   INGREDIENT_TOGGLE: { tab: 'recipes', tier: 'changed' },
   GARDEN_UPDATE: { tab: 'garden', tier: 'changed' },
   RITUAL_COMPLETE: { tab: 'rituals', tier: 'changed' },
-  ADVENTURE_UPDATE: { tab: 'scrapbook', tier: 'changed' },
+  // Adventures have their own place in the dock now; they used to send you
+  // to the scrapbook.
+  ADVENTURE_UPDATE: { tab: 'adventures', tier: 'changed' },
   COORDINATES_UPDATE: { tab: 'coordinates', tier: 'changed' },
   CANVAS_SAVE_SKETCH: { tab: 'canvas', tier: 'changed' },
   KINTSUGI_ADD: { tab: 'kintsugi', tier: 'changed' },
@@ -120,7 +122,7 @@ const PHRASES: Record<string, string> = {
   INGREDIENT_TOGGLE: 'ticked off an ingredient',
   GARDEN_UPDATE: 'tended the garden',
   RITUAL_COMPLETE: 'completed a ritual',
-  ADVENTURE_UPDATE: 'added to the scrapbook',
+  ADVENTURE_UPDATE: 'updated your adventures',
   COORDINATES_UPDATE: 'shared where they are',
   CANVAS_SAVE_SKETCH: 'saved a sketch',
   INTUITION_ROUND: 'played a round',
@@ -141,7 +143,10 @@ const PHRASES: Record<string, string> = {
   LIST_ITEM_DELETE: 'took something off a list',
   RITUAL_ADD: 'added a ritual',
   MILESTONE_ADD: 'added a milestone',
-  LETTER_OPENED: 'opened your letter'
+  LETTER_OPENED: 'opened your letter',
+  // Not in ROUTES: the dates are sent again on every connection, so App
+  // notes them only when they actually change (see OUR_DATES there).
+  OUR_DATES: 'set your dates'
 };
 
 /** Where a record belongs, or null when it is plumbing. */

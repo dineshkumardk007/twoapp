@@ -156,6 +156,7 @@ import {
 } from './core/sharedRecords';
 import { localDay, isDoneOn, withRitualDay } from './core/rituals';
 import { OUR_DATES } from './core/sharedRecords';
+import { cleanOurDates, newerOurDates } from './core/ourDates';
 import { resolveMediaRefs, withResolvedMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
 import {
   lockoutRemaining,
@@ -738,6 +739,33 @@ export const App: React.FC = () => {
         // otherwise open on every destination marked unread, with a hundred
         // lines of news about things that happened months ago.
         if (record.authorId !== state.activeUser && !msg.restoring) {
+          // The dates go out again on every connection, so they are news only
+          // when they change what this phone shows - judged against the
+          // dates as they are before this record is applied below.
+          if (record.type === OUR_DATES) {
+            let incoming: ReturnType<typeof cleanOurDates> = null;
+            try {
+              incoming = cleanOurDates(JSON.parse(record.payload));
+            } catch {
+              incoming = null;
+            }
+            if (incoming) {
+              const dates = incoming;
+              const at = Number(record.clientTs) || Date.now();
+              setState(prev => {
+                const next = newerOurDates(dates, prev.ourDates);
+                const changed =
+                  !!next &&
+                  ((next.togetherSince || '') !== (prev.ourDates?.togetherSince || '') ||
+                    (next.anniversary || '') !== (prev.ourDates?.anniversary || ''));
+                if (!changed) return prev;
+                return {
+                  ...prev,
+                  activity: withActivity(prev.activity || [], { id: record.id, tabId: 'home', type: OUR_DATES, at })
+                };
+              });
+            }
+          }
           const route = routeFor(record.type);
           if (route) {
             const at = Number(record.clientTs) || Date.now();
@@ -2824,7 +2852,8 @@ export const App: React.FC = () => {
   const handleScratchCardComplete = (cardId: string) => {
     setState(prev => {
       const updated = prev.scratchCards.map(c =>
-        c.id === cardId ? { ...c, isScratched: true, scratchedAt: 'Just now' } : c
+        // The day itself, not "Just now" - which it went on saying for good.
+        c.id === cardId ? { ...c, isScratched: true, scratchedAt: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) } : c
       );
       wsRelay.broadcastUpdate('SCRATCH_CARD_UPDATE', updated);
       localMesh.broadcastLocally('SCRATCH_CARD_UPDATE', updated, prev.activeUser);
@@ -2838,7 +2867,7 @@ export const App: React.FC = () => {
   const handleRedeemScratchCard = (cardId: string) => {
     setState(prev => {
       const updated = prev.scratchCards.map(c =>
-        c.id === cardId ? { ...c, isRedeemed: true, redeemedAt: 'Just now' } : c
+        c.id === cardId ? { ...c, isRedeemed: true, redeemedAt: new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) } : c
       );
       wsRelay.broadcastUpdate('SCRATCH_CARD_UPDATE', updated);
       localMesh.broadcastLocally('SCRATCH_CARD_UPDATE', updated, prev.activeUser);
@@ -4193,6 +4222,7 @@ export const App: React.FC = () => {
           <MoneyLightView
             expenses={state.expenses}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onAddExpense={handleAddExpense}
             onSettleUp={handleSettleUpExpenses}
           />
