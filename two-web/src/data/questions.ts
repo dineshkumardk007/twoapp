@@ -237,6 +237,11 @@ export const DAILY_QUESTIONS: Question[] = [
   { id: 's-40', tier: 'spicy', prompt: 'What makes you feel most confident and attractive when you are with me?' }
 ];
 
+/** A question by its id, or undefined for one this version does not have. */
+export function questionById(id: string): Question | undefined {
+  return DAILY_QUESTIONS.find(q => q.id === id);
+}
+
 const EVERYDAY = DAILY_QUESTIONS.filter(q => q.tier !== 'spicy');
 const SPICY = DAILY_QUESTIONS.filter(q => q.tier === 'spicy');
 

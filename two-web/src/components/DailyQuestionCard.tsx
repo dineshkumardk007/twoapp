@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Sparkles, Flame, Lock, Hourglass, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { DailyAnswer } from '../types';
-import { questionForDay } from '../data/questions';
+import { questionById, questionForDay } from '../data/questions';
 import { MAX_ANSWER_CHARS } from '../core/sharedRecords';
-import { formatDay } from '../core/ourDates';
+import { formatDay, localDateKey } from '../core/ourDates';
 import { useToday } from '../core/useToday';
 import { haptic } from '../core/haptics';
 
@@ -50,6 +50,22 @@ interface Pair {
   theirs: DailyAnswer;
 }
 
+/** One of yesterday's questions the other person answered. */
+interface LateQuestion {
+  questionId: string;
+  prompt: string;
+  theirs: DailyAnswer;
+  mine?: DailyAnswer;
+}
+
+/** The calendar day before `day`, worked out at midday, clear of any clock change. */
+function dayBefore(day: string): string {
+  const [y, m, d] = day.split('-').map(Number);
+  const noon = new Date(y, m - 1, d, 12);
+  noon.setDate(noon.getDate() - 1);
+  return localDateKey(noon);
+}
+
 /**
  * Today's question, answered together.
  *
@@ -91,7 +107,15 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
   const theirsOnOther = find(otherQuestion.id, other);
   const mineOnOther = find(otherQuestion.id, activeUser);
 
-  const draft = drafts[question.id] || '';
+  const draftKey = `${today}|${question.id}`;
+  const draft = drafts[draftKey] || '';
+  const setDraft = (key: string, value: string) => setDrafts(prev => ({ ...prev, [key]: value }));
+  const clearDraft = (key: string) =>
+    setDrafts(prev => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   const sentKey = `${today}|${question.id}`;
   const alreadySent = sent === sentKey;
 
@@ -109,11 +133,51 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
     if (!text || mine) return;
     haptic('confirm');
     onAnswer({ day: today, questionId: question.id, prompt: question.prompt, text });
-    setDrafts(prev => {
-      const next = { ...prev };
-      delete next[question.id];
-      return next;
-    });
+    clearDraft(draftKey);
+  };
+
+  /**
+   * Yesterday's questions the other person answered.
+   *
+   * The question moves on at midnight, so an answer given late one evening
+   * used to wait for an answer that could no longer be given: the card had
+   * already moved to the next day, and theirs stayed hidden for good. Each
+   * stays here, open to answer, until you have - and once you both have, the
+   * pair stays here for the rest of the day an answer came in late, so the
+   * reveal is seen rather than filed straight away under earlier answers.
+   */
+  const yesterday = dayBefore(today);
+  const late = useMemo<LateQuestion[]>(() => {
+    const answeredToday = (a?: DailyAnswer) => !!a && localDateKey(new Date(a.at)) === today;
+    const byQuestion = new Map<string, { mine?: DailyAnswer; theirs?: DailyAnswer }>();
+    for (const a of answers) {
+      if (a.day !== yesterday) continue;
+      const entry = byQuestion.get(a.questionId) || {};
+      if (a.seat === activeUser) entry.mine = entry.mine || a;
+      else entry.theirs = entry.theirs || a;
+      byQuestion.set(a.questionId, entry);
+    }
+    const list: LateQuestion[] = [];
+    for (const [questionId, entry] of byQuestion) {
+      if (!entry.theirs) continue;
+      if (entry.mine && !answeredToday(entry.mine) && !answeredToday(entry.theirs)) continue;
+      list.push({
+        questionId,
+        prompt: entry.theirs.prompt || entry.mine?.prompt || questionById(questionId)?.prompt || '',
+        theirs: entry.theirs,
+        mine: entry.mine
+      });
+    }
+    return list;
+  }, [answers, today, yesterday, activeUser]);
+
+  const lockInLate = (item: LateQuestion) => {
+    const key = `${yesterday}|${item.questionId}`;
+    const text = (drafts[key] || '').trim();
+    if (!text || item.mine) return;
+    haptic('confirm');
+    onAnswer({ day: yesterday, questionId: item.questionId, prompt: item.prompt, text });
+    clearDraft(key);
   };
 
   const askInChat = () => {
@@ -130,8 +194,10 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
   // question counts too once it is open to both of you.
   const earlier = useMemo<Pair[]>(() => {
     const byQuestion = new Map<string, { mine?: DailyAnswer; theirs?: DailyAnswer }>();
+    const shownAbove = new Set(late.map(item => item.questionId));
     for (const a of answers) {
       if (a.day === today && a.questionId === question.id) continue;
+      if (a.day === yesterday && shownAbove.has(a.questionId)) continue;
       const key = `${a.day}|${a.questionId}`;
       const entry = byQuestion.get(key) || {};
       if (a.seat === activeUser) entry.mine = entry.mine || a;
@@ -151,7 +217,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
     return pairs.sort((a, b) =>
       a.day === b.day ? Math.max(b.mine.at, b.theirs.at) - Math.max(a.mine.at, a.theirs.at) : b.day.localeCompare(a.day)
     );
-  }, [answers, today, question.id, activeUser]);
+  }, [answers, today, yesterday, late, question.id, activeUser]);
 
   const shownEarlier = showAllEarlier ? earlier : earlier.slice(0, EARLIER_SHOWN);
 
@@ -235,7 +301,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
           )}
           <textarea
             value={draft}
-            onChange={e => setDrafts(prev => ({ ...prev, [question.id]: e.target.value }))}
+            onChange={e => setDraft(draftKey, e.target.value)}
             maxLength={MAX_ANSWER_CHARS}
             rows={3}
             placeholder="Your answer…"
@@ -275,6 +341,51 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
           <span className="shrink-0 font-medium text-linen-primary">Show it</span>
         </button>
       )}
+
+      {late.map(item => {
+        const key = `${yesterday}|${item.questionId}`;
+        const lateDraft = drafts[key] || '';
+        return (
+          <div key={key} className="mt-4 pt-3 border-t border-linen-border/50 space-y-2.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-linen-secondary">
+              Yesterday's question
+            </div>
+            {item.prompt && <p className="font-serif text-sm text-linen-primary leading-snug">“{item.prompt}”</p>}
+            {item.mine ? (
+              <div className="space-y-2 animate-scale-up">
+                <AnswerBubble label={partnerName} text={item.theirs.text} tone="theirs" compact />
+                <AnswerBubble label="You" text={item.mine.text} tone="mine" compact />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 rounded-xl bg-linen-variant/60 border border-linen-border px-3 py-2 text-xs text-linen-primary">
+                  <Lock className="w-3.5 h-3.5 shrink-0 text-linen-accent" />
+                  <span>{partnerName} answered. There's still time - answer to see theirs.</span>
+                </div>
+                <textarea
+                  value={lateDraft}
+                  onChange={e => setDraft(key, e.target.value)}
+                  maxLength={MAX_ANSWER_CHARS}
+                  rows={2}
+                  placeholder="Your answer…"
+                  aria-label="Your answer to yesterday's question"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-linen-variant/40 border border-linen-border text-linen-primary text-sm leading-relaxed placeholder:text-linen-secondary/70 focus:outline-hidden focus:border-linen-accent/60 resize-none"
+                />
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => lockInLate(item)}
+                    disabled={!lateDraft.trim()}
+                    className="inline-flex shrink-0 items-center gap-1.5 px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    Lock in my answer
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })}
 
       {earlier.length > 0 && (
         <div className="mt-4 pt-3 border-t border-linen-border/50">
