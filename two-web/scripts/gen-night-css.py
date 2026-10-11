@@ -10,9 +10,10 @@ text. This finds every one of them in src/ and gives each a night version:
 pale fills become a glow of the same hue, dark text becomes light, hairlines
 become faint lines of light.
 
-Day is left exactly as designed. Anything inside an element marked
-`no-remap` is left alone too - the screens that were drawn dark on purpose
-(the nightstand clock, the co-presence room) already know what they are.
+Day is left exactly as designed. An element marked `no-remap`, and anything
+inside it, is left alone too - the screens that were drawn dark on purpose
+(the nightstand clock, the co-presence room) already know what they are, and
+so does dark text on a bright button: lightening it would leave it unreadable.
 
 Run after adding colours to a screen:   python scripts/gen-night-css.py
 """
@@ -181,7 +182,7 @@ def rule_for(token):
         target = f'.{escape(token)} > :not([hidden]) ~ :not([hidden])'
     else:
         target = f'{prefix}.{escape(token)}{pseudo}'
-    selector = f'html.dark {target}:not(.no-remap *)'
+    selector = f'html.dark {target}:not(.no-remap):not(.no-remap *)'
     body = '; '.join(decls)
     css = f'{selector} {{ {body} }}'
     return (media, css, m.group('prop'))

@@ -230,7 +230,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
           <div className="flex flex-row md:flex-col gap-2 shrink-0">
             <button
               onClick={() => handleOpenInscribe()}
-              className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-medium text-xs sm:text-sm shadow-lg shadow-amber-900/40 active:scale-95 transition-all cursor-pointer"
+              className="no-remap inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-medium text-xs sm:text-sm shadow-lg shadow-amber-900/40 active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4 text-stone-950" />
               <span>Inscribe Golden Seam</span>
@@ -455,7 +455,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                       setSelectedSeamIndex(seam.index);
                       playKintsugiChime();
                     }}
-                    className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-medium transition-all text-center cursor-pointer ${
+                    className={`min-w-0 flex-1 py-1.5 px-1 min-[360px]:px-2 rounded-xl text-xs font-medium transition-all text-center cursor-pointer ${
                       isSelected
                         ? 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold shadow-2xs'
                         : moment
@@ -464,7 +464,8 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                     }`}
                   >
                     <span className="block text-[10px] uppercase tracking-wider text-amber-700/70">
-                      Seam {seam.index + 1}
+                      {/* The smallest phones have room for the number alone. */}
+                      <span className="max-[359px]:hidden">Seam </span>{seam.index + 1}
                     </span>
                     <span className="truncate block max-w-[75px] mx-auto text-[11px]">
                       {moment ? moment.title.split(' ')[0] : '+ Open'}

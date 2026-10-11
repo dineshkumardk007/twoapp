@@ -463,7 +463,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
       <button
         onClick={() => setBrightnessLevel('ultra')}
         className={`px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
-          brightnessLevel === 'ultra' ? 'bg-amber-900/40 text-amber-400 font-medium' : 'text-amber-700/60 hover:text-amber-500'
+          brightnessLevel === 'ultra' ? 'bg-amber-900/40 text-amber-400 font-medium' : 'text-amber-600/90 hover:text-amber-500'
         }`}
         title="Ultra-dim (zero blue light)"
       >
@@ -472,7 +472,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
       <button
         onClick={() => setBrightnessLevel('dim')}
         className={`px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
-          brightnessLevel === 'dim' ? 'bg-amber-900/60 text-amber-300 font-medium' : 'text-amber-700/60 hover:text-amber-400'
+          brightnessLevel === 'dim' ? 'bg-amber-900/60 text-amber-300 font-medium' : 'text-amber-600/90 hover:text-amber-400'
         }`}
         title="Warm candle glow"
       >
@@ -481,7 +481,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
       <button
         onClick={() => setBrightnessLevel('glow')}
         className={`px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
-          brightnessLevel === 'glow' ? 'bg-amber-500/30 text-amber-200 font-medium' : 'text-amber-700/60 hover:text-amber-300'
+          brightnessLevel === 'glow' ? 'bg-amber-500/30 text-amber-200 font-medium' : 'text-amber-600/90 hover:text-amber-300'
         }`}
         title="Room glow"
       >

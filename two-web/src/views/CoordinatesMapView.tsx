@@ -290,7 +290,7 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
       </div>
 
       {/* Interactive Map Canvas Container */}
-      <div className="rounded-3xl border border-linen-border bg-gradient-to-b from-[#f8f6f0] to-[#f0ece1] shadow-md overflow-hidden relative select-none">
+      <div className="rounded-3xl border border-linen-border bg-gradient-to-b from-[#f8f6f0] to-[#f0ece1] dark:from-[#120e2a] dark:to-[#120e2a] shadow-md overflow-hidden relative select-none">
         {/* Map Toolbar overlay */}
         <div className="absolute top-3 left-3 z-20 flex items-center space-x-2">
           {/* Zoom controls */}

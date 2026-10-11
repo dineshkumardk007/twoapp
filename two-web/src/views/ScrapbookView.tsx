@@ -209,7 +209,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
             <span>You & {partnerLabel}</span>
           </div>
 
-          <div className="mt-12 text-[10px] text-[#a89b8c] uppercase tracking-wider flex items-center space-x-1">
+          <div className="mt-12 text-[10px] text-[#8a7b6a] uppercase tracking-wider flex items-center space-x-1">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Zero-Knowledge Encrypted Archive</span>
           </div>
@@ -246,7 +246,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                   <p className="font-serif text-sm text-[#38312a] leading-relaxed italic">
                     “{star.note}”
                   </p>
-                  <div className="text-[10px] text-[#a89b8c] mt-3 font-serif">
+                  <div className="text-[10px] text-[#8a7b6a] mt-3 font-serif">
                     Recorded {new Date(star.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </div>
                 </div>
@@ -510,7 +510,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
           <p className="font-serif text-xs text-[#8e7e6b] max-w-sm mx-auto leading-relaxed">
             Preserved privately on your personal device with end-to-end zero-knowledge encryption. Our story continues tomorrow morning.
           </p>
-          <div className="text-[10px] text-[#a89b8c] font-mono mt-4">
+          <div className="text-[10px] text-[#8a7b6a] font-mono mt-4">
             ARCHIVE ID: TWO-{new Date().getFullYear()}-{state.activeUser.toUpperCase()}
           </div>
         </div>

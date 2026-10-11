@@ -361,7 +361,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
                       {isReadyToOpen ? (
                         <button
                           onClick={() => handleUnseal(capsule)}
-                          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-stone-950 text-xs font-bold shadow-lg shadow-amber-500/20 transition-all cursor-pointer inline-flex items-center space-x-1.5 animate-bounce"
+                          className="no-remap px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-stone-950 text-xs font-bold shadow-lg shadow-amber-500/20 transition-all cursor-pointer inline-flex items-center space-x-1.5 animate-bounce"
                         >
                           <Unlock className="w-3.5 h-3.5" />
                           <span>Unseal & Reveal Now</span>

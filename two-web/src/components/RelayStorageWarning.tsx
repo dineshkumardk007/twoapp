@@ -25,7 +25,7 @@ export const RelayStorageWarning: React.FC<RelayStorageWarningProps> = ({ durabl
   return (
     <div
       role="status"
-      className="fixed inset-x-0 top-0 z-[60] flex items-start gap-2.5 border-b border-amber-300/60 bg-amber-50 px-4 py-2.5 text-amber-900 shadow-xs"
+      className="no-remap fixed inset-x-0 top-0 z-[60] flex items-start gap-2.5 border-b border-amber-300/60 bg-amber-50 px-4 py-2.5 text-amber-900 shadow-xs dark:border-amber-400/25 dark:bg-[#2a2016] dark:text-amber-100"
       style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.625rem)' }}
     >
       <CloudOff className="mt-0.5 h-4 w-4 shrink-0" />
@@ -40,7 +40,7 @@ export const RelayStorageWarning: React.FC<RelayStorageWarningProps> = ({ durabl
       <button
         onClick={onDismiss}
         aria-label="Dismiss"
-        className="mt-0.5 shrink-0 rounded-lg p-1 transition-colors hover:bg-amber-100"
+        className="mt-0.5 shrink-0 rounded-lg p-1 transition-colors hover:bg-amber-100 dark:hover:bg-amber-400/15"
       >
         <X className="h-4 w-4" />
       </button>

@@ -538,7 +538,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
         </div>
 
         {/* Brush Size + Background Theme Toggles + Undo */}
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Brush Size Selector */}
           <div className="flex items-center space-x-1 bg-linen-variant/40 px-2.5 py-1.5 rounded-2xl border border-linen-border/60">
             {[2, 5, 12].map(sz => (
