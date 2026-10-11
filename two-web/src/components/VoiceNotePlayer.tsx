@@ -50,23 +50,24 @@ const TONES: Record<
   Tone,
   { button: string; played: string; unplayed: string; meta: string; chip: string; ring: string; thumb: string }
 > = {
+  // Your own notes sit on the aurora gradient of your bubbles: white on it.
   mine: {
-    button: 'bg-linen-surface text-linen-primary hover:bg-linen-variant',
-    played: 'bg-linen-surface',
-    unplayed: 'bg-linen-surface/35',
-    meta: 'text-linen-surface/75',
-    chip: 'bg-linen-surface/15 text-linen-surface hover:bg-linen-surface/25',
-    ring: 'focus-visible:ring-linen-surface/70',
-    thumb: 'bg-linen-surface'
+    button: 'bg-white text-aurora-violet hover:bg-white/90',
+    played: 'bg-white',
+    unplayed: 'bg-white/40',
+    meta: 'text-white/80',
+    chip: 'bg-white/15 text-white hover:bg-white/25',
+    ring: 'focus-visible:ring-white/70',
+    thumb: 'bg-white'
   },
   theirs: {
     button: 'bg-linen-primary text-linen-surface hover:bg-linen-primary/90',
-    played: 'bg-linen-primary',
+    played: 'bg-aurora-pink',
     unplayed: 'bg-linen-primary/25',
     meta: 'text-linen-secondary',
     chip: 'bg-linen-primary/10 text-linen-primary hover:bg-linen-primary/15',
     ring: 'focus-visible:ring-linen-primary/50',
-    thumb: 'bg-linen-primary'
+    thumb: 'bg-aurora-pink'
   },
   composer: {
     button: 'bg-linen-variant text-linen-primary hover:bg-linen-border',
@@ -697,7 +698,7 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
               <span className="tabular-nums">{timeText}</span>
               {showHeard && tone === 'mine' && (
                 <>
-                  <Mic className={`h-3 w-3 ${heard ? 'text-sky-300' : 'text-linen-surface/40'}`} aria-hidden="true" />
+                  <Mic className={`h-3 w-3 ${heard ? 'text-sky-200' : 'text-white/50'}`} aria-hidden="true" />
                   <span className="sr-only">{heard ? 'Heard' : 'Not heard yet'}</span>
                 </>
               )}

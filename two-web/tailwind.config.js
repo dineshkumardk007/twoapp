@@ -231,14 +231,27 @@ export default {
   theme: {
     extend: {
       colors: {
+        // The app's colours, as variables, so the whole app follows the look
+        // in use: Aurora's night (the default) or its day. The values live in
+        // index.css; `linen` stays as the name because three thousand class
+        // names use it.
         linen: {
-          bg: '#FAF8F5',
-          surface: '#FFFFFF',
-          variant: '#F2EFEB',
-          primary: '#2D312E',
-          secondary: '#72685F',
-          accent: '#B07D62',
-          border: '#E8E4DF',
+          bg: 'rgb(var(--c-bg) / <alpha-value>)',
+          surface: 'rgb(var(--c-surface) / <alpha-value>)',
+          variant: 'rgb(var(--c-variant) / <alpha-value>)',
+          primary: 'rgb(var(--c-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--c-secondary) / <alpha-value>)',
+          accent: 'rgb(var(--c-accent) / <alpha-value>)',
+          border: 'rgb(var(--c-border) / <alpha-value>)',
+        },
+        // Aurora's light: the glow, the gradients, the five families.
+        aurora: {
+          violet: 'rgb(var(--c-violet) / <alpha-value>)',
+          pink: 'rgb(var(--c-pink) / <alpha-value>)',
+          peach: 'rgb(var(--c-peach) / <alpha-value>)',
+          teal: 'rgb(var(--c-teal) / <alpha-value>)',
+          gold: 'rgb(var(--c-gold) / <alpha-value>)',
+          sky: 'rgb(var(--c-sky) / <alpha-value>)',
         },
         slate: {
           bg: '#121518',
@@ -275,17 +288,18 @@ export default {
         }
       },
       fontFamily: {
-        serif: ['Lora', 'Georgia', 'serif'],
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        serif: ['Fraunces', 'Georgia', 'serif'],
+        sans: ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
 
-      // Card depth. Low and warm: tinted with the linen ink (#2D312E) rather
-      // than pure black, so a card on the cream background looks lifted, not
-      // smudged. shadow-xs is the everyday card; shadow-2xs a hairline under
-      // small chips and icon tiles.
+      // Card depth, from index.css so it suits the look: a soft lift by day,
+      // and at night a faint violet edge instead of a shadow nobody could see
+      // on a dark sky. shadow-xs is the everyday card; shadow-2xs a hairline
+      // under small chips and icon tiles; shadow-glow the lit, primary things.
       boxShadow: {
-        '2xs': '0 1px 0 0 rgb(45 49 46 / 0.05)',
-        xs: '0 1px 2px 0 rgb(45 49 46 / 0.05), 0 2px 8px -3px rgb(45 49 46 / 0.08)',
+        '2xs': 'var(--shadow-2xs)',
+        xs: 'var(--shadow-xs)',
+        glow: '0 10px 30px -12px rgb(var(--c-pink) / 0.55), 0 4px 14px -8px rgb(var(--c-violet) / 0.6)',
       },
       dropShadow: {
         xs: '0 1px 1px rgb(45 49 46 / 0.08)',

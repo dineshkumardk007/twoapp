@@ -353,68 +353,68 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
             <defs>
               {/* Parchment Grid Pattern */}
               <pattern id="parchmentGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(163, 150, 133, 0.15)" strokeWidth="0.8" />
+                <path d="M 40 0 L 0 0 0 40" fill="none" className="stroke-[rgba(163,150,133,0.15)] dark:stroke-[rgba(167,139,250,0.10)]" strokeWidth="0.8" />
               </pattern>
               {/* Landmass Texture Gradient */}
               <radialGradient id="landGradient" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#ebe4d3" />
-                <stop offset="100%" stopColor="#dfd6c2" />
+                <stop offset="0%" className="[stop-color:#ebe4d3] dark:[stop-color:#2e2760]" />
+                <stop offset="100%" className="[stop-color:#dfd6c2] dark:[stop-color:#221c4a]" />
               </radialGradient>
             </defs>
 
             {/* Ocean background */}
-            <rect width={MAP_WIDTH} height={MAP_HEIGHT} fill="#f4efe4" />
+            <rect width={MAP_WIDTH} height={MAP_HEIGHT} className="fill-[#f4efe4] dark:fill-[#120e2a]" />
             <rect width={MAP_WIDTH} height={MAP_HEIGHT} fill="url(#parchmentGrid)" />
 
             {/* Latitude / Longitude lines */}
-            <line x1="0" y1={MAP_HEIGHT / 2} x2={MAP_WIDTH} y2={MAP_HEIGHT / 2} stroke="#d4c9b8" strokeDasharray="4 4" strokeWidth="1" />
-            <line x1={MAP_WIDTH / 2} y1="0" x2={MAP_WIDTH / 2} y2={MAP_HEIGHT} stroke="#d4c9b8" strokeDasharray="4 4" strokeWidth="1" />
+            <line x1="0" y1={MAP_HEIGHT / 2} x2={MAP_WIDTH} y2={MAP_HEIGHT / 2} className="stroke-[#d4c9b8] dark:stroke-[#3a3266]" strokeDasharray="4 4" strokeWidth="1" />
+            <line x1={MAP_WIDTH / 2} y1="0" x2={MAP_WIDTH / 2} y2={MAP_HEIGHT} className="stroke-[#d4c9b8] dark:stroke-[#3a3266]" strokeDasharray="4 4" strokeWidth="1" />
 
             {/* Tropic and Meridian labels */}
-            <text x="12" y={MAP_HEIGHT / 2 - 6} fill="#b0a28f" fontSize="9" fontFamily="serif">Equator (0°)</text>
-            <text x={MAP_WIDTH / 2 + 6} y="18" fill="#b0a28f" fontSize="9" fontFamily="serif">Prime Meridian (0°)</text>
+            <text x="12" y={MAP_HEIGHT / 2 - 6} className="fill-[#b0a28f] dark:fill-[#8f86bd]" fontSize="9" fontFamily="serif">Equator (0°)</text>
+            <text x={MAP_WIDTH / 2 + 6} y="18" className="fill-[#b0a28f] dark:fill-[#8f86bd]" fontSize="9" fontFamily="serif">Prime Meridian (0°)</text>
 
             {/* Stylized organic landmass paths */}
             {/* North America */}
             <path
               d="M 120 70 Q 200 60 250 90 T 260 170 Q 240 210 200 240 T 170 290 Q 140 260 110 210 T 80 140 Z"
               fill="url(#landGradient)"
-              stroke="#cfc4b0"
+              className="stroke-[#cfc4b0] dark:stroke-[#4b4282]"
               strokeWidth="1.2"
             />
             {/* South America */}
             <path
               d="M 230 260 Q 290 280 290 340 T 260 440 Q 240 470 220 460 T 200 360 Q 200 300 230 260 Z"
               fill="url(#landGradient)"
-              stroke="#cfc4b0"
+              className="stroke-[#cfc4b0] dark:stroke-[#4b4282]"
               strokeWidth="1.2"
             />
             {/* Europe */}
             <path
               d="M 450 80 Q 520 70 540 120 T 520 180 Q 470 200 440 180 T 430 130 Z"
               fill="url(#landGradient)"
-              stroke="#cfc4b0"
+              className="stroke-[#cfc4b0] dark:stroke-[#4b4282]"
               strokeWidth="1.2"
             />
             {/* Africa */}
             <path
               d="M 460 190 Q 550 200 560 280 T 520 400 Q 480 430 460 380 T 430 270 Q 430 210 460 190 Z"
               fill="url(#landGradient)"
-              stroke="#cfc4b0"
+              className="stroke-[#cfc4b0] dark:stroke-[#4b4282]"
               strokeWidth="1.2"
             />
             {/* Asia */}
             <path
               d="M 540 80 Q 750 60 840 120 T 850 240 Q 750 270 680 250 T 580 200 Q 530 140 540 80 Z"
               fill="url(#landGradient)"
-              stroke="#cfc4b0"
+              className="stroke-[#cfc4b0] dark:stroke-[#4b4282]"
               strokeWidth="1.2"
             />
             {/* Australia / Oceania */}
             <path
               d="M 760 320 Q 840 310 860 360 T 820 430 Q 770 440 750 390 Z"
               fill="url(#landGradient)"
-              stroke="#cfc4b0"
+              className="stroke-[#cfc4b0] dark:stroke-[#4b4282]"
               strokeWidth="1.2"
             />
 
@@ -479,11 +479,10 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
                   <text
                     x="10"
                     y="4"
-                    fill="#433422"
                     fontSize={isSelected ? '12' : '10'}
                     fontWeight={isSelected ? '600' : '500'}
                     fontFamily="serif"
-                    className="select-none pointer-events-none drop-shadow-xs"
+                    className="fill-[#433422] dark:fill-[#EDE9FF] select-none pointer-events-none drop-shadow-xs"
                   >
                     {pin.title}
                   </text>

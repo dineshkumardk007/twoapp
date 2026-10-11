@@ -6,7 +6,8 @@ import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
-import { Shield, Download, Trash2, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw } from 'lucide-react';
+import { Shield, Download, Trash2, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw, Moon, Sun, Smartphone } from 'lucide-react';
+import { APPEARANCE_CHOICES, Appearance, readAppearance, writeAppearance } from '../core/appearance';
 import { whenLabel } from '../core/when';
 import { isAndroidApp } from '../core/platform';
 import { saveFile } from '../core/saveFile';
@@ -311,6 +312,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     void saveFile(blob, `two_space_export_${new Date().toISOString().slice(0, 10)}.json`);
   };
 
+  // Night (Aurora), its day version, or whatever the phone is set to.
+  const [appearance, setAppearance] = useState<Appearance>(readAppearance);
+  const chooseAppearance = (next: Appearance) => {
+    setAppearance(next);
+    writeAppearance(next);
+  };
+  const APPEARANCE_ICON = { night: Moon, day: Sun, system: Smartphone } as const;
+
   const handleOpenPartnerWindow = () => {
     const partnerUrl = `${window.location.origin}${window.location.pathname}?perspective=partner`;
     window.open(partnerUrl, 'TwoPartnerSync', 'width=540,height=840,menubar=no,toolbar=no');
@@ -321,6 +330,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div>
         <h2 className="font-serif text-2xl font-medium text-linen-primary">{t.settings.title}</h2>
         <p className="text-sm text-linen-secondary">{t.settings.subtitle}</p>
+      </div>
+
+      {/* How the app looks on this phone. */}
+      <div className="p-5 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
+        <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
+          <Moon className="w-4 h-4 text-linen-accent" />
+          <span>Appearance</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Appearance">
+          {APPEARANCE_CHOICES.map(choice => {
+            const Icon = APPEARANCE_ICON[choice.value];
+            const on = appearance === choice.value;
+            return (
+              <button
+                key={choice.value}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => chooseAppearance(choice.value)}
+                className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center transition-all cursor-pointer ${
+                  on
+                    ? 'border-transparent bg-linen-primary text-linen-surface shadow-glow'
+                    : 'border-linen-border bg-linen-variant/40 text-linen-primary hover:bg-linen-variant'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="text-xs font-semibold">{choice.label}</span>
+                <span className={`text-[10px] leading-tight ${on ? 'text-white/80' : 'text-linen-secondary'}`}>{choice.hint}</span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[11px] text-linen-secondary leading-relaxed">
+          Just this phone. Your partner's phone keeps the look they chose.
+        </p>
       </div>
 
       {/* Connected Space & End-to-End Encryption */}

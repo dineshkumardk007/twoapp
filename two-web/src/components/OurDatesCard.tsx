@@ -57,7 +57,7 @@ export const OurDatesCard: React.FC<OurDatesCardProps> = ({ dates, onSave }) => 
           className="block w-full rounded-3xl border border-dashed border-linen-border bg-linen-surface p-5 text-left transition-colors hover:border-linen-accent/50 cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-linen-variant text-linen-accent">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-linen-primary text-linen-surface shadow-glow">
               <CalendarHeart className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -83,33 +83,35 @@ export const OurDatesCard: React.FC<OurDatesCardProps> = ({ dates, onSave }) => 
       <button
         type="button"
         onClick={open}
-        className="block w-full rounded-3xl border border-linen-border bg-gradient-to-br from-linen-surface via-linen-surface to-linen-variant/50 p-5 text-left shadow-xs transition-colors hover:border-linen-accent/40 cursor-pointer"
+        className="aurora-hero relative block w-full overflow-hidden rounded-[28px] p-5 text-left shadow-glow transition-transform active:scale-[0.99] cursor-pointer"
       >
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-linen-accent">Our days</span>
-          <span className="inline-flex items-center gap-1 text-[11px] text-linen-secondary">
+        {/* A halo of light in the corner, as on the hero of every Aurora screen. */}
+        <span aria-hidden="true" className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full border-[16px] border-white/15" />
+        <div className="relative flex items-center justify-between gap-3">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/85">Our days</span>
+          <span className="inline-flex items-center gap-1 text-[11px] text-white/80">
             <Pencil className="h-3 w-3" />
             Change
           </span>
         </div>
 
         {since && count !== null && (
-          <div className="mt-2">
+          <div className="relative mt-2">
             {count === 0 ? (
-              <p className="font-serif text-4xl leading-tight text-linen-primary">Day one</p>
+              <p className="font-serif text-4xl font-semibold leading-tight text-white">Day one</p>
             ) : (
               <div className="flex flex-wrap items-baseline gap-x-2">
-                <span className="font-serif text-5xl leading-none text-linen-primary tabular-nums">
+                <span className="font-serif text-6xl font-semibold leading-none tracking-tight text-white tabular-nums drop-shadow-[0_2px_12px_rgba(60,0,80,0.35)]">
                   {Math.abs(count).toLocaleString()}
                 </span>
-                <span className="text-sm text-linen-secondary">
+                <span className="text-sm font-medium text-white/90">
                   {count < 0
                     ? `${Math.abs(count) === 1 ? 'day' : 'days'} to go`
                     : `${count === 1 ? 'day' : 'days'} together`}
                 </span>
               </div>
             )}
-            <p className="mt-1.5 text-xs text-linen-secondary">
+            <p className="mt-1.5 text-xs text-white/80">
               {count < 0 ? 'Begins' : 'Since'} {formatDay(since)}
             </p>
           </div>
@@ -117,28 +119,28 @@ export const OurDatesCard: React.FC<OurDatesCardProps> = ({ dates, onSave }) => 
 
         {next && (
           <div
-            className={`flex items-center gap-3 ${
-              since ? 'mt-4 border-t border-linen-border/60 pt-4' : 'mt-3'
+            className={`relative flex items-center gap-3 ${
+              since ? 'mt-4 border-t border-white/25 pt-4' : 'mt-3'
             }`}
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linen-variant text-linen-accent">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
               <CalendarHeart className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
               {next.daysUntil === 0 ? (
                 <>
-                  <p className="font-serif text-base font-medium text-linen-primary">Happy anniversary</p>
-                  <p className="text-xs text-linen-secondary">
+                  <p className="font-serif text-base font-semibold text-white">Happy anniversary</p>
+                  <p className="text-xs text-white/80">
                     {next.years ? `${next.years} ${next.years === 1 ? 'year' : 'years'} today` : 'Today is the day'}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-linen-primary">
+                  <p className="text-sm font-medium text-white">
                     {next.years ? `Your ${ordinal(next.years)} anniversary` : 'Your anniversary'}{' '}
                     {next.daysUntil === 1 ? 'is tomorrow' : `is in ${next.daysUntil} days`}
                   </p>
-                  <p className="text-xs text-linen-secondary">{formatDay(next.date, false)}</p>
+                  <p className="text-xs text-white/80">{formatDay(next.date, false)}</p>
                 </>
               )}
             </div>

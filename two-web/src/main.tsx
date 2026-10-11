@@ -2,7 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
 import { isAndroidApp } from './core/platform';
+import { applyAppearance, watchPhoneAppearance } from './core/appearance';
 import './index.css';
+import './styles/night.css';
 
 // Inside the Android app, and on a touch phone, the page should behave like
 // an app rather than a document: no long-press text selection on buttons and
@@ -17,6 +19,11 @@ try {
 } catch {
   // Without the class the page simply keeps normal selection.
 }
+
+// Night or day - already set by index.html before the first paint; this also
+// tells the phone which colour its status bar icons should be.
+applyAppearance();
+watchPhoneAppearance();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

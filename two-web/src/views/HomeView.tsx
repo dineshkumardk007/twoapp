@@ -212,10 +212,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="flex items-center gap-3.5">
           <button
             onClick={() => triggerGlobalPulse('Thinking of you')}
-            className="w-12 h-12 rounded-2xl bg-linen-accent text-linen-surface flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-xs cursor-pointer shrink-0"
+            className="w-14 h-14 rounded-[20px] bg-linen-accent text-linen-surface flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-glow cursor-pointer shrink-0"
             aria-label={`Send ${partnerName} a heartbeat`}
           >
-            <Heart className="w-6 h-6 fill-current" />
+            <Heart className="heart-beat w-7 h-7 fill-current" />
           </button>
           <div className="min-w-0 flex-1">
             <h4 className="font-serif text-base font-medium text-linen-primary">Thinking of you</h4>

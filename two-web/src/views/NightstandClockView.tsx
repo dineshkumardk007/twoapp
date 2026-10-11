@@ -491,12 +491,12 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
   );
 
   return (
-    <div className={`min-h-[85vh] rounded-3xl p-4 sm:p-8 transition-colors duration-700 relative overflow-hidden flex flex-col justify-between select-none ${theme.container}`}>
+    <div className={`no-remap min-h-[85vh] rounded-3xl p-4 sm:p-8 transition-colors duration-700 relative overflow-hidden flex flex-col justify-between select-none ${theme.container}`}>
       {/* On the page's body rather than inside this screen, so nothing the
           screen sits in can clip it or shift where "fixed" means. */}
       {bedside && createPortal(
         <div
-          className="fixed inset-0 z-[60] bg-black select-none cursor-default"
+          className="no-remap fixed inset-0 z-[60] bg-black select-none cursor-default"
           role="dialog"
           aria-modal="true"
           aria-label="Bedside clock"

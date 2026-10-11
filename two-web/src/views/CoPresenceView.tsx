@@ -571,7 +571,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
       </div>
 
       {/* Main Sanctuary Room Stage */}
-      <div className={`rounded-3xl border border-stone-800 p-6 sm:p-8 text-stone-100 shadow-2xl relative overflow-hidden bg-gradient-to-br ${currentRoom.bgGradient} transition-all duration-700`}>
+      <div className={`no-remap rounded-3xl border border-stone-800 p-6 sm:p-8 text-stone-100 shadow-2xl relative overflow-hidden bg-gradient-to-br ${currentRoom.bgGradient} transition-all duration-700`}>
         {/* Soft Ambient Lamp Glow */}
         <div 
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-all duration-1000"

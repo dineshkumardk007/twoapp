@@ -490,7 +490,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
       </div>
 
       {/* Vintage Wooden Chassis & Analog Vacuum Tube Radio UI */}
-      <div className="rounded-3xl border-4 border-[#2b2219] bg-gradient-to-b from-[#1c1712] via-[#14100c] to-[#0a0806] p-6 sm:p-8 shadow-2xl text-amber-100 relative overflow-hidden select-none">
+      <div className="no-remap rounded-3xl border-4 border-[#2b2219] bg-gradient-to-b from-[#1c1712] via-[#14100c] to-[#0a0806] p-6 sm:p-8 shadow-2xl text-amber-100 relative overflow-hidden select-none">
         {/* Brass corner trim highlights */}
         <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-amber-600/40 rounded-tl-lg pointer-events-none" />
         <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-amber-600/40 rounded-tr-lg pointer-events-none" />

@@ -11,25 +11,46 @@ import {
   Wind, Search, Users 
 } from 'lucide-react';
 
+/**
+ * The five families every destination belongs to, each with its own colour -
+ * so the app is colourful without being a jumble: everything about the two of
+ * you glows pink, the quiet places teal, memories and play gold, everyday life
+ * sky blue, and your own settings violet.
+ */
+export type Family = 'love' | 'calm' | 'play' | 'everyday' | 'space';
+
+/** Class names per family. Whole strings, so the stylesheet keeps them. */
+export const FAMILY_STYLE: Record<Family, { text: string; tile: string; dot: string; ring: string }> = {
+  love: { text: 'text-aurora-pink', tile: 'bg-aurora-pink/15', dot: 'bg-aurora-pink', ring: 'ring-aurora-pink/30' },
+  calm: { text: 'text-aurora-teal', tile: 'bg-aurora-teal/15', dot: 'bg-aurora-teal', ring: 'ring-aurora-teal/30' },
+  play: { text: 'text-aurora-gold', tile: 'bg-aurora-gold/15', dot: 'bg-aurora-gold', ring: 'ring-aurora-gold/30' },
+  everyday: { text: 'text-aurora-sky', tile: 'bg-aurora-sky/15', dot: 'bg-aurora-sky', ring: 'ring-aurora-sky/30' },
+  space: { text: 'text-aurora-violet', tile: 'bg-aurora-violet/15', dot: 'bg-aurora-violet', ring: 'ring-aurora-violet/30' }
+};
+
 export interface Destination {
   id: string;
   name: string;
   desc: string;
   icon: any;
   badge?: string;
+  /** Filled in from its group. */
+  family?: Family;
 }
 
 export interface DestinationGroup {
   title: string;
   emoji: string;
+  family: Family;
   items: Destination[];
 }
 
 export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
-  return [
+  return withFamilies([
     {
       title: 'Intimacy & Heart Connection',
       emoji: '💖',
+      family: 'love',
       items: [
         { id: 'chat', name: 'Private Chat', desc: 'Secure two-person messaging with gentle prompts', icon: MessageSquare, badge: unreadChatCount > 0 ? `${unreadChatCount} new` : undefined },
         { id: 'softlanding', name: 'Soft Landing', desc: 'Decompress after a long day before speaking', icon: Feather },
@@ -42,6 +63,7 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
     {
       title: 'Our Parallel Sanctuary',
       emoji: '🌿',
+      family: 'calm',
       items: [
         { id: 'home', name: 'Sanctuary Home', desc: 'Emotional weather, daily check-ins & milestones', icon: Heart },
         { id: 'presence', name: 'Quiet Co-Presence', desc: 'Study & rest beside each other with synchronized timer', icon: Coffee },
@@ -54,6 +76,7 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
     {
       title: 'Memories, Creativity & Play',
       emoji: '🎨',
+      family: 'play',
       items: [
         { id: 'canvas', name: 'Canvas of Us', desc: 'Live shared drawing & doodle canvas', icon: Palette },
         { id: 'scrapbook', name: 'Memoir Book', desc: 'Your private photo scrapbooks & album pages', icon: BookMarked },
@@ -72,6 +95,7 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
     {
       title: 'Daily Shared Life',
       emoji: '📋',
+      family: 'everyday',
       items: [
         { id: 'rituals', name: 'Daily Rituals', desc: 'Shared micro-habits & daily grounding moments', icon: Flame },
         { id: 'lists', name: 'Shared Lists', desc: 'Groceries, trip wishlists & secret gift items', icon: CheckSquare },
@@ -87,12 +111,23 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
     {
       title: 'Your Space',
       emoji: '⚙️',
+      family: 'space',
       items: [
         { id: 'groups', name: 'Groups', desc: 'Chat rooms for more than two, kept apart from your sanctuary', icon: Users },
         { id: 'settings', name: 'Settings', desc: 'Devices, link code, backups & how this space is locked', icon: Settings }
       ]
     }
-  ];
+  ]);
+}
+
+/** Every destination carries its group's family. */
+function withFamilies(groups: DestinationGroup[]): DestinationGroup[] {
+  return groups.map(g => ({ ...g, items: g.items.map(item => ({ ...item, family: g.family })) }));
+}
+
+/** A destination's family, by its id. */
+export function familyOf(tabId: string): Family {
+  return allDestinations().find(d => d.id === tabId)?.family || 'space';
 }
 
 /** Flat list, for the dock and for search. */

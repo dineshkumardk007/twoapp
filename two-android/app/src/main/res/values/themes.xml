@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Two" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/linen_background</item>
-        <item name="android:navigationBarColor">@color/linen_background</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
+    <style name="Theme.Two" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/aurora_night</item>
+        <item name="android:navigationBarColor">@color/aurora_night</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
         <!-- The window behind everything, seen for a moment before the page
-             first draws. The Material default here is a cold white, which
-             showed as a flash between the cream launch screen and the cream
-             app. -->
-        <item name="android:windowBackground">@color/linen_background</item>
+             first draws: the night sky, so the launch screen, the window and
+             the app are one colour with no flash between them. -->
+        <item name="android:windowBackground">@color/aurora_night</item>
     </style>
 
     <!--
-      The launch screen: the leaf from the app icon on the linen background.
+      The launch screen: the leaf from the app icon on the Aurora night sky.
 
       MainActivity starts in this theme. installSplashScreen() moves the
       activity on to Theme.Two (postSplashScreenTheme) straight away, but the
@@ -28,14 +27,14 @@
       circle, so nothing is clipped.
     -->
     <style name="Theme.Two.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/linen_background</item>
+        <item name="windowSplashScreenBackground">@color/aurora_night</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/aurora_icon_back</item>
         <item name="postSplashScreenTheme">@style/Theme.Two</item>
-        <!-- Dark clock and battery icons over the linen, even when the phone
-             itself is in dark mode. -->
-        <item name="android:statusBarColor">@color/linen_background</item>
-        <item name="android:navigationBarColor">@color/linen_background</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <!-- Light clock and battery icons over the night sky. -->
+        <item name="android:statusBarColor">@color/aurora_night</item>
+        <item name="android:navigationBarColor">@color/aurora_night</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 </resources>

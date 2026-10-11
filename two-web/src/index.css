@@ -5,70 +5,218 @@
 /* ---------------------------------------------------------------------------
    Fonts
    ---------------------------------------------------------------------------
-   Inter for the interface and Lora for the reading text, shipped inside the
-   app rather than fetched from Google Fonts. The stylesheet link used to hold
-   up the first paint until fonts.googleapis.com answered, which on a weak
-   signal meant a blank screen; offline the app fell back to the phone's own
-   fonts and looked like a different app; and both phones checked in with
-   Google every day, which a private space should not do.
+   Manrope for the interface and Fraunces for headings and reading text -
+   Aurora's pair - shipped inside the app rather than fetched from Google
+   Fonts, which held up the first paint on a weak signal, failed offline, and
+   had both phones checking in with Google every day.
 
-   Variable fonts, so one file per style covers every weight in use (Inter
-   300-600, Lora 400-600 upright and italic). Only the Latin and Latin
-   Extended subsets: English, the European languages in the language list and
-   romanised Tamil. Tamil script was never in either font and still comes from
-   the phone's own Tamil font. unicode-range means the extended file is only
-   fetched when a page actually uses one of its letters.
+   Variable fonts, so one file per style covers every weight in use. Only the
+   Latin and Latin Extended subsets: English, the European languages in the
+   language list and romanised Tamil; Tamil script comes from the phone's own
+   Tamil font. unicode-range means the extended file is only fetched when a
+   page uses one of its letters.
 
    Both are under the SIL Open Font License 1.1, which allows bundling them;
-   the notice travels inside each file's metadata. Inter by Rasmus Andersson,
-   Lora by Cyreal. */
+   the notice travels inside each file's metadata. Manrope by Mikhail
+   Sharanda, Fraunces by Undercase Type. */
 @font-face {
-  font-family: 'Inter';
+  font-family: 'Manrope';
   font-style: normal;
-  font-weight: 300 600;
+  font-weight: 200 800;
   font-display: swap;
-  src: url('./assets/fonts/inter-latin-ext.woff2') format('woff2');
+  src: url('./assets/fonts/manrope-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
-  font-family: 'Inter';
+  font-family: 'Manrope';
   font-style: normal;
-  font-weight: 300 600;
+  font-weight: 200 800;
   font-display: swap;
-  src: url('./assets/fonts/inter-latin.woff2') format('woff2');
+  src: url('./assets/fonts/manrope-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: 'Lora';
+  font-family: 'Fraunces';
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('./assets/fonts/lora-latin-ext.woff2') format('woff2');
+  src: url('./assets/fonts/fraunces-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
-  font-family: 'Lora';
+  font-family: 'Fraunces';
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('./assets/fonts/lora-latin.woff2') format('woff2');
+  src: url('./assets/fonts/fraunces-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: 'Lora';
+  font-family: 'Fraunces';
   font-style: italic;
-  font-weight: 400 600;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('./assets/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  src: url('./assets/fonts/fraunces-italic-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
-  font-family: 'Lora';
+  font-family: 'Fraunces';
   font-style: italic;
-  font-weight: 400 600;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('./assets/fonts/lora-italic-latin.woff2') format('woff2');
+  src: url('./assets/fonts/fraunces-italic-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------------------------------------------------------------------------
+   Aurora
+   ---------------------------------------------------------------------------
+   The look: a night sky with light moving through it. Every colour in the
+   app comes from these variables (see `linen` and `aurora` in
+   tailwind.config.js), as red green blue channels so that any class can add
+   its own transparency (bg-linen-surface/60).
+
+   Night is the look and the default - `dark` on <html>, set before the first
+   paint (index.html, core/appearance.ts). Day is its lighter version for
+   anyone who prefers it, chosen in Settings. */
+:root {
+  /* Day: lavender mist and plum ink. */
+  --c-bg: 247 245 255;
+  --c-surface: 255 255 255;
+  --c-variant: 239 235 255;
+  --c-primary: 29 22 56;
+  --c-secondary: 104 96 140;
+  --c-accent: 219 39 119;
+  --c-border: 228 223 245;
+  --c-violet: 124 58 237;
+  --c-pink: 219 39 119;
+  --c-peach: 249 115 22;
+  --c-teal: 13 148 136;
+  --c-gold: 217 119 6;
+  --c-sky: 2 132 199;
+  --glow-strength: 0.16;
+  --shadow-2xs: 0 1px 0 0 rgb(29 22 56 / 0.05);
+  --shadow-xs: 0 1px 2px 0 rgb(29 22 56 / 0.05), 0 6px 16px -8px rgb(76 29 149 / 0.18);
+  --grad-primary: linear-gradient(120deg, rgb(var(--c-violet)), rgb(var(--c-pink)) 70%, rgb(var(--c-peach)));
+  --grad-hero: linear-gradient(125deg, #7C3AED, #DB2777 55%, #FB923C);
+  color-scheme: light;
+}
+html.dark {
+  /* Night: the sky behind everything, cards a step lighter, lavender ink. */
+  --c-bg: 14 11 31;
+  --c-surface: 26 21 52;
+  --c-variant: 37 31 70;
+  --c-primary: 244 241 255;
+  --c-secondary: 170 162 205;
+  --c-accent: 244 114 182;
+  --c-border: 55 48 96;
+  --c-violet: 139 92 246;
+  --c-pink: 236 72 153;
+  --c-peach: 251 146 60;
+  --c-teal: 45 212 191;
+  --c-gold: 252 211 77;
+  --c-sky: 56 189 248;
+  --glow-strength: 0.30;
+  --shadow-2xs: 0 0 0 1px rgb(255 255 255 / 0.03);
+  --shadow-xs: 0 0 0 1px rgb(255 255 255 / 0.04), 0 10px 24px -14px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
+
+/* The sky: the page colour, and light glowing in from its edges - violet at
+   the top, pink to the side, a little peach at the foot. One fixed layer
+   behind everything, drawn once, never re-laid out by scrolling. */
+body {
+  background-color: rgb(var(--c-bg));
+  color: rgb(var(--c-primary));
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 45% at 12% -5%, rgb(var(--c-violet) / var(--glow-strength)), transparent 70%),
+    radial-gradient(55% 40% at 105% 18%, rgb(var(--c-pink) / calc(var(--glow-strength) * 0.7)), transparent 70%),
+    radial-gradient(65% 40% at 50% 112%, rgb(var(--c-peach) / calc(var(--glow-strength) * 0.45)), transparent 70%);
+}
+
+/* The app's own canvas lets the sky through. */
+.app-canvas {
+  background-color: transparent;
+}
+
+/* Cards at night are glass: a little of the sky shows through them. */
+html.dark .bg-linen-surface {
+  --tw-bg-opacity: 0.82;
+}
+
+/* The primary action, and anything wearing the primary colour as a filled
+   tile: lit with the aurora instead of a flat block. */
+.bg-linen-primary.text-linen-surface {
+  background-image: var(--grad-primary);
+  color: #fff;
+}
+.bg-linen-accent.text-linen-surface {
+  background-image: linear-gradient(135deg, rgb(var(--c-pink)), rgb(var(--c-peach)));
+  color: #fff;
+}
+
+/* A hero: the big moments - your days together, a reveal. */
+.aurora-hero {
+  background-image: var(--grad-hero);
+  background-size: 180% 180%;
+  animation: aurora-drift 14s ease-in-out infinite alternate;
+  color: #fff;
+}
+@keyframes aurora-drift {
+  from { background-position: 0% 30%; }
+  to { background-position: 100% 70%; }
+}
+
+/* A heart that beats: lub-dub, then rest. */
+.heart-beat {
+  animation: heart-beat 2.4s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes heart-beat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.16); }
+  24% { transform: scale(1); }
+  36% { transform: scale(1.08); }
+}
+
+/* Each screen arrives with a short rise rather than a cut. */
+.screen-enter {
+  animation: screen-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes screen-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-hero, .heart-beat, .screen-enter { animation: none !important; }
+}
+
+/* Words lit with the aurora: the name of the app, the big numbers. */
+.aurora-text {
+  background-image: linear-gradient(100deg, rgb(var(--c-violet)), rgb(var(--c-pink)) 55%, rgb(var(--c-peach)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+html.dark .aurora-text {
+  background-image: linear-gradient(100deg, #C4B5FD, #F9A8D4 55%, #FDBA74);
+}
+
+/* Selection and focus in the aurora's colours. */
+::selection {
+  background: rgb(var(--c-pink) / 0.28);
+}
+:focus-visible {
+  outline: 2px solid rgb(var(--c-accent) / 0.8);
+  outline-offset: 2px;
 }
 
 @layer base {
@@ -222,6 +370,9 @@
 .dock-all-edge {
   box-shadow: -10px 0 12px -8px rgb(0 0 0 / 0.16);
 }
+html.dark .dock-all-edge {
+  box-shadow: -12px 0 14px -8px rgb(0 0 0 / 0.5);
+}
 
 /* Every tab carries its destination's full name, on up to two lines, in a box
    of fixed height. Fixed height is the point: a one-word tab and a two-word tab
@@ -251,22 +402,22 @@
    fixed dock exists to prevent. transform is painted after layout, so this key
    swells out of the bar and its neighbours do not move a pixel. */
 .dock-tab-active {
-  background-image: linear-gradient(180deg, #ffffff 0%, #f2efeb 100%);
-  border: 1px solid rgb(255 255 255 / 0.7);
+  /* Lit with the aurora: the one place in the bar the light falls. */
+  background-image: var(--grad-primary);
+  border: 1px solid rgb(255 255 255 / 0.22);
   transform: translateY(-2px) scale(1.12);
   z-index: 1;
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.95),
-    inset 0 -1px 0 rgb(45 49 46 / 0.06),
-    0 1px 1px rgb(45 49 46 / 0.07),
-    0 4px 10px -3px rgb(45 49 46 / 0.24);
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    0 8px 18px -8px rgb(var(--c-pink) / 0.75),
+    0 3px 10px -4px rgb(var(--c-violet) / 0.7);
 }
 
 /* The icon lifts a touch further than the key it sits on, which is what sells
    the depth: two planes moving by different amounts. */
 .dock-tab-icon {
   transform: translateY(-0.5px) scale(1.16);
-  filter: drop-shadow(0 1px 0.5px rgb(45 49 46 / 0.22));
+  filter: drop-shadow(0 1px 1px rgb(30 10 60 / 0.35));
 }
 
 /* Pressing pushes the key back down into the bar. */

@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronUp, X, Search } from 'lucide-react';
-import { getDestinations, allDestinations } from '../data/destinations';
+import { getDestinations, allDestinations, FAMILY_STYLE } from '../data/destinations';
 import { useBackLayer } from '../core/backStack';
 import { haptic } from '../core/haptics';
 
@@ -184,7 +184,7 @@ export const AppDock: React.FC<AppDockProps> = ({
 
           <div
             onClick={e => e.stopPropagation()}
-            className="relative rounded-t-3xl border-t border-white/25 bg-linen-surface/80 backdrop-blur-2xl shadow-2xl max-h-[82vh] flex flex-col"
+            className="relative rounded-t-[28px] border-t border-linen-border bg-linen-bg/95 backdrop-blur-2xl shadow-2xl max-h-[82vh] flex flex-col"
             style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
           >
             <div className="shrink-0 px-4 pt-3 pb-2">
@@ -223,8 +223,8 @@ export const AppDock: React.FC<AppDockProps> = ({
 
               {filtered.map(group => (
                 <div key={group.title} className="mb-5">
-                  <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
-                    <span className="mr-1">{group.emoji}</span>
+                  <p className={`mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider ${FAMILY_STYLE[group.family].text}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${FAMILY_STYLE[group.family].dot}`} />
                     {group.title}
                   </p>
 
@@ -232,17 +232,20 @@ export const AppDock: React.FC<AppDockProps> = ({
                     {group.items.map(item => {
                       const Icon = item.icon;
                       const active = currentTab === item.id;
+                      const family = FAMILY_STYLE[group.family];
                       return (
                         <button
                           key={item.id}
                           onClick={() => go(item.id)}
                           className={`flex items-start gap-2.5 rounded-2xl border p-3 text-left transition-all active:scale-[0.97] ${
                             active
-                              ? 'border-linen-primary/40 bg-linen-variant/80 ring-1 ring-linen-primary/20'
+                              ? `border-transparent bg-linen-variant/80 ring-1 ${family.ring}`
                               : 'border-linen-border/60 bg-linen-surface/60 hover:bg-linen-variant/50'
                           }`}
                         >
-                          <Icon className="mt-0.5 h-4 w-4 shrink-0 text-linen-accent" />
+                          <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${family.tile}`}>
+                            <Icon className={`h-4 w-4 ${family.text}`} />
+                          </span>
                           <span className="min-w-0">
                             <span className="block truncate text-xs font-semibold text-linen-primary">
                               {item.name}
@@ -272,7 +275,7 @@ export const AppDock: React.FC<AppDockProps> = ({
       {/* Resting bar */}
       <div
         ref={barRef}
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/20 bg-linen-surface/70 backdrop-blur-2xl"
+        className="dock-bar fixed inset-x-0 bottom-0 z-40 border-t border-linen-border/70 bg-linen-bg/75 backdrop-blur-2xl"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className={`mx-auto flex items-stretch ${isTablet ? 'max-w-3xl' : ''}`}>
@@ -294,11 +297,13 @@ export const AppDock: React.FC<AppDockProps> = ({
                     // scrolls at all; with tabs sized to divide the width
                     // exactly, it reads as a fixed row of four.
                     isTablet ? 'w-[104px]' : 'w-[80px]'
-                  } ${active ? 'dock-tab-active text-linen-primary' : 'text-linen-secondary'}`}
+                  } ${active ? 'dock-tab-active text-white' : 'text-linen-secondary'}`}
                 >
+                  {/* Each icon in its family's colour, so the bar itself
+                      shows where love, calm, play and everyday life live. */}
                   <Icon
                     className={`h-5 w-5 transition-transform ${
-                      active ? 'dock-tab-icon text-linen-primary' : 'text-linen-secondary'
+                      active ? 'dock-tab-icon text-white' : FAMILY_STYLE[item.family || 'space'].text
                     }`}
                   />
                   {/* The whole name, the same one the directory sheet and the

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <!-- The tab icon was an emoji rendered by whatever font the browser happened
@@ -11,15 +11,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
     <title>Two — Private Encrypted Space</title>
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#2D2621" />
+    <meta name="theme-color" content="#0E0B1F" />
+    <!-- Night (the Aurora sky) unless this phone chose day, decided before
+         anything is drawn so the app never flashes the other colours. The
+         rest is in src/core/appearance.ts. -->
+    <script>
+      try {
+        var look = localStorage.getItem('two_appearance_v1');
+        var night = look === 'day' ? false : look === 'system' ? matchMedia('(prefers-color-scheme: dark)').matches : true;
+        if (!night) document.documentElement.classList.remove('dark');
+      } catch (e) {}
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Two" />
-    <!-- Inter and Lora ship with the app (src/assets/fonts, declared in
-         index.css). They used to come from fonts.googleapis.com, which held
+    <!-- Manrope and Fraunces ship with the app (src/assets/fonts, declared in
+         index.css). Fonts used to come from fonts.googleapis.com, which held
          up the first paint on a weak signal and failed offline. -->
   </head>
-  <body class="bg-linen-bg text-linen-primary font-sans antialiased selection:bg-linen-accent/20">
+  <body class="bg-linen-bg text-linen-primary font-sans antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>

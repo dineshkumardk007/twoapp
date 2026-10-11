@@ -259,7 +259,7 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
                     key={level}
                     points={points}
                     fill="none"
-                    stroke="#e5e0db"
+                    className="stroke-linen-border"
                     strokeWidth="1"
                     strokeDasharray={level === 1 ? 'none' : '3 3'}
                   />
@@ -276,30 +276,28 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
                     y1={center}
                     x2={x}
                     y2={y}
-                    stroke="#e5e0db"
+                    className="stroke-linen-border"
                     strokeWidth="1"
                   />
                 );
               })}
 
-              {/* User Polygon (Terracotta / Linen Primary) */}
+              {/* Your polygon, in the aurora's pink */}
               {(viewMode === 'both' || viewMode === 'you') && (
                 <polygon
                   points={generatePolygonPoints(currentMyProfile)}
-                  fill="#c48b71"
+                  className="fill-aurora-pink stroke-aurora-pink"
                   fillOpacity="0.28"
-                  stroke="#c48b71"
                   strokeWidth="2.2"
                 />
               )}
 
-              {/* Partner Polygon (Indigo / Sage Accent) */}
+              {/* Their polygon, in the aurora's violet */}
               {(viewMode === 'both' || viewMode === 'partner') && (
                 <polygon
                   points={generatePolygonPoints(currentTheirProfile)}
-                  fill="#6366f1"
+                  className="fill-aurora-violet stroke-aurora-violet"
                   fillOpacity="0.24"
-                  stroke="#6366f1"
                   strokeWidth="2.2"
                 />
               )}
@@ -329,11 +327,11 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
           {/* Chart Legend */}
           <div className="flex items-center space-x-6 text-xs text-linen-secondary mt-3">
             <div className="flex items-center space-x-1.5">
-              <div className="w-3 h-3 rounded-full bg-[#c48b71]" />
+              <div className="w-3 h-3 rounded-full bg-aurora-pink" />
               <span className="font-medium text-linen-primary">Your Needs</span>
             </div>
             <div className="flex items-center space-x-1.5">
-              <div className="w-3 h-3 rounded-full bg-[#6366f1]" />
+              <div className="w-3 h-3 rounded-full bg-aurora-violet" />
               <span className="font-medium text-linen-primary">Partner’s Needs</span>
             </div>
           </div>

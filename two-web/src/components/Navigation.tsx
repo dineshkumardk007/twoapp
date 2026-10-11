@@ -176,7 +176,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
     return (
       <>
-        <header className="app-topbar sticky top-0 z-40 border-b border-linen-border/70 bg-linen-surface/80 backdrop-blur-md">
+        <header className="app-topbar sticky top-0 z-40 border-b border-linen-border/60 bg-linen-bg/75 backdrop-blur-xl">
           <div className="flex h-11 items-center justify-between gap-2 px-3">
             {/* Left: the product name, then the link's state - two things, the
                 way the website has always had them. They were briefly merged
@@ -186,20 +186,20 @@ export const Navigation: React.FC<NavigationProps> = ({
             <div className="flex min-w-0 items-center gap-2">
               <span
                 onClick={() => onSelectTab('home')}
-                className="shrink-0 cursor-pointer select-none font-serif text-xl font-medium tracking-tight text-linen-primary"
+                className="aurora-text shrink-0 cursor-pointer select-none font-serif text-[22px] font-semibold tracking-tight"
               >
                 {t.appName}
               </span>
 
               <button
                 onClick={() => setShowPairingModal(true)}
-                className="flex min-w-0 items-center gap-1.5 rounded-full border border-linen-border bg-linen-variant px-2 py-1 active:scale-95 transition-transform"
+                className="flex min-w-0 items-center gap-1.5 rounded-full border border-linen-border bg-linen-surface/60 px-2 py-1 active:scale-95 transition-transform"
                 title="End-to-end encrypted - tap to verify safety numbers"
               >
                 <span
                   className={`h-2 w-2 shrink-0 rounded-full ${
                     connected
-                      ? 'bg-emerald-500'
+                      ? 'bg-aurora-teal shadow-[0_0_8px_rgb(var(--c-teal)/0.8)]'
                       : connecting
                       ? 'bg-amber-400 animate-pulse'
                       : 'bg-stone-400'
@@ -222,15 +222,15 @@ export const Navigation: React.FC<NavigationProps> = ({
             <div className="flex shrink-0 items-center gap-1.5">
               <button
                 onClick={() => setShowHeartModal(true)}
-                className="inline-flex items-center rounded-lg border border-rose-200/90 bg-rose-50/80 px-2.5 py-1 text-xs font-medium text-rose-600 active:scale-95 transition-transform"
+                className="inline-flex items-center rounded-full bg-linen-accent text-linen-surface px-3 py-1 text-xs font-semibold shadow-glow active:scale-95 transition-transform"
                 title="Heart Touch: send a sensory pulse"
               >
-                <Heart className="mr-1 h-3.5 w-3.5 shrink-0 fill-rose-500 text-rose-500" />
+                <Heart className="heart-beat mr-1 h-3.5 w-3.5 shrink-0 fill-current" />
                 <span>Heart</span>
               </button>
               <button
                 onClick={() => setShowToolsModal(true)}
-                className="inline-flex items-center rounded-lg border border-linen-border bg-linen-variant/80 px-2.5 py-1 text-xs font-medium text-linen-primary active:scale-95 transition-transform"
+                className="inline-flex items-center rounded-full border border-linen-border bg-linen-surface/60 px-3 py-1 text-xs font-medium text-linen-primary active:scale-95 transition-transform"
                 title="Sanctuary Tools (soundscapes, breathing, camouflage, mesh & more)"
               >
                 <Compass className="mr-1 h-3.5 w-3.5 shrink-0 text-linen-accent" />

@@ -3304,7 +3304,8 @@ export const App: React.FC = () => {
   };
 
   const themeClass = {
-    linen: 'bg-linen-bg text-linen-primary',
+    // The canvas lets the Aurora sky drawn behind the page show through.
+    linen: 'app-canvas text-linen-primary',
     slate: 'bg-slate-bg text-slate-primary dark',
     forest: 'bg-forest-bg text-forest-primary',
     terracotta: 'bg-terracotta-bg text-terracotta-primary'
@@ -3577,13 +3578,13 @@ export const App: React.FC = () => {
     };
 
     return (
-      <div className="min-h-screen app-min-vh bg-linen-bg flex items-center justify-center p-4">
-        <div className="max-w-xs w-full bg-linen-surface border border-linen-border rounded-3xl p-8 shadow-sm text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-500 shadow-xs">
-            <Lock className="w-7 h-7 text-rose-500" />
+      <div className="min-h-screen app-min-vh app-canvas flex items-center justify-center p-4">
+        <div className="max-w-xs w-full bg-linen-surface/70 backdrop-blur-xl border border-linen-border rounded-[32px] p-8 shadow-xs text-center space-y-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-linen-primary text-linen-surface shadow-glow">
+            <Lock className="w-7 h-7" />
           </div>
           <div>
-            <h2 className="font-serif text-2xl font-medium text-linen-primary">Sanctuary Locked</h2>
+            <h2 className="font-serif text-2xl font-semibold text-linen-primary">Sanctuary Locked</h2>
             <p className="text-xs text-linen-secondary mt-1">
               {lockoutLeft > 0
                 ? 'Too many wrong PINs'
@@ -3614,14 +3615,14 @@ export const App: React.FC = () => {
             {[0, 1, 2, 3].map((idx) => (
               <div
                 key={idx}
-                className={`w-10 h-12 rounded-xl border flex items-center justify-center text-xl font-mono transition-all ${
+                className={`w-11 h-12 rounded-2xl border flex items-center justify-center text-xl font-mono transition-all ${
                   lockoutLeft > 0
                     ? 'border-linen-border bg-linen-variant/30 text-linen-secondary/30'
                     : pinError
                     ? 'border-red-500 bg-red-50 text-red-600'
                     : pinAttempt.length > idx
-                    ? 'border-linen-primary bg-linen-variant text-linen-primary font-bold'
-                    : 'border-linen-border bg-linen-surface text-linen-secondary/30'
+                    ? 'border-transparent bg-linen-primary text-linen-surface font-bold shadow-glow scale-105'
+                    : 'border-linen-border bg-linen-variant/40 text-linen-secondary/30'
                 }`}
               >
                 {pinAttempt.length > idx ? '•' : ''}
@@ -3629,7 +3630,7 @@ export const App: React.FC = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5 max-w-[240px] mx-auto pt-2">
+          <div className="grid grid-cols-3 gap-x-5 gap-y-3 max-w-[236px] mx-auto pt-2">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((btn) => (
               <button
                 key={btn}
@@ -3641,7 +3642,7 @@ export const App: React.FC = () => {
                   } else handlePinInput(btn);
                 }}
                 disabled={lockoutLeft > 0}
-                className="py-3.5 rounded-xl border border-linen-border bg-linen-variant/40 hover:bg-linen-variant text-linen-primary text-lg font-medium transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-linen-variant/40"
+                className="h-[60px] w-[60px] mx-auto rounded-full border border-linen-border bg-linen-variant/40 hover:bg-linen-variant active:scale-90 active:bg-linen-variant text-linen-primary text-xl font-medium transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-linen-variant/40"
               >
                 {btn}
               </button>
@@ -3690,7 +3691,7 @@ export const App: React.FC = () => {
    */
   if (!mediaReady) {
     return (
-      <div className="min-h-screen app-min-vh bg-linen-bg flex items-center justify-center">
+      <div className="min-h-screen app-min-vh app-canvas flex items-center justify-center">
         {/* Inlined rather than loaded from /icon-192.svg: inside the Android
             WebView the assets are served from a base this path would miss. */}
         <svg
@@ -3919,7 +3920,9 @@ export const App: React.FC = () => {
         } ${isTablet ? 'max-w-5xl' : 'max-w-3xl'}`}
       >
         {/* The screens below arrive as separate chunks. Only this region
-            waits for one; the navigation around it never moves. */}
+            waits for one; the navigation around it never moves. Each one
+            rises in briefly rather than cutting (screen-enter). */}
+        <div key={currentTab} className="screen-enter">
         <Suspense fallback={<ScreenFallback />}>
         {currentTab === 'home' && (
           <HomeView
@@ -4339,6 +4342,7 @@ export const App: React.FC = () => {
           />
         )}
         </Suspense>
+        </div>
       </main>
 
       {roleClash && (

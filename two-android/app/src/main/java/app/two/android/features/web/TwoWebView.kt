@@ -131,6 +131,18 @@ class AndroidWebBridge(
     }
 
     /**
+     * The page's look: Aurora's night (light = false) or its day. The status
+     * bar icons and the strips around the page follow it.
+     */
+    @JavascriptInterface
+    fun setBarsLight(light: Boolean) {
+        Handler(Looper.getMainLooper()).post {
+            val activity = context.findActivity() ?: return@post
+            SystemChrome.apply(activity, light)
+        }
+    }
+
+    /**
      * The page has drawn its first real screen - the lock screen, the
      * first-run screens or the app - so the launch splash can step aside.
      */
@@ -544,7 +556,9 @@ fun TwoWebView(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
-                setBackgroundColor(Color.parseColor("#FAF8F5"))
+                // The night sky, so the moment before the page draws is the
+                // same colour as the launch screen and the page.
+                setBackgroundColor(SystemChrome.NIGHT_ARGB)
                 // Let the page paint under the system bars; the CSS handles insets.
                 setFitsSystemWindows(false)
                 overScrollMode = WebView.OVER_SCROLL_NEVER

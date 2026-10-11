@@ -147,7 +147,7 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
   // the screen ends.
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-neutral-900 text-white select-none overflow-hidden"
+      className="no-remap fixed inset-0 z-[100] flex flex-col bg-neutral-900 text-white select-none overflow-hidden"
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
