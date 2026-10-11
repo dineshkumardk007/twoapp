@@ -5,7 +5,16 @@ import { newId } from '../core/ids';
 import { whenLabel } from '../core/when';
 import { who } from '../core/who';
 import { MAX_RECORD_BYTES, recordSizeOf } from '../core/ws';
-import { openRecorder, VOICE_MAX_AUDIO_BYTES } from '../core/voice';
+import {
+  canRecordVoice,
+  claimVoicePlayback,
+  holdRadioDown,
+  markWaitingForMic,
+  startVoiceRecording,
+  summarizePeaks,
+  VoiceRecording
+} from '../core/voice';
+import { useBackLayer } from '../core/backStack';
 
 interface WhisperMemosViewProps {
   memos: WhisperMemoItem[];
@@ -41,6 +50,24 @@ const CATEGORY_META: Record<WhisperCategory, { label: string; icon: string; colo
  */
 const MAX_MEMO_SECONDS = 180;
 
+/** The live meter at rest. */
+const QUIET_BARS = new Array(12).fill(0.15);
+
+/** Bars kept in a memo's waveform - the shape of the voice actually recorded. */
+const MEMO_BARS = 28;
+
+/** What went wrong asking for the microphone, in words that say what to do. */
+function micErrorText(err: unknown): string {
+  const name = (err as { name?: string } | null)?.name;
+  if (name === 'NotAllowedError' || name === 'SecurityError') {
+    return "Two can't use the microphone - allow it in the phone's settings, then try again.";
+  }
+  if (name === 'NotFoundError') return 'No microphone found.';
+  return "Couldn't start recording. Try again.";
+}
+
+type RecorderState = 'idle' | 'starting' | 'recording' | 'recorded';
+
 export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
   memos,
   activeUser,
@@ -58,12 +85,13 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
   const [showRecordModal, setShowRecordModal] = useState(false);
 
   // Recording State
-  const [isRecording, setIsRecording] = useState(false);
+  const [recorderState, setRecorderState] = useState<RecorderState>('idle');
+  const isRecording = recorderState === 'recording';
   const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [liveVolumeBars, setLiveVolumeBars] = useState<number[]>([0.2, 0.4, 0.3, 0.5, 0.7, 0.4, 0.6]);
+  const [liveVolumeBars, setLiveVolumeBars] = useState<number[]>(QUIET_BARS);
   const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
   const [recordedWaveform, setRecordedWaveform] = useState<number[]>([]);
-  /** Why recording stopped by itself, or why a memo could not be sent. */
+  /** Why recording stopped by itself, or why a memo could not be made or sent. */
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
   // Form State
@@ -74,160 +102,213 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
   // Audio Playback State
   const [playingMemoId, setPlayingMemoId] = useState<string | null>(null);
   const [playbackProgress, setPlaybackProgress] = useState<Record<string, number>>({});
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
+  const [playbackSpeed] = useState<number>(1.0);
+  /** A memo that could not be played, and why - said under it. */
+  const [playError, setPlayError] = useState<{ id: string; text: string } | null>(null);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const recordingTimerRef = useRef<any>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const animFrameRef = useRef<number | null>(null);
+  const recordingRef = useRef<VoiceRecording | null>(null);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  /**
+   * Bumped whenever a recording is finished with - stopped, thrown away, the
+   * window closed - so a microphone that answers late is let go of instead of
+   * starting a recording nobody is looking at.
+   */
+  const recordSessionRef = useRef(0);
 
   const activeAudioElementRef = useRef<HTMLAudioElement | null>(null);
+  const releasePlaybackRef = useRef<(() => void) | null>(null);
+  const releaseRadioRef = useRef<(() => void) | null>(null);
 
-  /**
-   * The recorder's context is its own, because the microphone is wired into
-   * it - and it is closed the moment recording ends. Left open, each memo
-   * held one of the handful of contexts a phone allows, until every sound in
-   * the app stopped.
-   */
-  const releaseLiveBars = () => {
-    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    analyserRef.current = null;
-    const ctx = audioContextRef.current;
-    audioContextRef.current = null;
-    if (ctx && ctx.state !== 'closed') ctx.close().catch(() => {});
+  const clearRecordingTimer = () => {
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = null;
   };
 
-  // Clean up on unmount
+  /** Lets go of the microphone, keeping nothing. */
+  const dropRecording = () => {
+    recordSessionRef.current++;
+    clearRecordingTimer();
+    recordingRef.current?.cancel();
+    recordingRef.current = null;
+  };
+
+  /** Back to an empty recorder: nothing recording, nothing recorded. */
+  const resetRecorder = () => {
+    dropRecording();
+    setRecorderState('idle');
+    setRecordingSeconds(0);
+    setLiveVolumeBars(QUIET_BARS);
+    setRecordedAudioUrl(null);
+    setRecordedWaveform([]);
+    setLimitNotice(null);
+  };
+
+  /** Stops whatever memo is playing. */
+  const stopPlayback = () => {
+    const audio = activeAudioElementRef.current;
+    activeAudioElementRef.current = null;
+    if (audio) {
+      audio.onended = null;
+      audio.ontimeupdate = null;
+      audio.onerror = null;
+      audio.pause();
+    }
+    releasePlaybackRef.current?.();
+    releasePlaybackRef.current = null;
+    releaseRadioRef.current?.();
+    releaseRadioRef.current = null;
+    setPlayingMemoId(null);
+  };
+
+  // Leaving the screen: the microphone and any memo playing are let go of.
+  // Closing the recorder used to leave the microphone on until then.
   useEffect(() => {
     return () => {
+      recordSessionRef.current++;
       if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-      releaseLiveBars();
-      if (activeAudioElementRef.current) {
-        activeAudioElementRef.current.pause();
+      recordingRef.current?.cancel();
+      recordingRef.current = null;
+      const audio = activeAudioElementRef.current;
+      activeAudioElementRef.current = null;
+      if (audio) {
+        audio.onended = null;
+        audio.pause();
       }
+      releasePlaybackRef.current?.();
+      releaseRadioRef.current?.();
     };
   }, []);
 
-  const startRecording = async () => {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        fallbackGenerateProceduralMemo();
-        return;
-      }
-
-      // One channel: a phone's second is a copy of the first, at twice the size.
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
-      const mediaRecorder = openRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      setLimitNotice(null);
-      let audioBytes = 0;
-
-      // Through the refs rather than stopRecording(), which tests a piece of
-      // state captured before recording began and would decline.
-      const stopAtLimit = () => {
-        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        setIsRecording(false);
-        setLimitNotice('Stopped here - the longest a memo can be.');
-      };
-
-      // Setup Web Audio Analyser for live visual bars
-      try {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        const ctx = new AudioContextClass();
-        const source = ctx.createMediaStreamSource(stream);
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 32;
-        source.connect(analyser);
-        audioContextRef.current = ctx;
-        analyserRef.current = analyser;
-
-        const updateLiveBars = () => {
-          if (!analyserRef.current) return;
-          const data = new Uint8Array(analyserRef.current.frequencyBinCount);
-          analyserRef.current.getByteFrequencyData(data);
-          const sample = Array.from(data.slice(0, 12)).map(v => Math.max(0.15, v / 255));
-          setLiveVolumeBars(sample);
-          animFrameRef.current = requestAnimationFrame(updateLiveBars);
-        };
-        updateLiveBars();
-      } catch (_) {}
-
-      mediaRecorder.ondataavailable = e => {
-        if (e.data.size === 0) return;
-        audioChunksRef.current.push(e.data);
-        audioBytes += e.data.size;
-        if (audioBytes >= VOICE_MAX_AUDIO_BYTES && mediaRecorder.state === 'recording') stopAtLimit();
-      };
-
-      mediaRecorder.onstop = () => {
-        // The type the recorder actually used - not every phone records WebM.
-        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setRecordedAudioUrl(reader.result as string);
-        };
-        reader.readAsDataURL(audioBlob);
-
-        // Generate synthetic waveform
-        const wf = Array.from({ length: 24 }).map(() => Math.max(0.2, Math.random() * 0.85 + 0.15));
-        setRecordedWaveform(wf);
-
-        // Stop stream tracks
-        stream.getTracks().forEach(t => t.stop());
-        releaseLiveBars();
-      };
-
-      mediaRecorder.start(100);
-      setIsRecording(true);
+  /**
+   * Ends the recording and keeps it for listening back and sending.
+   *
+   * `notice` says why, when it was not the stop button.
+   */
+  const finishRecording = async (notice?: string) => {
+    const recording = recordingRef.current;
+    if (!recording) return;
+    recordingRef.current = null;
+    clearRecordingTimer();
+    const session = recordSessionRef.current;
+    const levels = recording.levels().slice();
+    const note = await recording.stop();
+    if (recordSessionRef.current !== session) return;
+    if (!note) {
+      setRecorderState('idle');
       setRecordingSeconds(0);
-
-      recordingTimerRef.current = setInterval(() => {
-        setRecordingSeconds(prev => {
-          // Stopped here rather than at the point of sending: a memo too big
-          // for one relay message cannot be sent at all, and finding that out
-          // after pouring five minutes into it is the wrong moment to learn it.
-          if (prev + 1 >= MAX_MEMO_SECONDS && mediaRecorder.state === 'recording') stopAtLimit();
-          return prev + 1;
-        });
-      }, 1000);
-    } catch (err) {
-      console.warn('Microphone error or permission denied, using procedural memo:', err);
-      fallbackGenerateProceduralMemo();
+      setLiveVolumeBars(QUIET_BARS);
+      setLimitNotice(
+        recording.elapsedMs() < 1000 ? 'Too short - record for a little longer.' : "Couldn't keep that recording. Try again."
+      );
+      return;
     }
+    setRecordedAudioUrl(note.dataUrl);
+    setRecordedWaveform(summarizePeaks(levels, MEMO_BARS).map(peak => peak / 100));
+    setRecordingSeconds(Math.max(1, Math.round(note.durationSeconds)));
+    setRecorderState('recorded');
+    setLimitNotice(notice || null);
+  };
+
+  /**
+   * Records from the microphone - the chat's voice-note recorder, so a memo
+   * is made, limited and cleaned up the same way.
+   *
+   * There is no pretending any more. When the microphone could not be had,
+   * this used to run a six-second timer and hand over an empty sound file,
+   * which could be sent - your partner received a silent memo.
+   */
+  const startRecording = async () => {
+    if (recorderState !== 'idle') return;
+    if (!canRecordVoice()) {
+      setLimitNotice("This phone can't record voice here.");
+      return;
+    }
+    const session = ++recordSessionRef.current;
+    setLimitNotice(null);
+    setRecorderState('starting');
+    setLiveVolumeBars(QUIET_BARS);
+
+    markWaitingForMic(true);
+    let recording: VoiceRecording | null = null;
+    try {
+      recording = await startVoiceRecording({
+        onLevel: level => {
+          if (recordSessionRef.current !== session) return;
+          setLiveVolumeBars(prev => [...prev.slice(1), Math.max(0.12, level)]);
+        },
+        onLimit: () => {
+          if (recordSessionRef.current === session) void finishRecording('Stopped here - the longest a memo can be.');
+        }
+      });
+    } catch (err) {
+      if (recordSessionRef.current === session) {
+        setRecorderState('idle');
+        setLimitNotice(micErrorText(err));
+      }
+      return;
+    } finally {
+      markWaitingForMic(false);
+    }
+    if (!recording) return;
+
+    // Closed while the microphone was being asked for, or the app went out of
+    // sight: nothing on screen would say the microphone is on.
+    if (recordSessionRef.current !== session || document.visibilityState === 'hidden') {
+      recording.cancel();
+      if (recordSessionRef.current === session) {
+        setRecorderState('idle');
+        // Most often Android's permission prompt, which takes the screen for
+        // a moment: the microphone is allowed now, and one more tap records.
+        setLimitNotice('Microphone ready - tap the button to record.');
+      }
+      return;
+    }
+
+    const live = recording;
+    recordingRef.current = live;
+    setRecorderState('recording');
+    setRecordingSeconds(0);
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds(Math.min(MAX_MEMO_SECONDS, Math.floor(live.elapsedMs() / 1000)));
+    }, 250);
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-    }
+    void finishRecording();
   };
 
-  const fallbackGenerateProceduralMemo = () => {
-    setIsRecording(true);
-    setRecordingSeconds(0);
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingSeconds(prev => {
-        if (prev >= 6) {
-          clearInterval(recordingTimerRef.current);
-          setIsRecording(false);
-          setRecordedWaveform([0.3, 0.5, 0.7, 0.9, 0.8, 0.6, 0.4, 0.7, 1.0, 0.8, 0.6, 0.5, 0.7, 0.8, 0.6, 0.4, 0.3]);
-          setRecordedAudioUrl('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-          return 6;
-        }
-        return prev + 1;
-      });
-    }, 1000);
+  // Leaving the app mid-memo stops it there, kept to listen back to - as a
+  // voice note in the chat does - rather than recording on, unseen.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden' && recordingRef.current) {
+        void finishRecording('Stopped when you left the app.');
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+    // finishRecording reads only refs and setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openRecordModal = () => {
+    resetRecorder();
+    setShowRecordModal(true);
   };
+
+  const closeRecordModal = () => {
+    resetRecorder();
+    setShowRecordModal(false);
+  };
+
+  useBackLayer(showRecordModal, closeRecordModal);
 
   const handleSaveMemo = (e: React.FormEvent) => {
     e.preventDefault();
-    const duration = Math.max(3, recordingSeconds);
+    // Enter in the title box submits the form too - mid-recording, that sent
+    // a memo with no recording in it.
+    if (recorderState !== 'recorded' || !recordedAudioUrl) return;
+    const duration = Math.max(1, recordingSeconds);
     const authorName = activeUser === 'user' ? 'You' : 'Partner';
     const recipientId = activeUser === 'user' ? 'partner' : 'user';
 
@@ -256,78 +337,80 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
     }
 
     onAddMemo(newMemo);
-    setLimitNotice(null);
+    resetRecorder();
     setShowRecordModal(false);
 
     // Reset form
     setMemoTitle('');
     setTranscriptSnippet('');
-    setRecordedAudioUrl(null);
-    setRecordingSeconds(0);
 
     if (onSendToChat) {
       onSendToChat(`🎙️ Sent an encrypted voice whisper: "${newMemo.title}" (${duration}s)`);
     }
   };
 
+  /**
+   * Plays a memo, or stops it.
+   *
+   * A memo that cannot be played now says why, and is not marked heard. It
+   * used to run the progress bar along in silence instead - and then tell
+   * the other phone it had been listened to.
+   */
   const togglePlayMemo = (memo: WhisperMemoItem) => {
     if (playingMemoId === memo.id) {
-      // Pause
-      if (activeAudioElementRef.current) {
-        activeAudioElementRef.current.pause();
-      }
-      setPlayingMemoId(null);
+      stopPlayback();
+      return;
+    }
+    stopPlayback();
+    setPlayError(null);
+
+    const url = memo.audioDataUrl || '';
+    if (url.startsWith('two-media:')) {
+      setPlayError({ id: memo.id, text: 'Still loading this recording - try again in a moment.' });
+      return;
+    }
+    if (!url.startsWith('data:audio')) {
+      setPlayError({ id: memo.id, text: "This recording isn't on this phone." });
       return;
     }
 
-    // Stop existing
-    if (activeAudioElementRef.current) {
-      activeAudioElementRef.current.pause();
-    }
+    const audio = new Audio(url);
+    audio.playbackRate = playbackSpeed;
+    activeAudioElementRef.current = audio;
+    const recorded = memo.durationSeconds || 0;
 
-    setPlayingMemoId(memo.id);
-
-    if (memo.audioDataUrl && memo.audioDataUrl.startsWith('data:audio')) {
-      const audio = new Audio(memo.audioDataUrl);
-      audio.playbackRate = playbackSpeed;
-      activeAudioElementRef.current = audio;
-
-      audio.ontimeupdate = () => {
-        if (audio.duration) {
-          const pct = audio.currentTime / audio.duration;
-          setPlaybackProgress(prev => ({ ...prev, [memo.id]: pct }));
-        }
-      };
-
-      audio.onended = () => {
-        setPlayingMemoId(null);
-        setPlaybackProgress(prev => ({ ...prev, [memo.id]: 1 }));
-        if (!memo.isListened) onMarkListened(memo.id);
-      };
-
-      audio.play().catch(() => {
-        // Fallback procedural playback simulation
-        simulatePlaybackProgress(memo);
-      });
-    } else {
-      simulatePlaybackProgress(memo);
-    }
-  };
-
-  const simulatePlaybackProgress = (memo: WhisperMemoItem) => {
-    let elapsed = 0;
-    const total = memo.durationSeconds || 10;
-    const interval = setInterval(() => {
-      elapsed += 0.25 * playbackSpeed;
-      const pct = Math.min(1, elapsed / total);
-      setPlaybackProgress(prev => ({ ...prev, [memo.id]: pct }));
-
-      if (pct >= 1) {
-        clearInterval(interval);
-        setPlayingMemoId(null);
-        if (!memo.isListened) onMarkListened(memo.id);
+    audio.ontimeupdate = () => {
+      // A recording straight from a phone often reports no length at all
+      // until it has played through; the length it was recorded at stands in.
+      const length = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : recorded;
+      if (length > 0) {
+        setPlaybackProgress(prev => ({ ...prev, [memo.id]: Math.min(1, audio.currentTime / length) }));
       }
-    }, 250);
+    };
+
+    audio.onended = () => {
+      if (activeAudioElementRef.current !== audio) return;
+      setPlaybackProgress(prev => ({ ...prev, [memo.id]: 1 }));
+      stopPlayback();
+      // Heard means its listener played it to the end. The one who
+      // recorded it playing it back is not news for anyone.
+      if (!memo.isListened && memo.authorId !== activeUser) onMarkListened(memo.id);
+    };
+
+    const fail = () => {
+      if (activeAudioElementRef.current !== audio) return;
+      stopPlayback();
+      setPlayError({ id: memo.id, text: "Couldn't play this recording." });
+    };
+    audio.onerror = fail;
+
+    // One voice at a time across the app, and the radio turned down under it.
+    releasePlaybackRef.current = claimVoicePlayback(`whisper:${memo.id}`, () => {
+      if (activeAudioElementRef.current === audio) stopPlayback();
+    });
+    releaseRadioRef.current = holdRadioDown();
+    setPlayingMemoId(memo.id);
+    audio.play().catch(fail);
   };
 
   const filteredMemos = memos.filter(m => {
@@ -361,11 +444,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
         </div>
 
         <button
-          onClick={() => {
-            setShowRecordModal(true);
-            setRecordedAudioUrl(null);
-            setRecordingSeconds(0);
-          }}
+          onClick={openRecordModal}
           className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-medium text-sm shadow-sm transition-all transform active:scale-95 cursor-pointer shrink-0"
         >
           <Mic className="w-4 h-4" />
@@ -446,7 +525,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
             Leave a 30-second morning whisper or quiet midnight voice note for your partner to wake up to.
           </p>
           <button
-            onClick={() => setShowRecordModal(true)}
+            onClick={openRecordModal}
             className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-linen-variant hover:bg-linen-border text-linen-primary text-xs font-medium transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -521,6 +600,12 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                     </div>
                   </div>
 
+                  {playError?.id === memo.id && (
+                    <p role="status" className="text-[11px] text-amber-800 mb-2 px-1">
+                      {playError.text}
+                    </p>
+                  )}
+
                   {/* Optional Transcript */}
                   {memo.transcriptSnippet && (
                     <p className="font-serif text-xs text-linen-secondary italic leading-relaxed mb-2 px-1">
@@ -564,7 +649,9 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                 </h3>
               </div>
               <button
-                onClick={() => setShowRecordModal(false)}
+                type="button"
+                onClick={closeRecordModal}
+                aria-label="Close"
                 className="p-1.5 text-linen-secondary hover:text-linen-primary rounded-lg hover:bg-linen-variant"
               >
                 <X className="w-4 h-4" />
@@ -600,16 +687,20 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <span className="text-xs text-stone-400">Tap microphone to begin speaking</span>
+                    <span className="text-xs text-stone-400">
+                      {recorderState === 'starting' ? 'Waiting for the microphone…' : 'Tap the microphone to begin'}
+                    </span>
                   )}
                 </div>
 
                 {/* Record Button */}
-                {!isRecording && !recordedAudioUrl ? (
+                {recorderState === 'idle' || recorderState === 'starting' ? (
                   <button
                     type="button"
                     onClick={startRecording}
-                    className="w-14 h-14 rounded-full bg-rose-600 hover:bg-rose-700 flex items-center justify-center text-white shadow-lg shadow-rose-600/40 transition-transform active:scale-95 cursor-pointer"
+                    disabled={recorderState === 'starting'}
+                    aria-label="Start recording"
+                    className="w-14 h-14 rounded-full bg-rose-600 hover:bg-rose-700 flex items-center justify-center text-white shadow-lg shadow-rose-600/40 transition-transform active:scale-95 cursor-pointer disabled:opacity-60 disabled:animate-pulse"
                   >
                     <Mic className="w-6 h-6" />
                   </button>
@@ -617,6 +708,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                   <button
                     type="button"
                     onClick={stopRecording}
+                    aria-label="Stop recording"
                     className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center text-white shadow-lg animate-pulse transition-transform active:scale-95 cursor-pointer"
                   >
                     <Square className="w-5 h-5 fill-white" />
@@ -625,11 +717,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                   <div className="flex items-center space-x-3">
                     <button
                       type="button"
-                      onClick={() => {
-                        setRecordedAudioUrl(null);
-                        setRecordingSeconds(0);
-                        setLimitNotice(null);
-                      }}
+                      onClick={resetRecorder}
                       className="px-3 py-1.5 rounded-lg bg-stone-800 text-stone-300 text-xs hover:bg-stone-700 transition-colors flex items-center space-x-1"
                     >
                       <RotateCcw className="w-3 h-3" />
@@ -699,16 +787,16 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
               <div className="pt-3 border-t border-linen-border flex items-center justify-end space-x-2">
                 <button
                   type="button"
-                  onClick={() => setShowRecordModal(false)}
+                  onClick={closeRecordModal}
                   className="px-4 py-2 rounded-xl text-xs font-medium text-linen-secondary hover:text-linen-primary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={!recordedAudioUrl && !isRecording}
+                  disabled={recorderState !== 'recorded' || !recordedAudioUrl}
                   className={`inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-medium shadow-xs transition-transform active:scale-95 ${
-                    recordedAudioUrl
+                    recorderState === 'recorded' && recordedAudioUrl
                       ? 'bg-rose-600 hover:bg-rose-700 cursor-pointer'
                       : 'bg-stone-400 cursor-not-allowed opacity-60'
                   }`}

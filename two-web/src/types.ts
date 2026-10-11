@@ -166,6 +166,8 @@ export interface LoveLetter {
   sentDate: string;
   isOpened: boolean;
   openedDate?: string;
+  /** When it was opened. `openedDate` alone was the word "Today", kept for good. */
+  openedAt?: number;
 }
 
 export type EnergyTier = 'low' | 'medium' | 'high';
@@ -207,6 +209,26 @@ export interface RelationshipMilestone {
  * Dates are calendar dates, not moments: 'YYYY-MM-DD', read in the phone's
  * own time zone, so the day count turns over at local midnight.
  */
+/**
+ * One person's answer to one day's question.
+ *
+ * Kept on both phones from the moment it is given, but shown to the other
+ * person only once they have answered the same question themselves - so
+ * neither answer can lean on the other.
+ */
+export interface DailyAnswer {
+  /** `day|questionId|seat`: one answer per person per question. */
+  id: string;
+  /** The day it was asked, 'YYYY-MM-DD' on the phone that answered. */
+  day: string;
+  questionId: string;
+  /** The question as it was asked, for reading back later. */
+  prompt: string;
+  seat: 'user' | 'partner';
+  text: string;
+  at: number;
+}
+
 export interface OurDates {
   /** The day the story began, 'YYYY-MM-DD'. */
   togetherSince?: string;

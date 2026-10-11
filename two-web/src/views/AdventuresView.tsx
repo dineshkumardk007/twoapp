@@ -391,7 +391,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                         <div className="border-2 border-dashed border-amber-700/80 rounded-full w-20 h-20 flex flex-col items-center justify-center p-1 text-center bg-amber-50/60 shadow-xs">
                           <span className="text-[7px] font-bold tracking-widest uppercase text-amber-900">PASSPORT</span>
                           <span className="text-[9px] font-black text-amber-800 leading-tight">LIVED</span>
-                          <span className="text-[7px] font-mono text-amber-700">{adv.completedDate || 'TOGETHER'}</span>
+                          <span className="text-[7px] font-mono text-amber-700">{adv.completedDate && adv.completedDate !== 'Recently' ? adv.completedDate : 'TOGETHER'}</span>
                         </div>
                       </div>
                     )}
@@ -637,7 +637,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                     <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
                       ★ Stamped Chapter
                     </span>
-                    <span className="text-xs font-mono text-linen-secondary">{item.completedDate || 'Completed'}</span>
+                    <span className="text-xs font-mono text-linen-secondary">{item.completedDate && item.completedDate !== 'Recently' ? item.completedDate : 'Completed'}</span>
                   </div>
 
                   {item.photoUrl && (

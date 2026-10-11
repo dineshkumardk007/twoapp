@@ -61,6 +61,8 @@ const ROUTES: Record<string, { tab: string; tier: ActivityTier }> = {
   JOURNAL_SHARED: { tab: 'journal', tier: 'for-you' },
   AGREEMENT_ADD: { tab: 'repair', tier: 'for-you' },
   MEMORY_ADD: { tab: 'timeline', tier: 'for-you' },
+  // Never what they said - only that they answered, which is an invitation.
+  DAILY_ANSWER: { tab: 'home', tier: 'for-you' },
 
   // Worth knowing, not worth interrupting for.
   LIST_ITEM: { tab: 'lists', tier: 'changed' },
@@ -146,7 +148,8 @@ const PHRASES: Record<string, string> = {
   LETTER_OPENED: 'opened your letter',
   // Not in ROUTES: the dates are sent again on every connection, so App
   // notes them only when they actually change (see OUR_DATES there).
-  OUR_DATES: 'set your dates'
+  OUR_DATES: 'set your dates',
+  DAILY_ANSWER: 'answered the daily question'
 };
 
 /** Where a record belongs, or null when it is plumbing. */

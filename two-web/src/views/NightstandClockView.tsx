@@ -6,6 +6,10 @@ import { Session, liveContext } from '../core/ambient/kit';
 import { startPreset } from '../core/ambient/presets';
 import { playSound } from '../core/sounds';
 import { who, whose } from '../core/who';
+import { createPortal } from 'react-dom';
+import { useBackLayer } from '../core/backStack';
+import { haptic } from '../core/haptics';
+import { enterBedside, leaveBedside, onBedsideLeft, setBedsideGlow } from '../core/bedside';
 import {
   Moon,
   Sun,
@@ -15,7 +19,6 @@ import {
   Clock,
   Sparkles,
   Maximize2,
-  Minimize2,
   Bed,
   Bell,
   Coffee,
@@ -36,8 +39,8 @@ interface NightstandClockViewProps {
 
 // Moon Phase Calculation
 function getMoonPhase(date: Date = new Date()): { phaseName: string; illumination: number; phaseIndex: number } {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
   const day = date.getDate();
 
   let c = 0;
@@ -45,9 +48,12 @@ function getMoonPhase(date: Date = new Date()): { phaseName: string; illuminatio
   let jd = 0;
   let b = 0;
 
+  // January and February count as months 13 and 14 of the year before.
+  // This used to read `year - 1; month + 12;` - two sums thrown away - so
+  // for two months of every year the moon shown was the wrong one.
   if (month < 3) {
-    year - 1;
-    month + 12;
+    year -= 1;
+    month += 12;
   }
 
   const a = Math.floor(year / 100);
@@ -149,11 +155,11 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
   onSendMidnightKiss,
   onNavigate
 }) => {
-  const nightstand = state.nightstand || {
-    userStatus: { isSleeping: false, wakeAlarmAt: '07:30' },
-    partnerStatus: { isSleeping: true, sleptAt: Date.now() - 35 * 60 * 1000 },
-    lastMidnightKissAt: Date.now() - 15 * 60 * 1000,
-    lastMidnightKissFrom: 'partner',
+  // Nothing invented when there is nothing yet. This used to fill in a
+  // partner asleep for 35 minutes and a kiss from 15 minutes ago.
+  const nightstand: NightstandState = state.nightstand || {
+    userStatus: { isSleeping: false },
+    partnerStatus: { isSleeping: false },
     ambientSoundscape: 'none',
     sleepTimerMinutes: 30
   };
@@ -178,7 +184,13 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
   // Local clock state
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [brightnessLevel, setBrightnessLevel] = useState<'ultra' | 'dim' | 'glow'>('dim');
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  /** The clock alone, on all night - see core/bedside.ts. */
+  const [bedside, setBedside] = useState(false);
+  const [controlsShown, setControlsShown] = useState(false);
+  /** Where the bedside clock sits, nudged each minute so no pixel stays lit all night. */
+  const [drift, setDrift] = useState({ x: 0, y: 0 });
+  const [kissSentAt, setKissSentAt] = useState(0);
+  const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [kissAnimation, setKissAnimation] = useState<boolean>(false);
   const [showNoteInput, setShowNoteInput] = useState<boolean>(false);
   const [pillowNote, setPillowNote] = useState<string>('');
@@ -335,15 +347,80 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
     audioEngine.setVolume(newVol);
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
-      }
-    }
+  /** The bedside controls, shown for a few seconds and then out of the way. */
+  const showControls = () => {
+    setControlsShown(true);
+    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    controlsTimerRef.current = setTimeout(() => setControlsShown(false), 5000);
   };
+
+  const hideControls = () => {
+    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    controlsTimerRef.current = null;
+    setControlsShown(false);
+  };
+
+  const startBedside = () => {
+    haptic('tick');
+    enterBedside(brightnessLevel);
+    setDrift({ x: 0, y: 0 });
+    setBedside(true);
+    showControls();
+  };
+
+  const endBedside = () => {
+    leaveBedside();
+    setBedside(false);
+    hideControls();
+  };
+
+  // The phone's Back button leaves bedside before it leaves the screen.
+  useBackLayer(bedside, endBedside);
+
+  // Bedside ended from elsewhere - a call coming in - closes the clock too.
+  useEffect(
+    () =>
+      onBedsideLeft(() => {
+        setBedside(false);
+        if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+        controlsTimerRef.current = null;
+        setControlsShown(false);
+      }),
+    []
+  );
+
+  // Leaving the Nightstand gives the screen back its own timeout and brightness.
+  useEffect(() => {
+    return () => {
+      leaveBedside();
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    };
+  }, []);
+
+  // A different glow chosen in bedside changes the screen's brightness too.
+  useEffect(() => {
+    if (bedside) setBedsideGlow(brightnessLevel);
+  }, [bedside, brightnessLevel]);
+
+  // On an OLED screen a clock that never moves leaves its shape behind. A
+  // small shift each minute is invisible from the pillow and spares it.
+  useEffect(() => {
+    if (!bedside) return;
+    const timer = setInterval(() => {
+      setDrift({
+        x: Math.round((Math.random() * 2 - 1) * 14),
+        y: Math.round((Math.random() * 2 - 1) * 24)
+      });
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, [bedside]);
+
+  const handleBedsideKiss = () => {
+    handleMidnightKiss();
+    setKissSentAt(Date.now());
+    showControls();
+  };
+  const kissJustSent = Date.now() - kissSentAt < 3000;
 
   // Brightness color themes for OLED zero-blue-light display
   const getBrightnessClasses = () => {
@@ -381,8 +458,102 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
 
   const theme = getBrightnessClasses();
 
+  const glowPresets = (
+    <div className="flex items-center bg-neutral-950/80 border border-amber-950/60 rounded-full p-0.5 text-xs">
+      <button
+        onClick={() => setBrightnessLevel('ultra')}
+        className={`px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
+          brightnessLevel === 'ultra' ? 'bg-amber-900/40 text-amber-400 font-medium' : 'text-amber-700/60 hover:text-amber-500'
+        }`}
+        title="Ultra-dim (zero blue light)"
+      >
+        Ember
+      </button>
+      <button
+        onClick={() => setBrightnessLevel('dim')}
+        className={`px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
+          brightnessLevel === 'dim' ? 'bg-amber-900/60 text-amber-300 font-medium' : 'text-amber-700/60 hover:text-amber-400'
+        }`}
+        title="Warm candle glow"
+      >
+        Candle
+      </button>
+      <button
+        onClick={() => setBrightnessLevel('glow')}
+        className={`px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
+          brightnessLevel === 'glow' ? 'bg-amber-500/30 text-amber-200 font-medium' : 'text-amber-700/60 hover:text-amber-300'
+        }`}
+        title="Room glow"
+      >
+        Glow
+      </button>
+    </div>
+  );
+
   return (
     <div className={`min-h-[85vh] rounded-3xl p-4 sm:p-8 transition-colors duration-700 relative overflow-hidden flex flex-col justify-between select-none ${theme.container}`}>
+      {/* On the page's body rather than inside this screen, so nothing the
+          screen sits in can clip it or shift where "fixed" means. */}
+      {bedside && createPortal(
+        <div
+          className="fixed inset-0 z-[60] bg-black select-none cursor-default"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Bedside clock"
+          onClick={() => (controlsShown ? hideControls() : showControls())}
+        >
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
+            style={{ transform: `translate(${drift.x}px, ${drift.y}px)`, transition: 'transform 3s ease-in-out' }}
+          >
+            <div className={`font-mono font-light tracking-tight leading-none text-[22vw] sm:text-[11rem] ${theme.clockGlow}`}>
+              <span>{hours}</span>
+              <span className="opacity-60">:</span>
+              <span>{minutes}</span>
+            </div>
+            <div className={`mt-5 font-serif text-xs sm:text-sm tracking-[0.3em] uppercase ${theme.subtext}`}>{dateStr}</div>
+            <div className={`mt-8 font-serif text-xs ${theme.subtext}`}>
+              {partnerSleep?.isSleeping
+                ? `${partnerName} ${isOrAre(partnerName)} asleep · ${getSleepingDuration(partnerSleep.sleptAt)}`
+                : `${partnerName} ${isOrAre(partnerName)} awake`}
+            </div>
+            {partnerSleep?.goodnightNote && (
+              <p className={`mt-3 max-w-xs font-serif italic text-xs ${theme.subtext}`}>“{partnerSleep.goodnightNote}”</p>
+            )}
+          </div>
+
+          {controlsShown && (
+            <div
+              className="absolute inset-x-0 bottom-0 px-6 pt-6 flex flex-col items-center gap-3 animate-fade-in"
+              style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+              onClick={e => {
+                e.stopPropagation();
+                showControls();
+              }}
+            >
+              {glowPresets}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleBedsideKiss}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-rose-900/60 bg-neutral-950 text-rose-300/90 text-xs font-serif cursor-pointer"
+                >
+                  <Heart className="w-3.5 h-3.5 fill-rose-400/80 text-rose-400/80" />
+                  {kissJustSent ? 'Kiss sent' : 'Send a kiss'}
+                </button>
+                <button
+                  onClick={endBedside}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-amber-900/60 bg-neutral-950 text-amber-400/90 text-xs font-serif cursor-pointer"
+                >
+                  Exit bedside
+                </button>
+              </div>
+              <span className="text-[10px] font-serif text-amber-800/90">Tap anywhere to show or hide these</span>
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
+
       {/* Visual Midnight Kiss Ripple Overlay */}
       {kissAnimation && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50 animate-fade-in">
@@ -419,46 +590,8 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
           </div>
         </div>
 
-        {/* Right side: Brightness Presets & Fullscreen */}
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center bg-neutral-950/80 border border-amber-950/60 rounded-full p-0.5 text-xs">
-            <button
-              onClick={() => setBrightnessLevel('ultra')}
-              className={`px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
-                brightnessLevel === 'ultra' ? 'bg-amber-900/40 text-amber-400 font-medium' : 'text-amber-700/60 hover:text-amber-500'
-              }`}
-              title="Ultra-dim bedside (zero blue light)"
-            >
-              Bedside
-            </button>
-            <button
-              onClick={() => setBrightnessLevel('dim')}
-              className={`px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
-                brightnessLevel === 'dim' ? 'bg-amber-900/60 text-amber-300 font-medium' : 'text-amber-700/60 hover:text-amber-400'
-              }`}
-              title="Warm candle glow"
-            >
-              Candle
-            </button>
-            <button
-              onClick={() => setBrightnessLevel('glow')}
-              className={`px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
-                brightnessLevel === 'glow' ? 'bg-amber-500/30 text-amber-200 font-medium' : 'text-amber-700/60 hover:text-amber-300'
-              }`}
-              title="Room glow"
-            >
-              Glow
-            </button>
-          </div>
-
-          <button
-            onClick={toggleFullscreen}
-            className="p-2 rounded-full border border-amber-950/60 bg-neutral-950/80 text-amber-600 hover:text-amber-400 transition-colors cursor-pointer"
-            title="Toggle fullscreen dock"
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
-        </div>
+        {/* Right side: how brightly it glows */}
+        <div className="flex items-center space-x-2">{glowPresets}</div>
       </div>
 
       {/* Center: Large Minimalist Glowing Clock Face */}
@@ -510,6 +643,16 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
         <div className={`mt-4 font-serif text-sm sm:text-base tracking-widest uppercase ${theme.subtext}`}>
           {dateStr}
         </div>
+
+        {/* Bedside: the clock alone, kept on all night. */}
+        <button
+          onClick={startBedside}
+          className={`mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-900/50 text-xs font-serif tracking-wide transition-colors cursor-pointer ${theme.buttonPrimary}`}
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+          Bedside mode
+        </button>
+        <span className={`mt-1.5 text-[10px] font-serif ${theme.subtext}`}>Keeps the screen on all night, dimmed</span>
 
         {/* Pillow Note (if left by partner) */}
         {partnerSleep?.goodnightNote && (

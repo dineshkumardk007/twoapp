@@ -35,7 +35,8 @@ import {
   RepairLetter,
   KintsugiVesselItem,
   MemoryItem,
-  OurDates
+  OurDates,
+  DailyAnswer
 } from '../types';
 import { loadSpaceSession } from './space';
 import type { LastSpace } from './space';
@@ -98,6 +99,8 @@ export interface SpaceState {
    * phones disagreed, and a reinstall started the count again.
    */
   ourDates?: OurDates;
+  /** Both of your answers to the daily questions. See DailyAnswer. */
+  dailyAnswers?: DailyAnswer[];
   /**
    * Set once the sample content older versions shipped with has been taken
    * out of this space. See core/sampleData.ts.
@@ -389,6 +392,7 @@ export function loadState(): SpaceState {
         parsed.ourDates && typeof parsed.ourDates === 'object' && Number.isFinite(parsed.ourDates.at)
           ? parsed.ourDates
           : undefined,
+      dailyAnswers: Array.isArray(parsed.dailyAnswers) ? parsed.dailyAnswers : undefined,
     };
     return withoutSampleData(loaded, !parsed.sampleDataRemoved);
   } catch (e) {

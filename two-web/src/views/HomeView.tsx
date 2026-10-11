@@ -2,13 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { SpaceState } from '../core/storage';
 import { EmotionalWeatherCard } from '../components/EmotionalWeatherCard';
 import { NotAboutYouBanner } from '../components/NotAboutYouBanner';
-import { getDailyQuestion } from '../data/questions';
 import { getResurfacedQuote, LiteraryQuote } from '../data/quotes';
-import { Sparkles, Quote, Send, Heart, Wind, ChevronRight, Flame } from 'lucide-react';
+import { Sparkles, Quote, Heart, Wind, ChevronRight } from 'lucide-react';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
 import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
 import { OurDatesCard } from '../components/OurDatesCard';
+import { DailyQuestionCard } from '../components/DailyQuestionCard';
 import { HeartOptionsModal } from '../components/HeartOptionsModal';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
 import { RelationshipMilestone, ComfortBoxData, WeatherState } from '../types';
@@ -22,8 +22,10 @@ interface HomeViewProps {
   onUpdateReport: (report: any) => void;
   onToggleUserFlag: (active: boolean) => void;
   onNavigate: (tab: string) => void;
-  /** Puts today's question in the chat, as an ordinary message. */
+  /** Puts a line about today's question in the chat, as an ordinary message. */
   onSendQuestion: (prompt: string) => void;
+  /** Gives this phone's answer to today's question, on both phones. */
+  onAnswerQuestion: (answer: { day: string; questionId: string; prompt: string; text: string }) => void;
   /** Sets the couple's dates on both phones. Empty means not set. */
   onSetOurDates: (dates: { togetherSince?: string; anniversary?: string }) => void;
   onOpenTour?: () => void;
@@ -55,29 +57,6 @@ function quoteFor(day: string, weather: WeatherState, capacity: number): Literar
   return quote;
 }
 
-/** Which daily question this phone last sent to the chat, and on what day. */
-const SENT_QUESTION_KEY = 'two_daily_question_sent';
-
-function readSentQuestion(): string | null {
-  try {
-    return localStorage.getItem(SENT_QUESTION_KEY);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * The daily question's tier, for its badge: one quiet badge in the theme's
- * colours. The four tiers used to come in four colours of their own, amber to
- * rose, on a screen meant to be calm.
- */
-const TIER_LABELS: Record<string, string> = {
-  playful: 'Playful',
-  curious: 'Curious',
-  deep: 'Deep',
-  spicy: 'Spicy'
-};
-
 /**
  * Home: what changed, your days together, how you both are, and one
  * question for today.
@@ -92,6 +71,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onToggleUserFlag,
   onNavigate,
   onSendQuestion,
+  onAnswerQuestion,
   onSetOurDates,
   onOpenTour,
   onAddMilestone = () => {},
@@ -101,11 +81,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showComfortBox, setShowComfortBox] = useState(false);
   const [showCoRegulation, setShowCoRegulation] = useState(false);
   const [showHeartModal, setShowHeartModal] = useState(false);
-  const [optInSpicy, setOptInSpicy] = useState(false);
-  // Which question was sent today, so the button says so instead of
-  // inviting a second copy of the same message - still true after a visit to
-  // another screen and back.
-  const [sentQuestion, setSentQuestion] = useState<string | null>(readSentQuestion);
   // The phone's Back button closes these popups through the popups themselves
   // (each registers its own layer), so the breathing one can end its session
   // and tell the other phone, as its close button does.
@@ -126,33 +101,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const myHeavyDay = myReport.capacity <= 2;
   const heavyDay = myHeavyDay || theirReport.capacity <= 2 || isPartnerFlagActive;
 
-  const dayIndex = new Date().getDate();
-  const dailyQuestion = getDailyQuestion(dayIndex, optInSpicy);
   const today = localDateKey();
   // This phone's own weather, for the quote tuned to it.
   const { weather, capacity } = myReport;
   const resurfacedQuote = useMemo(() => quoteFor(today, weather, capacity), [today, weather, capacity]);
-
-  // Today's date as well as the question: the same question comes round
-  // again on the same day next month.
-  const questionKey = `${today}|${dailyQuestion.id}`;
-  const handleSendQuestionToChat = () => {
-    onSendQuestion(dailyQuestion.prompt);
-    setSentQuestion(questionKey);
-    try {
-      localStorage.setItem(SENT_QUESTION_KEY, questionKey);
-    } catch {
-      /* storage unavailable: the button simply forgets on leaving Home */
-    }
-  };
-  const questionSent = sentQuestion === questionKey;
-
-  const getTierBadge = (tier: string) =>
-    TIER_LABELS[tier] ? (
-      <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-linen-variant text-linen-secondary border border-linen-border">
-        {TIER_LABELS[tier]}
-      </span>
-    ) : null;
 
   return (
     <div className="space-y-6">
@@ -290,47 +242,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       </div>
 
-      {/* Daily Question */}
-      <div className="rounded-3xl border border-linen-border bg-linen-surface p-5 sm:p-6 shadow-xs">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex flex-wrap items-center gap-2 min-w-0">
-            <Sparkles className="w-4 h-4 text-linen-accent shrink-0" />
-            <span className="text-xs font-semibold tracking-wider uppercase text-linen-accent">Today's question</span>
-            {getTierBadge(dailyQuestion.tier)}
-          </div>
-          <button
-            onClick={() => setOptInSpicy(!optInSpicy)}
-            aria-pressed={optInSpicy}
-            className={`inline-flex shrink-0 items-center gap-1 text-[11px] px-2.5 py-1 rounded-full border transition-all ${
-              optInSpicy
-                ? 'bg-linen-variant text-linen-primary border-linen-accent/40 font-medium'
-                : 'text-linen-secondary border-linen-border hover:bg-linen-variant'
-            }`}
-            title="Spicy questions are for when you both want them"
-          >
-            <Flame className={`w-3 h-3 shrink-0 ${optInSpicy ? 'text-linen-accent' : ''}`} />
-            {optInSpicy ? 'Spicy: on' : 'Spicy: off'}
-          </button>
-        </div>
-
-        <p className="font-serif text-lg sm:text-xl text-linen-primary leading-relaxed my-3 font-normal break-words">
-          “{dailyQuestion.prompt}”
-        </p>
-
-        <div className="flex items-center justify-between gap-3 pt-3 border-t border-linen-border/40 mt-3">
-          <span className="text-xs text-linen-secondary min-w-0">
-            Talk it over tonight, or send it to {partnerName}
-          </span>
-          <button
-            onClick={handleSendQuestionToChat}
-            disabled={questionSent}
-            className="inline-flex shrink-0 items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-60"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>{questionSent ? 'Sent to chat' : 'Send to chat'}</span>
-          </button>
-        </div>
-      </div>
+      {/* Today's question, answered together: each answer stays hidden
+          from the other until you have both answered. */}
+      <DailyQuestionCard
+        answers={state.dailyAnswers || []}
+        activeUser={state.activeUser}
+        partnerName={partnerName}
+        onAnswer={onAnswerQuestion}
+        onSendToChat={onSendQuestion}
+      />
 
       {/* Resurfaced Literary Quote, the same one all day */}
       <div className="rounded-3xl border border-linen-border bg-gradient-to-r from-linen-variant/30 via-linen-surface to-linen-variant/20 p-5 sm:p-6">

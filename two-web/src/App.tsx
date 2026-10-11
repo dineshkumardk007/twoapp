@@ -155,7 +155,7 @@ import {
   CYCLE_SHARING
 } from './core/sharedRecords';
 import { localDay, isDoneOn, withRitualDay } from './core/rituals';
-import { OUR_DATES } from './core/sharedRecords';
+import { OUR_DATES, DAILY_ANSWER } from './core/sharedRecords';
 import { cleanOurDates, newerOurDates } from './core/ourDates';
 import { resolveMediaRefs, withResolvedMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
 import {
@@ -165,6 +165,7 @@ import {
   isUnderSuspicion
 } from './core/lockGuard';
 import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting } from './core/autoLock';
+import { leaveBedside } from './core/bedside';
 import {
   PRESENCE_BEAT,
   BEAT_INTERVAL_MS,
@@ -337,6 +338,11 @@ export const App: React.FC = () => {
    */
   const [callState, setCallState] = useState<CallState>(IDLE_CALL);
   const callEngineRef = useRef<CallEngine | null>(null);
+  // A call ends the Nightstand's bedside mode: the screen was turned down to
+  // almost nothing, and a call needs to be seen.
+  useEffect(() => {
+    if (callState.phase !== 'idle') leaveBedside();
+  }, [callState.phase]);
   useEffect(() => {
     const engine = new CallEngine({
       send: signal => wsRelay.sendSignal(CALL_SIGNAL, signal),
@@ -2764,14 +2770,21 @@ export const App: React.FC = () => {
 
   const handleOpenLetter = (letterId: string) => {
     const letter = state.letters.find(l => l.id === letterId);
+    // The moment, and the day in words for a phone on the previous version.
+    // It used to be the word "Today", which every opened letter then said
+    // for good.
+    const openedAt = Date.now();
+    const openedDate = new Date(openedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
     // Sent only for a letter written by the other side: whether you opened
     // your own is nobody's news.
     if (letter && !letter.isOpened && letter.authorId !== state.activeUser) {
-      shareUpdate(LETTER_OPENED, { id: letterId, openedDate: 'Today' });
+      shareUpdate(LETTER_OPENED, { id: letterId, openedDate, openedAt });
     }
     setState(prev => ({
       ...prev,
-      letters: prev.letters.map(l => l.id === letterId ? { ...l, isOpened: true, openedDate: 'Today' } : l)
+      letters: prev.letters.map(l =>
+        l.id === letterId && !l.isOpened ? { ...l, isOpened: true, openedDate, openedAt } : l
+      )
     }));
   };
 
@@ -2795,7 +2808,13 @@ export const App: React.FC = () => {
           return {
             ...a,
             isCompleted: willBeCompleted,
-            completedDate: willBeCompleted ? (a.completedDate || 'Recently') : undefined,
+            // The day it was done. It used to be the word "Recently", which
+            // the passport stamp and the Memoir Book then said for good.
+            completedDate: willBeCompleted
+              ? (a.completedDate && a.completedDate !== 'Recently'
+                  ? a.completedDate
+                  : new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }))
+              : undefined,
             personalNotes: notes !== undefined ? notes : a.personalNotes,
             photoUrl: photoUrl !== undefined ? photoUrl : a.photoUrl
           };
@@ -3166,6 +3185,19 @@ export const App: React.FC = () => {
     const record = { ...dates, at };
     shareUpdate(OUR_DATES, record);
     setState(prev => applySharedRecord(prev, OUR_DATES, record, prev.activeUser) ?? prev);
+  };
+
+  /**
+   * This phone's answer to today's question, on both phones.
+   *
+   * Applied here through the same reducer the other phone uses, so the first
+   * answer stands on both - and a second tap, or a second device in the same
+   * seat, cannot replace one the other person may already have read.
+   */
+  const handleAnswerQuestion = (answer: { day: string; questionId: string; prompt: string; text: string }) => {
+    const record = { ...answer, seat: state.activeUser, at: Date.now() };
+    shareUpdate(DAILY_ANSWER, record);
+    setState(prev => applySharedRecord(prev, DAILY_ANSWER, record, prev.activeUser) ?? prev);
   };
 
   const handleAddStar = (newStar: GratitudeStar) => {
@@ -3889,7 +3921,8 @@ export const App: React.FC = () => {
             onNavigate={handleSelectTab}
             // An ordinary message, not a need card: it is a question to
             // talk over, and arrived as "I need: Daily Question [DEEP]".
-            onSendQuestion={(prompt) => handleSendMessage(`Today's question: “${prompt}”`, false)}
+            onSendQuestion={(text) => handleSendMessage(text, false)}
+            onAnswerQuestion={handleAnswerQuestion}
             onSetOurDates={handleSetOurDates}
             onOpenTour={
               showTourCard

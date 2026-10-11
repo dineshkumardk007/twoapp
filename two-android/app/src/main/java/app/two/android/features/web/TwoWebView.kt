@@ -25,6 +25,7 @@ import android.graphics.Color
 import android.util.Base64
 import android.view.HapticFeedbackConstants
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.*
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -37,6 +38,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebViewAssetLoader
 import app.two.android.core.network.NetworkConfig
 import app.two.android.features.radio.RadioRemote
@@ -106,6 +110,23 @@ class AndroidWebBridge(
             } catch (_: Exception) {
                 // No print service on this phone, or the page went away.
             }
+        }
+    }
+
+    /**
+     * The Nightstand's bedside mode: the clock left on all night.
+     *
+     * Keeps the screen on, hides the status and navigation bars, and sets the
+     * screen's own brightness for this window - [brightness] 0..1 - which goes
+     * far lower than any dark colour on the page. Off gives all three back.
+     * A page load turns it off too (see [resetBedside]), so a lock or a
+     * reload never leaves the screen pinned on and dimmed.
+     */
+    @JavascriptInterface
+    fun setBedside(on: Boolean, brightness: Double) {
+        Handler(Looper.getMainLooper()).post {
+            val activity = context.findActivity() ?: return@post
+            applyBedside(activity, on, brightness)
         }
     }
 
@@ -600,6 +621,16 @@ fun TwoWebView(
                         val url = request?.url ?: return null
                         return assetLoader.shouldInterceptRequest(url)
                     }
+
+                    /**
+                     * Whatever bedside mode the last page left behind ends with
+                     * it. Locking the app reloads the page, and the page that
+                     * comes up knows nothing of the clock it replaced.
+                     */
+                    override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                        super.onPageStarted(view, url, favicon)
+                        view?.context?.findActivity()?.let { resetBedside(it) }
+                    }
                 }
 
                 webChromeClient = object : WebChromeClient() {
@@ -683,6 +714,27 @@ fun TwoWebView(
 
 /** Where the app's own pages are served from (see WebViewAssetLoader). */
 private const val APP_HOST = "appassets.androidplatform.net"
+
+/** Bedside on or off for this window: screen kept on, bars hidden, brightness set. */
+private fun applyBedside(activity: Activity, on: Boolean, brightness: Double) {
+    val window = activity.window
+    val controller = WindowCompat.getInsetsController(window, window.decorView)
+    val attributes = window.attributes
+    if (on) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // A swipe from the edge brings the bars back for a moment, then they go.
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+        attributes.screenBrightness = brightness.toFloat().coerceIn(0.01f, 1f)
+    } else {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        controller.show(WindowInsetsCompat.Type.systemBars())
+        attributes.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+    }
+    window.attributes = attributes
+}
+
+private fun resetBedside(activity: Activity) = applyBedside(activity, false, -1.0)
 
 /**
  * The Activity behind a Compose context, which may be wrapped (a theme, a

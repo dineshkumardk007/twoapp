@@ -52,6 +52,28 @@ const SEAL_META: Record<CapsuleSealType, { name: string; emoji: string; icon: an
   }
 };
 
+/**
+ * A moment as a date-and-time box shows it: this phone's own time.
+ *
+ * toISOString() is London time, so in India every preset landed five and a
+ * half hours before the moment it meant.
+ */
+function localInputValue(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Now plus some months - on the last day of a shorter month rather than spilling into the next. */
+function monthsFromNow(months: number): Date {
+  const d = new Date();
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + months);
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, last));
+  return d;
+}
+
 function playUnsealChime() {
   playSound('unseal');
 }
@@ -85,12 +107,8 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
   const [newTitle, setNewTitle] = useState('');
   const [newTeaser, setNewTeaser] = useState('');
   const [newContent, setNewContent] = useState('');
-  const [newUnlockDate, setNewUnlockDate] = useState(() => {
-    // Default 6 months from now
-    const d = new Date();
-    d.setMonth(d.getMonth() + 6);
-    return d.toISOString().slice(0, 16);
-  });
+  // Six months from now, by default.
+  const [newUnlockDate, setNewUnlockDate] = useState(() => localInputValue(monthsFromNow(6)));
   const [newSeal, setNewSeal] = useState<CapsuleSealType>('gold_key');
   const [newPhotoUrls, setNewPhotoUrls] = useState('');
 
@@ -181,9 +199,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
   };
 
   const handlePresetDate = (monthsAhead: number) => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + monthsAhead);
-    setNewUnlockDate(d.toISOString().slice(0, 16));
+    setNewUnlockDate(localInputValue(monthsFromNow(monthsAhead)));
   };
 
   return (

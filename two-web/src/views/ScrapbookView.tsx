@@ -38,6 +38,31 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
     who(seat, activeUser, state.partnerName, storedName);
   const partnerLabel = nameOf(activeUser === 'user' ? 'partner' : 'user');
 
+  /**
+   * A date for the printed page: the day itself, never "Today".
+   *
+   * Letters were stored with the words "Today" for sent and opened, which a
+   * book printed next year still said. A letter carries the moment it was
+   * written, and newer ones the moment they were opened; the old words, where
+   * there is nothing else, are left out rather than printed.
+   */
+  const bookDate = (at?: number, words?: string) => {
+    if (at && Number.isFinite(at)) {
+      return new Date(at).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    const w = (words || '').trim();
+    return w && !['today', 'yesterday', 'just now', 'recently'].includes(w.toLowerCase()) ? w : '';
+  };
+  const letterDateLine = (letter: SpaceState['letters'][number]) => {
+    if (letter.isOpened) {
+      const opened = bookDate(letter.openedAt, letter.openedDate);
+      if (opened) return `Opened ${opened}`;
+    }
+    const sent = bookDate(letter.at, letter.sentDate);
+    return sent ? `Written ${sent}` : '';
+  };
+  const stampedDate = (date?: string) => bookDate(undefined, date);
+
   const [settings, setSettings] = useState<ScrapbookSettings>(DEFAULT_SETTINGS);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
@@ -259,7 +284,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       </div>
                     </div>
                     <div className="text-[11px] text-[#8e7e6b] font-serif">
-                      {letter.openedDate ? `Opened ${letter.openedDate}` : `Delivered ${letter.sentDate}`}
+                      {letterDateLine(letter)}
                     </div>
                   </div>
 
@@ -298,9 +323,9 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-[#f0e8dc] text-[#7a6a57]">
                         {adv.category}
                       </span>
-                      {adv.completedDate && (
+                      {stampedDate(adv.completedDate) && (
                         <span className="text-[11px] text-[#8e7e6b] font-serif">
-                          Stamped: {adv.completedDate}
+                          Stamped: {stampedDate(adv.completedDate)}
                         </span>
                       )}
                     </div>

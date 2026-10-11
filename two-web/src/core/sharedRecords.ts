@@ -22,6 +22,7 @@
 import {
   AgreementItem,
   ChoreItem,
+  DailyAnswer,
   LoveLetter,
   RelationshipMilestone,
   RitualItem,
@@ -69,6 +70,17 @@ export const WHISPER_MEMO_HEARD = 'WHISPER_MEMO_HEARD';
  * type and passes over it.
  */
 export const OUR_DATES = 'OUR_DATES';
+/**
+ * One person's answer to the day's question: { day, questionId, prompt, text,
+ * at, seat }. Final once given - the first answer for a person and question
+ * is the one kept, so it cannot be changed after seeing the other's.
+ */
+export const DAILY_ANSWER = 'DAILY_ANSWER';
+
+/** Longest answer kept. */
+export const MAX_ANSWER_CHARS = 1000;
+/** Answers kept per space: a year of both of you answering every day. */
+const MAX_DAILY_ANSWERS = 730;
 
 export const SHARED_RECORD_TYPES = new Set([
   CHORE_ADD,
@@ -88,7 +100,8 @@ export const SHARED_RECORD_TYPES = new Set([
   LETTER_OPENED,
   WHISPER_MEMO,
   WHISPER_MEMO_HEARD,
-  OUR_DATES
+  OUR_DATES,
+  DAILY_ANSWER
 ]);
 
 type Role = 'user' | 'partner';
@@ -232,7 +245,12 @@ export function applySharedRecord(
   // and the dates, which are one value rather than a list, do not - and a
   // ritual tick names the ritual it is for instead.
   const needsId =
-    type !== CYCLE_SHARING && type !== EXPENSES_SETTLED && type !== RITUAL_SET && type !== OUR_DATES;
+    type !== CYCLE_SHARING &&
+    type !== EXPENSES_SETTLED &&
+    type !== RITUAL_SET &&
+    type !== OUR_DATES &&
+    // Named by what it answers, below - never by an id the sender chose.
+    type !== DAILY_ANSWER;
   if (needsId && !isText(payload.id)) return null;
 
   // Add-only: something already here is left exactly as it is.
@@ -420,7 +438,13 @@ export function applySharedRecord(
       const letters: LoveLetter[] = prev.letters.map(letter => {
         if (letter.id !== payload.id || letter.isOpened) return letter;
         changed = true;
-        return { ...letter, isOpened: true, openedDate: isText(payload.openedDate) ? payload.openedDate : 'Today' };
+        const openedAt = Number(payload.openedAt);
+        return {
+          ...letter,
+          isOpened: true,
+          openedDate: isText(payload.openedDate) ? payload.openedDate : '',
+          openedAt: Number.isFinite(openedAt) && openedAt > 0 ? openedAt : undefined
+        };
       });
       return changed ? { ...prev, letters } : null;
     }
@@ -459,6 +483,36 @@ export function applySharedRecord(
       if (!incoming) return null;
       const ourDates = newerOurDates(incoming, prev.ourDates);
       return ourDates ? { ...prev, ourDates } : null;
+    }
+
+    case DAILY_ANSWER: {
+      if (!isLocalDay(payload.day) || !isText(payload.questionId) || !isText(payload.text)) return null;
+      // Whose answer it is comes from who sent it, where that is a seat: an
+      // answer is never written on the other person's behalf, and one that
+      // claimed to be would otherwise stand in for theirs for good.
+      const seat = authorId === 'user' || authorId === 'partner' ? authorId : payload.seat;
+      if (seat !== 'user' && seat !== 'partner') return null;
+      const text = payload.text.trim().slice(0, MAX_ANSWER_CHARS);
+      const questionId = payload.questionId.trim().slice(0, 40);
+      if (!text || !questionId) return null;
+      const id = `${payload.day}|${questionId}|${seat}`;
+      const answers = prev.dailyAnswers || [];
+      // The first answer stands. Applying it again - a replay, a catch-up -
+      // changes nothing, and a second answer to the same question is not
+      // allowed to replace one the other person may already have read.
+      if (answers.some(a => a.id === id)) return null;
+      const at = Number(payload.at);
+      const answer: DailyAnswer = {
+        id,
+        day: payload.day,
+        questionId,
+        prompt: isText(payload.prompt) ? payload.prompt.slice(0, 400) : '',
+        seat,
+        text,
+        at: Number.isFinite(at) && at > 0 ? at : Date.now()
+      };
+      const dailyAnswers = [answer, ...answers].sort((a, b) => b.at - a.at).slice(0, MAX_DAILY_ANSWERS);
+      return { ...prev, dailyAnswers };
     }
 
     case CYCLE_SHARING: {

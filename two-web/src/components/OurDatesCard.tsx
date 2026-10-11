@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { CalendarHeart, ChevronRight, Pencil, X } from 'lucide-react';
 import { OurDates } from '../types';
 import {
@@ -6,38 +6,17 @@ import {
   formatDay,
   hasOurDates,
   isCalendarDate,
-  localDateKey,
   nextAnniversary,
   ordinal
 } from '../core/ourDates';
 import { useBackLayer } from '../core/backStack';
 import { haptic } from '../core/haptics';
+import { useToday } from '../core/useToday';
 
 interface OurDatesCardProps {
   dates?: OurDates;
   /** Both dates as the editor left them; empty means not set. */
   onSave: (dates: { togetherSince?: string; anniversary?: string }) => void;
-}
-
-/**
- * Today's date on this phone, kept current.
- *
- * Checked once a minute and whenever the app comes back into view, so a
- * screen left open overnight - or a phone woken the next morning - counts
- * the new day without needing to be touched.
- */
-function useToday(): string {
-  const [today, setToday] = useState(localDateKey);
-  useEffect(() => {
-    const check = () => setToday(localDateKey());
-    const timer = window.setInterval(check, 60_000);
-    document.addEventListener('visibilitychange', check);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', check);
-    };
-  }, []);
-  return today;
 }
 
 /**
