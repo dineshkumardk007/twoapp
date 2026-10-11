@@ -4,10 +4,15 @@ import { HearthGardenCanvas, playWaterDropSound, playSunlightChime, playBlossomP
 import { Sprout, Droplets, Sun, Heart, Sparkles, Scissors, Clock, Plus, X, MessageSquare, History, ShieldCheck } from 'lucide-react';
 import { newId } from '../core/ids';
 import { whenLabel } from '../core/when';
+import { who } from '../core/who';
 
 interface HearthGardenViewProps {
   garden: HearthGardenState;
   activeUser: 'user' | 'partner';
+  /** The other person's name. */
+  partnerName?: string;
+  /** This person's own name, written into a log line for older phones. */
+  myName?: string;
   onUpdateGarden: (updated: HearthGardenState) => void;
   onSendToChat?: (message: string) => void;
 }
@@ -15,9 +20,26 @@ interface HearthGardenViewProps {
 export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
   garden,
   activeUser,
+  partnerName,
+  myName,
   onUpdateGarden,
   onSendToChat
 }) => {
+  // Who did what is kept as a seat and named on each phone. The garden log
+  // used to be written as "You watered the bonsai...", which the other phone
+  // then showed word for word - about the person reading it.
+  const ownName = myName?.trim() || (activeUser === 'user' ? 'You' : 'Partner');
+  const today = () => new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  const logEntry = (action: string) => ({
+    id: newId('log'),
+    by: activeUser,
+    action,
+    event: `${ownName} ${action}`,
+    timestamp: today(),
+    at: Date.now()
+  });
+  const logLine = (log: HearthGardenState['growthLog'][number]) =>
+    log.by && log.action ? `${who(log.by, activeUser, partnerName)} ${log.action}` : log.event;
   const [activeTab, setActiveTab] = useState<'blossoms' | 'chronicle'>('blossoms');
   const [isWatering, setIsWatering] = useState(false);
   const [isSunlight, setIsSunlight] = useState(false);
@@ -34,7 +56,6 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
 
     const newWater = Math.min(100, garden.waterLevel + 20);
     const newVitality = Math.min(100, garden.vitality + 10);
-    const authorName = activeUser === 'user' ? 'You' : 'Partner';
 
     // Growth calculation
     const newTotalWaterings = garden.totalWaterings + 1;
@@ -56,15 +77,10 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
       waterLevel: newWater,
       vitality: newVitality,
       isDormant: false,
-      lastNourishedAt: 'Just now',
+      lastNourishedAt: today(),
       totalWaterings: newTotalWaterings,
       growthLog: [
-        {
-          id: newId('log'),
-          event: `${authorName} watered the bonsai with morning dew. Vitality raised to ${newVitality}%.`,
-          timestamp: 'Just now',
-          at: Date.now()
-        },
+        logEntry(`watered the bonsai with morning dew. Vitality raised to ${newVitality}%.`),
         ...garden.growthLog
       ]
     };
@@ -79,22 +95,16 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
 
     const newSunlight = Math.min(100, garden.sunlightLevel + 20);
     const newVitality = Math.min(100, garden.vitality + 8);
-    const authorName = activeUser === 'user' ? 'You' : 'Partner';
 
     const updated: HearthGardenState = {
       ...garden,
       sunlightLevel: newSunlight,
       vitality: newVitality,
       isDormant: false,
-      lastNourishedAt: 'Just now',
+      lastNourishedAt: today(),
       totalSunbaths: garden.totalSunbaths + 1,
       growthLog: [
-        {
-          id: newId('log'),
-          event: `${authorName} opened the window shutters to bask the canopy in warm sunlight.`,
-          timestamp: 'Just now',
-          at: Date.now()
-        },
+        logEntry(`opened the window shutters to bask the canopy in warm sunlight.`),
         ...garden.growthLog
       ]
     };
@@ -104,19 +114,13 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
 
   const handlePrune = () => {
     playWaterDropSound();
-    const authorName = activeUser === 'user' ? 'You' : 'Partner';
 
     const updated: HearthGardenState = {
       ...garden,
       vitality: Math.min(100, garden.vitality + 5),
-      lastNourishedAt: 'Just now',
+      lastNourishedAt: today(),
       growthLog: [
-        {
-          id: newId('log'),
-          event: `${authorName} mindfully pruned old twigs and cleared mental noise.`,
-          timestamp: 'Just now',
-          at: Date.now()
-        },
+        logEntry(`mindfully pruned old twigs and cleared mental noise.`),
         ...garden.growthLog
       ]
     };
@@ -135,15 +139,15 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
     const xPercent = 18 + Math.floor(Math.random() * 64);
     const yPercent = 16 + Math.floor(Math.random() * 52);
 
-    const authorName = activeUser === 'user' ? 'You' : 'Partner';
 
     const newBlossom: GardenBlossom = {
       id: newId('blossom'),
       type: blossomType,
       note: blossomNote.trim(),
       sproutedBy: activeUser,
-      sproutedByName: authorName,
-      sproutedAt: 'Just now',
+      sproutedByName: ownName,
+      sproutedAt: today(),
+      at: Date.now(),
       xPercent,
       yPercent
     };
@@ -154,12 +158,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
       isDormant: false,
       blossoms: [newBlossom, ...garden.blossoms],
       growthLog: [
-        {
-          id: newId('log'),
-          event: `${authorName} sprouted a ${blossomType.replace('_', ' ')} blossom: "${blossomNote.trim()}".`,
-          timestamp: 'Just now',
-          at: Date.now()
-        },
+        logEntry(`sprouted a ${blossomType.replace('_', ' ')} blossom: "${blossomNote.trim()}".`),
         ...garden.growthLog
       ]
     };
@@ -345,7 +344,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
                     <Heart className="w-3 h-3 mr-1 fill-pink-500 text-pink-500" />
                     {blossom.type.replace('_', ' ')} Blossom
                   </span>
-                  <span>{blossom.sproutedAt}</span>
+                  <span>{whenLabel(blossom.at, blossom.sproutedAt === 'Just now' ? '' : blossom.sproutedAt)}</span>
                 </div>
                 <p className="font-serif text-sm text-linen-primary italic leading-relaxed mb-3">
                   “{blossom.note}”
@@ -353,7 +352,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
               </div>
 
               <div className="text-[11px] text-linen-secondary pt-2 border-t border-linen-border/60 flex items-center justify-between">
-                <span>Dedicated by {blossom.sproutedByName}</span>
+                <span>Dedicated by {who(blossom.sproutedBy, activeUser, partnerName, blossom.sproutedByName)}</span>
                 {onSendToChat && (
                   <button
                     onClick={() => onSendToChat(`🌸 Remembering this blossom: "${blossom.note}"`)}
@@ -373,7 +372,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
             <div key={log.id} className="flex items-start space-x-3 text-xs pb-3 border-b border-linen-border/40 last:border-none last:pb-0">
               <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
               <div className="flex-1">
-                <p className="text-linen-primary">{log.event}</p>
+                <p className="text-linen-primary">{logLine(log)}</p>
                 <span className="text-[11px] text-linen-secondary mt-0.5 block">
                   {whenLabel(log.at, log.timestamp)}
                 </span>

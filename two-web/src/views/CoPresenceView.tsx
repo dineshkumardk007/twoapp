@@ -21,6 +21,8 @@ interface CoPresenceViewProps {
   activeUser: 'user' | 'partner';
   userName?: string;
   partnerName?: string;
+  /** Whether the other phone is connected at all, from the app's presence beat. */
+  partnerOnline?: boolean;
   onSendToChat?: (message: string) => void;
 }
 
@@ -89,26 +91,30 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
   activeUser, 
   userName = 'You', 
   partnerName = 'Partner',
-  onSendToChat 
+  partnerOnline = true,
+  onSendToChat
 }) => {
   const [selectedRoomId, setSelectedRoomId] = useState<CoPresenceRoomId>('rainy_window');
   const [myActivity, setMyActivity] = useState<CoPresenceActivity>('reading');
   const [myCustomNote, setMyCustomNote] = useState<string>('');
-  const [isJoined, setIsJoined] = useState<boolean>(true);
+  // You are in the room for as long as this screen is open and in sight.
+  const isJoined = true;
   const [joinedTimestamp, setJoinedTimestamp] = useState<number>(Date.now());
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
   const [volume, setVolume] = useState<number>(0.35);
 
-  // Partner status received from network
-  const [partnerStatus, setPartnerStatus] = useState<CoPresenceUserStatus>({
-    userId: activeUser === 'user' ? 'partner' : 'user',
-    name: partnerName || (activeUser === 'user' ? 'Partner' : 'You'),
-    activity: 'reading',
-    room: 'rainy_window',
-    customNote: 'Reading chapter 4 by the lamp',
-    isJoined: true,
-    joinedAt: Date.now() - 1000 * 60 * 25
-  });
+  /**
+   * The other person's status, as last sent from their phone - or null until
+   * it has been.
+   *
+   * It used to start out filled in: "Reading chapter 4 by the lamp", there
+   * for 25 minutes, with "Beside You" lit - whether or not they had opened
+   * the room at all, or even the app.
+   */
+  const [partnerStatus, setPartnerStatus] = useState<CoPresenceUserStatus | null>(null);
+  /** What this phone last said about itself, for answering an arrival and for saying goodbye. */
+  const statusRef = useRef<CoPresenceUserStatus | null>(null);
+  const [invited, setInvited] = useState(false);
 
   // Active micro-interaction toast overlay
   const [activeInteractionToast, setActiveInteractionToast] = useState<{
@@ -180,14 +186,16 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
   // Listen for remote presence updates, interactions, and timer sync
   useEffect(() => {
     const unsubWs = wsRelay.subscribe((msg) => {
-      if (msg.type === 'REMOTE_RECORD') {
+      // Live only. History replayed on reconnecting is someone's status from
+      // hours ago, a glance long since sent, a timer long since run out.
+      if (msg.type === 'REMOTE_RECORD' && !msg.replay) {
         if (msg.record?.type === 'CO_PRESENCE_STATUS') {
           try {
             const data: CoPresenceUserStatus = JSON.parse(msg.record.payload);
             if (data.userId !== activeUser) {
-              setPartnerStatus(data);
+              receiveStatus(data);
               // If partner has an active focus session running, sync our timer to it!
-              if (data.timerActive && data.timerEndsAt && data.timerEndsAt > Date.now()) {
+              if (data.isJoined && data.timerActive && data.timerEndsAt && data.timerEndsAt > Date.now()) {
                 const remaining = Math.max(0, Math.round((data.timerEndsAt - Date.now()) / 1000));
                 setTimerActive(true);
                 setTimerEndsAt(data.timerEndsAt);
@@ -216,8 +224,8 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
     const unsubMesh = localMesh.subscribe((packet) => {
       if (packet.authorId !== activeUser) {
         if (packet.subType === 'CO_PRESENCE_STATUS') {
-          setPartnerStatus(packet.payload);
-          if (packet.payload?.timerActive && packet.payload?.timerEndsAt && packet.payload.timerEndsAt > Date.now()) {
+          receiveStatus(packet.payload);
+          if (packet.payload?.isJoined && packet.payload?.timerActive && packet.payload?.timerEndsAt && packet.payload.timerEndsAt > Date.now()) {
             const remaining = Math.max(0, Math.round((packet.payload.timerEndsAt - Date.now()) / 1000));
             setTimerActive(true);
             setTimerEndsAt(packet.payload.timerEndsAt);
@@ -231,14 +239,50 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
       }
     });
 
-    // Broadcast our initial arrival into the sanctuary room on mount
-    broadcastMyStatus(myActivity, selectedRoomId, myCustomNote);
-
     return () => {
       unsubWs();
       unsubMesh();
     };
   }, [activeUser, myActivity, selectedRoomId, myCustomNote]);
+
+  // Arriving, leaving, and the app going out of sight and back. Arriving
+  // asks whoever is already here to say so; leaving says goodbye, so the
+  // other phone stops showing you at the desk. It used to announce an arrival
+  // on every change of activity and never say it had left.
+  useEffect(() => {
+    broadcastMyStatus(myActivity, selectedRoomId, myCustomNote, undefined, undefined, undefined, true);
+    const sayGoodbye = () => {
+      const last = statusRef.current;
+      if (last && last.isJoined) sendStatus({ ...last, isJoined: false, hello: false });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') sayGoodbye();
+      else if (statusRef.current) sendStatus({ ...statusRef.current, isJoined: true, hello: true });
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      sayGoodbye();
+    };
+    // Once, for this visit: changes are sent as they are made.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Sends this phone's status, and remembers it. */
+  const sendStatus = (status: CoPresenceUserStatus) => {
+    statusRef.current = status;
+    wsRelay.broadcastUpdate('CO_PRESENCE_STATUS', status);
+    localMesh.broadcastLocally('CO_PRESENCE_STATUS', status, activeUser);
+  };
+
+  /** The other person's status arriving - and if they just walked in, ours back to them. */
+  const receiveStatus = (data: CoPresenceUserStatus) => {
+    if (!data || typeof data !== 'object') return;
+    setPartnerStatus(data);
+    if (data.hello && data.isJoined && statusRef.current?.isJoined) {
+      sendStatus({ ...statusRef.current, hello: false });
+    }
+  };
 
   const broadcastMyStatus = (
     activity: CoPresenceActivity, 
@@ -246,7 +290,8 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
     note?: string,
     isTimerRunning?: boolean,
     targetEndsAt?: number | null,
-    secsLeft?: number
+    secsLeft?: number,
+    hello = false
   ) => {
     const status: CoPresenceUserStatus = {
       userId: activeUser,
@@ -258,10 +303,10 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
       joinedAt: joinedTimestamp,
       timerActive: isTimerRunning !== undefined ? isTimerRunning : timerActive,
       timerEndsAt: targetEndsAt !== undefined ? (targetEndsAt || undefined) : (timerEndsAt || undefined),
-      timerSecondsLeft: secsLeft !== undefined ? secsLeft : timerSecondsLeft
+      timerSecondsLeft: secsLeft !== undefined ? secsLeft : timerSecondsLeft,
+      hello
     };
-    wsRelay.broadcastUpdate('CO_PRESENCE_STATUS', status);
-    localMesh.broadcastLocally('CO_PRESENCE_STATUS', status, activeUser);
+    sendStatus(status);
   };
 
   const handleStartTimer = () => {
@@ -418,6 +463,9 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
   };
 
   const sendInteraction = (type: CoPresenceInteractionEvent['type']) => {
+    // A touch only lands on someone in the room: the other phone hears it
+    // only while this screen is open there.
+    if (!partnerHere) return;
     playInteractionSound(type);
     const event: CoPresenceInteractionEvent = {
       type,
@@ -455,10 +503,28 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
+  /** Whether they are at their desk now: in the room, on a phone that is connected. */
+  const partnerHere = !!partnerStatus && partnerStatus.isJoined !== false && partnerOnline;
+  const shownPartnerName = partnerName || partnerStatus?.name || 'Partner';
+
   const getMinutesTogether = () => {
-    const elapsedMs = Date.now() - joinedTimestamp;
-    const mins = Math.floor(elapsedMs / (1000 * 60));
-    return mins < 1 ? 'Just arrived' : `${mins} min together`;
+    // Together since the later of the two arrivals; alone, since your own.
+    const since = partnerHere && partnerStatus ? Math.max(joinedTimestamp, partnerStatus.joinedAt || 0) : joinedTimestamp;
+    const mins = Math.max(0, Math.floor((Date.now() - since) / (1000 * 60)));
+    if (!partnerHere) return mins < 1 ? 'Just arrived' : `${mins} min in the room`;
+    return mins < 1 ? 'Together just now' : `${mins} min together`;
+  };
+
+  const partnerHereFor = () => {
+    if (!partnerStatus?.joinedAt) return '';
+    const mins = Math.max(0, Math.floor((Date.now() - partnerStatus.joinedAt) / (1000 * 60)));
+    return mins < 1 ? 'Just arrived' : `Here ${mins} min`;
+  };
+
+  const inviteIn = () => {
+    if (!onSendToChat) return;
+    onSendToChat(`Come sit with me in Quiet Co-Presence - I'm in the ${currentRoom.name}.`);
+    setInvited(true);
   };
 
   return (
@@ -564,42 +630,76 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
                   <div>
                     <span className="text-xs uppercase tracking-wider font-semibold text-amber-300/80">Partner's Side</span>
                     <h4 className="font-serif text-base font-medium text-stone-100">
-                      {partnerName || partnerStatus.name || 'Partner'}
+                      {shownPartnerName}
                     </h4>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  {timerActive && (
+                  {partnerHere && timerActive && (
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 flex items-center">
                       <Clock className="w-2.5 h-2.5 mr-1" />
                       Co-Focusing
                     </span>
                   )}
-                  <span className="inline-flex items-center text-[10px] font-medium px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-ping" />
-                    Beside You
-                  </span>
+                  {partnerHere ? (
+                    <span className="inline-flex items-center text-[10px] font-medium px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-ping" />
+                      Beside You
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center text-[10px] font-medium px-2.5 py-1 rounded-full bg-white/5 text-stone-400 border border-white/10">
+                      <span className="w-1.5 h-1.5 rounded-full bg-stone-500 mr-1.5" />
+                      Not here yet
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Partner's Activity */}
-              <div className="p-4 rounded-2xl bg-black/30 border border-white/5 space-y-1.5">
-                <div className="flex items-center space-x-2 text-xs text-amber-200 font-medium">
-                  {React.createElement(ACTIVITIES[partnerStatus.activity].icon, { className: 'w-4 h-4 text-amber-400' })}
-                  <span>{ACTIVITIES[partnerStatus.activity].label}</span>
-                </div>
-                <p className="text-xs text-stone-300 italic font-serif">
-                  {partnerStatus.customNote 
-                    ? `“${partnerStatus.customNote}”` 
-                    : `${partnerName || partnerStatus.name} is ${ACTIVITIES[partnerStatus.activity].verb}.`}
-                </p>
-              </div>
+              {partnerHere && partnerStatus ? (
+                <>
+                  {/* Partner's Activity */}
+                  <div className="p-4 rounded-2xl bg-black/30 border border-white/5 space-y-1.5">
+                    <div className="flex items-center space-x-2 text-xs text-amber-200 font-medium">
+                      {React.createElement((ACTIVITIES[partnerStatus.activity] || ACTIVITIES.reading).icon, { className: 'w-4 h-4 text-amber-400' })}
+                      <span>{(ACTIVITIES[partnerStatus.activity] || ACTIVITIES.reading).label}</span>
+                    </div>
+                    <p className="select-text text-xs text-stone-300 italic font-serif">
+                      {partnerStatus.customNote
+                        ? `“${partnerStatus.customNote}”`
+                        : `${shownPartnerName} is ${(ACTIVITIES[partnerStatus.activity] || ACTIVITIES.reading).verb}.`}
+                    </p>
+                  </div>
 
-              <div className="text-[11px] text-stone-400 flex items-center justify-between pt-2 border-t border-white/10">
-                <span>In {ROOMS[partnerStatus.room]?.name || 'Quiet Sanctuary'}</span>
-                <span>Reading in calm stillness</span>
-              </div>
+                  <div className="text-[11px] text-stone-400 flex items-center justify-between pt-2 border-t border-white/10">
+                    <span>In {ROOMS[partnerStatus.room]?.name || 'Quiet Sanctuary'}</span>
+                    <span>{partnerHereFor()}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-4 rounded-2xl bg-black/30 border border-white/5 space-y-1.5">
+                    <p className="text-xs text-stone-300 font-serif leading-relaxed">
+                      {shownPartnerName} isn't in the room right now. When they open Quiet Co-Presence, they'll
+                      appear at this desk.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                    <span className="text-[11px] text-stone-400">
+                      {partnerOnline ? 'Online, elsewhere in Two' : 'Away from Two'}
+                    </span>
+                    {onSendToChat && (
+                      <button
+                        onClick={inviteIn}
+                        disabled={invited}
+                        className="text-[11px] font-medium text-amber-300 hover:text-amber-200 disabled:text-stone-500 cursor-pointer"
+                      >
+                        {invited ? 'Invited' : `Invite ${shownPartnerName}`}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Your Desk Side */}
@@ -651,12 +751,14 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
           <div className="p-4 rounded-3xl bg-black/40 border border-white/10 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase tracking-widest font-semibold text-amber-300/80">
-                Wordless Micro-Touches • Send to Partner
+                Wordless Micro-Touches • Send to {shownPartnerName}
               </span>
-              <span className="text-[11px] text-stone-400">Tactile acoustic feedback</span>
+              <span className="text-[11px] text-stone-400">
+                {partnerHere ? 'Tactile acoustic feedback' : `When ${shownPartnerName} is here`}
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <div className={`grid grid-cols-2 sm:grid-cols-5 gap-2 transition-opacity ${partnerHere ? '' : 'opacity-40 pointer-events-none'}`} aria-disabled={!partnerHere}>
               <button
                 onClick={() => sendInteraction('tea')}
                 className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col items-center text-center transition-all hover:scale-102 cursor-pointer group"

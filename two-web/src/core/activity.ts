@@ -130,7 +130,7 @@ const PHRASES: Record<string, string> = {
   INTUITION_ROUND: 'played a round',
   CARE_COMPASS: 'updated the care compass',
   SOFT_LANDING_UPDATE: 'changed a soft landing',
-  CO_PRESENCE_STATUS: 'is sitting with you',
+  CO_PRESENCE_STATUS: 'came to sit with you',
   WEATHER: 'changed their weather',
   JOURNAL_SHARED: 'shared a journal entry',
   AGREEMENT_ADD: 'added an agreement',

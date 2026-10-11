@@ -65,7 +65,9 @@ export const AmbientSoundscapeModal: React.FC<AmbientSoundscapeModalProps> = ({
     };
 
     const wsUnsub = wsRelay.subscribe((msg) => {
-      if (msg.type === 'REMOTE_RECORD' && msg.record?.type === 'SOUNDSCAPE_SYNC') {
+      // Live only: a sync replayed on reconnecting is what they were playing
+      // hours ago, and would start it here now.
+      if (msg.type === 'REMOTE_RECORD' && !msg.replay && msg.record?.type === 'SOUNDSCAPE_SYNC') {
         try {
           const data = JSON.parse(msg.record.payload);
           handleRemoteSync(data, msg.record.authorId);

@@ -137,7 +137,10 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
   const [newCategory, setNewCategory] = useState<CoordinateCategory>('secret_spot');
   const [newLocationName, setNewLocationName] = useState('');
   const [newStory, setNewStory] = useState('');
-  const [newDate, setNewDate] = useState('Today');
+  // The day itself, ready to change. It used to be the word "Today", which a
+  // pin then said for good.
+  const todayLabel = () => new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  const [newDate, setNewDate] = useState(todayLabel);
   const [newLat, setNewLat] = useState<number>(40.7128);
   const [newLon, setNewLon] = useState<number>(-74.006);
   const [newSong, setNewSong] = useState('');
@@ -231,8 +234,10 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
       title: newTitle.trim(),
       category: newCategory,
       locationName: newLocationName.trim(),
-      story: newStory.trim() || 'A quiet moment held close in memory.',
-      date: newDate.trim() || 'Recently',
+      // Only what you wrote. An empty story used to be filled in with a
+      // line neither of you had written.
+      story: newStory.trim(),
+      date: newDate.trim() || todayLabel(),
       latitude: Number(newLat),
       longitude: Number(newLon),
       authorId: activeUser,
@@ -253,6 +258,7 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
     setNewStory('');
     setNewSong('');
     setNewWeather('');
+    setNewDate(todayLabel());
   };
 
   return (
@@ -590,11 +596,13 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
           </div>
 
           {/* Story & Emotional Resonance */}
-          <div className="mt-4 p-4 rounded-2xl bg-linen-variant/40 border border-linen-border/60">
-            <p className="font-serif text-sm text-linen-primary leading-relaxed">
-              “{selectedPin.story}”
-            </p>
-          </div>
+          {selectedPin.story && (
+            <div className="mt-4 p-4 rounded-2xl bg-linen-variant/40 border border-linen-border/60">
+              <p className="select-text font-serif text-sm text-linen-primary leading-relaxed">
+                “{selectedPin.story}”
+              </p>
+            </div>
+          )}
 
           {/* Sensory Memory Badges */}
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">

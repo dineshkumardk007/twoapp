@@ -773,7 +773,18 @@ export const App: React.FC = () => {
             }
           }
           const route = routeFor(record.type);
-          if (route) {
+          // Co-presence sends a status for every change and a goodbye on
+          // leaving; only walking in is news.
+          let isNews = !!route;
+          if (isNews && record.type === 'CO_PRESENCE_STATUS') {
+            try {
+              const status = JSON.parse(record.payload);
+              isNews = status?.hello === true && status?.isJoined !== false;
+            } catch {
+              isNews = false;
+            }
+          }
+          if (route && isNews) {
             const at = Number(record.clientTs) || Date.now();
             setState(prev => ({
               ...prev,
@@ -4011,6 +4022,8 @@ export const App: React.FC = () => {
           <HearthGardenView
             garden={state.hearthGarden}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
+            myName={state.userName}
             onUpdateGarden={handleUpdateGarden}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
@@ -4151,6 +4164,7 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             userName={state.userName}
             partnerName={state.partnerName}
+            partnerOnline={partnerOnline}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}

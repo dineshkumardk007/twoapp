@@ -374,6 +374,8 @@ export interface CoPresenceUserStatus {
   timerEndsAt?: number;
   timerActive?: boolean;
   timerSecondsLeft?: number;
+  /** Set on arriving: whoever is already in the room answers with theirs. */
+  hello?: boolean;
 }
 
 export interface CoPresenceInteractionEvent {
@@ -440,6 +442,8 @@ export interface GardenBlossom {
   sproutedBy: 'user' | 'partner';
   sproutedByName: string;
   sproutedAt: string;
+  /** When it sprouted. `sproutedAt` alone was the words "Just now", kept for good. */
+  at?: number;
   xPercent: number; // percentage coordinate 10-90 on canopy
   yPercent: number; // percentage coordinate 15-75 on canopy
 }
@@ -455,7 +459,11 @@ export interface HearthGardenState {
   totalWaterings: number;
   totalSunbaths: number;
   blossoms: GardenBlossom[];
-  growthLog: { id: string; event: string; timestamp: string; at?: number }[];
+  /**
+   * What happened, newest first. `by` and `action` let each phone name who
+   * did it; `event` is the whole line, for a phone on an older version.
+   */
+  growthLog: { id: string; event: string; timestamp: string; at?: number; by?: 'user' | 'partner'; action?: string }[];
 }
 
 export type SoftLandingPhase = 'idle' | 'breather_active' | 'nvc_reflection' | 'ready_to_reconnect' | 'resolved';
