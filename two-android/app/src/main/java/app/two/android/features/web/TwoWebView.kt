@@ -45,7 +45,11 @@ import androidx.fragment.app.FragmentActivity
 import androidx.webkit.WebViewAssetLoader
 import app.two.android.core.network.NetworkConfig
 import app.two.android.core.security.FingerprintLock
+import app.two.android.core.update.AppUpdater
+import org.json.JSONArray
 import org.json.JSONObject
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import app.two.android.features.radio.RadioRemote
 
 /**
@@ -203,7 +207,6 @@ class AndroidWebBridge(
     }
 
     private fun replyFingerprint(id: String, result: FingerprintLock.Result) {
-        val view = webView ?: return
         val reply = JSONObject().put("id", id)
         when (result) {
             is FingerprintLock.Result.Ok -> {
@@ -213,10 +216,123 @@ class AndroidWebBridge(
             is FingerprintLock.Result.Failed -> reply.put("ok", false).put("reason", result.reason)
             else -> reply.put("ok", false).put("reason", "error")
         }
+        replyToPage("__twoFingerprint", reply)
+    }
+
+    /** Calls window.[callback](reply) - only ever on the app's own page. */
+    private fun replyToPage(callback: String, reply: JSONObject) {
+        val view = webView ?: return
         Handler(Looper.getMainLooper()).post {
-            // Only ever told to the app's own page, never one that replaced it.
             if (Uri.parse(view.url ?: "").host != APP_HOST) return@post
-            view.evaluateJavascript("window.__twoFingerprint && window.__twoFingerprint($reply)", null)
+            view.evaluateJavascript("window.$callback && window.$callback($reply)", null)
+        }
+    }
+
+    private val updater by lazy { AppUpdater(context.applicationContext) }
+    private val updateWork = Executors.newSingleThreadExecutor()
+    private val updateInstalling = AtomicBoolean(false)
+
+    /** The newest release the last check found, for the install that follows it. */
+    @Volatile
+    private var foundUpdate: AppUpdater.Update? = null
+
+    /** This build, for the page: {"code":66,"name":"1.0.66","updatable":true}. */
+    @JavascriptInterface
+    fun appVersion(): String = try {
+        JSONObject()
+            .put("code", updater.installedCode)
+            .put("name", updater.installedName)
+            .put("updatable", updater.updatable)
+            .toString()
+    } catch (_: Exception) {
+        "{}"
+    }
+
+    /**
+     * Asks GitHub for the newest release. Answers window.__twoUpdate with
+     * [id]: available or not, and the version and what is new when it is.
+     */
+    @JavascriptInterface
+    fun updateCheck(id: String) {
+        updateWork.execute {
+            val reply = JSONObject().put("id", id)
+            try {
+                val update = updater.check()
+                foundUpdate = update
+                reply.put("ok", true).put("available", update != null)
+                if (update != null) {
+                    reply.put("code", update.code)
+                        .put("name", update.name)
+                        .put("size", update.size)
+                        .put("notes", JSONArray(update.notes))
+                }
+            } catch (failure: Exception) {
+                reply.put("ok", false).put("reason", (failure as? AppUpdater.Failure)?.reason ?: "error")
+            }
+            replyToPage("__twoUpdate", reply)
+        }
+    }
+
+    /**
+     * Downloads the update, checks it, and opens Android's installer on it.
+     * Answers [id] with progress as it downloads, then ok, or the reason it
+     * stopped: permission (the phone's switch was opened for you), none,
+     * network, verify, busy, error.
+     */
+    @JavascriptInterface
+    fun updateInstall(id: String) {
+        fun answer(ok: Boolean, reason: String? = null) {
+            val reply = JSONObject().put("id", id).put("ok", ok)
+            if (reason != null) reply.put("reason", reason)
+            replyToPage("__twoUpdate", reply)
+        }
+        if (!updateInstalling.compareAndSet(false, true)) return answer(false, "busy")
+        updateWork.execute {
+            try {
+                if (!updater.canInstall()) {
+                    Handler(Looper.getMainLooper()).post {
+                        context.findActivity()?.let { activity ->
+                            try {
+                                updater.openInstallPermission(activity)
+                            } catch (_: Exception) {
+                                // No settings screen for it on this phone.
+                            }
+                        }
+                    }
+                    answer(false, "permission")
+                    return@execute
+                }
+                val update = foundUpdate ?: updater.check()
+                if (update == null) {
+                    answer(false, "none")
+                    return@execute
+                }
+                var lastPercent = -1
+                val file = updater.download(update) { fraction ->
+                    val percent = (fraction * 100).toInt()
+                    if (percent >= lastPercent + 2) {
+                        lastPercent = percent
+                        replyToPage("__twoUpdate", JSONObject().put("id", id).put("progress", fraction))
+                    }
+                }
+                Handler(Looper.getMainLooper()).post {
+                    val activity = context.findActivity()
+                    if (activity == null) {
+                        answer(false, "error")
+                        return@post
+                    }
+                    try {
+                        updater.install(activity, file)
+                        answer(true)
+                    } catch (_: Exception) {
+                        answer(false, "error")
+                    }
+                }
+            } catch (failure: Exception) {
+                answer(false, (failure as? AppUpdater.Failure)?.reason ?: "error")
+            } finally {
+                updateInstalling.set(false)
+            }
         }
     }
 

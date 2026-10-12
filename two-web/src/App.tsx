@@ -77,6 +77,8 @@ import {
   addOnce
 } from './core/seats';
 import { UpdateReadyToast } from './components/UpdateReadyToast';
+import { UpdatePrompt } from './components/UpdatePrompt';
+import { appVersion, checkForUpdate, isPutOff, UpdateInfo } from './core/appUpdate';
 import { routeFor, withActivity, unseen, dottedTabs } from './core/activity';
 import {
   ThemeMode,
@@ -204,6 +206,15 @@ const FINGERPRINT_CHANGED_NOTE =
  * over it, as it does any record it has no branch for.
  */
 const VOICE_HEARD = 'VOICE_HEARD';
+
+/**
+ * Which version of the app this phone runs: `{ code, name }`.
+ *
+ * Sent once per version rather than with every presence beat: the beat is
+ * not sent at all to someone who has turned off "last seen", and a version is
+ * not a way of being seen. A phone on an older version passes over the type.
+ */
+const APP_VERSION = 'APP_VERSION';
 
 /**
  * What is said when a message is too big for one record: the relay takes a
@@ -1053,6 +1064,16 @@ export const App: React.FC = () => {
               });
               return changed ? { ...prev, messages } : prev;
             });
+          } else if (record.type === APP_VERSION) {
+            // Which version the partner runs, for the note on Home when
+            // theirs is behind. Our own comes back to us on replay.
+            if (record.authorId === state.activeUser) return;
+            const code = Number(parsed?.code);
+            if (!Number.isFinite(code) || code <= 0) return;
+            const name = String(parsed?.name || code).slice(0, 32);
+            setState(prev =>
+              prev.partnerApp?.code === code ? prev : { ...prev, partnerApp: { code, name } }
+            );
           } else if (record.type === PRESENCE_BEAT) {
             // Only the partner's beats say anything; our own come back to us
             // on replay and would otherwise overwrite theirs with our time.
@@ -1851,6 +1872,39 @@ export const App: React.FC = () => {
    * privacy control: with no beat there is no timestamp, on the relay or on
    * the partner's device.
    */
+  // Tells the partner's phone which version this one runs, once per version.
+  useEffect(() => {
+    if (relayStatus !== 'connected' || isLocked || !session) return;
+    const mine = appVersion();
+    if (!mine || state.appVersionSent === mine.code) return;
+    wsRelay.broadcastUpdate(APP_VERSION, { code: mine.code, name: mine.name });
+    setState(prev => ({ ...prev, appVersionSent: mine.code }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relayStatus, isLocked, !!session, state.appVersionSent]);
+
+  /**
+   * A new version of the app, offered when it is opened: after unlocking,
+   * outside the disguise and calls, a moment after the screen has settled.
+   * The check itself is limited to every few hours (core/appUpdate.ts).
+   */
+  const [updateOffer, setUpdateOffer] = useState<UpdateInfo | null>(null);
+  const callIdle = callState.phase === 'idle';
+  useEffect(() => {
+    if (isLocked || isCamouflaged || !pageVisible || !session || !callIdle || updateOffer) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      void checkForUpdate().then(result => {
+        if (cancelled || result.status !== 'found' || isPutOff(result.update.code)) return;
+        setUpdateOffer(result.update);
+      });
+    }, 2500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocked, isCamouflaged, pageVisible, !!session, callIdle]);
+
   useEffect(() => {
     if (!shareLastSeen || relayStatus !== 'connected' || isLocked) return;
 
@@ -4058,6 +4112,16 @@ export const App: React.FC = () => {
             onAddMilestone={handleAddMilestone}
             onSaveComfortBox={handleSaveComfortBox}
             partnerNews={partnerNews}
+            partnerUpdate={(() => {
+              const mine = appVersion();
+              const theirs = state.partnerApp;
+              if (!mine || !theirs || theirs.code >= mine.code) return undefined;
+              if (state.partnerUpdateDismissed === theirs.code) return undefined;
+              return {
+                version: theirs.name,
+                onDismiss: () => setState(prev => ({ ...prev, partnerUpdateDismissed: theirs.code }))
+              };
+            })()}
           />
         )}
 
@@ -4441,6 +4505,11 @@ export const App: React.FC = () => {
               writeShareReceipts(value);
               setShareReceipts(value);
             }}
+            onCheckForUpdate={async () => {
+              const result = await checkForUpdate(true);
+              if (result.status === 'found') setUpdateOffer(result.update);
+              return result.status;
+            }}
             decoyOnLaunch={decoyOnLaunch}
             onToggleDecoyOnLaunch={handleToggleDecoyOnLaunch}
             autoCamouflageOnBlur={autoCamouflageOnBlur}
@@ -4472,6 +4541,10 @@ export const App: React.FC = () => {
       )}
 
       <UpdateReadyToast suppressed={callState.phase !== 'idle'} />
+
+      {updateOffer && !isLocked && !isCamouflaged && callState.phase === 'idle' && (
+        <UpdatePrompt update={updateOffer} onClose={() => setUpdateOffer(null)} />
+      )}
 
       {callOverlay}
 

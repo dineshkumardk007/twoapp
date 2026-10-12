@@ -3,7 +3,7 @@ import { SpaceState } from '../core/storage';
 import { EmotionalWeatherCard } from '../components/EmotionalWeatherCard';
 import { NotAboutYouBanner } from '../components/NotAboutYouBanner';
 import { getResurfacedQuote, LiteraryQuote } from '../data/quotes';
-import { Sparkles, Quote, Heart, Wind, ChevronRight } from 'lucide-react';
+import { Sparkles, Quote, Heart, Wind, ChevronRight, X } from 'lucide-react';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
 import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
@@ -33,6 +33,8 @@ interface HomeViewProps {
   onSaveComfortBox?: (box: ComfortBoxData) => void;
   /** Partner changes this device has not looked at yet, newest first. */
   partnerNews?: ActivityEvent[];
+  /** Set while the partner's phone runs an older version than this one. */
+  partnerUpdate?: { version: string; onDismiss: () => void };
 }
 
 /**
@@ -76,7 +78,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onOpenTour,
   onAddMilestone = () => {},
   onSaveComfortBox,
-  partnerNews = []
+  partnerNews = [],
+  partnerUpdate
 }) => {
   const [showComfortBox, setShowComfortBox] = useState(false);
   const [showCoRegulation, setShowCoRegulation] = useState(false);
@@ -117,6 +120,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
         onNavigate={onNavigate}
         labelFor={destinationName}
       />
+
+      {/* New things only work properly when both phones have them. */}
+      {partnerUpdate && (
+        <div role="status" className="flex items-start gap-3 rounded-2xl border border-linen-border bg-linen-surface p-4 shadow-xs">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-aurora-violet/15">
+            <Sparkles className="h-4 w-4 text-aurora-violet" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-linen-primary">
+              {partnerName}'s phone has an older Two
+            </p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-linen-secondary">
+              They're on {partnerUpdate.version}. New things work best when both phones match, so remind{' '}
+              {partnerName} to update.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={partnerUpdate.onDismiss}
+            aria-label="Dismiss"
+            className="shrink-0 rounded-lg p-1 text-linen-secondary hover:bg-linen-variant transition-colors cursor-pointer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Your days together, from the dates the two of you set - or a quiet
           question until you have. */}

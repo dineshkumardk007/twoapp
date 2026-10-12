@@ -14,6 +14,7 @@ import { saveFile } from '../core/saveFile';
 import { copyTextOrThrow } from '../core/clipboard';
 import { FingerprintStatus, fingerprintStatus, enableFingerprint, disableFingerprint } from '../core/fingerprint';
 import { unlockVault } from '../core/vault';
+import { appVersion } from '../core/appUpdate';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -89,6 +90,8 @@ interface SettingsViewProps {
   /** Whether this device sends read receipts and typing. */
   shareReceipts?: boolean;
   onToggleShareReceipts?: (share: boolean) => void;
+  /** Asks for a new version now; one found is offered by the app's own popup. */
+  onCheckForUpdate?: () => Promise<'found' | 'none' | 'failed' | 'skipped'>;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -122,7 +125,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   autoCamouflageOnBlur = false,
   onToggleAutoCamouflage,
   decoyOnLaunch = false,
-  onToggleDecoyOnLaunch
+  onToggleDecoyOnLaunch,
+  onCheckForUpdate
 }) => {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
@@ -396,6 +400,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // Night (Aurora), its day version, or whatever the phone is set to.
   const [appearance, setAppearance] = useState<Appearance>(readAppearance);
+
+  // This phone's version, and a way to ask for a newer one.
+  const [mine] = useState(appVersion);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+  const checkNow = async () => {
+    if (!onCheckForUpdate || checkingUpdate) return;
+    setCheckingUpdate(true);
+    setUpdateMessage(null);
+    const result = await onCheckForUpdate();
+    setCheckingUpdate(false);
+    setUpdateMessage(
+      result === 'found'
+        ? null
+        : result === 'none'
+        ? 'You have the newest version.'
+        : "Couldn't check just now. Try again in a while."
+    );
+  };
   const chooseAppearance = (next: Appearance) => {
     setAppearance(next);
     writeAppearance(next);
@@ -448,6 +471,46 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           Just this phone. Your partner's phone keeps the look they chose.
         </p>
       </div>
+
+      {/* Which version this phone runs. New ones are offered by themselves;
+          this is for asking now. */}
+      {mine && (
+        <div className="p-5 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
+              <Smartphone className="w-4 h-4 text-linen-accent" />
+              <span>App version</span>
+            </div>
+            <span className="text-xs font-medium text-linen-secondary tabular-nums">{mine.name}</span>
+          </div>
+          {state.partnerApp && (
+            <p className="text-[11px] text-linen-secondary leading-relaxed">
+              {state.partnerName || 'Your partner'}'s phone: {state.partnerApp.name}
+              {state.partnerApp.code < mine.code
+                ? ' - older than yours'
+                : state.partnerApp.code > mine.code
+                ? ' - newer than yours'
+                : ' - the same as yours'}
+            </p>
+          )}
+          {onCheckForUpdate && mine.updatable && (
+            <button
+              type="button"
+              onClick={() => void checkNow()}
+              disabled={checkingUpdate}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-linen-border bg-linen-surface hover:bg-linen-variant text-linen-primary text-[11px] font-medium transition-colors cursor-pointer disabled:opacity-60"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${checkingUpdate ? 'animate-spin' : ''}`} />
+              {checkingUpdate ? 'Checking...' : 'Check for updates'}
+            </button>
+          )}
+          {updateMessage && (
+            <p role="status" className="text-[11px] leading-relaxed text-linen-secondary">
+              {updateMessage}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Connected Space & End-to-End Encryption */}
       <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-4">

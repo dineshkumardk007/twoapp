@@ -167,6 +167,12 @@ export interface SpaceState {
   knownDevices: KnownDevice[];
   /** How many devices you have accepted as legitimately in this space. */
   approvedDeviceCount: number;
+  /** The partner's app version, from their APP_VERSION record. */
+  partnerApp?: { code: number; name: string };
+  /** The version this phone last told the partner about. */
+  appVersionSent?: number;
+  /** The partner version whose "older version" note was dismissed on Home. */
+  partnerUpdateDismissed?: number;
 }
 
 const DEFAULT_STATE: SpaceState = {

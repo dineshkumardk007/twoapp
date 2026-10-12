@@ -11,6 +11,9 @@ jobs:
     # Pinned rather than ubuntu-latest, which moves to a new Ubuntu on
     # GitHub's schedule - a build should only change when this file does.
     runs-on: ubuntu-24.04
+    # Writing is for publishing the release the app updates from (below).
+    permissions:
+      contents: write
     env:
       # A release build once the signing key is in the repository's secrets,
       # and the debug build until then - so a missing key never breaks a build.
@@ -19,6 +22,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
+        with:
+          # The whole history and its tags, to say what changed since the
+          # last release.
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v6
@@ -125,3 +132,55 @@ jobs:
           path: two-android/app/build/outputs/apk/release/app-release.apk
           archive: false
           retention-days: 30
+
+      # The release the app updates itself from (AppUpdater on Android): the
+      # APK and update.json, which names the version, the APK's SHA-256 and
+      # what is new. A release download needs no GitHub login, unlike the
+      # artifact above. Only main publishes, so a branch never reaches phones.
+      - name: Publish Update
+        if: env.HAS_RELEASE_KEY == 'true' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          CODE="$GITHUB_RUN_NUMBER"
+          NAME="1.0.$GITHUB_RUN_NUMBER"
+          TAG="v$NAME"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::notice title=Already published::$TAG"
+            exit 0
+          fi
+          APK="$RUNNER_TEMP/two-$NAME.apk"
+          cp two-android/app/build/outputs/apk/release/app-release.apk "$APK"
+          SHA=$(sha256sum "$APK" | cut -d' ' -f1)
+          SIZE=$(stat -c %s "$APK")
+
+          # What is new: the commits since the last release, by their titles.
+          PREV=$(git describe --tags --abbrev=0 --match 'v1.0.*' HEAD 2>/dev/null || true)
+          if [ -n "$PREV" ]; then
+            # --max-count rather than | head: under pipefail, head closing the
+            # pipe early fails the whole step.
+            git log --no-merges --max-count=8 --format='%s' "$PREV..HEAD" > "$RUNNER_TEMP/notes.txt"
+          else
+            git log -1 --format='%s' > "$RUNNER_TEMP/notes.txt"
+          fi
+          [ -s "$RUNNER_TEMP/notes.txt" ] || echo "Small fixes" > "$RUNNER_TEMP/notes.txt"
+
+          jq -n \
+            --argjson code "$CODE" \
+            --arg name "$NAME" \
+            --arg apk "https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/two-$NAME.apk" \
+            --arg sha "$SHA" \
+            --argjson size "$SIZE" \
+            --rawfile notes "$RUNNER_TEMP/notes.txt" \
+            '{versionCode: $code, versionName: $name, apk: $apk, sha256: $sha, size: $size,
+              notes: ($notes | split("\n") | map(select(length > 0)))}' > "$RUNNER_TEMP/update.json"
+          cat "$RUNNER_TEMP/update.json"
+
+          sed 's/^/- /' "$RUNNER_TEMP/notes.txt" > "$RUNNER_TEMP/body.md"
+          gh release create "$TAG" "$APK" "$RUNNER_TEMP/update.json" \
+            --title "Two $NAME" \
+            --notes-file "$RUNNER_TEMP/body.md" \
+            --target "$GITHUB_SHA" \
+            --latest
+          echo "::notice title=Update published::$TAG - phones on an older version will be asked to update"
