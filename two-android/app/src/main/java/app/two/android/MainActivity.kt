@@ -13,7 +13,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
-import app.two.android.core.security.BiometricAuthManager
 import app.two.android.core.security.ExitSafeManager
 import app.two.android.core.security.SecurityWindowManager
 import app.two.android.core.theme.AppThemeMode
@@ -51,7 +50,6 @@ enum class Screen {
 
 class MainActivity : FragmentActivity() {
 
-    private lateinit var biometricAuthManager: BiometricAuthManager
     private lateinit var exitSafeManager: ExitSafeManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,7 +86,6 @@ class MainActivity : FragmentActivity() {
         // 1. Enable FLAG_SECURE to prevent screenshots and task-switcher previews
         SecurityWindowManager.applyWindowProtection(this, true)
 
-        biometricAuthManager = BiometricAuthManager(this)
         val app = application as TwoApplication
         exitSafeManager = ExitSafeManager(this, app.database, app.keystoreManager)
 
@@ -104,11 +101,6 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        biometricAuthManager.onAppBackgrounded()
     }
 
     private companion object {

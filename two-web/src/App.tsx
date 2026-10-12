@@ -44,6 +44,7 @@ import {
   writeVault,
   destroyVault
 } from './core/vault';
+import { fingerprintStatus, unlockWithFingerprint, disableFingerprint } from './core/fingerprint';
 import type { SpaceRole } from './core/space';
 import {
   isWeakPairingCode,
@@ -123,7 +124,7 @@ import { SensoryPulseOverlay, triggerGlobalPulse } from './components/SensoryPul
 import { playMessageChime, playLetterChime, triggerHaptic } from './core/audioAlerts';
 import { InAppNotificationToast, InAppNotification } from './components/InAppNotificationToast';
 import { Locale } from './core/i18n';
-import { Lock } from 'lucide-react';
+import { Lock, Fingerprint } from 'lucide-react';
 import { CURATED_DILEMMAS } from './data/dilemmas';
 import { newId } from './core/ids';
 import {
@@ -190,6 +191,10 @@ function formatWait(seconds: number): string {
 
 /** Set the first time the home screen shows the tour card. */
 const TOUR_CARD_SEEN_KEY = 'two_story_tour_card_seen_v1';
+
+/** Said on the lock screen once the phone has switched fingerprint unlock off itself. */
+const FINGERPRINT_CHANGED_NOTE =
+  "The fingerprints on this phone changed, so fingerprint unlock switched itself off. Use your PIN, then turn it on again in Settings.";
 
 /**
  * The partner has played one of your voice notes: `{ messageId }`.
@@ -1622,6 +1627,96 @@ export const App: React.FC = () => {
     document.addEventListener('visibilitychange', update);
     return () => document.removeEventListener('visibilitychange', update);
   }, []);
+
+  /** The vault is open: everything it held goes into the app. */
+  const finishUnlock = (opened: NonNullable<Awaited<ReturnType<typeof unlockVault>>>) => {
+    clearFailures();
+    setLockoutLeft(0);
+    // The vault carries the same references localStorage does.
+    setMediaReady(!containsMediaRefs(opened.payload.state));
+    // Upgraded like a localStorage load is: new fields filled in, and
+    // the old sample content taken out.
+    setState(upgradeState(opened.payload.state));
+    setSession(opened.payload.session);
+    setVaultKey(opened.key);
+    // A PIN set under an older build left the code behind in plain
+    // storage, under a key nothing else would ever remove.
+    forgetLastSpace();
+    setIsLocked(false);
+    setPinAttempt('');
+    setPassphraseAttempt('');
+    setFingerprintNote(null);
+    setSpaceVersion(v => v + 1);
+  };
+
+  /**
+   * Fingerprint unlock (core/fingerprint.ts).
+   *
+   * The lock screen asks by itself when it comes up, and again when the app
+   * comes back to the front still locked - never behind the calculator, whose
+   * disguise a prompt saying "Open Two" would give away. "Use PIN" on the
+   * prompt is an answer, so it is not asked again until the app has really
+   * been away; a page that flickers hidden while the prompt is up has not.
+   *
+   * A fingerprint is allowed through a wrong-PIN wait. The wait is there to
+   * slow down someone guessing PINs, and a matching finger is not a guess.
+   */
+  const [fingerprintOn, setFingerprintOn] = useState(false);
+  const [fingerprintNote, setFingerprintNote] = useState<string | null>(null);
+  const fingerprintAskedRef = useRef(false);
+  const fingerprintBusyRef = useRef(false);
+
+  const askFingerprint = async () => {
+    if (fingerprintBusyRef.current) return;
+    fingerprintBusyRef.current = true;
+    setFingerprintNote(null);
+    try {
+      const result = await unlockWithFingerprint();
+      if (result.ok) {
+        if (!result.pin) return;
+        setIsUnlocking(true);
+        const opened = await unlockVault(result.pin);
+        setIsUnlocking(false);
+        if (opened) {
+          finishUnlock(opened);
+          return;
+        }
+        // The PIN the phone kept no longer opens the vault.
+        disableFingerprint();
+        setFingerprintOn(false);
+        setFingerprintNote('Fingerprint unlock switched off because the PIN changed. Enter your PIN.');
+        return;
+      }
+      if (result.reason === 'changed') {
+        setFingerprintOn(false);
+        setFingerprintNote(FINGERPRINT_CHANGED_NOTE);
+      } else if (result.reason === 'lockout') {
+        setFingerprintNote('Too many tries, so the fingerprint is paused for now. Use your PIN.');
+      } else if (result.reason !== 'cancel') {
+        setFingerprintOn(fingerprintStatus() === 'on');
+      }
+    } finally {
+      fingerprintBusyRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (!isLocked) {
+      fingerprintAskedRef.current = false;
+      return;
+    }
+    if (!pageVisible) {
+      if (!fingerprintBusyRef.current) fingerprintAskedRef.current = false;
+      return;
+    }
+    if (isCamouflaged || fingerprintAskedRef.current) return;
+    fingerprintAskedRef.current = true;
+    const status = fingerprintStatus();
+    setFingerprintOn(status === 'on');
+    if (status === 'changed') setFingerprintNote(FINGERPRINT_CHANGED_NOTE);
+    if (status === 'on') void askFingerprint();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocked, pageVisible, isCamouflaged]);
 
   // Opening the chat is not the only way to read something: a message arriving
   // while the chat is already open has also been seen - when the chat is what
@@ -3300,6 +3395,8 @@ export const App: React.FC = () => {
     void clearMedia();
     clearSpaceSession();
     destroyVault();
+    // And the copy of the PIN the phone kept for the fingerprint.
+    disableFingerprint();
     window.location.reload();
   };
 
@@ -3418,6 +3515,9 @@ export const App: React.FC = () => {
         clearState();
         clearSpaceSession();
         setState(prev => ({ ...prev, pinEnabled: true }));
+        // The phone's copy is of the old PIN; Settings offers one touch to
+        // keep fingerprint unlock on with the new one.
+        disableFingerprint();
         return 'ok';
       }
 
@@ -3429,6 +3529,7 @@ export const App: React.FC = () => {
       setStorageFull(saveState(forStorage({ ...state, pinEnabled: false })).quotaExceeded);
       if (session) saveSpaceSession(session);
       setState(prev => ({ ...prev, pinEnabled: false }));
+      disableFingerprint();
       return 'ok';
     } catch (e) {
       console.error('[Vault] Could not change the app lock', e);
@@ -3510,22 +3611,7 @@ export const App: React.FC = () => {
       void unlockVault(secret)
         .then(opened => {
           if (opened) {
-            clearFailures();
-            setLockoutLeft(0);
-            // The vault carries the same references localStorage does.
-            setMediaReady(!containsMediaRefs(opened.payload.state));
-            // Upgraded like a localStorage load is: new fields filled in, and
-            // the old sample content taken out.
-            setState(upgradeState(opened.payload.state));
-            setSession(opened.payload.session);
-            setVaultKey(opened.key);
-            // A PIN set under an older build left the code behind in plain
-            // storage, under a key nothing else would ever remove.
-            forgetLastSpace();
-            setIsLocked(false);
-            setPinAttempt('');
-            setPassphraseAttempt('');
-            setSpaceVersion(v => v + 1);
+            finishUnlock(opened);
           } else {
             const penalty = registerFailure();
             setLockoutLeft(penalty);
@@ -3559,6 +3645,7 @@ export const App: React.FC = () => {
         return;
       }
       destroyVault();
+      disableFingerprint();
       clearState();
       void clearMedia();
       clearSpaceSession();
@@ -3586,7 +3673,9 @@ export const App: React.FC = () => {
           <div>
             <h2 className="font-serif text-2xl font-semibold text-linen-primary">Sanctuary Locked</h2>
             <p className="text-xs text-linen-secondary mt-1">
-              {lockoutLeft > 0
+              {isUnlocking
+                ? 'Opening…'
+                : lockoutLeft > 0
                 ? 'Too many wrong PINs'
                 : 'Enter your 4-digit PIN to open'}
             </p>
@@ -3648,6 +3737,26 @@ export const App: React.FC = () => {
               </button>
             ))}
           </div>
+          {(fingerprintOn || fingerprintNote) && (
+            <div className="space-y-2">
+              {fingerprintOn && (
+                <button
+                  type="button"
+                  onClick={() => void askFingerprint()}
+                  disabled={isUnlocking}
+                  className="mx-auto inline-flex items-center gap-2 rounded-full border border-linen-border bg-linen-variant/40 px-4 py-2 text-xs font-medium text-linen-primary hover:bg-linen-variant active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Fingerprint className="h-4 w-4 text-aurora-pink" />
+                  Use fingerprint
+                </button>
+              )}
+              {fingerprintNote && (
+                <p role="status" className="text-[11px] leading-relaxed text-linen-secondary">
+                  {fingerprintNote}
+                </p>
+              )}
+            </div>
+          )}
           {/* A vault can outlive whatever created it. The login experiment sealed
               some with an account password, which a four-digit keypad cannot
               express - without this those devices would be permanently shut. */}

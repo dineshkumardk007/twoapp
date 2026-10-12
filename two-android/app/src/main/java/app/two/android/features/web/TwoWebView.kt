@@ -41,8 +41,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.webkit.WebViewAssetLoader
 import app.two.android.core.network.NetworkConfig
+import app.two.android.core.security.FingerprintLock
+import org.json.JSONObject
 import app.two.android.features.radio.RadioRemote
 
 /**
@@ -139,6 +142,81 @@ class AndroidWebBridge(
         Handler(Looper.getMainLooper()).post {
             val activity = context.findActivity() ?: return@post
             SystemChrome.apply(activity, light)
+        }
+    }
+
+    private val fingerprint by lazy { FingerprintLock(context.applicationContext) }
+
+    /** Main thread only: a fingerprint prompt is on screen, and who asked for it. */
+    private var fingerprintPrompting = false
+    private var fingerprintRequest = ""
+
+    /**
+     * Fingerprint unlock for this phone: unavailable, not-enrolled, off, on,
+     * or changed (a fingerprint was added, so it switched itself off).
+     */
+    @JavascriptInterface
+    fun fingerprintStatus(): String = try {
+        fingerprint.status()
+    } catch (_: Exception) {
+        "unavailable"
+    }
+
+    /**
+     * Turns fingerprint unlock on: one touch, then [pin] is kept behind it.
+     * The page has already checked the PIN opens the vault. The answer comes
+     * back through window.__twoFingerprint with the same [id].
+     */
+    @JavascriptInterface
+    fun fingerprintEnable(id: String, pin: String) {
+        withFingerprintPrompt(id) { activity, done -> fingerprint.enable(activity, pin, done) }
+    }
+
+    /** Asks for a fingerprint and answers [id] with the PIN, or why not. */
+    @JavascriptInterface
+    fun fingerprintUnlock(id: String) {
+        withFingerprintPrompt(id) { activity, done -> fingerprint.unlock(activity, done) }
+    }
+
+    @JavascriptInterface
+    fun fingerprintDisable() {
+        fingerprint.disable()
+    }
+
+    private fun withFingerprintPrompt(
+        id: String,
+        start: (FragmentActivity, (FingerprintLock.Result) -> Unit) -> Unit
+    ) {
+        Handler(Looper.getMainLooper()).post {
+            // A prompt already up answers whoever asked last: a page that
+            // reloaded behind it is the one waiting now.
+            fingerprintRequest = id
+            if (fingerprintPrompting) return@post
+            val activity = context.findActivity() as? FragmentActivity
+                ?: return@post replyFingerprint(id, FingerprintLock.Result.Failed("unavailable"))
+            fingerprintPrompting = true
+            start(activity) { result ->
+                fingerprintPrompting = false
+                replyFingerprint(fingerprintRequest, result)
+            }
+        }
+    }
+
+    private fun replyFingerprint(id: String, result: FingerprintLock.Result) {
+        val view = webView ?: return
+        val reply = JSONObject().put("id", id)
+        when (result) {
+            is FingerprintLock.Result.Ok -> {
+                reply.put("ok", true)
+                result.pin?.let { reply.put("pin", it) }
+            }
+            is FingerprintLock.Result.Failed -> reply.put("ok", false).put("reason", result.reason)
+            else -> reply.put("ok", false).put("reason", "error")
+        }
+        Handler(Looper.getMainLooper()).post {
+            // Only ever told to the app's own page, never one that replaced it.
+            if (Uri.parse(view.url ?: "").host != APP_HOST) return@post
+            view.evaluateJavascript("window.__twoFingerprint && window.__twoFingerprint($reply)", null)
         }
     }
 

@@ -6,12 +6,14 @@ import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
-import { Shield, Download, Trash2, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw, Moon, Sun, Smartphone } from 'lucide-react';
+import { Shield, Download, Trash2, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw, Moon, Sun, Smartphone, Fingerprint } from 'lucide-react';
 import { APPEARANCE_CHOICES, Appearance, readAppearance, writeAppearance } from '../core/appearance';
 import { whenLabel } from '../core/when';
 import { isAndroidApp } from '../core/platform';
 import { saveFile } from '../core/saveFile';
 import { copyTextOrThrow } from '../core/clipboard';
+import { FingerprintStatus, fingerprintStatus, enableFingerprint, disableFingerprint } from '../core/fingerprint';
+import { unlockVault } from '../core/vault';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -175,6 +177,72 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setConfirmPinInput('');
   };
 
+  // Fingerprint unlock: this phone only, like the PIN it types for you.
+  const [fingerprint, setFingerprint] = useState<FingerprintStatus>(() => fingerprintStatus());
+  const [fingerprintForm, setFingerprintForm] = useState(false);
+  const [fingerprintPin, setFingerprintPin] = useState('');
+  const [fingerprintBusy, setFingerprintBusy] = useState(false);
+  const [fingerprintMessage, setFingerprintMessage] = useState<{ tone: 'ok' | 'bad'; text: string } | null>(null);
+
+  // Adding a fingerprint in the phone's settings and coming back should find
+  // the switch ready, not still saying there is none.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') setFingerprint(fingerprintStatus());
+    };
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
+  }, []);
+
+  const closeFingerprintForm = () => {
+    setFingerprintForm(false);
+    setFingerprintPin('');
+  };
+
+  const turnOnFingerprint = async () => {
+    if (fingerprintBusy) return;
+    setFingerprintMessage(null);
+    if (fingerprintPin.length !== 4) {
+      setFingerprintMessage({ tone: 'bad', text: 'Your PIN is four digits.' });
+      return;
+    }
+    setFingerprintBusy(true);
+    // Checked against the vault itself, so the phone never keeps a PIN that
+    // would not open it.
+    const opens = await unlockVault(fingerprintPin);
+    if (!opens) {
+      setFingerprintBusy(false);
+      setFingerprintMessage({ tone: 'bad', text: 'That is not your PIN.' });
+      return;
+    }
+    const result = await enableFingerprint(fingerprintPin);
+    setFingerprintBusy(false);
+    setFingerprint(fingerprintStatus());
+    if (result.ok) {
+      closeFingerprintForm();
+      setFingerprintMessage({ tone: 'ok', text: 'Fingerprint unlock is on. Next time Two opens, touch the sensor.' });
+      return;
+    }
+    setFingerprintMessage({
+      tone: 'bad',
+      text:
+        result.reason === 'cancel'
+          ? 'Not turned on.'
+          : result.reason === 'lockout'
+          ? 'Too many tries, so the fingerprint is paused for now. Try again in a little while.'
+          : result.reason === 'unavailable'
+          ? 'This phone has no fingerprint Two can use.'
+          : 'Could not turn it on. Nothing was changed.'
+    });
+  };
+
+  const turnOffFingerprint = () => {
+    disableFingerprint();
+    setFingerprint(fingerprintStatus());
+    closeFingerprintForm();
+    setFingerprintMessage({ tone: 'ok', text: 'Fingerprint unlock is off. Two opens with your PIN.' });
+  };
+
   const submitLockChange = async () => {
     if (!onUpdatePin || lockBusy) return;
     setLockMessage(null);
@@ -196,6 +264,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
 
     setLockBusy(true);
+    const fingerprintWasOn = fingerprint === 'on';
     const result = await onUpdatePin(
       pinEnabled ? currentPinInput : null,
       removing ? null : newPinInput
@@ -210,6 +279,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           ? 'App lock removed. This device now opens without a PIN.'
           : 'App lock updated. It applies the next time this app is opened.'
       });
+      // A new PIN leaves the phone holding the old one, so it was switched
+      // off; one touch keeps it on with the new PIN.
+      if (!removing && fingerprintWasOn) {
+        const again = await enableFingerprint(newPinInput);
+        setLockMessage({
+          tone: 'ok',
+          text: again.ok
+            ? 'App lock updated. Fingerprint unlock stays on with your new PIN.'
+            : 'App lock updated. Fingerprint unlock is off for now - turn it on again below.'
+        });
+      }
+      setFingerprint(fingerprintStatus());
+      setFingerprintMessage(null);
       return;
     }
 
@@ -781,6 +863,98 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 >
                   {lockMessage.text}
                 </p>
+              )}
+
+              {/* Fingerprint unlock. Only the Two PIN stands behind it: the
+                  phone's own screen lock does not open Two, so someone who
+                  knows how to unlock the phone still cannot. */}
+              {pinEnabled && lockMode === 'idle' && fingerprint !== 'unavailable' && (
+                <div className="rounded-xl border border-linen-border/70 bg-linen-variant/30 p-3 space-y-2">
+                  <label
+                    className={`flex items-start justify-between gap-3 ${
+                      fingerprint === 'not-enrolled' ? 'cursor-not-allowed' : 'cursor-pointer'
+                    }`}
+                  >
+                    <span className="flex min-w-0 items-start gap-2.5">
+                      <Fingerprint className="mt-0.5 h-4 w-4 shrink-0 text-aurora-pink" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-linen-primary">
+                          Open with fingerprint
+                        </span>
+                        <span className="mt-1 block text-[11px] leading-relaxed text-linen-secondary">
+                          {fingerprint === 'on'
+                            ? 'On for this phone. Two asks for your fingerprint when it opens, and your PIN always works too.'
+                            : fingerprint === 'not-enrolled'
+                            ? "Add a fingerprint in your phone's settings first, then come back here."
+                            : fingerprint === 'changed'
+                            ? 'The fingerprints on this phone changed, so this switched itself off. Turn it on again to keep using your fingerprint.'
+                            : "Touch the sensor instead of typing your PIN. Your PIN always works too, and knowing your phone's own lock is not enough to open Two."}
+                        </span>
+                      </span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={fingerprint === 'on' || fingerprintForm}
+                      disabled={fingerprint === 'not-enrolled' || fingerprintBusy}
+                      onChange={e => {
+                        setFingerprintMessage(null);
+                        if (e.target.checked) setFingerprintForm(true);
+                        else if (fingerprint === 'on') turnOffFingerprint();
+                        else closeFingerprintForm();
+                      }}
+                      className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 cursor-pointer disabled:cursor-not-allowed"
+                    />
+                  </label>
+
+                  {fingerprintForm && fingerprint !== 'on' && (
+                    <div className="space-y-2">
+                      <label className="block">
+                        <span className="block text-[11px] font-medium text-linen-secondary mb-1">
+                          Your PIN, once, to turn it on
+                        </span>
+                        <input
+                          type="password"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          value={fingerprintPin}
+                          onChange={e => setFingerprintPin(onlyDigits(e.target.value))}
+                          onKeyDown={e => e.key === 'Enter' && void turnOnFingerprint()}
+                          placeholder="0000"
+                          className="w-full px-3 py-2 rounded-lg border border-linen-border bg-linen-surface text-linen-primary text-sm tracking-[0.4em] focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
+                        />
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={fingerprintBusy}
+                          onClick={() => void turnOnFingerprint()}
+                          className="flex-1 px-2.5 py-2 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+                        >
+                          {fingerprintBusy ? 'Checking...' : 'Continue'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={fingerprintBusy}
+                          onClick={closeFingerprintForm}
+                          className="px-2.5 py-2 rounded-lg border border-linen-border bg-linen-surface text-linen-secondary text-[11px] font-medium hover:bg-linen-variant disabled:opacity-50 transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {fingerprintMessage && (
+                    <p
+                      role="status"
+                      className={`text-[11px] leading-relaxed ${
+                        fingerprintMessage.tone === 'ok' ? 'text-emerald-700' : 'text-rose-700'
+                      }`}
+                    >
+                      {fingerprintMessage.text}
+                    </p>
+                  )}
+                </div>
               )}
 
               {/* A PIN only guards a closed app. Left open on a table, Two
