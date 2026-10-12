@@ -40,10 +40,18 @@ jobs:
           cache: 'npm'
           cache-dependency-path: two-web/package-lock.json
 
+      - name: Install Web Dependencies
+        run: npm ci
+        working-directory: two-web
+
+      # The app's own checks - syncing, answers, the lock, updates. A failure
+      # stops here, so a build that breaks one never reaches the phones.
+      - name: Run Checks
+        run: npm test
+        working-directory: two-web
+
       - name: Build Web Application Bundle
-        run: |
-          npm ci
-          npm run build
+        run: npm run build
         working-directory: two-web
 
       # Replaced, not merged: copying over the committed copy left every older
