@@ -189,7 +189,7 @@ export const DecksView: React.FC<DecksViewProps> = ({ onSendToChat, onNavigate }
           </button>
         </div>
         {sentToast && (
-          <p className="text-[11px] text-emerald-600 mt-2 flex items-center">
+          <p className="text-[11px] text-emerald-700 mt-2 flex items-center">
             ✓ Sent to your encrypted space chat!
           </p>
         )}

@@ -462,7 +462,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               >
                 <Icon className="w-4 h-4" />
                 <span className="text-xs font-semibold">{choice.label}</span>
-                <span className={`text-[10px] leading-tight ${on ? 'text-white/80' : 'text-linen-secondary'}`}>{choice.hint}</span>
+                <span className={`text-[10px] leading-tight ${on ? 'text-white' : 'text-linen-secondary'}`}>{choice.hint}</span>
               </button>
             );
           })}
@@ -718,7 +718,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   type="checkbox"
                   checked={shareLastSeen}
                   onChange={e => onToggleShareLastSeen(e.target.checked)}
-                  className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 cursor-pointer"
+                  className="mt-1 h-4 w-4 shrink-0 accent-linen-accent cursor-pointer"
                 />
               </label>
             </div>
@@ -745,7 +745,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   type="checkbox"
                   checked={shareReceipts}
                   onChange={e => onToggleShareReceipts(e.target.checked)}
-                  className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 cursor-pointer"
+                  className="mt-1 h-4 w-4 shrink-0 accent-linen-accent cursor-pointer"
                 />
               </label>
             </div>
@@ -776,7 +776,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   setCallSaver(e.target.checked);
                   writeCallQuality(e.target.checked ? 'saver' : 'high');
                 }}
-                className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 cursor-pointer"
+                className="mt-1 h-4 w-4 shrink-0 accent-linen-accent cursor-pointer"
               />
             </label>
           </div>
@@ -965,7 +965,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         else if (fingerprint === 'on') turnOffFingerprint();
                         else closeFingerprintForm();
                       }}
-                      className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 cursor-pointer disabled:cursor-not-allowed"
+                      className="mt-1 h-4 w-4 shrink-0 accent-linen-accent cursor-pointer disabled:cursor-not-allowed"
                     />
                   </label>
 
@@ -1306,7 +1306,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 Applies to the installed app only &mdash; a browser gives itself away
                 by its address and history whatever is on screen.
               </p>
-              <p className="text-[11px] text-linen-secondary/80 leading-normal pt-1">
+              <p className="text-[11px] text-linen-secondary leading-normal pt-1">
                 Forgotten the code? Press and hold the calculator&rsquo;s display for
                 five seconds.
               </p>

@@ -217,7 +217,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-medium text-sm shadow-sm transition-all transform active:scale-95 cursor-pointer shrink-0"
+          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 font-medium text-sm shadow-sm transition-all transform active:scale-95 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Craft a Surprise Card</span>
@@ -231,7 +231,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
             onClick={() => setActiveTab('surprises')}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               activeTab === 'surprises'
-                ? 'bg-amber-600 text-white shadow-sm'
+                ? 'bg-linen-primary text-linen-surface shadow-sm'
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
             }`}
           >
@@ -321,7 +321,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                       {getCategoryIcon(card.category)}
                       {card.category.replace('_', ' ')}
                     </span>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${getFoilBadgeStyle(card.foilType)}`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full no-remap ${getFoilBadgeStyle(card.foilType)}`}>
                       {card.foilType.replace('_', ' ')} foil
                     </span>
                   </div>
@@ -352,7 +352,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                     {card.title}
                   </h3>
                   {!card.isScratched && (
-                    <p className="text-xs text-amber-700/80 font-medium mt-0.5">
+                    <p className="text-xs text-amber-700 font-medium mt-0.5">
                       ✨ {card.teaserHeadline}
                     </p>
                   )}
@@ -370,7 +370,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                       {/* Redeemed Stamp Overlay */}
                       {card.isRedeemed && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                          <div className="transform -rotate-12 border-4 border-dashed border-rose-600/80 rounded-xl px-4 py-2 bg-white/70 backdrop-blur-xs shadow-sm">
+                          <div className="transform -rotate-12 border-4 border-dashed border-rose-600/80 rounded-xl px-4 py-2 bg-white/70 shadow-sm">
                             <span className="font-serif text-base sm:text-lg font-black tracking-widest text-rose-700 uppercase">
                               REDEEMED & LOVED
                             </span>
@@ -435,7 +435,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                         {!card.isRedeemed && (
                           <button
                             onClick={() => handleRedeem(card)}
-                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs transition-transform active:scale-95 cursor-pointer"
+                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-linen-primary text-linen-surface hover:opacity-90 font-medium text-xs shadow-xs transition-transform active:scale-95 cursor-pointer"
                           >
                             <Check className="w-3.5 h-3.5" />
                             <span>Redeem Coupon</span>
@@ -518,7 +518,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                       onClick={() => setFoilType(type)}
                       className={`px-3 py-2 rounded-xl text-xs font-medium border text-center transition-all capitalize ${
                         foilType === type
-                          ? `${getFoilBadgeStyle(type)} ring-2 ring-amber-500/50`
+                          ? `no-remap ${getFoilBadgeStyle(type)} ring-2 ring-amber-500/50`
                           : 'bg-linen-variant text-linen-secondary border-linen-border hover:text-linen-primary'
                       }`}
                     >
@@ -615,7 +615,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-medium text-sm shadow-xs transition-transform active:scale-95 cursor-pointer"
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 font-medium text-sm shadow-xs transition-transform active:scale-95 cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Foil & Seal Card</span>

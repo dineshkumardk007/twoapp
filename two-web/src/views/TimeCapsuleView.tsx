@@ -211,7 +211,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
             <h2 className="font-serif text-2xl sm:text-3xl font-medium text-linen-primary tracking-tight">
               Future Time Capsule Vault
             </h2>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 font-sans font-medium border border-indigo-200">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-sans font-medium border border-amber-200">
               Locked Anniversary Vault
             </span>
           </div>
@@ -284,7 +284,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
                 return (
                   <div
                     key={capsule.id}
-                    className="rounded-3xl border border-stone-800/80 bg-gradient-to-br from-stone-900 via-stone-950 to-neutral-950 p-6 text-stone-100 shadow-xl flex flex-col justify-between relative overflow-hidden group"
+                    className="rounded-3xl border no-remap border-white/10 bg-gradient-to-br from-[#251F46] via-[#1A1534] to-[#0E0B1F] p-6 text-[#F4F1FF] shadow-xl flex flex-col justify-between relative overflow-hidden group"
                   >
                     {/* Atmospheric Starlight Glow */}
                     <div className="absolute -right-12 -top-12 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -361,13 +361,13 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
                       {isReadyToOpen ? (
                         <button
                           onClick={() => handleUnseal(capsule)}
-                          className="no-remap px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-stone-950 text-xs font-bold shadow-lg shadow-amber-500/20 transition-all cursor-pointer inline-flex items-center space-x-1.5 animate-bounce"
+                          className="px-5 py-2.5 rounded-2xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-bold shadow-glow transition-all cursor-pointer inline-flex items-center space-x-1.5 animate-bounce"
                         >
                           <Unlock className="w-3.5 h-3.5" />
                           <span>Unseal & Reveal Now</span>
                         </button>
                       ) : (
-                        <span className="text-xs text-stone-500 font-mono italic">
+                        <span className="text-xs text-white/60 font-mono italic">
                           Locked until {capsule.unlockDateFormatted}
                         </span>
                       )}
@@ -445,7 +445,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
 
       {/* MODAL 1: FULL LETTER VIEWER */}
       {readingCapsule && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-linen-border pb-3">
               <div className="flex items-center space-x-2">
@@ -501,11 +501,11 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
 
       {/* MODAL 2: SEAL NEW CAPSULE */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Hourglass className="w-5 h-5 text-indigo-600" />
+                <Hourglass className="w-5 h-5 text-amber-600" />
                 <h3 className="font-serif text-xl font-medium text-linen-primary">Seal Future Time Capsule</h3>
               </div>
               <button onClick={() => setShowAddModal(false)} className="p-1.5 rounded-xl text-linen-secondary hover:text-linen-primary">

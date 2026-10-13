@@ -558,7 +558,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
       {kissAnimation && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50 animate-fade-in">
           <div className="absolute w-96 h-96 rounded-full bg-rose-500/10 animate-ping duration-1000" />
-          <div className="relative p-6 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-300 flex flex-col items-center space-y-2 shadow-2xl backdrop-blur-md animate-bounce">
+          <div className="relative p-6 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-300 flex flex-col items-center space-y-2 shadow-2xl animate-bounce">
             <Heart className="w-12 h-12 fill-rose-500 text-rose-400 animate-pulse" />
             <span className="text-xs font-serif font-medium tracking-widest uppercase text-rose-200">
               Silent Midnight Kiss Sent
@@ -571,7 +571,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
       <div className="flex items-center justify-between z-10">
         <div className="flex items-center space-x-3">
           {/* Moon Phase Orb SVG */}
-          <div className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full border border-amber-900/40 bg-neutral-900/60 backdrop-blur-sm">
+          <div className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full border border-amber-900/40 bg-neutral-900/60">
             <div className="relative w-6 h-6 rounded-full bg-neutral-800 overflow-hidden border border-amber-500/30 flex items-center justify-center">
               <div
                 className="absolute inset-0 rounded-full bg-amber-200/90 transition-transform duration-700"
@@ -597,7 +597,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
       {/* Center: Large Minimalist Glowing Clock Face */}
       <div className="my-auto py-8 sm:py-14 text-center z-10 flex flex-col items-center">
         {/* Living Partner Status Pill */}
-        <div className="mb-6 inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full border border-amber-900/50 bg-neutral-950/80 backdrop-blur-md shadow-lg">
+        <div className="mb-6 inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full border border-amber-900/50 bg-neutral-950/80 shadow-lg">
           <div className="relative flex items-center justify-center">
             {partnerSleep?.isSleeping ? (
               <>
@@ -656,7 +656,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
 
         {/* Pillow Note (if left by partner) */}
         {partnerSleep?.goodnightNote && (
-          <div className="mt-4 max-w-md px-4 py-2 rounded-2xl border border-amber-900/40 bg-neutral-900/40 backdrop-blur-sm text-center">
+          <div className="mt-4 max-w-md px-4 py-2 rounded-2xl border border-amber-900/40 bg-neutral-900/40 text-center">
             <p className="text-xs font-serif italic text-amber-300/80">
               “{partnerSleep.goodnightNote}”
             </p>
@@ -773,7 +773,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
             <Heart className="w-7 h-7 fill-rose-300 group-hover:scale-110 transition-transform" />
           </button>
 
-          <span className="text-[10px] text-amber-600/80 font-serif">
+          <span className="text-[10px] text-amber-500/90 font-serif">
             {nightstand.lastMidnightKissAt ? (
               <>
                 Last exchanged{' '}
@@ -836,7 +836,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <span className="text-[11px] font-serif text-amber-600/80">
+            <span className="text-[11px] font-serif text-amber-500/90">
               {selectedSoundscape === 'none' ? 'Soundscape off' : '30-min sleep fade active'}
             </span>
             {selectedSoundscape !== 'none' && (

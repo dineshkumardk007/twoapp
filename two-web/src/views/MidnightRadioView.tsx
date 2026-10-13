@@ -615,7 +615,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
                   aria-selected={viewBand === id}
                   onClick={() => setViewBand(id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-serif transition-colors cursor-pointer ${
-                    viewBand === id ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40' : 'text-amber-600/80 hover:text-amber-300'
+                    viewBand === id ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40' : 'text-amber-500/90 hover:text-amber-300'
                   }`}
                 >
                   {label}
@@ -648,7 +648,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
                   className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
                     isCurrent
                       ? `${station.accentClass} shadow-md`
-                      : 'border-amber-950/60 bg-neutral-950/60 hover:bg-neutral-900/60 text-amber-600/70'
+                      : 'border-amber-950/60 bg-neutral-950/60 hover:bg-neutral-900/60 text-amber-500/80'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
@@ -892,7 +892,7 @@ const LiveBand: React.FC<LiveBandProps> = ({ current, tunedIn, status, favorites
         className={`relative rounded-2xl border transition-all ${
           isCurrent
             ? 'text-rose-200 border-rose-500/40 bg-rose-950/30 shadow-md'
-            : 'border-amber-950/60 bg-neutral-950/60 hover:bg-neutral-900/60 text-amber-600/70'
+            : 'border-amber-950/60 bg-neutral-950/60 hover:bg-neutral-900/60 text-amber-500/80'
         }`}
       >
         <button onClick={() => onPlay(station)} className="w-full p-3 pr-9 text-left cursor-pointer">
@@ -918,7 +918,7 @@ const LiveBand: React.FC<LiveBandProps> = ({ current, tunedIn, status, favorites
   };
 
   const heading = (text: string) => (
-    <h5 className="text-[10px] font-mono uppercase tracking-widest text-amber-600/80 mb-2">{text}</h5>
+    <h5 className="text-[10px] font-mono uppercase tracking-widest text-amber-500/80 mb-2">{text}</h5>
   );
 
   return (
@@ -986,7 +986,7 @@ const LiveBand: React.FC<LiveBandProps> = ({ current, tunedIn, status, favorites
         )}
       </div>
 
-      <p className="text-[10px] leading-relaxed font-serif text-amber-600/70">
+      <p className="text-[10px] leading-relaxed font-serif text-amber-500/80">
         Live radio comes straight from each station over the internet: about 30 to 60 MB an hour on mobile data.
         The station can see your connection, as with any radio app; search goes to the radio-browser.info directory.
         Your messages and your space stay where they are.

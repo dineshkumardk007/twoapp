@@ -245,7 +245,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
             onClick={() => setActiveTab('current')}
             className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-colors ${
               activeTab === 'current'
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? 'bg-linen-primary text-linen-surface shadow-xs'
                 : 'bg-linen-variant text-linen-secondary hover:text-linen-primary'
             }`}
           >
@@ -255,7 +255,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
             onClick={() => setActiveTab('history')}
             className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-colors ${
               activeTab === 'history'
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? 'bg-linen-primary text-linen-surface shadow-xs'
                 : 'bg-linen-variant text-linen-secondary hover:text-linen-primary'
             }`}
           >
@@ -347,7 +347,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
 
                 <button
                   onClick={handleCompleteReconnection}
-                  className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium shadow-sm transition-transform active:scale-95 cursor-pointer"
+                  className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-medium shadow-sm transition-transform active:scale-95 cursor-pointer"
                 >
                   <Handshake className="w-4 h-4" />
                   <span>Ready to Reconnect</span>
@@ -462,7 +462,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
 
                 <button
                   type="submit"
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium shadow-xs transition-transform active:scale-95"
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-medium shadow-xs transition-transform active:scale-95"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>{myReflection ? 'Update Reflection' : 'Save Reflection'}</span>
@@ -527,7 +527,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
             <div className="pt-2 flex justify-end">
               <button
                 onClick={handleCompleteReconnection}
-                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-semibold shadow-sm transition-transform active:scale-95 cursor-pointer"
+                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-semibold shadow-sm transition-transform active:scale-95 cursor-pointer"
               >
                 <Heart className="w-4 h-4 fill-white" />
                 <span>Complete Soft Landing & Reconnect</span>
@@ -564,7 +564,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
                   onClick={() => setDurationMinutes(mins)}
                   className={`py-2.5 rounded-xl text-xs font-medium border transition-all ${
                     durationMinutes === mins
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                      ? 'bg-linen-primary text-linen-surface border-transparent shadow-xs'
                       : 'bg-linen-variant/40 border-linen-border text-linen-secondary hover:text-linen-primary'
                   }`}
                 >
@@ -613,7 +613,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
 
             <button
               onClick={handleStartBreather}
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-medium shadow-sm transition-transform active:scale-95 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 text-sm font-medium shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <Shield className="w-4 h-4" />
               <span>Begin Soft Landing Breather</span>

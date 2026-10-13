@@ -184,8 +184,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
                     {/* Time Capsule Lock Screen */}
                     {locked && (
-                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-black/40 backdrop-blur-md text-center text-white">
-                        <div className="p-3 rounded-full bg-white/20 backdrop-blur-sm mb-2">
+                      <div className="no-remap absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-black/40 backdrop-blur-md text-center text-white">
+                        <div className="p-3 rounded-full bg-white/20 mb-2">
                           <Lock className="w-6 h-6 text-white" />
                         </div>
                         <span className="font-serif text-base font-medium">Sealed in Time Capsule</span>
@@ -225,7 +225,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                       {item.authorId ? (item.authorId === activeUser ? 'you' : 'your partner') : item.authorName}
                     </span>
                     {locked ? (
-                      <span className="text-amber-600 font-medium flex items-center">
+                      <span className="text-amber-700 font-medium flex items-center">
                         <Lock className="w-3 h-3 mr-1" /> Time Capsule
                       </span>
                     ) : (

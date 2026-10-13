@@ -241,7 +241,7 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
             <button
               onClick={handleImport}
               disabled={isProcessing || !importFileContent || !importPassphrase}
-              className="w-full py-2.5 rounded-xl bg-emerald-700 text-white font-medium hover:bg-emerald-800 disabled:opacity-40 transition-opacity flex items-center justify-center space-x-2"
+              className="w-full py-2.5 rounded-xl bg-linen-primary text-linen-surface font-medium hover:opacity-90 disabled:opacity-40 transition-opacity flex items-center justify-center space-x-2"
             >
               <Upload className="w-4 h-4" />
               <span>{isProcessing ? 'Decrypting Vault...' : 'Decrypt & Restore Space'}</span>

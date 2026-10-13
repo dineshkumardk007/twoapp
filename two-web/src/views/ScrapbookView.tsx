@@ -116,8 +116,8 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
       {/* Screen-Only Control Toolbar */}
       <div className="print:hidden bg-linen-surface rounded-2xl p-5 border border-linen-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 mb-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-rose-600" />
+          <div className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 mb-1.5">
+            <BookOpen className="w-3.5 h-3.5 text-amber-600" />
             <span>Annual Relational Memoir</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-linen-primary font-medium">
@@ -148,7 +148,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
 
           <button
             onClick={handlePrint}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white font-medium text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 font-medium text-xs shadow-sm transition-transform active:scale-95 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Print / Save PDF</span>
@@ -175,7 +175,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
         and high-fidelity print-to-PDF (@media print)
         ============================================================
       */}
-      <div className="scrapbook-memoir bg-[#faf8f5] text-[#2c2825] rounded-3xl p-6 sm:p-12 border border-[#e5ded4] shadow-md print:shadow-none print:border-none print:p-0 print:m-0 print:bg-white print:text-black">
+      <div className="scrapbook-memoir no-remap bg-[#faf8f5] text-[#2c2825] rounded-3xl p-6 sm:p-12 border border-[#e5ded4] shadow-md print:shadow-none print:border-none print:p-0 print:m-0 print:bg-white print:text-black">
 
         {/* ----------------- COVER / FRONTISPIECE PAGE ----------------- */}
         <div className="scrapbook-page min-h-[500px] flex flex-col items-center justify-center text-center p-8 sm:p-16 border-4 border-double border-[#d8cdbf] rounded-2xl bg-[#fdfbf7] print:border-[#bbb] print:min-h-[90vh] print:break-after-page mb-12">
@@ -183,7 +183,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
             <Sparkles className="w-8 h-8" />
           </div>
 
-          <span className="text-xs font-serif uppercase tracking-[0.3em] text-[#8e7e6b] mb-3">
+          <span className="text-xs font-serif uppercase tracking-[0.3em] text-[#7a6a57] mb-3">
             Two · Relational Memoir
           </span>
 
@@ -201,7 +201,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
             “{settings.dedication}”
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-xs font-serif uppercase tracking-widest text-[#8e7e6b]">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-xs font-serif uppercase tracking-widest text-[#7a6a57]">
             <span>Established {settings.coupleEstablishedYear}</span>
             <span className="hidden sm:inline">·</span>
             <span>{totalMemoriesCount} Captured Memories</span>
@@ -209,7 +209,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
             <span>You & {partnerLabel}</span>
           </div>
 
-          <div className="mt-12 text-[10px] text-[#8a7b6a] uppercase tracking-wider flex items-center space-x-1">
+          <div className="mt-12 text-[10px] text-[#7a6a57] uppercase tracking-wider flex items-center space-x-1">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Zero-Knowledge Encrypted Archive</span>
           </div>
@@ -220,10 +220,10 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
           <div className="scrapbook-chapter mb-14 print:break-before-page">
             <div className="border-b border-[#d8cdbf] pb-3 mb-6 flex items-baseline justify-between">
               <div>
-                <span className="text-[11px] font-serif uppercase tracking-widest text-[#8e7e6b] block">Chapter I</span>
+                <span className="text-[11px] font-serif uppercase tracking-widest text-[#7a6a57] block">Chapter I</span>
                 <h2 className="font-serif text-2xl font-medium text-[#221e1a]">Constellations of Gratitude</h2>
               </div>
-              <span className="text-xs font-serif italic text-[#8e7e6b]">{state.constellationStars.length} Stars</span>
+              <span className="text-xs font-serif italic text-[#7a6a57]">{state.constellationStars.length} Stars</span>
             </div>
 
             <p className="font-serif italic text-xs text-[#6f6153] mb-6">
@@ -236,7 +236,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                   key={star.id}
                   className="p-4 rounded-xl border border-[#e5ded4] bg-[#fbf9f6] print:border-[#ddd] print:bg-white print:break-inside-avoid"
                 >
-                  <div className="flex items-center justify-between text-[11px] text-[#8e7e6b] mb-2 font-serif">
+                  <div className="flex items-center justify-between text-[11px] text-[#7a6a57] mb-2 font-serif">
                     <span className="inline-flex items-center font-medium capitalize">
                       <Star className="w-3 h-3 text-amber-600 mr-1 fill-amber-600/20" />
                       {star.category}
@@ -246,7 +246,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                   <p className="font-serif text-sm text-[#38312a] leading-relaxed italic">
                     “{star.note}”
                   </p>
-                  <div className="text-[10px] text-[#8a7b6a] mt-3 font-serif">
+                  <div className="text-[10px] text-[#7a6a57] mt-3 font-serif">
                     Recorded {new Date(star.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </div>
                 </div>
@@ -260,10 +260,10 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
           <div className="scrapbook-chapter mb-14 print:break-before-page">
             <div className="border-b border-[#d8cdbf] pb-3 mb-6 flex items-baseline justify-between">
               <div>
-                <span className="text-[11px] font-serif uppercase tracking-widest text-[#8e7e6b] block">Chapter II</span>
+                <span className="text-[11px] font-serif uppercase tracking-widest text-[#7a6a57] block">Chapter II</span>
                 <h2 className="font-serif text-2xl font-medium text-[#221e1a]">Letters Across Time</h2>
               </div>
-              <span className="text-xs font-serif italic text-[#8e7e6b]">{state.letters.length} Letters</span>
+              <span className="text-xs font-serif italic text-[#7a6a57]">{state.letters.length} Letters</span>
             </div>
 
             <p className="font-serif italic text-xs text-[#6f6153] mb-6">
@@ -279,11 +279,11 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#ebdcd0] mb-4 gap-2">
                     <div>
                       <h3 className="font-serif text-lg font-medium text-[#221e1a]">{letter.title}</h3>
-                      <div className="text-xs text-[#8e7e6b] font-serif mt-0.5">
+                      <div className="text-xs text-[#7a6a57] font-serif mt-0.5">
                         Penned by {nameOf(letter.authorId, letter.authorName)} · Sealed with {letter.waxColor} wax
                       </div>
                     </div>
-                    <div className="text-[11px] text-[#8e7e6b] font-serif">
+                    <div className="text-[11px] text-[#7a6a57] font-serif">
                       {letterDateLine(letter)}
                     </div>
                   </div>
@@ -302,10 +302,10 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
           <div className="scrapbook-chapter mb-14 print:break-before-page">
             <div className="border-b border-[#d8cdbf] pb-3 mb-6 flex items-baseline justify-between">
               <div>
-                <span className="text-[11px] font-serif uppercase tracking-widest text-[#8e7e6b] block">Chapter III</span>
+                <span className="text-[11px] font-serif uppercase tracking-widest text-[#7a6a57] block">Chapter III</span>
                 <h2 className="font-serif text-2xl font-medium text-[#221e1a]">Shared Horizons & Passport</h2>
               </div>
-              <span className="text-xs font-serif italic text-[#8e7e6b]">{completedAdventures.length} Stamp Entries</span>
+              <span className="text-xs font-serif italic text-[#7a6a57]">{completedAdventures.length} Stamp Entries</span>
             </div>
 
             <p className="font-serif italic text-xs text-[#6f6153] mb-6">
@@ -324,7 +324,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                         {adv.category}
                       </span>
                       {stampedDate(adv.completedDate) && (
-                        <span className="text-[11px] text-[#8e7e6b] font-serif">
+                        <span className="text-[11px] text-[#7a6a57] font-serif">
                           Stamped: {stampedDate(adv.completedDate)}
                         </span>
                       )}
@@ -355,7 +355,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                   )}
 
                   {adv.location && (
-                    <div className="text-[11px] text-[#8e7e6b] flex items-center space-x-1 mt-3 pt-2 border-t border-[#ebdcd0]">
+                    <div className="text-[11px] text-[#7a6a57] flex items-center space-x-1 mt-3 pt-2 border-t border-[#ebdcd0]">
                       <MapPin className="w-3 h-3 text-rose-600" />
                       <span>{adv.location} {adv.season ? `(${adv.season})` : ''}</span>
                     </div>
@@ -371,10 +371,10 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
           <div className="scrapbook-chapter mb-14 print:break-before-page">
             <div className="border-b border-[#d8cdbf] pb-3 mb-6 flex items-baseline justify-between">
               <div>
-                <span className="text-[11px] font-serif uppercase tracking-widest text-[#8e7e6b] block">Chapter IV</span>
+                <span className="text-[11px] font-serif uppercase tracking-widest text-[#7a6a57] block">Chapter IV</span>
                 <h2 className="font-serif text-2xl font-medium text-[#221e1a]">Milestones & Sacred Epochs</h2>
               </div>
-              <span className="text-xs font-serif italic text-[#8e7e6b]">{state.milestones.length} Epochs</span>
+              <span className="text-xs font-serif italic text-[#7a6a57]">{state.milestones.length} Epochs</span>
             </div>
 
             <p className="font-serif italic text-xs text-[#6f6153] mb-6">
@@ -388,7 +388,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                   <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-[#8e7e6b] border-2 border-white" />
 
                   <div className="p-4 rounded-xl border border-[#e5ded4] bg-[#fbf9f6] print:border-[#ddd] print:bg-white">
-                    <div className="flex items-center justify-between text-xs text-[#8e7e6b] font-serif mb-1">
+                    <div className="flex items-center justify-between text-xs text-[#7a6a57] font-serif mb-1">
                       <span className="font-medium text-[#7a6a57] uppercase tracking-wider text-[10px]">{ms.category}</span>
                       <span>{ms.date}</span>
                     </div>
@@ -410,10 +410,10 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
           <div className="scrapbook-chapter mb-14 print:break-before-page">
             <div className="border-b border-[#d8cdbf] pb-3 mb-6 flex items-baseline justify-between">
               <div>
-                <span className="text-[11px] font-serif uppercase tracking-widest text-[#8e7e6b] block">Chapter V</span>
+                <span className="text-[11px] font-serif uppercase tracking-widest text-[#7a6a57] block">Chapter V</span>
                 <h2 className="font-serif text-2xl font-medium text-[#221e1a]">The Hearth & Shared Table</h2>
               </div>
-              <span className="text-xs font-serif italic text-[#8e7e6b]">{state.recipes.length} Recipes</span>
+              <span className="text-xs font-serif italic text-[#7a6a57]">{state.recipes.length} Recipes</span>
             </div>
 
             <p className="font-serif italic text-xs text-[#6f6153] mb-6">
@@ -426,7 +426,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                   key={recipe.id}
                   className="p-5 rounded-2xl border border-[#e5ded4] bg-[#fdfbf7] print:border-[#ccc] print:bg-white print:break-inside-avoid"
                 >
-                  <div className="flex items-center justify-between text-[11px] text-[#8e7e6b] font-serif mb-1">
+                  <div className="flex items-center justify-between text-[11px] text-[#7a6a57] font-serif mb-1">
                     <span className="capitalize">{recipe.comfortTag.replace('_', ' ')}</span>
                     <span>{recipe.prepTime} prep</span>
                   </div>
@@ -447,7 +447,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       <li key={ing.id}>{ing.name}</li>
                     ))}
                     {recipe.ingredients.length > 5 && (
-                      <li className="list-none text-[#8e7e6b] italic">+ {recipe.ingredients.length - 5} more ingredients...</li>
+                      <li className="list-none text-[#7a6a57] italic">+ {recipe.ingredients.length - 5} more ingredients...</li>
                     )}
                   </ul>
 
@@ -467,10 +467,10 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
           <div className="scrapbook-chapter mb-14 print:break-before-page">
             <div className="border-b border-[#d8cdbf] pb-3 mb-6 flex items-baseline justify-between">
               <div>
-                <span className="text-[11px] font-serif uppercase tracking-widest text-[#8e7e6b] block">Chapter VI</span>
+                <span className="text-[11px] font-serif uppercase tracking-widest text-[#7a6a57] block">Chapter VI</span>
                 <h2 className="font-serif text-2xl font-medium text-[#221e1a]">Vows, Surprises & Archives</h2>
               </div>
-              <span className="text-xs font-serif italic text-[#8e7e6b]">Redeemed Coupons</span>
+              <span className="text-xs font-serif italic text-[#7a6a57]">Redeemed Coupons</span>
             </div>
 
             <p className="font-serif italic text-xs text-[#6f6153] mb-6">
@@ -483,7 +483,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                   key={card.id}
                   className="p-4 rounded-xl border border-dashed border-[#c4b5a2] bg-[#fcfaf7] print:border-[#999] print:bg-white print:break-inside-avoid relative"
                 >
-                  <div className="text-[10px] font-serif uppercase tracking-wider text-[#8e7e6b] mb-1">
+                  <div className="text-[10px] font-serif uppercase tracking-wider text-[#7a6a57] mb-1">
                     {card.foilType} Foil Coupon · From {nameOf(card.authorId, card.authorName)}
                   </div>
                   <h3 className="font-serif text-sm font-medium text-[#221e1a] mb-1.5">
@@ -507,10 +507,10 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
           <p className="font-serif italic text-sm text-[#6f6153] mb-2">
             End of {settings.subtitle}
           </p>
-          <p className="font-serif text-xs text-[#8e7e6b] max-w-sm mx-auto leading-relaxed">
+          <p className="font-serif text-xs text-[#7a6a57] max-w-sm mx-auto leading-relaxed">
             Preserved privately on your personal device with end-to-end zero-knowledge encryption. Our story continues tomorrow morning.
           </p>
-          <div className="text-[10px] text-[#8a7b6a] font-mono mt-4">
+          <div className="text-[10px] text-[#7a6a57] font-mono mt-4">
             ARCHIVE ID: TWO-{new Date().getFullYear()}-{state.activeUser.toUpperCase()}
           </div>
         </div>
@@ -594,7 +594,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       type="checkbox"
                       checked={settings.includeGratitude}
                       onChange={e => setSettings({ ...settings, includeGratitude: e.target.checked })}
-                      className="rounded text-rose-600 focus:ring-0"
+                      className="rounded accent-linen-accent focus:ring-0"
                     />
                     <span>Gratitude Stars</span>
                   </label>
@@ -604,7 +604,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       type="checkbox"
                       checked={settings.includeLetters}
                       onChange={e => setSettings({ ...settings, includeLetters: e.target.checked })}
-                      className="rounded text-rose-600 focus:ring-0"
+                      className="rounded accent-linen-accent focus:ring-0"
                     />
                     <span>Love Letters</span>
                   </label>
@@ -614,7 +614,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       type="checkbox"
                       checked={settings.includeAdventures}
                       onChange={e => setSettings({ ...settings, includeAdventures: e.target.checked })}
-                      className="rounded text-rose-600 focus:ring-0"
+                      className="rounded accent-linen-accent focus:ring-0"
                     />
                     <span>Passport Adventures</span>
                   </label>
@@ -624,7 +624,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       type="checkbox"
                       checked={settings.includeMilestones}
                       onChange={e => setSettings({ ...settings, includeMilestones: e.target.checked })}
-                      className="rounded text-rose-600 focus:ring-0"
+                      className="rounded accent-linen-accent focus:ring-0"
                     />
                     <span>Sacred Milestones</span>
                   </label>
@@ -634,7 +634,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       type="checkbox"
                       checked={settings.includeRecipes}
                       onChange={e => setSettings({ ...settings, includeRecipes: e.target.checked })}
-                      className="rounded text-rose-600 focus:ring-0"
+                      className="rounded accent-linen-accent focus:ring-0"
                     />
                     <span>Couple Cookbook</span>
                   </label>
@@ -644,7 +644,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                       type="checkbox"
                       checked={settings.includeScratchCards}
                       onChange={e => setSettings({ ...settings, includeScratchCards: e.target.checked })}
-                      className="rounded text-rose-600 focus:ring-0"
+                      className="rounded accent-linen-accent focus:ring-0"
                     />
                     <span>Scratch Coupons</span>
                   </label>

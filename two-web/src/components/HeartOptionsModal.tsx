@@ -265,7 +265,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
                       e.stopPropagation();
                       handleSend(expr.note, expr.type);
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-medium transition-all shadow-2xs cursor-pointer flex items-center space-x-1 active:scale-95"
+                    className="px-3 py-1.5 rounded-xl bg-linen-accent text-linen-surface hover:opacity-90 text-xs font-medium transition-all shadow-2xs cursor-pointer flex items-center space-x-1 active:scale-95"
                   >
                     <Heart className="w-3 h-3 fill-current" />
                     <span>Send</span>
@@ -314,7 +314,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
                   handleSend(text, 'chime');
                   setCustomNote('');
                 }}
-                className="w-full py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-all shadow-xs flex items-center justify-center space-x-2 cursor-pointer active:scale-98 mt-2"
+                className="w-full py-2.5 rounded-2xl bg-linen-accent text-linen-surface hover:opacity-90 text-xs font-semibold transition-all shadow-xs flex items-center justify-center space-x-2 cursor-pointer active:scale-98 mt-2"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Send Heart Note to {partnerName}</span>

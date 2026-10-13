@@ -228,7 +228,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
                 setIsVerified(true);
                 setTimeout(onClose, 800);
               }}
-              className="w-full py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs"
+              className="w-full py-2.5 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-medium transition-opacity flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs"
             >
               <Check className="w-4 h-4" />
               <span>{isVerified ? 'Identity Confirmed ✓' : 'Mark Safety Number as Verified'}</span>

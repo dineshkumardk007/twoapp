@@ -18,9 +18,9 @@ interface AdventuresViewProps {
 }
 
 const CATEGORY_META: Record<AdventureCategory, { label: string; icon: any; color: string }> = {
-  home: { label: 'Cozy Sanctuary', icon: Home, color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  home: { label: 'Cozy Sanctuary', icon: Home, color: 'text-amber-700 bg-amber-50 border-amber-200' },
   creative: { label: 'Creative Sparks', icon: Palette, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
-  outdoors: { label: 'Places to Wander', icon: TreePine, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+  outdoors: { label: 'Places to Wander', icon: TreePine, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
   food: { label: 'Delicious Feasts', icon: Utensils, color: 'text-rose-600 bg-rose-50 border-rose-200' },
 };
 
@@ -249,7 +249,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
             }`}
           >
             <span>🛂 Couple Passport</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-400/30 text-amber-900 font-semibold">
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${activeTab === 'passport' ? 'bg-black/15 text-white' : 'bg-amber-400/30 text-amber-900'}`}>
               {completedCount}
             </span>
           </button>
@@ -388,7 +388,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                     {/* Vintage Passport Stamp Imprint Overlay if completed */}
                     {adv.isCompleted && (
                       <div className="absolute top-3 right-3 pointer-events-none transform rotate-12 opacity-85">
-                        <div className="border-2 border-dashed border-amber-700/80 rounded-full w-20 h-20 flex flex-col items-center justify-center p-1 text-center bg-amber-50/60 shadow-xs">
+                        <div className="border-2 border-dashed border-aurora-gold/70 rounded-full w-20 h-20 flex flex-col items-center justify-center p-1 text-center bg-linen-surface/90 shadow-xs">
                           <span className="text-[7px] font-bold tracking-widest uppercase text-amber-900">PASSPORT</span>
                           <span className="text-[9px] font-black text-amber-800 leading-tight">LIVED</span>
                           <span className="text-[7px] font-mono text-amber-700">{adv.completedDate && adv.completedDate !== 'Recently' ? adv.completedDate : 'TOGETHER'}</span>
@@ -551,7 +551,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                 </div>
 
                 {proposedToast && (
-                  <p className="text-xs text-emerald-600 font-medium animate-fade-in">
+                  <p className="text-xs text-emerald-700 font-medium animate-fade-in">
                     ✓ Date proposed directly to encrypted chat!
                   </p>
                 )}
@@ -589,7 +589,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
       {activeTab === 'passport' && (
         <div className="space-y-6">
           {/* Passport Cover Header */}
-          <div className="rounded-3xl border border-amber-200/90 bg-gradient-to-r from-amber-900 via-stone-900 to-amber-950 p-6 sm:p-8 text-amber-50 shadow-lg relative overflow-hidden">
+          <div className="rounded-3xl border no-remap border-aurora-gold/30 bg-gradient-to-br from-[#251F46] via-[#1A1534] to-[#0E0B1F] p-6 sm:p-8 text-amber-50 shadow-lg relative overflow-hidden">
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
@@ -604,7 +604,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center space-x-4">
+              <div className="p-4 rounded-2xl bg-white/10 border border-white/10 flex items-center space-x-4">
                 <div className="text-center">
                   <span className="block text-2xl font-serif font-bold text-amber-300">{completedCount}</span>
                   <span className="text-[10px] uppercase tracking-wider text-amber-200">Dreams Lived</span>
@@ -737,7 +737,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold shadow-md transition-colors inline-flex items-center space-x-1.5"
+                  className="px-5 py-2.5 rounded-2xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-semibold shadow-md transition-opacity inline-flex items-center space-x-1.5"
                 >
                   <Stamp className="w-3.5 h-3.5" />
                   <span>Stamp into Passport</span>

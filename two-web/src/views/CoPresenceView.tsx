@@ -580,7 +580,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
 
         {/* Interaction Floating Toast Banner */}
         {activeInteractionToast && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/95 backdrop-blur-md border border-amber-400/70 px-5 py-2.5 rounded-2xl text-amber-200 text-xs font-serif font-medium shadow-2xl flex items-center space-x-2 animate-in slide-in-from-top-4 duration-300">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/95 border border-amber-400/70 px-5 py-2.5 rounded-2xl text-amber-200 text-xs font-serif font-medium shadow-2xl flex items-center space-x-2 animate-in slide-in-from-top-4 duration-300">
             <span className="text-lg">{activeInteractionToast.icon}</span>
             <span>{activeInteractionToast.text}</span>
           </div>
@@ -621,7 +621,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
           {/* Shared Parallel Desk: Two Desks Side by Side */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 my-6">
             {/* Partner's Desk Side */}
-            <div className="rounded-3xl bg-white/5 border border-white/10 p-6 flex flex-col justify-between space-y-4 backdrop-blur-xs relative overflow-hidden">
+            <div className="rounded-3xl bg-white/5 border border-white/10 p-6 flex flex-col justify-between space-y-4 relative overflow-hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-9 h-9 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-300">
@@ -703,7 +703,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
             </div>
 
             {/* Your Desk Side */}
-            <div className="rounded-3xl bg-white/5 border border-white/10 p-6 flex flex-col justify-between space-y-4 backdrop-blur-xs relative overflow-hidden">
+            <div className="rounded-3xl bg-white/5 border border-white/10 p-6 flex flex-col justify-between space-y-4 relative overflow-hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-9 h-9 rounded-2xl bg-rose-400/10 border border-rose-400/30 flex items-center justify-center text-rose-300">

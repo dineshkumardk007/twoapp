@@ -576,8 +576,20 @@ export const App: React.FC = () => {
 
   // The sounds heard most - a message, a letter, a heartbeat, a call - are
   // decoded ahead of time, so the first of the day plays the moment it should.
+  // Once the app has settled, not while it opens: making the audio context and
+  // decoding took a tenth of a second from the first frames on a mid-range
+  // phone, and nothing can sound before the first tap anyway.
   useEffect(() => {
-    preloadSounds();
+    const idle = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number })
+      .requestIdleCallback;
+    const timer = idle
+      ? idle(() => preloadSounds(), { timeout: 4000 })
+      : window.setTimeout(preloadSounds, 2500);
+    return () => {
+      const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+      if (idle && cancel) cancel(timer);
+      else window.clearTimeout(timer);
+    };
   }, []);
 
   // Track live WebSocket relay status
@@ -1784,20 +1796,19 @@ export const App: React.FC = () => {
    * height can have changed, and there is no observer lifetime to get wrong.
    * The cost is one getBoundingClientRect against one element.
    */
+  const publishedHeaderRef = useRef('');
   const publishChromeHeight = () => {
     const el = headerRef.current;
     // No header on screen means no header height. Group mode renders none, and
     // leaving the sanctuary's last measurement in place reserved 45px of room
     // for a bar that was not there - which is why the group composer sat high
     // above its dock with a band of empty surface beneath it.
-    if (!el) {
-      document.documentElement.style.setProperty('--two-header-h', '0px');
-      return;
-    }
-    document.documentElement.style.setProperty(
-      '--two-header-h',
-      `${Math.round(el.getBoundingClientRect().height)}px`
-    );
+    const height = el ? `${Math.round(el.getBoundingClientRect().height)}px` : '0px';
+    // Written only when it changed: a property on <html> restyles every
+    // element that reads it, and this runs after every render.
+    if (height === publishedHeaderRef.current) return;
+    publishedHeaderRef.current = height;
+    document.documentElement.style.setProperty('--two-header-h', height);
   };
 
   useLayoutEffect(publishChromeHeight);

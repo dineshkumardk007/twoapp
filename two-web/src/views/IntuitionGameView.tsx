@@ -82,13 +82,13 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
       {/* Header */}
       <div className="bg-linen-surface border border-linen-border rounded-3xl p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+          <div className="w-12 h-12 rounded-2xl bg-aurora-gold/15 border border-aurora-gold/25 flex items-center justify-center text-aurora-gold">
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
             <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex items-center space-x-2">
               <span>Guess My Mind</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-sans font-normal">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-sans font-normal">
                 Intuition Mini-Game
               </span>
             </h2>
@@ -224,7 +224,7 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
                       {currentRound.authorChoice && (
                         <button
                           onClick={() => handleGuessChoice(key)}
-                          className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors shadow-xs"
+                          className="px-3.5 py-1.5 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-medium transition-opacity shadow-xs"
                         >
                           Guess This Option
                         </button>

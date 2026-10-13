@@ -191,7 +191,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
 
         <button
           onClick={() => setShowSproutModal(true)}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-medium text-sm shadow-sm transition-all transform active:scale-95 cursor-pointer shrink-0"
+          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 font-medium text-sm shadow-sm transition-all transform active:scale-95 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Sprout a Blossom</span>
@@ -454,7 +454,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-medium shadow-xs transition-transform active:scale-95"
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-medium shadow-xs transition-transform active:scale-95"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Bloom on Tree</span>

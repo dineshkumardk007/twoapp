@@ -184,7 +184,7 @@ export const AppDock: React.FC<AppDockProps> = ({
 
           <div
             onClick={e => e.stopPropagation()}
-            className="relative rounded-t-[28px] border-t border-linen-border bg-linen-bg/95 backdrop-blur-2xl shadow-2xl max-h-[82vh] flex flex-col"
+            className="relative rounded-t-[28px] border-t border-linen-border bg-linen-bg/95 shadow-2xl max-h-[82vh] flex flex-col"
             style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
           >
             <div className="shrink-0 px-4 pt-3 pb-2">
@@ -239,7 +239,7 @@ export const AppDock: React.FC<AppDockProps> = ({
                           onClick={() => go(item.id)}
                           className={`flex items-start gap-2.5 rounded-2xl border p-3 text-left transition-all active:scale-[0.97] ${
                             active
-                              ? `border-transparent bg-linen-variant/80 ring-1 ${family.ring}`
+                              ? 'sheet-item-active'
                               : 'border-linen-border/60 bg-linen-surface/60 hover:bg-linen-variant/50'
                           }`}
                         >
@@ -275,7 +275,7 @@ export const AppDock: React.FC<AppDockProps> = ({
       {/* Resting bar */}
       <div
         ref={barRef}
-        className="dock-bar fixed inset-x-0 bottom-0 z-40 border-t border-linen-border/70 bg-linen-bg/75 backdrop-blur-2xl"
+        className="dock-bar fixed inset-x-0 bottom-0 z-40 border-t border-linen-border/70 bg-linen-bg/75 backdrop-blur-xl"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className={`mx-auto flex items-stretch ${isTablet ? 'max-w-3xl' : ''}`}>
@@ -297,13 +297,13 @@ export const AppDock: React.FC<AppDockProps> = ({
                     // scrolls at all; with tabs sized to divide the width
                     // exactly, it reads as a fixed row of four.
                     isTablet ? 'w-[104px]' : 'w-[80px]'
-                  } ${active ? 'dock-tab-active text-white' : 'text-linen-secondary'}`}
+                  } ${active ? 'dock-tab-active text-linen-primary' : 'text-linen-secondary'}`}
                 >
                   {/* Each icon in its family's colour, so the bar itself
                       shows where love, calm, play and everyday life live. */}
                   <Icon
-                    className={`h-5 w-5 transition-transform ${
-                      active ? 'dock-tab-icon text-white' : FAMILY_STYLE[item.family || 'space'].text
+                    className={`h-5 w-5 transition-transform ${FAMILY_STYLE[item.family || 'space'].text} ${
+                      active ? 'dock-tab-icon' : ''
                     }`}
                   />
                   {/* The whole name, the same one the directory sheet and the

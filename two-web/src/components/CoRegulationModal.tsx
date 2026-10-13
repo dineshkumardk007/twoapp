@@ -316,7 +316,7 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-linen-surface border border-linen-border rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col relative max-h-[92vh]">
         {/* Header */}
         <div className="p-5 border-b border-linen-border flex items-center justify-between">

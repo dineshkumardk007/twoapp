@@ -420,7 +420,7 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
             <button
               onClick={handleSealWeeklyCapsule}
               disabled={isSealing}
-              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 text-white text-xs font-semibold hover:opacity-95 shadow-md shadow-amber-900/20 transition-all cursor-pointer flex items-center space-x-2 animate-bounce"
+              className="px-5 py-2.5 rounded-2xl bg-linen-primary text-linen-surface text-xs font-semibold hover:opacity-90 shadow-glow transition-all cursor-pointer flex items-center space-x-2 animate-bounce"
             >
               <Sparkles className="w-4 h-4" />
               <span>{isSealing ? 'Sealing Capsule...' : 'Seal Weekly Harmony Capsule 🕊️'}</span>

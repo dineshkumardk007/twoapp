@@ -73,6 +73,21 @@ const COMPOSER_MAX_PX = 122;
 /** This close to the end of the conversation counts as being at the end. */
 const AT_BOTTOM_PX = 48;
 
+/**
+ * How much of the conversation is drawn: the newest DRAWN_AT_FIRST messages
+ * when the chat opens, and DRAWN_MORE further back each time you scroll to
+ * within LOAD_EARLIER_PX of the top.
+ *
+ * Drawing every message ever kept made opening the chat stall: nine hundred
+ * bubbles - most of them aurora gradients, almost all of them off screen -
+ * took a mid-range phone about two seconds to style, lay out and paint, and a
+ * chat may keep five thousand. The history is all still here; it is drawn as
+ * you go back into it, the way a messenger does.
+ */
+const DRAWN_AT_FIRST = 80;
+const DRAWN_MORE = 80;
+const LOAD_EARLIER_PX = 600;
+
 function startOfDay(at: number): number {
   const d = new Date(at);
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -231,6 +246,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const [showNeedModal, setShowNeedModal] = useState(false);
 
+  // Where the drawn part of the conversation starts. Kept as an index from the
+  // oldest message, so new messages add to the end without moving what you are
+  // reading; never so late that fewer than DRAWN_AT_FIRST would show.
+  const [firstDrawn, setFirstDrawn] = useState(() => Math.max(0, messages.length - DRAWN_AT_FIRST));
+  const drawnFrom = Math.max(0, Math.min(firstDrawn, rows.length - DRAWN_AT_FIRST));
+  const drawnRows = useMemo(() => rows.slice(drawnFrom), [rows, drawnFrom]);
+  /** Set while earlier messages are being added above, to keep your place. */
+  const growingRef = useRef<{ height: number; top: number } | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -250,7 +274,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const log = messagesRef.current;
     if (!log) return;
     pinnedRef.current = log.scrollHeight - log.scrollTop - log.clientHeight < AT_BOTTOM_PX;
+    // Near the top with more behind it: draw the next part of the history.
+    if (log.scrollTop < LOAD_EARLIER_PX && drawnFrom > 0 && !growingRef.current) {
+      growingRef.current = { height: log.scrollHeight, top: log.scrollTop };
+      setFirstDrawn(Math.max(0, drawnFrom - DRAWN_MORE));
+    }
   };
+
+  // Earlier messages were just drawn above: move down by exactly what they
+  // added, so the message you were reading stays where it was.
+  useLayoutEffect(() => {
+    const log = messagesRef.current;
+    const growing = growingRef.current;
+    if (!log || !growing) return;
+    log.scrollTop = log.scrollHeight - growing.height + growing.top;
+    growingRef.current = null;
+  }, [drawnFrom]);
 
   useEffect(() => {
     const log = messagesRef.current;
@@ -281,6 +320,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
       pinnedRef.current = true;
     }
     if (pinnedRef.current) log.scrollTop = log.scrollHeight;
+    // Opened while a long catch-up was arriving, the drawn part grows with it.
+    // At the end of the conversation, it goes back to the newest few.
+    if (pinnedRef.current && rows.length - drawnFrom > DRAWN_AT_FIRST * 3) {
+      setFirstDrawn(rows.length - DRAWN_AT_FIRST);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, newestId]);
 
   // The composer grows with what is written, up to about five lines, so a
@@ -396,7 +441,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
    */
   const conversation = useMemo(
     () =>
-      rows.map((row, i) => {
+      drawnRows.map((row, i) => {
         const { msg, firstOfRun, lastOfRun } = row;
         const mine = msg.authorId === activeUser;
         const read = !!msg.sentAt && partnerReadAt >= msg.sentAt;
@@ -541,7 +586,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </React.Fragment>
         );
       }),
-    [rows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay]
+    [drawnRows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay]
   );
 
   return (

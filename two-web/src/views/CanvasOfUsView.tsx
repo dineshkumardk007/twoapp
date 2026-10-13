@@ -433,8 +433,8 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <Palette className="w-5 h-5 text-rose-500" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-rose-600">
+            <Palette className="w-5 h-5 text-amber-600" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-amber-700">
               Tactile Touch Artistry
             </span>
           </div>
@@ -501,7 +501,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
             }`}
             title="Pencil (Light Graphite)"
           >
-            <Pencil className="w-4 h-4 text-stone-600" />
+            <Pencil className="w-4 h-4 text-linen-secondary" />
             <span className="hidden sm:inline">Pencil</span>
           </button>
 
@@ -530,7 +530,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
               className={`w-7 h-7 rounded-full border-2 transition-transform cursor-pointer shadow-xs ${
                 activeColor === c.hex && activeTool !== 'eraser'
                   ? 'scale-115 border-linen-primary ring-2 ring-linen-accent/40'
-                  : 'border-white/80 hover:scale-105'
+                  : 'border-linen-primary/30 hover:scale-105'
               }`}
               title={c.name}
             />
@@ -603,7 +603,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
         />
 
         {/* Bottom Canvas Telemetry Badge */}
-        <div className="absolute bottom-3 left-3 pointer-events-none flex items-center space-x-2 bg-linen-surface/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-linen-border/80 text-[11px] font-serif text-linen-secondary shadow-xs">
+        <div className="absolute bottom-3 left-3 pointer-events-none flex items-center space-x-2 bg-linen-surface/85 px-3 py-1.5 rounded-full border border-linen-border/80 text-[11px] font-serif text-linen-secondary shadow-xs">
           <Sparkles className="w-3.5 h-3.5 text-linen-accent" />
           <span>{canvasState.strokes.length} strokes drawn together</span>
         </div>

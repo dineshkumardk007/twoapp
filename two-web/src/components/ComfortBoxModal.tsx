@@ -133,7 +133,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-linen-surface text-linen-primary border border-linen-border rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="p-6 border-b border-linen-border flex items-center justify-between bg-gradient-to-r from-linen-surface via-rose-50/40 to-linen-surface">
@@ -288,7 +288,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
                     onClick={handleStartBreathing}
                     className={`px-5 py-2 rounded-2xl text-xs font-semibold flex items-center space-x-2 transition-all shadow-xs ${
                       isBreathing
-                        ? 'bg-amber-700 text-white hover:bg-amber-800'
+                        ? 'bg-linen-variant text-linen-primary border border-linen-border hover:bg-linen-variant/70'
                         : 'bg-linen-primary text-linen-surface hover:opacity-90'
                     }`}
                   >
@@ -352,7 +352,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
                 </div>
                 <button
                   onClick={handleSendWordlessHug}
-                  className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium transition-colors shadow-xs flex items-center space-x-1.5 shrink-0 ml-3"
+                  className="px-3.5 py-2 rounded-xl bg-linen-accent text-linen-surface hover:opacity-90 text-xs font-medium transition-colors shadow-xs flex items-center space-x-1.5 shrink-0 ml-3"
                 >
                   <Heart className="w-3.5 h-3.5 fill-current" />
                   <span>Send Wordless Hug</span>

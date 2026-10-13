@@ -152,7 +152,7 @@ export const AmbientSoundscapeModal: React.FC<AmbientSoundscapeModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-stone-900 text-stone-100 border border-stone-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="p-6 border-b border-stone-800/80 flex items-center justify-between bg-gradient-to-r from-stone-900 via-indigo-950/30 to-stone-900">

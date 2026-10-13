@@ -206,13 +206,13 @@ export const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     ctx.lineWidth = 3;
     ctx.strokeRect(10, 10, width - 20, height - 20);
 
-    ctx.fillStyle = 'rgba(40, 30, 20, 0.65)';
+    ctx.fillStyle = 'rgba(29, 22, 56, 0.85)';
     ctx.font = 'bold 13px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('✨ SCRATCH WITH FINGER OR MOUSE ✨', width / 2, height / 2 - 12);
     ctx.font = '11px sans-serif';
-    ctx.fillStyle = 'rgba(40, 30, 20, 0.5)';
+    ctx.fillStyle = 'rgba(29, 22, 56, 0.75)';
     ctx.fillText('Rub across the foil to reveal your surprise', width / 2, height / 2 + 10);
 
     // Put back what had already been scratched off. The grid is stored as a
@@ -437,7 +437,7 @@ export const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
 
       {/* Live Reveal Progress Bar */}
       {!fullyRevealed && scratchPercent > 0 && (
-        <div className="absolute bottom-2 right-3 z-10 pointer-events-none bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-full text-[10px] font-mono text-amber-300">
+        <div className="absolute bottom-2 right-3 z-10 pointer-events-none bg-black/60 px-2 py-0.5 rounded-full text-[10px] font-mono text-amber-300">
           Revealed: {scratchPercent}%
         </div>
       )}

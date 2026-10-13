@@ -301,7 +301,7 @@ export const HearthGardenCanvas: React.FC<HearthGardenCanvasProps> = ({
       </svg>
 
       {/* Floating Status Pill */}
-      <div className="absolute top-4 left-4 flex items-center space-x-2 bg-stone-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-stone-700/60 text-xs text-stone-200">
+      <div className="absolute top-4 left-4 flex items-center space-x-2 bg-stone-900/80 px-3 py-1.5 rounded-full border border-stone-700/60 text-xs text-stone-200">
         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
         <span className="font-serif font-medium">{garden.stageName}</span>
         <span className="text-stone-400 font-mono text-[11px]">Lvl {garden.level}</span>
@@ -310,11 +310,11 @@ export const HearthGardenCanvas: React.FC<HearthGardenCanvasProps> = ({
       {/* Slumber or Vitality Pill */}
       <div className="absolute top-4 right-4">
         {isDormant ? (
-          <div className="bg-amber-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-amber-700/60 text-xs text-amber-200 flex items-center space-x-1.5">
+          <div className="bg-amber-950/80 px-3 py-1.5 rounded-full border border-amber-700/60 text-xs text-amber-200 flex items-center space-x-1.5">
             <span>🍂 Winter Slumber</span>
           </div>
         ) : (
-          <div className="bg-emerald-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-700/60 text-xs text-emerald-200 flex items-center space-x-1.5">
+          <div className="bg-emerald-950/80 px-3 py-1.5 rounded-full border border-emerald-700/60 text-xs text-emerald-200 flex items-center space-x-1.5">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
             <span>{garden.vitality}% Flourishing</span>
           </div>

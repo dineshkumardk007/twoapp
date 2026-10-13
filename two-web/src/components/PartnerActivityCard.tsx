@@ -21,14 +21,19 @@ const SHOWN = 4;
  * at 10:18 pm" - true of a person, wrong about an event, and it read as
  * "Private Chat last seen today" here, which is a different claim entirely.
  */
+// Made once: toLocaleTimeString with options builds a formatter on every call,
+// and this card is drawn again with every change that arrives.
+const TIME = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
+const DAY = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' });
+
 function whenFor(at: number): string {
   if (!at) return '';
-  const time = new Date(at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  const today = new Date().toDateString() === new Date(at).toDateString();
-  if (today) return time;
-  const yesterday = new Date(Date.now() - 86_400_000).toDateString() === new Date(at).toDateString();
+  const then = new Date(at);
+  const time = TIME.format(then);
+  if (new Date().toDateString() === then.toDateString()) return time;
+  const yesterday = new Date(Date.now() - 86_400_000).toDateString() === then.toDateString();
   if (yesterday) return `yesterday, ${time}`;
-  return new Date(at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  return DAY.format(then);
 }
 
 /**

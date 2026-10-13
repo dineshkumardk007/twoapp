@@ -445,7 +445,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
 
         <button
           onClick={openRecordModal}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-medium text-sm shadow-sm transition-all transform active:scale-95 cursor-pointer shrink-0"
+          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 font-medium text-sm shadow-sm transition-all transform active:scale-95 cursor-pointer shrink-0"
         >
           <Mic className="w-4 h-4" />
           <span>Record a Whisper</span>
@@ -472,7 +472,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
               onClick={() => setFilterCategory(cat)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 filterCategory === cat
-                  ? 'bg-rose-600 text-white shadow-xs'
+                  ? 'bg-linen-primary text-linen-surface shadow-xs'
                   : 'bg-linen-variant/60 text-linen-secondary hover:text-linen-primary'
               }`}
             >
@@ -795,10 +795,10 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
                 <button
                   type="submit"
                   disabled={recorderState !== 'recorded' || !recordedAudioUrl}
-                  className={`inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-medium shadow-xs transition-transform active:scale-95 ${
+                  className={`inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-medium shadow-xs transition-transform active:scale-95 ${
                     recorderState === 'recorded' && recordedAudioUrl
-                      ? 'bg-rose-600 hover:bg-rose-700 cursor-pointer'
-                      : 'bg-stone-400 cursor-not-allowed opacity-60'
+                      ? 'bg-linen-primary text-linen-surface hover:opacity-90 cursor-pointer'
+                      : 'bg-linen-variant text-linen-secondary cursor-not-allowed opacity-60'
                   }`}
                 >
                   <Send className="w-3.5 h-3.5" />

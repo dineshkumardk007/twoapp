@@ -209,7 +209,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
           <button
             onClick={() => setActiveTab('compose')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-serif transition-colors cursor-pointer flex items-center space-x-1 ${
-              activeTab === 'compose' ? 'bg-indigo-600 text-white font-semibold' : 'text-indigo-700 hover:bg-indigo-50'
+              activeTab === 'compose' ? 'bg-linen-primary text-linen-surface font-semibold' : 'text-linen-accent hover:text-linen-primary'
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -367,7 +367,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-colors shadow-xs cursor-pointer flex items-center space-x-1.5"
+              className="px-5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer flex items-center space-x-1.5"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Send Wholehearted Repair</span>
@@ -480,7 +480,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => handleAcceptRepair(selectedLetter.id)}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition-colors cursor-pointer flex items-center space-x-1.5 shadow-xs"
+                  className="px-4 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity cursor-pointer flex items-center space-x-1.5 shadow-xs"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>I Accept Your Apology (Reconcile)</span>

@@ -391,7 +391,7 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
 
       {/* Add Recipe Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-linen-surface text-linen-primary border border-linen-border rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-linen-border">
               <div className="flex items-center space-x-2">

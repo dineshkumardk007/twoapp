@@ -325,7 +325,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
               Lock in my answer
             </button>
           </div>
-          <p className="text-[10px] text-linen-secondary/80 text-right -mt-1">Answers can't be changed once locked in</p>
+          <p className="text-[10px] text-linen-secondary text-right -mt-1">Answers can't be changed once locked in</p>
         </div>
       )}
 

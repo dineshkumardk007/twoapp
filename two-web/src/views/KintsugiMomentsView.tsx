@@ -577,7 +577,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                 </p>
                 <button
                   onClick={() => handleOpenInscribe(selectedSeamIndex)}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-amber-600 text-white text-xs font-medium hover:bg-amber-500 transition-colors cursor-pointer shadow-sm"
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-amber-700 text-white text-xs font-medium hover:bg-amber-600 transition-colors cursor-pointer shadow-sm"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Inscribe Seam #{selectedSeamIndex + 1}</span>
@@ -901,7 +901,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmCherish}
-                className="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-amber-600 text-white text-xs font-medium hover:bg-amber-500 shadow-sm"
+                className="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-amber-700 text-white text-xs font-medium hover:bg-amber-600 shadow-sm"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>Confirm Honor</span>

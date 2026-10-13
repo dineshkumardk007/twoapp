@@ -74,19 +74,19 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
   return (
     <div className="space-y-4">
       {/* Header & Description */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-900/90 text-stone-100 p-5 rounded-3xl border border-stone-800 shadow-xl backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-linen-surface text-linen-primary p-5 rounded-3xl border border-linen-border shadow-xs">
         <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-2xl bg-indigo-500/10 border border-indigo-400/20 flex items-center justify-center text-indigo-300">
+          <div className="w-11 h-11 rounded-2xl bg-aurora-teal/15 border border-aurora-teal/25 flex items-center justify-center text-aurora-teal">
             <Sparkles className="w-6 h-6 animate-pulse" />
           </div>
           <div>
-            <h2 className="font-serif text-xl font-medium tracking-tight flex items-center space-x-2 text-stone-100">
+            <h2 className="font-serif text-xl font-medium tracking-tight flex items-center space-x-2 text-linen-primary">
               <span>The Gratitude Constellation</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-sans">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 font-sans">
                 {stars.length} Stars Shining
               </span>
             </h2>
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-linen-secondary">
               Every small appreciation forms a star in your shared celestial night sky.
             </p>
           </div>
@@ -94,7 +94,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-900/40 transition-all cursor-pointer"
+          className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-2xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-semibold shadow-glow transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Plant a Gratitude Star</span>
@@ -107,8 +107,8 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
           onClick={() => setSelectedCategory('all')}
           className={`px-3 py-1.5 rounded-xl border transition-all whitespace-nowrap font-medium ${
             selectedCategory === 'all'
-              ? 'bg-stone-100 text-stone-900 border-stone-100'
-              : 'bg-stone-900/80 text-stone-400 border-stone-800 hover:text-stone-200'
+              ? 'bg-linen-primary text-linen-surface border-transparent'
+              : 'bg-linen-surface text-linen-secondary border-linen-border hover:text-linen-primary'
           }`}
         >
           🌌 All Constellations
@@ -122,13 +122,13 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
               onClick={() => setSelectedCategory(cat.id)}
               className={`px-3 py-1.5 rounded-xl border transition-all whitespace-nowrap font-medium flex items-center space-x-1.5 ${
                 isSelected
-                  ? 'bg-stone-800 text-stone-100 border-stone-600 shadow-xs'
-                  : 'bg-stone-900/80 text-stone-400 border-stone-800 hover:text-stone-200'
+                  ? 'bg-linen-primary text-linen-surface border-transparent shadow-xs'
+                  : 'bg-linen-surface text-linen-secondary border-linen-border hover:text-linen-primary'
               }`}
             >
               <span>{cat.emoji}</span>
               <span>{cat.label}</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-800/80 text-stone-400">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/10">
                 {count}
               </span>
             </button>
@@ -137,7 +137,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
       </div>
 
       {/* The Celestial Sky Canvas */}
-      <div className="relative w-full h-[540px] rounded-3xl border border-stone-800/90 overflow-hidden bg-gradient-to-b from-[#070913] via-[#0d1224] to-[#080b18] shadow-2xl select-none">
+      <div className="relative w-full h-[540px] rounded-3xl border border-linen-border overflow-hidden bg-gradient-to-b from-[#070913] via-[#0d1224] to-[#080b18] shadow-2xl select-none">
         {/* Subtle Background Nebula Glows */}
         <div className="absolute -top-12 -left-12 w-80 h-80 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none" />
         <div className="absolute top-1/2 -right-16 w-96 h-96 rounded-full bg-rose-600/10 blur-3xl pointer-events-none" />
@@ -235,7 +235,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
 
         {/* Inspection Card Drawer (Bottom-left overlay) */}
         {selectedStar && (
-          <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:max-w-sm z-30 bg-stone-900/95 border border-stone-700/80 rounded-3xl p-5 shadow-2xl backdrop-blur-xl animate-fade-in text-stone-100">
+          <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:max-w-sm z-30 bg-stone-900/95 border border-stone-700/80 rounded-3xl p-5 shadow-2xl animate-fade-in text-stone-100">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-2">
                 <span className="text-xl">
@@ -278,20 +278,20 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
 
       {/* Plant a Star Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-          <div className="bg-stone-900 text-stone-100 border border-stone-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-linen-surface text-linen-primary border border-linen-border rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6">
+            <div className="flex items-center justify-between pb-4 border-b border-linen-border">
               <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-300">
+                <div className="w-8 h-8 rounded-xl bg-aurora-teal/15 flex items-center justify-center text-aurora-teal">
                   <Sparkles className="w-4 h-4" />
                 </div>
-                <h3 className="font-serif text-lg font-medium text-stone-100">
+                <h3 className="font-serif text-lg font-medium text-linen-primary">
                   Plant a Gratitude Star
                 </h3>
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="p-1.5 rounded-lg text-stone-400 hover:text-stone-200 hover:bg-stone-800"
+                className="p-1.5 rounded-lg text-linen-secondary hover:text-linen-primary hover:bg-linen-variant"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -299,7 +299,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
 
             <form onSubmit={handleCreateStar} className="mt-5 space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-linen-secondary mb-1.5">
                   Constellation Cluster
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -310,8 +310,8 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
                       onClick={() => setCategory(cat.id)}
                       className={`p-2.5 rounded-xl border text-left text-xs font-medium flex items-center space-x-2 transition-all ${
                         category === cat.id
-                          ? 'border-indigo-500 bg-indigo-950/40 text-stone-100'
-                          : 'border-stone-800 bg-stone-800/40 text-stone-400 hover:bg-stone-800'
+                          ? 'border-aurora-violet bg-aurora-violet/10 text-linen-primary'
+                          : 'border-linen-border bg-linen-variant/40 text-linen-secondary hover:bg-linen-variant'
                       }`}
                     >
                       <span>{cat.emoji}</span>
@@ -322,7 +322,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-linen-secondary mb-1.5">
                   Your Gratitude Note
                 </label>
                 <textarea
@@ -330,13 +330,13 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="What small, beautiful thing did you appreciate today?"
                   rows={3}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-stone-800 border border-stone-700 text-stone-100 placeholder-stone-400 text-sm focus:outline-hidden focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-linen-variant/40 border border-linen-border text-linen-primary placeholder:text-linen-secondary/70 text-sm focus:outline-hidden focus:border-aurora-violet"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-linen-secondary mb-1.5">
                   Starlight Radiance
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -351,8 +351,8 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
                       onClick={() => setMagnitude(m.mag)}
                       className={`py-2 rounded-xl border text-xs font-medium text-center transition-all ${
                         magnitude === m.mag
-                          ? 'border-indigo-500 bg-indigo-950/40 text-stone-100'
-                          : 'border-stone-800 bg-stone-800/40 text-stone-400 hover:bg-stone-800'
+                          ? 'border-aurora-violet bg-aurora-violet/10 text-linen-primary'
+                          : 'border-linen-border bg-linen-variant/40 text-linen-secondary hover:bg-linen-variant'
                       }`}
                     >
                       {m.label}
@@ -361,17 +361,17 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-stone-800 flex items-center justify-end space-x-3">
+              <div className="pt-3 border-t border-linen-border flex items-center justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs text-stone-400 hover:text-stone-200"
+                  className="px-4 py-2 rounded-xl text-xs text-linen-secondary hover:text-linen-primary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-900/30 cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-semibold shadow-glow cursor-pointer"
                 >
                   Illuminate in Sky
                 </button>
