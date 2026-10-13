@@ -10,6 +10,7 @@ import {
   readVoiceRate,
   saveVoiceRate
 } from '../core/voice';
+import { armEar, disarmEar, earIsNear, stopEar, EarNote } from '../core/earpiece';
 
 /**
  * One voice note, as a bubble shows it: a play button, the shape of the voice
@@ -160,6 +161,10 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
   const pendingRef = useRef(false);
   const rateRef = useRef(rate);
   const waveRef = useRef<HTMLDivElement | null>(null);
+  /** The note is playing at the ear, through the earpiece (core/earpiece). */
+  const earRef = useRef(false);
+  /** Builds what the earpiece needs, for the element now open. */
+  const earNoteRef = useRef<(() => EarNote) | null>(null);
   const gestureRef = useRef<{ pointerId: number; startX: number; moved: boolean } | null>(null);
 
   // Read by the element's events, which outlive any one render.
@@ -232,6 +237,10 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
   /** Closes the recording and forgets everything about it. */
   const dispose = () => {
     intentRef.current++;
+    stopEar(idRef.current);
+    disarmEar(idRef.current);
+    earRef.current = false;
+    earNoteRef.current = null;
     letGo();
     detachRef.current?.();
     detachRef.current = null;
@@ -256,6 +265,7 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
   const ensureAudio = (): HTMLAudioElement | null => {
     if (audioRef.current) return audioRef.current;
     if (!playable || !audioDataUrl) return null;
+    const dataUrl = audioDataUrl;
     const audio = new Audio();
     audio.preload = 'auto';
     audio.defaultPlaybackRate = rateRef.current;
@@ -286,14 +296,19 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
         }
       }
       startFrames();
+      // Sounding on the loudspeaker: raise the phone and it moves to the ear.
+      armEar(earNote());
     };
     const onPause = () => {
       setPlaying(false);
       letGo();
       if (!preparingRef.current) setPosition(audio.currentTime);
+      // Paused here, not handed to the ear: nothing left to watch for.
+      if (!earRef.current) disarmEar(idRef.current);
     };
     const onEnd = () => {
       intentRef.current++;
+      disarmEar(idRef.current);
       markPending(false);
       setBusy(false);
       setPlaying(false);
@@ -319,8 +334,58 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
       setBusy(false);
       setPlaying(false);
       letGo();
+      disarmEar(idRef.current);
       setFailed(true);
     };
+
+    /**
+     * The note as the earpiece takes it: from where it is, at its speed.
+     * Back from the ear it is paused where it got to - or, played to the
+     * end there, finished exactly as if it had ended here.
+     */
+    const earNote = (): EarNote => ({
+      id: idRef.current,
+      dataUrl,
+      position: () => audio.currentTime || 0,
+      rate: () => rateRef.current,
+      toEar: () => {
+        earRef.current = true;
+        markPending(false);
+        setBusy(false);
+        // Heard at the ear is heard: a note sent straight there never fires
+        // 'playing' here.
+        if (!firstPlayDoneRef.current) {
+          firstPlayDoneRef.current = true;
+          if (!heardRef.current) {
+            try {
+              onFirstPlayRef.current?.();
+            } catch {
+              /* the screen's problem, not the note's */
+            }
+          }
+        }
+        try {
+          audio.pause();
+        } catch {
+          /* already quiet */
+        }
+      },
+      back: (reason, at) => {
+        earRef.current = false;
+        if (!mountedRef.current || audioRef.current !== audio) return;
+        if (reason === 'ended') {
+          onEnd();
+          return;
+        }
+        try {
+          audio.currentTime = at;
+        } catch {
+          /* it stays where it was */
+        }
+        setPosition(at);
+      }
+    });
+    earNoteRef.current = earNote;
 
     audio.addEventListener('timeupdate', onTime);
     audio.addEventListener('durationchange', onDuration);
@@ -416,6 +481,10 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
     }
     audio.defaultPlaybackRate = rateRef.current;
     audio.playbackRate = rateRef.current;
+    if (earIsNear() && earNoteRef.current) {
+      armEar(earNoteRef.current());
+      if (earRef.current) return;
+    }
     try {
       await audio.play();
       // Normally 'playing' has already said so; not when it was playing all

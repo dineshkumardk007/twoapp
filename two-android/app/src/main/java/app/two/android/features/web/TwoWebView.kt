@@ -566,6 +566,37 @@ class AndroidWebBridge(
             }
         }
     }
+
+    /** Voice notes at the ear: see EarpieceVoice, and the page's core/earpiece.ts. */
+    private val earpiece by lazy {
+        EarpieceVoice(context) { reply -> replyToPage("__twoEar", reply) }
+    }
+
+    /** Whether this phone has the proximity sensor raise-to-ear needs. */
+    @JavascriptInterface
+    fun earAvailable(): Boolean = earpiece.available
+
+    /** The sensor on while a voice note plays on the loudspeaker, off after. */
+    @JavascriptInterface
+    fun earWatch(on: Boolean) {
+        earpiece.watch(on)
+    }
+
+    /** Plays the note at the ear, from [positionMs], at [rate]. */
+    @JavascriptInterface
+    fun earPlay(id: String, base64: String, positionMs: Double, rate: Double) {
+        earpiece.play(id, base64, positionMs.toLong().coerceAtLeast(0L), rate.toFloat())
+    }
+
+    @JavascriptInterface
+    fun earStop() {
+        earpiece.stop()
+    }
+
+    /** A new page: nothing of the old one keeps playing at the ear, or watching. */
+    fun earRelease() {
+        earpiece.release()
+    }
 }
 
 /**
@@ -803,7 +834,8 @@ fun TwoWebView(
                     layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 }
 
-                addJavascriptInterface(AndroidWebBridge(context, this, saveThroughPicker), "AndroidBridge")
+                val bridge = AndroidWebBridge(context, this, saveThroughPicker)
+                addJavascriptInterface(bridge, "AndroidBridge")
                 // The radio service reports to this page from now on.
                 val page = this
                 RadioRemote.attach(context) { js -> page.evaluateJavascript(js, null) }
@@ -850,6 +882,7 @@ fun TwoWebView(
                     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                         super.onPageStarted(view, url, favicon)
                         view?.context?.findActivity()?.let { resetBedside(it) }
+                        bridge.earRelease()
                     }
                 }
 
