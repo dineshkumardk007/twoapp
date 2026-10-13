@@ -35,8 +35,8 @@ export const EmotionalWeatherCard: React.FC<EmotionalWeatherCardProps> = ({
     <div className="bg-linen-surface rounded-2xl border border-linen-border p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="min-w-0">
-          <h2 className="font-serif text-lg font-medium text-linen-primary">Emotional Weather & Capacity</h2>
-          <p className="text-xs text-linen-secondary">Calibrate expectations without guesswork or assumptions.</p>
+          <h2 className="font-serif text-lg font-medium text-linen-primary">Emotional Weather</h2>
+          <p className="text-xs text-linen-secondary">How each of you is doing today. No explaining needed.</p>
         </div>
         <button
           onClick={() => setIsEditing(!isEditing)}

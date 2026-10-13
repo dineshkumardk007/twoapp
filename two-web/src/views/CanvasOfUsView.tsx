@@ -443,7 +443,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
             Canvas of Us
           </h2>
           <p className="text-xs text-linen-secondary mt-0.5">
-            Draw, trace palms, or leave sweet handwritten notes together in real-time. Every stroke synchronizes across distance.
+            Draw, doodle or leave a handwritten note. Every line appears on both phones as you draw.
           </p>
         </div>
 

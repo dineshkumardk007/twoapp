@@ -523,7 +523,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
 
   const inviteIn = () => {
     if (!onSendToChat) return;
-    onSendToChat(`Come sit with me in Quiet Co-Presence - I'm in the ${currentRoom.name}.`);
+    onSendToChat(`Come sit with me in Quiet Together - I'm in the ${currentRoom.name}.`);
     setInvited(true);
   };
 
@@ -534,14 +534,11 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h2 className="font-serif text-2xl sm:text-3xl font-medium text-linen-primary tracking-tight">
-              Quiet Co-Presence Room
+              Quiet Together
             </h2>
-            <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-sans font-medium border border-amber-200">
-              Parallel Sanctuary
-            </span>
           </div>
           <p className="text-xs sm:text-sm text-linen-secondary mt-1">
-            Read, study, or rest alongside your partner across distance with zero pressure to speak.
+            Read, work or rest alongside each other, wherever you are. No need to talk.
           </p>
         </div>
 
@@ -680,7 +677,7 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
                 <>
                   <div className="p-4 rounded-2xl bg-black/30 border border-white/5 space-y-1.5">
                     <p className="text-xs text-stone-300 font-serif leading-relaxed">
-                      {shownPartnerName} isn't in the room right now. When they open Quiet Co-Presence, they'll
+                      {shownPartnerName} isn't in the room right now. When they open Quiet Together, they'll
                       appear at this desk.
                     </p>
                   </div>

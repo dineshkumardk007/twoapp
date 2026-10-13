@@ -53,8 +53,8 @@ export const JournalView: React.FC<JournalViewProps> = ({
           screen; beside them it was squeezed to "Write / Entry". */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-serif text-2xl font-medium text-linen-primary">Thought & Mood Journal</h2>
-          <p className="text-sm text-linen-secondary">Reflective micro-blogging away from rapid-fire chat.</p>
+          <h2 className="font-serif text-2xl font-medium text-linen-primary">Shared Journal</h2>
+          <p className="text-sm text-linen-secondary">Slower thoughts, away from the quick back-and-forth of chat.</p>
         </div>
         <button
           onClick={() => setIsWriting(!isWriting)}

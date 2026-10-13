@@ -46,8 +46,8 @@ export const ListsView: React.FC<ListsViewProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl font-medium text-linen-primary">Shared Lists & Surprises</h2>
-        <p className="text-sm text-linen-secondary">Collaborative planning with built-in surprise gift protection.</p>
+        <h2 className="font-serif text-2xl font-medium text-linen-primary">Shared Lists</h2>
+        <p className="text-sm text-linen-secondary">Plan together, and keep a gift idea hidden until it's given.</p>
       </div>
 
       {/* Add Item Card */}

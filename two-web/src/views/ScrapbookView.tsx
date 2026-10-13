@@ -121,10 +121,10 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
             <span>Annual Relational Memoir</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-linen-primary font-medium">
-            Keepsake Memory Book
+            Memoir Book
           </h1>
           <p className="text-xs sm:text-sm text-linen-secondary mt-0.5">
-            Editorial compilation of your letters, stars, passport journeys, and milestones. Formatted for fine printing or archival export.
+            Your letters, stars, trips and milestones, laid out as a book to print or keep.
           </p>
         </div>
 

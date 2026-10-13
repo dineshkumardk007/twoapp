@@ -179,10 +179,10 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
         <div>
           <div className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 mb-2">
             <Sprout className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Living Hearth Garden</span>
+            <span>Your bonsai</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-linen-primary font-medium">
-            The Digital Bonsai
+            Hearth Garden
           </h1>
           <p className="text-sm text-linen-secondary mt-1 max-w-xl">
             A botanical companion that thrives on your shared care. Never wilts or induces guilt — it gently enters winter slumber during busy weeks, and blooms the moment you return.

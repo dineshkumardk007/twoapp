@@ -81,13 +81,13 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
           </div>
           <div>
             <h2 className="font-serif text-xl font-medium tracking-tight flex flex-wrap items-center gap-x-2 gap-y-1 text-linen-primary">
-              <span>The Gratitude Constellation</span>
+              <span>Gratitude Stars</span>
               <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 font-sans">
                 {stars.length} Stars Shining
               </span>
             </h2>
             <p className="text-xs text-linen-secondary">
-              Every small appreciation forms a star in your shared celestial night sky.
+              Every small thank-you becomes a star in a sky you share.
             </p>
           </div>
         </div>
@@ -281,7 +281,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
             <div className="mt-4 pt-3 border-t border-stone-800 flex items-center justify-between text-[11px] text-stone-400">
               <span className="flex items-center space-x-1">
                 <Shield className="w-3 h-3 text-emerald-400" />
-                <span>Zero-Knowledge Starlight</span>
+                <span>Only you two can see this</span>
               </span>
               <span className="font-mono text-stone-400">
                 Mag {selectedStar.magnitude}.0

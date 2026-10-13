@@ -132,13 +132,10 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
           </div>
           <div>
             <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span>Our Kitchen Table</span>
-              <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-sans font-normal">
-                Secret Couple Cookbook
-              </span>
+              <span>Secret Recipes</span>
             </h2>
             <p className="text-xs text-linen-secondary mt-0.5">
-              Cherished memories behind every meal • Hands-free date night cooking mode.
+              The dishes you love, the story behind each, and a step-by-step mode for cooking together.
             </p>
           </div>
         </div>

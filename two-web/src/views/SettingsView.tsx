@@ -519,11 +519,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
             <Link2 className="w-4 h-4 text-linen-accent" />
-            <span>Connected Space &amp; Relay</span>
+            <span>Your Space</span>
           </div>
           <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
-            E2EE Live
+            Private link on
           </span>
         </div>
 
@@ -1179,17 +1179,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
 
           <div className="flex justify-between items-center text-linen-secondary">
-            <span>Linked Sanctuary:</span>
+            <span>Space:</span>
             <strong className="text-linen-primary font-medium">
               {state.userName || 'You'} &amp; {state.partnerName || 'Partner'}
             </strong>
           </div>
 
           <div className="flex justify-between items-center text-linen-secondary">
-            <span>Your Device Role:</span>
+            <span>This phone:</span>
             <div className="flex items-center space-x-2">
               <span className="text-linen-primary font-medium">
-                {state.activeUser === 'user' ? 'Creator Device' : 'Partner Device'}
+                {state.activeUser === 'user' ? 'Started the space' : 'Joined the space'}
               </span>
               <button
                 type="button"
@@ -1226,7 +1226,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
 
           <div className="flex justify-between items-center text-linen-secondary">
-            <span className="shrink-0">Encrypted Relay:</span>
+            <span className="shrink-0">Server:</span>
             {/* The one in use, not a fixed address: a phone pointed at
                 another relay used to be told it was on the usual one. */}
             <span className="min-w-0 break-all text-right font-mono text-[10px] text-linen-primary">{resolveRelayUrl()}</span>
@@ -1481,10 +1481,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div className="p-6 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
         <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
           <Download className="w-4 h-4 text-linen-accent" />
-          <span>Raw Structured Data Export</span>
+          <span>Download Everything</span>
         </div>
         <p className="text-xs text-linen-secondary">
-          Download your entire space history unencrypted as a plain JSON file for personal archival.
+          Save all your history as a plain, unlocked file (JSON). Anyone who opens it can read it, so keep it somewhere safe.
         </p>
         <button
           onClick={handleExportData}

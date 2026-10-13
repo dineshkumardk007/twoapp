@@ -142,14 +142,11 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="font-serif text-lg font-medium text-linen-primary">
-                  Heart Touch Options
+                  Heart Touches
                 </h3>
-                <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
-                  Sensory Pulse
-                </span>
               </div>
               <p className="text-xs text-linen-secondary mt-0.5">
-                Wordless touch & haptic warmth to {partnerName}
+                Send {partnerName} a touch they can feel
               </p>
             </div>
           </div>
@@ -327,7 +324,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
         <div className="p-3 sm:p-4 border-t border-linen-border/60 bg-linen-variant/20 flex items-center justify-between text-xs text-linen-secondary shrink-0">
           <span className="text-[11px] truncate flex items-center space-x-1">
             <Sparkles className="w-3 h-3 text-rose-500 inline mr-1 shrink-0" />
-            <span className="truncate">End-to-end encrypted • Zero tracking</span>
+            <span className="truncate">Private to you two</span>
           </span>
           <button
             onClick={onClose}

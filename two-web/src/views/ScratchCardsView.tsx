@@ -208,10 +208,10 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
             <span>Golden Scratch Surprises</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-linen-primary font-medium">
-            Love Coupons & Scratch Surprises
+            Scratch Cards
           </h1>
           <p className="text-sm text-linen-secondary mt-1 max-w-xl">
-            Scratch off shimmering gold foil with realistic friction audio to uncover secret pampering vouchers, sweet immunity passes, and tender date invitations.
+            Make a love coupon (a massage, a free pass, a date) and let your partner scratch off the gold to find it.
           </p>
         </div>
 

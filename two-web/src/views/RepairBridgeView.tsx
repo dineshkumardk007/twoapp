@@ -187,10 +187,10 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
             </span>
           </div>
           <h2 className="font-serif text-2xl font-bold text-linen-primary mt-1">
-            The Repair Bridge
+            Repair Bridge
           </h2>
           <p className="text-xs text-linen-secondary mt-0.5">
-            Based on the 5 Languages of Apology: craft wholehearted, non-defensive repairs and receive them with grace and zero pressure.
+            Say sorry in the way your partner hears it best, and receive their apology gently, with no pressure.
           </p>
         </div>
 

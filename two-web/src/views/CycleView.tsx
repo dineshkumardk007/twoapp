@@ -110,11 +110,11 @@ export const CycleView: React.FC<CycleViewProps> = ({
       <div className="border-b border-linen-border pb-4">
         <div className="flex items-center space-x-2 text-linen-accent mb-1">
           <Moon className="w-5 h-5" />
-          <span className="text-xs font-semibold tracking-wider uppercase">Reproductive Health Sovereignty</span>
+          <span className="text-xs font-semibold tracking-wider uppercase">Private to you</span>
         </div>
-        <h2 className="font-serif text-2xl font-medium text-linen-primary">Cycle Sovereignty & Empathy Hub</h2>
+        <h2 className="font-serif text-2xl font-medium text-linen-primary">Cycle Compass</h2>
         <p className="text-sm text-linen-secondary mt-1">
-          Mathematically unreadable to servers. Protected under dedicated domain subkeys with granular selective disclosure.
+          Only you can read this. You choose exactly how much your partner sees.
         </p>
       </div>
 
@@ -123,9 +123,9 @@ export const CycleView: React.FC<CycleViewProps> = ({
         <div className="flex items-center space-x-2.5">
           <Shield className="w-4 h-4 text-emerald-700 shrink-0" />
           <div>
-            <span className="font-medium text-linen-primary">Domain Subkey Isolation Active:</span>{' '}
+            <span className="font-medium text-linen-primary">What you share:</span>{' '}
             <span className="text-linen-secondary">
-              Current sharing level: <strong className="uppercase text-linen-primary">{sharingLevel.replace('_', ' ')}</strong>
+              <strong className="uppercase text-linen-primary">{sharingLevel.replace('_', ' ')}</strong>
             </span>
           </div>
         </div>
@@ -135,7 +135,7 @@ export const CycleView: React.FC<CycleViewProps> = ({
             className="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium transition-colors self-start sm:self-auto flex items-center space-x-1"
           >
             <Lock className="w-3 h-3" />
-            <span>Revoke All Partner Access</span>
+            <span>Stop all sharing</span>
           </button>
         )}
       </div>
@@ -301,7 +301,7 @@ export const CycleView: React.FC<CycleViewProps> = ({
                   <Lock className="w-3 h-3 text-linen-accent" />
                   <span>Private Notes (Never shared with partner)</span>
                 </label>
-                <span className="text-[10px] text-linen-secondary font-mono">Owner Subkey</span>
+                <span className="text-[10px] text-linen-secondary">Only you</span>
               </div>
               <textarea
                 rows={2}
@@ -314,7 +314,7 @@ export const CycleView: React.FC<CycleViewProps> = ({
 
             {/* Granular Selective Disclosure Settings */}
             <div className="pt-4 border-t border-linen-border space-y-3">
-              <h4 className="font-serif text-base font-medium text-linen-primary">Partner Disclosure Level</h4>
+              <h4 className="font-serif text-base font-medium text-linen-primary">What your partner can see</h4>
               <p className="text-xs text-linen-secondary leading-relaxed">
                 Choose exactly how much biological and emotional context your partner's device is allowed to decrypt:
               </p>
@@ -390,7 +390,7 @@ export const CycleView: React.FC<CycleViewProps> = ({
               onClick={handleSaveLog}
               className="w-full py-2.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity"
             >
-              Save Cycle Log & Apply Sovereignty Settings
+              Save
             </button>
           </div>
         </div>

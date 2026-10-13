@@ -182,10 +182,10 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="font-serif text-2xl sm:text-3xl font-medium text-linen-primary tracking-tight">
-            Shared Micro-Rituals & Zen Pebble Garden
+            Daily Rituals
           </h2>
           <p className="text-sm text-linen-secondary mt-1">
-            Intentional micro-habits that release oxytocin, quiet cortisol, and nurture relational safety.
+            Small habits that keep you close: a six-second kiss, tea together, a walk.
           </p>
         </div>
         <button

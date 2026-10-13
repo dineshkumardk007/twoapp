@@ -89,11 +89,11 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
             <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex flex-wrap items-center gap-x-2 gap-y-1">
               <span>Guess My Mind</span>
               <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-sans font-normal">
-                Intuition Mini-Game
+                A game for two
               </span>
             </h2>
             <p className="text-xs text-linen-secondary mt-0.5">
-              Lock in your secret preference • Test how intuitively you know each other's hearts.
+              Pick your answer in secret, then see if your partner can guess it.
             </p>
           </div>
         </div>
@@ -260,7 +260,7 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
         <div className="pt-4 border-t border-linen-border flex flex-col sm:flex-row items-center justify-between text-xs text-linen-secondary gap-2">
           <div className="flex items-center space-x-1.5">
             <Shield className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Encrypted zero-knowledge guesses</span>
+            <span>Your answers stay between you two</span>
           </div>
 
           <div className="flex items-center space-x-3">

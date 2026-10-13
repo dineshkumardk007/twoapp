@@ -25,8 +25,8 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl font-medium text-linen-primary">Mental Load & Chore Split</h2>
-        <p className="text-sm text-linen-secondary">Validating the invisible cognitive labor of *planning* vs *doing*.</p>
+        <h2 className="font-serif text-2xl font-medium text-linen-primary">Chore Split</h2>
+        <p className="text-sm text-linen-secondary">Who remembers and plans, and who does the work. Both count.</p>
       </div>
 
       {/* Summary Card */}

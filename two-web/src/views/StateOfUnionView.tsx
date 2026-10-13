@@ -163,7 +163,7 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
             State of Our Union
           </h2>
           <p className="text-xs text-linen-secondary mt-0.5">
-            Inspired by Dr. John Gottman: a safe Sunday container to cherish, calibrate, and care for each other.
+            A weekly check-in, inspired by Dr. John Gottman: what went well, what's tender, and what's next.
           </p>
         </div>
 

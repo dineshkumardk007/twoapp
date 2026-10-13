@@ -122,8 +122,8 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-serif text-lg font-medium text-linen-primary">Encrypted Vault Backup</h3>
-              <p className="text-xs text-linen-secondary">Sovereign offline data protection (.two‑vault)</p>
+              <h3 className="font-serif text-lg font-medium text-linen-primary">Backups</h3>
+              <p className="text-xs text-linen-secondary">A password-locked file of everything (.two‑vault)</p>
             </div>
           </div>
           <button

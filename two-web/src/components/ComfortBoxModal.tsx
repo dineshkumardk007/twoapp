@@ -143,13 +143,13 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
             </div>
             <div>
               <h3 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span>Emergency Comfort Box</span>
+                <span>Comfort Box</span>
                 <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 font-sans font-normal border border-rose-200">
                   Open When Heavy
                 </span>
               </h3>
               <p className="text-xs text-linen-secondary mt-0.5">
-                Prepared with unconditional tenderness • No energy or explaining needed
+                Kind words saved for a heavy day
               </p>
             </div>
           </div>
@@ -257,7 +257,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
               <div className="p-5 rounded-3xl bg-linen-variant/40 border border-linen-border flex flex-col items-center text-center space-y-3">
                 <div className="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-linen-accent">
                   <Wind className="w-4 h-4" />
-                  <span>4-7-8 Somatic Parasympathetic Calming</span>
+                  <span>4-7-8 breathing</span>
                 </div>
 
                 {/* Animated Breath Ring */}
@@ -366,7 +366,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
         <div className="p-4 border-t border-linen-border bg-linen-surface flex items-center justify-between text-xs text-linen-secondary">
           <span className="flex items-center space-x-1.5">
             <Shield className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Encrypted sovereign sanctuary</span>
+            <span>Private to you two</span>
           </span>
           <button
             onClick={onClose}

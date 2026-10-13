@@ -75,8 +75,8 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl font-medium text-linen-primary">Money-Light Shared Tab</h2>
-        <p className="text-sm text-linen-secondary">Shared expenses, running balance, and settle-up. No bank integrations.</p>
+        <h2 className="font-serif text-2xl font-medium text-linen-primary">Shared Money</h2>
+        <p className="text-sm text-linen-secondary">Split costs, see who's ahead, and settle up. No bank connection.</p>
       </div>
 
       {/* Balance Card */}

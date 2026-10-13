@@ -233,10 +233,10 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
             <span>Safe Harbor & Conflict Haven</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-linen-primary font-medium">
-            Soft Landing Protocol
+            Soft Landing
           </h1>
           <p className="text-sm text-linen-secondary mt-1 max-w-xl">
-            A structured emotional safety valve for moments of overwhelm or misunderstanding. Takes space without triggering abandonment, soothes the nervous system, and guides reconnection.
+            When things feel like too much: take a short pause, calm down, and come back to each other.
           </p>
         </div>
 
@@ -544,7 +544,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
               <span>Pause Before Flooding</span>
             </div>
             <h2 className="font-serif text-2xl font-medium text-linen-primary">
-              Initiate a 20-Minute Safe Breather
+              Take a Breather
             </h2>
             <p className="text-sm text-linen-secondary mt-1">
               Select a reassuring affirmation so your partner knows you are taking space out of love for the relationship, not out of withdrawal or abandonment.
@@ -608,7 +608,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
           {/* Action Trigger */}
           <div className="pt-4 border-t border-linen-border flex flex-col sm:flex-row items-center justify-between gap-3">
             <span className="text-xs text-linen-secondary">
-              Both phones enter soothing 432Hz sanctuary mode.
+              Both phones switch to a calm, quiet mode.
             </span>
 
             <button

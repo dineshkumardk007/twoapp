@@ -120,7 +120,7 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="font-serif text-2xl font-medium text-linen-primary">Conflict Repair Kit</h2>
-          <p className="text-sm text-linen-secondary">4-stage de-escalation protocol & permanent agreement archive.</p>
+          <p className="text-sm text-linen-secondary">Cool down first, talk it through in four calm steps, and keep what you agree.</p>
         </div>
         <div className="flex space-x-2">
           <button

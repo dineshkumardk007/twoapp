@@ -15,7 +15,7 @@ const PATTERNS: Record<BreathPatternType, BreathPatternConfig> = {
   '4-7-8': {
     id: '4-7-8',
     name: '4-7-8 Deep Sanctuary',
-    subtitle: 'Parasympathetic reset for sleep, soothing overstimulation & deep peace',
+    subtitle: 'A slow rhythm for winding down and sleep',
     inhale: 4,
     holdIn: 7,
     exhale: 8,
@@ -326,13 +326,10 @@ export const CoRegulationModal: React.FC<CoRegulationModalProps> = ({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <h3 className="font-serif text-lg font-medium text-linen-primary">Co-Regulation Sanctuary</h3>
-                <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                  432Hz Bio-Sync
-                </span>
+                <h3 className="font-serif text-lg font-medium text-linen-primary">Breathe Together</h3>
               </div>
               <p className="text-xs text-linen-secondary">
-                Synchronized parasympathetic breathing across physical distance
+                Slow your breathing together, wherever you are
               </p>
             </div>
           </div>

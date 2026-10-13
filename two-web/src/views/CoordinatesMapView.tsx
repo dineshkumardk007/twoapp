@@ -280,10 +280,10 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
             </span>
           </div>
           <h2 className="font-serif text-2xl font-bold text-linen-primary mt-1">
-            Our Secret Coordinates
+            Our Map
           </h2>
           <p className="text-xs text-linen-secondary mt-0.5">
-            Encrypted geocache pins of places where love, laughter, and history were born.
+            Pin the places that hold your story: where you met, laughed, or want to go back.
           </p>
         </div>
 

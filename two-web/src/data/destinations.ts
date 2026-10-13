@@ -8,7 +8,7 @@ import {
   X, Heart, MessageSquare, Feather, Bed, Sprout, Mic, Map, Radio, Shield, Palette, 
   Handshake, Sparkles, Flame, Star, Compass, Mail, Gift, Hourglass, Coffee, BookMarked, 
   MapPin, Utensils, Smile, Moon, BookOpen, CheckSquare, Layers, IndianRupee, Image, Settings, 
-  Wind, Search, Users 
+  Wind, Search, Users, CalendarHeart 
 } from 'lucide-react';
 
 /**
@@ -48,64 +48,64 @@ export interface DestinationGroup {
 export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
   return withFamilies([
     {
-      title: 'Intimacy & Heart Connection',
+      title: 'Love & Closeness',
       emoji: '💖',
       family: 'love',
       items: [
-        { id: 'chat', name: 'Private Chat', desc: 'Secure two-person messaging with gentle prompts', icon: MessageSquare, badge: unreadChatCount > 0 ? `${unreadChatCount} new` : undefined },
-        { id: 'softlanding', name: 'Soft Landing', desc: 'Decompress after a long day before speaking', icon: Feather },
-        { id: 'letters', name: 'Love Letters', desc: 'Sealed written letters with timed unlocks', icon: Mail },
-        { id: 'whispers', name: 'Whisper Memos', desc: 'Audio & text whispers left for each other', icon: Mic },
-        { id: 'repairbridge', name: 'Repair Bridge', desc: 'Walk through de-escalation step by step', icon: Handshake },
-        { id: 'kintsugi', name: 'Kintsugi Scars', desc: 'Cherishing what we repaired together', icon: Sparkles }
+        { id: 'chat', name: 'Private Chat', desc: 'Messages, voice notes and calls, just for you two', icon: MessageSquare, badge: unreadChatCount > 0 ? `${unreadChatCount} new` : undefined },
+        { id: 'softlanding', name: 'Soft Landing', desc: 'Unwind after a hard day before you talk', icon: Feather },
+        { id: 'letters', name: 'Love Letters', desc: 'Sealed letters that open when the time is right', icon: Mail },
+        { id: 'whispers', name: 'Whisper Memos', desc: 'Little voice notes to find in the morning or at night', icon: Mic },
+        { id: 'repairbridge', name: 'Repair Bridge', desc: 'Say sorry in the way your partner hears it best', icon: Handshake },
+        { id: 'kintsugi', name: 'Kintsugi Moments', desc: 'The hard times you came through, mended in gold', icon: Sparkles }
       ]
     },
     {
-      title: 'Our Parallel Sanctuary',
+      title: 'Calm & Care',
       emoji: '🌿',
       family: 'calm',
       items: [
-        { id: 'home', name: 'Sanctuary Home', desc: 'Emotional weather, daily check-ins & milestones', icon: Heart },
-        { id: 'presence', name: 'Quiet Co-Presence', desc: 'Study & rest beside each other with synchronized timer', icon: Coffee },
-        { id: 'nightstand', name: 'Nightstand Clock', desc: 'Bedside analogue clock, sleep sounds & midnight kisses', icon: Bed },
-        { id: 'garden', name: 'Hearth Garden', desc: 'Living digital flowers that grow as you care', icon: Sprout },
-        { id: 'constellation', name: 'Constellation Stars', desc: 'Gratitude starlight map across your universe', icon: Star },
-        { id: 'compass', name: 'Care Compass', desc: 'Decompression & love language cheat sheets', icon: Compass }
+        { id: 'home', name: 'Home', desc: 'Your days together, how you both feel, today\'s question', icon: Heart },
+        { id: 'presence', name: 'Quiet Together', desc: 'Read, work or rest side by side, even when apart', icon: Coffee },
+        { id: 'nightstand', name: 'Nightstand Clock', desc: 'A bedside clock, sleep sounds and goodnight kisses', icon: Bed },
+        { id: 'garden', name: 'Hearth Garden', desc: 'A little tree that grows as you care for each other', icon: Sprout },
+        { id: 'constellation', name: 'Gratitude Stars', desc: 'Every thank-you becomes a star in your sky', icon: Star },
+        { id: 'compass', name: 'Care Compass', desc: 'How each of you likes to be loved', icon: Compass }
       ]
     },
     {
-      title: 'Memories, Creativity & Play',
+      title: 'Memories & Play',
       emoji: '🎨',
       family: 'play',
       items: [
-        { id: 'canvas', name: 'Canvas of Us', desc: 'Live shared drawing & doodle canvas', icon: Palette },
-        { id: 'scrapbook', name: 'Memoir Book', desc: 'Your private photo scrapbooks & album pages', icon: BookMarked },
-        { id: 'capsules', name: 'Time Capsule', desc: 'Bury letters and photos to open on future anniversaries', icon: Hourglass },
-        { id: 'scratch', name: 'Scratch Cards', desc: 'Interactive scratch-off love coupons & secrets', icon: Gift },
-        { id: 'coordinates', name: 'Coordinates Map', desc: 'Pinned physical places that hold special meaning', icon: Map },
+        { id: 'canvas', name: 'Canvas of Us', desc: 'Draw and doodle together, live', icon: Palette },
+        { id: 'scrapbook', name: 'Memoir Book', desc: 'Your story as a book you can print', icon: BookMarked },
+        { id: 'capsules', name: 'Time Capsule', desc: 'Notes and photos that open on a future date', icon: Hourglass },
+        { id: 'scratch', name: 'Scratch Cards', desc: 'Love coupons to scratch open', icon: Gift },
+        { id: 'coordinates', name: 'Our Map', desc: 'The places that hold your story', icon: Map },
         // Only ever reachable from a tile on Home, which is going; without a
         // line here it would have no way in at all.
-        { id: 'adventures', name: 'Adventures', desc: 'Places and plans you want to share, and the ones you have lived', icon: MapPin },
-        { id: 'radio', name: 'Midnight Radio', desc: 'Shared radio station & voice whispers', icon: Radio },
-        { id: 'decks', name: 'Conversation Decks', desc: 'Curated card decks for deep midnight talks', icon: Sparkles },
-        { id: 'intuition', name: 'Intuition Game', desc: 'Guess what your partner would choose in dilemmas', icon: Smile },
-        { id: 'timeline', name: 'Timeline & Quotes', desc: 'Our favorite resurfaced love quotes & memory moments', icon: Image }
+        { id: 'adventures', name: 'Adventures', desc: 'Trips and plans you dream of, and the ones you lived', icon: MapPin },
+        { id: 'radio', name: 'Midnight Radio', desc: 'Listen to the same station at the same time', icon: Radio },
+        { id: 'decks', name: 'Conversation Decks', desc: 'Question cards for long talks', icon: Sparkles },
+        { id: 'intuition', name: 'Guess My Mind', desc: 'Guess what your partner would choose', icon: Smile },
+        { id: 'timeline', name: 'Timeline & Quotes', desc: 'Moments you want to keep, and words for hard days', icon: Image }
       ]
     },
     {
-      title: 'Daily Shared Life',
+      title: 'Everyday Life',
       emoji: '📋',
       family: 'everyday',
       items: [
-        { id: 'rituals', name: 'Daily Rituals', desc: 'Shared micro-habits & daily grounding moments', icon: Flame },
-        { id: 'lists', name: 'Shared Lists', desc: 'Groceries, trip wishlists & secret gift items', icon: CheckSquare },
-        { id: 'chores', name: 'Chore Split', desc: 'Invisible labor balance & appreciative chore splits', icon: Layers },
-        { id: 'money', name: 'Money Light', desc: 'Gentle expense sharing with zero awkwardness', icon: IndianRupee },
-        { id: 'recipes', name: 'Secret Recipes', desc: 'Our favorite dishes, ingredients & cook notes', icon: Utensils },
-        { id: 'journal', name: 'Shared Journal', desc: 'Shared reflections & joint writing prompts', icon: BookOpen },
-        { id: 'cycle', name: 'Cycle Compass', desc: 'Private hormonal cycle tracking & support compass', icon: Moon },
-        { id: 'repair', name: 'Relationship Agreements', desc: 'Gentle boundaries & relationship compass rules', icon: Shield },
-        { id: 'stateofunion', name: 'State of Union', desc: 'Weekly or monthly heart-to-heart alignment session', icon: Shield }
+        { id: 'rituals', name: 'Daily Rituals', desc: 'Small habits you keep together, every day', icon: Flame },
+        { id: 'lists', name: 'Shared Lists', desc: 'Groceries, plans, and gift ideas kept secret', icon: CheckSquare },
+        { id: 'chores', name: 'Chore Split', desc: 'Who plans and who does, made visible', icon: Layers },
+        { id: 'money', name: 'Shared Money', desc: 'Split costs and settle up, without awkwardness', icon: IndianRupee },
+        { id: 'recipes', name: 'Secret Recipes', desc: 'Your dishes, with the story behind each', icon: Utensils },
+        { id: 'journal', name: 'Shared Journal', desc: 'Thoughts to share, or keep to yourself', icon: BookOpen },
+        { id: 'cycle', name: 'Cycle Compass', desc: 'Track your cycle and choose what to share', icon: Moon },
+        { id: 'repair', name: 'Conflict Repair Kit', desc: 'Cool down, talk it through, keep what you agree', icon: Shield },
+        { id: 'stateofunion', name: 'State of Our Union', desc: 'A weekly heart-to-heart, one section at a time', icon: CalendarHeart }
       ]
     },
     {
@@ -113,8 +113,8 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
       emoji: '⚙️',
       family: 'space',
       items: [
-        { id: 'groups', name: 'Groups', desc: 'Chat rooms for more than two, kept apart from your sanctuary', icon: Users },
-        { id: 'settings', name: 'Settings', desc: 'Devices, link code, backups & how this space is locked', icon: Settings }
+        { id: 'groups', name: 'Groups', desc: 'Chats with friends and family, kept apart from yours', icon: Users },
+        { id: 'settings', name: 'Settings', desc: 'Devices, link code, backups and the app lock', icon: Settings }
       ]
     }
   ]);
@@ -139,7 +139,7 @@ export function allDestinations(unreadChatCount = 0): Destination[] {
  * What a destination is called, by its id.
  *
  * Here rather than in the caller so there is one list of names in the app: the
- * dock, the directory sheet and the activity card all say "Kintsugi Scars"
+ * dock, the directory sheet and the activity card all say "Kintsugi Moments"
  * because all three ask this.
  */
 export function destinationName(tabId: string): string {

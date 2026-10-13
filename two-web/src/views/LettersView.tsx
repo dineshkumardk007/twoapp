@@ -129,10 +129,10 @@ export const LettersView: React.FC<LettersViewProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="font-serif text-2xl sm:text-3xl font-medium text-linen-primary tracking-tight">
-            Wax-Sealed Love Letters
+            Love Letters
           </h2>
           <p className="text-sm text-linen-secondary mt-1">
-            Epistolary intimacy sealed with digital wax, created to be unsealed in intentional moments.
+            Write a letter, seal it, and let it wait for the right moment to be opened.
           </p>
         </div>
         <button

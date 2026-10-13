@@ -209,14 +209,11 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h2 className="font-serif text-2xl sm:text-3xl font-medium text-linen-primary tracking-tight">
-              Future Time Capsule Vault
+              Time Capsule
             </h2>
-            <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-sans font-medium border border-amber-200">
-              Locked Anniversary Vault
-            </span>
           </div>
           <p className="text-xs sm:text-sm text-linen-secondary mt-1">
-            Seal letters, vows, and photo memories with a cryptographic lock until your next anniversary or future date.
+            Seal a note, a promise or a photo until a date you choose: your anniversary, or any day.
           </p>
         </div>
 

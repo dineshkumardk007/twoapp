@@ -439,7 +439,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
             Whisper Memos
           </h1>
           <p className="text-sm text-linen-secondary mt-1 max-w-xl">
-            Intimate audio notes that capture vocal warmth, quiet sighs, and soft morning greetings. Encrypted locally with zero cloud upload.
+            Little voice notes, a good-morning or a goodnight, kept just between you two.
           </p>
         </div>
 

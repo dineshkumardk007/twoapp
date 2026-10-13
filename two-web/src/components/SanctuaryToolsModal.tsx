@@ -54,8 +54,8 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     {
       id: 'soundscapes',
       title: 'Fall Asleep Together',
-      subtitle: 'Ambient Night Soundscapes & Sleep Timer',
-      desc: 'Synchronized procedural rain, ocean waves, fireplace & forest canopy acoustics with auto-fade sleep timer.',
+      subtitle: 'Night sounds with a sleep timer',
+      desc: 'Rain, waves, a fire or a forest, playing on both phones and fading out as you fall asleep.',
       icon: Moon,
       iconColor: 'text-indigo-500 bg-indigo-50 border-indigo-200',
       actionText: 'Open Soundscapes',
@@ -66,9 +66,9 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'coregulation',
-      title: 'Co-Regulation Sanctuary',
-      subtitle: 'Synchronized 4-7-8 Breathing & Somatic Calm',
-      desc: 'Calm the nervous system together with guided breathing, harmonic drones, and tactile haptic pacing.',
+      title: 'Breathe Together',
+      subtitle: 'Slow breathing, in step',
+      desc: 'Calm down together with a guided breathing rhythm, soft sound and gentle buzzes.',
       icon: Wind,
       iconColor: 'text-teal-600 bg-teal-50 border-teal-200',
       actionText: 'Start Breathing',
@@ -79,9 +79,9 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'pulse',
-      title: 'Sensory Heart Pulse & Options',
-      subtitle: 'Instant Touch, Hugs, Kisses & Notes',
-      desc: 'Send wordless touches, warm hugs, gentle kisses, synchronized heartbeats, and custom notes directly to your partner.',
+      title: 'Heart Touches',
+      subtitle: 'Hugs, kisses and little notes',
+      desc: 'Send a touch without words. Your partner feels it as a soft buzz and a glow.',
       icon: Heart,
       iconColor: 'text-rose-500 bg-rose-50 border-rose-200',
       actionText: 'Heart Options',
@@ -96,9 +96,9 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'camouflage',
-      title: 'Discreet Camouflage',
-      subtitle: 'Decoy Functional Calculator',
-      desc: 'Instantly disguises Two into a real working calculator. Unlock anytime with your secret passcode.',
+      title: 'Calculator Disguise',
+      subtitle: 'Two looks like a calculator',
+      desc: 'Turns Two into a working calculator until you type your secret code.',
       icon: Calculator,
       iconColor: 'text-neutral-700 bg-neutral-100 border-neutral-300',
       actionText: 'Engage Calculator',
@@ -109,9 +109,9 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'mesh',
-      title: 'Off-Grid Local Mesh',
-      subtitle: 'Encrypted Sync Over Local Wi-Fi & Hotspot',
-      desc: 'Sync letters, gratitude stars, and recipes directly between devices even when mobile internet is down.',
+      title: 'Nearby Sync',
+      subtitle: 'Over the same Wi-Fi or hotspot',
+      desc: 'Share letters, stars and recipes straight between your phones when the internet is down.',
       icon: Radio,
       iconColor: 'text-sky-600 bg-sky-50 border-sky-200',
       actionText: 'Mesh Status',
@@ -122,9 +122,9 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'safety',
-      title: 'Cryptographic Safety Numbers',
-      subtitle: 'Zero-Knowledge Pairing & Verification',
-      desc: 'Verify safety fingerprints, QR codes, and confirm that no third party can ever intercept your space.',
+      title: 'Safety Check',
+      subtitle: 'Make sure only you two are linked',
+      desc: 'Compare a code with your partner to confirm nobody else is in your space.',
       icon: Shield,
       iconColor: 'text-emerald-600 bg-emerald-50 border-emerald-200',
       actionText: 'Verify Encryption',
@@ -137,7 +137,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
       ? [{
           id: 'settings',
           title: 'Settings',
-          subtitle: 'Devices, Link Code, Backups & Lock',
+          subtitle: 'Devices, link code, backups and lock',
           desc: 'See which devices are in your space, rotate the link code, export a backup and set how this space is locked.',
           icon: Settings,
           iconColor: 'text-linen-accent bg-linen-variant border-linen-border',
@@ -154,8 +154,8 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     ...(onOpenStoryTour
       ? [{
           id: 'tour',
-          title: 'Interactive Story Tour',
-          subtitle: 'A Day in the Life with Two - 5-Act Walkthrough',
+          title: 'Take the Tour',
+          subtitle: 'A day with Two, in five short acts',
           desc: 'Walk through a full day in the sanctuary, act by act, to see how the spaces fit together.',
           icon: Sparkles,
           iconColor: 'text-amber-600 bg-amber-50 border-amber-200',
@@ -168,9 +168,9 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
       : []),
     {
       id: 'wipe',
-      title: 'Emergency Exit',
-      subtitle: 'Immediate Local Key & Session Wipe',
-      desc: 'Safely clear the active session and return to welcome lock screen in one tap.',
+      title: 'Quick Exit',
+      subtitle: 'Lock and leave in one tap',
+      desc: 'Clears this session and goes back to the start screen.',
       icon: LogOut,
       iconColor: 'text-red-600 bg-red-50 border-red-200',
       actionText: 'Emergency Wipe',
@@ -200,14 +200,11 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="font-serif text-lg sm:text-xl font-medium text-linen-primary">
-                  Sanctuary Tools
+                  Tools
                 </h3>
-                <span className="whitespace-nowrap whitespace-nowrap text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-linen-variant text-linen-accent border border-linen-border">
-                  Quick Access
-                </span>
               </div>
               <p className="text-xs text-linen-secondary mt-0.5">
-                Soundscapes, Co-Regulation, Sensory Touch & Privacy Controls
+                Sounds, breathing, touches and privacy
               </p>
             </div>
           </div>
@@ -238,7 +235,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
             </span>
           </div>
           <span className="text-[11px] text-linen-secondary font-mono">
-            Role: {activeUser === 'user' ? 'Creator (You)' : 'Partner'}
+            {activeUser === 'user' ? 'You started this space' : 'You joined this space'}
           </span>
         </div>
 
@@ -284,7 +281,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
 
         {/* Modal Footer */}
         <div className="p-3 sm:p-4 border-t border-linen-border/60 bg-linen-variant/20 flex items-center justify-between text-xs text-linen-secondary shrink-0">
-          <span className="text-[11px] truncate">End-to-end encrypted locally.</span>
+          <span className="text-[11px] truncate">Private to you two.</span>
           <button
             onClick={onClose}
             className="px-3.5 py-1.5 rounded-xl bg-linen-variant hover:bg-linen-border text-linen-primary font-medium transition-colors cursor-pointer text-xs shadow-2xs"

@@ -436,7 +436,10 @@ html.dark .dock-all-edge {
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
-  height: 21px;
+  /* Two lines at its own line height, in em rather than px: the phone's text
+     size makes the letters bigger, and a box fixed in pixels would then cut
+     the second line off. */
+  height: 2.3em;
   text-align: center;
   overflow-wrap: anywhere;
 }

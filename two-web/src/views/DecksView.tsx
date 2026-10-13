@@ -76,7 +76,7 @@ export const DecksView: React.FC<DecksViewProps> = ({ onSendToChat, onNavigate }
           <Layers className="w-5 h-5" />
           <span className="text-xs font-semibold tracking-wider uppercase">Conversation Card Decks</span>
         </div>
-        <h2 className="font-serif text-2xl font-medium text-linen-primary">Curated Connection Decks</h2>
+        <h2 className="font-serif text-2xl font-medium text-linen-primary">Conversation Decks</h2>
         <p className="text-sm text-linen-secondary mt-1">
           Designed for quiet evenings, long walks, or car rides. No scoring, no winners—only space to be known.
         </p>

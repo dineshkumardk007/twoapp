@@ -50,6 +50,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.roundToInt
 import app.two.android.features.radio.RadioRemote
 
 /**
@@ -787,7 +788,18 @@ fun TwoWebView(
                     // The bundle is a responsive layout, not a desktop page: let it
                     // lay out at the device's own width so a tablet gets a tablet
                     // layout rather than a scaled-up phone one.
-                    textZoom = 100
+                    //
+                    // Text follows the phone's own text size (Settings > Display >
+                    // Font size), as in every other app: someone who needs bigger
+                    // letters asked for them once, for everything. Never smaller
+                    // than designed, and at most 130% - past that the fixed-height
+                    // pieces (the dock's two-line labels, the PIN keys) cannot
+                    // hold their words. fontScale is not in the activity's
+                    // configChanges, so changing the setting recreates the page
+                    // at the new size.
+                    textZoom = (context.resources.configuration.fontScale * 100f)
+                        .roundToInt()
+                        .coerceIn(100, 130)
                     layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 }
 

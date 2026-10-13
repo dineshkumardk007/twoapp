@@ -197,14 +197,14 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h2 className="font-serif text-2xl sm:text-3xl font-medium text-linen-primary tracking-tight">
-              Shared Wanderlust & Dream Map
+              Adventures
             </h2>
             <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-sans font-medium border border-amber-200">
-              Life Bucket List
+              Bucket list
             </span>
           </div>
           <p className="text-xs sm:text-sm text-linen-secondary mt-1">
-            Capture future getaways, micro-adventures, and romantic sparks — stamped into your couple passport.
+            Trips and little adventures you dream of, and a passport stamp for each one you live.
           </p>
         </div>
 

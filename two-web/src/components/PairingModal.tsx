@@ -84,8 +84,8 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
               <QrCode className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-serif text-lg font-medium text-linen-primary">Pairing & Cryptographic Verification</h3>
-              <p className="text-xs text-linen-secondary">X25519 Identity Exchange & Safety Numbers</p>
+              <h3 className="font-serif text-lg font-medium text-linen-primary">Link & Safety Check</h3>
+              <p className="text-xs text-linen-secondary">Make sure only you two are linked</p>
             </div>
           </div>
           <button
@@ -107,7 +107,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
             }`}
           >
             <Smartphone className="w-3.5 h-3.5" />
-            <span>1. Space QR & Code</span>
+            <span>Link code</span>
           </button>
 
           <button
@@ -119,7 +119,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
             }`}
           >
             <Shield className="w-3.5 h-3.5" />
-            <span>2. Safety Numbers</span>
+            <span>Safety check</span>
           </button>
         </div>
 
@@ -143,14 +143,14 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
               </div>
 
               <span className="text-xs text-linen-secondary">
-                Point your partner's camera at this screen to exchange identity keys.
+                Show this to your partner's camera to link your phones.
               </span>
             </div>
 
             {/* 6-Digit Code Fallback */}
             <div className="space-y-2">
               <span className="text-[11px] uppercase tracking-wider text-linen-secondary font-medium">
-                Or enter this ephemeral pairing code on partner device
+                Or type this code on your partner's phone
               </span>
               <div className="flex items-center justify-center space-x-3">
                 <span className="font-mono text-2xl tracking-widest font-semibold text-linen-primary bg-linen-variant/50 px-4 py-2 rounded-xl border border-linen-border">
@@ -170,7 +170,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
               onClick={() => setCurrentStep('verify')}
               className="w-full py-3 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity flex items-center justify-center space-x-2 cursor-pointer shadow-xs"
             >
-              <span>Pairing Established &rarr; View Safety Numbers</span>
+              <span>Linked &middot; Check safety numbers</span>
             </button>
           </div>
         )}

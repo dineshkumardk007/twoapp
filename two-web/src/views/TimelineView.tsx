@@ -125,8 +125,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="font-serif text-2xl font-medium text-linen-primary">Encrypted Memories & Time Capsule</h2>
-          <p className="text-sm text-linen-secondary">Polaroid keepsakes, sealed anniversary capsules, and the Quote Jar.</p>
+          <h2 className="font-serif text-2xl font-medium text-linen-primary">Timeline & Quotes</h2>
+          <p className="text-sm text-linen-secondary">Photos and moments you want to keep, and a jar of words for hard days.</p>
         </div>
 
         <div className="flex items-center space-x-2">

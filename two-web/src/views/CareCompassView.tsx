@@ -105,13 +105,13 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
           </div>
           <div>
             <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span>The Care Compass</span>
+              <span>Care Compass</span>
               <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-linen-variant text-linen-accent border border-linen-border font-sans font-normal">
-                Love Language Radar
+                Love languages
               </span>
             </h2>
             <p className="text-xs text-linen-secondary mt-0.5">
-              Visualizing how you both receive care and replenishing emotional reserves with zero demands.
+              How each of you likes to be loved, and small ways to show it today.
             </p>
           </div>
         </div>

@@ -486,7 +486,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {msg.isNeedCard && (
                   <div className="text-[11px] font-semibold tracking-wider text-amber-700 uppercase mb-1 flex items-center">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    Structured Need Request
+                    A request
                   </div>
                 )}
 
@@ -754,7 +754,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               aria-label={`Message to ${partnerName}`}
               // Short enough for one line on a small phone; whose chat this is
               // is already in the header right above.
-              placeholder="Write a quiet thought…"
+              placeholder="A quiet thought…"
               className="flex-1 min-w-0 resize-none overflow-y-hidden px-4 py-2.5 text-sm leading-5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary placeholder:text-linen-secondary/60 select-text"
             />
 

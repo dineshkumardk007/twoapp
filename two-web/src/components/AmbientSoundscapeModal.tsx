@@ -163,9 +163,6 @@ export const AmbientSoundscapeModal: React.FC<AmbientSoundscapeModalProps> = ({
             <div>
               <h3 className="font-serif text-xl font-medium tracking-tight text-stone-100 flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span>Fall Asleep Together</span>
-                <span className="whitespace-nowrap text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-sans font-normal">
-                  Offline Synthesizer
-                </span>
               </h3>
               <p className="text-xs text-stone-400">
                 Procedural acoustics • Zero external files • Shared night sanctuary
