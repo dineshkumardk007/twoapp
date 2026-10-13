@@ -227,7 +227,9 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
             </p>
           </div>
 
-          <div className="flex flex-row md:flex-col gap-2 shrink-0">
+          {/* Stacked on a phone, each the full width: side by side, the
+              button and the switch squeezed each other onto two lines. */}
+          <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
             <button
               onClick={() => handleOpenInscribe()}
               className="no-remap inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-medium text-xs sm:text-sm shadow-lg shadow-amber-900/40 active:scale-95 transition-all cursor-pointer"
@@ -238,7 +240,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
             <div className="flex rounded-xl bg-stone-800/80 p-1 border border-stone-700">
               <button
                 onClick={() => setViewMode('vessel')}
-                className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`flex-1 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   viewMode === 'vessel'
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
                     : 'text-stone-400 hover:text-stone-200'
@@ -248,7 +250,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
               </button>
               <button
                 onClick={() => setViewMode('chronicle')}
-                className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`flex-1 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   viewMode === 'chronicle'
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
                     : 'text-stone-400 hover:text-stone-200'

@@ -8,6 +8,8 @@ interface ListsViewProps {
   onToggleItem: (id: string) => void;
   onAddItem: (title: string, isSecret: boolean) => void;
   onDeleteItem: (id: string) => void;
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
 }
 
 export const ListsView: React.FC<ListsViewProps> = ({
@@ -15,12 +17,16 @@ export const ListsView: React.FC<ListsViewProps> = ({
   activeUser,
   onToggleItem,
   onAddItem,
-  onDeleteItem
+  onDeleteItem,
+  partnerName: knownPartnerName
 }) => {
   const [newTitle, setNewTitle] = useState('');
   const [isSecret, setIsSecret] = useState(false);
 
-  const partnerName = activeUser === 'user' ? 'Partner' : 'You';
+  // Who a hidden item is hidden from. This used to be worked out from the
+  // seat - "Partner" on one phone and "You" on the other - so the joiner's
+  // phone offered to hide a gift from themselves.
+  const partnerName = knownPartnerName?.trim() || 'your partner';
 
   // Omit secret items added by the OTHER person!
   // If activeUser is 'user', hide secret items added by 'partner'.
@@ -78,6 +84,17 @@ export const ListsView: React.FC<ListsViewProps> = ({
         </label>
       </div>
 
+      {visibleItems.length === 0 && (
+        <div className="p-10 text-center border-2 border-dashed border-linen-border rounded-3xl bg-linen-surface/40 space-y-3">
+          <Gift className="w-8 h-8 text-linen-accent/60 mx-auto" />
+          <p className="font-serif text-base text-linen-primary">Your lists are empty</p>
+          <p className="text-xs text-linen-secondary max-w-xs mx-auto leading-relaxed text-balance">
+            Date ideas, films to watch, things to buy. Tick the box above to keep a gift hidden from{' '}
+            {partnerName} until it is given.
+          </p>
+        </div>
+      )}
+
       {/* Items list */}
       <div className="space-y-2.5">
         {visibleItems.map(item => (
@@ -92,9 +109,10 @@ export const ListsView: React.FC<ListsViewProps> = ({
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => onToggleItem(item.id)}
-                className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+                aria-label={item.isCompleted ? 'Mark not done' : 'Mark done'}
+                className={`tap-target-icon w-5 h-5 shrink-0 rounded-md border flex items-center justify-center transition-colors ${
                   item.isCompleted
-                    ? 'bg-linen-primary border-linen-primary text-linen-surface'
+                    ? 'bg-linen-primary border-transparent text-linen-surface'
                     : 'border-linen-secondary/40 hover:border-linen-primary'
                 }`}
               >
@@ -113,7 +131,8 @@ export const ListsView: React.FC<ListsViewProps> = ({
 
             <button
               onClick={() => onDeleteItem(item.id)}
-              className="p-1 text-linen-secondary hover:text-red-600 rounded-lg transition-colors"
+              aria-label="Delete"
+              className="tap-target-icon shrink-0 p-1 text-linen-secondary hover:text-red-600 rounded-lg transition-colors"
             >
               <Trash2 className="w-4 h-4" />
             </button>

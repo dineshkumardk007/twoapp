@@ -207,11 +207,11 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
       {/* Top Banner Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h2 className="font-serif text-2xl sm:text-3xl font-medium text-linen-primary tracking-tight">
               Future Time Capsule Vault
             </h2>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-sans font-medium border border-amber-200">
+            <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-sans font-medium border border-amber-200">
               Locked Anniversary Vault
             </span>
           </div>
@@ -604,7 +604,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
                         <span className="text-lg">{meta.emoji}</span>
                         <div>
                           <span className="block text-xs font-semibold text-linen-primary">{meta.name}</span>
-                          <span className="block text-[10px] text-linen-secondary leading-tight line-clamp-1">{meta.desc}</span>
+                          <span className="text-[10px] text-linen-secondary leading-tight line-clamp-1">{meta.desc}</span>
                         </div>
                       </button>
                     );

@@ -104,9 +104,9 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
             <Compass className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex items-center space-x-2">
+            <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex flex-wrap items-center gap-x-2 gap-y-1">
               <span>The Care Compass</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-linen-variant text-linen-accent border border-linen-border font-sans font-normal">
+              <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-linen-variant text-linen-accent border border-linen-border font-sans font-normal">
                 Love Language Radar
               </span>
             </h2>
@@ -121,7 +121,7 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
             onClick={() => setIsEditing(!isEditing)}
             className={`px-4 py-2 rounded-xl text-xs font-medium border transition-colors flex items-center space-x-1.5 ${
               isEditing 
-                ? 'bg-linen-primary text-linen-surface border-linen-primary' 
+                ? 'bg-linen-primary text-linen-surface border-transparent' 
                 : 'bg-linen-variant hover:bg-linen-border text-linen-primary border-linen-border'
             }`}
           >
@@ -315,7 +315,7 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
                     y={y}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className="text-[10px] font-sans font-medium fill-stone-600 select-none"
+                    className="text-[10px] font-sans font-medium fill-linen-secondary select-none"
                   >
                     {axis.emoji} {axis.label}
                   </text>

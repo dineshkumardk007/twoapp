@@ -79,8 +79,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   const [isTimeCapsule, setIsTimeCapsule] = useState(false);
   const [lockDate, setLockDate] = useState('2026-12-31');
 
-  const partnerName = activeUser === 'user' ? 'Partner' : 'You';
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -162,6 +160,25 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           </div>
         </div>
       </div>
+
+      {tab === 'timeline' && memories.length === 0 && (
+        <div className="p-12 text-center border-2 border-dashed border-linen-border rounded-3xl bg-linen-surface/40 space-y-3">
+          <ImageIcon className="w-8 h-8 text-linen-accent/60 mx-auto" />
+          <p className="font-serif text-base text-linen-primary">No memories here yet</p>
+          <p className="text-xs text-linen-secondary max-w-xs mx-auto leading-relaxed text-balance">
+            A photo and a few words about a day you want to keep. Seal one until a date and it stays a
+            surprise until then.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-semibold hover:opacity-90 transition-opacity shadow-glow cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add the first one</span>
+          </button>
+        </div>
+      )}
 
       {tab === 'timeline' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

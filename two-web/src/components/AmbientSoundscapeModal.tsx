@@ -161,9 +161,9 @@ export const AmbientSoundscapeModal: React.FC<AmbientSoundscapeModalProps> = ({
               <Moon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-serif text-xl font-medium tracking-tight text-stone-100 flex items-center space-x-2">
+              <h3 className="font-serif text-xl font-medium tracking-tight text-stone-100 flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span>Fall Asleep Together</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-sans font-normal">
+                <span className="whitespace-nowrap text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-sans font-normal">
                   Offline Synthesizer
                 </span>
               </h3>
@@ -342,12 +342,15 @@ export const AmbientSoundscapeModal: React.FC<AmbientSoundscapeModalProps> = ({
             </div>
             <button
               onClick={toggleSync}
-              className={`w-11 h-6 rounded-full transition-colors relative ${
+              role="switch"
+              aria-checked={state.syncedWithPartner}
+              aria-label="Play in sync with your partner"
+              className={`tap-target-icon w-11 h-6 rounded-full transition-colors relative ${
                 state.syncedWithPartner ? 'bg-indigo-600' : 'bg-stone-700'
               }`}
             >
               <div
-                className={`w-4 h-4 rounded-full bg-white transition-transform transform absolute top-1 ${
+                className={`no-remap w-4 h-4 rounded-full bg-white shadow-md transition-transform transform absolute top-1 ${
                   state.syncedWithPartner ? 'left-6' : 'left-1'
                 }`}
               />

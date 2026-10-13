@@ -15,6 +15,8 @@ import { copyTextOrThrow } from '../core/clipboard';
 import { FingerprintStatus, fingerprintStatus, enableFingerprint, disableFingerprint } from '../core/fingerprint';
 import { unlockVault } from '../core/vault';
 import { appVersion } from '../core/appUpdate';
+import { showNotice } from '../core/dialog';
+import { resolveRelayUrl } from '../core/ws';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -376,17 +378,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setJoinRotation('');
   };
 
-  const handleSaveRelay = () => {
+  const handleSaveRelay = async () => {
     const trimmed = relayInput.trim();
     if (trimmed) {
       localStorage.setItem('two_custom_relay_url', trimmed);
       (window as any).AndroidBridge?.setRelayUrl?.(trimmed);
-      alert('Relay server saved! Reloading to connect...');
+      await showNotice({ title: 'Relay saved', body: 'Two restarts now to connect to it.', ok: 'Restart' });
       window.location.reload();
     } else {
       localStorage.removeItem('two_custom_relay_url');
       (window as any).AndroidBridge?.setRelayUrl?.('');
-      alert('Reset to default relay.');
+      await showNotice({ title: 'Back to the usual relay', body: 'Two restarts now to connect to it.', ok: 'Restart' });
       window.location.reload();
     }
   };
@@ -1224,8 +1226,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
 
           <div className="flex justify-between items-center text-linen-secondary">
-            <span>Encrypted Relay:</span>
-            <span className="font-mono text-[10px] text-linen-primary">wss://twoapp-tfj8.onrender.com/relay</span>
+            <span className="shrink-0">Encrypted Relay:</span>
+            {/* The one in use, not a fixed address: a phone pointed at
+                another relay used to be told it was on the usual one. */}
+            <span className="min-w-0 break-all text-right font-mono text-[10px] text-linen-primary">{resolveRelayUrl()}</span>
           </div>
         </div>
 
@@ -1311,15 +1315,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 five seconds.
               </p>
             </div>
+            {/* A switch: the aurora when on, a quiet track when off, and a
+                white knob either way. The knob was bg-white, which the
+                night palette darkens like any white card - at night it
+                vanished into its own track. */}
             <button
               onClick={() => onToggleDecoyOnLaunch(!decoyOnLaunch)}
-              aria-pressed={decoyOnLaunch}
-              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 cursor-pointer shrink-0 ${
-                decoyOnLaunch ? 'bg-linen-primary' : 'bg-linen-border'
+              role="switch"
+              aria-checked={decoyOnLaunch}
+              aria-label="Always open to the calculator"
+              className={`tap-target-icon w-11 h-6 rounded-full transition-colors relative p-0.5 cursor-pointer shrink-0 ${
+                decoyOnLaunch ? 'bg-linen-primary text-linen-surface' : 'bg-linen-border'
               }`}
             >
               <span
-                className={`block w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${
+                className={`no-remap block w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
                   decoyOnLaunch ? 'translate-x-5' : 'translate-x-0'
                 }`}
               />
@@ -1340,12 +1350,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
             <button
               onClick={() => onToggleAutoCamouflage(!autoCamouflageOnBlur)}
-              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 cursor-pointer shrink-0 ${
-                autoCamouflageOnBlur ? 'bg-linen-primary' : 'bg-linen-border'
+              role="switch"
+              aria-checked={autoCamouflageOnBlur}
+              aria-label="Auto-camouflage on app switch"
+              className={`tap-target-icon w-11 h-6 rounded-full transition-colors relative p-0.5 cursor-pointer shrink-0 ${
+                autoCamouflageOnBlur ? 'bg-linen-primary text-linen-surface' : 'bg-linen-border'
               }`}
             >
-              <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform ${
+              <span
+                className={`no-remap block w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
                   autoCamouflageOnBlur ? 'translate-x-5' : 'translate-x-0'
                 }`}
               />
@@ -1445,6 +1458,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {t.settings.auditDesc}
         </p>
         <div className="space-y-2">
+          {state.consentLogs.length === 0 && (
+            <p className="p-3 rounded-xl border border-dashed border-linen-border text-xs text-linen-secondary text-center">
+              Nothing logged yet.
+            </p>
+          )}
           {state.consentLogs.map(log => (
             <div key={log.id} className="p-3 rounded-xl border border-linen-border/60 bg-linen-variant/30 text-xs flex items-center justify-between">
               <div>

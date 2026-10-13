@@ -18,10 +18,10 @@ export const NotAboutYouBanner: React.FC<NotAboutYouBannerProps> = ({
     <div className="space-y-3">
       {/* Partner Active Banner */}
       {isPartnerActive && (
-        <div className="rounded-2xl bg-gold-50 border border-gold-500/30 p-4 shadow-sm animate-in fade-in duration-300">
+        <div className="rounded-2xl bg-amber-50 border border-amber-300/60 p-4 shadow-sm animate-in fade-in duration-300">
           <div className="flex items-start space-x-3">
-            <div className="p-2 rounded-xl bg-gold-100 text-gold-600 shrink-0">
-              <Heart className="w-5 h-5 fill-gold-600" />
+            <div className="p-2 rounded-xl bg-amber-100 text-amber-600 shrink-0">
+              <Heart className="w-5 h-5 fill-current" />
             </div>
             <div>
               <h3 className="font-serif text-base font-medium text-linen-primary">It’s not about you</h3>
@@ -45,9 +45,9 @@ export const NotAboutYouBanner: React.FC<NotAboutYouBannerProps> = ({
         </div>
         <button
           onClick={() => onToggleUserFlag(!isUserActive)}
-          className={`px-3 py-1 text-xs font-medium rounded-lg transition-all ${
+          className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
             isUserActive
-              ? 'bg-gold-500 text-white shadow-sm'
+              ? 'bg-amber-700 text-white shadow-sm'
               : 'bg-linen-variant hover:bg-linen-border text-linen-secondary'
           }`}
         >

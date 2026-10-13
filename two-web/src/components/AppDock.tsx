@@ -250,7 +250,7 @@ export const AppDock: React.FC<AppDockProps> = ({
                             <span className="block truncate text-xs font-semibold text-linen-primary">
                               {item.name}
                             </span>
-                            <span className="mt-0.5 block text-[10px] leading-tight text-linen-secondary line-clamp-2">
+                            <span className="mt-0.5 text-[10px] leading-tight text-linen-secondary line-clamp-2">
                               {item.desc}
                             </span>
                           </span>

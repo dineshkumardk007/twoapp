@@ -195,11 +195,11 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h2 className="font-serif text-2xl sm:text-3xl font-medium text-linen-primary tracking-tight">
               Shared Wanderlust & Dream Map
             </h2>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-sans font-medium border border-amber-200">
+            <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-sans font-medium border border-amber-200">
               Life Bucket List
             </span>
           </div>
@@ -218,11 +218,13 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
       </div>
 
       {/* Main Tabs */}
-      <div className="flex items-center justify-between border-b border-linen-border pb-2">
-        <div className="flex space-x-2">
+      <div className="flex items-center justify-between gap-3 border-b border-linen-border pb-2">
+        {/* One line each; on a narrow phone the row scrolls rather than
+            folding "Dream Map" and "Couple Passport" onto two lines. */}
+        <div className="flex min-w-0 gap-2 overflow-x-auto scrollbar-none -mx-1 px-1">
           <button
             onClick={() => setActiveTab('bucketlist')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
               activeTab === 'bucketlist'
                 ? 'bg-linen-primary text-linen-surface shadow-xs'
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant/60'
@@ -232,7 +234,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('roulette')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
               activeTab === 'roulette'
                 ? 'bg-linen-primary text-linen-surface shadow-xs'
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant/60'
@@ -242,7 +244,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('passport')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all flex items-center space-x-1.5 ${
+            className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-medium transition-all flex items-center space-x-1.5 ${
               activeTab === 'passport'
                 ? 'bg-linen-primary text-linen-surface shadow-xs'
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant/60'

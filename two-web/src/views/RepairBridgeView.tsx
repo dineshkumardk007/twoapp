@@ -109,7 +109,13 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
   const receivedLetters = repairLetters.filter(l => l.recipientId === activeUser);
   const sentLetters = repairLetters.filter(l => l.authorId === activeUser);
 
-  const selectedLetter = repairLetters.find(l => l.id === selectedLetterId) || repairLetters[0] || null;
+  // Each tab shows its own letters, newest first. It used to show the first
+  // letter of either kind whichever tab was chosen, so Received and Sent were
+  // two names for the same view, and a second letter could not be reached.
+  const tabLetters = (activeTab === 'sent' ? sentLetters : receivedLetters)
+    .slice()
+    .sort((a, b) => b.sentAt - a.sentAt);
+  const selectedLetter = tabLetters.find(l => l.id === selectedLetterId) || tabLetters[0] || null;
 
   const handleSendRepairLetter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,7 +198,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
         <div className="flex items-center space-x-1 bg-linen-surface border border-linen-border p-1 rounded-2xl shadow-xs self-start sm:self-auto">
           <button
             onClick={() => setActiveTab('received')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-serif transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
               activeTab === 'received' ? 'bg-linen-primary text-linen-surface font-semibold' : 'text-linen-secondary hover:text-linen-primary'
             }`}
           >
@@ -200,7 +206,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('sent')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-serif transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
               activeTab === 'sent' ? 'bg-linen-primary text-linen-surface font-semibold' : 'text-linen-secondary hover:text-linen-primary'
             }`}
           >
@@ -208,7 +214,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('compose')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-serif transition-colors cursor-pointer flex items-center space-x-1 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center space-x-1 ${
               activeTab === 'compose' ? 'bg-linen-primary text-linen-surface font-semibold' : 'text-linen-accent hover:text-linen-primary'
             }`}
           >
@@ -376,13 +382,65 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
         </form>
       )}
 
+      {activeTab !== 'compose' && tabLetters.length === 0 && (
+        <div className="p-12 text-center border-2 border-dashed border-linen-border rounded-3xl bg-linen-surface/40 space-y-3">
+          <Handshake className="w-8 h-8 text-linen-accent/60 mx-auto" />
+          <p className="font-serif text-base text-linen-primary">
+            {activeTab === 'received' ? 'No repairs here yet' : "You haven't sent a repair yet"}
+          </p>
+          <p className="text-xs text-linen-secondary max-w-xs mx-auto leading-relaxed text-balance">
+            {activeTab === 'received'
+              ? `When ${partnerName || 'your partner'} sends a repair after a hard moment, it waits here until you're ready to read it.`
+              : 'After a hard moment, a repair says sorry in the way your partner hears it best.'}
+          </p>
+          {activeTab === 'sent' && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('compose')}
+              className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-semibold hover:opacity-90 transition-opacity shadow-glow cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Craft a repair</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {activeTab !== 'compose' && tabLetters.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+          {tabLetters.map(letter => {
+            const shown = letter.id === selectedLetter?.id;
+            return (
+              <button
+                key={letter.id}
+                type="button"
+                onClick={() => setSelectedLetterId(letter.id)}
+                aria-pressed={shown}
+                className={`shrink-0 max-w-[220px] rounded-2xl border px-3.5 py-2.5 text-left transition-colors cursor-pointer ${
+                  shown
+                    ? 'border-aurora-violet bg-aurora-violet/10'
+                    : 'border-linen-border bg-linen-surface hover:bg-linen-variant/50'
+                }`}
+              >
+                <span className="block truncate text-xs font-semibold text-linen-primary">{letter.title}</span>
+                <span className="mt-0.5 block text-[10px] text-linen-secondary">
+                  {new Date(letter.sentAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  {' · '}
+                  {letter.status === 'accepted' ? 'Reconciled' : letter.status === 'processing' ? 'In process' : 'Waiting'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* View Mode: Letter Inspection (Received or Sent) */}
       {activeTab !== 'compose' && selectedLetter && (
         <div className="rounded-3xl border border-linen-border bg-linen-surface p-6 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-linen-border pb-4">
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-[11px] font-serif px-2.5 py-0.5 rounded-full border border-indigo-200 bg-indigo-50 text-indigo-800">
+                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full border border-indigo-200 bg-indigo-50 text-indigo-800">
                   {APOLOGY_LANGUAGES_META[selectedLetter.primaryLanguage]?.icon}{' '}
                   {APOLOGY_LANGUAGES_META[selectedLetter.primaryLanguage]?.name}
                 </span>
@@ -400,7 +458,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
             </div>
 
             <div className="self-start sm:self-auto">
-              <span className={`px-3 py-1 rounded-full text-xs font-serif font-medium border ${
+              <span className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium border ${
                 selectedLetter.status === 'accepted'
                   ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                   : selectedLetter.status === 'processing'

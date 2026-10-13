@@ -24,6 +24,7 @@ import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
 import { playOneOf } from '../core/sounds';
 import { who } from '../core/who';
+import { askConfirm } from '../core/dialog';
 
 interface CanvasOfUsViewProps {
   canvasState: SharedDrawingCanvasState;
@@ -576,10 +577,14 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           </button>
 
           <button
-            onClick={() => {
-              if (window.confirm('Clear the shared drawing board?')) {
-                onClearCanvas();
-              }
+            onClick={async () => {
+              const sure = await askConfirm({
+                title: 'Clear the drawing board?',
+                body: 'It clears for both of you.',
+                confirm: 'Clear it',
+                danger: true
+              });
+              if (sure) onClearCanvas();
             }}
             className="p-2 rounded-2xl border border-linen-border bg-linen-surface text-linen-secondary hover:text-rose-600 transition-colors cursor-pointer"
             title="Clear Board"

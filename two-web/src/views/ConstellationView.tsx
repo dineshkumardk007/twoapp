@@ -80,9 +80,9 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
             <Sparkles className="w-6 h-6 animate-pulse" />
           </div>
           <div>
-            <h2 className="font-serif text-xl font-medium tracking-tight flex items-center space-x-2 text-linen-primary">
+            <h2 className="font-serif text-xl font-medium tracking-tight flex flex-wrap items-center gap-x-2 gap-y-1 text-linen-primary">
               <span>The Gratitude Constellation</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 font-sans">
+              <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 font-sans">
                 {stars.length} Stars Shining
               </span>
             </h2>
@@ -192,6 +192,21 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
             });
           })}
         </svg>
+
+        {/* An empty sky says what it is for, instead of a dark box. */}
+        {filteredStars.length === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center pointer-events-none">
+            <Sparkles className="w-7 h-7 text-indigo-200/70 mb-3" />
+            <p className="font-serif text-lg text-stone-100 text-balance">
+              {stars.length === 0 ? 'Your sky is waiting for its first star' : 'No stars in this constellation yet'}
+            </p>
+            <p className="mt-1.5 max-w-[17rem] text-xs leading-relaxed text-stone-400 text-balance">
+              {stars.length === 0
+                ? 'Each small thank-you you plant becomes a star here, shining for both of you.'
+                : 'Plant one and it joins this cluster.'}
+            </p>
+          </div>
+        )}
 
         {/* User Gratitude Stars */}
         {filteredStars.map(star => {

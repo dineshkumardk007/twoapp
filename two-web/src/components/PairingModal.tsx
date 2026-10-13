@@ -102,7 +102,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
             onClick={() => setCurrentStep('invite')}
             className={`py-2.5 rounded-xl border transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
               currentStep === 'invite'
-                ? 'bg-linen-primary text-linen-surface border-linen-primary shadow-xs'
+                ? 'bg-linen-primary text-linen-surface border-transparent shadow-xs'
                 : 'bg-linen-surface text-linen-secondary border-linen-border hover:bg-linen-variant'
             }`}
           >
@@ -114,7 +114,7 @@ export const PairingModal: React.FC<PairingModalProps> = ({ isOpen, onClose, act
             onClick={() => setCurrentStep('verify')}
             className={`py-2.5 rounded-xl border transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
               currentStep === 'verify'
-                ? 'bg-linen-primary text-linen-surface border-linen-primary shadow-xs'
+                ? 'bg-linen-primary text-linen-surface border-transparent shadow-xs'
                 : 'bg-linen-surface text-linen-secondary border-linen-border hover:bg-linen-variant'
             }`}
           >

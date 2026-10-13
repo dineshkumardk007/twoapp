@@ -31,19 +31,25 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
 
       {/* Summary Card */}
       <div className="p-6 rounded-2xl bg-linen-surface border border-linen-border grid grid-cols-2 gap-4 shadow-xs text-center">
+        {/* The count is the figure; "tasks" is its unit, set small beneath
+            it rather than at the same size on a line of its own. */}
         <div className="p-4 rounded-xl bg-linen-variant/40">
-          <Brain className="w-5 h-5 text-linen-accent mx-auto mb-1" />
-          <span className="text-xs text-linen-secondary">Mental Planning (You)</span>
-          <span className="font-serif text-2xl font-medium text-linen-primary block mt-1">
-            {rememberedByMeCount} / {chores.length} tasks
+          <Brain className="w-5 h-5 text-linen-accent mx-auto mb-1.5" />
+          <span className="block text-xs leading-snug text-linen-secondary">Mental Planning (You)</span>
+          <span className="block mt-1.5 font-serif text-3xl font-medium text-linen-primary tabular-nums">
+            {rememberedByMeCount}
+            <span className="text-lg text-linen-secondary"> / {chores.length}</span>
           </span>
+          <span className="block text-[11px] text-linen-secondary">tasks</span>
         </div>
         <div className="p-4 rounded-xl bg-linen-variant/40">
-          <Wrench className="w-5 h-5 text-linen-accent mx-auto mb-1" />
-          <span className="text-xs text-linen-secondary">Physical Execution (You)</span>
-          <span className="font-serif text-2xl font-medium text-linen-primary block mt-1">
-            {executedByMeCount} / {chores.length} tasks
+          <Wrench className="w-5 h-5 text-linen-accent mx-auto mb-1.5" />
+          <span className="block text-xs leading-snug text-linen-secondary">Physical Execution (You)</span>
+          <span className="block mt-1.5 font-serif text-3xl font-medium text-linen-primary tabular-nums">
+            {executedByMeCount}
+            <span className="text-lg text-linen-secondary"> / {chores.length}</span>
           </span>
+          <span className="block text-[11px] text-linen-secondary">tasks</span>
         </div>
       </div>
 
@@ -59,8 +65,8 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
         />
 
         <div className="grid grid-cols-2 gap-3 text-xs">
-          <div>
-            <label className="block text-linen-secondary mb-1">Who carried the mental load?</label>
+          <div className="flex flex-col">
+            <label className="flex-1 block text-linen-secondary mb-1">Who carried the mental load?</label>
             <select
               value={rememberedBy}
               onChange={(e) => setRememberedBy(e.target.value)}
@@ -71,8 +77,8 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
             </select>
           </div>
 
-          <div>
-            <label className="block text-linen-secondary mb-1">Who physically executed?</label>
+          <div className="flex flex-col">
+            <label className="flex-1 block text-linen-secondary mb-1">Who physically executed?</label>
             <select
               value={executedBy}
               onChange={(e) => setExecutedBy(e.target.value)}
@@ -92,6 +98,16 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
           Add to Balance
         </button>
       </div>
+
+      {chores.length === 0 && (
+        <div className="p-8 text-center border-2 border-dashed border-linen-border rounded-3xl bg-linen-surface/40 space-y-2">
+          <Layers className="w-7 h-7 text-linen-accent/60 mx-auto" />
+          <p className="font-serif text-base text-linen-primary">Nothing logged yet</p>
+          <p className="text-xs text-linen-secondary max-w-xs mx-auto leading-relaxed text-balance">
+            Log a task above and who carried it. The ones nobody sees - remembering, booking, planning - count too.
+          </p>
+        </div>
+      )}
 
       {/* Chores Table */}
       <div className="space-y-2.5">

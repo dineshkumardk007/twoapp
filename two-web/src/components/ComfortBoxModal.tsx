@@ -142,9 +142,9 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
               <Heart className="w-6 h-6 fill-rose-500 text-rose-500" />
             </div>
             <div>
-              <h3 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex items-center space-x-2">
+              <h3 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span>Emergency Comfort Box</span>
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 font-sans font-normal border border-rose-200">
+                <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 font-sans font-normal border border-rose-200">
                   Open When Heavy
                 </span>
               </h3>

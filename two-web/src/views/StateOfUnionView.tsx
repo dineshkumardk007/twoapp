@@ -29,6 +29,8 @@ interface StateOfUnionViewProps {
   onUpdateSession: (session: StateOfUnionSession) => void;
   onSealSession: (session: StateOfUnionSession) => void;
   onSendToChat?: (text: string) => void;
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
 }
 
 // A struck singing bowl, for sealing the check-in.
@@ -42,9 +44,13 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
   activeUser,
   onUpdateSession,
   onSealSession,
-  onSendToChat
+  onSendToChat,
+  partnerName: knownPartnerName
 }) => {
-  const partnerName = activeUser === 'user' ? 'Partner' : 'You';
+  // The other person's name. This used to be worked out from the seat -
+  // "Partner" on one phone and "You" on the other - so the joiner's phone
+  // spoke of their partner as "You".
+  const partnerName = knownPartnerName?.trim() || 'Partner';
   const partnerId = activeUser === 'user' ? 'partner' : 'user';
 
   // Fallback initial session if null
@@ -200,15 +206,15 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
             </h3>
           </div>
           {session.isCompleted ? (
-            <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-serif font-medium">
+            <span className="shrink-0 whitespace-nowrap px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
               ✓ Harmony Capsule Sealed
             </span>
           ) : isBothSubmitted ? (
-            <span className="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-serif font-medium animate-pulse">
+            <span className="shrink-0 whitespace-nowrap px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium animate-pulse">
               ✨ Both Shared • Ready to Seal
             </span>
           ) : (
-            <span className="px-3 py-1 rounded-full bg-linen-variant text-linen-secondary text-xs font-serif">
+            <span className="shrink-0 whitespace-nowrap px-3 py-1 rounded-full bg-linen-variant text-linen-secondary text-xs font-medium">
               In Progress
             </span>
           )}

@@ -11,6 +11,7 @@ import {
   findTwoCode
 } from '../core/space';
 import { copyTextOrThrow } from '../core/clipboard';
+import { askConfirm } from '../core/dialog';
 
 interface GroupsViewProps {
   groups: GroupSpace[];
@@ -280,15 +281,16 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
                 <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-linen-secondary" />
               </button>
               <button
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      `Leave "${group.name}"? This removes it and its messages from this device ` +
-                        `only. The others keep the group, and they are not told.`
-                    )
-                  ) {
-                    onLeave(group.id);
-                  }
+                onClick={async () => {
+                  const sure = await askConfirm({
+                    title: `Leave "${group.name}"?`,
+                    body:
+                      'This removes it and its messages from this device only. The others keep ' +
+                      'the group, and they are not told.',
+                    confirm: 'Leave group',
+                    danger: true
+                  });
+                  if (sure) onLeave(group.id);
                 }}
                 title="Leave this group"
                 className="shrink-0 rounded-lg p-2 text-linen-secondary hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer"

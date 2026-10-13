@@ -131,9 +131,9 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
             <Utensils className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex items-center space-x-2">
+            <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex flex-wrap items-center gap-x-2 gap-y-1">
               <span>Our Kitchen Table</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-sans font-normal">
+              <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-sans font-normal">
                 Secret Couple Cookbook
               </span>
             </h2>
@@ -381,6 +381,23 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        ) : recipes.length === 0 ? (
+          <div className="md:col-span-2 p-12 text-center border-2 border-dashed border-linen-border rounded-3xl bg-linen-surface/40 space-y-3">
+            <ChefHat className="w-8 h-8 text-linen-accent/60 mx-auto" />
+            <p className="font-serif text-base text-linen-primary">No recipes in the book yet</p>
+            <p className="text-xs text-linen-secondary max-w-xs mx-auto leading-relaxed text-balance">
+              The dish from your first date, the one you make on bad days. Write down the story with it,
+              then cook it together step by step.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-semibold hover:opacity-90 transition-opacity shadow-glow cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add the first recipe</span>
+            </button>
           </div>
         ) : (
           <div className="md:col-span-2 flex items-center justify-center p-12 text-center text-linen-secondary border border-dashed border-linen-border rounded-3xl">

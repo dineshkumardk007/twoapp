@@ -49,14 +49,16 @@ export const JournalView: React.FC<JournalViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* On a phone the button goes under the words, as on every other
+          screen; beside them it was squeezed to "Write / Entry". */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="font-serif text-2xl font-medium text-linen-primary">Thought & Mood Journal</h2>
           <p className="text-sm text-linen-secondary">Reflective micro-blogging away from rapid-fire chat.</p>
         </div>
         <button
           onClick={() => setIsWriting(!isWriting)}
-          className="inline-flex items-center px-4 py-2 rounded-xl bg-linen-primary text-linen-surface font-medium text-sm hover:opacity-95 transition-all shadow-xs"
+          className="self-start sm:self-auto shrink-0 whitespace-nowrap inline-flex items-center px-4 py-2 rounded-xl bg-linen-primary text-linen-surface font-medium text-sm hover:opacity-95 transition-all shadow-xs"
         >
           <Plus className="w-4 h-4 mr-1.5" />
           Write Entry

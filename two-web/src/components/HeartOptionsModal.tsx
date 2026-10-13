@@ -140,11 +140,11 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
               <Heart className="w-5 h-5 fill-rose-500 animate-pulse" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="font-serif text-lg font-medium text-linen-primary">
                   Heart Touch Options
                 </h3>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
                   Sensory Pulse
                 </span>
               </div>

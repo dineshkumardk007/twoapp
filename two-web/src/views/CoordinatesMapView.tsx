@@ -23,6 +23,7 @@ import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
 import { playSound } from '../core/sounds';
 import { who } from '../core/who';
+import { showNotice } from '../core/dialog';
 
 interface CoordinatesMapViewProps {
   pins: MemoryCoordinatePin[];
@@ -206,7 +207,10 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
   // Browser Geolocation auto-detect
   const handleGetCurrentLocation = () => {
     if (!('geolocation' in navigator)) {
-      alert('Geolocation is not supported by your browser.');
+      void showNotice({
+        title: "This phone can't share its location here",
+        body: 'Tap the map where it happened, or type the coordinates in.'
+      });
       return;
     }
     setIsLocating(true);
@@ -219,7 +223,10 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
       },
       err => {
         setIsLocating(false);
-        alert('Could not retrieve current coordinates. You can click on the map or type them.');
+        void showNotice({
+          title: "Couldn't find where you are",
+          body: 'Tap the map where it happened, or type the coordinates in.'
+        });
       },
       { timeout: 10000 }
     );
@@ -498,9 +505,9 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
         <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 max-w-full">
           <button
             onClick={() => setFilterCategory('all')}
-            className={`px-3 py-1 rounded-full text-xs font-serif transition-colors cursor-pointer border ${
+            className={`shrink-0 whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer border ${
               filterCategory === 'all'
-                ? 'bg-linen-primary text-linen-surface border-linen-primary'
+                ? 'bg-linen-primary text-linen-surface border-transparent'
                 : 'bg-linen-surface text-linen-secondary border-linen-border hover:bg-linen-variant/50'
             }`}
           >
@@ -513,9 +520,9 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
               <button
                 key={key}
                 onClick={() => setFilterCategory(key)}
-                className={`px-3 py-1 rounded-full text-xs font-serif transition-colors cursor-pointer border flex items-center space-x-1 ${
+                className={`shrink-0 whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer border flex items-center space-x-1 ${
                   filterCategory === key
-                    ? 'bg-linen-primary text-linen-surface border-linen-primary'
+                    ? 'bg-linen-primary text-linen-surface border-transparent'
                     : 'bg-linen-surface text-linen-secondary border-linen-border hover:bg-linen-variant/50'
                 }`}
               >
@@ -546,7 +553,7 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
-                <span className={`text-[11px] font-serif px-2.5 py-0.5 rounded-full border ${
+                <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${
                   CATEGORY_META[selectedPin.category]?.colorClass || 'bg-linen-variant text-linen-secondary border-linen-border'
                 }`}>
                   {CATEGORY_META[selectedPin.category]?.icon} {CATEGORY_META[selectedPin.category]?.label}

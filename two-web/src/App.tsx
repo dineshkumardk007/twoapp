@@ -169,6 +169,7 @@ import {
 } from './core/lockGuard';
 import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting } from './core/autoLock';
 import { leaveBedside } from './core/bedside';
+import { askConfirm } from './core/dialog';
 import {
   PRESENCE_BEAT,
   BEAT_INTERVAL_MS,
@@ -3602,8 +3603,14 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleUnpair = () => {
-    if (window.confirm('Are you sure you want to disconnect from this space? You can reconnect anytime using your Space Link Code.')) {
+  const handleUnpair = async () => {
+    const sure = await askConfirm({
+      title: 'Disconnect from this space?',
+      body: 'You can reconnect any time with your space link code.',
+      confirm: 'Disconnect',
+      danger: true
+    });
+    if (sure) {
       // Kept for "Rejoin": coming back is what this message promises. With a
       // PIN it is kept inside the vault, with everything else - never in plain
       // storage, where enabling the PIN was meant to stop the code being.
@@ -3699,16 +3706,16 @@ export const App: React.FC = () => {
      * and a four-digit keypad cannot express a password. Without this the only
      * way out would be clearing site data by hand.
      */
-    const startFresh = () => {
-      if (
-        !window.confirm(
-          'Start fresh on this device? Everything stored here will be erased. ' +
-            'If you know your space link code you can enter it again and your shared ' +
-            'history will come back from the relay.'
-        )
-      ) {
-        return;
-      }
+    const startFresh = async () => {
+      const sure = await askConfirm({
+        title: 'Start fresh on this device?',
+        body:
+          'Everything stored here will be erased. If you know your space link code you can ' +
+          'enter it again, and your shared history will come back from the relay.',
+        confirm: 'Erase and start fresh',
+        danger: true
+      });
+      if (!sure) return;
       destroyVault();
       disableFingerprint();
       clearState();
@@ -4285,6 +4292,7 @@ export const App: React.FC = () => {
             onUpdateSession={handleUpdateStateOfUnion}
             onSealSession={handleSealStateOfUnion}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
+            partnerName={state.partnerName}
           />
         )}
 
@@ -4431,6 +4439,7 @@ export const App: React.FC = () => {
             agreements={state.agreements}
             activeUser={state.activeUser}
             onAddAgreement={handleAddAgreement}
+            partnerName={state.partnerName}
           />
         )}
 
@@ -4438,6 +4447,7 @@ export const App: React.FC = () => {
           <ListsView
             lists={state.lists}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onToggleItem={handleToggleListItem}
             onAddItem={handleAddListItem}
             onDeleteItem={handleDeleteListItem}

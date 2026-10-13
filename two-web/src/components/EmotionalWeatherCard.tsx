@@ -33,17 +33,26 @@ export const EmotionalWeatherCard: React.FC<EmotionalWeatherCardProps> = ({
 
   return (
     <div className="bg-linen-surface rounded-2xl border border-linen-border p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <div>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="min-w-0">
           <h2 className="font-serif text-lg font-medium text-linen-primary">Emotional Weather & Capacity</h2>
           <p className="text-xs text-linen-secondary">Calibrate expectations without guesswork or assumptions.</p>
         </div>
         <button
           onClick={() => setIsEditing(!isEditing)}
-          className="inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-lg bg-linen-variant hover:bg-linen-border text-linen-primary transition-colors"
+          className="shrink-0 whitespace-nowrap inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-lg bg-linen-variant hover:bg-linen-border text-linen-primary transition-colors"
         >
           <Sliders className="w-3.5 h-3.5 mr-1 text-linen-accent" />
-          {isEditing ? 'Close' : 'Update Your State'}
+          {/* "Update" on a phone: the full label left the card's title three
+              words wide, on three lines. */}
+          {isEditing ? (
+            'Close'
+          ) : (
+            <>
+              <span className="sm:hidden">Update</span>
+              <span className="hidden sm:inline">Update Your State</span>
+            </>
+          )}
         </button>
       </div>
 

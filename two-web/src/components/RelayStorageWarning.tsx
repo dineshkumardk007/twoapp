@@ -40,7 +40,7 @@ export const RelayStorageWarning: React.FC<RelayStorageWarningProps> = ({ durabl
       <button
         onClick={onDismiss}
         aria-label="Dismiss"
-        className="mt-0.5 shrink-0 rounded-lg p-1 transition-colors hover:bg-amber-100 dark:hover:bg-amber-400/15"
+        className="tap-target-icon mt-0.5 shrink-0 rounded-lg p-1 transition-colors hover:bg-amber-100 dark:hover:bg-amber-400/15"
       >
         <X className="h-4 w-4" />
       </button>

@@ -193,7 +193,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
               <button
                 onClick={() => setShowPairingModal(true)}
-                className="flex min-w-0 items-center gap-1.5 rounded-full border border-linen-border bg-linen-surface/60 px-2 py-1 active:scale-95 transition-transform"
+                className="tap-target flex min-w-0 items-center gap-1.5 rounded-full border border-linen-border bg-linen-surface/60 px-2 py-1 active:scale-95 transition-transform"
                 title="End-to-end encrypted - tap to verify safety numbers"
               >
                 <span
@@ -222,7 +222,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             <div className="flex shrink-0 items-center gap-1.5">
               <button
                 onClick={() => setShowHeartModal(true)}
-                className="inline-flex items-center rounded-full bg-linen-accent text-linen-surface px-3 py-1 text-xs font-semibold shadow-glow active:scale-95 transition-transform"
+                className="tap-target inline-flex items-center rounded-full bg-linen-accent text-linen-surface px-3 py-1 text-xs font-semibold shadow-glow active:scale-95 transition-transform"
                 title="Heart Touch: send a sensory pulse"
               >
                 <Heart className="heart-beat mr-1 h-3.5 w-3.5 shrink-0 fill-current" />
@@ -230,7 +230,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
               <button
                 onClick={() => setShowToolsModal(true)}
-                className="inline-flex items-center rounded-full border border-linen-border bg-linen-surface/60 px-3 py-1 text-xs font-medium text-linen-primary active:scale-95 transition-transform"
+                className="tap-target inline-flex items-center rounded-full border border-linen-border bg-linen-surface/60 px-3 py-1 text-xs font-medium text-linen-primary active:scale-95 transition-transform"
                 title="Sanctuary Tools (soundscapes, breathing, camouflage, mesh & more)"
               >
                 <Compass className="mr-1 h-3.5 w-3.5 shrink-0 text-linen-accent" />

@@ -89,7 +89,7 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
     setSuccessMessage(null);
 
     if (!importFileContent) {
-      setErrorMessage('Please select a .two-vault file first.');
+      setErrorMessage('Please select a .two‑vault file first.');
       return;
     }
     if (!importPassphrase) {
@@ -123,7 +123,7 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
             </div>
             <div>
               <h3 className="font-serif text-lg font-medium text-linen-primary">Encrypted Vault Backup</h3>
-              <p className="text-xs text-linen-secondary">Sovereign offline data protection (.two-vault)</p>
+              <p className="text-xs text-linen-secondary">Sovereign offline data protection (.two‑vault)</p>
             </div>
           </div>
           <button
@@ -140,7 +140,7 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
             onClick={() => { setActiveTab('export'); setErrorMessage(null); setSuccessMessage(null); }}
             className={`py-2 text-xs font-medium rounded-xl border transition-all flex items-center justify-center space-x-1.5 ${
               activeTab === 'export'
-                ? 'bg-linen-primary text-linen-surface border-linen-primary shadow-xs'
+                ? 'bg-linen-primary text-linen-surface border-transparent shadow-xs'
                 : 'bg-linen-surface text-linen-secondary border-linen-border hover:bg-linen-variant'
             }`}
           >
@@ -151,7 +151,7 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
             onClick={() => { setActiveTab('import'); setErrorMessage(null); setSuccessMessage(null); }}
             className={`py-2 text-xs font-medium rounded-xl border transition-all flex items-center justify-center space-x-1.5 ${
               activeTab === 'import'
-                ? 'bg-linen-primary text-linen-surface border-linen-primary shadow-xs'
+                ? 'bg-linen-primary text-linen-surface border-transparent shadow-xs'
                 : 'bg-linen-surface text-linen-secondary border-linen-border hover:bg-linen-variant'
             }`}
           >
@@ -202,17 +202,17 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
               className="w-full py-2.5 rounded-xl bg-linen-primary text-linen-surface font-medium hover:opacity-90 disabled:opacity-40 transition-opacity flex items-center justify-center space-x-2"
             >
               <Download className="w-4 h-4" />
-              <span>{isProcessing ? 'Sealing & Encrypting...' : 'Export & Download .two-vault'}</span>
+              <span>{isProcessing ? 'Sealing & Encrypting...' : 'Export & Download .two‑vault'}</span>
             </button>
           </div>
         ) : (
           <div className="space-y-4 text-xs">
             <div>
-              <label className="block font-medium text-linen-primary mb-1.5">Select .two-vault File</label>
+              <label className="block font-medium text-linen-primary mb-1.5">Select .two‑vault File</label>
               <label className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-linen-border bg-linen-variant/20 hover:bg-linen-variant/40 cursor-pointer transition-colors">
                 <FileArchive className="w-6 h-6 text-linen-secondary mb-1" />
                 <span className="text-linen-primary font-medium">
-                  {importFileName || 'Click to select .two-vault backup file'}
+                  {importFileName || 'Click to select .two‑vault backup file'}
                 </span>
                 <span className="text-[10px] text-linen-secondary mt-0.5">Encrypted JSON backup file</span>
                 <input

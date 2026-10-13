@@ -86,9 +86,9 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex items-center space-x-2">
+            <h2 className="font-serif text-xl font-medium tracking-tight text-linen-primary flex flex-wrap items-center gap-x-2 gap-y-1">
               <span>Guess My Mind</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-sans font-normal">
+              <span className="whitespace-nowrap text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-sans font-normal">
                 Intuition Mini-Game
               </span>
             </h2>
@@ -197,8 +197,11 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
                     : 'bg-linen-surface border-linen-border hover:bg-linen-variant/40'
                 }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start space-x-3">
+                {/* On a phone the option reads across the whole card and its
+                    button sits beneath; side by side, the button left the
+                    words a column two or three words wide. */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex items-start space-x-3 min-w-0 flex-1">
                     <span className="w-6 h-6 rounded-lg bg-linen-variant border border-linen-border font-mono text-xs font-bold flex items-center justify-center text-linen-accent shrink-0 mt-0.5">
                       {key}
                     </span>
@@ -209,7 +212,7 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
 
                   {/* Actions depending on stage */}
                   {!currentRound.revealed && (
-                    <div className="flex items-center space-x-2 shrink-0">
+                    <div className="flex items-center space-x-2 shrink-0 self-end sm:self-auto">
                       {/* If secret pick not yet chosen */}
                       {!currentRound.authorChoice && (
                         <button
@@ -234,7 +237,7 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
 
                   {/* Reveal Badges */}
                   {currentRound.revealed && (
-                    <div className="flex items-center space-x-1.5 shrink-0 text-[11px] font-medium">
+                    <div className="flex items-center space-x-1.5 shrink-0 self-end sm:self-auto text-[11px] font-medium">
                       {isPickedByAuthor && (
                         <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
                           Partner's Choice

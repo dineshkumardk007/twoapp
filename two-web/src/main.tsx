@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
+import { DialogHost } from './components/DialogHost';
 import { isAndroidApp } from './core/platform';
 import { applyAppearance, watchPhoneAppearance } from './core/appearance';
 import './index.css';
@@ -28,5 +29,8 @@ watchPhoneAppearance();
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
+    {/* Beside the app, not inside it: the lock screen and the welcome
+        screens replace the app's whole tree, and still ask questions. */}
+    <DialogHost />
   </React.StrictMode>
 );

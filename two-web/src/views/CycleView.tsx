@@ -18,7 +18,6 @@ export const CycleView: React.FC<CycleViewProps> = ({
   onLogRecord
 }) => {
   const isOwner = activeUser === 'user';
-  const partnerName = isOwner ? 'Partner' : 'You';
 
   const currentRecord = records[0] || {
     id: 'default',
@@ -284,7 +283,7 @@ export const CycleView: React.FC<CycleViewProps> = ({
                       onClick={() => toggleSymptom(sym)}
                       className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
                         isSelected
-                          ? 'bg-linen-primary text-linen-surface border-linen-primary shadow-xs'
+                          ? 'bg-linen-primary text-linen-surface border-transparent shadow-xs'
                           : 'bg-linen-variant/30 text-linen-secondary border-linen-border hover:bg-linen-variant'
                       }`}
                     >

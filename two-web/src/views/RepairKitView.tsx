@@ -7,9 +7,11 @@ interface RepairKitViewProps {
   agreements: AgreementItem[];
   activeUser: 'user' | 'partner';
   onAddAgreement: (agreement: Omit<AgreementItem, 'id'>) => void;
+  /** The other person's name, as this phone knows it. */
+  partnerName?: string;
 }
 
-export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, activeUser, onAddAgreement }) => {
+export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, activeUser, onAddAgreement, partnerName: knownPartnerName }) => {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1); // 1: Cool-down, 2: Private Reflection, 3: Mirror & Reveal, 4: Agreement Log
 
   // Cooldown Breathing Timer
@@ -76,7 +78,10 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  const partnerName = activeUser === 'user' ? 'Partner' : 'You';
+  // The other person's name. This used to be worked out from the seat -
+  // "Partner" on one phone and "You" on the other - so the joiner's phone
+  // spoke of their partner as "You".
+  const partnerName = knownPartnerName?.trim() || 'Partner';
 
   const emotionChips = [
     'Unheard', 'Defensive', 'Overwhelmed', 'Dismissed', 'Rushed',

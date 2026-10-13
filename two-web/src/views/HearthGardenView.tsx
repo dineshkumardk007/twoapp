@@ -331,6 +331,25 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
       </div>
 
       {/* Tab Content */}
+      {activeTab === 'blossoms' && garden.blossoms.length === 0 && (
+        <div className="p-10 text-center border-2 border-dashed border-linen-border rounded-3xl bg-linen-surface/40 space-y-3">
+          <Sprout className="w-8 h-8 text-linen-accent/60 mx-auto" />
+          <p className="font-serif text-base text-linen-primary">No blossoms yet</p>
+          <p className="text-xs text-linen-secondary max-w-xs mx-auto leading-relaxed text-balance">
+            Dedicate a flower to something one of you did - it opens on the tree for both of you.
+          </p>
+        </div>
+      )}
+      {activeTab === 'chronicle' && garden.growthLog.length === 0 && (
+        <div className="p-10 text-center border-2 border-dashed border-linen-border rounded-3xl bg-linen-surface/40 space-y-3">
+          <History className="w-8 h-8 text-linen-accent/60 mx-auto" />
+          <p className="font-serif text-base text-linen-primary">The story starts with the first watering</p>
+          <p className="text-xs text-linen-secondary max-w-xs mx-auto leading-relaxed text-balance">
+            Every bit of care either of you gives the tree is written down here.
+          </p>
+        </div>
+      )}
+
       {activeTab === 'blossoms' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {garden.blossoms.map(blossom => (
@@ -366,7 +385,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
             </div>
           ))}
         </div>
-      ) : (
+      ) : garden.growthLog.length > 0 && (
         <div className="bg-linen-surface rounded-2xl p-5 border border-linen-border space-y-3">
           {garden.growthLog.map(log => (
             <div key={log.id} className="flex items-start space-x-3 text-xs pb-3 border-b border-linen-border/40 last:border-none last:pb-0">

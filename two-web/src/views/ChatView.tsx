@@ -477,14 +477,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : 'max-w-[85%] px-4 py-2.5'
                 } text-sm leading-relaxed ${shape} ${
                   msg.isNeedCard
-                    ? 'bg-gold-50 border border-gold-500/40 text-linen-primary'
+                    ? 'bg-amber-50 border border-amber-300/70 text-linen-primary'
                     : mine
                     ? 'bg-linen-primary text-linen-surface'
                     : 'bg-linen-variant text-linen-primary border border-linen-border'
                 }`}
               >
                 {msg.isNeedCard && (
-                  <div className="text-[11px] font-semibold tracking-wider text-gold-600 uppercase mb-1 flex items-center">
+                  <div className="text-[11px] font-semibold tracking-wider text-amber-700 uppercase mb-1 flex items-center">
                     <Sparkles className="w-3 h-3 mr-1" />
                     Structured Need Request
                   </div>

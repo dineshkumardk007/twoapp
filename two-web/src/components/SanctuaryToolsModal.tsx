@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   X, Moon, Wind, Heart, Radio, Calculator, Shield, LogOut, 
-  Sparkles, Check, Compass, Wifi, EyeOff, Activity, Settings 
+  Sparkles, Check, Compass, Wifi, EyeOff, Activity, Settings, ChevronRight
 } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
 
@@ -198,11 +198,11 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
               <Compass className="w-5 h-5 text-linen-surface" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="font-serif text-lg sm:text-xl font-medium text-linen-primary">
                   Sanctuary Tools
                 </h3>
-                <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-linen-variant text-linen-accent border border-linen-border">
+                <span className="whitespace-nowrap whitespace-nowrap text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-linen-variant text-linen-accent border border-linen-border">
                   Quick Access
                 </span>
               </div>
@@ -244,47 +244,40 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
 
         {/* Scrollable Tools List */}
         <div className="p-3 sm:p-4 overflow-y-auto space-y-2.5 flex-1 min-h-0 scrollbar-none">
+          {/* Each tool is one row you tap anywhere on. Each used to end in
+              its own gradient button ("Open Soundscapes →"), which left the
+              name and description a third of the row: every title cut off
+              mid-word, eight bright buttons competing in one list. */}
           {tools.map((tool) => {
             const Icon = tool.icon;
             return (
-              <div
+              <button
                 key={tool.id}
+                type="button"
                 onClick={tool.action}
-                className="group p-3 sm:p-3.5 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between gap-3"
+                aria-label={`${tool.actionText}: ${tool.title}`}
+                className="group w-full p-3 sm:p-3.5 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 active:scale-[0.99] transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center gap-3 text-left"
               >
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className={`p-2.5 rounded-xl border shrink-0 transition-transform group-hover:scale-105 ${tool.iconColor}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-sm font-semibold text-linen-primary truncate">
-                      {tool.title}
-                    </h4>
-                    <p className="text-xs text-linen-accent truncate">
-                      {tool.subtitle}
-                    </p>
-                    <p className="text-xs text-linen-secondary line-clamp-1 mt-0.5">
-                      {tool.desc}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      tool.action();
-                    }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                      tool.isDanger
-                        ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
-                        : 'bg-linen-primary text-linen-surface hover:opacity-90 shadow-2xs'
-                    }`}
-                  >
-                    {tool.actionText} →
-                  </button>
-                </div>
-              </div>
+                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border ${tool.iconColor}`}>
+                  <Icon className="w-5 h-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block text-sm font-semibold leading-snug ${tool.isDanger ? 'text-red-700' : 'text-linen-primary'}`}>
+                    {tool.title}
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-snug text-linen-accent">
+                    {tool.subtitle}
+                  </span>
+                  <span className="mt-1 text-xs leading-relaxed text-linen-secondary line-clamp-2">
+                    {tool.desc}
+                  </span>
+                </span>
+                <ChevronRight
+                  className={`h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${
+                    tool.isDanger ? 'text-red-600' : 'text-linen-secondary'
+                  }`}
+                />
+              </button>
             );
           })}
         </div>

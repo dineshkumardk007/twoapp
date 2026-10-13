@@ -226,10 +226,10 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
 
       {/* Navigation & Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-linen-border pb-3">
-        <div className="flex space-x-2">
+        <div className="flex min-w-0 max-w-full gap-2 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab('surprises')}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+            className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
               activeTab === 'surprises'
                 ? 'bg-linen-primary text-linen-surface shadow-sm'
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
@@ -239,7 +239,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('vault')}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+            className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
               activeTab === 'vault'
                 ? 'bg-linen-primary text-linen-surface shadow-sm'
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'

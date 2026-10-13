@@ -155,7 +155,10 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
     whispers: []
   };
 
-  const partnerName = state.activeUser === 'user' ? 'Partner' : 'You';
+  // The other person's name. This used to be worked out from the seat -
+  // "Partner" on one phone and "You" on the other - so the joiner's phone
+  // spoke of their partner as "You".
+  const partnerName = state.partnerName?.trim() || 'Partner';
   const isUserListening = state.activeUser === 'user' ? radio.userListening : radio.partnerListening;
   const isPartnerListening = state.activeUser === 'user' ? radio.partnerListening : radio.userListening;
 

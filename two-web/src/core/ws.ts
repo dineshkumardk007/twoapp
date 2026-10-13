@@ -76,7 +76,8 @@ const RECONNECT_MAX_MS = 30_000;
  */
 const PRODUCTION_RELAY_URL = 'wss://twoapp-tfj8.onrender.com/relay';
 
-function resolveRelayUrl(): string {
+/** The relay this device connects to - also what Settings shows. */
+export function resolveRelayUrl(): string {
   // 1. Injected by native Android WebView bridge (if running in APK)
   try {
     const androidUrl = (window as any).AndroidBridge?.getRelayUrl?.();
