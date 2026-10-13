@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SpaceState } from '../core/storage';
 import { exportVault, importVault, downloadVaultFile } from '../core/vaultExport';
+import { recordBackup } from '../core/backupReminder';
 import { X, Shield, Download, Upload, Key, CheckCircle, AlertTriangle, FileArchive } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
 
@@ -48,7 +49,7 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
       return;
     }
     if (passphrase !== confirmPassphrase) {
-      setErrorMessage('Passphrases do not match.');
+      setErrorMessage('The two passwords are different. Type the same one twice.');
       return;
     }
 
@@ -57,6 +58,8 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
       const vaultJson = await exportVault(state, passphrase);
       const dateStr = new Date().toISOString().split('T')[0];
       const how = await downloadVaultFile(vaultJson, `two-vault-${dateStr}.two-vault`);
+      // Home stops asking for a month.
+      recordBackup();
       setSuccessMessage(
         how === 'saved'
           ? 'Backup sealed. Choose where to keep it on the screen that just opened.'
@@ -145,7 +148,7 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
             }`}
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Export Backup</span>
+            <span>Save a Backup</span>
           </button>
           <button
             onClick={() => { setActiveTab('import'); setErrorMessage(null); setSuccessMessage(null); }}
@@ -156,7 +159,7 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
             }`}
           >
             <Upload className="w-3.5 h-3.5" />
-            <span>Restore From File</span>
+            <span>Restore</span>
           </button>
         </div>
 
@@ -164,21 +167,21 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
         {activeTab === 'export' ? (
           <div className="space-y-4 text-xs">
             <div className="p-3.5 rounded-2xl bg-linen-variant/40 border border-linen-border text-linen-secondary space-y-1">
-              <p className="font-medium text-linen-primary">What gets backed up:</p>
-              <p>• {state.messages.length} encrypted chat messages</p>
-              <p>• {state.journalEntries.length} journal reflections</p>
-              <p>• {state.agreements.length} conflict repair agreements</p>
-              <p>• Lists ({state.lists.length}), Mental Load Chores ({state.chores.length}), Shared Tab ({state.expenses.length})</p>
+              <p className="font-medium text-linen-primary">In this backup:</p>
+              <p>• {state.messages.length} chat messages</p>
+              <p>• {state.journalEntries.length} journal entries</p>
+              <p>• {state.agreements.length} agreements</p>
+              <p>• Lists ({state.lists.length}), Chores ({state.chores.length}), Shared Money ({state.expenses.length})</p>
             </div>
 
             <div>
-              <label className="block font-medium text-linen-primary mb-1">Set Vault Backup Passphrase</label>
+              <label className="block font-medium text-linen-primary mb-1">Choose a password for this backup</label>
               <div className="relative">
                 <input
                   type="password"
                   value={passphrase}
                   onChange={(e) => setPassphrase(e.target.value)}
-                  placeholder="At least 8 characters..."
+                  placeholder="At least 12 characters..."
                   className="w-full pl-9 pr-3 py-2 rounded-xl border border-linen-border bg-linen-surface focus:outline-none focus:ring-1 focus:ring-linen-accent"
                 />
                 <Key className="w-4 h-4 text-linen-secondary absolute left-3 top-2.5" />
@@ -186,12 +189,12 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
             </div>
 
             <div>
-              <label className="block font-medium text-linen-primary mb-1">Confirm Passphrase</label>
+              <label className="block font-medium text-linen-primary mb-1">Type it again</label>
               <input
                 type="password"
                 value={confirmPassphrase}
                 onChange={(e) => setConfirmPassphrase(e.target.value)}
-                placeholder="Re-enter your passphrase..."
+                placeholder="The same password again..."
                 className="w-full px-3 py-2 rounded-xl border border-linen-border bg-linen-surface focus:outline-none focus:ring-1 focus:ring-linen-accent"
               />
             </div>
@@ -202,7 +205,7 @@ export const VaultBackupModal: React.FC<VaultBackupModalProps> = ({
               className="w-full py-2.5 rounded-xl bg-linen-primary text-linen-surface font-medium hover:opacity-90 disabled:opacity-40 transition-opacity flex items-center justify-center space-x-2"
             >
               <Download className="w-4 h-4" />
-              <span>{isProcessing ? 'Sealing & Encrypting...' : 'Export & Download .two‑vault'}</span>
+              <span>{isProcessing ? 'Locking and saving...' : 'Save Backup (.two‑vault)'}</span>
             </button>
           </div>
         ) : (

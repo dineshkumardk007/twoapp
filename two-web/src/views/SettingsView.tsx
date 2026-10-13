@@ -17,6 +17,7 @@ import { unlockVault } from '../core/vault';
 import { appVersion } from '../core/appUpdate';
 import { showNotice } from '../core/dialog';
 import { resolveRelayUrl } from '../core/ws';
+import { takeBackupRequest } from '../core/backupReminder';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -132,6 +133,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 }) => {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
+  // Home's "Back up now" lands here with the backup already open.
+  useEffect(() => {
+    if (takeBackupRequest()) setShowVaultModal(true);
+  }, []);
   const [copiedCode, setCopiedCode] = useState(false);
   const [decoyCodeInput, setDecoyCodeInput] = useState(decoyCode);
   const [decoySaved, setDecoySaved] = useState(false);

@@ -1,7 +1,7 @@
 // What the code under test expects of a browser, and nothing more.
 //
 // The modules here read `window.crypto`, `window.AndroidBridge` and
-// localStorage. Node has WebCrypto, atob/btoa and TextEncoder already; the
+// local and session storage. Node has WebCrypto, atob/btoa and TextEncoder already; the
 // window is simply the global object, and storage is a Map that starts empty
 // for every test.
 
@@ -36,11 +36,14 @@ class MemoryStorage implements Storage {
 }
 
 const storage = new MemoryStorage();
+const session = new MemoryStorage();
 Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true, writable: true });
+Object.defineProperty(globalThis, 'sessionStorage', { value: session, configurable: true, writable: true });
 Object.defineProperty(globalThis, 'window', { value: globalThis, configurable: true, writable: true });
 
 beforeEach(() => {
   storage.clear();
+  session.clear();
   delete (globalThis as { AndroidBridge?: unknown }).AndroidBridge;
   delete (globalThis as { __twoFingerprint?: unknown }).__twoFingerprint;
   delete (globalThis as { __twoUpdate?: unknown }).__twoUpdate;

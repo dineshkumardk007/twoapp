@@ -3,7 +3,8 @@ import { SpaceState } from '../core/storage';
 import { EmotionalWeatherCard } from '../components/EmotionalWeatherCard';
 import { NotAboutYouBanner } from '../components/NotAboutYouBanner';
 import { getResurfacedQuote, LiteraryQuote } from '../data/quotes';
-import { Sparkles, Quote, Heart, Wind, ChevronRight, X } from 'lucide-react';
+import { Sparkles, Quote, Heart, Wind, ChevronRight, X, ShieldCheck } from 'lucide-react';
+import { backupNudge, snoozeBackupNudge, requestBackupOnOpen } from '../core/backupReminder';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
 import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
@@ -84,6 +85,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showComfortBox, setShowComfortBox] = useState(false);
   const [showCoRegulation, setShowCoRegulation] = useState(false);
   const [showHeartModal, setShowHeartModal] = useState(false);
+  // Worked out once per visit to Home; "Later" hides it straight away.
+  const [nudge, setNudge] = useState(() => backupNudge());
   // The phone's Back button closes these popups through the popups themselves
   // (each registers its own layer), so the breathing one can end its session
   // and tell the other phone, as its close button does.
@@ -144,6 +147,50 @@ export const HomeView: React.FC<HomeViewProps> = ({
           >
             <X className="h-4 w-4" />
           </button>
+        </div>
+      )}
+
+      {/* Now and then, a backup. Gentle and easy to put off: a week's quiet
+          after Later, a month's after a backup (core/backupReminder.ts). */}
+      {nudge && (
+        <div role="status" className="rounded-2xl border border-linen-border bg-linen-surface p-4 shadow-xs">
+          <div className="flex items-start gap-3">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-aurora-violet/15">
+              <ShieldCheck className="h-4 w-4 text-aurora-violet" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-linen-primary">
+                {nudge.everBackedUp ? 'Time for a fresh backup' : 'Keep a backup of your space'}
+              </p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-linen-secondary">
+                {nudge.everBackedUp
+                  ? `Your last backup was ${nudge.daysSince} days ago. A new one keeps everything since then safe.`
+                  : 'If this phone is ever lost, a backup brings everything back. It takes a minute, locked with a password only you know.'}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                snoozeBackupNudge();
+                setNudge(null);
+              }}
+              className="px-3 py-1.5 rounded-xl text-xs font-medium text-linen-secondary hover:bg-linen-variant transition-colors cursor-pointer"
+            >
+              Later
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                requestBackupOnOpen();
+                onNavigate('settings');
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-semibold hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
+            >
+              Back up now
+            </button>
+          </div>
         </div>
       )}
 
