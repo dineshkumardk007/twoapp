@@ -17,6 +17,7 @@ import { PartnerActivityCard } from '../components/PartnerActivityCard';
 import { ActivityEvent } from '../core/activity';
 import { destinationName } from '../data/destinations';
 import { localDateKey } from '../core/ourDates';
+import { ThirukkuralCard } from '../components/ThirukkuralCard';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -218,6 +219,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* A kural a day, on a palm leaf - the same one on both phones. */}
+      <ThirukkuralCard onShare={onSendQuestion} />
 
       {/* Side-by-Side Emotional Weather & Capacity */}
       <EmotionalWeatherCard

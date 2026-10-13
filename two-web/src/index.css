@@ -68,6 +68,27 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Kavivanar, for the kural of the day: Tamil written the way a stylus cuts
+   it into a palm leaf. By Tharique Azeez, under the SIL Open Font License 1.1
+   (the notice travels in each file's metadata). Used only on the leaf, so
+   the files load only when Home shows it. */
+@font-face {
+  font-family: 'Kavivanar';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/kavivanar-tamil.woff2') format('woff2');
+  unicode-range: U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
+}
+@font-face {
+  font-family: 'Kavivanar';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/kavivanar-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* ---------------------------------------------------------------------------
    Aurora
    ---------------------------------------------------------------------------
@@ -516,4 +537,80 @@ html.dark .sheet-item-active {
   .dock-tab-icon {
     transition: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Olai: the palm leaf the kural of the day is written on
+   ---------------------------------------------------------------------------
+   How the Thirukkural was kept for most of its life: cut into strips of dried
+   palm leaf with a stylus, the cuts darkened with soot and oil, and the
+   leaves strung together on a cord through two holes. Drawn here rather than
+   pictured - a gradient for the leaf's colour, a fine repeating stripe for
+   its grain, darker ends where it was cut from the frond.
+
+   A real thing, so the same in day and night: a warm leaf on either sky. */
+.olai {
+  position: relative;
+  border-radius: 26px / 50%;
+  padding: 16px 30px;
+  color: #3a220c;
+  background:
+    repeating-linear-gradient(180deg, rgb(120 78 28 / 0.09) 0 1px, transparent 1px 5px),
+    linear-gradient(90deg, rgb(112 70 24 / 0.30), transparent 10%, transparent 90%, rgb(112 70 24 / 0.30)),
+    linear-gradient(180deg, #f2dba6 0%, #e4c183 46%, #cfa364 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 249 228 / 0.75),
+    inset 0 -3px 7px rgb(110 68 22 / 0.32),
+    inset 0 0 0 1px rgb(120 80 30 / 0.38),
+    0 16px 30px -18px rgb(0 0 0 / 0.6);
+}
+html.dark .olai {
+  box-shadow:
+    inset 0 1px 0 rgb(255 249 228 / 0.75),
+    inset 0 -3px 7px rgb(110 68 22 / 0.32),
+    inset 0 0 0 1px rgb(120 80 30 / 0.38),
+    0 0 0 1px rgb(252 211 77 / 0.10),
+    0 18px 40px -16px rgb(251 146 60 / 0.35);
+}
+/* The two holes the binding cord runs through. */
+.olai-hole {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 45% 40%, #24130a 0 48%, #6a4421 72%, rgb(255 238 196 / 0.55) 76%, transparent 80%);
+}
+.olai-hole-left { left: 15px; }
+.olai-hole-right { right: 15px; }
+/* The cord: a red thread through the left hole, loose ends hanging below. */
+.olai-cord {
+  position: absolute;
+  left: 9px;
+  top: calc(50% - 2px);
+  width: 22px;
+  height: 46px;
+  overflow: visible;
+  pointer-events: none;
+}
+/* The words, cut in and darkened: a light edge below each stroke where the
+   leaf catches the light. */
+/* A kural is two lines - four words, then three - and keeps that shape:
+   --olai-fit shrinks the letters just enough for the longer line to fit the
+   leaf (ThirukkuralCard measures it). A ratio, not a size, so the phone's own
+   text size still applies on top. */
+.olai-text {
+  font-family: 'Kavivanar', 'Noto Sans Tamil', 'Tamil Sangam MN', serif;
+  font-size: calc(21px * var(--olai-fit, 1));
+  line-height: 1.6;
+  text-align: center;
+  text-shadow: 0 1px 0 rgb(255 241 208 / 0.6);
+}
+.olai-text.is-latin {
+  font-size: calc(18px * var(--olai-fit, 1));
+}
+.olai-line {
+  display: block;
+  white-space: nowrap;
 }
