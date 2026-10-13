@@ -808,6 +808,10 @@ fun TwoWebView(
                 // Let the page paint under the system bars; the CSS handles insets.
                 setFitsSystemWindows(false)
                 overScrollMode = WebView.OVER_SCROLL_NEVER
+                // No scroll bar down the edge while you scroll; the page hides
+                // its own the same way (index.css, under `html.in-app`).
+                isVerticalScrollBarEnabled = false
+                isHorizontalScrollBarEnabled = false
 
                 // A debug build may talk to a relay on this desk over plain
                 // ws://; the release app never needs anything insecure.

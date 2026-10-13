@@ -332,6 +332,20 @@ html.dark .aurora-text {
     user-select: text;
     -webkit-touch-callout: default;
   }
+
+  /* No scroll bars. The thin bar that slid down the right edge whenever you
+     scrolled sat over the edge of cards and messages, and on a phone nobody
+     drags it - a swipe already shows where you are. The website on a computer
+     keeps them, for a mouse. <html> itself is included because the page's own
+     scroll bar takes its style from the root. */
+  html.in-app,
+  html.in-app * {
+    scrollbar-width: none;
+  }
+
+  html.in-app ::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @media print {
