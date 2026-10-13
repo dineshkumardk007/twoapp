@@ -46,6 +46,9 @@ import androidx.webkit.WebViewAssetLoader
 import app.two.android.core.network.NetworkConfig
 import app.two.android.core.security.FingerprintLock
 import app.two.android.core.update.AppUpdater
+import app.two.android.features.widget.LaunchAction
+import app.two.android.features.widget.TwoWidget
+import app.two.android.features.widget.WidgetSummary
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.Executors
@@ -597,6 +600,23 @@ class AndroidWebBridge(
     fun earRelease() {
         earpiece.release()
     }
+
+    /**
+     * The home-screen widget's summary, from the page (core/widget.ts):
+     * names, dates, a count and a few times - never a word of a message.
+     * "{}" clears it. Stored, then every widget on the home screen redrawn.
+     */
+    @JavascriptInterface
+    fun widgetUpdate(json: String?) {
+        val text = json?.takeIf { it.length <= 4_000 } ?: return
+        val app = context.applicationContext
+        WidgetSummary.save(app, text)
+        TwoWidget.refresh(app)
+    }
+
+    /** What the widget opened Two to do - "chat" or "heartbeat" - once; "" otherwise. */
+    @JavascriptInterface
+    fun takeLaunchAction(): String = LaunchAction.take()
 }
 
 /**

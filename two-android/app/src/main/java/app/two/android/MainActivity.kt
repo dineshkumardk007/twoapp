@@ -1,5 +1,6 @@
 package app.two.android
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.os.SystemClock
@@ -30,6 +31,7 @@ import app.two.android.features.settings.SettingsScreen
 import app.two.android.features.web.SystemChrome
 import app.two.android.features.web.TwoWebView
 import app.two.android.features.web.WebReady
+import app.two.android.features.widget.LaunchAction
 import kotlinx.coroutines.launch
 
 enum class Screen {
@@ -89,6 +91,11 @@ class MainActivity : FragmentActivity() {
         val app = application as TwoApplication
         exitSafeManager = ExitSafeManager(this, app.database, app.keystoreManager)
 
+        // Opened from the home-screen widget to do something (LaunchAction).
+        // Only on a real start: an activity recreated for a new font size
+        // still carries the intent it started with.
+        if (savedInstanceState == null) LaunchAction.offer(intent)
+
         setContent {
             TwoTheme(themeMode = AppThemeMode.WARM_LINEN) {
                 // The strips above and below the WebView - behind the status
@@ -101,6 +108,13 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+
+    /** Brought forward by the widget while already open: the page asks when it shows. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        LaunchAction.offer(intent)
     }
 
     private companion object {

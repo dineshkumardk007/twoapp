@@ -159,7 +159,8 @@ import {
 } from './core/sharedRecords';
 import { localDay, isDoneOn, withRitualDay } from './core/rituals';
 import { OUR_DATES, DAILY_ANSWER } from './core/sharedRecords';
-import { cleanOurDates, newerOurDates } from './core/ourDates';
+import { cleanOurDates, newerOurDates, nextAnniversary } from './core/ourDates';
+import { updateWidget, takeLaunchAction, weatherLabel } from './core/widget';
 import { resolveMediaRefs, withResolvedMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
 import {
   lockoutRemaining,
@@ -2492,6 +2493,61 @@ export const App: React.FC = () => {
   }, [currentTab, activeGroupId]);
 
   /**
+   * The home-screen widget's summary (core/widget.ts): your days together,
+   * the next anniversary, how many messages from your partner wait unread and
+   * how they are. Only while the space is open - a locked vault has nothing
+   * to tell it - and never a word of any message.
+   */
+  const partnerSeat = state.activeUser === 'user' ? 'partner' : 'user';
+  const theirReport = state.activeUser === 'user' ? state.partnerReport : state.userReport;
+  const newestFromThem = useMemo(() => {
+    for (let i = state.messages.length - 1; i >= 0; i--) {
+      const m = state.messages[i];
+      if (m.authorId === partnerSeat) return m.sentAt;
+    }
+    return undefined;
+  }, [state.messages, partnerSeat]);
+  useEffect(() => {
+    if (isLocked || !session || !state.isPaired) return;
+    const next = state.ourDates ? nextAnniversary(state.ourDates) : null;
+    updateWidget({
+      partner: state.partnerName || 'Partner',
+      since: state.ourDates?.togetherSince,
+      annivDate: next?.date,
+      annivYears: next?.years,
+      unread: unreadChatCount,
+      lastMessageAt: unreadChatCount > 0 ? newestFromThem : undefined,
+      weather: weatherLabel(theirReport?.weather),
+      capacity: theirReport?.capacity,
+      online: partnerOnline,
+      lastSeenAt: shareLastSeen && state.partnerLastSeen ? state.partnerLastSeen : undefined
+    });
+  }, [
+    isLocked, session, state.isPaired, state.partnerName, state.ourDates, unreadChatCount, newestFromThem,
+    theirReport?.weather, theirReport?.capacity, partnerOnline, shareLastSeen, state.partnerLastSeen
+  ]);
+
+  /**
+   * Opened from the widget to do something: go to the chat, or send a
+   * heartbeat. Asked whenever Two comes to the front, and only once it is
+   * unlocked and linked - a heartbeat asked for on the lock screen goes as
+   * soon as the PIN is in.
+   */
+  useEffect(() => {
+    if (isLocked || !session || !state.isPaired) return;
+    const act = () => {
+      if (document.visibilityState !== 'visible') return;
+      const action = takeLaunchAction();
+      if (action === 'chat') handleSelectTab('chat');
+      else if (action === 'heartbeat') triggerGlobalPulse('Thinking of you');
+    };
+    act();
+    document.addEventListener('visibilitychange', act);
+    return () => document.removeEventListener('visibilitychange', act);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocked, session, state.isPaired]);
+
+  /**
    * The phone's Back button once nothing is open on top (see core/backStack).
    *
    * Back leaves a group for the couple's space, then any screen for Home, and
@@ -3457,6 +3513,7 @@ export const App: React.FC = () => {
 
   const handleEmergencyExit = () => {
     // Wipe the encrypted vault too, or the panic button leaves everything behind.
+    updateWidget(null);
     clearState();
     void clearMedia();
     clearSpaceSession();
@@ -3611,6 +3668,7 @@ export const App: React.FC = () => {
       danger: true
     });
     if (sure) {
+      updateWidget(null);
       // Kept for "Rejoin": coming back is what this message promises. With a
       // PIN it is kept inside the vault, with everything else - never in plain
       // storage, where enabling the PIN was meant to stop the code being.
@@ -3716,6 +3774,7 @@ export const App: React.FC = () => {
         danger: true
       });
       if (!sure) return;
+      updateWidget(null);
       destroyVault();
       disableFingerprint();
       clearState();

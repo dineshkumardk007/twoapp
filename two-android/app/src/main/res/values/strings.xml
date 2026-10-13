@@ -47,4 +47,12 @@
     <!-- Privacy & Emergency -->
     <string name="emergency_quick_exit">Quick Exit</string>
     <string name="emergency_exit_desc">Silently exit and clear this device.</string>
+
+    <!-- Home-screen widget -->
+    <string name="widget_name">Two</string>
+    <string name="widget_description">Your days together, your partner at a glance, and a heart to send.</string>
+    <string name="widget_days_together">days together</string>
+    <string name="widget_heart">Send a heartbeat</string>
+    <string name="widget_preview_days">1,702</string>
+    <string name="widget_preview_line">3 new messages from Priya</string>
 </resources>

@@ -99,6 +99,29 @@
                 android:resource="@xml/update_paths" />
         </provider>
 
+        <!-- The home-screen widget, and the pop-up it opens (features/widget).
+             The pop-up has a task of its own, so it floats over the home
+             screen instead of bringing Two forward behind it. -->
+        <receiver
+            android:name=".features.widget.TwoWidget"
+            android:exported="false"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/two_widget_info" />
+        </receiver>
+        <activity
+            android:name=".features.widget.WidgetPopupActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Two.Popup" />
+
     </application>
 
 </manifest>
