@@ -52,7 +52,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="35">
 
-        <!-- Starts in the launch-screen theme (the leaf on linen), which
+        <!-- Starts in the launch-screen theme (the mark on the night sky), which
              MainActivity holds until the page is ready and then carries on
              in Theme.Two (see themes.xml). -->
         <activity

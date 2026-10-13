@@ -12,18 +12,18 @@
     </style>
 
     <!--
-      The launch screen: the leaf from the app icon on the Aurora night sky.
+      The launch screen: the app icon's two circles on the Aurora night sky.
 
       MainActivity starts in this theme. installSplashScreen() moves the
       activity on to Theme.Two (postSplashScreenTheme) straight away, but the
-      leaf stays drawn over it until the page has drawn its first real screen,
-      so opening the app goes from the leaf to the app with no blank cream
+      mark stays drawn over it until the page has drawn its first real screen,
+      so opening the app goes from the mark to the app with no blank
       page in between. On Android 12 and later this is the system's own
       launch screen; on 8 to 11 the splash-screen library draws the same
       thing.
 
       The icon is the adaptive icon's foreground layer, which is drawn for
-      exactly this kind of circular crop: the leaves sit inside its safe
+      exactly this kind of circular crop: the circles sit inside its safe
       circle, so nothing is clipped.
     -->
     <style name="Theme.Two.Starting" parent="Theme.SplashScreen">

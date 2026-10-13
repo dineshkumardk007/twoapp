@@ -3941,9 +3941,20 @@ export const App: React.FC = () => {
           strokeLinecap="round"
           aria-label="Loading"
         >
-          <path d="M54,84 C51,70 51,56 54,44 C56,36 56,30 54,25" stroke="#4E5A2E" strokeWidth="4.5" />
-          <path d="M54,47 C58,32 66,25 80,24 C79,38 70,46 54,47 Z" fill="#606C38" />
-          <path d="M54,64 C50,49 42,42 28,41 C29,55 38,63 54,64 Z" fill="#8A9A5B" />
+          {/* The app's mark: two circles and the space they share. */}
+          <defs>
+            <linearGradient id="loading-a" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#C4B5FD" />
+              <stop offset="1" stopColor="#8B5CF6" />
+            </linearGradient>
+            <linearGradient id="loading-b" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#F472B6" />
+              <stop offset="1" stopColor="#FB923C" />
+            </linearGradient>
+          </defs>
+          <circle cx="44" cy="54" r="18" fill="url(#loading-a)" />
+          <circle cx="64" cy="54" r="18" fill="url(#loading-b)" />
+          <path d="M54,39.03 A18,18 0 0 1 54,68.97 A18,18 0 0 1 54,39.03 Z" fill="#FFFFFF" />
         </svg>
       </div>
     );

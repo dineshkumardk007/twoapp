@@ -1,52 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The app mark: one stem, two leaves.
+  The app mark: two circles, one for each of you, and the bright space where
+  they overlap - the space this app is. Violet and pink-to-peach, the
+  aurora's colours; the overlap lit nearly white.
 
-  It matches the leaf on the website's browser tab, and the pair is the point -
-  the app is called Two. Drawn as a vector so it stays sharp from the 48dp
-  launcher grid up to the 512dp store listing, and kept inside the 66dp safe
-  circle so a round, squircle or teardrop mask cannot clip a leaf off.
+  Drawn as a vector so it is sharp from the 48dp launcher grid to the 512dp
+  store listing. Kept well inside the 66dp safe circle, so a round, squircle
+  or teardrop mask clips nothing - and the launch screen shows it whole.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <group
-        android:scaleX="0.82"
-        android:scaleY="0.82"
-        android:translateX="9.72"
-        android:translateY="9.72">
+    <!-- One of you -->
+    <path android:pathData="M26,54a18,18 0,1 0,36 0a18,18 0,1 0,-36 0z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="26"
+                android:startY="36"
+                android:endX="62"
+                android:endY="72">
+                <item android:offset="0" android:color="#FFC4B5FD" />
+                <item android:offset="1" android:color="#FF8B5CF6" />
+            </gradient>
+        </aapt:attr>
+    </path>
 
-        <!-- Stem first, so each leaf covers the join where it meets it. -->
-        <path
-            android:strokeColor="#4E5A2E"
-            android:strokeWidth="4.5"
-            android:strokeLineCap="round"
-            android:pathData="M54,84 C51,70 51,56 54,44 C56,36 56,30 54,25" />
+    <!-- The other -->
+    <path android:pathData="M46,54a18,18 0,1 0,36 0a18,18 0,1 0,-36 0z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="46"
+                android:startY="36"
+                android:endX="82"
+                android:endY="72">
+                <item android:offset="0" android:color="#FFF472B6" />
+                <item android:offset="1" android:color="#FFFB923C" />
+            </gradient>
+        </aapt:attr>
+    </path>
 
-        <!-- Upper leaf -->
-        <path
-            android:fillColor="#606C38"
-            android:pathData="M54,47 C58,32 66,25 80,24 C79,38 70,46 54,47 Z" />
-        <path
-            android:strokeColor="#FAF8F5"
-            android:strokeWidth="1.4"
-            android:strokeAlpha="0.45"
-            android:strokeLineCap="round"
-            android:pathData="M56,45 C64,39 71,32 77,27" />
-
-        <!-- Lower leaf, a shade lighter so the two read as a pair and not one
-             solid blob at launcher size. -->
-        <path
-            android:fillColor="#8A9A5B"
-            android:pathData="M54,64 C50,49 42,42 28,41 C29,55 38,63 54,64 Z" />
-        <path
-            android:strokeColor="#FAF8F5"
-            android:strokeWidth="1.4"
-            android:strokeAlpha="0.45"
-            android:strokeLineCap="round"
-            android:pathData="M52,62 C44,56 37,49 31,44" />
-    </group>
+    <!-- What you share -->
+    <path android:pathData="M54,39.03A18,18 0,0 1,54 68.97A18,18 0,0 1,54 39.03z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="39"
+                android:endX="54"
+                android:endY="69">
+                <item android:offset="0" android:color="#FFFFFFFF" />
+                <item android:offset="1" android:color="#FFFFE4F1" />
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>

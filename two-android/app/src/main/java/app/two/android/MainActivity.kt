@@ -55,11 +55,11 @@ class MainActivity : FragmentActivity() {
     private lateinit var exitSafeManager: ExitSafeManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // The launch screen - the leaf on linen - has to be installed before
+        // The launch screen - the two circles on the night sky - has to be installed before
         // the activity is created, and it then stays up until the page says it
         // has drawn its first real screen (WebReady, set over the bridge). The
         // time limit is a safety net: a page that never reports in, or a slow
-        // phone, still gets its blank-then-app start rather than a leaf that
+        // phone, still gets its blank-then-app start rather than a mark that
         // never goes away.
         val launchedAt = SystemClock.uptimeMillis()
         WebReady.reset()

@@ -3,8 +3,9 @@
     <!-- Aurora: the night sky the app is drawn on, and its day version. -->
     <color name="aurora_night">#0E0B1F</color>
     <color name="aurora_day">#F7F5FF</color>
-    <!-- The circle behind the leaf on the launch screen, so it reads on the night. -->
-    <color name="aurora_icon_back">#F4F1FF</color>
+    <!-- The circle behind the mark on the launch screen: the icon's own night
+         plate, a shade lighter than the sky, so the two circles glow on it. -->
+    <color name="aurora_icon_back">#1C1440</color>
 
     <!-- Warm Linen Palette (the previous look) -->
     <color name="linen_background">#FAF8F5</color>
