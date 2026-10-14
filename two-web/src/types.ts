@@ -44,6 +44,38 @@ export interface ChatMessage {
    * taken from one that arrives.
    */
   heard?: boolean;
+  /**
+   * A photo: a JPEG or WebP data: URL, shrunk on the sending phone to fit one
+   * record, and its size in pixels so the bubble keeps its shape before it
+   * has drawn. `text` holds "Photo", for notifications and older phones.
+   */
+  isPhoto?: boolean;
+  photoDataUrl?: string;
+  photoWidth?: number;
+  photoHeight?: number;
+  /** The message this one answers (core/chatActions). */
+  replyTo?: ChatReplyRef;
+  /** When its author last changed the words (CHAT_EDIT); `text` holds the new ones. */
+  editedAt?: number;
+  /**
+   * Taken back by its author (CHAT_UNSEND). The words, and any recording or
+   * photo, are gone from this phone; the bubble says it was unsent.
+   */
+  unsent?: boolean;
+  /** At most one reaction from each of you, by seat (CHAT_REACTION). */
+  reactions?: Partial<Record<'user' | 'partner', string>>;
+}
+
+/**
+ * What a reply carries of the message it answers: whose it was and a few of
+ * its words, so the quote still shows when the original has gone from this
+ * phone (or has not arrived yet).
+ */
+export interface ChatReplyRef {
+  id: string;
+  authorId: string;
+  /** Up to about eighty characters - or "Voice note" or "Photo". */
+  snippet: string;
 }
 
 export interface JournalEntry {

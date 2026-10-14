@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { QuoteItem, MemoryItem } from '../types';
+import { shrinkPhoto } from '../core/photo';
 import { Quote, Plus, Sparkles, Image as ImageIcon, Lock, Unlock, Calendar, Clock, Heart, Camera, X } from 'lucide-react';
 
 export type { MemoryItem };
@@ -10,45 +11,11 @@ function todayLabel(): string {
 }
 
 /**
- * Shrinks a photo before it becomes part of a memory.
- *
- * A memory travels to your partner's phone inside one encrypted record, and
- * the relay refuses any record over 256 KB - so the photo has to fit, not just
- * be smaller. It starts at 1600 pixels on the long side, sharp full-screen on a
- * phone, and steps down in size and quality only as far as it must.
+ * How large a memory's photo may be (core/photo). A memory travels to your
+ * partner's phone inside one encrypted record with its title and words, so
+ * its photo is kept well under what one record can carry.
  */
-const MAX_PHOTO_CHARS = 150_000; // leaves room for encryption's base64 growth and the rest of the record
-
-function shrinkPhoto(file: File): Promise<string> {
-  const STEPS: Array<[number, number]> = [
-    [1600, 0.85], [1600, 0.72], [1280, 0.72], [1280, 0.6], [1024, 0.6], [800, 0.6], [640, 0.55]
-  ];
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return reject(new Error('no canvas'));
-      let dataUrl = '';
-      for (const [edge, quality] of STEPS) {
-        const scale = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
-        canvas.width = Math.round(img.naturalWidth * scale);
-        canvas.height = Math.round(img.naturalHeight * scale);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        dataUrl = canvas.toDataURL('image/jpeg', quality);
-        if (dataUrl.length <= MAX_PHOTO_CHARS) break;
-      }
-      resolve(dataUrl);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('not an image'));
-    };
-    img.src = url;
-  });
-}
+const MAX_PHOTO_CHARS = 150_000;
 
 interface TimelineViewProps {
   quotes: QuoteItem[];
@@ -82,7 +49,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      shrinkPhoto(file)
+      shrinkPhoto(file, MAX_PHOTO_CHARS).then(photo => photo.dataUrl)
         .then(setNewImage)
         .catch(() => setNewImage(undefined));
     }

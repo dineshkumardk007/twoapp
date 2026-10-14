@@ -72,6 +72,12 @@ export const CATCH_UP_TYPES = new Set<string>([
   'CHAT',
   // Marks one voice note heard; marking it again changes nothing.
   'VOICE_HEARD',
+  // Changes to a message (core/chatActions). Each sets a value - the words,
+  // a reaction, taken back - so the history applied again in order ends
+  // exactly where it was.
+  'CHAT_EDIT',
+  'CHAT_UNSEND',
+  'CHAT_REACTION',
   'LOVE_LETTER',
   'GRATITUDE_STAR',
   'INTUITION_ROUND',

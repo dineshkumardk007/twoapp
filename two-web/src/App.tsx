@@ -173,6 +173,19 @@ import { leaveBedside } from './core/bedside';
 import { askConfirm } from './core/dialog';
 import { firstHue, watchBoxes } from './core/boxHues';
 import {
+  CHAT_EDIT,
+  CHAT_REACTION,
+  CHAT_UNSEND,
+  applyEdit,
+  applyReaction,
+  applyUnsend,
+  canEdit,
+  canUnsend,
+  cleanPhotoFields,
+  cleanReplyRef,
+  type MessageExtras
+} from './core/chatActions';
+import {
   PRESENCE_BEAT,
   BEAT_INTERVAL_MS,
   readShareLastSeen,
@@ -241,16 +254,26 @@ function tooLargeNotice(bytes: number, isChat: boolean, tabId: string): InAppNot
  * A chat message from the partner's phone, made safe to keep.
  *
  * A recording is kept only as cleanVoiceFields accepts it - an audio data:
- * URL, nothing that would be fetched from anywhere. A message that claims to
- * be a voice note and fails loses the claim, and shows as its text: the label
- * every note carries ("Voice note · 0:12"). `heard` is never taken from the
- * wire; it is this phone's own record of who has played what.
+ * URL, nothing that would be fetched from anywhere - and a photo only as
+ * cleanPhotoFields does, an image data: URL. A message that claims either and
+ * fails loses the claim, and shows as its text: the label every one carries
+ * ("Voice note · 0:12", "Photo"). A reply's quote is kept only as a quote.
+ * `heard` is never taken from the wire; it is this phone's own record of who
+ * has played what. Nor are edits, unsending or reactions: those arrive as
+ * records of their own (core/chatActions), never inside the message.
  */
 function chatFromWire(parsed: any): ChatMessage {
   // Taken off whatever they say, so only the checked copies below go back on.
-  const { isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard, ...rest } = parsed;
+  const {
+    isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard,
+    isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo,
+    editedAt, unsent, reactions,
+    ...rest
+  } = parsed;
   const voice = cleanVoiceFields(parsed);
-  return voice ? { ...rest, ...voice } : rest;
+  const photo = voice ? null : cleanPhotoFields(parsed);
+  const reply = cleanReplyRef(replyTo);
+  return { ...rest, ...(voice || photo || {}), ...(reply ? { replyTo: reply } : {}) };
 }
 
 const AdventuresView = lazy(() => import('./views/AdventuresView').then(m => ({ default: m.AdventuresView })));
@@ -1078,6 +1101,17 @@ export const App: React.FC = () => {
                 return { ...m, heard: true };
               });
               return changed ? { ...prev, messages } : prev;
+            });
+          } else if (record.type === CHAT_EDIT || record.type === CHAT_UNSEND || record.type === CHAT_REACTION) {
+            // A change to a message already here: new words, taking it back,
+            // or a reaction. core/chatActions decides what each may do and
+            // who may do it; one naming a message this phone does not hold
+            // changes nothing.
+            const apply =
+              record.type === CHAT_EDIT ? applyEdit : record.type === CHAT_UNSEND ? applyUnsend : applyReaction;
+            setState(prev => {
+              const messages = apply(prev.messages, record.authorId, parsed);
+              return messages ? { ...prev, messages } : prev;
             });
           } else if (record.type === APP_VERSION) {
             // Which version the partner runs, for the note on Home when
@@ -2731,8 +2765,11 @@ export const App: React.FC = () => {
     });
   };
 
-  /** `extra` makes it a voice note; `text` is then the note's label. */
-  const handleSendMessage = (text: string, isNeedCard: boolean = false, extra?: VoiceFields) => {
+  /**
+   * `extra` makes it a voice note or a photo (`text` is then its label), or an
+   * answer to another message.
+   */
+  const handleSendMessage = (text: string, isNeedCard: boolean = false, extra?: MessageExtras) => {
     const newMessage: ChatMessage = {
       id: newId(),
       authorId: state.activeUser,
@@ -2744,11 +2781,11 @@ export const App: React.FC = () => {
       isNeedCard,
       ...extra
     };
-    // A voice note is measured against the relay's limit before it is shown.
-    // The relay client refuses an oversized record too, but only once it
-    // holds the space's key, so until then a bubble would sit there for a
-    // note that can never go. Refused here, where somebody can be told.
-    if (extra?.isVoiceMemo) {
+    // A voice note or a photo is measured against the relay's limit before it
+    // is shown. The relay client refuses an oversized record too, but only
+    // once it holds the space's key, so until then a bubble would sit there
+    // for a message that can never go. Refused here, where somebody can be told.
+    if (extra?.isVoiceMemo || extra?.isPhoto) {
       const bytes = recordSizeOf(newMessage);
       if (bytes > MAX_RECORD_BYTES) {
         setInAppNotification(tooLargeNotice(bytes, true, 'chat'));
@@ -2780,6 +2817,55 @@ export const App: React.FC = () => {
       messages: prev.messages.map(m => (m.id === messageId ? { ...m, heard: true } : m))
     }));
     if (readShareReceipts()) wsRelay.broadcastUpdate(VOICE_HEARD, { messageId });
+  };
+
+  /**
+   * New words for one of your own messages, within fifteen minutes of sending
+   * it (core/chatActions decides, here and on the other phone).
+   */
+  const handleEditMessage = (messageId: string, text: string) => {
+    const target = state.messages.find(m => m.id === messageId);
+    const words = text.trim();
+    if (!target || !words || words === target.text || !canEdit(target, state.activeUser)) return;
+    const payload = { messageId, text: words, editedAt: Date.now() };
+    setState(prev => {
+      const messages = applyEdit(prev.messages, prev.activeUser, payload);
+      return messages ? { ...prev, messages } : prev;
+    });
+    wsRelay.broadcastUpdate(CHAT_EDIT, payload);
+  };
+
+  /**
+   * Takes one of your messages back, from both phones, once you have said so.
+   * What it said goes; a line saying it was unsent stays in its place, so
+   * nothing disappears without a trace.
+   */
+  const handleUnsendMessage = async (messageId: string) => {
+    const target = state.messages.find(m => m.id === messageId);
+    if (!target || !canUnsend(target, state.activeUser)) return;
+    const ok = await askConfirm({
+      title: 'Unsend this message?',
+      body: `It will be taken off your phone and ${state.partnerName || 'your partner'}'s. A line saying you unsent a message stays in its place.`,
+      confirm: 'Unsend',
+      cancel: 'Keep it',
+      danger: true
+    });
+    if (!ok) return;
+    setState(prev => {
+      const messages = applyUnsend(prev.messages, prev.activeUser, { messageId });
+      return messages ? { ...prev, messages } : prev;
+    });
+    wsRelay.broadcastUpdate(CHAT_UNSEND, { messageId });
+  };
+
+  /** Your reaction to a message: set, changed, or taken off with ''. */
+  const handleReactToMessage = (messageId: string, emoji: string) => {
+    const payload = { messageId, emoji };
+    setState(prev => {
+      const messages = applyReaction(prev.messages, prev.activeUser, payload);
+      return messages ? { ...prev, messages } : prev;
+    });
+    wsRelay.broadcastUpdate(CHAT_REACTION, payload);
   };
 
   /** Sends one change to the other phone: over the relay, and the local network when there is one. */
@@ -4261,6 +4347,9 @@ export const App: React.FC = () => {
             partnerTyping={partnerTypingAt > 0}
             shareReceipts={shareReceipts}
             onVoiceHeard={handleVoiceHeard}
+            onReact={handleReactToMessage}
+            onEditMessage={handleEditMessage}
+            onUnsendMessage={messageId => void handleUnsendMessage(messageId)}
             onTyping={() => {
               // Read straight from the setting rather than the render's copy:
               // off must mean nothing leaves this device, immediately.

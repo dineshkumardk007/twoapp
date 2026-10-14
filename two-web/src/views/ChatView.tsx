@@ -1,14 +1,31 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { ChatMessage } from '../types';
+import { ChatMessage, ChatReplyRef } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
-import { voiceFieldsOf, voiceNoteLabel, type VoiceFields } from '../core/voice';
+import { MessageMenu, type MessageMenuAction } from '../components/MessageMenu';
+import { PhotoViewer } from '../components/PhotoViewer';
+import { voiceFieldsOf, voiceNoteLabel } from '../core/voice';
+import {
+  canEdit,
+  canUnsend,
+  highlightParts,
+  replyRefFor,
+  searchMatches,
+  type MessageExtras
+} from '../core/chatActions';
+import { shrinkPhoto } from '../core/photo';
+import { copyText } from '../core/clipboard';
+import { saveFile } from '../core/saveFile';
+import { useBackLayer } from '../core/backStack';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
 import { MAX_CHAT_MESSAGES } from '../core/storage';
 import { who } from '../core/who';
 import { haptic } from '../core/haptics';
-import { Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone } from 'lucide-react';
+import {
+  Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
+  Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download
+} from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
 
 interface ChatViewProps {
@@ -24,8 +41,17 @@ interface ChatViewProps {
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
   /** Retry or abandon a message that never left this device. */
   onResolveStuck?: (messageId: string, action: 'retry' | 'delete') => void;
-  /** `extra` makes it a voice note; `text` is then the note's label. */
-  onSendMessage: (text: string, isNeed?: boolean, extra?: VoiceFields) => void;
+  /**
+   * `extra` makes it a voice note or a photo (`text` is then its label), or an
+   * answer to another message.
+   */
+  onSendMessage: (text: string, isNeed?: boolean, extra?: MessageExtras) => void;
+  /** Sets, changes, or (with '') takes off your reaction to a message. */
+  onReact?: (messageId: string, emoji: string) => void;
+  /** New words for one of your own messages; offered for fifteen minutes after sending. */
+  onEditMessage?: (messageId: string, text: string) => void;
+  /** Takes one of your own messages back from both phones. The caller asks first. */
+  onUnsendMessage?: (messageId: string) => void;
   /**
    * The partner's voice note has just been played for the first time on this
    * phone. Whether that is told to them is the caller's business (it follows
@@ -87,6 +113,45 @@ const AT_BOTTOM_PX = 48;
 const DRAWN_AT_FIRST = 80;
 const DRAWN_MORE = 80;
 const LOAD_EARLIER_PX = 600;
+
+/** A press held this long without moving opens the message's menu. */
+const LONG_PRESS_MS = 420;
+/** A click this soon after a long press or a drag ended belongs to it, not to what is under the finger. */
+const SWALLOW_MS = 800;
+/** Dragged this far to the right, a message is answered when let go. */
+const SWIPE_REPLY_PX = 56;
+/** A photo is shrunk to fit one record with room to spare (core/photo). */
+const PHOTO_MAX_CHARS = 600_000;
+/** At most this many photos picked at once go. */
+const PHOTOS_AT_ONCE = 10;
+/** The largest a photo is shown in the conversation; tapped, it fills the screen. */
+const PHOTO_MAX_W = 240;
+const PHOTO_MAX_H = 300;
+
+/** A photo's size in the conversation: its own shape, within PHOTO_MAX_W by PHOTO_MAX_H. */
+function photoSize(m: ChatMessage): { width: number; height: number } {
+  const w = m.photoWidth || 4;
+  const h = m.photoHeight || 3;
+  const s = Math.min(PHOTO_MAX_W / w, PHOTO_MAX_H / h);
+  return { width: Math.round(w * s), height: Math.round(h * s) };
+}
+
+/** A data: URL as the bytes it holds, for saving. */
+function dataUrlToBlob(url: string): Blob {
+  const comma = url.indexOf(',');
+  const type = /^data:([^;,]+)/.exec(url)?.[1] || 'application/octet-stream';
+  const bytes = atob(url.slice(comma + 1));
+  const out = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) out[i] = bytes.charCodeAt(i);
+  return new Blob([out], { type });
+}
+
+/** "two-photo-2026-10-14-2141.jpg" */
+function photoFileName(at?: number): string {
+  const d = new Date(at && Number.isFinite(at) ? at : Date.now());
+  const two = (n: number) => String(n).padStart(2, '0');
+  return `two-photo-${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}-${two(d.getHours())}${two(d.getMinutes())}.jpg`;
+}
 
 function startOfDay(at: number): number {
   const d = new Date(at);
@@ -180,24 +245,44 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onStartCall,
   callInProgress = false,
   partnerName = 'Partner',
-  onVoiceHeard
+  onVoiceHeard,
+  onReact,
+  onEditMessage,
+  onUnsendMessage
 }) => {
   const [inputText, setInputText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  /** The message being answered: shown above the composer, and sent with what is written next. */
+  const [replyTo, setReplyTo] = useState<ChatReplyRef | null>(null);
+  const replyToRef = useRef(replyTo);
+  replyToRef.current = replyTo;
+  /** One of your messages having its words changed, in the composer; what it said before. */
+  const [editing, setEditing] = useState<{ id: string; original: string } | null>(null);
 
   /**
    * Hold-to-talk. The mic takes Send's place while the text box is empty, and
    * the strip lies over the composer while a note is under way. Not during a
    * call: the call has the microphone, and its sound would be in the note.
+   * A note recorded while answering a message answers it.
    */
   const rec = useVoiceRecorder({
-    onSend: note => onSendMessage(voiceNoteLabel(note.durationSeconds), false, voiceFieldsOf(note)),
+    onSend: note => {
+      const reply = replyToRef.current;
+      onSendMessage(voiceNoteLabel(note.durationSeconds), false, {
+        ...voiceFieldsOf(note),
+        ...(reply ? { replyTo: reply } : {})
+      });
+      if (reply) setReplyTo(null);
+    },
     disabled: callInProgress,
     onActiveChange: active => {
       if (active) setShowEmojiPicker(false);
     }
   });
   const showMic = rec.supported && (!inputText.trim() || rec.active);
+  /** Photos are offered while nothing is written - not mid-sentence, mid-edit, or mid-note. */
+  const showPhotoButton = !inputText && !editing && !rec.active;
   /** Which stuck message has its retry/discard choice open. */
   const [stuckOpen, setStuckOpen] = useState<string | null>(null);
 
@@ -384,10 +469,113 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const handleSendText = () => {
     const text = inputText.trim();
     if (!text) return;
-    onSendMessage(text);
+    if (editing) {
+      const target = messages.find(m => m.id === editing.id);
+      if (!target || !canEdit(target, activeUser)) {
+        // The fifteen minutes ran out while the new words were being written.
+        showToast('Too late to change - messages can be edited for 15 minutes');
+      } else if (text !== editing.original) {
+        onEditMessage?.(editing.id, text);
+      }
+      setEditing(null);
+    } else {
+      onSendMessage(text, false, replyTo ? { replyTo } : undefined);
+      setReplyTo(null);
+    }
     setInputText('');
     haptic('confirm');
     restoreComposerFocus();
+  };
+
+  /** Answer a message: its quote goes above the composer, and the keyboard comes up. */
+  const answer = (id: string) => {
+    const m = messages.find(x => x.id === id);
+    if (!m || m.unsent) return;
+    if (editing) {
+      setEditing(null);
+      setInputText('');
+    }
+    setReplyTo(replyRefFor(m));
+    inputRef.current?.focus();
+  };
+
+  /** Change one of your messages: its words go into the composer to be written over. */
+  const startEdit = (m: ChatMessage) => {
+    setReplyTo(null);
+    setEditing({ id: m.id, original: m.text });
+    setInputText(m.text);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+  };
+
+  /** Put down an answer or an edit without sending it. */
+  const cancelCompose = () => {
+    setReplyTo(null);
+    if (editing) {
+      setEditing(null);
+      setInputText('');
+    }
+  };
+  useBackLayer(!!(replyTo || editing), cancelCompose);
+
+  /** A word or two for a moment, over the conversation: "Copied", "Saved". */
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef(0);
+  const showToast = (text: string) => {
+    setToast(text);
+    window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => setToast(null), 1800);
+  };
+  useEffect(() => () => window.clearTimeout(toastTimerRef.current), []);
+
+  /**
+   * Photos chosen from the phone, sent one message each, in the order picked.
+   * Each is shrunk to fit one record first (core/photo); the first of them
+   * answers the message being answered, if there is one.
+   */
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [preparingPhotos, setPreparingPhotos] = useState(0);
+  const sendPhotos = async (files: FileList | null) => {
+    const picked = files ? Array.from(files).filter(f => !f.type || f.type.startsWith('image/')) : [];
+    if (!picked.length) return;
+    if (picked.length > PHOTOS_AT_ONCE) showToast(`The first ${PHOTOS_AT_ONCE} photos are on their way`);
+    const list = picked.slice(0, PHOTOS_AT_ONCE);
+    let reply = replyToRef.current;
+    setReplyTo(null);
+    setPreparingPhotos(n => n + list.length);
+    for (const file of list) {
+      try {
+        const photo = await shrinkPhoto(file, PHOTO_MAX_CHARS);
+        onSendMessage('Photo', false, {
+          isPhoto: true,
+          photoDataUrl: photo.dataUrl,
+          photoWidth: photo.width,
+          photoHeight: photo.height,
+          ...(reply ? { replyTo: reply } : {})
+        });
+        reply = null;
+        haptic('confirm');
+      } catch {
+        showToast('That file could not be opened as a photo');
+      } finally {
+        setPreparingPhotos(n => Math.max(0, n - 1));
+      }
+    }
+  };
+
+  /** A photo, out of the chat and into the phone's own storage, where the person chooses. */
+  const savePhoto = async (m: ChatMessage) => {
+    if (!m.photoDataUrl) return;
+    try {
+      await saveFile(dataUrlToBlob(m.photoDataUrl), photoFileName(m.sentAt));
+      showToast('Saved');
+    } catch {
+      showToast('Could not save the photo');
+    }
   };
 
   const handleComposerKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -433,6 +621,206 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const playNextAfterRef = useRef(playNextAfter);
   playNextAfterRef.current = playNextAfter;
 
+  /** The message whose menu is open, and where it sits on screen. */
+  const [menu, setMenu] = useState<{
+    id: string;
+    anchor: { top: number; bottom: number; left: number; right: number };
+  } | null>(null);
+  const menuRef = useRef(menu);
+  menuRef.current = menu;
+  /** The photo filling the screen. */
+  const [viewerId, setViewerId] = useState<string | null>(null);
+  /** A message just jumped to, lit for a moment so the eye finds it. */
+  const [flashId, setFlashId] = useState<string | null>(null);
+
+  /** Every message by id: a reply's quote looks up whether what it answers was since taken back. */
+  const byId = useMemo(() => new Map(messages.map(m => [m.id, m])), [messages]);
+
+  const openMenu = (id: string, bubble: HTMLElement) => {
+    const m = latestMessagesRef.current.find(x => x.id === id);
+    if (!m || m.unsent) return;
+    const r = bubble.getBoundingClientRect();
+    setMenu({ id, anchor: { top: r.top, bottom: r.bottom, left: r.left, right: r.right } });
+    haptic('tick');
+  };
+
+  /**
+   * A finger on a message. Held still, it opens the message's menu; drawn to
+   * the right, it answers the message. Followed in a ref, with the drag written
+   * straight onto the message, so neither goes through a render of the
+   * conversation. A drag that starts on a voice note's waveform is the
+   * player's: that is how it is scrubbed.
+   */
+  const pressRef = useRef<{
+    id: string;
+    pointerId: number;
+    x: number;
+    y: number;
+    timer: number;
+    bubble: HTMLElement;
+    row: HTMLElement;
+    swiping: boolean;
+    pull: number;
+    armed: boolean;
+  } | null>(null);
+  /**
+   * When a long press or a drag last ended, so the click that comes straight
+   * after it does not also open a photo or follow a quote. A moment later it
+   * no longer counts: a click from the keyboard is never eaten.
+   */
+  const swallowClickRef = useRef(0);
+
+  const pressStart = (e: React.PointerEvent<HTMLElement>, id: string) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if ((e.target as HTMLElement).closest('[role="slider"]')) return;
+    const bubble = e.currentTarget;
+    const row = bubble.parentElement;
+    if (!row) return;
+    swallowClickRef.current = 0;
+    window.clearTimeout(pressRef.current?.timer);
+    const timer = window.setTimeout(() => {
+      const p = pressRef.current;
+      if (!p || p.swiping) return;
+      swallowClickRef.current = Date.now();
+      pressRef.current = null;
+      openMenuRef.current(p.id, p.bubble);
+    }, LONG_PRESS_MS);
+    pressRef.current = {
+      id, pointerId: e.pointerId, x: e.clientX, y: e.clientY, timer, bubble, row, swiping: false, pull: 0, armed: false
+    };
+  };
+
+  const pressMove = (e: React.PointerEvent<HTMLElement>) => {
+    const p = pressRef.current;
+    if (!p || p.pointerId !== e.pointerId) return;
+    const dx = e.clientX - p.x;
+    const dy = e.clientY - p.y;
+    if (!p.swiping) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      window.clearTimeout(p.timer);
+      // Up and down is scrolling; only a pull to the right answers.
+      if (dx <= 0 || Math.abs(dx) < Math.abs(dy) * 1.5) {
+        pressRef.current = null;
+        return;
+      }
+      p.swiping = true;
+      try {
+        p.bubble.setPointerCapture(e.pointerId);
+      } catch {
+        /* the finger is already up */
+      }
+    }
+    p.pull = Math.min(80, dx * 0.6);
+    p.row.style.transition = 'none';
+    p.row.style.transform = `translateX(${p.pull}px)`;
+    p.row.style.setProperty('--pull', String(Math.min(1, p.pull / SWIPE_REPLY_PX)));
+    if (p.pull >= SWIPE_REPLY_PX && !p.armed) {
+      p.armed = true;
+      haptic('tick');
+    }
+  };
+
+  const pressEnd = (e: React.PointerEvent<HTMLElement>) => {
+    const p = pressRef.current;
+    if (!p || p.pointerId !== e.pointerId) return;
+    window.clearTimeout(p.timer);
+    pressRef.current = null;
+    if (!p.swiping) return;
+    swallowClickRef.current = Date.now();
+    p.row.style.transition = 'transform 180ms ease-out';
+    p.row.style.transform = '';
+    p.row.style.setProperty('--pull', '0');
+    if (p.pull >= SWIPE_REPLY_PX) answerRef.current(p.id);
+  };
+
+  /** A right click, or a phone's own long press: the same menu. */
+  const pressContextMenu = (e: React.MouseEvent<HTMLElement>, id: string) => {
+    e.preventDefault();
+    if (menuRef.current) return;
+    const p = pressRef.current;
+    if (p) {
+      window.clearTimeout(p.timer);
+      pressRef.current = null;
+    }
+    swallowClickRef.current = Date.now();
+    openMenuRef.current(id, e.currentTarget);
+  };
+
+  /**
+   * Brings a message into view - drawing further back first when it is older
+   * than what is drawn - and, from a quote, lights it up for a moment. False
+   * when it is not on this phone.
+   */
+  const pendingJumpRef = useRef<{ id: string; flash: boolean } | null>(null);
+  const scrollToMessage = (id: string, flash: boolean) => {
+    const log = messagesRef.current;
+    const el = log?.querySelector<HTMLElement>(`[data-mid="${CSS.escape(id)}"]`);
+    if (!log || !el) return;
+    pinnedRef.current = false;
+    log.scrollTop += el.getBoundingClientRect().top - log.getBoundingClientRect().top - log.clientHeight / 3;
+    if (flash) {
+      setFlashId(id);
+      window.setTimeout(() => setFlashId(current => (current === id ? null : current)), 1500);
+    }
+  };
+  const jumpTo = (id: string, flash: boolean): boolean => {
+    const index = rows.findIndex(r => r.msg.id === id);
+    if (index < 0) return false;
+    if (index < drawnFrom) {
+      pendingJumpRef.current = { id, flash };
+      setFirstDrawn(Math.max(0, index - 20));
+    } else {
+      scrollToMessage(id, flash);
+    }
+    return true;
+  };
+  // Drawn further back for a jump: now it is there to go to.
+  useLayoutEffect(() => {
+    const jump = pendingJumpRef.current;
+    if (!jump) return;
+    pendingJumpRef.current = null;
+    scrollToMessage(jump.id, jump.flash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawnFrom]);
+
+  /** Searching the conversation: the words, which match is in view, and the matches oldest first. */
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const matches = useMemo(
+    () => (searchOpen ? searchMatches(messages, searchQuery) : []),
+    [messages, searchQuery, searchOpen]
+  );
+  const matchSet = useMemo(() => new Set(matches), [matches]);
+  const [matchIndex, setMatchIndex] = useState(-1);
+  // New words start at the newest match, the way a messenger's search does -
+  // and only new words: messages arriving mid-search do not move it.
+  const matchCount = matches.length;
+  useEffect(() => {
+    setMatchIndex(matchCount ? matchCount - 1 : -1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, searchOpen]);
+  const currentMatch = matchIndex >= 0 && matchIndex < matchCount ? matches[matchIndex] : null;
+  useEffect(() => {
+    if (currentMatch) jumpToRef.current(currentMatch, false);
+  }, [currentMatch]);
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery('');
+  };
+  useBackLayer(searchOpen, closeSearch);
+  const highlight = searchOpen ? searchQuery.trim() : '';
+
+  // Read through refs inside the laid-out conversation, which is not built
+  // again for each of these changing.
+  const openMenuRef = useRef(openMenu);
+  openMenuRef.current = openMenu;
+  const answerRef = useRef(answer);
+  answerRef.current = answer;
+  const jumpToRef = useRef(jumpTo);
+  jumpToRef.current = jumpTo;
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+
   /**
    * The bubbles themselves.
    *
@@ -449,7 +837,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
         // retry stay even with receipts switched off - otherwise a message
         // that never went would sit there looking sent.
         const stuck = mine && !msg.delivered && !read;
-        const showMeta = lastOfRun || stuck;
+        const unsent = !!msg.unsent;
+        const edited = !!msg.editedAt && !unsent;
+        const showMeta = lastOfRun || stuck || edited;
+        const reactions = unsent || !msg.reactions ? [] : (Object.values(msg.reactions).filter(Boolean) as string[]);
+        const quote = unsent ? undefined : msg.replyTo;
+        const photo = !unsent && msg.isPhoto && msg.photoDataUrl ? photoSize(msg) : null;
 
         // One rounded shape per run: the corners on the sender's side tuck in
         // where bubbles meet, and the last one keeps a small tail.
@@ -468,26 +861,83 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </div>
             )}
 
-            <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'} ${spacing}`}>
+            <div data-mid={msg.id} className={`relative flex flex-col ${mine ? 'items-end' : 'items-start'} ${spacing}`}>
+              {/* Comes into view as the message is drawn to the right to answer it. */}
+              {!unsent && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-0 top-1/2 -translate-x-8 -translate-y-1/2 text-linen-secondary"
+                  style={{ opacity: 'var(--pull, 0)' }}
+                >
+                  <CornerUpLeft className="w-5 h-5" />
+                </span>
+              )}
               <div
-                className={`sm:max-w-md rounded-2xl ${
+                data-bubble
+                // A long press opens the message's menu and a pull to the right
+                // answers it; up and down stays the conversation's scroll.
+                onPointerDown={unsent ? undefined : e => pressStart(e, msg.id)}
+                onPointerMove={unsent ? undefined : pressMove}
+                onPointerUp={unsent ? undefined : pressEnd}
+                onPointerCancel={unsent ? undefined : pressEnd}
+                onContextMenu={unsent ? undefined : e => pressContextMenu(e, msg.id)}
+                onClickCapture={e => {
+                  if (Date.now() - swallowClickRef.current > SWALLOW_MS) return;
+                  swallowClickRef.current = 0;
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                className={`touch-pan-y sm:max-w-md rounded-2xl ${
                   // A little tighter around a player, which has its own
                   // breathing room, than around words - and a little more of
-                  // the width, so its 200px fits a 320px phone.
-                  msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : 'max-w-[85%] px-4 py-2.5'
+                  // the width, so its 200px fits a 320px phone. A photo gets a
+                  // thin frame of the bubble's own colour.
+                  photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : 'max-w-[85%] px-4 py-2.5'
                 } text-sm leading-relaxed ${shape} ${
-                  msg.isNeedCard
+                  unsent
+                    ? 'border border-dashed border-linen-border text-linen-secondary'
+                    : msg.isNeedCard
                     ? 'bg-amber-50 border border-amber-300/70 text-linen-primary'
                     : mine
                     ? 'bg-linen-primary text-linen-surface'
                     : 'bg-linen-variant text-linen-primary border border-linen-border'
-                }`}
+                } ${flashId === msg.id ? 'message-flash' : ''} ${currentMatch === msg.id ? 'ring-2 ring-amber-400' : ''}`}
               >
+                {unsent ? (
+                  <p className="flex items-center gap-1.5 italic">
+                    <Undo2 className="w-3.5 h-3.5 shrink-0" />
+                    {mine ? 'You unsent a message' : `${partnerName} unsent a message`}
+                  </p>
+                ) : (
+                <>
                 {msg.isNeedCard && (
                   <div className="text-[11px] font-semibold tracking-wider text-amber-700 uppercase mb-1 flex items-center">
                     <Sparkles className="w-3 h-3 mr-1" />
                     A request
                   </div>
+                )}
+
+                {quote && (
+                  // What this answers. Tapped, the conversation goes back to it.
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!jumpToRef.current(quote.id, true)) showToastRef.current('That message is no longer on this phone');
+                    }}
+                    className={`mb-1.5 block w-full min-w-0 rounded-xl border-l-[3px] px-2.5 py-1.5 text-left text-xs ${
+                      // On your own aurora bubble the quote is set back into it,
+                      // darker, so its white words stay clear over the orange end.
+                      mine ? 'no-remap border-white/70 bg-black/25' : 'border-linen-accent bg-linen-surface/70'
+                    } ${photo ? 'mx-0' : ''}`}
+                    style={photo ? { maxWidth: photo.width } : undefined}
+                  >
+                    <span className={`block font-semibold ${mine ? 'text-white' : 'text-linen-accent'}`}>
+                      {who(quote.authorId, activeUser, partnerName)}
+                    </span>
+                    <span className={`block truncate ${mine ? 'text-white/90' : 'text-linen-secondary'}`}>
+                      {byId.get(quote.id)?.unsent ? 'Message unsent' : quote.snippet || 'Message'}
+                    </span>
+                  </button>
                 )}
 
                 {msg.isVoiceMemo ? (
@@ -508,13 +958,73 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     onEnded={() => playNextAfterRef.current(msg.id)}
                     playSignal={autoPlay?.id === msg.id ? autoPlay.signal : undefined}
                   />
+                ) : photo ? (
+                  // Its own shape at a size that fits the conversation; tapped,
+                  // it has the whole screen.
+                  <button
+                    type="button"
+                    onClick={() => setViewerId(msg.id)}
+                    aria-label="Open photo"
+                    className="block overflow-hidden rounded-xl"
+                  >
+                    <img
+                      src={msg.photoDataUrl}
+                      alt="Photo"
+                      width={photo.width}
+                      height={photo.height}
+                      decoding="async"
+                      draggable={false}
+                      className="block object-cover"
+                      style={photo}
+                    />
+                  </button>
                 ) : (
-                  // Selectable on purpose: the rest of the app is not, so a
-                  // long press on a button never selects its label, but a
-                  // message is something you copy.
-                  <p className="select-text whitespace-pre-wrap break-words">{msg.text}</p>
+                  // Copied from the message's menu rather than selected: a
+                  // long press here opens the menu, so it cannot also start
+                  // selecting words.
+                  <p className="whitespace-pre-wrap break-words">
+                    {highlight && matchSet.has(msg.id)
+                      ? highlightParts(msg.text, highlight).map((part, k) =>
+                          part.match ? (
+                            // Dark ink on amber whatever is behind it: light words on
+                            // a pale mark could not be read at night, nor on the
+                            // pink of your own messages.
+                            <mark key={k} className="no-remap rounded bg-amber-300 px-0.5 text-[#1d1638]">
+                              {part.text}
+                            </mark>
+                          ) : (
+                            <React.Fragment key={k}>{part.text}</React.Fragment>
+                          )
+                        )
+                      : msg.text}
+                  </p>
+                )}
+                </>
                 )}
               </div>
+
+              {reactions.length > 0 && (
+                // One from each of you, on the bubble's lower edge. Tapped, the
+                // reactions come up to be changed.
+                <button
+                  type="button"
+                  onClick={e => {
+                    const bubble = e.currentTarget.parentElement?.querySelector<HTMLElement>('[data-bubble]');
+                    if (bubble) openMenuRef.current(msg.id, bubble);
+                  }}
+                  aria-label={`Reactions: ${reactions.join(' ')}`}
+                  className={`relative z-[1] -mt-2 inline-flex items-center gap-0.5 rounded-full border border-linen-border bg-linen-surface px-1.5 py-0.5 text-[13px] leading-none shadow-sm ${
+                    mine ? 'mr-3' : 'ml-3'
+                  }`}
+                >
+                  {[...new Set(reactions)].map(r => (
+                    <span key={r}>{r}</span>
+                  ))}
+                  {reactions.length > 1 && new Set(reactions).size === 1 && (
+                    <span className="ml-0.5 text-[10px] font-semibold text-linen-secondary">2</span>
+                  )}
+                </button>
+              )}
 
               {showMeta && (
                 <span className="text-[10px] text-linen-secondary mt-1 px-1 inline-flex items-center">
@@ -525,7 +1035,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       {row.time && <> &middot; {row.time}</>}
                     </span>
                   )}
-                  {mine && (
+                  {/* Changed after it was sent: said wherever it is, last of a run or not. */}
+                  {edited && <span className={lastOfRun ? 'ml-1' : ''}>{lastOfRun ? <>&middot; edited</> : 'edited'}</span>}
+                  {mine && !unsent && (
                     <span className="ml-1.5 inline-flex items-center align-middle">
                       {stuck ? (
                         <>
@@ -586,96 +1098,196 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </React.Fragment>
         );
       }),
-    [drawnRows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay]
+    // The press handlers are left out on purpose: they act only through refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [drawnRows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay,
+      byId, highlight, matchSet, currentMatch, flashId]
   );
 
+  /** What can be done with the message whose menu is open. */
+  const menuMessage = menu ? byId.get(menu.id) : undefined;
+  const menuActions: MessageMenuAction[] = [];
+  if (menuMessage && !menuMessage.unsent) {
+    const m = menuMessage;
+    const close = () => setMenu(null);
+    menuActions.push({ key: 'reply', label: 'Reply', icon: CornerUpLeft, onSelect: () => { close(); answer(m.id); } });
+    if (!m.isVoiceMemo && !m.isPhoto && m.text) {
+      menuActions.push({
+        key: 'copy',
+        label: 'Copy',
+        icon: Copy,
+        onSelect: () => {
+          close();
+          void copyText(m.text).then(ok => showToast(ok ? 'Copied' : 'Could not copy'));
+        }
+      });
+    }
+    if (m.isPhoto && m.photoDataUrl) {
+      menuActions.push({ key: 'save', label: 'Save to phone', icon: Download, onSelect: () => { close(); void savePhoto(m); } });
+    }
+    if (onEditMessage && canEdit(m, activeUser)) {
+      menuActions.push({ key: 'edit', label: 'Edit', icon: Pencil, onSelect: () => { close(); startEdit(m); } });
+    }
+    if (onUnsendMessage && canUnsend(m, activeUser)) {
+      menuActions.push({ key: 'unsend', label: 'Unsend', icon: Undo2, danger: true, onSelect: () => { close(); onUnsendMessage(m.id); } });
+    }
+  }
+  /** The photo filling the screen - gone if it was taken back meanwhile. */
+  const viewed = viewerId ? byId.get(viewerId) : undefined;
+  const viewerMessage = viewed && viewed.isPhoto && viewed.photoDataUrl && !viewed.unsent ? viewed : undefined;
+
   return (
-    <div className="flex flex-col chat-shell bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
+    <div className="relative flex flex-col chat-shell bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
       {/* Header */}
       <div className="px-4 py-3 border-b border-linen-border bg-linen-variant/40 flex items-center justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <h3 className="font-serif text-base font-medium text-linen-primary truncate">
-            {partnerName}
-          </h3>
-          {/* One line, always. Three separate facts used to sit here as
-              separate spans and, once presence was added, a phone-width header
-              wrapped them into a four-line stack that pushed the conversation
-              down the screen. */}
-          <div className="flex items-center gap-1.5 text-xs text-linen-secondary min-w-0 whitespace-nowrap overflow-hidden">
-            {/* Encryption is unconditional, so this dot stays green: it is a
-                statement about the room, not the connection. The connection
-                gets its own words, and only when there is something to say. */}
-            <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-500 inline-block" />
-
-            {/* Presence takes the line when there is any, the way a messenger
-                does it. "Encrypted Room" is what the line says when there is
-                nothing else to report - the encryption is unconditional, so it
-                is a statement about the room rather than news. */}
-            <span className="truncate">
-              {partnerTyping ? (
-                <span className="font-medium text-linen-accent">typing…</span>
-              ) : partnerOnline ? (
-                <span className="text-emerald-700">online</span>
-              ) : (
-                lastSeenLabel || 'Encrypted Room'
-              )}
+        {searchOpen ? (
+          // Searching: the words, which match is in view, and the way to the
+          // earlier and later ones. Enter goes further back, as the first
+          // match shown is the newest.
+          <div className="flex w-full min-w-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={closeSearch}
+              aria-label="Close search"
+              className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-linen-secondary hover:bg-linen-variant hover:text-linen-primary transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <input
+              autoFocus
+              type="search"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => {
+                if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+                e.preventDefault();
+                setMatchIndex(i => Math.max(0, i - 1));
+              }}
+              enterKeyHint="search"
+              aria-label="Search this chat"
+              placeholder="Search this chat"
+              className="min-w-0 flex-1 rounded-lg border border-linen-border bg-linen-surface px-3 py-1.5 text-sm text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary select-text"
+            />
+            <span className="shrink-0 px-1 text-xs tabular-nums text-linen-secondary" aria-live="polite">
+              {matchCount ? `${matchIndex + 1}/${matchCount}` : searchQuery.trim() ? 'None' : ''}
             </span>
-
-            {relayStatus !== 'connected' && (
-              <span className="shrink-0 text-amber-700">
-                &middot;{' '}
-                {relayStatus === 'connecting' || relayStatus === 'reconnecting'
-                  ? 'Connecting'
-                  : 'Offline'}
-              </span>
-            )}
+            <button
+              type="button"
+              onClick={() => setMatchIndex(i => Math.max(0, i - 1))}
+              disabled={matchIndex <= 0}
+              aria-label="Earlier match"
+              className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-linen-primary hover:bg-linen-variant disabled:opacity-30 transition-colors"
+            >
+              <ChevronUp className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setMatchIndex(i => Math.min(matchCount - 1, i + 1))}
+              disabled={matchIndex < 0 || matchIndex >= matchCount - 1}
+              aria-label="Later match"
+              className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-linen-primary hover:bg-linen-variant disabled:opacity-30 transition-colors"
+            >
+              <ChevronDown className="w-5 h-5" />
+            </button>
           </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
-          {/* Enabled whether or not they are online. A call to somebody who
-              is away cannot connect, but it still leaves a missed call they
-              will see - which is what calling a phone that is off does too. */}
-          {onStartCall && (
+        ) : (
+          <>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-serif text-base font-medium text-linen-primary truncate">
+              {partnerName}
+            </h3>
+            {/* One line, always. Three separate facts used to sit here as
+                separate spans and, once presence was added, a phone-width header
+                wrapped them into a four-line stack that pushed the conversation
+                down the screen. */}
+            <div className="flex items-center gap-1.5 text-xs text-linen-secondary min-w-0 whitespace-nowrap overflow-hidden">
+              {/* Encryption is unconditional, so this dot stays green: it is a
+                  statement about the room, not the connection. The connection
+                  gets its own words, and only when there is something to say. */}
+              <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-500 inline-block" />
+
+              {/* Presence takes the line when there is any, the way a messenger
+                  does it. "Encrypted Room" is what the line says when there is
+                  nothing else to report - the encryption is unconditional, so it
+                  is a statement about the room rather than news. */}
+              <span className="truncate">
+                {partnerTyping ? (
+                  <span className="font-medium text-linen-accent">typing…</span>
+                ) : partnerOnline ? (
+                  <span className="text-emerald-700">online</span>
+                ) : (
+                  lastSeenLabel || 'Encrypted Room'
+                )}
+              </span>
+
+              {relayStatus !== 'connected' && (
+                <span className="shrink-0 text-amber-700">
+                  &middot;{' '}
+                  {relayStatus === 'connecting' || relayStatus === 'reconnecting'
+                    ? 'Connecting'
+                    : 'Offline'}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
             <button
-              onClick={onStartCall}
-              disabled={callInProgress}
-              aria-label={`Call ${partnerName}`}
-              title={`Call ${partnerName}`}
-              className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant disabled:opacity-40 transition-colors cursor-pointer"
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search this chat"
+              title="Search this chat"
+              className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
             >
-              <Phone className="w-4 h-4" />
+              <Search className="w-4 h-4" />
             </button>
-          )}
-          {onOpenSoftLanding && (
+            {/* Enabled whether or not they are online. A call to somebody who
+                is away cannot connect, but it still leaves a missed call they
+                will see - which is what calling a phone that is off does too. */}
+            {onStartCall && (
+              <button
+                onClick={onStartCall}
+                disabled={callInProgress}
+                aria-label={`Call ${partnerName}`}
+                title={`Call ${partnerName}`}
+                className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant disabled:opacity-40 transition-colors cursor-pointer"
+              >
+                <Phone className="w-4 h-4" />
+              </button>
+            )}
+            {onOpenSoftLanding && (
+              <button
+                onClick={onOpenSoftLanding}
+                className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200 flex items-center transition-colors cursor-pointer"
+                title="Pause and take a 20-minute de-escalation breather"
+              >
+                <Feather className="w-3.5 h-3.5 mr-1" />
+                <span>Breather</span>
+              </button>
+            )}
             <button
-              onClick={onOpenSoftLanding}
-              className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200 flex items-center transition-colors cursor-pointer"
-              title="Pause and take a 20-minute de-escalation breather"
+              onClick={() => setShowNeedModal(true)}
+              className="text-xs font-medium text-linen-accent hover:underline flex items-center"
             >
-              <Feather className="w-3.5 h-3.5 mr-1" />
-              <span>Breather</span>
+              <Sparkles className="w-3.5 h-3.5 mr-1 shrink-0" />
+              {/* The full phrase wrapped onto three lines in a phone-width
+                  header, which both made it tall and squeezed the presence line
+                  beside it into an ellipsis. Same button, fewer words where
+                  there is no room for them. */}
+              <span className="hidden sm:inline">Ask For What You Need</span>
+              <span className="sm:hidden">Ask</span>
             </button>
-          )}
-          <button
-            onClick={() => setShowNeedModal(true)}
-            className="text-xs font-medium text-linen-accent hover:underline flex items-center"
-          >
-            <Sparkles className="w-3.5 h-3.5 mr-1 shrink-0" />
-            {/* The full phrase wrapped onto three lines in a phone-width
-                header, which both made it tall and squeezed the presence line
-                beside it into an ellipsis. Same button, fewer words where
-                there is no room for them. */}
-            <span className="hidden sm:inline">Ask For What You Need</span>
-            <span className="sm:hidden">Ask</span>
-          </button>
-        </div>
-      </div>
+          </div>
+                </>
+        )}
+</div>
 
       {/* Message List */}
       <div
         ref={messagesRef}
         onScroll={handleLogScroll}
-        className="flex-1 min-h-0 overflow-y-auto scroll-contain p-4 sm:p-6"
+        // Sideways hidden: a message drawn to the right to answer it must not
+        // make the conversation scroll sideways under the finger.
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-contain p-4 sm:p-6"
       >
         <div ref={contentRef}>
           {/* Said once the device is full rather than never. The oldest fall off
@@ -711,6 +1323,46 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </div>
       )}
 
+      {/* What the next message answers, or which message is being changed -
+          with the way out of either. */}
+      {(replyTo || editing) && (
+        <div className="mx-4 mt-2 flex items-center gap-2 rounded-xl border border-linen-border bg-linen-variant/50 py-1.5 pl-3 pr-1">
+          <div className="w-[3px] self-stretch rounded-full bg-linen-accent" />
+          {editing ? (
+            <Pencil className="w-4 h-4 shrink-0 text-linen-accent" />
+          ) : (
+            <CornerUpLeft className="w-4 h-4 shrink-0 text-linen-accent" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold text-linen-accent">
+              {editing
+                ? 'Editing your message'
+                : `Replying to ${replyTo!.authorId === activeUser ? 'yourself' : partnerName}`}
+            </p>
+            <p className="truncate text-xs text-linen-secondary">{editing ? editing.original : replyTo!.snippet || 'Message'}</p>
+          </div>
+          <button
+            type="button"
+            onPointerDown={keepComposerFocus}
+            onMouseDown={keepComposerFocus}
+            onClick={() => {
+              cancelCompose();
+              restoreComposerFocus();
+            }}
+            aria-label={editing ? 'Stop editing' : 'Cancel reply'}
+            className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-linen-secondary hover:bg-linen-variant hover:text-linen-primary transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {preparingPhotos > 0 && (
+        <p className="mx-4 mt-2 text-[11px] text-linen-secondary" aria-live="polite">
+          {preparingPhotos === 1 ? 'Getting the photo ready…' : `Getting ${preparingPhotos} photos ready…`}
+        </p>
+      )}
+
       {/* Input Bar. Positioned, so a voice note under way can lie over the
           emoji button and the text box (which stay mounted underneath, the
           text box focused if it was, so the keyboard does not drop) while the
@@ -740,23 +1392,52 @@ export const ChatView: React.FC<ChatViewProps> = ({
               <Smile className="w-5 h-5" />
             </button>
 
-            <textarea
-              ref={inputRef}
-              rows={1}
-              value={inputText}
-              onChange={(e) => {
-                setInputText(e.target.value);
-                announceTyping();
-              }}
-              onKeyDown={handleComposerKey}
-              enterKeyHint={touchFirst ? 'enter' : 'send'}
-              autoCapitalize="sentences"
-              aria-label={`Message to ${partnerName}`}
-              // Short enough for one line on a small phone; whose chat this is
-              // is already in the header right above.
-              placeholder="A quiet thought…"
-              className="flex-1 min-w-0 resize-none overflow-y-hidden px-4 py-2.5 text-sm leading-5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary placeholder:text-linen-secondary/60 select-text"
-            />
+            {/* The photo button sits inside the text box while it is empty, so
+                it takes none of the width the words need once there are some. */}
+            <div className="relative flex-1 min-w-0">
+              <textarea
+                ref={inputRef}
+                rows={1}
+                value={inputText}
+                onChange={(e) => {
+                  setInputText(e.target.value);
+                  announceTyping();
+                }}
+                onKeyDown={handleComposerKey}
+                enterKeyHint={touchFirst ? 'enter' : 'send'}
+                autoCapitalize="sentences"
+                aria-label={editing ? 'New words for your message' : `Message to ${partnerName}`}
+                // Short enough for one line on a small phone; whose chat this is
+                // is already in the header right above.
+                placeholder="A quiet thought…"
+                className={`block w-full resize-none overflow-y-hidden px-4 py-2.5 text-sm leading-5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary placeholder:text-linen-secondary/60 select-text ${
+                  showPhotoButton ? 'pr-11' : ''
+                }`}
+              />
+              {showPhotoButton && (
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  aria-label="Send a photo"
+                  title="Send a photo"
+                  className="absolute right-1 bottom-1 h-[34px] w-[34px] rounded-lg flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </button>
+              )}
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={e => {
+                  void sendPhotos(e.target.files);
+                  // So the same photo can be picked again.
+                  e.target.value = '';
+                }}
+              />
+            </div>
 
             {/* One slot: Send while there is something written, the mic while
                 there is not - and the mic for as long as a note is under way,
@@ -778,6 +1459,40 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </button>
             )}
       </div>
+
+      {toast && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-4" aria-live="polite">
+          <span className="rounded-full bg-linen-primary text-linen-surface px-3.5 py-1.5 text-xs font-medium shadow-lg">
+            {toast}
+          </span>
+        </div>
+      )}
+
+      {menu && menuMessage && !menuMessage.unsent && (
+        <MessageMenu
+          anchor={menu.anchor}
+          side={menuMessage.authorId === activeUser ? 'right' : 'left'}
+          reaction={onReact ? menuMessage.reactions?.[activeUser] || '' : null}
+          onReact={emoji => {
+            setMenu(null);
+            onReact?.(menuMessage.id, emoji);
+            haptic('confirm');
+          }}
+          actions={menuActions}
+          onClose={() => setMenu(null)}
+        />
+      )}
+
+      {viewerMessage && (
+        <PhotoViewer
+          src={viewerMessage.photoDataUrl!}
+          caption={`${who(viewerMessage.authorId, activeUser, partnerName)}${
+            viewerMessage.sentAt ? ' · ' + TIME_FORMAT.format(viewerMessage.sentAt) : ''
+          }`}
+          onClose={() => setViewerId(null)}
+          onSave={() => void savePhoto(viewerMessage)}
+        />
+      )}
 
       <NeedMenuModal
         isOpen={showNeedModal}
