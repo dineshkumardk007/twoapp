@@ -43,8 +43,13 @@ type Reply = {
   progress?: number;
 };
 
-/** How often the app asks on its own. A tap on "Check for updates" always asks. */
-const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
+/**
+ * How often the app asks on its own: every time it is opened, but not twice
+ * within a minute (unlocking, then a call ending, would otherwise ask twice).
+ * A longer gap hides a release that comes out soon after a check until the
+ * gap is over. A tap on "Check for updates" always asks.
+ */
+const CHECK_EVERY_MS = 60 * 1000;
 /** "Later" quiets one version for this long. */
 const LATER_MS = 24 * 60 * 60 * 1000;
 
@@ -158,8 +163,8 @@ function keepFound(update: UpdateInfo | null) {
 }
 
 /**
- * Asks whether a newer version is out. On its own the app asks at most every
- * few hours - in between, an update already found is offered again; [force]
+ * Asks whether a newer version is out. On its own the app asks at most once a
+ * minute - in between, an update already found is offered again; [force]
  * asks now.
  */
 export async function checkForUpdate(force = false): Promise<CheckResult> {

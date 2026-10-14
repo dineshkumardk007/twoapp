@@ -45,12 +45,28 @@ describe('Checking for a new version', () => {
     expect(await checkForUpdate()).toEqual({ status: 'failed' });
   });
 
-  it('asks at most every few hours, but offers an update it already found again', async () => {
+  it('asks at most once a minute, but offers an update it already found again', async () => {
     const bridge = phoneOn(65, release66);
     await checkForUpdate();
     const again = await checkForUpdate();
     expect(bridge.updateCheck).toHaveBeenCalledTimes(1);
     expect(again).toMatchObject({ status: 'found', update: { code: 66 } });
+  });
+
+  it('offers a release that came out just after the last check on the next open', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-10-14T14:35:00Z'));
+      phoneOn(65, { ok: true, available: false });
+      expect(await checkForUpdate()).toEqual({ status: 'none' });
+      // 1.0.66 is published at 14:40; the app is opened again at 14:45.
+      vi.setSystemTime(new Date('2026-10-14T14:45:00Z'));
+      const bridge = phoneOn(65, release66);
+      expect(await checkForUpdate()).toMatchObject({ status: 'found', update: { code: 66 } });
+      expect(bridge.updateCheck).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('asks again straight away when told to', async () => {

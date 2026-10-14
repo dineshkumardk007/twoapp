@@ -1947,7 +1947,8 @@ export const App: React.FC = () => {
   /**
    * A new version of the app, offered when it is opened: after unlocking,
    * outside the disguise and calls, a moment after the screen has settled.
-   * The check itself is limited to every few hours (core/appUpdate.ts).
+   * It asks every time the app is opened, never twice within a minute
+   * (core/appUpdate.ts).
    */
   const [updateOffer, setUpdateOffer] = useState<UpdateInfo | null>(null);
   const callIdle = callState.phase === 'idle';
