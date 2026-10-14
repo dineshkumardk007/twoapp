@@ -21,9 +21,16 @@ export interface WidgetSummary {
   unread: number;
   /** When the newest of them came, epoch ms. */
   lastMessageAt?: number;
-  /** How the partner is: their emotional weather, and capacity 0..5. */
+  /**
+   * How the partner is: their emotional weather as the app stores it (SUNNY,
+   * CALM, OVERCAST, RAINY or STORMY - the phone puts it into the same words
+   * as Home), and their capacity 0..5.
+   */
   weather?: string;
   capacity?: number;
+  /** The same for you: the widget shows the two of you side by side. */
+  myWeather?: string;
+  myCapacity?: number;
   /** In Two right now, as of the last update. */
   online: boolean;
   /** Last seen, epoch ms - only when they share it. */
@@ -65,12 +72,6 @@ export function takeLaunchAction(): LaunchAction | null {
   } catch {
     return null;
   }
-}
-
-/** A weather word as the widget shows it: 'overcast' -> 'Overcast'. */
-export function weatherLabel(weather: string | undefined): string | undefined {
-  if (!weather) return undefined;
-  return weather.charAt(0).toUpperCase() + weather.slice(1);
 }
 
 /** For tests: forget what was last sent. */

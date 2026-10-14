@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  A wide, short widget (4 x 1, resizable). Refreshed by the app whenever it
-  has news, and every 30 minutes by the launcher so the day count moves on at
-  midnight even when Two has not been opened.
+  Four cells by two, resizable down to a two-by-two square (WidgetArt draws a
+  smaller picture for that). Refreshed by the app whenever it has news, and
+  every 30 minutes by the launcher so the day count moves on at midnight even
+  when Two has not been opened.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_description"
     android:initialLayout="@layout/widget_two"
     android:minWidth="250dp"
-    android:minHeight="70dp"
-    android:minResizeWidth="180dp"
-    android:minResizeHeight="60dp"
-    android:previewLayout="@layout/widget_two"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
+    android:previewImage="@drawable/widget_preview"
+    android:previewLayout="@layout/widget_two_preview"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="4"
-    android:targetCellHeight="1"
+    android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen" />

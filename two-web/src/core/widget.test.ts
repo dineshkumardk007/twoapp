@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { updateWidget, takeLaunchAction, weatherLabel, resetWidgetForTests, WidgetSummary } from './widget';
+import { updateWidget, takeLaunchAction, resetWidgetForTests, WidgetSummary } from './widget';
 
 const summary: WidgetSummary = {
   partner: 'Priya',
@@ -8,8 +8,10 @@ const summary: WidgetSummary = {
   annivYears: 5,
   unread: 3,
   lastMessageAt: 1_760_000_000_000,
-  weather: 'Clear',
+  weather: 'CALM',
   capacity: 4,
+  myWeather: 'SUNNY',
+  myCapacity: 5,
   online: false,
   lastSeenAt: 1_760_000_100_000
 };
@@ -43,7 +45,7 @@ describe('The home-screen widget', () => {
     updateWidget(summary);
     const sent = JSON.parse(b.widgetUpdate.mock.calls[0][0]);
     expect(Object.keys(sent).sort()).toEqual(
-      ['annivDate', 'annivYears', 'capacity', 'lastMessageAt', 'lastSeenAt', 'online', 'partner', 'since', 'unread', 'weather']
+      ['annivDate', 'annivYears', 'capacity', 'lastMessageAt', 'lastSeenAt', 'myCapacity', 'myWeather', 'online', 'partner', 'since', 'unread', 'weather']
     );
   });
 
@@ -61,10 +63,5 @@ describe('The home-screen widget', () => {
     expect(takeLaunchAction()).toBe('heartbeat');
     phone('settings');
     expect(takeLaunchAction()).toBeNull();
-  });
-
-  it('writes the weather as a word', () => {
-    expect(weatherLabel('overcast')).toBe('Overcast');
-    expect(weatherLabel(undefined)).toBeUndefined();
   });
 });

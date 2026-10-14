@@ -160,7 +160,7 @@ import {
 import { localDay, isDoneOn, withRitualDay } from './core/rituals';
 import { OUR_DATES, DAILY_ANSWER } from './core/sharedRecords';
 import { cleanOurDates, newerOurDates, nextAnniversary } from './core/ourDates';
-import { updateWidget, takeLaunchAction, weatherLabel } from './core/widget';
+import { updateWidget, takeLaunchAction } from './core/widget';
 import { resolveMediaRefs, withResolvedMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
 import {
   lockoutRemaining,
@@ -2515,6 +2515,7 @@ export const App: React.FC = () => {
    */
   const partnerSeat = state.activeUser === 'user' ? 'partner' : 'user';
   const theirReport = state.activeUser === 'user' ? state.partnerReport : state.userReport;
+  const myReport = state.activeUser === 'user' ? state.userReport : state.partnerReport;
   const newestFromThem = useMemo(() => {
     for (let i = state.messages.length - 1; i >= 0; i--) {
       const m = state.messages[i];
@@ -2532,14 +2533,17 @@ export const App: React.FC = () => {
       annivYears: next?.years,
       unread: unreadChatCount,
       lastMessageAt: unreadChatCount > 0 ? newestFromThem : undefined,
-      weather: weatherLabel(theirReport?.weather),
+      weather: theirReport?.weather,
       capacity: theirReport?.capacity,
+      myWeather: myReport?.weather,
+      myCapacity: myReport?.capacity,
       online: partnerOnline,
       lastSeenAt: shareLastSeen && state.partnerLastSeen ? state.partnerLastSeen : undefined
     });
   }, [
     isLocked, session, state.isPaired, state.partnerName, state.ourDates, unreadChatCount, newestFromThem,
-    theirReport?.weather, theirReport?.capacity, partnerOnline, shareLastSeen, state.partnerLastSeen
+    theirReport?.weather, theirReport?.capacity, myReport?.weather, myReport?.capacity,
+    partnerOnline, shareLastSeen, state.partnerLastSeen
   ]);
 
   /**

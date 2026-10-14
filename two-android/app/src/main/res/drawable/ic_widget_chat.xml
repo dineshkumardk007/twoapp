@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- New messages, in the widget's corner. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFBCFE8"
+        android:pathData="M4,5.5A2.5,2.5 0,0 1,6.5 3h11A2.5,2.5 0,0 1,20 5.5v8a2.5,2.5 0,0 1,-2.5 2.5H10l-4.5,4v-4A2.5,2.5 0,0 1,4 13.5z" />
+</vector>

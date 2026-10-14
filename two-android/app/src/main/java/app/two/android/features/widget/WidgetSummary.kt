@@ -12,8 +12,9 @@ import java.util.Date
 
 /**
  * What the widget knows about the two of you, as the page last told it
- * (core/widget.ts): names, dates, a count of unread messages and a few times
- * - never a word of any message. Kept in the app's private preferences.
+ * (core/widget.ts): names, dates, how each of you is, a count of unread
+ * messages and a few times - never a word of any message. Kept in the app's
+ * private preferences.
  */
 class WidgetSummary private constructor(
     val partner: String,
@@ -22,8 +23,13 @@ class WidgetSummary private constructor(
     private val anniversaryYears: Int,
     val unread: Int,
     private val lastMessageAt: Long,
-    private val weather: String,
-    private val capacity: Int,
+    /** Their emotional weather as Two stores it: SUNNY, CALM, OVERCAST, RAINY or STORMY. */
+    val theirWeather: String,
+    /** Their capacity today, 0..5; -1 when they have not said. */
+    val theirCapacity: Int,
+    /** The same two for you: the widget shows you side by side. */
+    val myWeather: String,
+    val myCapacity: Int,
     private val online: Boolean,
     private val lastSeenAt: Long,
     private val updatedAt: Long
@@ -31,6 +37,10 @@ class WidgetSummary private constructor(
     /** Nothing linked yet, or the space was left: the widget just opens Two. */
     val isEmpty: Boolean
         get() = partner.isEmpty()
+
+    /** In Two right now - as the page said within the last five minutes. */
+    val onlineNow: Boolean
+        get() = online && System.currentTimeMillis() - updatedAt < 5 * 60_000L
 
     /** Whole days since the story began, counted today. */
     fun daysTogether(today: LocalDate = LocalDate.now()): Long? {
@@ -69,14 +79,14 @@ class WidgetSummary private constructor(
 
     /** "Priya feels Clear · 4/5" */
     fun moodText(): String? {
-        if (weather.isEmpty()) return null
-        val cap = if (capacity in 0..5) " · $capacity/5" else ""
-        return "$partner feels $weather$cap"
+        val word = weatherWord(theirWeather) ?: return null
+        val cap = if (theirCapacity in 0..5) " · $theirCapacity/5" else ""
+        return "$partner feels $word$cap"
     }
 
     /** Whether they were in Two, and when - as of the last update. */
     fun presenceText(context: Context): String? = when {
-        online && System.currentTimeMillis() - updatedAt < 5 * 60_000L -> "$partner is in Two now"
+        onlineNow -> "$partner is in Two now"
         online -> "$partner was in Two at ${timeText(context, updatedAt)}"
         lastSeenAt > 0 -> "$partner was last in Two at ${timeText(context, lastSeenAt)}"
         else -> null
@@ -86,11 +96,16 @@ class WidgetSummary private constructor(
     fun updatedText(context: Context): String? =
         if (updatedAt > 0) "Updated ${timeText(context, updatedAt)}" else null
 
-    /** The one line the small widget has room for. */
-    fun widgetLine(context: Context): String = when {
-        unread > 0 -> chatText(context)
-        moodText() != null -> moodText()!!
-        else -> "Tap for more"
+    /** Everything the widget's picture shows, in words, for TalkBack. */
+    fun spokenText(): String {
+        if (isEmpty) return "Two. Open Two to link with your partner."
+        val parts = mutableListOf("Two")
+        daysText()?.let { parts += "$it days together" }
+        weatherWord(myWeather)?.let { parts += "You feel $it" + heartsWords(myCapacity) }
+        weatherWord(theirWeather)?.let { parts += "$partner feels $it" + heartsWords(theirCapacity) }
+        if (onlineNow) parts += "$partner is in Two now"
+        if (unread > 0) parts += if (unread == 1) "1 new message" else "$unread new messages"
+        return parts.joinToString(". ")
     }
 
     companion object {
@@ -120,13 +135,31 @@ class WidgetSummary private constructor(
                 anniversaryYears = o.optInt("annivYears", 0),
                 unread = o.optInt("unread", 0).coerceAtLeast(0),
                 lastMessageAt = o.optLong("lastMessageAt", 0L),
-                weather = o.optString("weather", "").take(20),
-                capacity = o.optInt("capacity", -1),
+                theirWeather = o.optString("weather", "").take(20),
+                theirCapacity = o.optInt("capacity", -1),
+                myWeather = o.optString("myWeather", "").take(20),
+                myCapacity = o.optInt("myCapacity", -1),
                 online = o.optBoolean("online", false),
                 lastSeenAt = o.optLong("lastSeenAt", 0L),
                 updatedAt = prefs.getLong(KEY_UPDATED, 0L)
             )
         }
+
+        /**
+         * Emotional weather in the words Home uses for it
+         * (EmotionalWeatherCard.tsx), or null when there is none.
+         */
+        fun weatherWord(code: String): String? = when (code.uppercase()) {
+            "SUNNY" -> "Sunny"
+            "CALM" -> "Clear"
+            "OVERCAST" -> "Overcast"
+            "RAINY" -> "Turbulent"
+            "STORMY" -> "Stormy"
+            else -> null
+        }
+
+        private fun heartsWords(capacity: Int): String =
+            if (capacity in 0..5) ", $capacity of 5 hearts" else ""
 
         private fun date(value: String): LocalDate? = try {
             if (value.isEmpty()) null else LocalDate.parse(value)

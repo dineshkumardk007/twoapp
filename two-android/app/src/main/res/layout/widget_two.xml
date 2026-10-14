@@ -1,109 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The home-screen widget: days together, one line about your partner, and a
-  heart. The night sky behind it, like the app. TwoWidget fills it in.
+  The home-screen widget: one picture (WidgetArt draws the two of you, the
+  lens and the days together at the widget's real size) and the heart, the
+  one real button, laid over it. Until the first picture is drawn, the
+  still preview stands in.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_background"
-    android:paddingStart="16dp"
-    android:paddingTop="10dp"
-    android:paddingEnd="12dp"
-    android:paddingBottom="10dp">
+    android:layout_height="match_parent">
 
-    <LinearLayout
+    <ImageView
+        android:id="@+id/widget_art"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:contentDescription="@string/widget_description"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_preview" />
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/widget_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="serif"
-                android:text="@string/app_name"
-                android:textColor="#F472B6"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:baselineAligned="true"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/widget_days"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="serif"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:text="@string/widget_preview_days"
-                    android:textColor="#FFFFFF"
-                    android:textSize="26sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/widget_days_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:maxLines="1"
-                    android:text="@string/widget_days_together"
-                    android:textColor="#E9E3FF"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/widget_line"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="@string/widget_preview_line"
-                android:textColor="#AAA2CD"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp">
-
-            <ImageView
-                android:id="@+id/widget_heart"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/widget_heart_background"
-                android:contentDescription="@string/widget_heart"
-                android:padding="11dp"
-                android:src="@drawable/ic_widget_heart" />
-
-            <TextView
-                android:id="@+id/widget_badge"
-                android:layout_width="wrap_content"
-                android:layout_height="18dp"
-                android:layout_gravity="top|end"
-                android:background="@drawable/widget_badge_background"
-                android:gravity="center"
-                android:minWidth="18dp"
-                android:paddingStart="5dp"
-                android:paddingEnd="5dp"
-                android:textColor="#FFFFFF"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
-        </FrameLayout>
-    </LinearLayout>
+    <!-- Size and inset kept in step with WidgetArt (HEART_DP, HEART_INSET_DP). -->
+    <ImageView
+        android:id="@+id/widget_heart"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/widget_heart_background"
+        android:contentDescription="@string/widget_heart"
+        android:padding="12dp"
+        android:src="@drawable/ic_widget_heart" />
 </FrameLayout>
