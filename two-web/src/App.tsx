@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense, startTransition, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, lazy, Suspense, startTransition, useMemo } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, forStorage, upgradeState, SpaceState, MAX_CHAT_MESSAGES } from './core/storage';
 import { AppDock } from './components/AppDock';
 import { GroupDock } from './components/GroupDock';
@@ -171,6 +171,7 @@ import {
 import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting } from './core/autoLock';
 import { leaveBedside } from './core/bedside';
 import { askConfirm } from './core/dialog';
+import { firstHue, watchBoxes } from './core/boxHues';
 import {
   PRESENCE_BEAT,
   BEAT_INTERVAL_MS,
@@ -1779,6 +1780,20 @@ export const App: React.FC = () => {
    * was showing.
    */
   const headerRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * Colours the boxes on each screen, the first in its tab's own colour
+   * (core/boxHues). The screen's wrapper is made anew for every tab - it is
+   * keyed by the tab - so this ref sees each screen arrive and leave. The chat
+   * has no boxes and changes with every message, so it is not watched.
+   */
+  const stopBoxes = useRef<(() => void) | null>(null);
+  const screenRef = useCallback((el: HTMLDivElement | null) => {
+    stopBoxes.current?.();
+    stopBoxes.current = null;
+    const tab = el?.dataset.tab;
+    if (el && tab && tab !== 'chat') stopBoxes.current = watchBoxes(el, firstHue(tab));
+  }, []);
 
   /**
    * Publishes the real height of everything above the main column.
@@ -4173,7 +4188,7 @@ export const App: React.FC = () => {
         {/* The screens below arrive as separate chunks. Only this region
             waits for one; the navigation around it never moves. Each one
             rises in briefly rather than cutting (screen-enter). */}
-        <div key={currentTab} className="screen-enter">
+        <div key={currentTab} ref={screenRef} data-tab={currentTab} className="screen-enter">
         <Suspense fallback={<ScreenFallback />}>
         {currentTab === 'home' && (
           <HomeView
