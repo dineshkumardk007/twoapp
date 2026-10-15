@@ -125,10 +125,7 @@ export const ThirukkuralCard: React.FC<ThirukkuralCardProps> = ({ onShare }) => 
         {kural.meaning}
       </p>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <p className="text-[10px] leading-snug text-linen-secondary/80">
-          G. U. Pope (1886) · Drew &amp; Lazarus
-        </p>
+      <div className="mt-4 flex items-center justify-end gap-3">
         {onShare && (
           <button
             type="button"
