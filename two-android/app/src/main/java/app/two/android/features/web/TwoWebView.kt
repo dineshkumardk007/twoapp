@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -51,6 +52,7 @@ import app.two.android.features.widget.TwoWidget
 import app.two.android.features.widget.WidgetSummary
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.roundToInt
@@ -671,6 +673,23 @@ fun TwoWebView(
         callback?.onReceiveValue(pickedUris(result.resultCode, result.data))
     }
 
+    /*
+     * A photo taken for the page with the phone's own camera app, when its
+     * file input asks for the camera (the chat's camera button). The camera
+     * app writes it straight into the cache's camera folder, and the page
+     * reads it from there.
+     */
+    val pendingCapture = remember { mutableStateOf<File?>(null) }
+    val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { taken ->
+        val callback = pendingFiles.value
+        val photo = pendingCapture.value
+        pendingFiles.value = null
+        pendingCapture.value = null
+        // Some camera apps say yes and write nothing; that is no photo either.
+        val uri = if (taken && photo != null && photo.length() > 0) cameraUri(hostContext, photo) else null
+        callback?.onReceiveValue(uri?.let { arrayOf(it) })
+    }
+
     /* Files the page asks to save, held until the person picks a place. */
     val pendingSave = remember { mutableStateOf<ByteArray?>(null) }
     val createDocument = rememberLauncherForActivityResult(
@@ -968,6 +987,18 @@ fun TwoWebView(
                         // with nothing first, or the page waits on it forever.
                         pendingFiles.value?.onReceiveValue(null)
                         pendingFiles.value = filePathCallback
+                        // The camera, when the page asks for it; the picker
+                        // otherwise - and also when no camera app answers.
+                        if (fileChooserParams?.isCaptureEnabled == true) {
+                            try {
+                                val photo = newCameraFile(hostContext)
+                                pendingCapture.value = photo
+                                takePicture.launch(cameraUri(hostContext, photo))
+                                return true
+                            } catch (_: Exception) {
+                                pendingCapture.value = null
+                            }
+                        }
                         return try {
                             pickFiles.launch(filePickerIntent(fileChooserParams))
                             true
@@ -1049,6 +1080,25 @@ private fun filePickerIntent(params: WebChromeClient.FileChooserParams?): Intent
         )
     }
 }
+
+/**
+ * A new file for the camera app to write a photo into. Photos from earlier
+ * than an hour ago are cleared out first: by then the page has long since
+ * read them.
+ */
+private fun newCameraFile(context: Context): File {
+    val dir = File(context.cacheDir, CAMERA_DIR).apply { mkdirs() }
+    val hourAgo = System.currentTimeMillis() - 60 * 60 * 1000L
+    dir.listFiles()?.filter { it.lastModified() < hourAgo }?.forEach { it.delete() }
+    return File(dir, "photo-${System.currentTimeMillis()}.jpg")
+}
+
+/** The camera folder's file as the content: address the camera app and the page are given. */
+private fun cameraUri(context: Context, file: File): Uri =
+    FileProvider.getUriForFile(context, "${context.packageName}.updates", file)
+
+/** Where a photo taken for the page waits (res/xml/update_paths.xml). */
+private const val CAMERA_DIR = "camera"
 
 /** What the picker returned, in the shape the page's callback takes; null if nothing. */
 private fun pickedUris(resultCode: Int, data: Intent?): Array<Uri>? {

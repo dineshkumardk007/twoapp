@@ -7,8 +7,10 @@ interface PhotoViewerProps {
   /** Who sent it and when, along the top. */
   caption: string;
   onClose: () => void;
-  /** Absent where there is nowhere to save to. */
+  /** Absent where there is nowhere to save to, or the photo is not to be kept. */
   onSave?: () => void;
+  /** A line along the bottom: what is special about this photo. */
+  note?: string;
 }
 
 const MAX_SCALE = 5;
@@ -23,7 +25,7 @@ const DOUBLE_TAP_MS = 280;
  * Each move is written straight onto the image rather than through React
  * state, so following a pinch costs a style change per frame, not a render.
  */
-export const PhotoViewer: React.FC<PhotoViewerProps> = ({ src, caption, onClose, onSave }) => {
+export const PhotoViewer: React.FC<PhotoViewerProps> = ({ src, caption, onClose, onSave, note }) => {
   useBackLayer(true, onClose);
   const imgRef = useRef<HTMLImageElement>(null);
   const view = useRef({ scale: 1, x: 0, y: 0 });
@@ -167,6 +169,11 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({ src, caption, onClose,
           </button>
         )}
       </div>
+      {note && (
+        <p className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-4 pt-8 pb-[max(env(safe-area-inset-bottom),16px)] text-center text-xs text-white/80">
+          {note}
+        </p>
+      )}
     </div>
   );
 };

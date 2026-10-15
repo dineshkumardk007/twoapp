@@ -2,18 +2,24 @@
 // a change to its words, taking it back - and finding it again.
 //
 // Each change travels as a record of its own that names the message
-// (CHAT_REACTION, CHAT_EDIT, CHAT_UNSEND), the way VOICE_HEARD does, rather
+// (CHAT_REACTION, CHAT_EDIT, CHAT_UNSEND, CHAT_PIN, CHAT_VIEWED), the way
+// VOICE_HEARD does, rather
 // than as the message sent again: a phone that does not know them passes them
 // over, and a phone being restored replays them in order, after the messages
 // they change. The functions here decide what each one does to the
 // conversation - the same on both phones, and nowhere else.
 
-import type { ChatMessage, ChatReplyRef } from '../types';
+import type { ChatMessage, ChatPin, ChatReplyRef } from '../types';
 import type { VoiceFields } from './voice';
 
 export const CHAT_EDIT = 'CHAT_EDIT';
 export const CHAT_UNSEND = 'CHAT_UNSEND';
 export const CHAT_REACTION = 'CHAT_REACTION';
+export const CHAT_PIN = 'CHAT_PIN';
+export const CHAT_VIEWED = 'CHAT_VIEWED';
+
+/** At most this many messages stay pinned; pinning another lets the oldest go. */
+export const MAX_PINS = 3;
 
 /** How long after sending your words can still be changed. */
 export const EDIT_WINDOW_MS = 15 * 60 * 1000;
@@ -53,7 +59,7 @@ export function canUnsend(m: ChatMessage, me: Seat): boolean {
 /** A few words of a message, for the quote above an answer to it. */
 export function snippetOf(m: ChatMessage): string {
   if (m.isVoiceMemo) return 'Voice note';
-  if (m.isPhoto) return 'Photo';
+  if (m.isPhoto) return m.viewOnce ? 'View-once photo' : 'Photo';
   const text = (m.text || '').replace(/\s+/g, ' ').trim();
   return text.length > SNIPPET_CHARS ? text.slice(0, SNIPPET_CHARS - 1).trimEnd() + '…' : text;
 }
@@ -72,8 +78,11 @@ export function cleanReplyRef(raw: unknown): ChatReplyRef | undefined {
   return { id: r.id, authorId: r.authorId, snippet };
 }
 
-/** What a message can carry besides its words: a recording, a photo, or the message it answers. */
-export type MessageExtras = Partial<VoiceFields> & Partial<PhotoFields> & { replyTo?: ChatReplyRef };
+/**
+ * What a message can carry besides its words: a recording, a photo (which may
+ * be view-once), or the message it answers.
+ */
+export type MessageExtras = Partial<VoiceFields> & Partial<PhotoFields> & { replyTo?: ChatReplyRef; viewOnce?: true };
 
 export interface PhotoFields {
   isPhoto: true;
@@ -191,6 +200,93 @@ export function applyReaction(messages: ChatMessage[], authorId: string, payload
     if (emoji) reactions[authorId] = emoji;
     else delete reactions[authorId];
     return { ...m, reactions: Object.keys(reactions).length ? reactions : undefined };
+  });
+}
+
+/** Anything still there can be pinned; what was taken back cannot. */
+export function canPin(m: ChatMessage): boolean {
+  return !m.unsent;
+}
+
+/**
+ * The pins that still stand for messages on this phone, newest last. One
+ * whose message was since taken back, or is no longer kept here, drops out.
+ */
+export function livePins(pins: ChatPin[] | undefined, byId: ReadonlyMap<string, ChatMessage>): ChatPin[] {
+  if (!Array.isArray(pins) || !pins.length) return [];
+  return pins.filter(p => {
+    const m = p && byId.get(p.messageId);
+    return !!m && canPin(m);
+  });
+}
+
+/**
+ * A message pinned or unpinned by either of you (`pinned`). Pinning puts it
+ * last, as the newest - so pinning one already pinned brings it forward - and
+ * past MAX_PINS the oldest lets go. Null when nothing changes.
+ */
+export function applyPin(
+  pins: ChatPin[] | undefined,
+  messages: ChatMessage[],
+  authorId: string,
+  payload: unknown
+): ChatPin[] | null {
+  if (authorId !== 'user' && authorId !== 'partner') return null;
+  const p = (payload || {}) as Record<string, unknown>;
+  const messageId = targetOf(payload);
+  if (!messageId || typeof p.pinned !== 'boolean') return null;
+  const byId = new Map(messages.map(m => [m.id, m]));
+  const others = livePins(pins, byId).filter(x => x.messageId !== messageId);
+  let next = others;
+  if (p.pinned) {
+    const m = byId.get(messageId);
+    if (!m || !canPin(m)) return null;
+    const at = Number(p.at);
+    const by: Seat = authorId === 'user' ? 'user' : 'partner';
+    next = [...others, { messageId, by, at: Number.isFinite(at) && at > 0 ? at : Date.now() }].slice(-MAX_PINS);
+  }
+  const before = Array.isArray(pins) ? pins : [];
+  const same = next.length === before.length && next.every((x, i) => x.messageId === before[i]?.messageId);
+  return same ? null : next;
+}
+
+/**
+ * Whether this phone may open a view-once photo: it was sent to you, it has
+ * not been opened, and its picture is here.
+ */
+export function canOpenViewOnce(m: ChatMessage, me: Seat): boolean {
+  return !!m.viewOnce && m.authorId !== me && !m.viewedAt && !m.unsent && !!m.photoDataUrl;
+}
+
+/** A message without its picture: a view-once photo nobody may see again on this phone. */
+export function withoutPicture(m: ChatMessage): ChatMessage {
+  const { photoDataUrl: _picture, ...rest } = m;
+  return rest;
+}
+
+/**
+ * A message once the relay has it. Your own view-once photo keeps no picture
+ * from then on - it is not to be seen on the phone that sent it - and not
+ * before, because until then it may have to be sent again.
+ */
+export function deliveredCopy(m: ChatMessage, me: Seat): ChatMessage {
+  const delivered = m.delivered ? m : { ...m, delivered: true };
+  return delivered.viewOnce && delivered.authorId === me && delivered.photoDataUrl
+    ? withoutPicture(delivered)
+    : delivered;
+}
+
+/**
+ * A view-once photo opened by the person it was sent to (CHAT_VIEWED, from
+ * either of their phones): the picture goes, and the bubble says it was
+ * opened. Only the receiver's seat opens it, and only once.
+ */
+export function applyViewed(messages: ChatMessage[], viewerId: string, payload: unknown): ChatMessage[] | null {
+  if (viewerId !== 'user' && viewerId !== 'partner') return null;
+  const at = Number((payload as { at?: unknown } | null | undefined)?.at);
+  return changeOne(messages, targetOf(payload), m => {
+    if (!m.viewOnce || m.authorId === viewerId || m.viewedAt || m.unsent) return null;
+    return { ...withoutPicture(m), viewedAt: Number.isFinite(at) && at > 0 ? at : Date.now() };
   });
 }
 

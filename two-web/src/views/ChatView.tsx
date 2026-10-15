@@ -1,17 +1,24 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { ChatMessage, ChatReplyRef } from '../types';
+import { ChatMessage, ChatPin, ChatReplyRef } from '../types';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
 import { MessageMenu, type MessageMenuAction } from '../components/MessageMenu';
 import { PhotoViewer } from '../components/PhotoViewer';
+import { PhotoSendSheet } from '../components/PhotoSendSheet';
+import { ViewOnceIcon } from '../components/ViewOnceIcon';
 import { voiceFieldsOf, voiceNoteLabel } from '../core/voice';
 import {
+  MAX_PINS,
   canEdit,
+  canOpenViewOnce,
+  canPin,
   canUnsend,
   highlightParts,
+  livePins,
   replyRefFor,
   searchMatches,
+  snippetOf,
   type MessageExtras
 } from '../core/chatActions';
 import { shrinkPhoto } from '../core/photo';
@@ -24,7 +31,8 @@ import { who } from '../core/who';
 import { haptic } from '../core/haptics';
 import {
   Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
-  Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download
+  Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download,
+  Camera, Pin, PinOff
 } from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
 
@@ -52,6 +60,12 @@ interface ChatViewProps {
   onEditMessage?: (messageId: string, text: string) => void;
   /** Takes one of your own messages back from both phones. The caller asks first. */
   onUnsendMessage?: (messageId: string) => void;
+  /** Messages pinned to the top of the chat, newest last (core/chatActions). */
+  pins?: ChatPin[];
+  /** Pins a message, or takes its pin down, on both phones. */
+  onPinMessage?: (messageId: string, pinned: boolean) => void;
+  /** A view-once photo sent to you is being opened; its picture goes from this phone. */
+  onViewOnceOpened?: (messageId: string) => void;
   /**
    * The partner's voice note has just been played for the first time on this
    * phone. Whether that is told to them is the caller's business (it follows
@@ -248,7 +262,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onVoiceHeard,
   onReact,
   onEditMessage,
-  onUnsendMessage
+  onUnsendMessage,
+  pins,
+  onPinMessage,
+  onViewOnceOpened
 }) => {
   const [inputText, setInputText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -533,17 +550,27 @@ export const ChatView: React.FC<ChatViewProps> = ({
   useEffect(() => () => window.clearTimeout(toastTimerRef.current), []);
 
   /**
-   * Photos chosen from the phone, sent one message each, in the order picked.
-   * Each is shrunk to fit one record first (core/photo); the first of them
-   * answers the message being answered, if there is one.
+   * Photos chosen from the phone or just taken with its camera. They wait for
+   * a last look first (PhotoSendSheet), where a single one can be made view
+   * once; then they go one message each, in the order picked.
    */
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const [preparingPhotos, setPreparingPhotos] = useState(0);
-  const sendPhotos = async (files: FileList | null) => {
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [pickedPhotos, setPickedPhotos] = useState<File[] | null>(null);
+  const pickPhotos = (files: FileList | null) => {
     const picked = files ? Array.from(files).filter(f => !f.type || f.type.startsWith('image/')) : [];
     if (!picked.length) return;
-    if (picked.length > PHOTOS_AT_ONCE) showToast(`The first ${PHOTOS_AT_ONCE} photos are on their way`);
-    const list = picked.slice(0, PHOTOS_AT_ONCE);
+    if (picked.length > PHOTOS_AT_ONCE) showToast(`Up to ${PHOTOS_AT_ONCE} photos at a time`);
+    setPickedPhotos(picked.slice(0, PHOTOS_AT_ONCE));
+  };
+
+  /**
+   * Sends photos one message each. Each is shrunk to fit one record first
+   * (core/photo); the first of them answers the message being answered, if
+   * there is one.
+   */
+  const [preparingPhotos, setPreparingPhotos] = useState(0);
+  const sendPhotos = async (list: File[], viewOnce: boolean) => {
     let reply = replyToRef.current;
     setReplyTo(null);
     setPreparingPhotos(n => n + list.length);
@@ -555,6 +582,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           photoDataUrl: photo.dataUrl,
           photoWidth: photo.width,
           photoHeight: photo.height,
+          ...(viewOnce ? { viewOnce: true as const } : {}),
           ...(reply ? { replyTo: reply } : {})
         });
         reply = null;
@@ -630,11 +658,36 @@ export const ChatView: React.FC<ChatViewProps> = ({
   menuRef.current = menu;
   /** The photo filling the screen. */
   const [viewerId, setViewerId] = useState<string | null>(null);
+  /**
+   * A view-once photo being looked at. Its picture is held here, because the
+   * conversation lets go of it the moment it is opened.
+   */
+  const [onceView, setOnceView] = useState<{ src: string; caption: string } | null>(null);
+  const openViewOnce = (m: ChatMessage) => {
+    if (!m.photoDataUrl || !canOpenViewOnce(m, activeUserRef.current)) return;
+    setOnceView({
+      src: m.photoDataUrl,
+      caption: `${who(m.authorId, activeUserRef.current, partnerName)}${m.sentAt ? ' · ' + TIME_FORMAT.format(m.sentAt) : ''}`
+    });
+    onViewOnceOpened?.(m.id);
+  };
+  const openViewOnceRef = useRef(openViewOnce);
+  openViewOnceRef.current = openViewOnce;
   /** A message just jumped to, lit for a moment so the eye finds it. */
   const [flashId, setFlashId] = useState<string | null>(null);
 
   /** Every message by id: a reply's quote looks up whether what it answers was since taken back. */
   const byId = useMemo(() => new Map(messages.map(m => [m.id, m])), [messages]);
+
+  /**
+   * The pinned messages still here, newest last, and which one the bar at the
+   * top shows: the newest first, then - each time the bar is tapped and the
+   * conversation goes to it - the one before, round again after the oldest.
+   */
+  const pinList = useMemo(() => livePins(pins, byId), [pins, byId]);
+  const pinnedBy = useMemo(() => new Map(pinList.map(p => [p.messageId, p])), [pinList]);
+  const [pinStep, setPinStep] = useState(0);
+  const shownPin = pinList.length ? pinList[pinList.length - 1 - (pinStep % pinList.length)] : null;
 
   const openMenu = (id: string, bubble: HTMLElement) => {
     const m = latestMessagesRef.current.find(x => x.id === id);
@@ -839,10 +892,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
         const stuck = mine && !msg.delivered && !read;
         const unsent = !!msg.unsent;
         const edited = !!msg.editedAt && !unsent;
-        const showMeta = lastOfRun || stuck || edited;
+        const pin = unsent ? undefined : pinnedBy.get(msg.id);
+        const showMeta = lastOfRun || stuck || edited || !!pin;
         const reactions = unsent || !msg.reactions ? [] : (Object.values(msg.reactions).filter(Boolean) as string[]);
         const quote = unsent ? undefined : msg.replyTo;
-        const photo = !unsent && msg.isPhoto && msg.photoDataUrl ? photoSize(msg) : null;
+        // A view-once photo shows as a mark you open, never as its picture.
+        const once = !unsent && !!msg.viewOnce;
+        const opened = once && !!msg.viewedAt;
+        const photo = !unsent && !once && msg.isPhoto && msg.photoDataUrl ? photoSize(msg) : null;
 
         // One rounded shape per run: the corners on the sender's side tuck in
         // where bubbles meet, and the last one keeps a small tail.
@@ -892,9 +949,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   // breathing room, than around words - and a little more of
                   // the width, so its 200px fits a 320px phone. A photo gets a
                   // thin frame of the bubble's own colour.
-                  photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : 'max-w-[85%] px-4 py-2.5'
+                  photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : once ? 'max-w-[85%] py-2 pl-2.5 pr-4' : 'max-w-[85%] px-4 py-2.5'
                 } text-sm leading-relaxed ${shape} ${
-                  unsent
+                  unsent || opened
                     ? 'border border-dashed border-linen-border text-linen-secondary'
                     : msg.isNeedCard
                     ? 'bg-amber-50 border border-amber-300/70 text-linen-primary'
@@ -957,6 +1014,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     onFirstPlay={mine ? undefined : () => voiceHeardRef.current?.(msg.id)}
                     onEnded={() => playNextAfterRef.current(msg.id)}
                     playSignal={autoPlay?.id === msg.id ? autoPlay.signal : undefined}
+                  />
+                ) : once ? (
+                  // Sent to you and not yet opened, it opens once, here. Your
+                  // own says whether it has been - its picture is not kept.
+                  <ViewOnceMark
+                    mine={mine}
+                    opened={opened}
+                    canOpen={!mine && canOpenViewOnce(msg, activeUser)}
+                    onOpen={() => openViewOnceRef.current(msg)}
                   />
                 ) : photo ? (
                   // Its own shape at a size that fits the conversation; tapped,
@@ -1028,6 +1094,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
               {showMeta && (
                 <span className="text-[10px] text-linen-secondary mt-1 px-1 inline-flex items-center">
+                  {pin && (
+                    <span className="mr-1.5 inline-flex items-center gap-0.5 font-medium text-linen-accent">
+                      <Pin className="w-3 h-3" />
+                      Pinned
+                    </span>
+                  )}
                   {/* The name once per run, under its last bubble with the time. */}
                   {lastOfRun && (
                     <span>
@@ -1072,6 +1144,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 </span>
               )}
 
+              {pin && (
+                // Who pinned it, in a quiet line under it.
+                <span className="mt-2 inline-flex items-center gap-1.5 self-center rounded-full bg-linen-variant/70 px-3 py-1 text-[11px] text-linen-secondary">
+                  <Pin className="w-3 h-3" />
+                  {pin.by === activeUser ? 'You' : partnerName} pinned this
+                </span>
+              )}
+
               {stuckOpen === msg.id && canResolveStuck && (
                 <span className="mt-0.5 flex items-center gap-1.5 px-1">
                   <button
@@ -1101,7 +1181,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     // The press handlers are left out on purpose: they act only through refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawnRows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay,
-      byId, highlight, matchSet, currentMatch, flashId]
+      byId, highlight, matchSet, currentMatch, flashId, pinnedBy]
   );
 
   /** What can be done with the message whose menu is open. */
@@ -1122,7 +1202,21 @@ export const ChatView: React.FC<ChatViewProps> = ({
         }
       });
     }
-    if (m.isPhoto && m.photoDataUrl) {
+    if (onPinMessage && canPin(m)) {
+      const pinned = pinnedBy.has(m.id);
+      menuActions.push({
+        key: 'pin',
+        label: pinned ? 'Unpin' : 'Pin',
+        icon: pinned ? PinOff : Pin,
+        onSelect: () => {
+          close();
+          onPinMessage(m.id, !pinned);
+          if (!pinned) setPinStep(0);
+          showToast(pinned ? 'Unpinned' : pinList.length >= MAX_PINS ? 'Pinned - the oldest pin made room' : 'Pinned');
+        }
+      });
+    }
+    if (m.isPhoto && m.photoDataUrl && !m.viewOnce) {
       menuActions.push({ key: 'save', label: 'Save to phone', icon: Download, onSelect: () => { close(); void savePhoto(m); } });
     }
     if (onEditMessage && canEdit(m, activeUser)) {
@@ -1134,7 +1228,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }
   /** The photo filling the screen - gone if it was taken back meanwhile. */
   const viewed = viewerId ? byId.get(viewerId) : undefined;
-  const viewerMessage = viewed && viewed.isPhoto && viewed.photoDataUrl && !viewed.unsent ? viewed : undefined;
+  const viewerMessage = viewed && viewed.isPhoto && viewed.photoDataUrl && !viewed.unsent && !viewed.viewOnce ? viewed : undefined;
 
   return (
     <div className="relative flex flex-col chat-shell bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
@@ -1281,6 +1375,39 @@ export const ChatView: React.FC<ChatViewProps> = ({
         )}
 </div>
 
+      {/* The pinned message on show; tapped, the conversation goes to it and
+          the bar moves on to the one pinned before it. */}
+      {shownPin && !searchOpen && (
+        <button
+          type="button"
+          onClick={() => {
+            if (!jumpTo(shownPin.messageId, true)) showToast('That message is no longer on this phone');
+            setPinStep(step => step + 1);
+          }}
+          className="relative z-[1] flex w-full items-center gap-2.5 border-b border-linen-border bg-linen-surface/95 px-4 py-2 text-left shadow-[0_4px_12px_-8px_rgba(0,0,0,0.18)]"
+        >
+          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[10px] bg-aurora-violet/12 text-aurora-violet">
+            <Pin className="w-4 h-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-baseline justify-between gap-2 text-[11px] font-semibold text-linen-accent">
+              Pinned message
+              {pinList.length > 1 && (
+                <span className="font-medium tabular-nums text-linen-secondary">
+                  {(pinStep % pinList.length) + 1} of {pinList.length}
+                </span>
+              )}
+            </span>
+            <span className="block truncate text-[13px] text-linen-primary">
+              {(() => {
+                const m = byId.get(shownPin.messageId);
+                return m ? snippetOf(m) || 'Message' : 'Message';
+              })()}
+            </span>
+          </span>
+        </button>
+      )}
+
       {/* Message List */}
       <div
         ref={messagesRef}
@@ -1411,9 +1538,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 // is already in the header right above.
                 placeholder="A quiet thought…"
                 className={`block w-full resize-none overflow-y-hidden px-4 py-2.5 text-sm leading-5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary placeholder:text-linen-secondary/60 select-text ${
-                  showPhotoButton ? 'pr-11' : ''
+                  showPhotoButton ? (touchFirst ? 'pr-20' : 'pr-11') : ''
                 }`}
               />
+              {showPhotoButton && touchFirst && (
+                // A phone's camera, straight from the chat. A computer has
+                // none to speak of, and its button would only open files.
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  aria-label="Take a photo"
+                  title="Take a photo"
+                  className="absolute right-10 bottom-1 h-[34px] w-[34px] rounded-lg flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
+                >
+                  <Camera className="w-5 h-5" />
+                </button>
+              )}
               {showPhotoButton && (
                 <button
                   type="button"
@@ -1432,8 +1572,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 multiple
                 hidden
                 onChange={e => {
-                  void sendPhotos(e.target.files);
+                  pickPhotos(e.target.files);
                   // So the same photo can be picked again.
+                  e.target.value = '';
+                }}
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+                onChange={e => {
+                  pickPhotos(e.target.files);
                   e.target.value = '';
                 }}
               />
@@ -1483,6 +1634,28 @@ export const ChatView: React.FC<ChatViewProps> = ({
         />
       )}
 
+      {pickedPhotos && (
+        <PhotoSendSheet
+          files={pickedPhotos}
+          partnerName={partnerName}
+          onClose={() => setPickedPhotos(null)}
+          onSend={viewOnce => {
+            const list = pickedPhotos;
+            setPickedPhotos(null);
+            void sendPhotos(list, viewOnce);
+          }}
+        />
+      )}
+
+      {onceView && (
+        <PhotoViewer
+          src={onceView.src}
+          caption={onceView.caption}
+          note="View once. It's gone when you close it."
+          onClose={() => setOnceView(null)}
+        />
+      )}
+
       {viewerMessage && (
         <PhotoViewer
           src={viewerMessage.photoDataUrl!}
@@ -1504,5 +1677,41 @@ export const ChatView: React.FC<ChatViewProps> = ({
         }}
       />
     </div>
+  );
+};
+
+/**
+ * A view-once photo in the conversation: never its picture, only whether it
+ * can still be opened. Yours says whether your partner has opened it.
+ */
+const ViewOnceMark: React.FC<{ mine: boolean; opened: boolean; canOpen: boolean; onOpen: () => void }> = ({
+  mine,
+  opened,
+  canOpen,
+  onOpen
+}) => {
+  const title = opened ? 'Opened' : 'Photo';
+  const detail = opened ? 'View-once photo' : mine ? 'Not opened yet' : canOpen ? 'Tap to view once' : 'View-once photo';
+  const body = (
+    <>
+      <span
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${
+          opened ? '' : mine ? 'no-remap bg-white/20 text-white' : 'bg-aurora-violet/14 text-aurora-violet'
+        }`}
+      >
+        <ViewOnceIcon className="h-[22px] w-[22px]" />
+      </span>
+      <span className="flex flex-col text-left leading-tight">
+        <span className="text-sm font-semibold">{title}</span>
+        <span className={`text-[11px] ${opened ? '' : 'opacity-85'}`}>{detail}</span>
+      </span>
+    </>
+  );
+  return canOpen ? (
+    <button type="button" onClick={onOpen} aria-label="Open the view-once photo" className="flex items-center gap-2.5">
+      {body}
+    </button>
+  ) : (
+    <span className="flex items-center gap-2.5">{body}</span>
   );
 };

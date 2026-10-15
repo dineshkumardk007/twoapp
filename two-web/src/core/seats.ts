@@ -78,6 +78,10 @@ export const CATCH_UP_TYPES = new Set<string>([
   'CHAT_EDIT',
   'CHAT_UNSEND',
   'CHAT_REACTION',
+  // Pinning sets a message pinned or not, keeping the newest three, and
+  // opening a view-once photo happens once: both end the same applied again.
+  'CHAT_PIN',
+  'CHAT_VIEWED',
   'LOVE_LETTER',
   'GRATITUDE_STAR',
   'INTUITION_ROUND',

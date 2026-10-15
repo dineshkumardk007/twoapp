@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The one folder a downloaded update waits in (AppUpdater). -->
+<!-- The folders shared, briefly, with another app: a downloaded update for
+     Android's installer (AppUpdater), and a photo for the camera app to take
+     for the chat (TwoWebView). -->
 <paths>
     <cache-path name="updates" path="updates/" />
+    <cache-path name="camera" path="camera/" />
 </paths>

@@ -174,15 +174,21 @@ import { askConfirm } from './core/dialog';
 import { firstHue, watchBoxes } from './core/boxHues';
 import {
   CHAT_EDIT,
+  CHAT_PIN,
   CHAT_REACTION,
   CHAT_UNSEND,
+  CHAT_VIEWED,
   applyEdit,
+  applyPin,
   applyReaction,
   applyUnsend,
+  applyViewed,
   canEdit,
+  canOpenViewOnce,
   canUnsend,
   cleanPhotoFields,
   cleanReplyRef,
+  deliveredCopy,
   type MessageExtras
 } from './core/chatActions';
 import { mergeReport, recordDay } from './core/weatherHistory';
@@ -261,21 +267,28 @@ function tooLargeNotice(bytes: number, isChat: boolean, tabId: string): InAppNot
  * fails loses the claim, and shows as its text: the label every one carries
  * ("Voice note · 0:12", "Photo"). A reply's quote is kept only as a quote.
  * `heard` is never taken from the wire; it is this phone's own record of who
- * has played what. Nor are edits, unsending or reactions: those arrive as
- * records of their own (core/chatActions), never inside the message.
+ * has played what. Nor are edits, unsending, reactions or a view-once photo
+ * being opened: those arrive as records of their own (core/chatActions),
+ * never inside the message. A photo keeps its view-once mark only if it is a
+ * photo at all.
  */
 function chatFromWire(parsed: any): ChatMessage {
   // Taken off whatever they say, so only the checked copies below go back on.
   const {
     isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard,
     isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo,
-    editedAt, unsent, reactions,
+    editedAt, unsent, reactions, viewOnce, viewedAt,
     ...rest
   } = parsed;
   const voice = cleanVoiceFields(parsed);
   const photo = voice ? null : cleanPhotoFields(parsed);
   const reply = cleanReplyRef(replyTo);
-  return { ...rest, ...(voice || photo || {}), ...(reply ? { replyTo: reply } : {}) };
+  return {
+    ...rest,
+    ...(voice || photo || {}),
+    ...(photo && viewOnce === true ? { viewOnce: true } : {}),
+    ...(reply ? { replyTo: reply } : {})
+  };
 }
 
 const AdventuresView = lazy(() => import('./views/AdventuresView').then(m => ({ default: m.AdventuresView })));
@@ -725,10 +738,12 @@ export const App: React.FC = () => {
     () =>
       wsRelay.subscribe((msg: any) => {
         if (msg?.type !== 'RECORD_ACK' || !msg.correlationId) return;
+        // Your own view-once photo lets go of its picture here: it is safely
+        // on its way, and not to be seen again on this phone (core/chatActions).
         setState(prev => ({
           ...prev,
           messages: prev.messages.map(m =>
-            m.id === msg.correlationId ? { ...m, delivered: true } : m
+            m.id === msg.correlationId ? deliveredCopy(m, prev.activeUser) : m
           )
         }));
       }),
@@ -960,7 +975,9 @@ export const App: React.FC = () => {
               // only its own socket ever hears the acknowledgement, so a second
               // device on the same role used to show everything typed on the
               // first one as forever sending.
-              const applied = incoming.delivered === false ? { ...incoming, delivered: true } : incoming;
+              // Your own view-once photo, back from the relay, keeps no picture.
+              const applied =
+                incoming.delivered === false || incoming.viewOnce ? deliveredCopy(incoming, prev.activeUser) : incoming;
               return {
                 ...prev,
                 messages: insertBySentAt(prev.messages, applied).slice(-MAX_CHAT_MESSAGES)
@@ -1123,6 +1140,19 @@ export const App: React.FC = () => {
               record.type === CHAT_EDIT ? applyEdit : record.type === CHAT_UNSEND ? applyUnsend : applyReaction;
             setState(prev => {
               const messages = apply(prev.messages, record.authorId, parsed);
+              return messages ? { ...prev, messages } : prev;
+            });
+          } else if (record.type === CHAT_PIN) {
+            // Either of you pinning or unpinning a message (core/chatActions).
+            setState(prev => {
+              const chatPins = applyPin(prev.chatPins, prev.messages, record.authorId, parsed);
+              return chatPins ? { ...prev, chatPins } : prev;
+            });
+          } else if (record.type === CHAT_VIEWED) {
+            // A view-once photo opened by the person it was sent to - here, on
+            // their other phone, or on yours as the one who sent it.
+            setState(prev => {
+              const messages = applyViewed(prev.messages, record.authorId, parsed);
               return messages ? { ...prev, messages } : prev;
             });
           } else if (record.type === APP_VERSION) {
@@ -2366,6 +2396,20 @@ export const App: React.FC = () => {
     // A voice note goes again as a voice note - its recording, length and
     // shape - not as the label that stands in for it as text.
     const voice = stuck?.isVoiceMemo ? cleanVoiceFields(stuck) : null;
+    // A photo likewise, picture and all - and view-once still, if it was.
+    // Only the couple's chat sends photos.
+    const stuckPhoto = groupId ? undefined : (stuck as ChatMessage | undefined);
+    const photo = stuckPhoto?.isPhoto ? cleanPhotoFields(stuckPhoto) : null;
+    if (action === 'retry' && stuckPhoto?.isPhoto && !photo) {
+      setInAppNotification({
+        id: newId(),
+        title: "Can't send that photo again",
+        body: 'The picture is no longer on this phone. Discard it and send the photo again.',
+        type: 'general',
+        tabId: 'chat'
+      });
+      return;
+    }
     if (action === 'retry' && stuck?.isVoiceMemo && !voice) {
       // Its recording did not come back from this phone's storage, so there
       // is nothing to send again - and its label sent as a text message
@@ -2400,7 +2444,12 @@ export const App: React.FC = () => {
 
     if (action !== 'retry' || !text) return;
     if (groupId) handleSendGroupMessage(groupId, text, voice ?? undefined);
-    else handleSendMessage(text, false, voice ?? undefined);
+    else
+      handleSendMessage(
+        text,
+        false,
+        voice ?? (photo ? { ...photo, ...(stuckPhoto?.viewOnce ? { viewOnce: true as const } : {}) } : undefined)
+      );
   };
 
   /** `voice` makes it a voice note; `text` is then the note's label. */
@@ -2882,6 +2931,32 @@ export const App: React.FC = () => {
       return messages ? { ...prev, messages } : prev;
     });
     wsRelay.broadcastUpdate(CHAT_REACTION, payload);
+  };
+
+  /** Pins a message to the top of the chat, or takes it down, on both phones. */
+  const handlePinMessage = (messageId: string, pinned: boolean) => {
+    const payload = { messageId, pinned, at: Date.now() };
+    setState(prev => {
+      const chatPins = applyPin(prev.chatPins, prev.messages, prev.activeUser, payload);
+      return chatPins ? { ...prev, chatPins } : prev;
+    });
+    wsRelay.broadcastUpdate(CHAT_PIN, payload);
+  };
+
+  /**
+   * A view-once photo sent to you has just been opened. Its picture goes from
+   * this phone now - the screen showing it keeps its own copy until closed -
+   * and from your other phones, and its sender learns it was opened.
+   */
+  const handleViewOnceOpened = (messageId: string) => {
+    const photo = state.messages.find(m => m.id === messageId);
+    if (!photo || !canOpenViewOnce(photo, state.activeUser)) return;
+    const payload = { messageId, at: Date.now() };
+    setState(prev => {
+      const messages = applyViewed(prev.messages, prev.activeUser, payload);
+      return messages ? { ...prev, messages } : prev;
+    });
+    wsRelay.broadcastUpdate(CHAT_VIEWED, payload);
   };
 
   /** Sends one change to the other phone: over the relay, and the local network when there is one. */
@@ -4366,6 +4441,9 @@ export const App: React.FC = () => {
             onReact={handleReactToMessage}
             onEditMessage={handleEditMessage}
             onUnsendMessage={messageId => void handleUnsendMessage(messageId)}
+            pins={state.chatPins}
+            onPinMessage={handlePinMessage}
+            onViewOnceOpened={handleViewOnceOpened}
             onTyping={() => {
               // Read straight from the setting rather than the render's copy:
               // off must mean nothing leaves this device, immediately.

@@ -87,8 +87,9 @@
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
         </service>
-        <!-- Shows a downloaded update to Android's installer, and nothing else:
-             only the cache's updates folder, only for the moment it installs. -->
+        <!-- Shows a downloaded update to Android's installer, and lets the
+             camera app write a photo for the chat: only those two cache
+             folders, and only for the moment each is needed. -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.updates"

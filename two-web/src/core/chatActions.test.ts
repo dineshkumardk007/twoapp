@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import type { ChatMessage } from '../types';
 import {
   EDIT_WINDOW_MS,
+  MAX_PINS,
   applyEdit,
+  applyPin,
+  applyViewed,
+  canOpenViewOnce,
+  deliveredCopy,
+  livePins,
   applyReaction,
   applyUnsend,
   canEdit,
@@ -140,5 +146,76 @@ describe('search', () => {
       { text: ', then ', match: false },
       { text: 'eight', match: true }
     ]);
+  });
+});
+
+describe('pins', () => {
+  const three = ['a', 'b', 'c', 'd'].map(id => msg({ id, text: `message ${id}` }));
+  const pin = (pins: ReturnType<typeof applyPin>, id: string, by = 'user', at = SENT) =>
+    applyPin(pins ?? undefined, three, by, { messageId: id, pinned: true, at });
+
+  it('keeps the newest last, and lets the oldest go past three', () => {
+    let pins = pin(null, 'a');
+    pins = pin(pins, 'b', 'partner');
+    pins = pin(pins, 'c');
+    expect(pins?.map(p => p.messageId)).toEqual(['a', 'b', 'c']);
+    pins = pin(pins, 'd');
+    expect(pins?.length).toBe(MAX_PINS);
+    expect(pins?.map(p => p.messageId)).toEqual(['b', 'c', 'd']);
+    expect(pins?.find(p => p.messageId === 'b')?.by).toBe('partner');
+  });
+
+  it('brings a pinned message forward when it is pinned again, and unpins', () => {
+    const pins = pin(pin(pin(null, 'a'), 'b'), 'a');
+    expect(pins?.map(p => p.messageId)).toEqual(['b', 'a']);
+    const unpinned = applyPin(pins ?? undefined, three, 'partner', { messageId: 'a', pinned: false });
+    expect(unpinned?.map(p => p.messageId)).toEqual(['b']);
+  });
+
+  it('changes nothing for a message that is not here, was taken back, or is already where it would go', () => {
+    expect(pin(null, 'zzz')).toBeNull();
+    expect(applyPin(undefined, [msg({ unsent: true })], 'user', { messageId: 'm1', pinned: true })).toBeNull();
+    const pins = pin(null, 'a');
+    expect(pin(pins, 'a')).toBeNull();
+    expect(applyPin(pins ?? undefined, three, 'user', { messageId: 'b', pinned: false })).toBeNull();
+    expect(applyPin(undefined, three, 'stranger', { messageId: 'a', pinned: true })).toBeNull();
+  });
+
+  it('drops a pin whose message was since taken back', () => {
+    const pins = pin(pin(null, 'a'), 'b') ?? [];
+    const byId = new Map(three.map(m => [m.id, m.id === 'a' ? { ...m, unsent: true } : m]));
+    expect(livePins(pins, byId).map(p => p.messageId)).toEqual(['b']);
+  });
+});
+
+describe('view-once photos', () => {
+  const photo = msg({ id: 'p1', authorId: 'partner', text: 'Photo', isPhoto: true, viewOnce: true, photoDataUrl: 'data:image/jpeg;base64,AAAA' });
+
+  it('opens once, for the person it was sent to', () => {
+    expect(canOpenViewOnce(photo, 'user')).toBe(true);
+    expect(canOpenViewOnce(photo, 'partner')).toBe(false);
+    const opened = applyViewed([photo], 'user', { messageId: 'p1', at: SENT + 5000 });
+    expect(opened?.[0].viewedAt).toBe(SENT + 5000);
+    expect(opened?.[0].photoDataUrl).toBeUndefined();
+    expect(canOpenViewOnce(opened![0], 'user')).toBe(false);
+    expect(applyViewed(opened!, 'user', { messageId: 'p1', at: SENT + 9000 })).toBeNull();
+  });
+
+  it('cannot be marked opened by its own sender, nor an ordinary photo', () => {
+    expect(applyViewed([photo], 'partner', { messageId: 'p1', at: SENT })).toBeNull();
+    expect(applyViewed([{ ...photo, viewOnce: false }], 'user', { messageId: 'p1', at: SENT })).toBeNull();
+  });
+
+  it('leaves the sender without the picture once the relay has it', () => {
+    const mine = { ...photo, authorId: 'user', delivered: false };
+    expect(deliveredCopy(mine, 'user')).toMatchObject({ delivered: true, viewOnce: true });
+    expect(deliveredCopy(mine, 'user').photoDataUrl).toBeUndefined();
+    // Not someone else's, and not an ordinary photo.
+    expect(deliveredCopy(photo, 'user').photoDataUrl).toBe(photo.photoDataUrl);
+    expect(deliveredCopy({ ...mine, viewOnce: false }, 'user').photoDataUrl).toBe(photo.photoDataUrl);
+  });
+
+  it('is quoted as a view-once photo', () => {
+    expect(snippetOf(photo)).toBe('View-once photo');
   });
 });

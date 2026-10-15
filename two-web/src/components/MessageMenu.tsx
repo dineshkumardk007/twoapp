@@ -68,7 +68,7 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
         ref={panelRef}
         role="menu"
         aria-label="Message"
-        className={`absolute w-[260px] max-w-[calc(100vw-24px)] rounded-2xl border border-linen-border bg-linen-surface shadow-2xl overflow-hidden ${
+        className={`absolute w-[260px] max-w-[calc(100vw-24px)] rounded-2xl border border-linen-border bg-linen-surface surface-solid shadow-2xl overflow-hidden ${
           place ? 'menu-pop' : 'invisible'
         } ${side === 'right' ? 'origin-bottom-right' : 'origin-bottom-left'}`}
         style={place ? { top: place.top, left: place.left } : { top: 0, left: 0 }}

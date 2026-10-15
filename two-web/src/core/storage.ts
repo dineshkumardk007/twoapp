@@ -1,6 +1,7 @@
 import {
   EmotionalReport,
   ChatMessage,
+  ChatPin,
   JournalEntry,
   AgreementItem,
   ListItem,
@@ -55,6 +56,8 @@ export interface SpaceState {
   userReport: EmotionalReport;
   partnerReport: EmotionalReport;
   messages: ChatMessage[];
+  /** Messages pinned to the top of the chat, newest last (core/chatActions). */
+  chatPins?: ChatPin[];
   journalEntries: JournalEntry[];
   agreements: AgreementItem[];
   lists: ListItem[];
