@@ -185,6 +185,8 @@ import {
   cleanReplyRef,
   type MessageExtras
 } from './core/chatActions';
+import { mergeReport, recordDay } from './core/weatherHistory';
+import { localDateKey } from './core/ourDates';
 import {
   PRESENCE_BEAT,
   BEAT_INTERVAL_MS,
@@ -990,15 +992,21 @@ export const App: React.FC = () => {
               }
             }
           } else if (record.type === 'WEATHER') {
+            // Checked, and with the days its author has had lately. An update
+            // from an older phone carries no days, so it counts for the day it
+            // was sent (core/weatherHistory).
+            //
             // It goes to the report of the seat that sent it: userReport is the
             // creator's seat, not "you". Choosing by "not my own seat" put the
             // creator's weather into the partner's own report on the partner's
             // phone - their card showed the other person's weather as theirs.
             if (record.authorId !== 'user' && record.authorId !== 'partner') return;
+            const sentAt = Number(record.clientTs);
+            const day = sentAt > 0 ? localDateKey(new Date(sentAt)) : msg.replay ? null : localDateKey();
             setState(prev =>
               record.authorId === 'user'
-                ? { ...prev, userReport: { ...prev.userReport, ...parsed } }
-                : { ...prev, partnerReport: { ...prev.partnerReport, ...parsed } }
+                ? { ...prev, userReport: mergeReport(prev.userReport, parsed, day) }
+                : { ...prev, partnerReport: mergeReport(prev.partnerReport, parsed, day) }
             );
           } else if (record.type === 'NOT_ABOUT_YOU') {
             // The sender's seat's report, as for WEATHER: chosen by "not my own
@@ -2745,15 +2753,18 @@ export const App: React.FC = () => {
   const handleUpdateReport = (updatedFields: any) => {
     // The whole report, not the field that changed. The relay keeps only the
     // newest of these now, and a newest that says "capacity 3" and nothing
-    // about the weather would lose the weather.
+    // about the weather would lose the weather. For the same reason it
+    // carries your days too, today's included (core/weatherHistory).
     const mine = state.activeUser === 'user' ? state.userReport : state.partnerReport;
-    wsRelay.broadcastUpdate('WEATHER', { ...mine, ...updatedFields });
+    const next = { ...mine, ...updatedFields };
+    next.days = recordDay(mine.days, localDateKey(), next.weather);
+    wsRelay.broadcastUpdate('WEATHER', next);
     setState(prev => {
       const isMe = prev.activeUser === 'user';
       return {
         ...prev,
-        userReport: isMe ? { ...prev.userReport, ...updatedFields } : prev.userReport,
-        partnerReport: !isMe ? { ...prev.partnerReport, ...updatedFields } : prev.partnerReport,
+        userReport: isMe ? { ...prev.userReport, ...updatedFields, days: next.days } : prev.userReport,
+        partnerReport: !isMe ? { ...prev.partnerReport, ...updatedFields, days: next.days } : prev.partnerReport,
       };
     });
   };

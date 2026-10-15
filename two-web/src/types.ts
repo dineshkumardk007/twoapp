@@ -7,6 +7,12 @@ export interface EmotionalReport {
   capacity: number; // 0 to 5
   notAboutYouActive: boolean;
   updatedAt: string;
+  /**
+   * The last weather set on each day lately, by local date ("2026-10-15").
+   * Each phone keeps its own and sends all of it with every update, because
+   * the relay keeps only the newest WEATHER record (core/weatherHistory).
+   */
+  days?: Record<string, WeatherState>;
 }
 
 export interface NeedItem {
@@ -64,6 +70,27 @@ export interface ChatMessage {
   unsent?: boolean;
   /** At most one reaction from each of you, by seat (CHAT_REACTION). */
   reactions?: Partial<Record<'user' | 'partner', string>>;
+  /**
+   * A photo that can be opened once, by the person it was sent to. Its sender
+   * keeps no copy once the relay has it, and the receiver's goes when opened
+   * (core/chatActions).
+   */
+  viewOnce?: boolean;
+  /**
+   * When a view-once photo was opened (CHAT_VIEWED). Its picture is gone from
+   * this phone from then on; the bubble says it was opened.
+   */
+  viewedAt?: number;
+}
+
+/**
+ * A message pinned to the top of the chat (CHAT_PIN): which one, who pinned
+ * it, and when. Up to three are kept, newest last.
+ */
+export interface ChatPin {
+  messageId: string;
+  by: 'user' | 'partner';
+  at: number;
 }
 
 /**
