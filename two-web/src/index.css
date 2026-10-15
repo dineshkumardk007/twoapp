@@ -180,6 +180,11 @@ body::before {
 html.dark .bg-linen-surface {
   --tw-bg-opacity: 0.82;
 }
+/* A sheet or menu lying over the screen is not: the words under it would
+   show through its own. */
+html.dark .bg-linen-surface.surface-solid {
+  --tw-bg-opacity: 1;
+}
 
 /* The primary action, and anything wearing the primary colour as a filled
    tile: lit with the aurora instead of a flat block. */

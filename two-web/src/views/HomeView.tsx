@@ -3,7 +3,7 @@ import { SpaceState } from '../core/storage';
 import { EmotionalWeatherCard } from '../components/EmotionalWeatherCard';
 import { NotAboutYouBanner } from '../components/NotAboutYouBanner';
 import { getResurfacedQuote, LiteraryQuote } from '../data/quotes';
-import { Sparkles, Quote, Heart, Wind, ChevronRight, X, ShieldCheck } from 'lucide-react';
+import { Sparkles, Quote, Heart, Wind, ChevronRight, X, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { backupNudge, snoozeBackupNudge, requestBackupOnOpen } from '../core/backupReminder';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
 import { CoRegulationModal } from '../components/CoRegulationModal';
@@ -18,6 +18,8 @@ import { ActivityEvent } from '../core/activity';
 import { destinationName } from '../data/destinations';
 import { localDateKey } from '../core/ourDates';
 import { ThirukkuralCard } from '../components/ThirukkuralCard';
+import { ArrangeHomeSheet } from '../components/ArrangeHomeSheet';
+import { HomeCardId, HomeLayout, readHomeLayout, writeHomeLayout } from '../core/homeLayout';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -49,6 +51,15 @@ interface HomeViewProps {
  * the capacity it was chosen for changes.
  */
 const quoteOfTheDay = new Map<string, LiteraryQuote>();
+
+/** A weather as the card names it: CALM is "clear", RAINY "turbulent". */
+const WEATHER_WORD: Record<WeatherState, string> = {
+  SUNNY: 'sunny',
+  CALM: 'clear',
+  OVERCAST: 'overcast',
+  RAINY: 'turbulent',
+  STORMY: 'stormy'
+};
 
 function quoteFor(day: string, weather: WeatherState, capacity: number): LiteraryQuote {
   const key = `${day}|${weather}|${capacity}`;
@@ -88,6 +99,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showHeartModal, setShowHeartModal] = useState(false);
   // Worked out once per visit to Home; "Later" hides it straight away.
   const [nudge, setNudge] = useState(() => backupNudge());
+  // This phone's own order of the cards below, and the ones switched off.
+  const [layout, setLayout] = useState<HomeLayout>(readHomeLayout);
+  const [arranging, setArranging] = useState(false);
+  const changeLayout = (next: HomeLayout) => {
+    setLayout(next);
+    writeHomeLayout(next);
+  };
   // The phone's Back button closes these popups through the popups themselves
   // (each registers its own layer), so the breathing one can end its session
   // and tell the other phone, as its close button does.
@@ -112,6 +130,194 @@ export const HomeView: React.FC<HomeViewProps> = ({
   // This phone's own weather, for the quote tuned to it.
   const { weather, capacity } = myReport;
   const resurfacedQuote = useMemo(() => quoteFor(today, weather, capacity), [today, weather, capacity]);
+
+  /**
+   * One of Home's cards. Each phone puts them in its own order and may switch
+   * some off (core/homeLayout) - except that the comfort box still shows on a
+   * heavy day, and the partner's "It's not about you" when they turn it on.
+   */
+  const hidden = (id: HomeCardId) => layout.hidden.includes(id);
+  const homeCard = (id: HomeCardId): React.ReactNode => {
+    switch (id) {
+      case 'ourDays':
+        return hidden('ourDays') ? null : (
+          <>
+            {/* Your days together, from the dates the two of you set - or a quiet
+                question until you have. */}
+            <OurDatesCard dates={state.ourDates} onSave={onSetOurDates} />
+          </>
+        );
+      case 'kural':
+        return hidden('kural') ? null : (
+          <>
+            {/* A kural a day, on a palm leaf - the same one on both phones. */}
+            <ThirukkuralCard onShare={onSendQuestion} />
+          </>
+        );
+      case 'weather':
+        return hidden('weather') ? null : (
+          <>
+            {/* Side-by-Side Emotional Weather & Capacity */}
+            <EmotionalWeatherCard
+              userReport={state.userReport}
+              partnerReport={state.partnerReport}
+              activeUser={state.activeUser}
+              onUpdateReport={onUpdateReport}
+              partnerName={partnerName}
+            />
+          </>
+        );
+      case 'notAboutYou':
+        return (
+          <>
+            {/* "It's Not About You" Flag */}
+            {(!hidden('notAboutYou') || isPartnerFlagActive) && (
+              <NotAboutYouBanner
+                isPartnerActive={isPartnerFlagActive}
+                partnerName={partnerName}
+                isUserActive={isUserFlagActive}
+                onToggleUserFlag={onToggleUserFlag}
+              />
+            )}
+          </>
+        );
+      case 'comfort':
+        return (
+          <>
+            {/* Emergency Comfort Box Banner on a heavy day; on any other day a
+                quiet way in, because the box is filled ahead of time and this is
+                the only place it opens from. */}
+            {!heavyDay && !hidden('comfort') && (
+              <button
+                onClick={() => setShowComfortBox(true)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-linen-border bg-linen-surface px-4 py-3 text-left transition-colors hover:bg-linen-variant/50 cursor-pointer"
+              >
+                <Heart className="w-4 h-4 shrink-0 text-linen-accent" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-linen-primary">Comfort box</span>
+                  <span className="block text-xs text-linen-secondary">For heavy days - open it, or fill it for {partnerName}</span>
+                </span>
+                <ChevronRight className="w-4 h-4 shrink-0 text-linen-secondary" />
+              </button>
+            )}
+            {/* The button has a row of its own, as on the card below: beside the
+                words it left them a column a few letters wide on a phone. */}
+            {heavyDay && (
+              <div className="rounded-2xl border border-linen-accent/30 bg-linen-variant/50 p-4 shadow-xs space-y-3 animate-fade-in">
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 rounded-xl bg-linen-surface border border-linen-border text-linen-accent shrink-0">
+                    <Heart className="w-4 h-4 fill-current" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-serif text-base font-medium text-linen-primary">
+                      {myHeavyDay ? 'Go gently today' : `A heavy day for ${partnerName}`}
+                    </h4>
+                    <p className="text-xs text-linen-secondary mt-0.5">
+                      {myHeavyDay
+                        ? 'Your comfort box is ready, with nothing asked of you.'
+                        : 'Something kind in the comfort box might help.'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowComfortBox(true)}
+                  className="w-full px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
+                >
+                  Open the comfort box
+                </button>
+              </div>
+            )}
+          </>
+        );
+      case 'thinking':
+        return hidden('thinking') ? null : (
+          <>
+            {/* Thinking of You. The big heart sends it; the two quieter buttons
+                sit on their own row so nothing has to squeeze in beside the
+                title - three of them side by side pushed the card, and with it
+                the whole screen, past the edge of a phone. */}
+            <div className="rounded-3xl border border-linen-border bg-linen-surface p-4 sm:p-5 shadow-xs space-y-3">
+              <div className="flex items-center gap-3.5">
+                <button
+                  onClick={() => triggerGlobalPulse('Thinking of you')}
+                  className="w-14 h-14 rounded-[20px] bg-linen-accent text-linen-surface flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-glow cursor-pointer shrink-0"
+                  aria-label={`Send ${partnerName} a heartbeat`}
+                >
+                  <Heart className="heart-beat w-7 h-7 fill-current" />
+                </button>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-serif text-base font-medium text-linen-primary">Thinking of you</h4>
+                  <p className="text-xs text-linen-secondary mt-0.5">
+                    Tap the heart to send {partnerName} a heartbeat
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setShowHeartModal(true)}
+                  className="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-linen-variant/60 border border-linen-border text-linen-primary text-xs font-medium hover:bg-linen-variant active:scale-95 transition-all cursor-pointer"
+                >
+                  <Heart className="w-3.5 h-3.5 shrink-0 text-linen-accent" />
+                  <span className="truncate">Heart options</span>
+                </button>
+                <button
+                  onClick={() => setShowCoRegulation(true)}
+                  className="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-linen-variant/60 border border-linen-border text-linen-primary text-xs font-medium hover:bg-linen-variant active:scale-95 transition-all cursor-pointer"
+                >
+                  <Wind className="w-3.5 h-3.5 shrink-0 text-linen-accent" />
+                  <span className="truncate">Breathe together</span>
+                </button>
+              </div>
+            </div>
+          </>
+        );
+      case 'question':
+        return hidden('question') ? null : (
+          <>
+            {/* Today's question, answered together: each answer stays hidden
+                from the other until you have both answered. */}
+            <DailyQuestionCard
+              answers={state.dailyAnswers || []}
+              activeUser={state.activeUser}
+              partnerName={partnerName}
+              onAnswer={onAnswerQuestion}
+              onSendToChat={onSendQuestion}
+            />
+          </>
+        );
+      case 'quote':
+        return hidden('quote') ? null : (
+          <>
+            {/* Resurfaced Literary Quote, the same one all day */}
+            <div className="rounded-3xl border border-linen-border bg-gradient-to-r from-linen-variant/30 via-linen-surface to-linen-variant/20 p-5 sm:p-6">
+              <div className="flex items-center space-x-2 text-linen-secondary mb-2">
+                <Quote className="w-4 h-4 text-linen-accent shrink-0" />
+                <span className="text-xs font-medium uppercase tracking-wider text-linen-secondary">Quote of the day</span>
+              </div>
+              <p className="font-serif italic text-base sm:text-lg text-linen-primary leading-relaxed mb-2 break-words">
+                “{resurfacedQuote.quote}”
+              </p>
+              <div className="text-xs text-linen-secondary flex flex-wrap items-center justify-between gap-2">
+                <span className="font-medium min-w-0">— {resurfacedQuote.author}{resurfacedQuote.source ? `, ${resurfacedQuote.source}` : ''}</span>
+                <span className="text-[11px] text-linen-accent bg-linen-surface px-2 py-0.5 rounded-md border border-linen-border/60">
+                  Picked for your {WEATHER_WORD[weather]} weather
+                </span>
+              </div>
+            </div>
+          </>
+        );
+      case 'milestones':
+        return hidden('milestones') ? null : (
+          <>
+            {/* The milestones you have added together */}
+            <MilestoneTrackerCard
+              milestones={state.milestones}
+              onAddMilestone={onAddMilestone}
+            />
+          </>
+        );
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -195,10 +401,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       )}
 
-      {/* Your days together, from the dates the two of you set - or a quiet
-          question until you have. */}
-      <OurDatesCard dates={state.ourDates} onSave={onSetOurDates} />
-
       {/* Story Tour Banner, until it has been seen once */}
       {onOpenTour && (
         <div className="rounded-2xl border border-linen-border bg-gradient-to-r from-linen-variant/60 via-linen-surface to-linen-variant/40 p-4 flex items-center justify-between gap-3 shadow-xs">
@@ -220,140 +422,30 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       )}
 
-      {/* A kural a day, on a palm leaf - the same one on both phones. */}
-      <ThirukkuralCard onShare={onSendQuestion} />
+      {layout.order.map(id => (
+        <React.Fragment key={id}>{homeCard(id)}</React.Fragment>
+      ))}
 
-      {/* Side-by-Side Emotional Weather & Capacity */}
-      <EmotionalWeatherCard
-        userReport={state.userReport}
-        partnerReport={state.partnerReport}
-        activeUser={state.activeUser}
-        onUpdateReport={onUpdateReport}
-        partnerName={partnerName}
-      />
-
-      {/* "It's Not About You" Flag */}
-      <NotAboutYouBanner
-        isPartnerActive={isPartnerFlagActive}
-        partnerName={partnerName}
-        isUserActive={isUserFlagActive}
-        onToggleUserFlag={onToggleUserFlag}
-      />
-
-      {/* Emergency Comfort Box Banner on a heavy day; on any other day a
-          quiet way in, because the box is filled ahead of time and this is
-          the only place it opens from. */}
-      {!heavyDay && (
+      {/* This phone's own order of the cards above, and which are shown. */}
+      <div className="flex justify-center pt-1">
         <button
-          onClick={() => setShowComfortBox(true)}
-          className="flex w-full items-center gap-3 rounded-2xl border border-linen-border bg-linen-surface px-4 py-3 text-left transition-colors hover:bg-linen-variant/50 cursor-pointer"
+          type="button"
+          onClick={() => setArranging(true)}
+          className="inline-flex items-center gap-2 rounded-[14px] border border-linen-border bg-linen-surface px-4 py-2.5 text-[13px] font-semibold text-linen-primary shadow-xs hover:bg-linen-variant/60 transition-colors cursor-pointer"
         >
-          <Heart className="w-4 h-4 shrink-0 text-linen-accent" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm text-linen-primary">Comfort box</span>
-            <span className="block text-xs text-linen-secondary">For heavy days - open it, or fill it for {partnerName}</span>
-          </span>
-          <ChevronRight className="w-4 h-4 shrink-0 text-linen-secondary" />
+          <SlidersHorizontal className="h-4 w-4 text-linen-accent" />
+          Arrange Home
         </button>
-      )}
-      {/* The button has a row of its own, as on the card below: beside the
-          words it left them a column a few letters wide on a phone. */}
-      {heavyDay && (
-        <div className="rounded-2xl border border-linen-accent/30 bg-linen-variant/50 p-4 shadow-xs space-y-3 animate-fade-in">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-linen-surface border border-linen-border text-linen-accent shrink-0">
-              <Heart className="w-4 h-4 fill-current" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h4 className="font-serif text-base font-medium text-linen-primary">
-                {myHeavyDay ? 'Go gently today' : `A heavy day for ${partnerName}`}
-              </h4>
-              <p className="text-xs text-linen-secondary mt-0.5">
-                {myHeavyDay
-                  ? 'Your comfort box is ready, with nothing asked of you.'
-                  : 'Something kind in the comfort box might help.'}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowComfortBox(true)}
-            className="w-full px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
-          >
-            Open the comfort box
-          </button>
-        </div>
-      )}
-
-      {/* Thinking of You. The big heart sends it; the two quieter buttons
-          sit on their own row so nothing has to squeeze in beside the
-          title - three of them side by side pushed the card, and with it
-          the whole screen, past the edge of a phone. */}
-      <div className="rounded-3xl border border-linen-border bg-linen-surface p-4 sm:p-5 shadow-xs space-y-3">
-        <div className="flex items-center gap-3.5">
-          <button
-            onClick={() => triggerGlobalPulse('Thinking of you')}
-            className="w-14 h-14 rounded-[20px] bg-linen-accent text-linen-surface flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-glow cursor-pointer shrink-0"
-            aria-label={`Send ${partnerName} a heartbeat`}
-          >
-            <Heart className="heart-beat w-7 h-7 fill-current" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h4 className="font-serif text-base font-medium text-linen-primary">Thinking of you</h4>
-            <p className="text-xs text-linen-secondary mt-0.5">
-              Tap the heart to send {partnerName} a heartbeat
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => setShowHeartModal(true)}
-            className="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-linen-variant/60 border border-linen-border text-linen-primary text-xs font-medium hover:bg-linen-variant active:scale-95 transition-all cursor-pointer"
-          >
-            <Heart className="w-3.5 h-3.5 shrink-0 text-linen-accent" />
-            <span className="truncate">Heart options</span>
-          </button>
-          <button
-            onClick={() => setShowCoRegulation(true)}
-            className="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-linen-variant/60 border border-linen-border text-linen-primary text-xs font-medium hover:bg-linen-variant active:scale-95 transition-all cursor-pointer"
-          >
-            <Wind className="w-3.5 h-3.5 shrink-0 text-linen-accent" />
-            <span className="truncate">Breathe together</span>
-          </button>
-        </div>
       </div>
 
-      {/* Today's question, answered together: each answer stays hidden
-          from the other until you have both answered. */}
-      <DailyQuestionCard
-        answers={state.dailyAnswers || []}
-        activeUser={state.activeUser}
-        partnerName={partnerName}
-        onAnswer={onAnswerQuestion}
-        onSendToChat={onSendQuestion}
-      />
-
-      {/* Resurfaced Literary Quote, the same one all day */}
-      <div className="rounded-3xl border border-linen-border bg-gradient-to-r from-linen-variant/30 via-linen-surface to-linen-variant/20 p-5 sm:p-6">
-        <div className="flex items-center space-x-2 text-linen-secondary mb-2">
-          <Quote className="w-4 h-4 text-linen-accent shrink-0" />
-          <span className="text-xs font-medium uppercase tracking-wider text-linen-secondary">Resurfaced from the Literary Quote Jar</span>
-        </div>
-        <p className="font-serif italic text-base sm:text-lg text-linen-primary leading-relaxed mb-2 break-words">
-          “{resurfacedQuote.quote}”
-        </p>
-        <div className="text-xs text-linen-secondary flex flex-wrap items-center justify-between gap-2">
-          <span className="font-medium min-w-0">— {resurfacedQuote.author}{resurfacedQuote.source ? `, ${resurfacedQuote.source}` : ''}</span>
-          <span className="text-[11px] text-linen-accent bg-linen-surface px-2 py-0.5 rounded-md border border-linen-border/60">
-            Tuned to your {weather.toLowerCase()} weather
-          </span>
-        </div>
-      </div>
-
-      {/* The milestones you have added together */}
-      <MilestoneTrackerCard
-        milestones={state.milestones}
-        onAddMilestone={onAddMilestone}
-      />
+      {arranging && (
+        <ArrangeHomeSheet
+          layout={layout}
+          partnerName={partnerName}
+          onChange={changeLayout}
+          onClose={() => setArranging(false)}
+        />
+      )}
 
       <ComfortBoxModal
         isOpen={showComfortBox}
