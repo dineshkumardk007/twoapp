@@ -2,14 +2,13 @@
 //
 // Home is about ten cards long, and not every couple uses every one of them.
 // Each phone keeps its own arrangement: the order of the cards and the ones
-// switched off. What cannot wait - news from your partner, reminders - is not
-// a card here, and always stays at the top.
+// switched off. What cannot wait - news from your partner, reminders, "it's
+// not about you" while it is on - is not a card here, and stays at the top.
 
 export type HomeCardId =
   | 'ourDays'
   | 'kural'
   | 'weather'
-  | 'notAboutYou'
   | 'comfort'
   | 'thinking'
   | 'question'
@@ -20,7 +19,7 @@ export interface HomeCard {
   id: HomeCardId;
   label: string;
   /** When a card that is switched off still shows, because it matters that day. */
-  stillShows?: (partnerName: string) => string;
+  stillShows?: () => string;
 }
 
 /** Every card, in the order Home has always had them. */
@@ -28,7 +27,6 @@ export const HOME_CARDS: readonly HomeCard[] = [
   { id: 'ourDays', label: 'Our days' },
   { id: 'kural', label: 'Kural of the day' },
   { id: 'weather', label: 'Emotional weather' },
-  { id: 'notAboutYou', label: '"It\'s not about you"', stillShows: name => `Still shows when ${name} turns it on` },
   { id: 'comfort', label: 'Comfort box', stillShows: () => 'Still shows on a heavy day' },
   { id: 'thinking', label: 'Thinking of you' },
   { id: 'question', label: "Today's question" },

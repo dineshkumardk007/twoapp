@@ -79,7 +79,7 @@ import {
 import { UpdateReadyToast } from './components/UpdateReadyToast';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import { appVersion, checkForUpdate, isPutOff, UpdateInfo } from './core/appUpdate';
-import { routeFor, withActivity, unseen, dottedTabs } from './core/activity';
+import { routeFor, isNews, NEWS_READS_PAYLOAD, withActivity, unseen, dottedTabs } from './core/activity';
 import {
   ThemeMode,
   NeedItem,
@@ -845,17 +845,17 @@ export const App: React.FC = () => {
           }
           const route = routeFor(record.type);
           // Co-presence sends a status for every change and a goodbye on
-          // leaving; only walking in is news.
-          let isNews = !!route;
-          if (isNews && record.type === 'CO_PRESENCE_STATUS') {
+          // leaving, and "it's not about you" is taken back as well as said:
+          // for those, what the record says decides whether it is news.
+          let payload: unknown = null;
+          if (route && NEWS_READS_PAYLOAD.has(record.type)) {
             try {
-              const status = JSON.parse(record.payload);
-              isNews = status?.hello === true && status?.isJoined !== false;
+              payload = JSON.parse(record.payload);
             } catch {
-              isNews = false;
+              payload = null;
             }
           }
-          if (route && isNews) {
+          if (route && isNews(record.type, payload)) {
             const at = Number(record.clientTs) || Date.now();
             setState(prev => ({
               ...prev,
@@ -4803,6 +4803,8 @@ export const App: React.FC = () => {
               if (result.status === 'found') setUpdateOffer(result.update);
               return result.status;
             }}
+            notAboutYouOn={(state.activeUser === 'user' ? state.userReport : state.partnerReport).notAboutYouActive}
+            onToggleNotAboutYou={handleToggleUserFlag}
             decoyOnLaunch={decoyOnLaunch}
             onToggleDecoyOnLaunch={handleToggleDecoyOnLaunch}
             autoCamouflageOnBlur={autoCamouflageOnBlur}

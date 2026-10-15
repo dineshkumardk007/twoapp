@@ -50,7 +50,8 @@ const ROUTES: Record<string, { tab: string; tier: ActivityTier }> = {
   SCRATCH_CARD_UPDATE: { tab: 'scratch', tier: 'for-you' },
   REPAIR_BRIDGE_SEND: { tab: 'repairbridge', tier: 'for-you' },
   REPAIR_BRIDGE_RESPOND: { tab: 'repairbridge', tier: 'for-you' },
-  NOT_ABOUT_YOU: { tab: 'softlanding', tier: 'for-you' },
+  // Its note is at the top of Home, where it is switched on and off.
+  NOT_ABOUT_YOU: { tab: 'home', tier: 'for-you' },
   KINTSUGI_CHERISH: { tab: 'kintsugi', tier: 'for-you' },
   NIGHTSTAND_KISS: { tab: 'nightstand', tier: 'for-you' },
   TIME_CAPSULE_UPDATE: { tab: 'capsules', tier: 'for-you' },
@@ -159,6 +160,22 @@ export function routeFor(type: string): { tab: string; tier: ActivityTier } | nu
 
 export function phraseFor(type: string): string {
   return PHRASES[type] || 'changed something';
+}
+
+/** Kinds of record where only some are news, which takes reading what they say. */
+export const NEWS_READS_PAYLOAD = new Set(['CO_PRESENCE_STATUS', 'NOT_ABOUT_YOU']);
+
+/**
+ * Whether a record is news. Most of the kinds routeFor knows always are;
+ * of Quiet Together's statuses only walking in is, and of "it's not about
+ * you" only saying it - taking it back is not something to be told about.
+ */
+export function isNews(type: string, payload: unknown): boolean {
+  if (!routeFor(type)) return false;
+  const p = (payload && typeof payload === 'object' ? payload : {}) as Record<string, unknown>;
+  if (type === 'CO_PRESENCE_STATUS') return p.hello === true && p.isJoined !== false;
+  if (type === 'NOT_ABOUT_YOU') return p.active === true;
+  return true;
 }
 
 /** Nothing older than this is worth surfacing as news. */

@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  BookOpen, CalendarHeart, ChevronDown, ChevronUp, CloudSun, Flag, Heart, HeartPulse, Info,
+  BookOpen, CalendarHeart, ChevronDown, ChevronUp, CloudSun, Flag, Heart, HeartPulse,
   MessageCircleQuestion, Quote
 } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
@@ -18,7 +18,6 @@ const ICONS: Record<HomeCardId, React.ComponentType<{ className?: string }>> = {
   ourDays: CalendarHeart,
   kural: BookOpen,
   weather: CloudSun,
-  notAboutYou: Info,
   comfort: Heart,
   thinking: HeartPulse,
   question: MessageCircleQuestion,
@@ -81,7 +80,7 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
             const card = byId.get(id)!;
             const Icon = ICONS[id];
             const shown = !layout.hidden.includes(id);
-            const note = !shown && card.stillShows ? card.stillShows(partnerName) : '';
+            const note = !shown && card.stillShows ? card.stillShows() : '';
             return (
               <div
                 key={id}

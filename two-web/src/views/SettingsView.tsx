@@ -6,7 +6,7 @@ import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
 import { Locale, getTranslation } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
-import { Shield, Download, Trash2, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw, Moon, Sun, Smartphone, Fingerprint } from 'lucide-react';
+import { Shield, Download, Trash2, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw, Moon, Sun, Smartphone, Fingerprint, Heart } from 'lucide-react';
 import { APPEARANCE_CHOICES, Appearance, readAppearance, writeAppearance } from '../core/appearance';
 import { whenLabel } from '../core/when';
 import { isAndroidApp } from '../core/platform';
@@ -95,6 +95,10 @@ interface SettingsViewProps {
   onToggleShareReceipts?: (share: boolean) => void;
   /** Asks for a new version now; one found is offered by the app's own popup. */
   onCheckForUpdate?: () => Promise<'found' | 'none' | 'failed' | 'skipped'>;
+  /** Whether you have told your partner "it's not about you". */
+  notAboutYouOn?: boolean;
+  /** Turns it on or off, on both phones. */
+  onToggleNotAboutYou?: (on: boolean) => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -122,6 +126,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onToggleShareLastSeen,
   shareReceipts = true,
   onToggleShareReceipts,
+  notAboutYouOn = false,
+  onToggleNotAboutYou,
   onToggleActiveUser = () => {},
   decoyCode = '142.85',
   onUpdateDecoyCode,
@@ -478,6 +484,46 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           Just this phone. Your partner's phone keeps the look they chose.
         </p>
       </div>
+
+      {/* "It's not about you", for a hard day that is not the other's doing.
+          Switched on here; while it is on, Home says so on both phones. */}
+      {onToggleNotAboutYou && (
+        <div className="p-5 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
+          <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
+            <Heart className="w-4 h-4 text-linen-accent" />
+            <span>It’s not about you</span>
+          </div>
+          <p className="text-[11px] text-linen-secondary leading-relaxed">
+            For a hard day that has nothing to do with {state.partnerName || 'your partner'}. Their Home shows a
+            gentle note until you turn this off.
+          </p>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={notAboutYouOn}
+            onClick={() => onToggleNotAboutYou(!notAboutYouOn)}
+            className="flex w-full items-center justify-between gap-3 rounded-xl border border-linen-border bg-linen-variant/40 px-3.5 py-3 text-left hover:bg-linen-variant transition-colors cursor-pointer"
+          >
+            <span className="min-w-0 text-sm font-medium text-linen-primary">
+              {notAboutYouOn
+                ? `On · ${state.partnerName || 'Your partner'} can see it`
+                : `Tell ${state.partnerName || 'your partner'} “it’s not about you”`}
+            </span>
+            <span
+              aria-hidden="true"
+              className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
+                notAboutYouOn ? 'bg-gradient-to-r from-aurora-violet to-aurora-pink' : 'bg-linen-secondary/30'
+              }`}
+            >
+              <span
+                className={`no-remap absolute top-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-all ${
+                  notAboutYouOn ? 'left-[19px]' : 'left-[3px]'
+                }`}
+              />
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Which version this phone runs. New ones are offered by themselves;
           this is for asking now. */}

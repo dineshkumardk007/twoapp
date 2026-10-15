@@ -134,7 +134,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   /**
    * One of Home's cards. Each phone puts them in its own order and may switch
    * some off (core/homeLayout) - except that the comfort box still shows on a
-   * heavy day, and the partner's "It's not about you" when they turn it on.
+   * heavy day.
    */
   const hidden = (id: HomeCardId) => layout.hidden.includes(id);
   const homeCard = (id: HomeCardId): React.ReactNode => {
@@ -165,20 +165,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onUpdateReport={onUpdateReport}
               partnerName={partnerName}
             />
-          </>
-        );
-      case 'notAboutYou':
-        return (
-          <>
-            {/* "It's Not About You" Flag */}
-            {(!hidden('notAboutYou') || isPartnerFlagActive) && (
-              <NotAboutYouBanner
-                isPartnerActive={isPartnerFlagActive}
-                partnerName={partnerName}
-                isUserActive={isUserFlagActive}
-                onToggleUserFlag={onToggleUserFlag}
-              />
-            )}
           </>
         );
       case 'comfort':
@@ -400,6 +386,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* "It's not about you", switched on in Settings: here only while it is
+          on, yours or your partner's. */}
+      <NotAboutYouBanner
+        isPartnerActive={isPartnerFlagActive}
+        partnerName={partnerName}
+        isUserActive={isUserFlagActive}
+        onToggleUserFlag={onToggleUserFlag}
+      />
 
       {/* Story Tour Banner, until it has been seen once */}
       {onOpenTour && (

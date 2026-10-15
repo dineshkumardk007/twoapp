@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Info, Check } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 interface NotAboutYouBannerProps {
   isPartnerActive: boolean;
@@ -8,15 +8,22 @@ interface NotAboutYouBannerProps {
   onToggleUserFlag: (active: boolean) => void;
 }
 
+/**
+ * "It's not about you" on Home - only while it is on.
+ *
+ * Either of you switches it on in Settings, for a hard day that is not the
+ * other's doing. While your partner's is on, their note is here, where you
+ * land; while yours is on, a line says so and can turn it off.
+ */
 export const NotAboutYouBanner: React.FC<NotAboutYouBannerProps> = ({
   isPartnerActive,
   partnerName,
   isUserActive,
   onToggleUserFlag
 }) => {
+  if (!isPartnerActive && !isUserActive) return null;
   return (
     <div className="space-y-3">
-      {/* Partner Active Banner */}
       {isPartnerActive && (
         <div className="rounded-2xl bg-amber-50 border border-amber-300/60 p-4 shadow-sm animate-in fade-in duration-300">
           <div className="flex items-start space-x-3">
@@ -33,27 +40,21 @@ export const NotAboutYouBanner: React.FC<NotAboutYouBannerProps> = ({
         </div>
       )}
 
-      {/* User 1-Tap Toggle */}
-      <div className="flex items-center justify-between p-3.5 rounded-xl border border-linen-border bg-linen-surface/50 hover:bg-linen-surface transition-colors">
-        <div className="flex items-center space-x-2.5">
-          <Info className="w-4 h-4 text-linen-secondary" />
-          <span className="text-sm font-medium text-linen-primary">
-            {isUserActive
-              ? `On: ${partnerName} knows it’s not about them`
-              : `Tell ${partnerName} “it’s not about you” today`}
-          </span>
+      {isUserActive && (
+        <div className="flex items-center gap-3 rounded-2xl border border-amber-300/60 bg-amber-50/70 py-2.5 pl-4 pr-2">
+          <Heart className="h-4 w-4 shrink-0 fill-current text-amber-600" />
+          <p className="min-w-0 flex-1 text-sm text-linen-primary">
+            {partnerName} can see it’s not about them
+          </p>
+          <button
+            type="button"
+            onClick={() => onToggleUserFlag(false)}
+            className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors"
+          >
+            Turn off
+          </button>
         </div>
-        <button
-          onClick={() => onToggleUserFlag(!isUserActive)}
-          className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-            isUserActive
-              ? 'bg-amber-700 text-white shadow-sm'
-              : 'bg-linen-variant hover:bg-linen-border text-linen-secondary'
-          }`}
-        >
-          {isUserActive ? 'On' : 'Turn on'}
-        </button>
-      </div>
+      )}
     </div>
   );
 };
