@@ -990,23 +990,27 @@ export const App: React.FC = () => {
               }
             }
           } else if (record.type === 'WEATHER') {
-            setState(prev => {
-              const isPartner = record.authorId !== prev.activeUser;
-              return {
-                ...prev,
-                partnerReport: isPartner ? { ...prev.partnerReport, ...parsed } : prev.partnerReport,
-                userReport: !isPartner ? { ...prev.userReport, ...parsed } : prev.userReport
-              };
-            });
+            // It goes to the report of the seat that sent it: userReport is the
+            // creator's seat, not "you". Choosing by "not my own seat" put the
+            // creator's weather into the partner's own report on the partner's
+            // phone - their card showed the other person's weather as theirs.
+            if (record.authorId !== 'user' && record.authorId !== 'partner') return;
+            setState(prev =>
+              record.authorId === 'user'
+                ? { ...prev, userReport: { ...prev.userReport, ...parsed } }
+                : { ...prev, partnerReport: { ...prev.partnerReport, ...parsed } }
+            );
           } else if (record.type === 'NOT_ABOUT_YOU') {
-            setState(prev => {
-              const isPartner = record.authorId !== prev.activeUser;
-              return {
-                ...prev,
-                partnerReport: isPartner ? { ...prev.partnerReport, notAboutYouActive: parsed.active } : prev.partnerReport,
-                userReport: !isPartner ? { ...prev.userReport, notAboutYouActive: parsed.active } : prev.userReport
-              };
-            });
+            // The sender's seat's report, as for WEATHER: chosen by "not my own
+            // seat", the creator's flag landed on the partner's own report on
+            // the partner's phone, so they never saw it was not about them.
+            if (record.authorId !== 'user' && record.authorId !== 'partner') return;
+            const active = parsed?.active === true;
+            setState(prev =>
+              record.authorId === 'user'
+                ? { ...prev, userReport: { ...prev.userReport, notAboutYouActive: active } }
+                : { ...prev, partnerReport: { ...prev.partnerReport, notAboutYouActive: active } }
+            );
           } else if (record.type === 'LIST_ITEM') {
             setState(prev => ({
               ...prev,
