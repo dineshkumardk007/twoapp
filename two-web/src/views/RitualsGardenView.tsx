@@ -193,7 +193,7 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
           className="self-start sm:self-auto inline-flex items-center px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs"
         >
           <Plus className="w-3.5 h-3.5 mr-1.5" />
-          Add Private Ritual
+          Add a ritual
         </button>
       </div>
 
@@ -201,10 +201,10 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
       <div className="p-5 rounded-2xl border border-linen-border bg-gradient-to-r from-linen-variant/50 via-linen-surface to-linen-variant/30 space-y-2 shadow-xs">
         <div className="flex items-center space-x-2 text-linen-accent">
           <Sparkles className="w-4 h-4" />
-          <span className="text-xs font-semibold uppercase tracking-wider">The Gottman 6-Second Oasis</span>
+          <span className="text-xs font-semibold uppercase tracking-wider">The six-second kiss</span>
         </div>
         <p className="font-serif text-sm text-linen-primary italic leading-relaxed">
-          "A 6-second kiss acts as an emotional oasis. It stops the hectic rush of the day and signals to your biological nervous system that you are home, treasured, and safe with your partner."
+          "A six-second kiss is a small pause in a busy day. It tells you both: you're home, and you're safe with each other."
         </p>
         <div className="pt-2 flex flex-wrap items-center gap-3">
           <button
@@ -235,10 +235,10 @@ export const RitualsGardenView: React.FC<RitualsGardenViewProps> = ({
       <div className="p-6 sm:p-8 rounded-3xl border border-linen-border bg-linen-surface shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-linen-border/60 pb-4">
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-linen-accent">Our Living Stone Cairn</span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-linen-accent">Our stone pile</span>
             <h3 className="font-serif text-xl font-medium text-linen-primary">The Pebble Garden</h3>
             <p className="text-xs text-linen-secondary mt-0.5">
-              Each completed ritual balances an organic river stone in our shared sanctuary.
+              Each ritual you finish adds a stone to the pile.
             </p>
           </div>
           <div className="flex flex-col items-start sm:items-end gap-1.5">

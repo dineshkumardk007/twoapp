@@ -453,7 +453,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
           <div className="flex items-center space-x-2">
             <Radio className="w-5 h-5 text-amber-600" />
             <span className="text-xs font-semibold uppercase tracking-widest text-amber-700">
-              Midnight Airwaves
+              Listen together
             </span>
           </div>
           <h2 className="font-serif text-2xl font-bold text-linen-primary mt-1">
@@ -486,7 +486,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
             ) : radio.isPlaying ? (
               <span className="text-amber-800 font-medium">📻 {partnerName} is on {nowName} • Tap play to join</span>
             ) : (
-              <span className="text-linen-secondary">Tuned off • Tap Play to start shared session</span>
+              <span className="text-linen-secondary">Off • Tap Play to listen together</span>
             )}
           </div>
         </div>
@@ -509,7 +509,7 @@ export const MidnightRadioView: React.FC<MidnightRadioViewProps> = ({
 
             <div className="flex items-center justify-between relative z-10 mb-2">
               <span className="text-[10px] font-mono uppercase tracking-widest text-amber-500/80">
-                Hi-Fi Vacuum Tube Stereo Receiver
+                Two · Stereo
               </span>
               <div className="flex items-center space-x-1.5">
                 <span className={`w-2 h-2 rounded-full ${isLocalTunedIn ? 'bg-amber-400 animate-pulse' : 'bg-amber-950'}`} />

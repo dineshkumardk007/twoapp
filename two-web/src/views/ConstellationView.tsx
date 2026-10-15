@@ -97,7 +97,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
           className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-2xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-semibold shadow-glow transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Plant a Gratitude Star</span>
+          <span>Add a thank-you star</span>
         </button>
       </div>
 
@@ -111,7 +111,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
               : 'bg-linen-surface text-linen-secondary border-linen-border hover:text-linen-primary'
           }`}
         >
-          🌌 All Constellations
+          🌌 All stars
         </button>
         {CATEGORIES.map(cat => {
           const isSelected = selectedCategory === cat.id;
@@ -301,7 +301,7 @@ export const ConstellationView: React.FC<ConstellationViewProps> = ({
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <h3 className="font-serif text-lg font-medium text-linen-primary">
-                  Plant a Gratitude Star
+                  Add a thank-you star
                 </h3>
               </div>
               <button

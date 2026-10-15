@@ -276,7 +276,7 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
           <div className="flex items-center space-x-2">
             <Compass className="w-5 h-5 text-linen-accent" />
             <span className="text-xs font-semibold uppercase tracking-widest text-linen-accent">
-              Memory Cartography
+              Places that matter
             </span>
           </div>
           <h2 className="font-serif text-2xl font-bold text-linen-primary mt-1">
@@ -292,7 +292,7 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
           className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-2xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-sm cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>Pin Sacred Coordinate</span>
+          <span>Pin a place</span>
         </button>
       </div>
 
@@ -511,7 +511,7 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
                 : 'bg-linen-surface text-linen-secondary border-linen-border hover:bg-linen-variant/50'
             }`}
           >
-            All Coordinates ({pins.length})
+            All places ({pins.length})
           </button>
           {Object.entries(CATEGORY_META).map(([key, meta]) => {
             const count = pins.filter(p => p.category === key).length;
@@ -643,7 +643,7 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
         </div>
       ) : (
         <div className="p-8 text-center rounded-3xl border border-dashed border-linen-border bg-linen-surface/50 text-linen-secondary font-serif text-sm">
-          Select any glowing coordinate on the map to open its story.
+          Tap a pin on the map to open its story.
         </div>
       )}
 

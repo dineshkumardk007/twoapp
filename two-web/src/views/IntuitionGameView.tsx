@@ -103,7 +103,7 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
           className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 rounded-xl bg-linen-variant hover:bg-linen-border text-linen-primary text-xs font-medium border border-linen-border transition-colors cursor-pointer"
         >
           <Shuffle className="w-4 h-4 text-linen-accent" />
-          <span>New Dilemma</span>
+          <span>New question</span>
         </button>
       </div>
 
@@ -112,14 +112,14 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
         {/* Category & Status Banner */}
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-linen-accent">
-            Daily Dilemma • {dilemma.category}
+            Today's question • {dilemma.category}
           </span>
           <div className="text-xs text-linen-secondary">
             {currentRound.revealed
               ? 'Results Revealed'
               : currentRound.authorChoice
               ? 'Secret Pick Locked • Ready to Guess'
-              : 'Waiting for Secret Pick'}
+              : 'Waiting for your pick'}
           </div>
         </div>
 
@@ -219,7 +219,7 @@ export const IntuitionGameView: React.FC<IntuitionGameViewProps> = ({
                           onClick={() => handlePickChoice(key)}
                           className="px-3.5 py-1.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity"
                         >
-                          Lock as My Choice
+                          Pick this
                         </button>
                       )}
 

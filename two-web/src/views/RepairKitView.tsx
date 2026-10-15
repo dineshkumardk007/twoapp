@@ -129,7 +129,7 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
               step < 4 ? 'bg-linen-primary text-linen-surface' : 'bg-linen-variant text-linen-primary border-linen-border'
             }`}
           >
-            Guided Protocol
+            Step by step
           </button>
           <button
             onClick={() => setStep(4)}
@@ -137,7 +137,7 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
               step === 4 ? 'bg-linen-primary text-linen-surface' : 'bg-linen-variant text-linen-primary border-linen-border'
             }`}
           >
-            Agreement Archive ({agreements.length})
+            Agreements ({agreements.length})
           </button>
         </div>
       </div>
@@ -147,12 +147,12 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
         <div className="bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs">
           <div className="flex items-center space-x-2 text-xs font-semibold text-linen-accent uppercase tracking-wider">
             <Clock className="w-4 h-4" />
-            <span>Stage 1 of 4: Regulated Nervous System Cooldown</span>
+            <span>Step 1 of 4: Cool down</span>
           </div>
           <div>
-            <h3 className="font-serif text-xl font-medium text-linen-primary">Soothe Physiological Arousal First</h3>
+            <h3 className="font-serif text-xl font-medium text-linen-primary">Calm down first</h3>
             <p className="text-xs sm:text-sm text-linen-secondary mt-1 leading-relaxed">
-              When heart rates surpass 100 BPM, empathy centers shut down. Take a pause to breathe, step back, and allow cortisol to clear before attempting to resolve the situation.
+              When your heart is racing, it’s hard to really listen. Take a pause, breathe, and come back when you both feel calmer.
             </p>
           </div>
 
@@ -224,7 +224,7 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
             onClick={() => setStep(2)}
             className="w-full py-3 bg-linen-primary text-linen-surface font-medium text-sm rounded-xl hover:opacity-95 transition-opacity"
           >
-            I Feel Regulated &rarr; Begin Structured Reflections
+            I feel calmer &rarr; Next step
           </button>
         </div>
       )}
@@ -234,10 +234,10 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
         <div className="bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs">
           <div className="flex items-center space-x-2 text-xs font-semibold text-linen-accent uppercase tracking-wider">
             <Lock className="w-4 h-4" />
-            <span>Stage 2 of 4: Confidential "I Feel... When..." Reflection</span>
+            <span>Step 2 of 4: Say how you feel</span>
           </div>
           <div>
-            <h3 className="font-serif text-xl font-medium text-linen-primary">Express Your Vulnerable Experience</h3>
+            <h3 className="font-serif text-xl font-medium text-linen-primary">Say how it felt for you</h3>
             <p className="text-xs sm:text-sm text-linen-secondary mt-1 leading-relaxed">
               Use non-accusatory language. These reflections remain locally sealed under your private key until both partners tap Reveal.
             </p>
@@ -326,10 +326,10 @@ export const RepairKitView: React.FC<RepairKitViewProps> = ({ agreements, active
         <div className="bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs">
           <div className="flex items-center space-x-2 text-xs font-semibold text-linen-accent uppercase tracking-wider">
             <Sparkles className="w-4 h-4" />
-            <span>Stage 3 of 4: Mirroring & Mutual Reveal</span>
+            <span>Step 3 of 4: Hear each other</span>
           </div>
           <div>
-            <h3 className="font-serif text-xl font-medium text-linen-primary">Understanding Both Perspectives</h3>
+            <h3 className="font-serif text-xl font-medium text-linen-primary">Both sides</h3>
             <p className="text-xs sm:text-sm text-linen-secondary mt-1 leading-relaxed">
               Read with an intention to understand your partner's experience, not to formulate a counter-argument.
             </p>

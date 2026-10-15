@@ -118,7 +118,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
         <div>
           <div className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 mb-1.5">
             <BookOpen className="w-3.5 h-3.5 text-amber-600" />
-            <span>Annual Relational Memoir</span>
+            <span>Your story, as a book</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-linen-primary font-medium">
             Memoir Book
@@ -143,7 +143,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
             title="Download complete raw relational vault backup"
           >
             <Download className="w-3.5 h-3.5 text-linen-accent" />
-            <span>Backup JSON</span>
+            <span>Save a copy</span>
           </button>
 
           <button
@@ -184,7 +184,7 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
           </div>
 
           <span className="text-xs font-serif uppercase tracking-[0.3em] text-[#7a6a57] mb-3">
-            Two · Relational Memoir
+            Two · Our story
           </span>
 
           <h1 className="font-serif text-3xl sm:text-5xl font-medium tracking-tight text-[#221e1a] mb-3">

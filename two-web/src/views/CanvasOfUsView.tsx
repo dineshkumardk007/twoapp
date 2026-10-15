@@ -436,7 +436,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           <div className="flex items-center space-x-2">
             <Palette className="w-5 h-5 text-amber-600" />
             <span className="text-xs font-semibold uppercase tracking-widest text-amber-700">
-              Tactile Touch Artistry
+              Draw together
             </span>
           </div>
           <h2 className="font-serif text-2xl font-bold text-linen-primary mt-1">
@@ -454,7 +454,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
           >
             {savedFeedback ? <Check className="w-4 h-4 text-emerald-300" /> : <Sparkles className="w-4 h-4" />}
-            <span>{savedFeedback ? 'Saved to Vault!' : 'Save to Vault'}</span>
+            <span>{savedFeedback ? 'Saved!' : 'Save drawing'}</span>
           </button>
 
           {onSendToChat && (

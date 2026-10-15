@@ -217,13 +217,13 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
           <div className="space-y-2.5 max-w-xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-medium">
               <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>Kintsugi 金継ぎ • The Art of Golden Joinery</span>
+              <span>Kintsugi 金継ぎ • mending with gold</span>
             </div>
             <h2 className="font-serif text-2xl sm:text-3xl text-stone-100 font-normal tracking-wide">
               Kintsugi Moments
             </h2>
             <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
-              Every long-term love has weathered storms. In Kintsugi, breakage is never concealed or lamented—it is mended with lacquer and dusted with pure gold, making the repaired vessel more resilient and luminous than before it broke.
+              Every couple goes through hard times. In kintsugi, a broken bowl is mended with gold, and comes out stronger and more beautiful than before. Keep the hard moments you came through together here.
             </p>
           </div>
 
@@ -235,7 +235,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
               className="no-remap inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-medium text-xs sm:text-sm shadow-lg shadow-amber-900/40 active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4 text-stone-950" />
-              <span>Inscribe Golden Seam</span>
+              <span>Add a mended moment</span>
             </button>
             <div className="flex rounded-xl bg-stone-800/80 p-1 border border-stone-700">
               <button
@@ -246,7 +246,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                     : 'text-stone-400 hover:text-stone-200'
                 }`}
               >
-                🏺 Ceramic Vessel
+                🏺 Bowl
               </button>
               <button
                 onClick={() => setViewMode('chronicle')}
@@ -256,7 +256,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                     : 'text-stone-400 hover:text-stone-200'
                 }`}
               >
-                📜 Chronicle ({moments.length})
+                📜 List ({moments.length})
               </button>
             </div>
           </div>
@@ -270,10 +270,10 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
           <div className="lg:col-span-6 rounded-3xl border border-linen-border bg-gradient-to-b from-linen-surface via-amber-50/20 to-linen-variant/40 p-6 flex flex-col items-center justify-center relative shadow-sm">
             <div className="text-center mb-4">
               <p className="text-xs font-medium text-amber-700 tracking-wider uppercase">
-                Interactive Ceramic Urn
+                Your bowl
               </p>
               <p className="text-xs text-linen-secondary mt-0.5">
-                Tap any glowing golden seam to unveil the overcome chapter
+                Tap a gold line to read that moment
               </p>
             </div>
 
@@ -542,7 +542,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                 {/* Sign-off & Cherish Section */}
                 <div className="pt-3 border-t border-linen-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="text-xs text-linen-secondary">
-                    Inscribed by <span className="font-medium text-linen-primary">{inscriberOf(selectedMoment)}</span>
+                    Added by <span className="font-medium text-linen-primary">{inscriberOf(selectedMoment)}</span>
                   </div>
 
                   {selectedMoment.isCherished ? (
@@ -575,14 +575,14 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                   Seam #{selectedSeamIndex + 1} Awaiting Your History
                 </h4>
                 <p className="text-xs text-linen-secondary max-w-sm mx-auto">
-                  This part of your ceramic vessel has not been inscribed yet. Have you weathered a trial that deserves to be commemorated in gold?
+                  Nothing here yet. Is there a hard time you came through together that deserves some gold?
                 </p>
                 <button
                   onClick={() => handleOpenInscribe(selectedSeamIndex)}
                   className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-amber-700 text-white text-xs font-medium hover:bg-amber-600 transition-colors cursor-pointer shadow-sm"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Inscribe Seam #{selectedSeamIndex + 1}</span>
+                  <span>Add a moment here</span>
                 </button>
               </div>
             )}
@@ -674,7 +674,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
 
                 <div className="pt-2 border-t border-linen-border/60 flex items-center justify-between text-xs">
                   <span className="text-linen-secondary text-[11px]">
-                    Inscribed by {inscriberOf(moment)}
+                    Added by {inscriberOf(moment)}
                   </span>
                   <div className="flex items-center space-x-2">
                     {moment.isCherished ? (
@@ -716,10 +716,10 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                 </div>
                 <div>
                   <h3 className="font-serif text-lg font-medium text-linen-primary">
-                    Inscribe an Overcome Challenge
+                    Add a mended moment
                   </h3>
                   <p className="text-xs text-linen-secondary">
-                    Commemorating resilience in golden lacquer
+                    A hard time you came through together
                   </p>
                 </div>
               </div>
@@ -735,7 +735,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
               {/* Seam Slot Selector */}
               <div>
                 <label className="block text-xs font-semibold text-linen-primary uppercase tracking-wider mb-1.5">
-                  Vessel Seam Slot
+                  Which gold line
                 </label>
                 <div className="grid grid-cols-5 gap-1.5">
                   {SEAM_CONFIGS.map(seam => (
@@ -758,7 +758,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
               {/* Title */}
               <div>
                 <label className="block text-xs font-semibold text-linen-primary uppercase tracking-wider mb-1">
-                  Title of Hardship or Trial
+                  What was it?
                 </label>
                 <input
                   type="text"
@@ -799,7 +799,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
               {/* Fracture Story */}
               <div>
                 <label className="block text-xs font-semibold text-linen-primary uppercase tracking-wider mb-1">
-                  The Fracture • What Felt Broken or Heavy?
+                  What felt broken or heavy?
                 </label>
                 <textarea
                   value={hardshipStory}
@@ -814,7 +814,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
               {/* Golden Seam (Wisdom) */}
               <div>
                 <label className="block text-xs font-semibold text-linen-primary uppercase tracking-wider mb-1">
-                  The Golden Seam • How Did We Repair & What Did We Learn?
+                  How did you mend it, and what did you learn?
                 </label>
                 <textarea
                   value={wisdomLearned}
@@ -829,7 +829,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
               {/* Season Weathered */}
               <div>
                 <label className="block text-xs font-semibold text-linen-primary uppercase tracking-wider mb-1">
-                  When Was This Weathered?
+                  When was it?
                 </label>
                 <input
                   type="text"
@@ -853,7 +853,7 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
                   className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white text-xs font-medium shadow-md shadow-amber-900/20 cursor-pointer active:scale-95 transition-all"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Inscribe in Gold</span>
+                  <span>Add it in gold</span>
                 </button>
               </div>
             </form>

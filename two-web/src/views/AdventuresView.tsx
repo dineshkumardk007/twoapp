@@ -240,7 +240,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant/60'
             }`}
           >
-            🎲 Adventure Roulette
+            🎲 Pick one for us
           </button>
           <button
             onClick={() => setActiveTab('passport')}
@@ -579,7 +579,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                   className="inline-flex items-center px-6 py-3 rounded-2xl bg-linen-primary text-linen-surface text-sm font-medium hover:opacity-90 transition-opacity shadow-md cursor-pointer disabled:opacity-50"
                 >
                   <Shuffle className="w-4 h-4 mr-2" />
-                  {isSpinning ? 'Spinning Destiny...' : 'Spin Adventure Roulette'}
+                  {isSpinning ? 'Picking...' : 'Pick one for us'}
                 </button>
               </div>
             )}

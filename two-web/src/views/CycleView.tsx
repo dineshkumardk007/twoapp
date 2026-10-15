@@ -81,22 +81,22 @@ export const CycleView: React.FC<CycleViewProps> = ({
     switch (phase) {
       case 'MENSTRUAL':
         return {
-          title: 'Menstrual Phase — Deep Rest & Inward Presence',
+          title: 'Menstrual phase · rest',
           advice: 'Physical stamina is naturally low. Warmth, hydration, hot tea, and zero pressure for heavy cognitive or social exertion.'
         };
       case 'FOLLICULAR':
         return {
-          title: 'Follicular Phase — Rising Estrogen & Novelty',
+          title: 'Follicular phase · energy rising',
           advice: 'Clarity, physical endurance, and curiosity surge. Great time for adventures, long walks, creative brainstorming, and new projects.'
         };
       case 'OVULATORY':
         return {
-          title: 'Ovulatory Phase — Peak Energy & Verbal Fluency',
+          title: 'Ovulatory phase · peak energy',
           advice: 'Highest social vitality and confidence. Ideal window for deep relational conversations, connection card decks, and dates.'
         };
       case 'LUTEAL':
         return {
-          title: 'Luteal Phase — Gentle Containment & Calm',
+          title: 'Luteal phase · go gently',
           advice: 'Progesterone rises; nervous system sensitivity increases. Partner support: offering to cook dinner, avoiding sharp debates, and providing quiet reassurance.'
         };
     }
@@ -220,7 +220,7 @@ export const CycleView: React.FC<CycleViewProps> = ({
           <div className="rounded-3xl border border-linen-border bg-linen-surface p-6 sm:p-8 space-y-6 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <span className="text-xs font-semibold tracking-wider text-linen-accent uppercase">Biological Phase Log</span>
+                <span className="text-xs font-semibold tracking-wider text-linen-accent uppercase">Today's phase</span>
                 <h3 className="font-serif text-xl font-medium text-linen-primary mt-0.5">{advice.title}</h3>
               </div>
               <div className="flex items-center space-x-2">
@@ -257,7 +257,7 @@ export const CycleView: React.FC<CycleViewProps> = ({
             {/* Energy Level Slider */}
             <div>
               <div className="flex justify-between text-xs font-medium text-linen-primary mb-2">
-                <span>Energy & Bandwidth Capacity</span>
+                <span>Energy</span>
                 <span>{energyLevel} / 5</span>
               </div>
               <input
@@ -272,7 +272,7 @@ export const CycleView: React.FC<CycleViewProps> = ({
 
             {/* Symptoms Tags */}
             <div>
-              <label className="block text-xs font-medium text-linen-primary mb-2">Physical Symptoms & Cues</label>
+              <label className="block text-xs font-medium text-linen-primary mb-2">How your body feels</label>
               <div className="flex flex-wrap gap-2">
                 {symptomOptions.map(sym => {
                   const isSelected = symptoms.includes(sym);

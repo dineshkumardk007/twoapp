@@ -183,7 +183,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
           <div className="flex items-center space-x-2">
             <Handshake className="w-5 h-5 text-indigo-600" />
             <span className="text-xs font-semibold uppercase tracking-widest text-indigo-700">
-              Wholehearted Reconciliation
+              Making up
             </span>
           </div>
           <h2 className="font-serif text-2xl font-bold text-linen-primary mt-1">
@@ -219,7 +219,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Craft Repair</span>
+            <span>Write an apology</span>
           </button>
         </div>
       </div>
@@ -229,10 +229,10 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
         <Feather className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <h4 className="text-xs font-semibold uppercase tracking-wider text-indigo-900">
-            The Non-Defensive Heart
+            How to say sorry
           </h4>
           <p className="text-xs font-serif text-linen-primary leading-relaxed">
-            A real apology never uses the word <em>“but”</em>. It owns the rupture, cares for the wound, and gives the other person permission to heal in their own time.
+            A real apology has no <em>“but”</em> in it. It owns what happened, cares about the hurt, and lets the other person take their time.
           </p>
         </div>
       </div>
@@ -242,7 +242,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
         <form onSubmit={handleSendRepairLetter} className="rounded-3xl border border-linen-border bg-linen-surface p-6 shadow-xs space-y-6 animate-fade-in">
           <div className="border-b border-linen-border pb-3">
             <h3 className="font-serif text-lg font-bold text-linen-primary">
-              Craft a Wholehearted Apology
+              Write an apology
             </h3>
             <p className="text-xs text-linen-secondary mt-0.5">
               Follow the 5 steps to ensure your apology is complete, clear, and comforting.
@@ -251,7 +251,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-linen-secondary mb-1">
-              What Happened (The Rupture)
+              What happened
             </label>
             <input
               type="text"
@@ -376,7 +376,7 @@ export const RepairBridgeView: React.FC<RepairBridgeViewProps> = ({
               className="px-5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer flex items-center space-x-1.5"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>Send Wholehearted Repair</span>
+              <span>Send apology</span>
             </button>
           </div>
         </form>

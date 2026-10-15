@@ -83,14 +83,14 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
       <div className="p-8 rounded-3xl bg-linen-surface border border-linen-border text-center shadow-xs space-y-3">
         <span className="inline-flex items-center text-xs font-semibold text-linen-secondary uppercase tracking-wider">
           <IndianRupee className="w-3.5 h-3.5 mr-1 text-linen-accent" />
-          Current Running Balance
+          Balance
         </span>
         <div className="font-serif text-3xl font-medium text-linen-primary">
           {diff > 0
             ? `${partnerName} owes you ${rupees(diff)}`
             : diff < 0
             ? `You owe ${partnerName} ${rupees(Math.abs(diff))}`
-            : "Your tab is completely settled"}
+            : "You're all square"}
         </div>
         <div>
           <button
@@ -98,14 +98,14 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
             className="inline-flex items-center px-4 py-2 rounded-xl bg-linen-variant hover:bg-linen-border text-linen-primary text-xs font-medium transition-colors"
           >
             <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-linen-accent" />
-            Settle Up Tab
+            Settle up
           </button>
         </div>
       </div>
 
       {/* Add Expense Form */}
       <div className="p-5 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
-        <h3 className="font-medium text-sm text-linen-primary">Add a Shared Expense</h3>
+        <h3 className="font-medium text-sm text-linen-primary">Add an expense</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input
             type="text"
@@ -137,7 +137,7 @@ export const MoneyLightView: React.FC<MoneyLightViewProps> = ({
           disabled={!title.trim() || !amount}
           className="w-full py-2.5 bg-linen-primary text-linen-surface rounded-xl text-sm font-medium hover:opacity-95 disabled:opacity-40 transition-all"
         >
-          Add to Tab
+          Add expense
         </button>
       </div>
 

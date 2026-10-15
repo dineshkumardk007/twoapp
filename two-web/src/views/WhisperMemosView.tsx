@@ -433,7 +433,7 @@ export const WhisperMemosView: React.FC<WhisperMemosViewProps> = ({
         <div>
           <div className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 mb-2">
             <Radio className="w-3.5 h-3.5 text-rose-600" />
-            <span>Encrypted Voice Letterbox</span>
+            <span>Private voice notes</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-linen-primary font-medium">
             Whisper Memos

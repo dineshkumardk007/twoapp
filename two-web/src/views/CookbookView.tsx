@@ -145,7 +145,7 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
           className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Couple Recipe</span>
+          <span>Add a recipe</span>
         </button>
       </div>
 
@@ -154,7 +154,7 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
         {/* Left Column: Recipe Book Shelf */}
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-wider text-linen-secondary block">
-            Our Recipe Collection ({recipes.length})
+            Our recipes ({recipes.length})
           </label>
 
           <div className="space-y-2">

@@ -185,7 +185,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
             Hearth Garden
           </h1>
           <p className="text-sm text-linen-secondary mt-1 max-w-xl">
-            A botanical companion that thrives on your shared care. Never wilts or induces guilt — it gently enters winter slumber during busy weeks, and blooms the moment you return.
+            A little tree you grow together. It never dies: on busy weeks it rests, and it blooms again when you come back.
           </p>
         </div>
 
@@ -194,7 +194,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
           className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 font-medium text-sm shadow-sm transition-all transform active:scale-95 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span>Sprout a Blossom</span>
+          <span>Add a blossom</span>
         </button>
       </div>
 
@@ -215,8 +215,8 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
           <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600 mb-2 group-hover:scale-110 transition-transform">
             <Droplets className="w-5 h-5" />
           </div>
-          <span className="text-xs font-semibold text-linen-primary">Water with Love</span>
-          <span className="text-[11px] text-linen-secondary mt-0.5">+20% Hydration</span>
+          <span className="text-xs font-semibold text-linen-primary">Water it</span>
+          <span className="text-[11px] text-linen-secondary mt-0.5">+20% water</span>
         </button>
 
         <button
@@ -226,8 +226,8 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
           <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-2 group-hover:scale-110 transition-transform">
             <Sun className="w-5 h-5" />
           </div>
-          <span className="text-xs font-semibold text-linen-primary">Bask in Sunlight</span>
-          <span className="text-[11px] text-linen-secondary mt-0.5">+20% Warmth</span>
+          <span className="text-xs font-semibold text-linen-primary">Give it sun</span>
+          <span className="text-[11px] text-linen-secondary mt-0.5">+20% sun</span>
         </button>
 
         <button
@@ -269,7 +269,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
         </div>
 
         <div>
-          <span className="text-xs text-linen-secondary block">Hydration Level</span>
+          <span className="text-xs text-linen-secondary block">Water</span>
           <div className="flex items-center space-x-2 mt-1">
             <div className="flex-1 bg-linen-variant rounded-full h-2 overflow-hidden">
               <div
@@ -282,7 +282,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
         </div>
 
         <div>
-          <span className="text-xs text-linen-secondary block">Sunlight Warmth</span>
+          <span className="text-xs text-linen-secondary block">Sunlight</span>
           <div className="flex items-center space-x-2 mt-1">
             <div className="flex-1 bg-linen-variant rounded-full h-2 overflow-hidden">
               <div
@@ -409,7 +409,7 @@ export const HearthGardenView: React.FC<HearthGardenViewProps> = ({
               <div className="flex items-center space-x-2">
                 <Heart className="w-5 h-5 text-pink-600" />
                 <h3 className="font-serif text-lg font-medium text-linen-primary">
-                  Sprout a Blossom on the Bonsai
+                  Add a blossom to the tree
                 </h3>
               </div>
               <button

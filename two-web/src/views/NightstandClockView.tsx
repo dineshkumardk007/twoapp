@@ -561,7 +561,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
           <div className="relative p-6 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-300 flex flex-col items-center space-y-2 shadow-2xl animate-bounce">
             <Heart className="w-12 h-12 fill-rose-500 text-rose-400 animate-pulse" />
             <span className="text-xs font-serif font-medium tracking-widest uppercase text-rose-200">
-              Silent Midnight Kiss Sent
+              Goodnight kiss sent
             </span>
           </div>
         </div>
@@ -674,7 +674,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Bed className="w-4 h-4 text-amber-500" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-300/90">Your Rest Status</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-amber-300/90">Your sleep</span>
             </div>
             <span className={`text-[11px] px-2 py-0.5 rounded-full border ${
               isUserSleeping
@@ -757,18 +757,18 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
           <div className="flex items-center space-x-2">
             <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
             <span className="text-xs font-semibold uppercase tracking-wider text-rose-300">
-              Silent Midnight Kiss
+              Goodnight kiss
             </span>
           </div>
 
           <p className="text-xs font-serif text-amber-400/70">
-            Sends a silent haptic flutter and soft glow without waking them up with bright alerts.
+            Sends a soft buzz and a glow that won’t wake them up.
           </p>
 
           <button
             onClick={handleMidnightKiss}
             className="w-14 h-14 rounded-full bg-gradient-to-br from-rose-600/80 to-amber-700/80 border border-rose-400/40 text-rose-100 flex items-center justify-center shadow-lg shadow-rose-950/60 hover:scale-105 active:scale-95 transition-all cursor-pointer group"
-            title="Send silent midnight kiss"
+            title="Send a goodnight kiss"
           >
             <Heart className="w-7 h-7 fill-rose-300 group-hover:scale-110 transition-transform" />
           </button>
@@ -781,7 +781,7 @@ export const NightstandClockView: React.FC<NightstandClockViewProps> = ({
                 by {nightstand.lastMidnightKissFrom === state.activeUser ? 'you' : partnerName}
               </>
             ) : (
-              'Tap to exchange your midnight kiss'
+              'Tap to send a goodnight kiss'
             )}
           </span>
         </div>

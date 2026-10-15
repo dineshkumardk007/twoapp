@@ -147,7 +147,7 @@ export const JournalView: React.FC<JournalViewProps> = ({
           <div className="p-12 text-center rounded-2xl border border-dashed border-linen-border text-linen-secondary text-sm">
             {tab === 'private'
               ? "You have no private drafts. Write a note to process feelings safely before sharing."
-              : "No shared journal entries yet. Post a reflection to start your feed."}
+              : "Nothing here yet. Write the first entry."}
           </div>
         ) : (
           visibleEntries.map(entry => (

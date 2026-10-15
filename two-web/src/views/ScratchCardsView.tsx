@@ -205,7 +205,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
         <div>
           <div className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 mb-2">
             <Gift className="w-3.5 h-3.5 text-amber-600" />
-            <span>Golden Scratch Surprises</span>
+            <span>Scratch-off surprises</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-linen-primary font-medium">
             Scratch Cards
@@ -220,7 +220,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
           className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 font-medium text-sm shadow-sm transition-all transform active:scale-95 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span>Craft a Surprise Card</span>
+          <span>Make a card</span>
         </button>
       </div>
 
@@ -235,7 +235,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
             }`}
           >
-            Surprises to Scratch ({activeSurprisesCount})
+            To scratch ({activeSurprisesCount})
           </button>
           <button
             onClick={() => setActiveTab('vault')}
@@ -245,7 +245,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
             }`}
           >
-            Redeemed Vault ({redeemedVaultCount})
+            Used ({redeemedVaultCount})
           </button>
         </div>
 
@@ -291,7 +291,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
           <h3 className="font-serif text-lg text-linen-primary font-medium">No surprise cards here yet</h3>
           <p className="text-sm text-linen-secondary max-w-sm mx-auto mt-1 mb-5">
             {activeTab === 'surprises'
-              ? 'Surprise your partner with a gentle massage voucher, immunity pass, or spontaneous date invitation.'
+              ? 'Surprise your partner with a massage voucher, a free pass, or a date night.'
               : 'Redeemed cards you have enjoyed together will be preserved here as cherished memories.'}
           </p>
           <button

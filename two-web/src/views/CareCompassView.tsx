@@ -86,10 +86,10 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
   };
 
   const getFuelBadge = (fuel: number) => {
-    if (fuel >= 80) return { label: 'Full & Generous', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
-    if (fuel >= 50) return { label: 'Comfortably Balanced', color: 'bg-blue-50 text-blue-800 border-blue-200' };
+    if (fuel >= 80) return { label: 'Full of energy', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+    if (fuel >= 50) return { label: 'Doing okay', color: 'bg-blue-50 text-blue-800 border-blue-200' };
     if (fuel >= 25) return { label: 'Running Low', color: 'bg-amber-50 text-amber-800 border-amber-200' };
-    return { label: 'Depleted • Gentle Care Needed', color: 'bg-rose-50 text-rose-800 border-rose-200' };
+    return { label: 'Worn out • go gently', color: 'bg-rose-50 text-rose-800 border-rose-200' };
   };
 
   const partnerFuel = getFuelBadge(currentTheirProfile.fuelTankPercent);
@@ -126,7 +126,7 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>{isEditing ? 'Close Tuning' : 'Tune My Compass'}</span>
+            <span>{isEditing ? 'Done' : 'Set my love languages'}</span>
           </button>
         </div>
       </div>
@@ -226,7 +226,7 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
         <div className="bg-linen-surface border border-linen-border rounded-3xl p-6 shadow-xs flex flex-col items-center">
           <div className="w-full flex items-center justify-between mb-4">
             <h3 className="font-serif text-base font-medium text-linen-primary">
-              Geometric Resonance Map
+              How you each like to be loved
             </h3>
             <div className="flex items-center space-x-1 text-xs">
               {(['both', 'partner', 'you'] as const).map(mode => (
@@ -344,7 +344,7 @@ export const CareCompassView: React.FC<CareCompassViewProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-linen-accent flex items-center space-x-1.5">
                 <Heart className="w-4 h-4 text-rose-500 fill-rose-500/20" />
-                <span>Partner’s Emotional Bandwidth</span>
+                <span>Partner’s energy</span>
               </span>
               <span className={`text-xs px-2.5 py-0.5 rounded-full border font-medium ${partnerFuel.color}`}>
                 {currentTheirProfile.fuelTankPercent}% • {partnerFuel.label}

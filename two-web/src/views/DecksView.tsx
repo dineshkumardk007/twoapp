@@ -161,7 +161,7 @@ export const DecksView: React.FC<DecksViewProps> = ({ onSendToChat, onNavigate }
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>Send Prompt to Chat</span>
+            <span>Ask in chat</span>
           </button>
         </div>
       </div>

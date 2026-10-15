@@ -237,7 +237,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
           }`}
         >
           <Lock className="w-3.5 h-3.5" />
-          <span>Locked Vaults ({lockedCapsules.length})</span>
+          <span>Sealed ({lockedCapsules.length})</span>
         </button>
 
         <button
@@ -249,7 +249,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
           }`}
         >
           <Unlock className="w-3.5 h-3.5" />
-          <span>Unsealed Archive ({unsealedCapsules.length})</span>
+          <span>Opened ({unsealedCapsules.length})</span>
         </button>
       </div>
 
@@ -259,7 +259,7 @@ export const TimeCapsuleView: React.FC<TimeCapsuleViewProps> = ({
           {lockedCapsules.length === 0 ? (
             <div className="text-center py-16 px-4 rounded-3xl border border-dashed border-linen-border bg-linen-surface">
               <Hourglass className="w-12 h-12 text-linen-secondary/40 mx-auto mb-3" />
-              <h3 className="font-serif text-xl font-medium text-linen-primary">No locked time capsules yet</h3>
+              <h3 className="font-serif text-xl font-medium text-linen-primary">No sealed capsules yet</h3>
               <p className="text-xs text-linen-secondary mt-1 max-w-sm mx-auto">
                 Write a secret note or anniversary promise to be opened together in the future.
               </p>

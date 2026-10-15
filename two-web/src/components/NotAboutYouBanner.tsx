@@ -26,7 +26,7 @@ export const NotAboutYouBanner: React.FC<NotAboutYouBannerProps> = ({
             <div>
               <h3 className="font-serif text-base font-medium text-linen-primary">It’s not about you</h3>
               <p className="text-sm text-linen-secondary mt-0.5 leading-relaxed">
-                <strong>{partnerName}</strong> is carrying heavy thoughts or having a rough day, but it is <em>not</em> caused by you or your relationship. Please don’t read into their tone, silence, or brevity.
+                <strong>{partnerName}</strong> is having a hard day, but it’s <em>not</em> because of you. Don’t read too much into a short reply or a quiet mood.
               </p>
             </div>
           </div>
@@ -39,8 +39,8 @@ export const NotAboutYouBanner: React.FC<NotAboutYouBannerProps> = ({
           <Info className="w-4 h-4 text-linen-secondary" />
           <span className="text-sm font-medium text-linen-primary">
             {isUserActive
-              ? "Active: “It’s not about you” flag is reassuring your partner"
-              : "Set “It’s not about you” flag for today"}
+              ? `On: ${partnerName} knows it’s not about them`
+              : `Tell ${partnerName} “it’s not about you” today`}
           </span>
         </div>
         <button
@@ -51,7 +51,7 @@ export const NotAboutYouBanner: React.FC<NotAboutYouBannerProps> = ({
               : 'bg-linen-variant hover:bg-linen-border text-linen-secondary'
           }`}
         >
-          {isUserActive ? 'Active' : 'Turn On'}
+          {isUserActive ? 'On' : 'Turn on'}
         </button>
       </div>
     </div>

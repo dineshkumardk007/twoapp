@@ -35,7 +35,7 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
             it rather than at the same size on a line of its own. */}
         <div className="p-4 rounded-xl bg-linen-variant/40">
           <Brain className="w-5 h-5 text-linen-accent mx-auto mb-1.5" />
-          <span className="block text-xs leading-snug text-linen-secondary">Mental Planning (You)</span>
+          <span className="block text-xs leading-snug text-linen-secondary">Planning (you)</span>
           <span className="block mt-1.5 font-serif text-3xl font-medium text-linen-primary tabular-nums">
             {rememberedByMeCount}
             <span className="text-lg text-linen-secondary"> / {chores.length}</span>
@@ -44,7 +44,7 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
         </div>
         <div className="p-4 rounded-xl bg-linen-variant/40">
           <Wrench className="w-5 h-5 text-linen-accent mx-auto mb-1.5" />
-          <span className="block text-xs leading-snug text-linen-secondary">Physical Execution (You)</span>
+          <span className="block text-xs leading-snug text-linen-secondary">Doing (you)</span>
           <span className="block mt-1.5 font-serif text-3xl font-medium text-linen-primary tabular-nums">
             {executedByMeCount}
             <span className="text-lg text-linen-secondary"> / {chores.length}</span>
@@ -55,7 +55,7 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
 
       {/* Add Chore Card */}
       <div className="p-5 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
-        <h3 className="font-medium text-sm text-linen-primary">Log a Household Task</h3>
+        <h3 className="font-medium text-sm text-linen-primary">Add a task</h3>
         <input
           type="text"
           value={task}
@@ -66,7 +66,7 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
 
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="flex flex-col">
-            <label className="flex-1 block text-linen-secondary mb-1">Who carried the mental load?</label>
+            <label className="flex-1 block text-linen-secondary mb-1">Who planned it?</label>
             <select
               value={rememberedBy}
               onChange={(e) => setRememberedBy(e.target.value)}
@@ -78,7 +78,7 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
           </div>
 
           <div className="flex flex-col">
-            <label className="flex-1 block text-linen-secondary mb-1">Who physically executed?</label>
+            <label className="flex-1 block text-linen-secondary mb-1">Who did it?</label>
             <select
               value={executedBy}
               onChange={(e) => setExecutedBy(e.target.value)}
@@ -95,7 +95,7 @@ export const ChoreSplitView: React.FC<ChoreSplitViewProps> = ({ chores, activeUs
           disabled={!task.trim()}
           className="w-full py-2.5 bg-linen-primary text-linen-surface rounded-xl text-sm font-medium hover:opacity-95 disabled:opacity-40 transition-all"
         >
-          Add to Balance
+          Add task
         </button>
       </div>
 

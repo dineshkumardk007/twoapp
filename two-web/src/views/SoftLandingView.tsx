@@ -18,19 +18,19 @@ interface SoftLandingViewProps {
 }
 
 const REASSURANCE_PRESETS = [
-  'I love you deeply. I am not abandoning this conversation or you. I need 20 minutes to regulate my nervous system so I can listen with an open heart.',
-  'I am feeling emotionally flooded and overwhelmed right now. Let us take 20 quiet minutes to ground ourselves, then regroup with gentleness.',
-  'I care too much about us to speak while defensive. Taking 20 minutes of silence to find my softness again. You are safe with me.',
-  'I need a quiet pause to catch my breath. I love you and look forward to reconnecting in a few minutes.'
+  'I love you. I’m not walking away from you or from this talk. I need 20 minutes to calm down, so I can really listen.',
+  'I’m feeling overwhelmed right now. Let’s take 20 quiet minutes, then come back and talk gently.',
+  'I care about us too much to talk while I’m upset. I’m taking 20 quiet minutes to calm down. You’re safe with me.',
+  'I need a quiet pause to catch my breath. I love you, and I’ll be back in a few minutes.'
 ];
 
 const FEELING_OPTIONS = [
-  'Emotionally flooded',
-  'Scared of disconnect',
+  'Overwhelmed',
+  'Scared we’re drifting',
   'Misunderstood',
-  'Defensive & on edge',
-  'Exhausted & depleted',
-  'Tender & vulnerable',
+  'On edge',
+  'Worn out',
+  'Fragile',
   'Unheard'
 ];
 
@@ -230,7 +230,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
         <div>
           <div className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200 mb-2">
             <Shield className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Safe Harbor & Conflict Haven</span>
+            <span>When things get heated</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl text-linen-primary font-medium">
             Soft Landing
@@ -541,20 +541,20 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
           <div>
             <div className="inline-flex items-center space-x-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200 mb-2">
               <AlertCircle className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Pause Before Flooding</span>
+              <span>Pause before it boils over</span>
             </div>
             <h2 className="font-serif text-2xl font-medium text-linen-primary">
               Take a Breather
             </h2>
             <p className="text-sm text-linen-secondary mt-1">
-              Select a reassuring affirmation so your partner knows you are taking space out of love for the relationship, not out of withdrawal or abandonment.
+              Pick a kind message, so your partner knows you’re taking a break because you care, not to get away.
             </p>
           </div>
 
           {/* Duration Selector */}
           <div>
             <label className="block text-xs font-semibold text-linen-secondary uppercase tracking-wider mb-2">
-              Breather Duration
+              How long
             </label>
             <div className="grid grid-cols-4 gap-2">
               {[15, 20, 30, 45].map(mins => (
@@ -577,7 +577,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
           {/* Reassurance Message Presets */}
           <div>
             <label className="block text-xs font-semibold text-linen-secondary uppercase tracking-wider mb-2">
-              Reassurance Affirmation for Your Partner
+              A message for your partner
             </label>
             <div className="space-y-2 mb-3">
               {REASSURANCE_PRESETS.map((preset, idx) => (

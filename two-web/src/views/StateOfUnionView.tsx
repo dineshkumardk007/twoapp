@@ -171,12 +171,12 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
         <div className="flex items-center space-x-2 bg-linen-surface border border-linen-border px-3.5 py-2 rounded-2xl shadow-xs self-start sm:self-auto">
           <div className="flex items-center space-x-1.5 text-xs font-serif">
             <span className={`w-2 h-2 rounded-full ${userContent.isSubmitted ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-            <span className="text-linen-primary font-medium">You: {userContent.isSubmitted ? 'Shared' : 'Drafting'}</span>
+            <span className="text-linen-primary font-medium">You: {userContent.isSubmitted ? 'Shared' : 'Writing'}</span>
           </div>
           <span className="text-linen-secondary text-xs">•</span>
           <div className="flex items-center space-x-1.5 text-xs font-serif">
             <span className={`w-2 h-2 rounded-full ${partnerContent.isSubmitted ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-            <span className="text-linen-primary font-medium">{partnerName}: {partnerContent.isSubmitted ? 'Shared' : 'Drafting'}</span>
+            <span className="text-linen-primary font-medium">{partnerName}: {partnerContent.isSubmitted ? 'Shared' : 'Writing'}</span>
           </div>
         </div>
       </div>
@@ -186,10 +186,10 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
         <Shield className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-800">
-            Sacred Ground Rule: Attune, Don't Defend
+            One rule: listen, don't defend
           </h4>
           <p className="text-xs font-serif text-linen-primary leading-relaxed">
-            This space is not a courtroom or performance review. It is an intentional garden. Listen to understand, not to rebut. Hold tender feelings with gentle hands.
+            This isn't a courtroom. Listen to understand, not to answer back, and be gentle with each other.
           </p>
         </div>
       </div>
@@ -202,7 +202,7 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
               {session.weekLabel}
             </span>
             <h3 className="font-serif text-lg font-bold text-linen-primary mt-0.5">
-              Weekly Attunement & Harmony
+              This week's check-in
             </h3>
           </div>
           {session.isCompleted ? (
@@ -227,7 +227,7 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
               1
             </span>
             <h4 className="font-serif text-sm font-semibold text-linen-primary">
-              Appreciations & Cherishing (3 Things I Loved About You)
+              3 things I loved about you this week
             </h4>
           </div>
           <p className="text-xs font-serif text-linen-secondary">
@@ -280,7 +280,7 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
               2
             </span>
             <h4 className="font-serif text-sm font-semibold text-linen-primary">
-              What Went Well (Shared Victories & Laughter)
+              What went well
             </h4>
           </div>
           <p className="text-xs font-serif text-linen-secondary">
@@ -309,7 +309,7 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
               3
             </span>
             <h4 className="font-serif text-sm font-semibold text-linen-primary">
-              The Gentle Pebble (Tender Spots & Positive Needs)
+              Something tender, and what would help
             </h4>
           </div>
           <p className="text-xs font-serif text-linen-secondary">
@@ -340,7 +340,7 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
 
           {partnerContent.isSubmitted && (partnerContent.pebbleInShoe || partnerContent.gentleNeed) && (
             <div className="p-3.5 rounded-2xl bg-rose-50/40 border border-rose-200/70 text-xs font-serif space-y-1">
-              <span className="font-semibold text-rose-800 block">{partnerName}'s Tender Request:</span>
+              <span className="font-semibold text-rose-800 block">{partnerName} would like:</span>
               {partnerContent.pebbleInShoe && <p className="italic text-linen-primary">“{partnerContent.pebbleInShoe}”</p>}
               {partnerContent.gentleNeed && (
                 <p className="text-rose-700 font-medium mt-1">Need: “{partnerContent.gentleNeed}”</p>
