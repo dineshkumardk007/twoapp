@@ -69,7 +69,18 @@ object CrashNote {
      */
     fun read(context: Context): String {
         val app = context.applicationContext
-        val seenUntil = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong(KEY_SEEN_UNTIL, 0L)
+        // Only what happened to this version: a close from before the last
+        // update is very likely what the update fixed.
+        val installedAt = try {
+            @Suppress("DEPRECATION")
+            app.packageManager.getPackageInfo(app.packageName, 0).lastUpdateTime
+        } catch (_: Exception) {
+            0L
+        }
+        val seenUntil = maxOf(
+            app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong(KEY_SEEN_UNTIL, 0L),
+            installedAt
+        )
         val file = File(app.filesDir, FILE)
         if (file.exists() && file.lastModified() > seenUntil) {
             return JSONObject()

@@ -787,6 +787,10 @@ html.dark .olai {
   transition:
     transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 600ms ease;
+  /* Blended here, not on the circle: the slot's transform makes it a layer
+     of its own, and a blend inside it would only see its own glow. Here the
+     second circle lights the first where they overlap - the lens. */
+  mix-blend-mode: screen;
 }
 /* Each one of you has a colour, as in the mark: violet for you, pink into
    peach for them. --voice is set on the slot, so the glow and the circle
@@ -799,7 +803,6 @@ html.dark .olai {
   display: grid;
   place-items: center;
   border-radius: 9999px;
-  mix-blend-mode: screen;
   transform: scale(calc(1 + var(--voice, 0) * 0.08));
   transition: transform 160ms ease-out;
 }
@@ -819,6 +822,10 @@ html.dark .olai {
 /* Not online: their circle is there, but dim, as if asleep. */
 .call-orb-slot[data-away='true'] {
   opacity: 0.42;
+}
+/* Ended: the two drift apart and fade a little. */
+.call-stage[data-ended='true'] .call-orb-slot {
+  opacity: 0.6;
 }
 .call-orb-initial {
   font-family: 'Fraunces', Georgia, serif;

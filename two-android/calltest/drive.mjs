@@ -52,14 +52,19 @@ let shotCount = 0;
 function shot(name) {
   const file = `${String(++shotCount).padStart(2, '0')}-${name}.png`;
   const png = adb(['exec-out', 'screencap', '-p'], { raw: true, allowFail: true });
-  if (!png.length) return null;
+  if (!png.length) {
+    say('  (no picture: screencap gave nothing)');
+    return null;
+  }
   writeFileSync(join(OUT, file), png);
   return file;
 }
 
 /** The screen's accessibility tree: Android's own dialogs, and the page's buttons too. */
+let lastDump = '';
 function uiNodes() {
-  sh('uiautomator dump /sdcard/ui.xml', { allowFail: true, timeout: 40_000 });
+  sh('rm -f /sdcard/ui.xml', { allowFail: true });
+  lastDump = sh('uiautomator dump /sdcard/ui.xml', { allowFail: true, timeout: 40_000 }).trim();
   const xml = sh('cat /sdcard/ui.xml', { allowFail: true });
   const nodes = [];
   for (const m of xml.matchAll(/<node [^>]*?\/?>/g)) {
@@ -76,6 +81,43 @@ function uiNodes() {
   return nodes;
 }
 const tap = ([x, y]) => sh(`input tap ${x} ${y}`);
+
+/** The activity on top of the screen, as Android reports it. */
+function onTop() {
+  const out = sh('dumpsys activity activities', { allowFail: true });
+  return ((/(?:topResumedActivity|mResumedActivity|ResumedActivity)[^\n]*/.exec(out) || [''])[0]).trim();
+}
+
+/**
+ * Answers Android's microphone question: "While using the app" (allow) or
+ * "Don't allow". Found in the accessibility tree; on a phone whose tree
+ * cannot be read while the question is up, the question is answered with
+ * the keys instead - the first button is allow, the last is don't allow.
+ */
+async function answerMicQuestion(r, allow) {
+  const id = allow ? /permission_allow_foreground_only_button|permission_allow_button/ : /permission_deny_button/;
+  const end = Date.now() + 25_000;
+  let asked = false;
+  while (Date.now() < end) {
+    const node = uiNodes().find(n => id.test(n.id));
+    if (node?.center) {
+      r.shot('microphone-question');
+      tap(node.center);
+      r.step(allow ? 'tap "While using the app"' : "tap Don't allow");
+      return;
+    }
+    asked = asked || /GrantPermissions/.test(onTop());
+    if (asked && Date.now() > end - 13_000) break;
+    await sleep(700);
+  }
+  if (!/GrantPermissions/.test(onTop())) {
+    throw new Error(`Android's microphone question never came up (uiautomator: ${lastDump.slice(0, 120)}; on top: ${onTop()})`);
+  }
+  r.shot('microphone-question');
+  r.step(`answered with the keys (uiautomator said: ${lastDump.slice(0, 100)})`);
+  for (let i = 0; i < (allow ? 1 : 3); i++) sh('input keyevent KEYCODE_DPAD_DOWN');
+  sh('input keyevent KEYCODE_ENTER');
+}
 
 async function waitFor(fn, ms, what, every = 500) {
   const end = Date.now() + ms;
@@ -221,6 +263,13 @@ async function phoneA({ fresh = false, mic = true } = {}) {
   if (!pidOf()) sh(`am start -W -n ${ACTIVITY}`, { allowFail: true });
   A = await waitFor(() => appPage(), 90_000, 'the app page');
   if (fresh) {
+    // The page's own document, not the blank one before it, whose storage
+    // cannot be touched.
+    await waitFor(
+      () => A.eval(`return location.host === 'appassets.androidplatform.net' && document.readyState !== 'loading';`),
+      60_000,
+      'the app page to load'
+    );
     // Point it at the relay on this machine and pair it as Dinesh, then
     // start the page again on that.
     await A.eval(`
@@ -245,6 +294,7 @@ async function onChat() {
   await waitFor(async () => !(await a.eval(PAGE.callScreen)), 15_000, 'the last call screen to close');
   const nav = await a.eval(PAGE.nav('Private Chat'));
   if (nav !== 'ok') throw new Error('could not open Private Chat: ' + nav);
+  await waitFor(() => a.eval(`return !!document.querySelector('button[aria-label^="Call "]');`), 20_000, 'the Call button');
   return a;
 }
 
@@ -255,7 +305,9 @@ function callService() {
   const record = out.slice(at, at + 3000);
   return { running: true, foreground: /isForeground=true/.test(record) };
 }
-const callNotification = () => /two_call_in_progress/.test(sh('dumpsys notification --noredact', { allowFail: true }));
+// The posted notification itself (its key: user|package|id|tag|uid), not
+// the channel's definition, which is listed whether or not one is showing.
+const callNotification = () => /\|app\.two\.android\|4102\|/.test(sh('dumpsys notification --noredact', { allowFail: true }));
 function audioModeLines() {
   return sh('dumpsys audio', { allowFail: true })
     .split('\n')
@@ -263,7 +315,12 @@ function audioModeLines() {
     .slice(-8)
     .map(l => l.trim());
 }
-const proximityHeld = () => /two:call-proximity/.test(sh('dumpsys power', { allowFail: true }));
+// Held right now: the "Wake Locks" list, not the log of past ones below it.
+function proximityHeld() {
+  const out = sh('dumpsys power', { allowFail: true });
+  const held = /Wake Locks: size=\d+\r?\n([\s\S]*?)\r?\n\s*\r?\n/.exec(out);
+  return !!held && /two:call-proximity/.test(held[1]);
+}
 
 // ------------------------------------------------------------- phone B
 
@@ -388,7 +445,19 @@ async function scenario(title, fn) {
   await sleep(1500);
   const pidAfter = pidOf();
   // A process that is gone, or a new one, means the app died on the way.
-  const died = !pidAfter || (pidBefore && pidAfter !== pidBefore && !r.restartExpected);
+  let died = !pidAfter || (pidBefore && pidAfter !== pidBefore && !r.restartExpected);
+  if (died) {
+    // Android also stops an app when a system app it leans on dies (Google
+    // Play services, now and then, on a test phone that has only just
+    // started). That is the phone, not Two: said so, and tried again once.
+    const why = (adb(['logcat', '-d', '-v', 'threadtime'], { allowFail: true }).match(/Killing \d+:app\.two\.android[^\n]*/) || [''])[0];
+    if (/dying proc|depends on provider/.test(why) && !r.retried) {
+      say('  ! the phone stopped the app:', why.slice(0, 200));
+      scenarios.push({ ...r, ok: true, environment: why.trim(), title: `${title} (the phone stopped the app; tried again)`, checks: [...r.checks] });
+      A = null;
+      return scenario(title, Object.assign((rr) => { rr.retried = true; return fn(rr); }, {}));
+    }
+  }
   r.check('the app is still open', !died, { pidBefore, pidAfter });
   const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50);
   const logcat = adb(['logcat', '-d', '-v', 'threadtime'], { allowFail: true });
@@ -429,6 +498,9 @@ async function main() {
   };
   say('device', device);
   say('installing', apk, adb(['install', '-r', '-t', join(APK_DIR, apk)], { timeout: 180_000 }).trim());
+  // A phone that has only just started is still busy starting its own apps;
+  // one of them falling over then takes others down with it.
+  await sleep(25_000);
 
   // 1. The very first call on a phone: Android asks for the microphone.
   await scenario('First call while Priya is offline, allowing the microphone', async r => {
@@ -436,14 +508,7 @@ async function main() {
     const a = await onChat();
     r.shot('chat');
     r.step('tap Call', await a.eval(PAGE.pressCall));
-    const allow = await waitFor(
-      () => uiNodes().find(n => /permission_allow_foreground_only_button|permission_allow_button/.test(n.id)),
-      20_000,
-      "Android's microphone question"
-    );
-    r.shot('microphone-question');
-    r.step('tap "While using the app"');
-    tap(allow.center);
+    await answerMicQuestion(r, true);
     await sleep(4000);
     const screen = await a.eval(PAGE.callScreen);
     r.check('the call screen says Priya is not online', /not online/i.test(screen), screen);
@@ -595,7 +660,15 @@ async function main() {
   // camera to speak of, so only that it opens and Two stays open is checked.
   await scenario('Taking a photo opens the camera', async r => {
     const a = await onChat();
-    r.step('tap Take a photo', await a.eval(PAGE.press('Take a photo')));
+    // Shown on phones that are touch-first; an emulator may not count as
+    // one, and then its input is used directly - the same path underneath.
+    const pressed = await a.eval(PAGE.press('Take a photo'));
+    r.step(
+      'tap Take a photo',
+      pressed.startsWith('pressed')
+        ? pressed
+        : await a.eval(`const i = document.querySelector('input[type=file][capture]'); if (!i) return 'no camera input'; i.click(); return 'clicked the camera input';`)
+    );
     await sleep(5000);
     const top = sh('dumpsys activity activities', { allowFail: true });
     const resumed = (/(?:mResumedActivity|topResumedActivity|ResumedActivity)[^\n]*/.exec(top) || [''])[0].trim();
@@ -608,10 +681,40 @@ async function main() {
       sh('input keyevent KEYCODE_BACK');
       await sleep(2000);
     }
-    r.check('back in the chat', !!(await a.eval(`return !!document.querySelector('button[aria-label^="Call "]');`)));
+    const back = await waitFor(
+      async () => /app\.two\.android/.test(onTop()) && (await a.eval(`return !!document.querySelector('button[aria-label^="Call "]');`)),
+      15_000,
+      'the chat to come back'
+    ).catch(() => false);
+    r.check('back in the chat', back, onTop());
   });
 
-  // 9. The microphone refused.
+  // 9. The page's own process crashing - the WebView's renderer - restarts
+  // the page; the app stays open, and Settings has a note about it.
+  await scenario("The page's own process crashing leaves the app open", async r => {
+    const a = await onChat();
+    r.step('crash the page process');
+    await a.send('Page.crash').catch(() => null);
+    await sleep(6000);
+    r.check('the app process is still running', !!pidOf());
+    A = null;
+    const fresh = await phoneA();
+    r.shot('page-restarted');
+    r.step('open Settings', await fresh.eval(PAGE.nav('Settings')));
+    await sleep(1000);
+    r.check(
+      'Settings shows a note about it',
+      await fresh.eval(`return document.body.innerText.includes('Two ran into a problem');`)
+    );
+    await fresh.eval(`
+      const card = [...document.querySelectorAll('[role=status]')].find(x => x.innerText.includes('ran into a problem'));
+      card?.scrollIntoView({ block: 'center' });
+      return 1;`);
+    await sleep(600);
+    r.shot('settings-note');
+  });
+
+  // 10. The microphone refused.
   await scenario("Call when you don't allow the microphone", async r => {
     r.restartExpected = true;
     // Taking a permission away stops the app, as Android always does.
@@ -621,15 +724,13 @@ async function main() {
     A = null;
     const a = await onChat();
     r.step('tap Call', await a.eval(PAGE.pressCall));
-    const deny = await waitFor(
-      () => uiNodes().find(n => /permission_deny_button/.test(n.id)),
-      20_000,
-      "Android's microphone question"
-    );
-    r.step("tap Don't allow");
-    tap(deny.center);
-    await sleep(3000);
-    const screen = await a.eval(PAGE.callScreen);
+    await answerMicQuestion(r, false);
+    // The end of a call shows for 2.5 seconds: read it while it is there.
+    let screen = '';
+    for (let i = 0; i < 24 && !/microphone/i.test(screen); i++) {
+      await sleep(250);
+      screen = await a.eval(PAGE.callScreen);
+    }
     r.check('the call screen says the microphone is not allowed', /microphone/i.test(screen), screen);
     r.check('no call service started', !callService().running);
     r.shot('mic-refused');

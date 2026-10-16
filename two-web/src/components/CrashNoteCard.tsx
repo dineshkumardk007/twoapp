@@ -5,8 +5,9 @@ import { copyTextOrThrow } from '../core/clipboard';
 import { whenLabelWithTime } from '../core/when';
 
 /**
- * Why Two last closed unexpectedly, inside Settings' App version card: when
- * it happened, and the details to copy and pass on so it can be fixed. Gone
+ * The last time Two ran into a problem - closed unexpectedly, or had to
+ * start its page again - inside Settings' App version card: when it
+ * happened, and the details to copy and pass on so it can be fixed. Gone
  * once dismissed, until something else goes wrong.
  */
 export const CrashNoteCard: React.FC = () => {
@@ -32,7 +33,7 @@ export const CrashNoteCard: React.FC = () => {
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-linen-primary">
-            Two closed unexpectedly{note.at > 0 ? ` · ${whenLabelWithTime(note.at)}` : ''}
+            Two ran into a problem{note.at > 0 ? ` · ${whenLabelWithTime(note.at)}` : ''}
           </p>
           <p className="mt-0.5 text-[11px] leading-relaxed text-linen-secondary">
             The details say where it stopped. Copy them to pass on, so it can be fixed. Nothing from your messages is in them.

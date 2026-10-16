@@ -232,7 +232,7 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
       </p>
 
       <div className="relative flex w-full flex-1 flex-col items-center justify-center">
-        <div className="call-stage" data-together={together} aria-hidden="true">
+        <div className="call-stage" data-together={together} data-ended={call.phase === 'ended'} aria-hidden="true">
           <div ref={youOrb} className="call-orb-slot call-tint-you" style={{ '--x': `${-gap}px` } as React.CSSProperties}>
             {call.phase === 'outgoing' && (
               <div className="absolute inset-0">

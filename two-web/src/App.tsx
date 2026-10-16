@@ -2002,8 +2002,9 @@ export const App: React.FC = () => {
   const [updateOffer, setUpdateOffer] = useState<UpdateInfo | null>(null);
 
   /**
-   * Two closed unexpectedly last time: said once, after unlocking, with the
-   * details waiting in Settings to be copied and passed on (core/crashNote.ts).
+   * Two ran into a problem last time - closed unexpectedly, or had to start
+   * its page again: said once, after unlocking, with the details waiting in
+   * Settings to be copied and passed on (core/crashNote.ts).
    */
   useEffect(() => {
     if (isLocked || isCamouflaged || !session) return;
@@ -2011,7 +2012,7 @@ export const App: React.FC = () => {
       if (!crashNoteToTell()) return;
       setInAppNotification({
         id: newId(),
-        title: 'Two closed unexpectedly',
+        title: 'Two ran into a problem',
         body: 'Settings has the details to copy and pass on',
         type: 'general',
         tabId: 'settings'
