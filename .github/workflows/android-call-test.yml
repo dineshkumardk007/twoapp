@@ -137,7 +137,9 @@ jobs:
           ram-size: 4096M
           disable-animations: true
           # Sound left on (no -no-audio): a call needs a microphone to open.
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -camera-back none -camera-front none
+          # An emulated back camera, so the camera app opens as on a phone;
+          # with none at all it crashes, and takes the screen that opened it.
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -camera-back emulated -camera-front none
           script: node two-android/calltest/drive.mjs
 
       - name: Say what happened

@@ -21,7 +21,10 @@ const OUT = resolve(process.env.OUT || 'calltest-results');
 const APK_DIR = resolve(process.env.APK_DIR || 'apk');
 const WEB_DIST = resolve(process.env.WEB_DIST || 'web-dist');
 const CODE = 'TWO-7K2M-9XQP-R4TN';
-const RELAY_FOR_A = 'http://10.0.2.2:4100';
+// Reached through `adb reverse`, as localhost: a WebView treats a socket to
+// localhost as secure, so the page's https origin can open it - where one to
+// 10.0.2.2 is mixed content, which some WebView versions would not open.
+const RELAY_FOR_A = 'http://localhost:4100';
 const RELAY_FOR_B = 'ws://127.0.0.1:4100/relay';
 
 mkdirSync(OUT, { recursive: true });
@@ -259,8 +262,18 @@ async function phoneA({ fresh = false, mic = true } = {}) {
     sh(`pm clear-permission-flags ${PKG} android.permission.RECORD_AUDIO user-set user-fixed`, { allowFail: true });
     sh(`pm ${mic ? 'grant' : 'revoke'} ${PKG} android.permission.RECORD_AUDIO`, { allowFail: true });
   }
-  if (A && !A.closed && pidOf()) return A;
-  if (!pidOf()) sh(`am start -W -n ${ACTIVITY}`, { allowFail: true });
+  // Running and in front: the page as it is. Running behind something
+  // else - another app closed it, say - brings it back to the front.
+  if (A && !A.closed && pidOf() && /app\.two\.android/.test(onTop())) return A;
+  if (!pidOf() || !/app\.two\.android/.test(onTop())) sh(`am start -W -n ${ACTIVITY}`, { allowFail: true });
+  if (A && !A.closed) {
+    try {
+      await A.eval('return 1;');
+      return A;
+    } catch {
+      A.close();
+    }
+  }
   A = await waitFor(() => appPage(), 90_000, 'the app page');
   if (fresh) {
     // The page's own document, not the blank one before it, whose storage
@@ -498,6 +511,7 @@ async function main() {
   };
   say('device', device);
   say('installing', apk, adb(['install', '-r', '-t', join(APK_DIR, apk)], { timeout: 180_000 }).trim());
+  say('relay as localhost', adb(['reverse', 'tcp:4100', 'tcp:4100']).trim());
   // A phone that has only just started is still busy starting its own apps;
   // one of them falling over then takes others down with it.
   await sleep(25_000);
