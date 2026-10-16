@@ -1,0 +1,76 @@
+{
+  "api": 36,
+  "device": {
+    "android": "16",
+    "sdk": "36",
+    "webview": "com.google.android.webview, 133.0.6943.137"
+  },
+  "passed": 8,
+  "failed": 2,
+  "crashed": [],
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Choosing a photo opens the picker",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Taking a photo opens the camera",
+      "ok": false,
+      "crashed": false,
+      "failedChecks": [
+        "back in the chat"
+      ]
+    },
+    {
+      "title": "The page's own process crashing leaves the app open",
+      "ok": false,
+      "crashed": false,
+      "error": "timed out after 15s waiting for the last call screen to close (Runtime.evaluate timed out)",
+      "failedChecks": []
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    }
+  ]
+}

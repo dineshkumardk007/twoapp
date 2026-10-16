@@ -1,0 +1,36 @@
+10-16 12:25:07.137  6251  6278 D EGL_emulation: app_time_stats: avg=1032.68ms min=15.00ms max=3991.83ms count=4
+10-16 12:25:08.760  3998  3998 D AndroidRuntime: Shutting down VM
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: FATAL EXCEPTION: main
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: Process: com.android.camera2, PID: 3998
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.android.camera2/com.android.camera.CaptureActivity}: java.lang.ArrayIndexOutOfBoundsException: length=0; index=0
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3645)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3782)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:101)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:138)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2307)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:106)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:201)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:288)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:7924)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: Caused by: java.lang.ArrayIndexOutOfBoundsException: length=0; index=0
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.ex.camera2.portability.AndroidCameraAgentImpl$AndroidCameraDeviceInfo.getCharacteristics(AndroidCameraAgentImpl.java:176)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.camera.app.CameraController.getCharacteristics(CameraController.java:112)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.camera.settings.CameraFacingSetting.<init>(CameraFacingSetting.java:54)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.camera.captureintent.resource.ResourceConstructedImpl.create(ResourceConstructedImpl.java:79)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.camera.captureintent.CaptureIntentModule.<init>(CaptureIntentModule.java:87)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.camera.module.ModulesInfo$7.createModule(ModulesInfo.java:255)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.camera.CameraActivity.setModuleFromModeIndex(CameraActivity.java:2560)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.camera.CameraActivity.onCreateTasks(CameraActivity.java:1621)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at com.android.camera.util.QuickActivity.onCreate(QuickActivity.java:114)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:8342)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:8321)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1417)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3626)
+10-16 12:25:08.760  3998  3998 E AndroidRuntime: 	... 12 more
+10-16 12:25:08.784   512   880 W ActivityTaskManager:   Force finishing activity app.two.android/.MainActivity
+10-16 12:25:08.875   512  3248 D CoreBackPreview: Window{2ae1ca1 u0 app.two.android/app.two.android.MainActivity}: Setting back callback null
+10-16 12:25:08.880   512  2389 W InputManager-JNI: Input channel object '2ae1ca1 app.two.android/app.two.android.MainActivity (client)' was disposed without first being removed with the input manager!

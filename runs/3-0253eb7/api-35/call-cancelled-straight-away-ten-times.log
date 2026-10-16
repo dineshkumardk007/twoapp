@@ -1,0 +1,116 @@
+10-16 12:22:57.040  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:22:57.531  3655  3675 D EGL_emulation: app_time_stats: avg=21.46ms min=9.76ms max=91.52ms count=41
+10-16 12:22:58.542  3655  3675 D EGL_emulation: app_time_stats: avg=11.22ms min=9.78ms max=17.39ms count=61
+10-16 12:22:58.711  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:22:58.711  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:22:58.991  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:22:59.554  3655  3675 D EGL_emulation: app_time_stats: avg=24.21ms min=10.01ms max=151.75ms count=38
+10-16 12:23:00.567  3655  3675 D EGL_emulation: app_time_stats: avg=17.68ms min=13.89ms max=26.82ms count=52
+10-16 12:23:01.575  3655  3675 D EGL_emulation: app_time_stats: avg=15.60ms min=9.57ms max=29.66ms count=55
+10-16 12:23:02.337  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:02.338  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:02.580  3655  3675 D EGL_emulation: app_time_stats: avg=15.19ms min=9.33ms max=142.68ms count=49
+10-16 12:23:02.595  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:23:03.591  3655  3675 D EGL_emulation: app_time_stats: avg=21.92ms min=13.61ms max=38.04ms count=43
+10-16 12:23:04.612  3655  3675 D EGL_emulation: app_time_stats: avg=17.54ms min=13.03ms max=23.25ms count=52
+10-16 12:23:05.625  3655  3675 D EGL_emulation: app_time_stats: avg=12.80ms min=9.35ms max=26.56ms count=58
+10-16 12:23:05.979  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:05.979  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:06.079  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:23:06.643  3655  3675 D EGL_emulation: app_time_stats: avg=19.38ms min=9.39ms max=157.14ms count=45
+10-16 12:23:07.644  3655  3675 D EGL_emulation: app_time_stats: avg=17.82ms min=13.87ms max=23.26ms count=51
+10-16 12:23:08.648  3655  3675 D EGL_emulation: app_time_stats: avg=17.41ms min=11.41ms max=28.19ms count=52
+10-16 12:23:09.631  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:09.632  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:09.649  3655  3675 D EGL_emulation: app_time_stats: avg=11.63ms min=9.66ms max=18.16ms count=60
+10-16 12:23:09.938  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:23:10.663  3655  3675 D EGL_emulation: app_time_stats: avg=22.36ms min=14.15ms max=141.81ms count=42
+10-16 12:23:11.667  3655  3675 D EGL_emulation: app_time_stats: avg=17.20ms min=14.01ms max=23.85ms count=52
+10-16 12:23:12.678  3655  3675 D EGL_emulation: app_time_stats: avg=15.09ms min=9.62ms max=32.31ms count=54
+10-16 12:23:13.043  3655  3680 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 1Mbps, Tx Link speed: 1Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: -1Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 UnderlyingNetworks: Null]
+10-16 12:23:13.279  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:13.279  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:13.529  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:23:13.689  3655  3675 D EGL_emulation: app_time_stats: avg=17.14ms min=9.38ms max=150.12ms count=47
+10-16 12:23:14.698  3655  3675 D EGL_emulation: app_time_stats: avg=17.19ms min=14.05ms max=22.41ms count=52
+10-16 12:23:15.713  3655  3675 D EGL_emulation: app_time_stats: avg=17.46ms min=14.59ms max=21.84ms count=52
+10-16 12:23:15.920  3655  3655 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:23:15.920  3655  3655 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:23:16.724  3655  3675 D EGL_emulation: app_time_stats: avg=12.46ms min=8.87ms max=29.88ms count=58
+10-16 12:23:17.079  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:17.079  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:17.335  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:23:17.727  3655  3675 D EGL_emulation: app_time_stats: avg=18.80ms min=8.99ms max=146.58ms count=45
+10-16 12:23:18.733  3655  3675 D EGL_emulation: app_time_stats: avg=17.17ms min=12.87ms max=25.09ms count=53
+10-16 12:23:19.734  3655  3675 D EGL_emulation: app_time_stats: avg=17.59ms min=13.73ms max=24.71ms count=52
+10-16 12:23:20.742  3655  3675 D EGL_emulation: app_time_stats: avg=10.99ms min=9.07ms max=28.38ms count=60
+10-16 12:23:20.863  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:20.863  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:21.119  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:23:21.748  3655  3675 D EGL_emulation: app_time_stats: avg=21.04ms min=9.20ms max=153.00ms count=43
+10-16 12:23:22.749  3655  3675 D EGL_emulation: app_time_stats: avg=16.69ms min=12.20ms max=20.83ms count=54
+10-16 12:23:23.758  3655  3675 D EGL_emulation: app_time_stats: avg=17.36ms min=9.74ms max=33.35ms count=51
+10-16 12:23:24.649  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:24.649  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:24.853  3655  3675 D EGL_emulation: app_time_stats: avg=13.61ms min=9.14ms max=143.27ms count=56
+10-16 12:23:24.888  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:23:25.067  3655  3680 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 5Mbps, Tx Link speed: 5Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: -1Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 UnderlyingNetworks: Null]
+10-16 12:23:25.866  3655  3675 D EGL_emulation: app_time_stats: avg=19.70ms min=14.00ms max=33.66ms count=47
+10-16 12:23:26.868  3655  3675 D EGL_emulation: app_time_stats: avg=17.67ms min=13.39ms max=25.82ms count=51
+10-16 12:23:27.876  3655  3675 D EGL_emulation: app_time_stats: avg=14.51ms min=9.32ms max=28.02ms count=56
+10-16 12:23:28.463  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:28.463  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:28.707  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:23:28.772  3690  3930 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:23:28.804   576  1092 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:23:28.807  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun1.l.google.com., errorcode: -105
+10-16 12:23:28.808  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun.l.google.com., errorcode: -105
+10-16 12:23:28.812  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28af800:0:1:0:host:Net[any:0.0.0.x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:23:28.812  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28af800:0:1:0:host:Net[any:0.0.0.x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:23:28.815  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun1.l.google.com., errorcode: -105
+10-16 12:23:28.815  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28b0200:0:1:0:host:Net[any:0:0:0:x:x:x:x:x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:23:28.815  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun.l.google.com., errorcode: -105
+10-16 12:23:28.819  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28b0200:0:1:0:host:Net[any:0:0:0:x:x:x:x:x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:23:28.830  3690  4342 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 174560830, interval (us) = 24
+10-16 12:23:28.840  3690  4342 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 174570542, interval (us) = 9
+10-16 12:23:28.852  3690  4342 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 174582379, interval (us) = 196
+10-16 12:23:28.905  3655  3675 D EGL_emulation: app_time_stats: avg=17.20ms min=9.30ms max=145.25ms count=47
+10-16 12:23:29.011   576   576 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10209
+10-16 12:23:29.916  3655  3675 D EGL_emulation: app_time_stats: avg=17.66ms min=13.54ms max=24.23ms count=51
+10-16 12:23:30.935  3655  3675 D EGL_emulation: app_time_stats: avg=17.44ms min=12.80ms max=22.56ms count=52
+10-16 12:23:31.945  3655  3675 D EGL_emulation: app_time_stats: avg=14.53ms min=9.95ms max=29.56ms count=56
+10-16 12:23:32.462  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:32.462  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:32.730  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:23:32.768  3690  3930 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:23:32.791  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun.l.google.com., errorcode: -105
+10-16 12:23:32.792  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28b0c00:0:1:0:host:Net[any:0.0.0.x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:23:32.795  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun1.l.google.com., errorcode: -105
+10-16 12:23:32.795  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun.l.google.com., errorcode: -105
+10-16 12:23:32.795  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun1.l.google.com., errorcode: -105
+10-16 12:23:32.796  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28b0c00:0:1:0:host:Net[any:0.0.0.x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:23:32.796  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28b1600:0:1:0:host:Net[any:0:0:0:x:x:x:x:x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:23:32.798  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28b1600:0:1:0:host:Net[any:0:0:0:x:x:x:x:x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:23:32.819   576   664 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:23:32.840  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178570798, interval (us) = 27
+10-16 12:23:32.855  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178585230, interval (us) = 41
+10-16 12:23:32.874  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178603927, interval (us) = 19
+10-16 12:23:32.887  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178617706, interval (us) = 14
+10-16 12:23:32.920  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178650523, interval (us) = 46
+10-16 12:23:32.935  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178665680, interval (us) = 111
+10-16 12:23:32.950  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178680869, interval (us) = 16
+10-16 12:23:32.967  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178697193, interval (us) = 172
+10-16 12:23:32.968  3655  3675 D EGL_emulation: app_time_stats: avg=18.00ms min=9.56ms max=141.98ms count=46
+10-16 12:23:32.999  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178729406, interval (us) = 104
+10-16 12:23:33.016  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178746424, interval (us) = 365
+10-16 12:23:33.032  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178761993, interval (us) = 736
+10-16 12:23:33.049  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178779307, interval (us) = 14
+10-16 12:23:33.096  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178826811, interval (us) = 40
+10-16 12:23:33.111  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178841402, interval (us) = 13
+10-16 12:23:33.127  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178857174, interval (us) = 184
+10-16 12:23:33.159  3690  4370 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178889191, interval (us) = 269
+10-16 12:23:33.968  3655  3675 D EGL_emulation: app_time_stats: avg=18.50ms min=14.35ms max=31.41ms count=49
+10-16 12:23:34.991  3655  3675 D EGL_emulation: app_time_stats: avg=17.71ms min=13.95ms max=24.58ms count=52
+10-16 12:23:35.993  3655  3675 D EGL_emulation: app_time_stats: avg=16.20ms min=9.92ms max=31.21ms count=53
+10-16 12:23:37.008  3655  3675 D EGL_emulation: app_time_stats: avg=11.26ms min=9.26ms max=21.09ms count=61
+10-16 12:23:38.010  3655  3675 D EGL_emulation: app_time_stats: avg=10.62ms min=9.19ms max=13.74ms count=60

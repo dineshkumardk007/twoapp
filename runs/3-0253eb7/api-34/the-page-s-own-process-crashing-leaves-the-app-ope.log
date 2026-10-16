@@ -1,0 +1,2 @@
+10-16 12:27:02.286   549   602 I AppsFilter: interaction: PackageSetting{ec2d6e app.two.android/10192} -> PackageSetting{c780ebf com.google.android.contacts/10156} BLOCKED
+10-16 12:27:12.296   549   602 I AppsFilter: interaction: PackageSetting{ec2d6e app.two.android/10192} -> PackageSetting{a966591 com.google.android.contacts/10156} BLOCKED

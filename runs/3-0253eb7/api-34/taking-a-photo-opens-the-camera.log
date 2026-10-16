@@ -1,0 +1,44 @@
+10-16 12:25:45.821  6382  6404 D EGL_emulation: app_time_stats: avg=4945.89ms min=299.18ms max=9592.60ms count=2
+10-16 12:25:47.275   914   957 V WindowManagerShell: Transition requested: android.os.BinderProxy@f5f17ca TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=9 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{com.android.camera2/com.android.camera.CaptureActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=2 lastActiveTime=323690 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@4f8dd3b} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{8005c58 com.android.camera.CaptureActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:25:47.409  3640  3640 D AndroidRuntime: Shutting down VM
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: FATAL EXCEPTION: main
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: Process: com.android.camera2, PID: 3640
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.android.camera2/com.android.camera.CaptureActivity}: java.lang.ArrayIndexOutOfBoundsException: length=0; index=0
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3782)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3922)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:103)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:139)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:96)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2443)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:106)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:205)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:294)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:8177)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:971)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: Caused by: java.lang.ArrayIndexOutOfBoundsException: length=0; index=0
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.ex.camera2.portability.AndroidCameraAgentImpl$AndroidCameraDeviceInfo.getCharacteristics(AndroidCameraAgentImpl.java:176)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.camera.app.CameraController.getCharacteristics(CameraController.java:112)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.camera.settings.CameraFacingSetting.<init>(CameraFacingSetting.java:54)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.camera.captureintent.resource.ResourceConstructedImpl.create(ResourceConstructedImpl.java:79)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.camera.captureintent.CaptureIntentModule.<init>(CaptureIntentModule.java:87)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.camera.module.ModulesInfo$7.createModule(ModulesInfo.java:255)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.camera.CameraActivity.setModuleFromModeIndex(CameraActivity.java:2526)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.camera.CameraActivity.onCreateTasks(CameraActivity.java:1594)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at com.android.camera.util.QuickActivity.onCreate(QuickActivity.java:114)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:8595)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:8573)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1456)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3764)
+10-16 12:25:47.409  3640  3640 E AndroidRuntime: 	... 12 more
+10-16 12:25:47.421   549  2035 W ActivityTaskManager:   Force finishing activity app.two.android/.MainActivity
+10-16 12:25:47.639   549   568 V WindowManager: Sent Transition #14 createdAt=10-16 12:25:47.271 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=9 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{com.android.camera2/com.android.camera.CaptureActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=2 lastActiveTime=323690 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{b1949c5 Task{fb9ab37 #9 type=standard A=10192:app.two.android}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{824008c com.android.camera.CaptureActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:25:47.639   549   568 V WindowManager:     info={id=14 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{f0958e3 Task{9ff2f52 #1 type=home}}} m=TO_FRONT f=SHOW_WALLPAPER|MOVE_TO_TOP leash=Surface(name=Task=1)/@0x74444b1 sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0},{WCT{RemoteToken{b1949c5 Task{fb9ab37 #9 type=standard A=10192:app.two.android}}} m=TO_BACK f=NONE leash=Surface(name=Task=9)/@0x7acca2f sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{e1f8eb7 token=android.os.Binder@b2bf1b6})/@0xefe145f sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0}]}
+10-16 12:25:47.857  6382  6382 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@d4b431d
+10-16 12:25:47.857   549  2296 D CoreBackPreview: Window{fbf7904 u0 app.two.android/app.two.android.MainActivity}: Setting back callback null
+10-16 12:25:47.860   549  2296 W InputManager-JNI: Input channel object 'fbf7904 app.two.android/app.two.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-16 12:25:55.083  2999  6262 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:25:55.084  2999  6262 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:25:57.686   549   645 D ActivityManager: freezing 6382 app.two.android
+10-16 12:25:57.687   549   645 D ActivityManager: freezing 6420 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0

@@ -1,0 +1,75 @@
+10-16 12:24:10.903  4051  4130 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:24:10.903  4051  4130 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:24:10.903  4051  4130 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:24:10.903  4051  4130 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:24:10.903  4051  4130 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:24:10.903  4051  4130 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:24:10.903  4051  4130 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:24:10.903  4051  4130 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:24:10.903  4051  4130 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:24:10.903  4051  4130 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:24:10.903  4051  4130 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:24:10.903  4051  4130 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:24:10.907  4051  4130 D AAudioStream: setState(s#14) from 0 to 2
+10-16 12:24:10.907  4051  4130 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#14 ----------------
+10-16 12:24:10.908  4051  4130 D AAudio  : AAudioStream_requestStart(s#14) called --------------
+10-16 12:24:10.908  4051  4130 D AAudioStream: setState(s#14) from 2 to 3
+10-16 12:24:10.911   669  2122 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:24:10.912  4051  4130 D AAudio  : AAudioStream_requestStart(s#14) returned 0 ---------
+10-16 12:24:10.912  4051  4376 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:24:10.912  4051  4245 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:24:10.917  4110  4576 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:24:10.946  4051  5382 D AAudioStream: setState(s#14) from 3 to 4
+10-16 12:24:11.116  1359  1359 I NotificationListener: received notification removed event - app.two.android#UserHandle{0},category=-1
+10-16 12:24:11.814  4110  4577 W chromium: [WARNING:openssl_stream_adapter.cc(154)] WebRTC-ForceDtls13: 
+10-16 12:24:11.829  4051  4130 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:24:11.829  4051  4130 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x3, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:24:11.829  4051  4130 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 12, callback: ON with frames = 4360
+10-16 12:24:11.829  4051  4130 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:24:11.829  4051  4130 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:24:11.829  4051  4130 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:24:11.829  4051  4130 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:24:11.829  4051  4130 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:24:11.829  4051  4130 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:24:11.829  4051  4130 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:24:11.829  4051  4130 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:24:11.829  4051  4130 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:24:11.831  4051  4130 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:24:11.832  4051  4130 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:24:11.832  4051  4130 D AAudioStream: setState(s#15) from 0 to 2
+10-16 12:24:11.833  4051  4130 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#15 ----------------
+10-16 12:24:11.833  4051  4130 D AAudio  : AAudioStream_requestStart(s#15) called --------------
+10-16 12:24:11.833  4051  4130 D AAudioStream: setState(s#15) from 2 to 3
+10-16 12:24:11.834   669  2116 E AppOps  : attributionTag  not declared in manifest of app.two.android
+10-16 12:24:11.835   669   751 E AppOps  : attributionTag  not declared in manifest of app.two.android
+10-16 12:24:11.835  4051  4376 D AudioStreamLegacy: onAudioDeviceUpdate() devices 2 => 2
+10-16 12:24:11.835  4051  4130 D AAudio  : AAudioStream_requestStart(s#15) returned 0 ---------
+10-16 12:24:11.841  4051  5387 D AAudioStream: setState(s#15) from 3 to 4
+10-16 12:24:12.081  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 12.418ms; playout delay: 290.991ms
+10-16 12:24:12.100  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 11.587ms; playout delay: 290.991ms
+10-16 12:24:12.164  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 15.332ms; playout delay: 290.404ms
+10-16 12:24:12.181  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 12.741ms; playout delay: 290.404ms
+10-16 12:24:12.326  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 18.094ms; playout delay: 287.638ms
+10-16 12:24:12.343  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 14.237ms; playout delay: 287.638ms
+10-16 12:24:12.486  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 18.053ms; playout delay: 287.76ms
+10-16 12:24:12.582  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 33.444ms; playout delay: 286.48ms
+10-16 12:24:12.582  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 23.444ms; playout delay: 286.48ms
+10-16 12:24:12.644  4110  5384 W chromium: [WARNING:audio_processor.cc(485)] Large audio delay, capture delay: 15.457ms; playout delay: 286.48ms
+10-16 12:24:17.625  4051  4130 D AAudio  : AAudioStream_requestStop(s#14) called
+10-16 12:24:17.626  4051  4130 D AAudioStream: setState(s#14) from 4 to 9
+10-16 12:24:17.650  4051  5387 W chromium: [WARNING:sync_reader.cc(148)] ASR: No room in socket buffer.: Broken pipe (32)
+10-16 12:24:17.667  1359  1359 I NotificationListener: received notification removed event - app.two.android#UserHandle{0},category=-1
+10-16 12:24:17.785  4051  4130 D AAudioStream: setState(s#14) from 9 to 10
+10-16 12:24:17.785  4051  4130 D AAudio  : AAudioStream_requestStop(s#14) called
+10-16 12:24:17.785  4051  4130 D AAudio  : AAudioStream_close(s#14) called ---------------
+10-16 12:24:17.785  4051  4130 D AAudioStream: setState(s#14) from 10 to 11
+10-16 12:24:17.792  4051  4130 D AAudioStream: setState(s#14) from 11 to 12
+10-16 12:24:17.792  4051  4130 D AAudioStream: ~AudioStream(s#14) mPlayerBase strongCount = 1
+10-16 12:24:17.792  4051  4130 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:24:17.792  4051  4130 D AAudio  : AAudioStream_close(s#14) returned 0 ---------
+10-16 12:24:17.794  4051  4130 D AAudio  : AAudioStream_requestStop(s#15) called
+10-16 12:24:17.794  4051  4130 D AAudioStream: setState(s#15) from 4 to 9
+10-16 12:24:17.794  4051  4130 D AudioTrack: stop(56): called with 288960 frames delivered
+10-16 12:24:17.795   669   685 E AppOps  : attributionTag  not declared in manifest of app.two.android
+10-16 12:24:17.795   669  1800 E AppOps  : attributionTag  not declared in manifest of app.two.android
+10-16 12:24:17.796  4051  4130 D AAudioStream: setState(s#15) from 9 to 10

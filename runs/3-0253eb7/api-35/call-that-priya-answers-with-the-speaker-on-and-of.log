@@ -1,0 +1,90 @@
+10-16 12:23:39.014  3655  3675 D EGL_emulation: app_time_stats: avg=12.93ms min=9.51ms max=21.21ms count=58
+10-16 12:23:40.027  3655  3675 D EGL_emulation: app_time_stats: avg=11.04ms min=9.02ms max=18.89ms count=61
+10-16 12:23:41.029  3655  3675 D EGL_emulation: app_time_stats: avg=11.64ms min=9.23ms max=16.55ms count=60
+10-16 12:23:42.048  3655  3675 D EGL_emulation: app_time_stats: avg=11.23ms min=8.99ms max=18.67ms count=61
+10-16 12:23:43.061  3655  3675 D EGL_emulation: app_time_stats: avg=12.52ms min=9.69ms max=21.76ms count=60
+10-16 12:23:44.077  3655  3675 D EGL_emulation: app_time_stats: avg=11.18ms min=9.62ms max=16.54ms count=61
+10-16 12:23:45.091  3655  3675 D EGL_emulation: app_time_stats: avg=11.36ms min=9.62ms max=20.53ms count=60
+10-16 12:23:45.951  3655  3655 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:23:45.951  3655  3655 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:23:46.094  3655  3675 D EGL_emulation: app_time_stats: avg=13.12ms min=9.36ms max=21.82ms count=58
+10-16 12:23:47.101  3655  3675 D EGL_emulation: app_time_stats: avg=12.43ms min=9.18ms max=19.98ms count=60
+10-16 12:23:47.348  1305  1785 W GLSUser : 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@242335041@24.23.35 (190800-0):4)
+10-16 12:23:48.108  3655  3675 D EGL_emulation: app_time_stats: avg=13.22ms min=9.36ms max=24.52ms count=57
+10-16 12:23:49.108  3655  3675 D EGL_emulation: app_time_stats: avg=13.69ms min=9.93ms max=21.19ms count=58
+10-16 12:23:50.118  3655  3675 D EGL_emulation: app_time_stats: avg=19.06ms min=11.37ms max=28.83ms count=48
+10-16 12:23:51.118  3655  3675 D EGL_emulation: app_time_stats: avg=19.64ms min=10.19ms max=35.02ms count=45
+10-16 12:23:52.108  3655  3680 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 2Mbps, Tx Link speed: 2Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: -1Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 UnderlyingNetworks: Null]
+10-16 12:23:52.125  3655  3675 D EGL_emulation: app_time_stats: avg=16.34ms min=10.38ms max=27.25ms count=53
+10-16 12:23:53.127  3655  3675 D EGL_emulation: app_time_stats: avg=20.21ms min=11.21ms max=42.05ms count=45
+10-16 12:23:54.132  3655  3675 D EGL_emulation: app_time_stats: avg=19.26ms min=10.39ms max=48.56ms count=44
+10-16 12:23:54.208  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:23:55.144  3655  3675 D EGL_emulation: app_time_stats: avg=22.80ms min=10.83ms max=145.37ms count=39
+10-16 12:23:56.145  3655  3675 D EGL_emulation: app_time_stats: avg=12.91ms min=10.39ms max=18.64ms count=60
+10-16 12:23:57.161  3655  3675 D EGL_emulation: app_time_stats: avg=12.78ms min=10.89ms max=16.41ms count=61
+10-16 12:23:58.177  3655  3675 D EGL_emulation: app_time_stats: avg=14.63ms min=9.90ms max=34.65ms count=57
+10-16 12:23:59.198  3655  3675 D EGL_emulation: app_time_stats: avg=18.32ms min=9.90ms max=31.04ms count=49
+10-16 12:24:00.218  3655  3675 D EGL_emulation: app_time_stats: avg=17.88ms min=11.69ms max=36.50ms count=51
+10-16 12:24:01.224  3655  3675 D EGL_emulation: app_time_stats: avg=14.08ms min=10.07ms max=22.31ms count=59
+10-16 12:24:02.228  3655  3675 D EGL_emulation: app_time_stats: avg=13.09ms min=9.90ms max=17.40ms count=61
+10-16 12:24:03.243  3655  3675 D EGL_emulation: app_time_stats: avg=13.32ms min=10.26ms max=17.37ms count=61
+10-16 12:24:04.260  3655  3675 D EGL_emulation: app_time_stats: avg=12.15ms min=9.88ms max=17.22ms count=61
+10-16 12:24:05.262  3655  3675 D EGL_emulation: app_time_stats: avg=12.04ms min=9.78ms max=18.42ms count=60
+10-16 12:24:06.277  3655  3675 D EGL_emulation: app_time_stats: avg=12.07ms min=9.58ms max=16.03ms count=61
+10-16 12:24:07.278  3655  3675 D EGL_emulation: app_time_stats: avg=11.71ms min=9.89ms max=16.96ms count=60
+10-16 12:24:08.293  3655  3675 D EGL_emulation: app_time_stats: avg=12.11ms min=9.81ms max=16.74ms count=61
+10-16 12:24:09.295  3655  3675 D EGL_emulation: app_time_stats: avg=12.43ms min=9.42ms max=26.18ms count=59
+10-16 12:24:10.318  3655  3675 D EGL_emulation: app_time_stats: avg=12.69ms min=10.17ms max=19.42ms count=61
+10-16 12:24:11.328  3655  3675 D EGL_emulation: app_time_stats: avg=13.22ms min=9.68ms max=25.73ms count=60
+10-16 12:24:12.334  3655  3675 D EGL_emulation: app_time_stats: avg=12.07ms min=9.79ms max=16.75ms count=60
+10-16 12:24:13.344  3655  3675 D EGL_emulation: app_time_stats: avg=12.24ms min=9.53ms max=18.43ms count=61
+10-16 12:24:14.352  3655  3675 D EGL_emulation: app_time_stats: avg=13.01ms min=9.57ms max=19.38ms count=59
+10-16 12:24:15.362  3655  3675 D EGL_emulation: app_time_stats: avg=13.88ms min=10.68ms max=19.69ms count=60
+10-16 12:24:15.967  3655  3655 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:24:15.967  3655  3655 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:24:16.364  3655  3675 D EGL_emulation: app_time_stats: avg=13.57ms min=9.97ms max=21.06ms count=59
+10-16 12:24:17.378  3655  3675 D EGL_emulation: app_time_stats: avg=13.73ms min=10.40ms max=19.38ms count=59
+10-16 12:24:18.387  3655  3675 D EGL_emulation: app_time_stats: avg=14.34ms min=10.12ms max=21.89ms count=59
+10-16 12:24:19.397  3655  3675 D EGL_emulation: app_time_stats: avg=13.46ms min=10.39ms max=21.15ms count=59
+10-16 12:24:20.407  3655  3675 D EGL_emulation: app_time_stats: avg=14.17ms min=10.22ms max=23.15ms count=59
+10-16 12:24:21.426  3655  3675 D EGL_emulation: app_time_stats: avg=14.50ms min=10.20ms max=23.57ms count=58
+10-16 12:24:22.426  3655  3675 D EGL_emulation: app_time_stats: avg=13.16ms min=10.03ms max=18.68ms count=60
+10-16 12:24:23.429  3655  3675 D EGL_emulation: app_time_stats: avg=12.63ms min=9.90ms max=16.58ms count=60
+10-16 12:24:24.442  3655  3675 D EGL_emulation: app_time_stats: avg=12.47ms min=9.99ms max=17.75ms count=61
+10-16 12:24:25.166  3655  3680 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 36Mbps, Tx Link speed: 36Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: -1Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 UnderlyingNetworks: Null]
+10-16 12:24:25.446  3655  3675 D EGL_emulation: app_time_stats: avg=12.57ms min=10.41ms max=19.37ms count=60
+10-16 12:24:26.462  3655  3675 D EGL_emulation: app_time_stats: avg=13.14ms min=10.23ms max=23.68ms count=59
+10-16 12:24:27.473  3655  3675 D EGL_emulation: app_time_stats: avg=15.52ms min=11.52ms max=26.20ms count=58
+10-16 12:24:28.476  3655  3675 D EGL_emulation: app_time_stats: avg=12.66ms min=10.18ms max=19.24ms count=60
+10-16 12:24:29.493  3655  3675 D EGL_emulation: app_time_stats: avg=13.93ms min=10.03ms max=20.30ms count=60
+10-16 12:24:30.494  3655  3675 D EGL_emulation: app_time_stats: avg=12.01ms min=10.50ms max=15.57ms count=60
+10-16 12:24:31.496  3655  3675 D EGL_emulation: app_time_stats: avg=12.72ms min=10.37ms max=18.67ms count=60
+10-16 12:24:32.510  3655  3675 D EGL_emulation: app_time_stats: avg=12.34ms min=9.69ms max=21.40ms count=61
+10-16 12:24:33.526  3655  3675 D EGL_emulation: app_time_stats: avg=13.70ms min=9.00ms max=18.94ms count=61
+10-16 12:24:34.532  3655  3675 D EGL_emulation: app_time_stats: avg=11.98ms min=9.55ms max=16.52ms count=60
+10-16 12:24:35.545  3655  3675 D EGL_emulation: app_time_stats: avg=11.73ms min=9.54ms max=15.22ms count=61
+10-16 12:24:36.562  3655  3675 D EGL_emulation: app_time_stats: avg=12.06ms min=9.34ms max=19.60ms count=61
+10-16 12:24:37.568  3655  3675 D EGL_emulation: app_time_stats: avg=12.49ms min=9.52ms max=19.94ms count=60
+10-16 12:24:38.576  3655  3675 D EGL_emulation: app_time_stats: avg=11.63ms min=9.50ms max=16.17ms count=61
+10-16 12:24:39.576  3655  3675 D EGL_emulation: app_time_stats: avg=11.58ms min=9.33ms max=14.69ms count=60
+10-16 12:24:40.578  3655  3675 D EGL_emulation: app_time_stats: avg=11.48ms min=9.18ms max=17.38ms count=60
+10-16 12:24:41.594  3655  3675 D EGL_emulation: app_time_stats: avg=12.11ms min=9.72ms max=18.95ms count=61
+10-16 12:24:42.607  3655  3675 D EGL_emulation: app_time_stats: avg=12.91ms min=9.36ms max=19.56ms count=60
+10-16 12:24:43.612  3655  3675 D EGL_emulation: app_time_stats: avg=12.29ms min=9.51ms max=19.96ms count=61
+10-16 12:24:44.626  3655  3675 D EGL_emulation: app_time_stats: avg=12.16ms min=9.62ms max=16.65ms count=61
+10-16 12:24:45.628  3655  3675 D EGL_emulation: app_time_stats: avg=11.94ms min=9.66ms max=17.08ms count=60
+10-16 12:24:45.976  3655  3655 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:24:45.976  3655  3655 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:24:46.628  3655  3675 D EGL_emulation: app_time_stats: avg=13.40ms min=9.38ms max=24.56ms count=59
+10-16 12:24:47.628  3655  3675 D EGL_emulation: app_time_stats: avg=12.28ms min=10.11ms max=18.89ms count=60
+10-16 12:24:48.643  3655  3675 D EGL_emulation: app_time_stats: avg=11.95ms min=10.23ms max=16.79ms count=61
+10-16 12:24:49.650  3655  3675 D EGL_emulation: app_time_stats: avg=14.63ms min=10.26ms max=24.39ms count=55
+10-16 12:24:50.662  3655  3675 D EGL_emulation: app_time_stats: avg=12.53ms min=9.84ms max=23.94ms count=60
+10-16 12:24:51.669  3655  3675 D EGL_emulation: app_time_stats: avg=13.33ms min=10.03ms max=23.61ms count=58
+10-16 12:24:52.675  3655  3675 D EGL_emulation: app_time_stats: avg=13.95ms min=9.38ms max=24.33ms count=60
+10-16 12:24:53.676  3655  3675 D EGL_emulation: app_time_stats: avg=13.94ms min=9.88ms max=22.51ms count=57
+10-16 12:24:54.687  3655  3675 D EGL_emulation: app_time_stats: avg=12.32ms min=10.04ms max=23.11ms count=59
+10-16 12:24:55.223  3655  3680 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 2Mbps, Tx Link speed: 2Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: -1Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 UnderlyingNetworks: Null]
+10-16 12:24:55.697  3655  3675 D EGL_emulation: app_time_stats: avg=16.65ms min=10.73ms max=27.58ms count=51
+10-16 12:24:56.714  3655  3675 D EGL_emulation: app_time_stats: avg=14.20ms min=9.82ms max=22.56ms count=58
+10-16 12:24:57.736  3655  3675 D EGL_emulation: app_time_stats: avg=13.34ms min=10.33ms max=25.53ms count=60

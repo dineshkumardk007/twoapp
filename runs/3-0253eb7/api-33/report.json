@@ -1,0 +1,531 @@
+{
+  "device": {
+    "android": "13",
+    "sdk": "33",
+    "webview": "com.google.android.webview, 109.0.5414.123"
+  },
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": true,
+      "checks": [
+        {
+          "name": "the call screen says Priya is not online",
+          "ok": true,
+          "detail": "END-TO-END ENCRYPTED Y P Partner Not online right now They will see that you called Cancel"
+        },
+        {
+          "name": "the call service runs in the foreground",
+          "ok": true,
+          "detail": {
+            "running": true,
+            "foreground": true
+          }
+        },
+        {
+          "name": "the \"Call in progress\" notification is up",
+          "ok": true
+        },
+        {
+          "name": "the call service has stopped",
+          "ok": true
+        },
+        {
+          "name": "the notification has gone",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "",
+            "pidAfter": "6251"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "40.8s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        },
+        {
+          "at": "43.6s",
+          "what": "tap \"While using the app\""
+        },
+        {
+          "at": "47.8s",
+          "what": "tap Cancel",
+          "value": "pressed Cancel call"
+        }
+      ],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "first-call-while-priya-is-offline-allowing-the-mic.log"
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": true,
+      "checks": [
+        {
+          "name": "the call service runs in the foreground",
+          "ok": true
+        },
+        {
+          "name": "after 45 seconds it says No answer",
+          "ok": true,
+          "detail": "END-TO-END ENCRYPTED Y P Partner No answer They will see that you called."
+        },
+        {
+          "name": "the call service has stopped",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "6251",
+            "pidAfter": "6251"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "54.1s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        }
+      ],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "call-while-priya-is-offline-rings-out.log"
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": true,
+      "checks": [
+        {
+          "name": "no call service left running",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "6251",
+            "pidAfter": "6251"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "106.8s",
+          "what": "Call, then Cancel after 0 ms",
+          "value": true
+        },
+        {
+          "at": "110.3s",
+          "what": "Call, then Cancel after 20 ms",
+          "value": true
+        },
+        {
+          "at": "114.0s",
+          "what": "Call, then Cancel after 40 ms",
+          "value": true
+        },
+        {
+          "at": "117.6s",
+          "what": "Call, then Cancel after 60 ms",
+          "value": true
+        },
+        {
+          "at": "121.3s",
+          "what": "Call, then Cancel after 90 ms",
+          "value": true
+        },
+        {
+          "at": "124.9s",
+          "what": "Call, then Cancel after 120 ms",
+          "value": true
+        },
+        {
+          "at": "128.7s",
+          "what": "Call, then Cancel after 180 ms",
+          "value": true
+        },
+        {
+          "at": "132.5s",
+          "what": "Call, then Cancel after 250 ms",
+          "value": true
+        },
+        {
+          "at": "136.4s",
+          "what": "Call, then Cancel after 400 ms",
+          "value": true
+        },
+        {
+          "at": "140.7s",
+          "what": "Call, then Cancel after 700 ms",
+          "value": true
+        }
+      ],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "call-cancelled-straight-away-ten-times.log"
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": true,
+      "checks": [
+        {
+          "name": "the call connects",
+          "ok": true,
+          "detail": "END-TO-END ENCRYPTED Y P Priya 0:00 Earpiece · 96 kbps Mute End Speaker"
+        },
+        {
+          "name": "the call service runs in the foreground",
+          "ok": true
+        },
+        {
+          "name": "still connected after six seconds",
+          "ok": true
+        },
+        {
+          "name": "the call service has stopped",
+          "ok": true
+        },
+        {
+          "name": "the screen lock at the ear is let go",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "6251",
+            "pidAfter": "6251"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "162.5s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        },
+        {
+          "at": "163.0s",
+          "what": "Priya sees",
+          "value": "END-TO-END ENCRYPTED P D Dinesh online is calling you Decline Accept"
+        },
+        {
+          "at": "163.2s",
+          "what": "Priya taps Accept",
+          "value": "pressed Accept"
+        },
+        {
+          "at": "164.8s",
+          "what": "tap Speaker",
+          "value": "pressed Use speaker"
+        },
+        {
+          "at": "166.5s",
+          "what": "tap Speaker again",
+          "value": "pressed Use earpiece"
+        },
+        {
+          "at": "169.7s",
+          "what": "tap End",
+          "value": "pressed End call"
+        },
+        {
+          "at": "172.7s",
+          "what": "Priya sees",
+          "value": ""
+        }
+      ],
+      "shots": [],
+      "info": {
+        "audioAtEar": [
+          "10-16 12:23:39:213 setCommunicationRouteForClient for pid: 6251 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:23:39:214 onUpdateCommunicationRoute, preferredCommunicationDevice: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] eventSource: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:23:43:026 setCommunicationRouteForClient for pid: 6251 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:23:43:026 onUpdateCommunicationRoute, preferredCommunicationDevice: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] eventSource: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:23:46:955 setCommunicationRouteForClient for pid: 6251 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:23:46:955 onUpdateCommunicationRoute, preferredCommunicationDevice: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] eventSource: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:24:09:468 setCommunicationRouteForClient for pid: 6251 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:24:09:468 onUpdateCommunicationRoute, preferredCommunicationDevice: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] eventSource: setCommunicationDevice() from u/pid:10174/6251"
+        ],
+        "proximityAtEar": true,
+        "audioOnSpeaker": [
+          "10-16 12:23:43:026 setCommunicationRouteForClient for pid: 6251 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:23:43:026 onUpdateCommunicationRoute, preferredCommunicationDevice: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] eventSource: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:23:46:955 setCommunicationRouteForClient for pid: 6251 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:23:46:955 onUpdateCommunicationRoute, preferredCommunicationDevice: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] eventSource: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:24:09:468 setCommunicationRouteForClient for pid: 6251 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:24:09:468 onUpdateCommunicationRoute, preferredCommunicationDevice: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] eventSource: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:24:11:742 setCommunicationRouteForClient for pid: 6251 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/6251",
+          "10-16 12:24:11:742 onUpdateCommunicationRoute, preferredCommunicationDevice: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] eventSource: setCommunicationDevice() from u/pid:10174/6251"
+        ],
+        "pageErrors": []
+      },
+      "log": "call-that-priya-answers-with-the-speaker-on-and-of.log"
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": true,
+      "checks": [
+        {
+          "name": "your phone rings",
+          "ok": true,
+          "detail": "END-TO-END ENCRYPTED Y P Priya online is calling you Decline Accept"
+        },
+        {
+          "name": "the call service runs in the foreground",
+          "ok": true
+        },
+        {
+          "name": "the call service has stopped",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "6251",
+            "pidAfter": "6251"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "179.1s",
+          "what": "Priya taps Call",
+          "value": "pressed Call"
+        },
+        {
+          "at": "179.7s",
+          "what": "tap Accept",
+          "value": "pressed Accept"
+        },
+        {
+          "at": "184.4s",
+          "what": "Priya taps End",
+          "value": "pressed End call"
+        },
+        {
+          "at": "187.4s",
+          "what": "you see",
+          "value": ""
+        }
+      ],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "priya-calls-and-you-answer.log"
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": true,
+      "checks": [
+        {
+          "name": "the app is still running with the screen off",
+          "ok": true
+        },
+        {
+          "name": "the call is still on (Priya sees a timer)",
+          "ok": true
+        },
+        {
+          "name": "the call service still runs in the foreground",
+          "ok": true
+        },
+        {
+          "name": "the call service has stopped",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "6251",
+            "pidAfter": "6251"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "192.1s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        },
+        {
+          "at": "193.1s",
+          "what": "press the power button"
+        },
+        {
+          "at": "205.6s",
+          "what": "tap End",
+          "value": "pressed End call"
+        }
+      ],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "screen-turned-off-in-the-middle-of-a-call.log"
+    },
+    {
+      "title": "Choosing a photo opens the picker",
+      "ok": true,
+      "checks": [
+        {
+          "name": "Android's picker is open",
+          "ok": true,
+          "detail": "topResumedActivity=ActivityRecord{2497427 u0 com.google.android.documentsui/com.android.documentsui.picker.PickActivity} t9}"
+        },
+        {
+          "name": "back in the chat",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "6251",
+            "pidAfter": "6251"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "211.8s",
+          "what": "tap Send a photo",
+          "value": "pressed Send a photo"
+        }
+      ],
+      "shots": [
+        "13-picker.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "choosing-a-photo-opens-the-picker.log"
+    },
+    {
+      "title": "Taking a photo opens the camera",
+      "ok": false,
+      "checks": [
+        {
+          "name": "back in the chat",
+          "ok": false,
+          "detail": "topResumedActivity=ActivityRecord{142ed86 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity} t8}"
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "6251",
+            "pidAfter": "6251"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "221.7s",
+          "what": "tap Take a photo",
+          "value": "clicked the camera input"
+        },
+        {
+          "at": "226.7s",
+          "what": "on screen",
+          "value": "topResumedActivity=ActivityRecord{142ed86 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity} t8}"
+        }
+      ],
+      "shots": [
+        "14-camera.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "taking-a-photo-opens-the-camera.log"
+    },
+    {
+      "title": "The page's own process crashing leaves the app open",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app process is still running",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "6251",
+            "pidAfter": "6251"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "251.4s",
+          "what": "crash the page process"
+        }
+      ],
+      "shots": [
+        "15-stopped.png"
+      ],
+      "info": {},
+      "error": "timed out after 90s waiting for the app page (no app page yet)",
+      "log": "the-page-s-own-process-crashing-leaves-the-app-ope.log"
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": true,
+      "checks": [
+        {
+          "name": "the call screen says the microphone is not allowed",
+          "ok": true,
+          "detail": "END-TO-END ENCRYPTED Y P Priya Microphone not allowed Allow microphone access for Two in your phone settings, then try again."
+        },
+        {
+          "name": "no call service started",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "6251",
+            "pidAfter": "8563"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "359.8s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        },
+        {
+          "at": "361.9s",
+          "what": "tap Don't allow"
+        }
+      ],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "restartExpected": true,
+      "log": "call-when-you-don-t-allow-the-microphone.log"
+    }
+  ]
+}

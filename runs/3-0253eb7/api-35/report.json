@@ -1,0 +1,397 @@
+{
+  "device": {
+    "android": "15",
+    "sdk": "35",
+    "webview": "com.google.android.webview, 124.0.6367.219"
+  },
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": true,
+      "checks": [
+        {
+          "name": "the call screen says Priya is not online",
+          "ok": true,
+          "detail": "END-TO-END ENCRYPTED Y P Partner Not online right now They will see that you called Cancel"
+        },
+        {
+          "name": "the call service runs in the foreground",
+          "ok": true,
+          "detail": {
+            "running": true,
+            "foreground": true
+          }
+        },
+        {
+          "name": "the \"Call in progress\" notification is up",
+          "ok": true
+        },
+        {
+          "name": "the call service has stopped",
+          "ok": true
+        },
+        {
+          "name": "the notification has gone",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "",
+            "pidAfter": "3655"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "41.4s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        },
+        {
+          "at": "45.7s",
+          "what": "tap \"While using the app\""
+        },
+        {
+          "at": "50.4s",
+          "what": "tap Cancel",
+          "value": "pressed Cancel call"
+        }
+      ],
+      "shots": [
+        "01-chat.png",
+        "02-microphone-question.png",
+        "03-calling-offline.png",
+        "04-cancelled.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "first-call-while-priya-is-offline-allowing-the-mic.log"
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": true,
+      "checks": [
+        {
+          "name": "the call service runs in the foreground",
+          "ok": true
+        },
+        {
+          "name": "after 45 seconds it says No answer",
+          "ok": true,
+          "detail": "END-TO-END ENCRYPTED Y P Partner No answer They will see that you called."
+        },
+        {
+          "name": "the call service has stopped",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3655",
+            "pidAfter": "3655"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "57.2s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        }
+      ],
+      "shots": [
+        "05-ringing-out.png",
+        "06-no-answer.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "call-while-priya-is-offline-rings-out.log"
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": true,
+      "checks": [
+        {
+          "name": "no call service left running",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3655",
+            "pidAfter": "3655"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "111.7s",
+          "what": "Call, then Cancel after 0 ms",
+          "value": true
+        },
+        {
+          "at": "115.3s",
+          "what": "Call, then Cancel after 20 ms",
+          "value": true
+        },
+        {
+          "at": "119.0s",
+          "what": "Call, then Cancel after 40 ms",
+          "value": true
+        },
+        {
+          "at": "122.6s",
+          "what": "Call, then Cancel after 60 ms",
+          "value": true
+        },
+        {
+          "at": "126.4s",
+          "what": "Call, then Cancel after 90 ms",
+          "value": true
+        },
+        {
+          "at": "130.2s",
+          "what": "Call, then Cancel after 120 ms",
+          "value": true
+        },
+        {
+          "at": "134.0s",
+          "what": "Call, then Cancel after 180 ms",
+          "value": true
+        },
+        {
+          "at": "137.8s",
+          "what": "Call, then Cancel after 250 ms",
+          "value": true
+        },
+        {
+          "at": "141.8s",
+          "what": "Call, then Cancel after 400 ms",
+          "value": true
+        },
+        {
+          "at": "146.1s",
+          "what": "Call, then Cancel after 700 ms",
+          "value": true
+        }
+      ],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "call-cancelled-straight-away-ten-times.log"
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3655",
+            "pidAfter": "3655"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "07-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 60s waiting for both phones on the relay",
+      "log": "call-that-priya-answers-with-the-speaker-on-and-of.log"
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3655",
+            "pidAfter": "3655"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "08-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 60s waiting for both phones on the relay",
+      "log": "priya-calls-and-you-answer.log"
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3655",
+            "pidAfter": "3655"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "09-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 60s waiting for both phones on the relay",
+      "log": "screen-turned-off-in-the-middle-of-a-call.log"
+    },
+    {
+      "title": "Choosing a photo opens the picker",
+      "ok": true,
+      "checks": [
+        {
+          "name": "Android's picker is open",
+          "ok": true,
+          "detail": "topResumedActivity=ActivityRecord{d8e9f34 u0 com.google.android.providers.media.module/com.android.providers.media.photopicker.PhotoPickerGetContentActivity t8}"
+        },
+        {
+          "name": "back in the chat",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3655",
+            "pidAfter": "3655"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "360.4s",
+          "what": "tap Send a photo",
+          "value": "pressed Send a photo"
+        }
+      ],
+      "shots": [
+        "10-picker.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "choosing-a-photo-opens-the-picker.log"
+    },
+    {
+      "title": "Taking a photo opens the camera",
+      "ok": false,
+      "checks": [
+        {
+          "name": "back in the chat",
+          "ok": false,
+          "detail": "topResumedActivity=ActivityRecord{f2e3b78 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7}"
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3655",
+            "pidAfter": "3655"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "370.8s",
+          "what": "tap Take a photo",
+          "value": "pressed Take a photo"
+        },
+        {
+          "at": "375.8s",
+          "what": "on screen",
+          "value": "topResumedActivity=ActivityRecord{f2e3b78 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7}"
+        }
+      ],
+      "shots": [
+        "11-camera.png"
+      ],
+      "info": {},
+      "log": "taking-a-photo-opens-the-camera.log"
+    },
+    {
+      "title": "The page's own process crashing leaves the app open",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3655",
+            "pidAfter": "3655"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "12-stopped.png"
+      ],
+      "info": {},
+      "error": "timed out after 15s waiting for the last call screen to close (Runtime.evaluate timed out)",
+      "log": "the-page-s-own-process-crashing-leaves-the-app-ope.log"
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": true,
+      "checks": [
+        {
+          "name": "the call screen says the microphone is not allowed",
+          "ok": true,
+          "detail": "END-TO-END ENCRYPTED Y P Partner Microphone not allowed Allow microphone access for Two in your phone settings, then try again."
+        },
+        {
+          "name": "no call service started",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3655",
+            "pidAfter": "4912"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "504.0s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        },
+        {
+          "at": "507.6s",
+          "what": "tap Don't allow"
+        }
+      ],
+      "shots": [
+        "13-microphone-question.png",
+        "14-mic-refused.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "restartExpected": true,
+      "log": "call-when-you-don-t-allow-the-microphone.log"
+    }
+  ]
+}

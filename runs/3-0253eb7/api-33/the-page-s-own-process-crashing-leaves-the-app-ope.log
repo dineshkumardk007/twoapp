@@ -1,0 +1,174 @@
+10-16 12:25:38.373  8070  8070 W linker64: type=1400 audit(0.0:49): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 12:25:38.373  8070  8070 W linker64: type=1400 audit(0.0:50): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 12:25:38.373  8070  8070 W linker64: type=1400 audit(0.0:51): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 12:25:38.373  8070  8070 W linker64: type=1400 audit(0.0:52): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 12:25:39.030  8070  8070 W chromium: [1016/122539.029915:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.030  8070  8070 W chromium: [1016/122539.030713:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.031  8070  8070 W chromium: [1016/122539.031303:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.031  8070  8070 W chromium: [1016/122539.031674:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.025  8070  8070 W linker64: type=1400 audit(0.0:53): avc: denied { getsched } for scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:r:isolated_app:s0:c512,c768 tclass=process permissive=0 app=app.two.android
+10-16 12:25:39.025  8070  8070 W linker64: type=1400 audit(0.0:54): avc: denied { getsched } for scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:r:isolated_app:s0:c512,c768 tclass=process permissive=0 app=app.two.android
+10-16 12:25:39.046  8070  8070 W chromium: [1016/122539.046902:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.047  8070  8070 W chromium: [1016/122539.047225:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.047  8070  8070 W chromium: [1016/122539.047492:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.047  8070  8070 W chromium: [1016/122539.047797:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.047  8070  8070 W chromium: [1016/122539.047986:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.050  8070  8070 W chromium: [1016/122539.050516:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.050  8070  8070 W chromium: [1016/122539.050834:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.051  8070  8070 W chromium: [1016/122539.051099:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.051  8070  8070 W chromium: [1016/122539.051491:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.025  8070  8070 W linker64: type=1400 audit(0.0:55): avc: denied { getsched } for scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:r:isolated_app:s0:c512,c768 tclass=process permissive=0 app=app.two.android
+10-16 12:25:39.053  8070  8070 W chromium: [1016/122539.053157:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.053  8070  8070 W chromium: [1016/122539.053435:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.029  8070  8070 W linker64: type=1400 audit(0.0:56): avc: denied { getsched } for scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:r:isolated_app:s0:c512,c768 tclass=process permissive=0 app=app.two.android
+10-16 12:25:39.058  8070  8070 W chromium: [1016/122539.058119:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.058  8070  8070 W chromium: [1016/122539.058564:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.059  8070  8070 W chromium: [1016/122539.059071:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.059  8070  8070 W chromium: [1016/122539.059350:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.059  8070  8070 W chromium: [1016/122539.059633:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.059  8070  8070 W chromium: [1016/122539.059858:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.060  8070  8070 W chromium: [1016/122539.060169:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.060  8070  8070 W chromium: [1016/122539.060507:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.060  8070  8070 W chromium: [1016/122539.060858:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.061  8070  8070 W chromium: [1016/122539.061101:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.061  8070  8070 W chromium: [1016/122539.061466:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.061  8070  8070 W chromium: [1016/122539.061818:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.062  8070  8070 W chromium: [1016/122539.062069:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.062  8070  8070 W chromium: [1016/122539.062305:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.062  8070  8070 W chromium: [1016/122539.062622:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.062  8070  8070 W chromium: [1016/122539.062993:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.063  8070  8070 W chromium: [1016/122539.063294:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.063  8070  8070 W chromium: [1016/122539.063729:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.064  8070  8070 W chromium: [1016/122539.064027:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:25:39.076  8070  8070 E chromium: [1016/122539.076218:ERROR:file_io_posix.cc(144)] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: Permission denied (13)
+10-16 12:25:39.076  8070  8070 E chromium: [1016/122539.076525:ERROR:ptrace_client.cc(363)] Broker Open: access denied
+10-16 12:25:39.163  8070  8070 E chromium: [1016/122539.163717:ERROR:socket.cc(182)] incorrect payload size 0
+10-16 12:25:39.165  6294  6357 E libc    : failed to connect to tombstoned: Operation not permitted
+10-16 12:25:39.251  6294  6357 W libc    : Access denied finding property "ro.debuggable"
+10-16 12:25:39.251  6294  6357 W libc    : Access denied finding property "ro.debuggable"
+10-16 12:25:39.251  6294  6357 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-16 12:25:39.251  6294  6357 F DEBUG   : Build fingerprint: 'google/sdk_gphone64_x86_64/emu64x:13/TE1A.240213.009/12342917:userdebug/dev-keys'
+10-16 12:25:39.251  6294  6357 F DEBUG   : Revision: '0'
+10-16 12:25:39.251  6294  6357 F DEBUG   : ABI: 'x86_64'
+10-16 12:25:39.251  6294  6357 F DEBUG   : Timestamp: 2026-10-16 12:25:39.168349747+0000
+10-16 12:25:39.251  6294  6357 F DEBUG   : Process uptime: 224s
+10-16 12:25:39.251  6294  6357 F DEBUG   : Cmdline: com.google.android.webview:sandboxed_process0:org.chromium.content.app.Sandbo
+10-16 12:25:39.251  6294  6357 F DEBUG   : pid: 6294, tid: 6357, name: Chrome_ChildIOT  >>> com.google.android.webview:sandboxed_process0:org.chromium.content.app.Sandbo <<<
+10-16 12:25:39.251  6294  6357 F DEBUG   : uid: 99000
+10-16 12:25:39.251  6294  6357 F DEBUG   : signal 0 (SIGTRAP), code 128 (SI_KERNEL), fault addr --------
+10-16 12:25:39.251  6294  6357 F DEBUG   :     rax 0000000000000001  rbx 000072ec7783d6b8  rcx b10478f22c6a30e2  rdx 000000000000000a
+10-16 12:25:39.251  6294  6357 F DEBUG   :     r8  000072ec2eddd114  r9  000072ec7783d9c8  r10 000000000000000a  r11 000072ef2a040f58
+10-16 12:25:39.251  6294  6357 F DEBUG   :     r12 000037a40404f9c0  r13 0000000000000000  r14 000037a403344c60  r15 0000000000000030
+10-16 12:25:39.251  6294  6357 F DEBUG   :     rdi 000037a4039be4d6  rsi 000072ec27b7ae5f
+10-16 12:25:39.251  6294  6357 F DEBUG   :     rbp 0000000000000064  rsp 000072ec7783d620  rip 000072ec2da0bda6
+10-16 12:25:39.251  6294  6357 F DEBUG   : backtrace:
+10-16 12:25:39.251  6294  6357 F DEBUG   :       #00 pc 00000000061d5da6  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.251  6294  6357 F DEBUG   :       #01 pc 000000000275d75f  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.251  6294  6357 F DEBUG   :       #02 pc 00000000029af655  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.251  6294  6357 F DEBUG   :       #03 pc 00000000029af25b  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #04 pc 00000000029adc4f  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #05 pc 00000000029ad90d  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #06 pc 00000000029ad592  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #07 pc 00000000029af25b  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #08 pc 00000000029ae8af  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #09 pc 00000000029ae14f  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #10 pc 00000000021f4e9a  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #11 pc 00000000029ade98  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #12 pc 000000000299e699  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #13 pc 0000000003e068be  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #14 pc 000000000299e60e  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #15 pc 00000000029ad1bb  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #16 pc 0000000003e021b1  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #17 pc 0000000003df37b1  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #18 pc 0000000003df3557  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #19 pc 000000000294ac3b  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #20 pc 0000000004fbfac5  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #21 pc 00000000050579ee  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #22 pc 00000000028abdd4  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #23 pc 0000000002949490  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #24 pc 0000000002948f66  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #25 pc 0000000002948da4  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #26 pc 0000000002d6664c  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #27 pc 0000000002948bca  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #28 pc 0000000002961ac9  /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #29 pc 00000000000ccd9a  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+58) (BuildId: f090904cc3ac285a6f190f8003c3eb0e)
+10-16 12:25:39.252  6294  6357 F DEBUG   :       #30 pc 0000000000060d47  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+55) (BuildId: f090904cc3ac285a6f190f8003c3eb0e)
+10-16 12:25:39.268   512  3247 I ActivityManager: Process com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 (pid 6294) has died: cch+5 CEM 
+10-16 12:25:39.269   512  3247 W ActivityManager: Scheduling restart of crashed service app.two.android/org.chromium.content.app.SandboxedProcessService0:0 in 1000ms for connection
+10-16 12:25:39.269  6251  6291 W cr_ChildProcessConn: onServiceDisconnected (crash or killed by oom): pid=6294 bindings:W  S
+10-16 12:25:39.273  6251  6251 E chromium: [ERROR:aw_browser_terminator.cc(156)] Renderer process (6294) crash detected (code 5).
+10-16 12:25:39.280   512   768 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6251 device: null from API: clearCommunicationDevice() from u/pid:10174/6251
+10-16 12:25:39.284   512  2108 I MediaFocusControl: abandonAudioFocus() from uid/pid 10174/6251 clientId=android.media.AudioManager@b0dd7aorg.chromium.content.browser.AudioFocusDelegate@525a92b
+10-16 12:25:39.290  6251  6312 E chromium: [ERROR:directory_reader_posix.cc(42)] opendir /data/user/0/app.two.android/cache/WebView/Crashpad/attachments/21d9e59c-9619-411e-ae15-b57de5580160: No such file or directory (2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: Exception in upload method
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: com.google.android.apps.gsa.shared.r.d: Error code: 262182
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.ab.bk.d(PG:5)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.ar.d(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.bo.b(PG:5)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.e.a(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.a.run(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bu.cancel(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:17)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.bk.b.h.run(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.aj.a(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.c(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.r.a(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.e(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.c(PG:3)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.e.a(PG:5)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.n.hh(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.cd.g.a.f.e(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.d(PG:22)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.ks(PG:6)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.e(PG:14)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.p.run(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.e.run(PG:2)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 12:26:00.480  1833  2266 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.l.run(PG:5)
+10-16 12:26:00.578  2875  2889 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:26:00.578  2875  2889 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:26:53.022  8392  8409 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.

@@ -1,0 +1,148 @@
+10-16 12:24:00.696  6382  6404 D EGL_emulation: app_time_stats: avg=3801.07ms min=3801.07ms max=3801.07ms count=1
+10-16 12:24:02.190   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:02.220   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:02.222  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:02.242  6382  6404 D EGL_emulation: app_time_stats: avg=772.65ms min=313.45ms max=1231.85ms count=2
+10-16 12:24:04.729  6382  6404 D EGL_emulation: app_time_stats: avg=176.84ms min=16.82ms max=2143.89ms count=14
+10-16 12:24:05.750   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:05.750  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:05.753   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:05.807  6382  6404 D EGL_emulation: app_time_stats: avg=1077.91ms min=1077.91ms max=1077.91ms count=1
+10-16 12:24:08.298  6382  6404 D EGL_emulation: app_time_stats: avg=165.03ms min=17.33ms max=2138.64ms count=15
+10-16 12:24:09.317   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:09.317  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:09.343  6420  6614 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:24:09.345   549   997 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:24:09.353  6420  6614 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:24:09.360  6420  6616 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:24:09.368   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:09.372  6382  6404 D EGL_emulation: app_time_stats: avg=1073.95ms min=1073.95ms max=1073.95ms count=1
+10-16 12:24:09.549   549   549 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10192
+10-16 12:24:11.911  6382  6404 D EGL_emulation: app_time_stats: avg=157.69ms min=14.27ms max=2211.66ms count=16
+10-16 12:24:12.981   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:12.982  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:13.001  6420  6614 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:24:13.005   549   625 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:24:13.006  6420  6614 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:24:13.013  6420  6616 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:24:13.031   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:13.065  6382  6404 D EGL_emulation: app_time_stats: avg=1153.70ms min=1153.70ms max=1153.70ms count=1
+10-16 12:24:13.207   549   549 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10192
+10-16 12:24:15.580  6382  6404 D EGL_emulation: app_time_stats: avg=178.16ms min=15.53ms max=2201.54ms count=14
+10-16 12:24:16.618   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:16.619  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:16.644  6420  6614 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:24:16.652  6382  6404 D EGL_emulation: app_time_stats: avg=1071.83ms min=1071.83ms max=1071.83ms count=1
+10-16 12:24:16.653  6420  6614 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:24:16.657   549  2387 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:24:16.662  6420  6616 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:24:16.688   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:16.861   549   549 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10192
+10-16 12:24:19.228  6382  6404 D EGL_emulation: app_time_stats: avg=159.63ms min=15.53ms max=2232.57ms count=16
+10-16 12:24:20.272   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:20.273  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:20.302  6420  6614 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:24:20.302  6382  6404 D EGL_emulation: app_time_stats: avg=1073.91ms min=1073.91ms max=1073.91ms count=1
+10-16 12:24:20.305  6420  6614 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:24:20.314  6420  6616 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:24:20.335  6420  6876 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 236751549, interval (us) = 23
+10-16 12:24:20.352  6420  6876 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 236768638, interval (us) = 13
+10-16 12:24:20.354   549   625 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:24:20.367  6420  6876 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 236783324, interval (us) = 101
+10-16 12:24:20.370   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:20.559   549   549 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10192
+10-16 12:24:22.911  6382  6404 D EGL_emulation: app_time_stats: avg=172.60ms min=14.08ms max=2277.09ms count=15
+10-16 12:24:23.968   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:23.969  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:24.006  6420  6614 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:24:24.007   549   997 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:24:24.011  6382  6404 D EGL_emulation: app_time_stats: avg=1100.59ms min=1100.59ms max=1100.59ms count=1
+10-16 12:24:24.015  6420  6614 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:24:24.024  6420  6616 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:24:24.043  6420  6888 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 240458968, interval (us) = 20
+10-16 12:24:24.059  6420  6888 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 240474905, interval (us) = 17
+10-16 12:24:24.075  6420  6888 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 240490973, interval (us) = 92
+10-16 12:24:24.093  6420  6888 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 240509406, interval (us) = 125
+10-16 12:24:24.139  6420  6888 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 240554754, interval (us) = 9
+10-16 12:24:24.140   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:24.222   549   549 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10192
+10-16 12:24:26.678  6382  6404 D EGL_emulation: app_time_stats: avg=156.43ms min=15.74ms max=2317.88ms count=17
+10-16 12:24:27.721   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:27.722  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:27.740  6420  6614 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:24:27.742  6420  6614 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:24:27.746  6420  6616 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:24:27.762  6382  6404 D EGL_emulation: app_time_stats: avg=1083.70ms min=1083.70ms max=1083.70ms count=1
+10-16 12:24:27.768   549  1017 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:24:27.782  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244198469, interval (us) = 23
+10-16 12:24:27.798  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244214126, interval (us) = 17
+10-16 12:24:27.814  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244230672, interval (us) = 169
+10-16 12:24:27.830  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244246183, interval (us) = 151
+10-16 12:24:27.863  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244279089, interval (us) = 197
+10-16 12:24:27.878  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244294337, interval (us) = 324
+10-16 12:24:27.894  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244310091, interval (us) = 200
+10-16 12:24:27.911  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244327717, interval (us) = 191
+10-16 12:24:27.943  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244358878, interval (us) = 331
+10-16 12:24:27.958  6420  6899 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 244374298, interval (us) = 225
+10-16 12:24:27.971   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:30.527  6382  6404 D EGL_emulation: app_time_stats: avg=183.30ms min=15.68ms max=2428.90ms count=15
+10-16 12:24:31.606  6382  6404 D EGL_emulation: app_time_stats: avg=1079.47ms min=1079.47ms max=1079.47ms count=1
+10-16 12:24:31.608   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:31.608  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:31.640  6420  6614 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:24:31.642  6420  6614 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:24:31.650  6420  6616 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:24:31.677  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248093650, interval (us) = 18
+10-16 12:24:31.691   549  1017 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:24:31.695  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248110789, interval (us) = 15
+10-16 12:24:31.709  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248125289, interval (us) = 85
+10-16 12:24:31.725  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248141026, interval (us) = 141
+10-16 12:24:31.757  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248173210, interval (us) = 176
+10-16 12:24:31.773  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248189064, interval (us) = 170
+10-16 12:24:31.790  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248206053, interval (us) = 208
+10-16 12:24:31.805  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248221458, interval (us) = 215
+10-16 12:24:31.838  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248254006, interval (us) = 202
+10-16 12:24:31.854  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248269938, interval (us) = 312
+10-16 12:24:31.871  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248287122, interval (us) = 171
+10-16 12:24:31.885  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248301275, interval (us) = 259
+10-16 12:24:31.920  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248335804, interval (us) = 261
+10-16 12:24:31.949  6420  6911 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 248365624, interval (us) = 60
+10-16 12:24:31.966   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:34.510  6382  6404 D EGL_emulation: app_time_stats: avg=151.32ms min=15.96ms max=2448.36ms count=19
+10-16 12:24:35.532   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:35.532  6382  6440 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:24:35.551  6420  6614 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:24:35.555   549  1017 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:24:35.561  6420  6614 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:24:35.567  6420  6616 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:24:35.581  6382  6404 D EGL_emulation: app_time_stats: avg=1070.09ms min=1070.09ms max=1070.09ms count=1
+10-16 12:24:35.590  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252005740, interval (us) = 25
+10-16 12:24:35.606  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252021836, interval (us) = 18
+10-16 12:24:35.624  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252039992, interval (us) = 146
+10-16 12:24:35.639  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252054819, interval (us) = 263
+10-16 12:24:35.704  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252120076, interval (us) = 18
+10-16 12:24:35.717  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252133578, interval (us) = 99
+10-16 12:24:35.754  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252169857, interval (us) = 686
+10-16 12:24:35.765  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252181441, interval (us) = 151
+10-16 12:24:35.800  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252216118, interval (us) = 38
+10-16 12:24:35.829  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252245422, interval (us) = 114
+10-16 12:24:35.861  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252277541, interval (us) = 47
+10-16 12:24:35.877  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252293665, interval (us) = 58
+10-16 12:24:35.909  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252325381, interval (us) = 138
+10-16 12:24:35.925  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252341351, interval (us) = 154
+10-16 12:24:35.941  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252357385, interval (us) = 204
+10-16 12:24:35.957  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252373397, interval (us) = 212
+10-16 12:24:35.989  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252405435, interval (us) = 255
+10-16 12:24:36.005  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252421658, interval (us) = 432
+10-16 12:24:36.021  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252437380, interval (us) = 300
+10-16 12:24:36.037  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252453407, interval (us) = 287
+10-16 12:24:36.069  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252485464, interval (us) = 385
+10-16 12:24:36.085  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252501452, interval (us) = 379
+10-16 12:24:36.101  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252517489, interval (us) = 390
+10-16 12:24:36.117  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252533529, interval (us) = 411
+10-16 12:24:36.149  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252565469, interval (us) = 407
+10-16 12:24:36.165  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252581513, interval (us) = 426
+10-16 12:24:36.181  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252597461, interval (us) = 413
+10-16 12:24:36.197  6420  6922 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 252613452, interval (us) = 441
+10-16 12:24:36.213   549   860 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6382 device: null from API: clearCommunicationDevice() from u/pid:10192/6382
+10-16 12:24:38.761  6382  6404 D EGL_emulation: app_time_stats: avg=166.49ms min=15.36ms max=2451.50ms count=19

@@ -1,0 +1,135 @@
+10-16 12:27:17.493   512   564 I ActivityManager: Killing 6251:app.two.android/u0a174 (adj 900): permissions revoked
+10-16 12:27:17.499   512   542 I libprocessgroup: Successfully killed process cgroup uid 10174 pid 6251 in 5ms
+10-16 12:27:17.508   512  2107 V ActivityManager: Got obituary of 6251:app.two.android
+10-16 12:27:17.509   314   314 I Zygote  : Process 6251 exited due to signal 9 (Killed)
+10-16 12:27:17.509   512   768 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 6251 device: null from API: onCommunicationRouteClientDied
+10-16 12:27:19.049   512   587 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=app.two.android/.MainActivity} from uid 2000
+10-16 12:27:19.062   512   541 I ActivityManager: Start proc 8563:app.two.android/u0a174 for next-top-activity {app.two.android/app.two.android.MainActivity}
+10-16 12:27:19.064   512  1016 D CoreBackPreview: Window{1d18781 u0 Splash Screen app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@9a8b214, mPriority=0}
+10-16 12:27:19.066  8563  8563 I app.two.android: Late-enabling -Xcheck:jni
+10-16 12:27:19.082  8563  8563 I app.two.android: Using CollectorTypeCC GC.
+10-16 12:27:19.082  8563  8563 W app.two.android: Unexpected CPU variant for x86: x86_64.
+10-16 12:27:19.082  8563  8563 W app.two.android: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-16 12:27:19.111  8563  8563 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10174; state: ENABLED
+10-16 12:27:19.114  8563  8563 W ziparchive: Unable to open '/data/app/~~EVeTQq1raZp_UHdVVz0T_Q==/app.two.android-NFQqw3KgmiP4isjq3br3ow==/base.dm': No such file or directory
+10-16 12:27:19.114  8563  8563 W ziparchive: Unable to open '/data/app/~~EVeTQq1raZp_UHdVVz0T_Q==/app.two.android-NFQqw3KgmiP4isjq3br3ow==/base.dm': No such file or directory
+10-16 12:27:19.172  8563  8563 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~EVeTQq1raZp_UHdVVz0T_Q==/app.two.android-NFQqw3KgmiP4isjq3br3ow==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~EVeTQq1raZp_UHdVVz0T_Q==/app.two.android-NFQqw3KgmiP4isjq3br3ow==/lib/x86_64:/data/app/~~EVeTQq1raZp_UHdVVz0T_Q==/app.two.android-NFQqw3KgmiP4isjq3br3ow==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/app.two.android
+10-16 12:27:19.177  8563  8563 V GraphicsEnvironment: ANGLE Developer option for 'app.two.android' set to: 'default'
+10-16 12:27:19.177  8563  8563 V GraphicsEnvironment: ANGLE GameManagerService for app.two.android: false
+10-16 12:27:19.177  8563  8563 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-16 12:27:19.178  8563  8563 D NetworkSecurityConfig: Using Network Security Config from resource network_security_config debugBuild: true
+10-16 12:27:19.179  8563  8563 D NetworkSecurityConfig: Using Network Security Config from resource network_security_config debugBuild: true
+10-16 12:27:19.184  8563  8563 D WM-WrkMgrInitializer: Initializing WorkManager with default configuration.
+10-16 12:27:19.193  8563  8563 D WM-PackageManagerHelper: Skipping component enablement for androidx.work.impl.background.systemjob.SystemJobService
+10-16 12:27:19.193  8563  8563 D WM-Schedulers: Created SystemJobScheduler and enabled SystemJobService
+10-16 12:27:19.196  8563  8582 D WM-ForceStopRunnable: The default process name was not specified.
+10-16 12:27:19.196  8563  8582 D WM-ForceStopRunnable: Performing cleanup operations.
+10-16 12:27:19.206  8563  8582 D CompatibilityChangeReporter: Compat change id reported: 160794467; UID 10174; state: ENABLED
+10-16 12:27:19.215  8563  8589 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+10-16 12:27:19.216  8563  8589 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+10-16 12:27:19.217  8563  8586 D WM-PackageManagerHelper: Skipping component enablement for androidx.work.impl.background.systemalarm.RescheduleReceiver
+10-16 12:27:19.218  8563  8589 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+10-16 12:27:19.235  8563  8563 D CompatibilityChangeReporter: Compat change id reported: 237531167; UID 10174; state: DISABLED
+10-16 12:27:19.237  8563  8587 W Parcel  : Expecting binder but got null!
+10-16 12:27:19.239   512  2106 D CoreBackPreview: Window{42a24b0 u0 app.two.android/app.two.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@a9702ae, mPriority=0}
+10-16 12:27:19.295  8563  8563 I WebViewFactory: Loading com.google.android.webview version 109.0.5414.123 (code 541412337)
+10-16 12:27:19.297  8563  8563 W ziparchive: Unable to open '/data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.dm': No such file or directory
+10-16 12:27:19.297  8563  8563 W ziparchive: Unable to open '/data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.dm': No such file or directory
+10-16 12:27:19.297  8563  8563 W app.two.android: Entry not found
+10-16 12:27:19.297  8563  8563 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk. target_sdk_version=33, uses_libraries=ALL, library_path=/data/app/~~xxvouY4e6L_VxzBi_1W7Lg==/com.google.android.webview-ClTGIbqQ4ObEI_VCe4YTzw==/lib/x86_64:/data/app/~~xxvouY4e6L_VxzBi_1W7Lg==/com.google.android.webview-ClTGIbqQ4ObEI_VCe4YTzw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:27:19.298  8563  8563 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~xxvouY4e6L_VxzBi_1W7Lg==/com.google.android.webview-ClTGIbqQ4ObEI_VCe4YTzw==/WebViewGoogle.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~xxvouY4e6L_VxzBi_1W7Lg==/com.google.android.webview-ClTGIbqQ4ObEI_VCe4YTzw==/lib/x86_64:/data/app/~~xxvouY4e6L_VxzBi_1W7Lg==/com.google.android.webview-ClTGIbqQ4ObEI_VCe4YTzw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~3ackCR0z7kTe6flfsnfNzg==/com.google.android.trichromelibrary_541412337-BlWHmInNXdw5GhHIpkfJbQ==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:27:19.306  8563  8563 W app.two.android: Accessing hidden method Landroid/os/Trace;->isTagEnabled(J)Z (unsupported, reflection, allowed)
+10-16 12:27:19.306  8563  8563 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceBegin(JLjava/lang/String;)V (unsupported, reflection, allowed)
+10-16 12:27:19.306  8563  8563 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceEnd(J)V (unsupported, reflection, allowed)
+10-16 12:27:19.306  8563  8563 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceBegin(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 12:27:19.306  8563  8563 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceEnd(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 12:27:19.308  8563  8563 I cr_WVCFactoryProvider: Loaded version=109.0.5414.123 minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 12:27:19.314  8563  8563 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:27:19.314  8563  8563 I cr_CachingUmaRecorder: Flushed 9 samples from 9 histograms.
+10-16 12:27:19.317  8563  8563 I cr_VariationsUtils: Loaded seed with age 345s
+10-16 12:27:19.325  8563  8563 D CompatibilityChangeReporter: Compat change id reported: 183155436; UID 10174; state: ENABLED
+10-16 12:27:19.327   512   541 I ActivityManager: Start proc 8599:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0i1 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 12:27:19.353  8599  8599 I cr_WebViewApkApp: Launched version=109.0.5414.123 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:27:19.353  8599  8599 I cr_ChildProcessService: Creating new ChildProcessService pid=8599
+10-16 12:27:19.364  8563  8615 E chromium: [ERROR:simple_file_enumerator.cc(21)] opendir /data/user/0/app.two.android/cache/WebView/Default/HTTP Cache/Code Cache/wasm: No such file or directory (2)
+10-16 12:27:19.364  8563  8615 E chromium: [ERROR:simple_index_file.cc(614)] Could not reconstruct index from disk
+10-16 12:27:19.365  8563  8563 D CompatibilityChangeReporter: Compat change id reported: 214741472; UID 10174; state: ENABLED
+10-16 12:27:19.367  8563  8563 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10174; state: ENABLED
+10-16 12:27:19.369   512  1016 D ConnectivityService: requestNetwork for uid/pid:10174/8563 activeRequest: null callbackRequest: 167 [NetworkRequest [ REQUEST id=168, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 12:27:19.370   512   752 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=168, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:27:19.370   512   752 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=168, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:27:19.370   512   752 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=168, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:27:19.370   512   752 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=168, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:27:19.381  8563  8619 W app.two.android: Accessing hidden method Landroid/media/AudioManager;->getOutputLatency(I)I (unsupported, reflection, allowed)
+10-16 12:27:19.382  8563  8619 W cr_media: BLUETOOTH_CONNECT permission is missing.
+10-16 12:27:19.382  8563  8619 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+10-16 12:27:19.386  8599  8631 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:27:19.386  8599  8631 I cr_CachingUmaRecorder: Flushed 3 samples from 3 histograms.
+10-16 12:27:19.389  8563  8639 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 12:27:19.393  8563  8639 D EGL_emulation: eglCreateContext: 0x72ed2059b890: maj 3 min 0 rcv 3
+10-16 12:27:19.393  8563  8639 D EGL_emulation: eglMakeCurrent: 0x72ed2059b890: ver 3 0 (tinfo 0x72ef45bc0080) (first time)
+10-16 12:27:19.393  8563  8563 W OnBackInvokedCallback: OnBackInvokedCallback is not enabled for the application.
+10-16 12:27:19.393  8563  8563 W OnBackInvokedCallback: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 12:27:19.401  8563  8563 D CompatibilityChangeReporter: Compat change id reported: 193247900; UID 10174; state: ENABLED
+10-16 12:27:19.410  8563  8587 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 12:27:19.410  8563  8587 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-16 12:27:19.411  8563  8587 D EGL_emulation: eglCreateContext: 0x72ed2059c190: maj 3 min 0 rcv 3
+10-16 12:27:19.412  8563  8587 D EGL_emulation: eglMakeCurrent: 0x72ed2059c190: ver 3 0 (tinfo 0x72ef45bc0100) (first time)
+10-16 12:27:19.424  8563  8587 I Gralloc4: mapper 4.x is not supported
+10-16 12:27:19.433  8563  8587 W Gralloc4: allocator 4.x is not supported
+10-16 12:27:19.440  8563  8587 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 12:27:19.443  8563  8639 D EGL_emulation: eglCreateContext: 0x72ed2059c6d0: maj 3 min 0 rcv 3
+10-16 12:27:19.473  8563  8639 D EGL_emulation: eglCreateContext: 0x72ed2059abd0: maj 3 min 0 rcv 3
+10-16 12:27:19.564  8599  8647 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:27:19.565  8599  8647 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:27:19.598  8563  8563 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 12:27:19.610  8599  8631 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 2116
+10-16 12:27:19.615  8563  8619 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:27:19.615  8563  8619 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:27:19.615  8563  8619 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 2116
+10-16 12:27:19.615  8563  8619 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:27:19.615  8563  8619 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:27:19.616  8563  8619 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:27:19.616  8563  8619 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:27:19.618  8563  8619 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:27:19.618  8563  8619 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:27:19.618  8563  8619 D AAudioStream: setState(s#1) from 0 to 2
+10-16 12:27:19.619  8563  8619 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#1 ----------------
+10-16 12:27:19.619  8563  8619 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+10-16 12:27:19.619  8563  8619 D AAudioStream: setState(s#1) from 2 to 3
+10-16 12:27:19.620  8563  8580 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:27:19.621  8563  8619 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+10-16 12:27:19.628  8563  8670 D AAudioStream: setState(s#1) from 3 to 4
+10-16 12:27:19.640  8599  8647 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:27:19.641  8599  8647 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:27:19.650  8599  8647 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:27:19.650  8599  8647 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:27:20.723  8563  8563 W chromium: [WARNING:render_frame_host_impl.cc(14006)] https://appassets.androidplatform.net/ ran insecure content from ws://10.0.2.2:4100/relay
+10-16 12:27:20.723  8563  8563 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:27:20.723  8563  8563 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:27:20.782  8563  8580 I OpenGLRenderer: Davey! duration=1066ms; Flags=1, FrameTimelineVsyncId=20371, IntendedVsync=382293666877, Vsync=382293666877, InputEventId=0, HandleInputStart=382293901376, AnimationStart=382293902348, PerformTraversalsStart=382294104569, DrawStart=382294436263, FrameDeadline=382310333543, FrameInterval=382293895317, FrameStartTime=16666666, SyncQueued=382297585292, SyncStart=382297874773, IssueDrawCommandsStart=382297911068, SwapBuffers=383272126413, FrameCompleted=383360299232, DequeueBufferDuration=3886, QueueBufferDuration=621305, GpuCompleted=383360227485, SwapBuffersCompleted=383360299232, DisplayPresentTime=0, CommandSubmissionCompleted=383272126413, 
+10-16 12:27:20.783  8563  8563 I Choreographer: Skipped 66 frames!  The application may be doing too much work on its main thread.
+10-16 12:27:20.789   512   529 W ziparchive: Unable to open '/data/app/~~EVeTQq1raZp_UHdVVz0T_Q==/app.two.android-NFQqw3KgmiP4isjq3br3ow==/base.dm': No such file or directory
+10-16 12:27:20.789   512   529 I ActivityTaskManager: Displayed app.two.android/.MainActivity: +1s736ms
+10-16 12:27:20.808   512  2127 W InputManager-JNI: Input channel object '1d18781 Splash Screen app.two.android (client)' was disposed without first being removed with the input manager!
+10-16 12:27:20.819  1586  1586 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=-1 fieldName=null extras=null}, false)
+10-16 12:27:20.827   512  1016 D CoreBackPreview: Window{1d18781 u0 Splash Screen app.two.android EXITING}: Setting back callback null
+10-16 12:27:24.268  8563  8563 I Choreographer: Skipped 199 frames!  The application may be doing too much work on its main thread.
+10-16 12:27:24.419  8563  8578 I OpenGLRenderer: Davey! duration=4597ms; Flags=0, FrameTimelineVsyncId=20378, IntendedVsync=382310333543, Vsync=383410333499, InputEventId=0, HandleInputStart=383424435432, AnimationStart=383424438256, PerformTraversalsStart=383426247615, DrawStart=383426345270, FrameDeadline=383377000167, FrameInterval=383424183246, FrameStartTime=16666666, SyncQueued=383426851414, SyncStart=383426867488, IssueDrawCommandsStart=383427836401, SwapBuffers=386899460065, FrameCompleted=386907436463, DequeueBufferDuration=4347, QueueBufferDuration=688265, GpuCompleted=386907376905, SwapBuffersCompleted=386907436463, DisplayPresentTime=14723147890688, CommandSubmissionCompleted=386899460065, 
+10-16 12:27:24.988  8563  8563 I Choreographer: Skipped 32 frames!  The application may be doing too much work on its main thread.
+10-16 12:27:25.004  8563  8688 D ProfileInstaller: Installing profile for app.two.android
+10-16 12:27:26.456  8563  8587 D EGL_emulation: app_time_stats: avg=716.05ms min=13.66ms max=3547.12ms count=8
+10-16 12:27:26.458  8563  8563 I Choreographer: Skipped 58 frames!  The application may be doing too much work on its main thread.
+10-16 12:27:26.473  8563  8580 I OpenGLRenderer: Davey! duration=1417ms; Flags=0, FrameTimelineVsyncId=20648, IntendedVsync=387693666661, Vsync=387693666661, InputEventId=0, HandleInputStart=387693953899, AnimationStart=387693955391, PerformTraversalsStart=387694419092, DrawStart=387694506512, FrameDeadline=387710333327, FrameInterval=387693946828, FrameStartTime=16666666, SyncQueued=387694958135, SyncStart=387695107471, IssueDrawCommandsStart=387695130585, SwapBuffers=389029831118, FrameCompleted=389111321446, DequeueBufferDuration=3255, QueueBufferDuration=164495, GpuCompleted=389111321446, SwapBuffersCompleted=389097017464, DisplayPresentTime=0, CommandSubmissionCompleted=389029831118, 
+10-16 12:27:26.799  8563  8619 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:27:26.812  8563  8619 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:27:26.918  8693  8693 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 12:27:26.921  8693  8693 I AndroidRuntime: Using default boot image
+10-16 12:27:26.921  8693  8693 I AndroidRuntime: Leaving lock profiling enabled
+10-16 12:27:27.010  8693  8693 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 12:27:28.033  8693  8693 D AndroidRuntime: Shutting down VM
+10-16 12:27:28.918  4690  4690 V GrantPermissionsViewModel: Logged buttons presented and clicked permissionGroupName=android.permission-group.MICROPHONE uid=10174 selectedPrecision=0 package=app.two.android presentedButtons=44 clickedButton=8 sessionId=5481881784547577403 targetSdk=35
+10-16 12:27:28.919  4690  4690 V GrantPermissionsViewModel: Permission grant result requestId=5481881784547577403 callingUid=10174 callingPackage=app.two.android permission=android.permission.RECORD_AUDIO isImplicit=false result=6
+10-16 12:27:28.932  8563  8563 D CompatibilityChangeReporter: Compat change id reported: 78294732; UID 10174; state: ENABLED
+10-16 12:27:28.957  1586  1586 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=-1 fieldName=null extras=null}, false)
+10-16 12:27:29.082  8563  8587 D EGL_emulation: app_time_stats: avg=237.93ms min=11.93ms max=1674.61ms count=11

@@ -1,0 +1,600 @@
+10-16 12:21:34.622   576  1932 I ActivityManager: Force stopping app.two.android appid=10209 user=0: from pid 3603
+10-16 12:21:34.624   576  1932 I AppsFilter: interaction: PackageSetting{861ee6f com.android.microdroid.empty_payload/10207} -> PackageSetting{132877c app.two.android/10209} BLOCKED
+10-16 12:21:34.627  1171  1171 D CarrierSvcBindHelper: onHandleForceStop: [app.two.android]
+10-16 12:21:34.629   576   931 I AppWidgetServiceImpl: Updating package stopped masked state for uid 10209 package app.two.android isStopped true
+10-16 12:21:34.652   576  2066 I ActivityManager: Force stopping app.two.android appid=10209 user=0: clear data
+10-16 12:21:34.653   576   610 I ActivityManager: Force stopping app.two.android appid=10209 user=-1: clearApplicationUserData
+10-16 12:21:34.712   576   634 I AppsFilter: interaction: PackageSetting{861ee6f com.android.microdroid.empty_payload/10207} -> PackageSetting{132877c app.two.android/10209} BLOCKED
+10-16 12:21:34.713   576   634 I AppsFilter: interaction: PackageSetting{861ee6f com.android.microdroid.empty_payload/10207} -> PackageSetting{132877c app.two.android/10209} BLOCKED
+10-16 12:21:34.718   576   931 I AppWidgetServiceImpl: Updating package stopped masked state for uid 10209 package app.two.android isStopped true
+10-16 12:21:34.719  1171  1171 D CarrierSvcBindHelper: onHandleForceStop: [app.two.android]
+10-16 12:21:34.722   576   947 D ShortcutService: clearing data for package: app.two.android userId0
+10-16 12:21:34.722   576   947 D ShortcutService: handlePackageDataCleared: app.two.android user=0
+10-16 12:21:34.722   576   947 D ShortcutService: rescanPackageIfNeeded 0@app.two.android, forceRescan=true , isNewApp=true
+10-16 12:21:34.722   576   947 D ShortcutService: Package app.two.android has 0 manifest shortcut(s), and 0 share target(s)
+10-16 12:21:34.737  1480  2020 D MediaProvider: Deleted 0 Android/media items belonging to app.two.android on /data/user/0/com.google.android.providers.media.module/databases/external.db
+10-16 12:21:34.749  1516  1989 I Icing   : doRemovePackageData app.two.android
+10-16 12:21:34.754   988   988 D PersistedStoragePackageUninstalledReceiver: Received android.intent.action.PACKAGE_DATA_CLEARED for app.two.android for u0
+10-16 12:21:34.757  1480  2020 D MediaGrants: Removed 0 media_grants for 0 user for [app.two.android, app.two.android]. Reason: Package orphaned
+10-16 12:21:34.878   576  1382 V SplashScreenExceptionList: SplashScreen checking exception for package app.two.android (target sdk:35) -> false
+10-16 12:21:34.881   576  1382 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=app.two.android/.MainActivity} with LAUNCH_MULTIPLE from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+10-16 12:21:34.890   576   611 I ActivityManager: Start proc 3655:app.two.android/u0a209 for next-top-activity {app.two.android/app.two.android.MainActivity}
+10-16 12:21:34.893   985  1053 V WindowManagerShell: Transition requested (#13): android.os.BinderProxy@580454c TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=60609 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@182d995} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{1403aaa app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= falseisLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false topActivityEligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=320 topActivityLetterboxHeight=640 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false cameraCompatTaskInfo=CameraCompatTaskInfo { cameraCompatControlState=hidden freeformCameraCompatMode=inactive}}}, pipTask = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 13 }
+10-16 12:21:34.900   576  1932 I AppsFilter: interaction: PackageSetting{861ee6f com.android.microdroid.empty_payload/10207} -> PackageSetting{8935172 app.two.android/10209} BLOCKED
+10-16 12:21:34.901   576   931 I AppWidgetServiceImpl: Updating package stopped masked state for uid 10209 package app.two.android isStopped false
+10-16 12:21:34.901  1245  1245 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=8, baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity }
+10-16 12:21:34.906   576  1932 D CoreBackPreview: Window{24112be u0 Splash Screen app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@f8ff035, mPriority=0, mIsAnimationCallback=false}
+10-16 12:21:34.919  3655  3655 I app.two.android: Late-enabling -Xcheck:jni
+10-16 12:21:34.937  3655  3655 I app.two.android: Using CollectorTypeCMC GC.
+10-16 12:21:34.938  3655  3655 W app.two.android: Unexpected CPU variant for x86: x86_64.
+10-16 12:21:34.938  3655  3655 W app.two.android: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, goldmont-without-sha-xsaves, tremont, kabylake, default
+10-16 12:21:34.948  3655  3655 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+10-16 12:21:35.101   576   599 V WindowManager: Sent Transition (#13) createdAt=10-16 12:21:34.875 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=60609 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{eb86c2b Task{65b8bc5 #8 type=standard A=10209:app.two.android}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{9bd5888 app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= falseisLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false topActivityEligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=320 topActivityLetterboxHeight=640 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false cameraCompatTaskInfo=CameraCompatTaskInfo { cameraCompatControlState=hidden freeformCameraCompatMode=inactive}}}, pipTask = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 13 }
+10-16 12:21:35.102   576   599 V WindowManager:         {WCT{RemoteToken{eb86c2b Task{65b8bc5 #8 type=standard A=10209:app.two.android}}} m=OPEN f=NONE leash=Surface(name=Task=8)/@0x39e50a5 sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0 taskParent=-1},
+10-16 12:21:35.104  3655  3655 W ziparchive: Unable to open '/data/app/~~h8DupAcn-TvSbCroB57dDg==/app.two.android-GM3rZosvJhSNnvyAPTy1DA==/base.dm': No such file or directory
+10-16 12:21:35.105  3655  3655 W ziparchive: Unable to open '/data/app/~~h8DupAcn-TvSbCroB57dDg==/app.two.android-GM3rZosvJhSNnvyAPTy1DA==/base.dm': No such file or directory
+10-16 12:21:35.233  3655  3655 D nativeloader: Configuring clns-7 for other apk /data/app/~~h8DupAcn-TvSbCroB57dDg==/app.two.android-GM3rZosvJhSNnvyAPTy1DA==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~h8DupAcn-TvSbCroB57dDg==/app.two.android-GM3rZosvJhSNnvyAPTy1DA==/lib/x86_64:/data/app/~~h8DupAcn-TvSbCroB57dDg==/app.two.android-GM3rZosvJhSNnvyAPTy1DA==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/app.two.android
+10-16 12:21:35.234  3655  3655 D CompatChangeReporter: Compat change id reported: 202956589; UID 10209; state: ENABLED
+10-16 12:21:35.245  3655  3655 V GraphicsEnvironment: Currently set values for:
+10-16 12:21:35.245  3655  3655 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+10-16 12:21:35.245  3655  3655 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+10-16 12:21:35.245  3655  3655 V GraphicsEnvironment: Global.Settings values are invalid: number of packages: 0, number of values: 0
+10-16 12:21:35.245  3655  3655 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-16 12:21:35.268  3655  3655 D CompatChangeReporter: Compat change id reported: 279646685; UID 10209; state: ENABLED
+10-16 12:21:35.272  3655  3655 D WM-WrkMgrInitializer: Initializing WorkManager with default configuration.
+10-16 12:21:35.304  3655  3655 D WM-PackageManagerHelper: androidx.work.impl.background.systemjob.SystemJobService enabled
+10-16 12:21:35.304  3655  3655 D WM-Schedulers: Created SystemJobScheduler and enabled SystemJobService
+10-16 12:21:35.316  3655  3673 D WM-ForceStopRunnable: The default process name was not specified.
+10-16 12:21:35.317  3655  3673 D WM-ForceStopRunnable: Performing cleanup operations.
+10-16 12:21:35.320  3655  3673 D CompatChangeReporter: Compat change id reported: 312399441; UID 10209; state: ENABLED
+10-16 12:21:35.406  3655  3655 D CompatChangeReporter: Compat change id reported: 309578419; UID 10209; state: ENABLED
+10-16 12:21:35.421  3655  3679 D CompatChangeReporter: Compat change id reported: 311402873; UID 10209; state: ENABLED
+10-16 12:21:35.422  3655  3679 D CompatChangeReporter: Compat change id reported: 323349338; UID 10209; state: ENABLED
+10-16 12:21:35.423  3655  3679 D WM-SystemJobScheduler: Scheduling work ID d830eed5-e87a-4e41-92c1-b7b0fb789d49Job ID 0
+10-16 12:21:35.428  3655  3679 D WM-GreedyScheduler: Starting tracking for d830eed5-e87a-4e41-92c1-b7b0fb789d49
+10-16 12:21:35.454  3655  3678 D WM-ConstraintTracker: NetworkStateTracker24: initial state = NetworkState(isConnected=true, isValidated=false, isMetered=false, isNotRoaming=true)
+10-16 12:21:35.454  3655  3678 D WM-NetworkStateTracker: Registering network callback
+10-16 12:21:35.455   576   663 D ConnectivityService: requestNetwork for uid/pid:10209/3655 activeRequest: null callbackRequest: 121 [NetworkRequest [ REQUEST id=122, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false
+10-16 12:21:35.459  3655  3678 D WM-PackageManagerHelper: androidx.work.impl.background.systemalarm.RescheduleReceiver enabled
+10-16 12:21:35.460  3655  3678 D WM-GreedyScheduler: Constraints not met: Cancelling work ID WorkGenerationalId(workSpecId=d830eed5-e87a-4e41-92c1-b7b0fb789d49, generation=0)
+10-16 12:21:35.460  3655  3655 W HWUI    : Unknown dataspace 0
+10-16 12:21:35.461   576   897 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=122, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:21:35.461   576   897 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=122, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:21:35.461   576   897 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=122, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:21:35.461   576   897 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=122, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:21:35.462  3655  3680 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 1Mbps, Tx Link speed: 1Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: -1Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 UnderlyingNetworks: Null]
+10-16 12:21:35.634  3655  3655 I WebViewFactory: Loading com.google.android.webview version 124.0.6367.219 (code 636771938)
+10-16 12:21:35.637  3655  3655 V ResourcesManager: The following library key has been added: ResourcesKey{ mHash=fd43f2c1 mResDir=null mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk,/data/resource-cache/com.android.systemui-neutral-uyXv.frro,/data/resource-cache/com.android.systemui-accent-C1R3.frro,/data/resource-cache/com.android.systemui-dynamic-709h.frro] mLibDirs=[/data/app/~~y06LvT5-_t3hZkniHSealw==/com.google.android.webview-RPQ3gRzTDqufexdqLSKKcA==/WebViewGoogle.apk,/data/app/~~1zzHwVj3mXpx2z2HIeb9ag==/com.google.android.trichromelibrary_636771938-dX-x3eLCa8AJIWt9nQzjJQ==/TrichromeLibrary.apk,/system_ext/framework/androidx.window.extensions.jar] mDisplayId=0 mOverrideConfig=v35 mCompatInfo={160dpi always-compat} mLoaders=[]}
+10-16 12:21:35.638  3655  3655 W ziparchive: Unable to open '/data/app/~~1zzHwVj3mXpx2z2HIeb9ag==/com.google.android.trichromelibrary_636771938-dX-x3eLCa8AJIWt9nQzjJQ==/TrichromeLibrary.dm': No such file or directory
+10-16 12:21:35.638  3655  3655 W ziparchive: Unable to open '/data/app/~~1zzHwVj3mXpx2z2HIeb9ag==/com.google.android.trichromelibrary_636771938-dX-x3eLCa8AJIWt9nQzjJQ==/TrichromeLibrary.dm': No such file or directory
+10-16 12:21:35.638  3655  3655 W app.two.android: Entry not found
+10-16 12:21:35.639  3655  3655 D nativeloader: Configuring clns-8 for other apk /data/app/~~1zzHwVj3mXpx2z2HIeb9ag==/com.google.android.trichromelibrary_636771938-dX-x3eLCa8AJIWt9nQzjJQ==/TrichromeLibrary.apk. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~y06LvT5-_t3hZkniHSealw==/com.google.android.webview-RPQ3gRzTDqufexdqLSKKcA==/lib/x86_64:/data/app/~~y06LvT5-_t3hZkniHSealw==/com.google.android.webview-RPQ3gRzTDqufexdqLSKKcA==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~1zzHwVj3mXpx2z2HIeb9ag==/com.google.android.trichromelibrary_636771938-dX-x3eLCa8AJIWt9nQzjJQ==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:21:35.640  3655  3655 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+10-16 12:21:35.642  3655  3655 D nativeloader: Configuring clns-9 for other apk /data/app/~~y06LvT5-_t3hZkniHSealw==/com.google.android.webview-RPQ3gRzTDqufexdqLSKKcA==/WebViewGoogle.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~y06LvT5-_t3hZkniHSealw==/com.google.android.webview-RPQ3gRzTDqufexdqLSKKcA==/lib/x86_64:/data/app/~~y06LvT5-_t3hZkniHSealw==/com.google.android.webview-RPQ3gRzTDqufexdqLSKKcA==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~1zzHwVj3mXpx2z2HIeb9ag==/com.google.android.trichromelibrary_636771938-dX-x3eLCa8AJIWt9nQzjJQ==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{9fd4183 com.android.cts.priv.ctsshim/10194} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{91cff00 com.google.android.youtube/10167} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{10ac339 com.android.internal.display.cutout.emulation.corner/10002} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{26ad7e com.android.internal.display.cutout.emulation.double/10082} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{1b4fe3c com.google.android.googlequicksearchbox/10144} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{6c872df com.google.android.onetimeinitializer/10128} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{dd30b2c com.google.android.ext.shared/10117} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{4b59f5 com.android.virtualmachine.res/10206} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{dfc238a com.android.managedprovisioning.auto_generated_rro_product__/10022} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{deb5dfb com.android.carrierconfig.auto_generated_rro_vendor__/10090} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{efbae18 com.google.android.server.deviceconfig.resources/10203} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{ec4a071 com.android.systemui.emulation.pixel_3_xl/10046} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{b00ee56 com.android.systemui.emulation.pixel_4_xl/10068} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{487ded7 com.android.systemui.emulation.pixel_fold/10020} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{50993c4 com.android.providers.telephony.auto_generated_characteristics_rro/10029} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{db1d2ad com.android.simappdialog.auto_generated_rro_product__/10015} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{1b599e2 com.android.htmlviewer/10116} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{6019173 com.google.android.health.connect.backuprestore/10186} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{aee2830 com.android.systemui.auto_generated_rro_product__/10043} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{deeb7c5 com.google.android.apps.messaging/10138} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{cc5eca9 com.google.android.soundpicker/10163} BLOCKED
+10-16 12:21:35.642   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{217722e com.google.android.marvin.talkbackoverlay/10087} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{659d1cf com.google.android.configupdater/10135} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{745975c com.android.internal.emulation.pixel_3a_xl/10021} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{9e7aa65 com.android.internal.emulation.pixel_6_pro/10067} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{cac833a com.android.internal.emulation.pixel_7_pro/10074} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{e4bbbeb com.android.internal.emulation.pixel_8_pro/10050} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{c42cd48 com.android.internal.emulation.pixel_9_pro/10012} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{ad87e1 com.android.internal.emulation.pixel_3a/10009} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{24f9906 com.android.internal.emulation.pixel_4a/10040} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{d282bc7 com.android.internal.emulation.pixel_6a/10078} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{a5b75f4 com.android.internal.emulation.pixel_7a/10073} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{599c11d com.android.internal.emulation.pixel_8a/10008} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{4bc3f92 com.google.android.overlay.googlewebview/10049} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{200751a com.google.android.apps.safetyhub/10129} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{c71bd63 com.google.android.hotspot2.osulogin/10191} BLOCKED
+10-16 12:21:35.643   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{1b3fd60 com.android.simappdialog/10119} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{9165219 com.android.internal.display.cutout.emulation.hole/10052} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{3dac2de com.android.internal.display.cutout.emulation.tall/10004} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{138ccbf com.android.internal.systemui.navbar.threebutton/10064} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{9fbf84b com.android.camera2/10157} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{e4b8f8c com.android.internal.ranchu.commonoverlay/10054} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{e30f6d5 com.android.systemui.auto_generated_rro_vendor__/10088} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{3cc2eea com.google.android.deskclock/10148} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{73775db com.android.internal.systemui.navbar.twobutton/10000} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{a66cdf4 com.google.android.as/10136} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{ae81878 com.google.android.gm/10161} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{1172b51 com.android.compos.payload/10208} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{7b64fb6 com.android.systemui.emulation.pixel_3/10025} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{1ad94b7 com.android.systemui.emulation.pixel_4/10033} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{6c24424 com.android.systemui.emulation.pixel_5/10071} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{9522b8d com.android.systemui.emulation.pixel_6/10041} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{d4fb142 com.android.systemui.emulation.pixel_7/10034} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{dfcc553 com.android.systemui.emulation.pixel_8/10055} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{9f17e90 com.android.systemui.emulation.pixel_9/10038} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{3c2f389 com.android.printspooler/10126} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{52b9f8e com.google.android.connectivity.resources.goldfish.overlay/10085} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{40463af com.android.dreams.basic/10114} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{497f3bc com.google.android.networkstack.tethering.emulator/10032} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{5e3f45 com.android.providers.settings.auto_generated_rro_product__/10080} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{3c6269a com.google.android.as.oss/10130} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{3d8bcb com.android.traceur.auto_generated_rro_product__/10030} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{4ce8fa8 com.android.internal.emulation.pixel_9_pro_fold/10056} BLOCKED
+10-16 12:21:35.644   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{7b99e5d com.google.android.devicelockcontroller/10200} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{fa88ac1 com.google.android.dialer/10131} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{7501266 com.android.internal.emulation.pixel_3/10027} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{39719a7 com.android.internal.emulation.pixel_4/10058} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{f50fe54 com.android.internal.emulation.pixel_5/10061} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{bf211fd com.android.internal.emulation.pixel_6/10024} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{e3aeef2 com.android.internal.emulation.pixel_7/10017} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{511a943 com.android.internal.emulation.pixel_8/10035} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{6e9abc0 com.android.internal.emulation.pixel_9/10059} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{a52d0f9 com.google.android.captiveportallogin/10121} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{a85083e android.auto_generated_characteristics_rro/10053} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{11b969f com.google.android.appsearch.apk/10193} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{e9dc3ec com.android.musicfx/10093} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{f6683b5 com.google.android.apps.docs/10158} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{6966fc9 com.google.android.apps.maps/10152} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{dc56a4a com.google.android.markup/10150} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{af1c228 com.google.android.rkpdapp/10184} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{2acfdbb com.google.android.contacts/10160} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{29932d8 com.android.server.telecom.auto_generated_rro_product__/10037} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{3c8a631 com.android.phone.auto_generated_characteristics_rro/10018} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{9f7e116 com.google.android.overlay.googleconfig/10079} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{223ba97 com.android.chrome/10145} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{3daa484 com.android.bips.auto_generated_rro_product__/10048} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{450746d com.google.android.apps.customization.pixel/10149} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{308f8a2 com.google.android.tag/10099} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{5df6933 com.google.android.overlay.permissioncontroller/10060} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{5080b41 com.google.android.partnersetup/10132} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{29f84f0 com.google.android.apps.wallpaper.nexus/10159} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{a0cea69 com.google.android.apps.nexuslauncher/10180} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{d21fcee com.android.theme.font.notoserifsource/10047} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{9d658f com.google.android.safetycenter.resources/10197} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{390001c com.android.internal.display.cutout.emulation.waterfall/10026} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{600c425 com.android.internal.systemui.navbar.transparent/10069} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{3b4f9fa com.google.android.connectivity.resources/10187} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{994cbab com.android.providers.contacts.auto_generated_rro_product__/10016} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{bab0208 com.google.android.feedback/10173} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{c9e7da1 com.google.android.printservice.recommendation/10120} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{548bbc6 com.google.android.apps.photos/10168} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{83a63cd com.google.android.calendar/10164} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{d16ef02 com.google.android.documentsui/10096} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{a527787 com.android.systemui.emulation.pixel_3a_xl/10081} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{ef236b4 com.android.systemui.emulation.pixel_6_pro/10042} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{d0452dd com.android.systemui.emulation.pixel_7_pro/10063} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{4ce52 com.android.systemui.emulation.pixel_8_pro/10075} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{e550523 com.android.systemui.emulation.pixel_9_pro/10023} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{dd60a20 com.android.carrierconfig.auto_generated_rro_product__/10006} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{ff83fd9 com.android.devicediagnostics.auto_generated_rro_product__/10065} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{afd7d9e com.android.providers.partnerbookmarks/10113} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{68d07f com.android.wallpaper.livepicker/10097} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{d61a84c com.android.providers.telephony.auto_generated_rro_product__/10036} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{aa40095 com.android.phone.auto_generated_rro_vendor__/10089} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{83fd5aa com.android.imsserviceentitlement/10137} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{1c3f59b com.android.internal.emulation.pixel_9_pro_xl/10011} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{2a07079 com.google.android.healthconnect.controller/10185} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{626fd38 com.android.internal.emulation.pixel_2_xl/10003} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{1111111 com.android.internal.emulation.pixel_3_xl/10083} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{b9da276 com.android.internal.emulation.pixel_4_xl/10039} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{6e25077 com.android.internal.emulation.pixel_fold/10013} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{5eab4e4 com.android.bookmarkprovider/10112} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{464ad4d com.google.android.overlay.pixelconfigcommon/10005} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{2397002 com.android.systemui.accessibility.accessibilitymenu.auto_generated_rro_product__/10044} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{6217d13 com.android.systemui.emulation.pixel_3a/10077} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{103b50 com.android.systemui.emulation.pixel_4a/10045} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{8dbd149 com.android.systemui.emulation.pixel_6a/10076} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{6d28a4e com.android.systemui.emulation.pixel_7a/10084} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{41cd76f com.android.systemui.emulation.pixel_8a/10072} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{d20c8e6 com.google.android.settings.intelligence/10140} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{739ccad com.google.android.projection.gearhead/10134} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{8c5bc7c com.google.android.uwb.resources/10199} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{ac70be2 com.android.cts.ctsshim/10195} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{f873905 com.google.android.wifi.resources/10190} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{ed0fd5a com.google.android.wifi.dialog/10192} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{9c97b8b com.android.wallpaper/10176} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{861ee6f com.android.microdroid.empty_payload/10207} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{6f02468 com.google.android.apps.wallpaper/10177} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{fc76081 com.google.android.odad/10133} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{c119526 com.android.settings.auto_generated_rro_product__/10062} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{524567 com.android.systemui.emulation.pixel_9_pro_xl/10028} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{8d71f14 com.android.companiondevicemanager.auto_generated_characteristics_rro/10057} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{c8883bd com.android.internal.systemui.navbar.gestural/10014} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{f71ddb2 com.google.android.apps.youtube.music/10156} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{eb3d103 com.android.bluetoothmidiservice/10115} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{7911880 com.android.storagemanager.auto_generated_rro_product__/10019} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{c0fce27 com.google.android.cellbroadcastreceiver/10205} BLOCKED
+10-16 12:21:35.645   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{13e9eb9 com.android.phone.auto_generated_rro_product__/10010} BLOCKED
+10-16 12:21:35.646   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{81c22fe com.android.systemui.emulation.pixel_9_pro_fold/10031} BLOCKED
+10-16 12:21:35.646   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{5187a5f android.auto_generated_rro_product__/10001} BLOCKED
+10-16 12:21:35.646   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{116f563 com.google.android.inputmethod.latin/10154} BLOCKED
+10-16 12:21:35.646   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{52f3cac android.auto_generated_rro_vendor__/10086} BLOCKED
+10-16 12:21:35.646   576  1379 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{2a16d75 com.google.android.apps.restore/10139} BLOCKED
+10-16 12:21:35.663  3655  3655 I cr_WVCFactoryProvider: Loaded version=124.0.6367.219 minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 12:21:35.680  3655  3655 D nativeloader: Load /data/app/~~1zzHwVj3mXpx2z2HIeb9ag==/com.google.android.trichromelibrary_636771938-dX-x3eLCa8AJIWt9nQzjJQ==/TrichromeLibrary.apk!/lib/x86_64/libmonochrome_64.so using ns clns-9 from class loader (caller=/data/app/~~y06LvT5-_t3hZkniHSealw==/com.google.android.webview-RPQ3gRzTDqufexdqLSKKcA==/WebViewGoogle.apk): ok
+10-16 12:21:35.681  3655  3655 D nativeloader: Load /system/lib64/libwebviewchromium_plat_support.so using ns clns-9 from class loader (caller=/data/app/~~y06LvT5-_t3hZkniHSealw==/com.google.android.webview-RPQ3gRzTDqufexdqLSKKcA==/WebViewGoogle.apk): ok
+10-16 12:21:35.686  3655  3684 I chromium: [1016/122135.684665:INFO:variations_seed_loader.cc(66)] Failed to open file for reading.: No such file or directory (2)
+10-16 12:21:35.686  3655  3684 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed_new"
+10-16 12:21:35.686  3655  3684 I chromium: [1016/122135.686394:INFO:variations_seed_loader.cc(66)] Failed to open file for reading.: No such file or directory (2)
+10-16 12:21:35.686  3655  3684 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed"
+10-16 12:21:35.687  3655  3685 I cr_VariationsUtils: Requesting new seed from IVariationsSeedServer
+10-16 12:21:35.689  3655  3655 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:21:35.689  3655  3655 I cr_CachingUmaRecorder: Flushed 6 samples from 6 histograms, 0 samples were dropped.
+10-16 12:21:35.691  3655  3655 I cr_CombinedPProvider: #registerProvider() provider:WV.V7@d7481b7 isPolicyCacheEnabled:false policyProvidersSize:0
+10-16 12:21:35.734  3655  3655 I cr_PolicyProvider: #setManagerAndSource() 0
+10-16 12:21:35.746   576   611 I ActivityManager: Start proc 3690:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0i1 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 12:21:35.756  3655  3655 I cr_CombinedPProvider: #linkNativeInternal() 1
+10-16 12:21:35.757  3655  3655 I cr_AppResProvider: #getApplicationRestrictionsFromUserManager() Bundle[EMPTY_PARCEL]
+10-16 12:21:35.757  3655  3655 I cr_PolicyProvider: #notifySettingsAvailable() 0
+10-16 12:21:35.757  3655  3655 I cr_CombinedPProvider: #onSettingsAvailable() 0
+10-16 12:21:35.757  3655  3655 I cr_CombinedPProvider: #flushPolicies()
+10-16 12:21:35.758  3690  3690 I cr_WebViewApkApp: Launched version=124.0.6367.219 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:21:35.762  3690  3690 I cr_ChildProcessService: Creating new ChildProcessService pid=3690
+10-16 12:21:35.825   576  2066 D ConnectivityService: requestNetwork for uid/pid:10209/3655 activeRequest: null callbackRequest: 123 [NetworkRequest [ REQUEST id=124, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false
+10-16 12:21:35.830   576   897 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=124, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:21:35.830   576   897 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=124, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:21:35.830   576   897 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=124, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:21:35.830   576   897 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=124, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:21:35.867  3655  3709 W cr_media: BLUETOOTH_CONNECT permission is missing.
+10-16 12:21:35.867  3655  3709 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+10-16 12:21:35.878  3655  3721 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+10-16 12:21:35.878  3655  3721 I EGL_emulation: Opening libGLESv2_emulation.so
+10-16 12:21:35.882  3690  3704 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:21:35.882  3690  3704 I cr_CachingUmaRecorder: Flushed 2 samples from 2 histograms, 0 samples were dropped.
+10-16 12:21:35.883  3655  3655 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+10-16 12:21:35.883  3655  3655 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 12:21:35.889   576  2066 D CoreBackPreview: Window{475c0b u0 app.two.android/app.two.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@cec7c58, mPriority=0, mIsAnimationCallback=false}
+10-16 12:21:35.908  3690  3704 W chromium: [WARNING:runtime_features.cc(694)] SharedStorage for M118+ cannot be enabled in this configuration. Use --enable-features=SharedStorageAPI,SharedStorageAPIM118 in addition.
+10-16 12:21:35.908  3690  3704 W chromium: [WARNING:runtime_features.cc(730)] AttributionReportingCrossAppWeb cannot be enabled in this configuration. Use --enable-features=ConversionMeasurement,AttributionReportingCrossAppWeb in addition.
+10-16 12:21:35.913  3655  3675 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-16 12:21:35.952  3655  3675 I Gralloc4: mapper 4.x is not supported
+10-16 12:21:35.958  3095  3243 I cr_VariationsUtils: Seed download job already scheduled
+10-16 12:21:36.041  1305  2232 W FontLog : 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@242335041@24.23.35 (190800-0):4)
+10-16 12:21:36.041  1305  2232 W FontLog : No resolver, short-circuit {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} for app.two.android to failure [CONTEXT service_id=132 ]
+10-16 12:21:36.055  1305  1785 W FontLog : 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@242335041@24.23.35 (190800-0):4)
+10-16 12:21:36.055  1305  1785 W FontLog : No resolver, short-circuit {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} for app.two.android to failure [CONTEXT service_id=132 ]
+10-16 12:21:36.156  3655  3662 I app.two.android: Compiler allocated 5174KB to compile void android.view.ViewRootImpl.performTraversals()
+10-16 12:21:36.270  3690  3704 I chromium: [INFO:viewport_data.cc(133)] E2E_Used ViewportFitCover
+10-16 12:21:36.390  3655  3655 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 12:21:36.405  3690  3731 E chromium: [ERROR:tile_manager.cc(982)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:21:36.405  3690  3731 E chromium: [ERROR:tile_manager.cc(982)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:21:36.419  3690  3704 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 4360
+10-16 12:21:36.426  3655  3709 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:21:36.432  3655  3709 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:21:36.432  3655  3709 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 4360
+10-16 12:21:36.432  3655  3709 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:21:36.432  3655  3709 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:21:36.432  3655  3709 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:21:36.433  3655  3709 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:21:36.436  3655  3709 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:21:36.437  3655  3709 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:21:36.437  3655  3709 D AAudioStream: setState(s#1) from 0 to 2
+10-16 12:21:36.437  3655  3709 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#1 ----------------
+10-16 12:21:36.438  3655  3709 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+10-16 12:21:36.438  3655  3709 D AAudioStream: setState(s#1) from 2 to 3
+10-16 12:21:36.440  3655  3733 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:21:36.442  3655  3709 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+10-16 12:21:36.445  3655  3751 D AAudioStream: setState(s#1) from 3 to 4
+10-16 12:21:36.655   576   599 W ziparchive: Unable to open '/data/app/~~h8DupAcn-TvSbCroB57dDg==/app.two.android-GM3rZosvJhSNnvyAPTy1DA==/base.dm': No such file or directory
+10-16 12:21:36.657   576   599 I ActivityTaskManager: Displayed app.two.android/.MainActivity for user 0: +1s783ms
+10-16 12:21:36.671   576  1379 D CoreBackPreview: Window{24112be u0 Splash Screen app.two.android EXITING}: Setting back callback null
+10-16 12:21:36.672   576  1379 W InputManager-JNI: Input channel object '24112be Splash Screen app.two.android (client)' was disposed without first being removed with the input manager!
+10-16 12:21:36.689   576   706 I ImeTracker: app.two.android:349a00f6: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+10-16 12:21:36.689   576   706 I ImeTracker: app.two.android:349a00f6: onCancelled at PHASE_SERVER_SHOULD_HIDE
+10-16 12:21:36.692  1409  1409 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=app.two.android, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+10-16 12:21:36.694   576  1382 W PackageConfigPersister: App-specific configuration not found for packageName: app.two.android and userId: 0
+10-16 12:21:37.405  3150  3264 I cr_CronetLibraryLoader: Cronet version: 126.0.6452.4, arch: x86_64
+10-16 12:21:37.428  3150  3788 I cr_CronetUrlRequestContext: destroyNativeStreamLocked org.chromium.net.impl.CronetBidirectionalStream@6cb8f90
+10-16 12:21:37.430  3150  3316 W BugleNetwork: 	at org.chromium.net.impl.CronetBidirectionalStream.onError(:com.google.android.gms.dynamite_cronetdynamite@242335041@24.23.35 (190800-0):28)
+10-16 12:21:37.430  3150  3316 W BugleNetwork: 	at org.chromium.net.impl.CronetBidirectionalStream.onError(:com.google.android.gms.dynamite_cronetdynamite@242335041@24.23.35 (190800-0):28)
+10-16 12:21:39.236  3655  3733 I HWUI    : Davey! duration=2766ms; Flags=0, FrameTimelineVsyncId=7843, IntendedVsync=62192463596, Vsync=62375796922, InputEventId=0, HandleInputStart=62386464770, AnimationStart=62386465902, PerformTraversalsStart=62387452534, DrawStart=62387499512, FrameDeadline=62409130254, FrameInterval=62385285026, FrameStartTime=16666666, SyncQueued=62388819512, SyncStart=62388890975, IssueDrawCommandsStart=62388917214, SwapBuffers=64893747083, FrameCompleted=64959306593, DequeueBufferDuration=2395, QueueBufferDuration=176920, GpuCompleted=64959306593, SwapBuffersCompleted=64956699266, DisplayPresentTime=0, CommandSubmissionCompleted=64893747083, 
+10-16 12:21:39.353  3655  3709 D AAudio  : AAudioStream_requestStop(s#1) called
+10-16 12:21:39.353  3655  3709 D AAudioStream: setState(s#1) from 4 to 9
+10-16 12:21:39.353  3655  3709 D AudioTrack: stop(16): called with 144000 frames delivered
+10-16 12:21:39.353  3655  3709 D AAudioStream: setState(s#1) from 9 to 10
+10-16 12:21:39.362  3690  3704 I chromium: [INFO:viewport_data.cc(133)] E2E_Used ViewportFitCover
+10-16 12:21:39.420  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:21:39.432  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:21:39.440  3655  3655 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 12:21:39.443  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:21:42.496  1305  1712 W HeterodyneSyncer: 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@242335041@24.23.35 (190800-0):4)
+10-16 12:21:42.503  1305  1712 E HeterodyneSyncTaskChime: 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@242335041@24.23.35 (190800-0):4)
+10-16 12:21:43.324  3655  3675 D EGL_emulation: app_time_stats: avg=3336.53ms min=2575.31ms max=4097.74ms count=2
+10-16 12:21:43.327  3655  3655 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:43.327  3655  3655 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:43.333  3655  3733 I HWUI    : Davey! duration=3867ms; Flags=0, FrameTimelineVsyncId=8075, IntendedVsync=65192463476, Vsync=65192463476, InputEventId=0, HandleInputStart=65192698005, AnimationStart=65192698767, PerformTraversalsStart=65193223131, DrawStart=65193318589, FrameDeadline=65209130142, FrameInterval=65192689330, FrameStartTime=16666666, SyncQueued=65193778257, SyncStart=65193841682, IssueDrawCommandsStart=65193944814, SwapBuffers=69053791335, FrameCompleted=69060172223, DequeueBufferDuration=2696, QueueBufferDuration=189935, GpuCompleted=69060172223, SwapBuffersCompleted=69055653718, DisplayPresentTime=0, CommandSubmissionCompleted=69053791335, 
+10-16 12:21:43.334  3655  3655 I Choreographer: Skipped 229 frames!  The application may be doing too much work on its main thread.
+10-16 12:21:43.395  3655  3828 D ProfileInstaller: Installing profile for app.two.android
+10-16 12:21:44.216  3655  3655 I Choreographer: Skipped 49 frames!  The application may be doing too much work on its main thread.
+10-16 12:21:44.217  3690  3704 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 4360
+10-16 12:21:44.291  3655  3815 I HWUI    : Davey! duration=4664ms; Flags=0, FrameTimelineVsyncId=8097, IntendedVsync=65242463474, Vsync=69059129988, InputEventId=0, HandleInputStart=69064333777, AnimationStart=69064334829, PerformTraversalsStart=69066752441, DrawStart=69067080313, FrameDeadline=69159129984, FrameInterval=69064044577, FrameStartTime=16666666, SyncQueued=69067713486, SyncStart=69120306748, IssueDrawCommandsStart=69120340200, SwapBuffers=69932685887, FrameCompleted=69959646243, DequeueBufferDuration=2534, QueueBufferDuration=135423, GpuCompleted=69959646243, SwapBuffersCompleted=69942838826, DisplayPresentTime=0, CommandSubmissionCompleted=69932685887, 
+10-16 12:21:44.337  3655  3675 D EGL_emulation: app_time_stats: avg=337.65ms min=65.75ms max=822.54ms count=3
+10-16 12:21:44.361  3655  3709 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+10-16 12:21:44.362  3655  3709 D AAudioStream: setState(s#1) from 10 to 3
+10-16 12:21:44.362  3655  3709 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+10-16 12:21:44.364  3655  3815 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:21:44.375  3655  3751 D AAudioStream: setState(s#1) from 3 to 4
+10-16 12:21:45.307   576   634 I AppsFilter: interaction: PackageSetting{a30c032 app.two.android/10209} -> PackageSetting{8bf08e0 com.google.android.apps.messaging/10138} BLOCKED
+10-16 12:21:45.307   576   634 I AppsFilter: interaction: PackageSetting{861ee6f com.android.microdroid.empty_payload/10207} -> PackageSetting{a30c032 app.two.android/10209} BLOCKED
+10-16 12:21:45.340  1171  1171 D CarrierSvcBindHelper: onPackageModified: app.two.android
+10-16 12:21:45.362  1171  1535 D ImsResolver: maybeAddedImsService, packageName: app.two.android
+10-16 12:21:45.368   576   947 D ShortcutService: changing package: app.two.android userId0
+10-16 12:21:45.368   576   947 D ShortcutService: handlePackageChanged: app.two.android user=0
+10-16 12:21:45.368   576   947 D ShortcutService: rescanPackageIfNeeded 0@app.two.android, forceRescan=true , isNewApp=true
+10-16 12:21:45.368   576   947 D ShortcutService: Package app.two.android has 0 manifest shortcut(s), and 0 share target(s)
+10-16 12:21:45.391  1477  1477 I AiAiEcho: AppFetcherImpl onPackageChanged app.two.android.
+10-16 12:21:45.391  1477  2209 I AiAiEcho: AppIndexer Package:[app.two.android] UserProfile:[0] Enabled:[true].
+10-16 12:21:45.391  1477  2209 I AiAiEcho: AppFetcherImplV2 updateApps package:[app.two.android], userId:[0], reason:[package is updated.].
+10-16 12:21:45.441  1245  1287 D PackageUpdatedTask: Package updated: mOp=UPDATE packages=[app.two.android]
+10-16 12:21:45.570  3655  3675 D EGL_emulation: app_time_stats: avg=1232.47ms min=1232.47ms max=1232.47ms count=1
+10-16 12:21:45.573  3655  3655 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:45.573  3655  3655 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:45.574  3655  3655 I Choreographer: Skipped 72 frames!  The application may be doing too much work on its main thread.
+10-16 12:21:45.593  3655  3733 I HWUI    : Davey! duration=2065ms; Flags=0, FrameTimelineVsyncId=8135, IntendedVsync=69125796652, Vsync=69942463286, InputEventId=0, HandleInputStart=69946389120, AnimationStart=69946390021, PerformTraversalsStart=69949032125, DrawStart=69949083552, FrameDeadline=70109129946, FrameInterval=69945934681, FrameStartTime=16666666, SyncQueued=69949661450, SyncStart=70067743146, IssueDrawCommandsStart=70067773953, SwapBuffers=71299525973, FrameCompleted=71309772058, DequeueBufferDuration=3887, QueueBufferDuration=128650, GpuCompleted=71309772058, SwapBuffersCompleted=71300159867, DisplayPresentTime=0, CommandSubmissionCompleted=71299525973, 
+10-16 12:21:45.693  3655  3733 I HWUI    : Davey! duration=1301ms; Flags=0, FrameTimelineVsyncId=8180, IntendedVsync=70092463280, Vsync=71292463232, InputEventId=0, HandleInputStart=71304644551, AnimationStart=71304645564, PerformTraversalsStart=71307465860, DrawStart=71307620308, FrameDeadline=71359129896, FrameInterval=71304411817, FrameStartTime=16666666, SyncQueued=71308292042, SyncStart=71323917801, IssueDrawCommandsStart=71324360188, SwapBuffers=71406592045, FrameCompleted=71409617010, DequeueBufferDuration=2955, QueueBufferDuration=191147, GpuCompleted=71409617010, SwapBuffersCompleted=71407169724, DisplayPresentTime=0, CommandSubmissionCompleted=71406592045, 
+10-16 12:21:45.789  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:21:46.089  3655  3665 W app.two.android: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~y06LvT5-_t3hZkniHSealw==/com.google.android.webview-RPQ3gRzTDqufexdqLSKKcA==/WebViewGoogle.apk' with 2 weak references
+10-16 12:21:47.742  3655  3675 D EGL_emulation: app_time_stats: avg=178.78ms min=11.19ms max=1892.77ms count=12
+10-16 12:21:47.744  3655  3655 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:47.744  3655  3655 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:47.745  3655  3655 I Choreographer: Skipped 112 frames!  The application may be doing too much work on its main thread.
+10-16 12:21:47.797  3655  3815 I HWUI    : Davey! duration=1903ms; Flags=0, FrameTimelineVsyncId=8274, IntendedVsync=71559129888, Vsync=71559129888, InputEventId=0, HandleInputStart=71565698670, AnimationStart=71565699161, PerformTraversalsStart=71566289113, DrawStart=71566325010, FrameDeadline=71625796552, FrameInterval=71565693471, FrameStartTime=16666666, SyncQueued=71566707353, SyncStart=71579923172, IssueDrawCommandsStart=71579991810, SwapBuffers=72949891776, FrameCompleted=73476069625, DequeueBufferDuration=2885, QueueBufferDuration=116878, GpuCompleted=73476069625, SwapBuffersCompleted=73472681280, DisplayPresentTime=0, CommandSubmissionCompleted=72949891776, 
+10-16 12:21:48.239  3655  3733 I HWUI    : Davey! duration=2365ms; Flags=0, FrameTimelineVsyncId=8290, IntendedVsync=71592463220, Vsync=73459129812, InputEventId=0, HandleInputStart=73475664558, AnimationStart=73475665761, PerformTraversalsStart=73526508033, DrawStart=73526568436, FrameDeadline=73575796474, FrameInterval=73475406387, FrameStartTime=16666666, SyncQueued=73527041620, SyncStart=73528090027, IssueDrawCommandsStart=73528117799, SwapBuffers=73950036465, FrameCompleted=73959334596, DequeueBufferDuration=2695, QueueBufferDuration=170789, GpuCompleted=73959334596, SwapBuffersCompleted=73950641165, DisplayPresentTime=0, CommandSubmissionCompleted=73950036465, 
+10-16 12:21:48.261  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:21:48.262  3690  3704 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:21:48.608  3867  3867 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 12:21:48.613  3867  3867 I AndroidRuntime: Using default boot image
+10-16 12:21:48.613  3867  3867 I AndroidRuntime: Leaving lock profiling enabled
+10-16 12:21:48.732  3867  3867 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 12:21:48.756  3655  3675 D EGL_emulation: app_time_stats: avg=168.18ms min=17.21ms max=422.67ms count=6
+10-16 12:21:48.757  3655  3709 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:21:48.806  3867  3867 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 12:21:48.896  3655  3680 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 2Mbps, Tx Link speed: 2Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: -1Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 UnderlyingNetworks: Null]
+10-16 12:21:49.480  3655  3655 I Choreographer: Skipped 42 frames!  The application may be doing too much work on its main thread.
+10-16 12:21:49.488  3655  3733 I HWUI    : Davey! duration=732ms; Flags=0, FrameTimelineVsyncId=8351, IntendedVsync=74192463116, Vsync=74192463116, InputEventId=0, HandleInputStart=74202218487, AnimationStart=74202219068, PerformTraversalsStart=74204536698, DrawStart=74204615946, FrameDeadline=74509129770, FrameInterval=74202210983, FrameStartTime=16666666, SyncQueued=74205076596, SyncStart=74486763383, IssueDrawCommandsStart=74487298650, SwapBuffers=75194483512, FrameCompleted=75206756300, DequeueBufferDuration=3106, QueueBufferDuration=696040, GpuCompleted=75206660441, SwapBuffersCompleted=75206756300, DisplayPresentTime=0, CommandSubmissionCompleted=75194483512, 
+10-16 12:21:49.504  3655  3709 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:21:49.529   985  1053 V WindowManagerShell: Transition requested (#14): android.os.BinderProxy@2bde757 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=2 lastActiveTime=75250 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@ba23244} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{3f84f2d com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=true appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= falseisLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false topActivityEligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=320 topActivityLetterboxHeight=640 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false cameraCompatTaskInfo=CameraCompatTaskInfo { cameraCompatControlState=hidden freeformCameraCompatMode=inactive}}}, pipTask = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 14 }
+10-16 12:21:49.567  3655  3733 I HWUI    : Davey! duration=737ms; Flags=0, FrameTimelineVsyncId=8374, IntendedVsync=74509129770, Vsync=75209129742, InputEventId=0, HandleInputStart=75210346983, AnimationStart=75210347985, PerformTraversalsStart=75213912741, DrawStart=75213949529, FrameDeadline=75259129740, FrameInterval=75210127001, FrameStartTime=16666666, SyncQueued=75214408637, SyncStart=75232486514, IssueDrawCommandsStart=75232725431, SwapBuffers=75260346296, FrameCompleted=75264783592, DequeueBufferDuration=2394, QueueBufferDuration=1557649, GpuCompleted=75264700547, SwapBuffersCompleted=75264783592, DisplayPresentTime=0, CommandSubmissionCompleted=75260346296, 
+10-16 12:21:49.770  3655  3675 D EGL_emulation: app_time_stats: avg=100.29ms min=25.65ms max=720.05ms count=10
+10-16 12:21:49.896   576   599 V WindowManager: Sent Transition (#14) createdAt=10-16 12:21:49.514 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=2 lastActiveTime=75250 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{eb86c2b Task{65b8bc5 #8 type=standard A=10209:app.two.android}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{f7aa298 com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=true appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= falseisLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false topActivityEligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=320 topActivityLetterboxHeight=640 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false cameraCompatTaskInfo=CameraCompatTaskInfo { cameraCompatControlState=hidden freeformCameraCompatMode=inactive}}}, pipTask = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 14 }
+10-16 12:21:50.772  3655  3675 D EGL_emulation: app_time_stats: avg=56.66ms min=17.24ms max=212.17ms count=16
+10-16 12:21:51.720  3867  3867 D AndroidRuntime: Shutting down VM
+10-16 12:21:51.786  3655  3675 D EGL_emulation: app_time_stats: avg=18.18ms min=13.05ms max=31.78ms count=49
+10-16 12:21:51.786  3655  3655 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:51.786  3655  3655 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:52.085  1305  1785 W GLSUser : 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@242335041@24.23.35 (190800-0):4)
+10-16 12:21:52.790  3655  3675 D EGL_emulation: app_time_stats: avg=21.12ms min=14.91ms max=36.29ms count=43
+10-16 12:21:52.797   988   988 I GrantPermissionsViewModel: Logged buttons presented and clicked permissionGroupName=android.permission-group.MICROPHONE uid=10209 selectedPrecision=0 package=app.two.android presentedButtons=44 clickedButton=4 isPermissionRationaleShown=false sessionId=-8342036786519427936 targetSdk=35
+10-16 12:21:52.902   576   706 I ImeTracker: app.two.android:7f7f51bb: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+10-16 12:21:52.902   576   706 I ImeTracker: app.two.android:7f7f51bb: onCancelled at PHASE_SERVER_SHOULD_HIDE
+10-16 12:21:52.905  1409  1409 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=app.two.android, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+10-16 12:21:52.908   576  1924 W PackageConfigPersister: App-specific configuration not found for packageName: app.two.android and userId: 0
+10-16 12:21:52.932  3655  3709 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:21:53.193  3690  3930 I chromium: [INFO:peer_connection_dependency_factory.cc(708)] Running WebRTC with a combined Network and Worker thread.
+10-16 12:21:53.223   576  1382 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:21:53.301  3690  3930 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:21:53.326  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79056575, interval (us) = 39
+10-16 12:21:53.339  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun1.l.google.com., errorcode: -105
+10-16 12:21:53.339  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28b2000:0:1:0:host:Net[any:0.0.0.x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:21:53.342  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun.l.google.com., errorcode: -105
+10-16 12:21:53.342  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun1.l.google.com., errorcode: -105
+10-16 12:21:53.342  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28b2000:0:1:0:host:Net[any:0.0.0.x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:21:53.342  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79072589, interval (us) = 13
+10-16 12:21:53.343  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28ac600:0:1:0:host:Net[any:0:0:0:x:x:x:x:x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:21:53.345  3655  3713 E chromium: [ERROR:socket_manager.cc(141)] Failed to resolve address for stun.l.google.com., errorcode: -105
+10-16 12:21:53.345  3690  3931 W chromium: [WARNING:stun_port.cc(460)] Port[28ac600:0:1:0:host:Net[any:0:0:0:x:x:x:x:x/0:Wildcard:id=0]]: StunPort: stun host lookup received error -1
+10-16 12:21:53.360  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79090304, interval (us) = 13
+10-16 12:21:53.492  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79222725, interval (us) = 109
+10-16 12:21:53.494  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79224341, interval (us) = 114
+10-16 12:21:53.497  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79227763, interval (us) = 188
+10-16 12:21:53.501  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79231212, interval (us) = 163
+10-16 12:21:53.506  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79236156, interval (us) = 715
+10-16 12:21:53.516  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79246800, interval (us) = 204
+10-16 12:21:53.521  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79251820, interval (us) = 205
+10-16 12:21:53.525  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79255102, interval (us) = 217
+10-16 12:21:53.536  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79266706, interval (us) = 164
+10-16 12:21:53.568  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79298464, interval (us) = 179
+10-16 12:21:53.584  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79314721, interval (us) = 192
+10-16 12:21:53.600  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79330624, interval (us) = 200
+10-16 12:21:53.616  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79346606, interval (us) = 204
+10-16 12:21:53.648  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79378490, interval (us) = 263
+10-16 12:21:53.664  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79394499, interval (us) = 226
+10-16 12:21:53.681  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79411507, interval (us) = 233
+10-16 12:21:53.696  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79426483, interval (us) = 250
+10-16 12:21:53.729  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79458916, interval (us) = 276
+10-16 12:21:53.747  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79477479, interval (us) = 218
+10-16 12:21:53.783  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79513473, interval (us) = 160
+10-16 12:21:53.803  3655  3675 D EGL_emulation: app_time_stats: avg=33.28ms min=15.20ms max=145.20ms count=29
+10-16 12:21:53.809  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79539541, interval (us) = 283
+10-16 12:21:53.824  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79554530, interval (us) = 230
+10-16 12:21:53.840  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79570430, interval (us) = 169
+10-16 12:21:53.889  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79619788, interval (us) = 162
+10-16 12:21:53.906  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79636540, interval (us) = 139
+10-16 12:21:53.920  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79650864, interval (us) = 165
+10-16 12:21:53.936  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79666805, interval (us) = 304
+10-16 12:21:53.971  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79701835, interval (us) = 216
+10-16 12:21:53.985  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79715300, interval (us) = 168
+10-16 12:21:54.003  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79732950, interval (us) = 152
+10-16 12:21:54.064  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79794408, interval (us) = 762
+10-16 12:21:54.067  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79797297, interval (us) = 112
+10-16 12:21:54.083  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79813331, interval (us) = 195
+10-16 12:21:54.096  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79826876, interval (us) = 531
+10-16 12:21:54.129  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79859220, interval (us) = 140
+10-16 12:21:54.144  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79874673, interval (us) = 237
+10-16 12:21:54.160  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79890515, interval (us) = 195
+10-16 12:21:54.176  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79906690, interval (us) = 134
+10-16 12:21:54.208  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79938881, interval (us) = 176
+10-16 12:21:54.227  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79957214, interval (us) = 255
+10-16 12:21:54.241  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79971686, interval (us) = 380
+10-16 12:21:54.265  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 79995323, interval (us) = 141
+10-16 12:21:54.290  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80019959, interval (us) = 543
+10-16 12:21:54.304  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80034705, interval (us) = 130
+10-16 12:21:54.320  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80050882, interval (us) = 129
+10-16 12:21:54.337  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80067429, interval (us) = 901
+10-16 12:21:54.369  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80099183, interval (us) = 204
+10-16 12:21:54.385  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80114967, interval (us) = 517
+10-16 12:21:54.401  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80131697, interval (us) = 857
+10-16 12:21:54.417  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80147746, interval (us) = 123
+10-16 12:21:54.471  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80201348, interval (us) = 87
+10-16 12:21:54.482  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80212842, interval (us) = 741
+10-16 12:21:54.501  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80231884, interval (us) = 159
+10-16 12:21:54.528  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80258711, interval (us) = 94
+10-16 12:21:54.545  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80275268, interval (us) = 95
+10-16 12:21:54.565  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80295262, interval (us) = 119
+10-16 12:21:54.576  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80306894, interval (us) = 108
+10-16 12:21:54.609  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80339123, interval (us) = 142
+10-16 12:21:54.625  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80355067, interval (us) = 559
+10-16 12:21:54.641  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80370965, interval (us) = 132
+10-16 12:21:54.657  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80387662, interval (us) = 227
+10-16 12:21:54.688  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80418443, interval (us) = 109
+10-16 12:21:54.704  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80434615, interval (us) = 210
+10-16 12:21:54.737  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80467378, interval (us) = 79
+10-16 12:21:54.769  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80499206, interval (us) = 167
+10-16 12:21:54.788  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80518662, interval (us) = 629
+10-16 12:21:54.800  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80530532, interval (us) = 85
+10-16 12:21:54.807  3655  3675 D EGL_emulation: app_time_stats: avg=17.51ms min=13.08ms max=24.81ms count=52
+10-16 12:21:54.816  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80546864, interval (us) = 121
+10-16 12:21:54.849  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80579709, interval (us) = 127
+10-16 12:21:54.866  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80596228, interval (us) = 282
+10-16 12:21:54.881  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80611325, interval (us) = 165
+10-16 12:21:54.896  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80626506, interval (us) = 98
+10-16 12:21:54.929  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80658914, interval (us) = 113
+10-16 12:21:54.946  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80676896, interval (us) = 106
+10-16 12:21:54.960  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80690630, interval (us) = 112
+10-16 12:21:54.978  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80708735, interval (us) = 128
+10-16 12:21:55.025  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80754927, interval (us) = 370
+10-16 12:21:55.040  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80770695, interval (us) = 149
+10-16 12:21:55.058  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80788268, interval (us) = 724
+10-16 12:21:55.090  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80820229, interval (us) = 404
+10-16 12:21:55.108  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80837997, interval (us) = 104
+10-16 12:21:55.121  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80851264, interval (us) = 89
+10-16 12:21:55.136  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80866614, interval (us) = 172
+10-16 12:21:55.168  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80898805, interval (us) = 119
+10-16 12:21:55.186  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80915976, interval (us) = 109
+10-16 12:21:55.205  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80935660, interval (us) = 102
+10-16 12:21:55.218  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80948357, interval (us) = 757
+10-16 12:21:55.264  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80994457, interval (us) = 69
+10-16 12:21:55.281  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81011015, interval (us) = 116
+10-16 12:21:55.297  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81026931, interval (us) = 452
+10-16 12:21:55.329  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81059584, interval (us) = 103
+10-16 12:21:55.362  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81092472, interval (us) = 71
+10-16 12:21:55.383  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81113174, interval (us) = 86
+10-16 12:21:55.393   988   997 W ssioncontroller: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~h8DupAcn-TvSbCroB57dDg==/app.two.android-GM3rZosvJhSNnvyAPTy1DA==/base.apk' with 1 weak references
+10-16 12:21:55.408  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81138852, interval (us) = 76
+10-16 12:21:55.424  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81154597, interval (us) = 107
+10-16 12:21:55.444  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81174581, interval (us) = 59
+10-16 12:21:55.457  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81187583, interval (us) = 88
+10-16 12:21:55.489  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81218903, interval (us) = 78
+10-16 12:21:55.504  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81234489, interval (us) = 76
+10-16 12:21:55.522  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81251962, interval (us) = 149
+10-16 12:21:55.537  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81267173, interval (us) = 94
+10-16 12:21:55.568  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81298683, interval (us) = 82
+10-16 12:21:55.584  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81314561, interval (us) = 112
+10-16 12:21:55.602  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81332344, interval (us) = 201
+10-16 12:21:55.616  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81346706, interval (us) = 216
+10-16 12:21:55.649  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81379396, interval (us) = 104
+10-16 12:21:55.665  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81395153, interval (us) = 188
+10-16 12:21:55.683  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81413750, interval (us) = 100
+10-16 12:21:55.701  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81431167, interval (us) = 237
+10-16 12:21:55.729  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81459724, interval (us) = 133
+10-16 12:21:55.745  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81475261, interval (us) = 159
+10-16 12:21:55.761  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81490993, interval (us) = 126
+10-16 12:21:55.776  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81506557, interval (us) = 139
+10-16 12:21:55.808  3655  3675 D EGL_emulation: app_time_stats: avg=17.90ms min=14.48ms max=25.54ms count=51
+10-16 12:21:55.808  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81538796, interval (us) = 110
+10-16 12:21:55.824  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81554465, interval (us) = 131
+10-16 12:21:55.840  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81570650, interval (us) = 121
+10-16 12:21:55.856  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81586846, interval (us) = 147
+10-16 12:21:55.888  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81618600, interval (us) = 307
+10-16 12:21:55.904  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81634725, interval (us) = 124
+10-16 12:21:55.922  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81651913, interval (us) = 125
+10-16 12:21:55.936  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81666635, interval (us) = 136
+10-16 12:21:55.968  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81698698, interval (us) = 198
+10-16 12:21:55.986  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81716178, interval (us) = 163
+10-16 12:21:56.000  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81730431, interval (us) = 133
+10-16 12:21:56.016  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81746444, interval (us) = 123
+10-16 12:21:56.048  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81778604, interval (us) = 151
+10-16 12:21:56.066  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81796792, interval (us) = 139
+10-16 12:21:56.108  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81838254, interval (us) = 222
+10-16 12:21:56.129  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81859427, interval (us) = 127
+10-16 12:21:56.145  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81874845, interval (us) = 154
+10-16 12:21:56.162  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81892392, interval (us) = 118
+10-16 12:21:56.177  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81906995, interval (us) = 662
+10-16 12:21:56.208  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81938537, interval (us) = 177
+10-16 12:21:56.224  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81954649, interval (us) = 155
+10-16 12:21:56.241  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81970977, interval (us) = 299
+10-16 12:21:56.258  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 81988172, interval (us) = 812
+10-16 12:21:56.290  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82020656, interval (us) = 143
+10-16 12:21:56.304  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82034678, interval (us) = 223
+10-16 12:21:56.321  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82051017, interval (us) = 183
+10-16 12:21:56.336  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82066630, interval (us) = 150
+10-16 12:21:56.372  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82102022, interval (us) = 168
+10-16 12:21:56.384  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82114616, interval (us) = 209
+10-16 12:21:56.401  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82131773, interval (us) = 136
+10-16 12:21:56.416  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82146594, interval (us) = 202
+10-16 12:21:56.450  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82180861, interval (us) = 561
+10-16 12:21:56.465  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82195170, interval (us) = 192
+10-16 12:21:56.481  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82211806, interval (us) = 155
+10-16 12:21:56.498  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82228326, interval (us) = 170
+10-16 12:21:56.528  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82258834, interval (us) = 163
+10-16 12:21:56.545  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82275205, interval (us) = 151
+10-16 12:21:56.562  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82292841, interval (us) = 215
+10-16 12:21:56.576  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82306609, interval (us) = 155
+10-16 12:21:56.608  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82338544, interval (us) = 168
+10-16 12:21:56.624  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82354640, interval (us) = 142
+10-16 12:21:56.653  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82383303, interval (us) = 246
+10-16 12:21:56.656  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82386819, interval (us) = 147
+10-16 12:21:56.689  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82419534, interval (us) = 239
+10-16 12:21:56.705  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82435858, interval (us) = 171
+10-16 12:21:56.721  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82451347, interval (us) = 245
+10-16 12:21:56.736  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82466789, interval (us) = 170
+10-16 12:21:56.784  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82514895, interval (us) = 143
+10-16 12:21:56.800  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82530694, interval (us) = 189
+10-16 12:21:56.815  3655  3675 D EGL_emulation: app_time_stats: avg=18.17ms min=15.01ms max=31.66ms count=50
+10-16 12:21:56.821  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82551772, interval (us) = 153
+10-16 12:21:56.866  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82596393, interval (us) = 116
+10-16 12:21:56.899  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82629881, interval (us) = 11
+10-16 12:21:56.929  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82659856, interval (us) = 35
+10-16 12:21:56.944  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82674493, interval (us) = 34
+10-16 12:21:56.960  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82690471, interval (us) = 37
+10-16 12:21:56.976  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82706750, interval (us) = 55
+10-16 12:21:57.010  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82740552, interval (us) = 129
+10-16 12:21:57.024  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82754542, interval (us) = 51
+10-16 12:21:57.040  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82770594, interval (us) = 51
+10-16 12:21:57.056  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82786459, interval (us) = 49
+10-16 12:21:57.088  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82818471, interval (us) = 82
+10-16 12:21:57.104  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82834438, interval (us) = 77
+10-16 12:21:57.126  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82856445, interval (us) = 76
+10-16 12:21:57.136  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82866458, interval (us) = 70
+10-16 12:21:57.170  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82900548, interval (us) = 93
+10-16 12:21:57.186  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82916546, interval (us) = 90
+10-16 12:21:57.202  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82932626, interval (us) = 89
+10-16 12:21:57.248  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82978527, interval (us) = 73
+10-16 12:21:57.264  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 82994529, interval (us) = 74
+10-16 12:21:57.280  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 83010551, interval (us) = 61
+10-16 12:21:57.296  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 83026515, interval (us) = 81
+10-16 12:21:57.328  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 83058757, interval (us) = 86
+10-16 12:21:57.346  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 83076228, interval (us) = 95
+10-16 12:21:57.360  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 83090418, interval (us) = 93
+10-16 12:21:57.376  3690  3928 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 83106635, interval (us) = 120
+10-16 12:21:57.824  3655  3675 D EGL_emulation: app_time_stats: avg=29.72ms min=13.35ms max=183.08ms count=32
+10-16 12:21:58.828  3655  3675 D EGL_emulation: app_time_stats: avg=17.54ms min=13.19ms max=23.36ms count=52
+10-16 12:21:59.822  3655  3655 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:59.822  3655  3655 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-CNlclVJ1.js (10)
+10-16 12:21:59.843  3655  3675 D EGL_emulation: app_time_stats: avg=17.23ms min=14.59ms max=21.47ms count=53
+10-16 12:22:00.851  3655  3675 D EGL_emulation: app_time_stats: avg=14.81ms min=9.45ms max=30.19ms count=55
+10-16 12:22:01.858  3655  3675 D EGL_emulation: app_time_stats: avg=11.93ms min=9.23ms max=23.97ms count=59
