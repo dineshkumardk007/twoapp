@@ -1,0 +1,40 @@
+10-16 12:04:26.490  1190  3434 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 12:04:26.961  1451  1466 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:27.932   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{7fd62b1 com.google.android.apps.messaging/10136} BLOCKED
+10-16 12:04:28.380  2673  2914 D AAudio  : AAudioStream_requestStop(s#1) called
+10-16 12:04:28.380  2673  2914 D AAudioStream: setState(s#1) from 4 to 9
+10-16 12:04:28.380  2673  2914 D AudioTrack: stop(15): called with 1447680 frames delivered
+10-16 12:04:28.381  2673  2914 D AAudioStream: setState(s#1) from 9 to 10
+10-16 12:04:30.742   580  1067 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.inputmethod.latin; callingUid: 10151; uidState: IMPB; uidBFSL: n/a; intent: Intent { cmp=com.google.android.inputmethod.latin/com.google.android.apps.inputmethod.libs.dataservice.superpacks.SuperpacksForegroundTaskService }; code:CURRENT_INPUT_METHOD; tempAllowListReason:<null>; targetSdkVersion:34; callerTargetSdkVersion:34; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:04:30.767   580  2222 W ForegroundServiceTypeLoggerModule: Foreground service start for UID: 10151 does not have any types
+10-16 12:04:30.929   580  1309 W ForegroundServiceTypeLoggerModule: FGS stop call for: 10151 has no types!
+10-16 12:04:31.686   580  2224 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.inputmethod.latin; callingUid: 10151; uidState: IMPB; uidBFSL: n/a; intent: Intent { cmp=com.google.android.inputmethod.latin/com.google.android.apps.inputmethod.libs.dataservice.superpacks.SuperpacksForegroundTaskService }; code:CURRENT_INPUT_METHOD; tempAllowListReason:<null>; targetSdkVersion:34; callerTargetSdkVersion:34; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:04:31.709   580  1067 W ForegroundServiceTypeLoggerModule: Foreground service start for UID: 10151 does not have any types
+10-16 12:04:33.385  2673  2914 D AAudio  : AAudioStream_requestStop(s#1) called
+10-16 12:04:33.385  2673  2914 D AAudio  : AAudioStream_close(s#1) called ---------------
+10-16 12:04:33.385  2673  2914 D AAudioStream: setState(s#1) from 10 to 11
+10-16 12:04:33.394  2673  2914 D AAudioStream: setState(s#1) from 11 to 12
+10-16 12:04:33.395  2673  2914 D AAudioStream: ~AudioStream(s#1) mPlayerBase strongCount = 2
+10-16 12:04:33.395  2673  2914 D AAudio  : AAudioStream_close(s#1) returned 0 ---------
+10-16 12:04:34.979  2242  2329 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:34.979  2242  2329 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:35.636   580  2222 W ForegroundServiceTypeLoggerModule: FGS stop call for: 10151 has no types!
+10-16 12:04:38.103  1451  1466 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:39.330  2242  2392 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:39.331  2242  2392 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:41.294  2242  2392 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:41.295  2242  2392 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:47.730  3525  3632 D dasx    : Starting download: https://c.tenor.com/L-cr_zEMUKIAAAAk/tenor.gif
+10-16 12:04:47.730  3525  3632 V dasx    : Is http uri, downloading (uri: https://c.tenor.com/L-cr_zEMUKIAAAAk/tenor.gif)
+10-16 12:04:53.890  1507  4401 W libc    : Access denied finding property "ro.hardware.chipname"
+10-16 12:04:53.968  2242  4393 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:53.968  2242  4393 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:54.497  1507  1551 W gle.android.gms: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:55.200  2242  2329 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:55.202  2242  2329 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:58.400  1190  1207 W ndroid.settings: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:05:03.292   580   689 D ActivityManager: freezing 3463 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:05:07.104   580   681 D ActivityManager: sync unfroze 3463 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 for 6
+10-16 12:05:20.530   580   689 D ActivityManager: freezing 3463 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:05:54.491  2242  4489 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:05:54.492  2242  4489 W libc    : Access denied finding property "service.adb.tls.port"

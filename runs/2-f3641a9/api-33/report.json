@@ -1,0 +1,223 @@
+{
+  "device": {
+    "android": "13",
+    "sdk": "33",
+    "webview": "com.google.android.webview, 109.0.5414.123"
+  },
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "",
+            "pidAfter": "3439"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "33.0s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        }
+      ],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 20s waiting for Android's microphone question",
+      "log": "first-call-while-priya-is-offline-allowing-the-mic.log"
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the call service runs in the foreground",
+          "ok": false
+        },
+        {
+          "name": "after 45 seconds it says No answer",
+          "ok": false,
+          "detail": "END-TO-END ENCRYPTED Y P Partner Not online right now They will see that you called Cancel"
+        },
+        {
+          "name": "the call service has stopped",
+          "ok": true
+        },
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3439",
+            "pidAfter": "3439"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "at": "57.7s",
+          "what": "tap Call",
+          "value": "pressed Call"
+        }
+      ],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "log": "call-while-priya-is-offline-rings-out.log"
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3439",
+            "pidAfter": "3439"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "log": "call-cancelled-straight-away-ten-times.log"
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3439",
+            "pidAfter": "3439"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "log": "call-that-priya-answers-with-the-speaker-on-and-of.log"
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3439",
+            "pidAfter": "3439"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "log": "priya-calls-and-you-answer.log"
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3439",
+            "pidAfter": "3439"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "log": "screen-turned-off-in-the-middle-of-a-call.log"
+    },
+    {
+      "title": "Choosing a photo opens the picker",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3439",
+            "pidAfter": "3439"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "log": "choosing-a-photo-opens-the-picker.log"
+    },
+    {
+      "title": "Taking a photo opens the camera",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3439",
+            "pidAfter": "3439"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "log": "taking-a-photo-opens-the-camera.log"
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "3439",
+            "pidAfter": "3439"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [],
+      "info": {
+        "pageErrors": []
+      },
+      "restartExpected": true,
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "log": "call-when-you-don-t-allow-the-microphone.log"
+    }
+  ]
+}

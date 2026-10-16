@@ -1,0 +1,128 @@
+10-16 12:05:05.719  6237  6237 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:05.749  3439  3542 D EGL_emulation: app_time_stats: avg=18200.84ms min=18200.84ms max=18200.84ms count=1
+10-16 12:05:05.812  6257  6257 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:05.891  6276  6276 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:05.946  6295  6295 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:07.128  3439  3627 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:05:07.171  3439  3627 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:05:07.239  3439  3542 D EGL_emulation: app_time_stats: avg=745.01ms min=225.20ms max=1264.81ms count=2
+10-16 12:05:07.514  3439  3627 D AAudio  : AAudioStream_close(s#2) called ---------------
+10-16 12:05:07.514  3439  3627 D AAudioStream: setState(s#2) from 10 to 11
+10-16 12:05:07.516  3439  3627 D AAudioStream: setState(s#2) from 11 to 12
+10-16 12:05:07.516  3439  3627 D AAudioStream: ~AudioStream(s#2) mPlayerBase strongCount = 2
+10-16 12:05:07.516  3439  3627 D AAudio  : AAudioStream_close(s#2) returned 0 ---------
+10-16 12:05:08.231  6331  6331 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:08.345  6350  6350 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:08.419  6370  6370 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:08.732  6389  6389 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:08.828  6408  6408 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:09.904  6445  6445 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:09.994  6465  6465 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:10.072  6484  6484 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:10.159  6504  6504 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:10.212   515   570 I AppsFilter: interaction: PackageSetting{c4f202a app.two.android/10174} -> PackageSetting{a8a6ed6 com.google.android.apps.messaging/10112} BLOCKED
+10-16 12:05:10.286  6525  6525 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:10.394  6564  6564 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:10.486  6599  6599 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:12.055  6656  6656 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:12.080   515   570 I AppsFilter: interaction: PackageSetting{c4f202a app.two.android/10174} -> PackageSetting{aa7062 com.google.android.gm/10145} BLOCKED
+10-16 12:05:12.153  6675  6675 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:12.224  6701  6701 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:12.288  6720  6720 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:13.519  6755  6755 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:13.594  6776  6776 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:13.682  6795  6795 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:13.772  6814  6814 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:13.816  6833  6833 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:13.908  6852  6852 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:17.112  6901  6901 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:17.192  6921  6921 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:21.011  6960  6960 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:21.077  6979  6979 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:21.149  6998  6998 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:21.223  7017  7017 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:23.252   515  1019 W ActivityManager: Scheduling restart of crashed service com.google.android.gms/com.google.android.location.network.NetworkLocationService in 190974ms for connection
+10-16 12:05:24.790  7335  7335 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:24.922  7364  7364 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:25.009  7386  7386 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:25.438  3327  4709 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:05:25.448  3327  4709 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:05:25.859  7076  7334 I cr_CronetLibraryLoader: Cronet version: 113.0.5672.51, arch: x86_64
+10-16 12:05:29.287  3327  5476 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:05:29.288  3327  5476 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:05:29.382  7133  7214 W libc    : Access denied finding property "ro.hardware.chipname"
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: Exception in upload method
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: com.google.android.apps.gsa.shared.r.d: Error code: 262182
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.ab.bk.d(PG:5)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.ar.d(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.bo.b(PG:5)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.e.a(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.a.run(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bu.cancel(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:17)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.bk.b.h.run(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.aj.a(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.c(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.r.a(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.e(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.c(PG:3)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.e.a(PG:5)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.n.hh(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.cd.g.a.f.e(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.d(PG:22)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.ks(PG:6)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.e(PG:14)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.p.run(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.e.run(PG:2)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 12:05:30.148  1911  2361 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.l.run(PG:5)
+10-16 12:05:31.247  3327  4709 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:05:31.247  3327  4709 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:05:44.340  7665  7665 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:44.412  7685  7685 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:44.475  7704  7704 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:05:45.961   515   570 I AppsFilter: interaction: PackageSetting{c4f202a app.two.android/10174} -> PackageSetting{7ab7094 com.google.android.googlequicksearchbox/10120} BLOCKED

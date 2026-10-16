@@ -1,0 +1,4 @@
+10-16 12:04:24.536  1451  1466 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:25.531   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{5ac028d com.google.android.settings.intelligence/10140} BLOCKED
+10-16 12:04:25.833  1190  3435 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 12:04:25.984  1190  1207 W ndroid.settings: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references

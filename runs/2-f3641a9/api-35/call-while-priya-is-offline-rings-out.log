@@ -1,0 +1,18 @@
+10-16 12:03:58.267  2673  2914 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:03:58.267  2673  2914 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:03:58.267  2673  2914 D AAudioStream: setState(s#1) from 0 to 2
+10-16 12:03:58.282  2673  2914 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#1 ----------------
+10-16 12:03:58.297  2673  2914 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+10-16 12:03:58.297  2673  2914 D AAudioStream: setState(s#1) from 2 to 3
+10-16 12:03:58.319  2673  2914 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+10-16 12:03:58.322  2673  2689 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:03:58.323  2673  3326 D AAudioStream: setState(s#1) from 3 to 4
+10-16 12:03:58.753   580  3363 D SystemServerTimingAsync: ssm.onCompletedEventUser-0_{|Unlocked|}_com.android.server.webkit.WebViewUpdateService
+10-16 12:03:58.753   580  3363 V SystemServerTimingAsync: ssm.onCompletedEventUser-0_{|Unlocked|}_com.android.server.webkit.WebViewUpdateService took to complete: 0ms
+10-16 12:03:59.049  1227  1265 D PackageUpdatedTask: Package updated: mOp=UPDATE packages=[app.two.android]
+10-16 12:03:59.140  2673  2673 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 12:03:59.247  2673  2683 I app.two.android: Background concurrent mark compact GC freed 4694KB AllocSpace bytes, 15(576KB) LOS objects, 49% free, 4885KB/9771KB, paused 156us,7.106ms total 107.855ms
+10-16 12:03:59.255  2673  2685 W app.two.android: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk' with 2 weak references
+10-16 12:03:59.290  1507  2039 I Icing   : doRemovePackageData app.two.android
+10-16 12:04:00.092  1451  1466 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:00.180  1507  1551 W gle.android.gms: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references

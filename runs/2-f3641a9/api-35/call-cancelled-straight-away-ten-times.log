@@ -1,0 +1,36 @@
+10-16 12:04:01.088  1614  3449 W chromium: [1016/120401.088164:WARNING:url_request_context_config.cc(716)] Unrecognized Cronet experimental option "enable_telemetry" with params "false
+10-16 12:04:01.088  1614  3449 W chromium: 
+10-16 12:04:01.507  1190  1209 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 12:04:01.516  1190  1210 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 12:04:01.538  1614  1856 I WebViewFactory: Loading com.google.android.webview version 124.0.6367.219 (code 636771938)
+10-16 12:04:01.758  1614  1856 V ResourcesManager: The following library key has been added: ResourcesKey{ mHash=e589ad6c mResDir=null mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk,/data/resource-cache/com.android.systemui-neutral-ec4w.frro,/data/resource-cache/com.android.systemui-accent-KR7f.frro,/data/resource-cache/com.android.systemui-dynamic-arPc.frro] mLibDirs=[/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk,/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk,/system_ext/framework/androidx.window.extensions.jar] mDisplayId=0 mOverrideConfig=v35 mCompatInfo={160dpi always-compat} mLoaders=[]}
+10-16 12:04:01.856  1190  1207 W ndroid.settings: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:01.880  1190  1252 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 12:04:01.954  1614  1856 D nativeloader: Configuring clns-8 for other apk /data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/lib/x86_64:/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:04:01.964  1614  1856 D nativeloader: Configuring clns-9 for other apk /data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/lib/x86_64:/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:04:01.996  1614  1856 I cr_WVCFactoryProvider: Loaded version=124.0.6367.219 minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 12:04:02.017  1614  1856 D nativeloader: Load /data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64/libmonochrome_64.so using ns clns-9 from class loader (caller=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk): ok
+10-16 12:04:02.018  1614  1856 D nativeloader: Load /system/lib64/libwebviewchromium_plat_support.so using ns clns-9 from class loader (caller=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk): ok
+10-16 12:04:02.057  1614  3455 I chromium: [1016/120402.057664:INFO:variations_seed_loader.cc(66)] Failed to open file for reading.: No such file or directory (2)
+10-16 12:04:02.107  1614  3455 I cr_VariationsUtils: Failed reading seed file "/data/user/0/com.google.android.googlequicksearchbox/app_webview/variations_seed_new"
+10-16 12:04:02.107  1614  3455 I chromium: [1016/120402.107694:INFO:variations_seed_loader.cc(66)] Failed to open file for reading.: No such file or directory (2)
+10-16 12:04:02.107  1614  3455 I cr_VariationsUtils: Failed reading seed file "/data/user/0/com.google.android.googlequicksearchbox/app_webview/variations_seed"
+10-16 12:04:02.108  1614  3457 I cr_VariationsUtils: Requesting new seed from IVariationsSeedServer
+10-16 12:04:02.120  1614  1614 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:04:02.121  1614  1614 I cr_CachingUmaRecorder: Flushed 7 samples from 7 histograms, 0 samples were dropped.
+10-16 12:04:02.134  1614  1614 I cr_CombinedPProvider: #registerProvider() provider:WV.V7@70a092f isPolicyCacheEnabled:false policyProvidersSize:0
+10-16 12:04:02.140  1614  1614 I cr_PolicyProvider: #setManagerAndSource() 0
+10-16 12:04:02.325   580   614 I ActivityManager: Start proc 3463:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0i1 for  {com.google.android.googlequicksearchbox/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 12:04:02.326  1614  1614 I cr_CombinedPProvider: #linkNativeInternal() 1
+10-16 12:04:02.337  1614  1614 I cr_AppResProvider: #getApplicationRestrictionsFromUserManager() Bundle[EMPTY_PARCEL]
+10-16 12:04:02.338  1614  1614 I cr_PolicyProvider: #notifySettingsAvailable() 0
+10-16 12:04:02.338  1614  1614 I cr_CombinedPProvider: #onSettingsAvailable() 0
+10-16 12:04:02.338  1614  1614 I cr_CombinedPProvider: #flushPolicies()
+10-16 12:04:02.431  3463  3463 I cr_WebViewApkApp: Launched version=124.0.6367.219 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:04:02.436  1614  3476 E chromium: [ERROR:simple_file_enumerator.cc(21)] opendir /data/user/0/com.google.android.googlequicksearchbox/cache/WebView/Default/HTTP Cache/Code Cache/js: No such file or directory (2)
+10-16 12:04:02.436  1614  3476 E chromium: [ERROR:simple_index_file.cc(614)] Could not reconstruct index from disk
+10-16 12:04:02.436  1614  3476 E chromium: [ERROR:simple_file_enumerator.cc(21)] opendir /data/user/0/com.google.android.googlequicksearchbox/cache/WebView/Default/HTTP Cache/Code Cache/wasm: No such file or directory (2)
+10-16 12:04:02.436  1614  3476 E chromium: [ERROR:simple_index_file.cc(614)] Could not reconstruct index from disk
+10-16 12:04:02.463  3463  3463 I cr_ChildProcessService: Creating new ChildProcessService pid=3463
+10-16 12:04:02.513  2852  2941 I cr_VariationsUtils: Throttling seed download job
+10-16 12:04:02.513  2852  2941 I cr_VariationsUtils: Writing new seed to app's data directory

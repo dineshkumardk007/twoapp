@@ -1,0 +1,141 @@
+10-16 12:05:24.890  5999  6031 D EGL_emulation: app_time_stats: avg=2021.92ms min=2021.92ms max=2021.92ms count=1
+10-16 12:05:26.315  5999  6066 D AAudio  : AAudioStream_close(s#4) called ---------------
+10-16 12:05:26.315  5999  6066 D AAudioStream: setState(s#4) from 10 to 11
+10-16 12:05:26.316  5999  6066 D AAudioStream: setState(s#4) from 11 to 12
+10-16 12:05:26.316  5999  6066 D AAudioStream: ~AudioStream(s#4) mPlayerBase strongCount = 2
+10-16 12:05:26.316  5999  6066 D AAudio  : AAudioStream_close(s#4) returned 0 ---------
+10-16 12:05:27.822  5720  6570 W libc    : Access denied finding property "ro.hardware.chipname"
+10-16 12:05:28.123  5999  6031 D EGL_emulation: app_time_stats: avg=1616.18ms min=306.00ms max=2926.37ms count=2
+10-16 12:05:28.308  3573  6562 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:05:28.308  3573  6562 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:05:28.411   549   863 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5999 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/5999
+10-16 12:05:28.429  5999  6066 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:05:28.563  6044  6396 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:05:28.566   549   637 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:05:28.566  6044  6396 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:05:28.583  6044  6398 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:05:28.618  6044  6604 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 157038781, interval (us) = 25
+10-16 12:05:28.630  6044  6604 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 157050704, interval (us) = 15
+10-16 12:05:28.994  6044  6398 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:05:29.066   549   863 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5999 device: null from API: clearCommunicationDevice() from u/pid:10192/5999
+10-16 12:05:29.196  5999  6031 D EGL_emulation: app_time_stats: avg=178.27ms min=41.51ms max=759.11ms count=6
+10-16 12:05:29.251   549   863 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5999 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setNewModeOwner
+10-16 12:05:29.262  5999  6066 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:05:29.262  5999  6066 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:05:29.262  5999  6066 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 4360
+10-16 12:05:29.262  5999  6066 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:05:29.262  5999  6066 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:05:29.263  5999  6066 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:05:29.263  5999  6066 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:05:29.268  5999  6066 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:05:29.268  5999  6066 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:05:29.268  5999  6066 D AAudioStream: setState(s#5) from 0 to 2
+10-16 12:05:29.274  5999  6066 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#5 ----------------
+10-16 12:05:29.285  5999  6066 D AAudio  : AAudioStream_requestStart(s#5) called --------------
+10-16 12:05:29.285  5999  6066 D AAudioStream: setState(s#5) from 2 to 3
+10-16 12:05:29.286  5999  6066 D AAudio  : AAudioStream_requestStart(s#5) returned 0 ---------
+10-16 12:05:29.302  5999  6112 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:05:29.303  5999  6622 D AAudioStream: setState(s#5) from 3 to 4
+10-16 12:05:29.442  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.051ms; playout delay: 287.796ms
+10-16 12:05:29.459  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.064ms; playout delay: 287.796ms
+10-16 12:05:29.490  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.047ms; playout delay: 287.796ms
+10-16 12:05:29.509  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.047ms; playout delay: 287.796ms
+10-16 12:05:29.530  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.036ms; playout delay: 289.734ms
+10-16 12:05:29.538  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.041ms; playout delay: 289.734ms
+10-16 12:05:29.570  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.063ms; playout delay: 289.734ms
+10-16 12:05:29.596  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 23.17ms; playout delay: 289.734ms
+10-16 12:05:29.596  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 13.17ms; playout delay: 289.734ms
+10-16 12:05:29.604  6044  6604 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.332ms; playout delay: 289.734ms
+10-16 12:05:30.270  5999  6031 D EGL_emulation: app_time_stats: avg=66.69ms min=34.41ms max=228.40ms count=16
+10-16 12:05:31.169   549   609 I AppsFilter: interaction: PackageSetting{b83a666 app.two.android/10192} -> PackageSetting{ae96ac1 com.google.android.contacts/10156} BLOCKED
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: Exception in upload method
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: com.google.android.apps.gsa.shared.r.d: Error code: 262182
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.ab.bk.d(PG:5)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.ar.d(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.bo.b(PG:5)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.e.a(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.a.run(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bu.cancel(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:17)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.bk.b.h.run(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.aj.a(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.c(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.r.a(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.e(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.c(PG:3)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.e.a(PG:5)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.n.hh(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.cd.g.a.f.e(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.d(PG:22)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.ks(PG:6)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.e(PG:14)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.p.run(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:487)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.e.run(PG:2)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:644)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 12:05:31.202  1981  2613 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.l.run(PG:5)
+10-16 12:05:39.614   549   600 E ActivityTaskManager: setVisibility=true while transition is not collecting or finishing ActivityRecord{8136528 u0 app.two.android/.MainActivity t9} caller=com.android.server.wm.ActivityRecord.setVisibility:5287 com.android.server.wm.TaskFragment.resumeTopActivity:1393 com.android.server.wm.Task.resumeTopActivityInnerLocked:5044 com.android.server.wm.Task.resumeTopActivityUncheckedLocked:4974 com.android.server.wm.Task.resumeTopActivityUncheckedLocked:5025 com.android.server.wm.RootWindowContainer.lambda$applySleepTokens$20:2428 com.android.server.wm.RootWindowContainer.$r8$lambda$9xL80GDJRExKql35hTmQVg_ieD8:0 com.android.server.wm.RootWindowContainer$$ExternalSyntheticLambda10.accept:0 
+10-16 12:05:39.628  5999  5999 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+10-16 12:05:39.628  5999  5999 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 12:05:39.766   549  2268 I ImeTracker: app.two.android:7c3fce78: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_SAME_WINDOW_FOCUSED_WITHOUT_EDITOR
+10-16 12:05:39.766   549  2268 I ImeTracker: app.two.android:7c3fce78: onCancelled at PHASE_SERVER_SHOULD_HIDE
+10-16 12:05:39.771  1677  1677 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=0 fieldName=null extras=null}, false)
+10-16 12:05:40.830  5999  6031 D EGL_emulation: app_time_stats: avg=36.76ms min=20.86ms max=212.44ms count=29
+10-16 12:05:41.188   549   609 I AppsFilter: interaction: PackageSetting{b83a666 app.two.android/10192} -> PackageSetting{8743b7b com.google.android.contacts/10156} BLOCKED
+10-16 12:05:41.854  5999  6031 D EGL_emulation: app_time_stats: avg=30.13ms min=23.11ms max=39.93ms count=33
+10-16 12:05:42.067  5999  6622 W chromium: [WARNING:sync_reader.cc(175)] ASR: No room in socket buffer.: Broken pipe (32)
+10-16 12:05:42.140   549   863 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5999 device: null from API: clearCommunicationDevice() from u/pid:10192/5999
+10-16 12:05:42.141  5999  6066 D AAudio  : AAudioStream_requestStop(s#5) called
+10-16 12:05:42.141  5999  6066 D AAudioStream: setState(s#5) from 4 to 9
+10-16 12:05:42.141  5999  6066 D AudioTrack: stop(46): called with 618816 frames delivered
+10-16 12:05:42.141  5999  6066 D AAudioStream: setState(s#5) from 9 to 10
+10-16 12:05:42.146   549   863 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5999 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setNewModeOwner
+10-16 12:05:42.877  5999  6031 D EGL_emulation: app_time_stats: avg=27.35ms min=17.19ms max=131.90ms count=36
+10-16 12:05:44.701  5999  6031 D EGL_emulation: app_time_stats: avg=139.17ms min=17.11ms max=1551.11ms count=13
+10-16 12:05:45.735  5999  6066 D AAudio  : AAudioStream_requestStop(s#3) called
+10-16 12:05:45.735  5999  6066 D AAudioStream: setState(s#3) from 4 to 9
+10-16 12:05:45.735  5999  6066 D AudioTrack: stop(34): called with 1487040 frames delivered
+10-16 12:05:45.736  5999  6066 D AAudioStream: setState(s#3) from 9 to 10

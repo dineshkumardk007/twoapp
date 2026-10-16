@@ -1,0 +1,4 @@
+[Relay DB] DATABASE_URL is not set - using in-memory storage. Records are lost on restart.
+[Two Relay Server] listening on port 4100 (storage: memory)
+[Two Relay Server] WebSocket pipe available at /relay
+[Two Relay Server] Retention: 365 days

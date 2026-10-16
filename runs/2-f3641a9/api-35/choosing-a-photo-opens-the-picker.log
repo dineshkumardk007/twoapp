@@ -1,0 +1,2 @@
+10-16 12:04:21.952  3525  4060 I cr_CronetUrlRequestContext: destroyNativeStreamLocked org.chromium.net.impl.CronetBidirectionalStream@10eb208
+10-16 12:04:22.006  1227  1233 W s.nexuslauncher: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references

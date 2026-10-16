@@ -1,0 +1,3 @@
+10-16 12:06:24.691  7133  7228 W libc    : Access denied finding property "ro.hardware.chipname"
+10-16 12:06:24.831  3327  7860 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:06:24.831  3327  7860 W libc    : Access denied finding property "service.adb.tls.port"

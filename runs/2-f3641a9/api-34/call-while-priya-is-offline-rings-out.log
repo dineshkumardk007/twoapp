@@ -1,0 +1,67 @@
+10-16 12:04:10.609  3010  3273 D EGL_emulation: app_time_stats: avg=2965.42ms min=2965.42ms max=2965.42ms count=1
+10-16 12:04:10.912   549  1311 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.googlequicksearchbox; callingUid: 10132; uidState: BFGS; uidBFSL: [BFSL]; intent: Intent { cmp=com.google.android.googlequicksearchbox/com.google.android.libraries.mdi.download.foreground.sting.ForegroundDownloadService (has extras) }; code:ACTIVITY_STARTER; tempAllowListReason:<null>; targetSdkVersion:31; callerTargetSdkVersion:31; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:04:12.071  3010  3273 D EGL_emulation: app_time_stats: avg=731.00ms min=188.85ms max=1273.15ms count=2
+10-16 12:04:12.232   549   863 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 3010 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/3010
+10-16 12:04:12.234  3010  3467 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:04:12.303   549   609 I AppsFilter: interaction: PackageSetting{b83a666 app.two.android/10192} -> PackageSetting{9d0b01e com.google.android.googlequicksearchbox/10132} BLOCKED
+10-16 12:04:12.303   549   609 I AppsFilter: interaction: PackageSetting{b83a666 app.two.android/10192} -> PackageSetting{8b850ff com.google.android.apps.messaging/10130} BLOCKED
+10-16 12:04:12.303   549   609 I AppsFilter: interaction: PackageSetting{b83a666 app.two.android/10192} -> PackageSetting{3625ecc com.google.android.as/10127} BLOCKED
+10-16 12:04:12.303   549   609 I AppsFilter: interaction: PackageSetting{b83a666 app.two.android/10192} -> PackageSetting{78cb515 com.google.android.contacts/10156} BLOCKED
+10-16 12:04:12.315  3436  5031 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:04:12.317  3436  5031 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:04:12.330  3436  5033 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:04:12.383   549   637 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:04:12.473  3436  5335 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80894035, interval (us) = 29
+10-16 12:04:12.473  3436  5335 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80894137, interval (us) = 8
+10-16 12:04:12.474  3436  5335 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80894366, interval (us) = 10
+10-16 12:04:12.474  3436  5335 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80894409, interval (us) = 7
+10-16 12:04:12.474  3436  5335 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80894441, interval (us) = 7
+10-16 12:04:12.479  3436  5335 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80899475, interval (us) = 11
+10-16 12:04:12.480  3436  5335 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 80900770, interval (us) = 295
+10-16 12:04:12.991   549  1010 I AppsFilter: interaction: PackageSetting{b83a666 app.two.android/10192} -> PackageSetting{d7196dc com.google.android.settings.intelligence/10118} BLOCKED
+10-16 12:04:13.004  1155  1185 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.007  1155  1185 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.028  1155  1185 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.072  1155  4604 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.170  1155  1185 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.178  1155  1185 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 12:04:13.197  1155  1185 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.246  1155  1185 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.602  1155  4604 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.624  1155  4604 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.673  1155  4604 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.682  1155  4604 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.684  1155  4604 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 12:04:13.715  1155  4604 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:13.773  1155  4604 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:04:15.865  3010  3467 D AAudio  : AAudioStream_requestStop(s#1) called
+10-16 12:04:15.866  3010  3467 D AAudioStream: setState(s#1) from 4 to 9
+10-16 12:04:15.866  3010  3467 D AudioTrack: stop(16): called with 1438080 frames delivered
+10-16 12:04:15.866  3010  3467 D AAudioStream: setState(s#1) from 9 to 10
+10-16 12:04:16.668   549  2265 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.inputmethod.latin; callingUid: 10142; uidState: IMPB; uidBFSL: n/a; intent: Intent { cmp=com.google.android.inputmethod.latin/com.google.android.apps.inputmethod.libs.dataservice.superpacks.SuperpacksForegroundTaskService }; code:CURRENT_INPUT_METHOD; tempAllowListReason:<null>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:04:21.157  3573  3597 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:21.158  3573  3597 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:21.867  3010  3467 D AAudio  : AAudioStream_close(s#1) called ---------------
+10-16 12:04:21.867  3010  3467 D AAudioStream: setState(s#1) from 10 to 11
+10-16 12:04:21.868  3010  3467 D AAudioStream: setState(s#1) from 11 to 12
+10-16 12:04:21.868  3010  3467 D AAudioStream: ~AudioStream(s#1) mPlayerBase strongCount = 2
+10-16 12:04:21.868  3010  3467 D AAudio  : AAudioStream_close(s#1) returned 0 ---------
+10-16 12:04:22.930   549   609 I AppsFilter: interaction: PackageSetting{b83a666 app.two.android/10192} -> PackageSetting{7f3688b com.google.android.as/10127} BLOCKED
+10-16 12:04:24.571   549   609 I AppsFilter: interaction: PackageSetting{b83a666 app.two.android/10192} -> PackageSetting{4072c5d com.google.android.contacts/10156} BLOCKED
+10-16 12:04:24.716   549  2099 I ActivityManager: Killing 3010:app.two.android/u0a192 (adj 0): depends on provider com.google.android.gms/.fonts.provider.FontsProvider in dying proc com.google.android.gms.persistent (adj -10000)
+10-16 12:04:24.721   549  2099 W ActivityManager: Scheduling restart of crashed service com.google.android.gms/com.google.android.location.network.NetworkLocationService in 90999ms for connection
+10-16 12:04:24.723   549   585 I libprocessgroup: Successfully killed process cgroup uid 10192 pid 3010 in 5ms
+10-16 12:04:24.745   549  2264 I WindowManager: WIN DEATH: Window{452e4b4 u0 app.two.android/app.two.android.MainActivity}
+10-16 12:04:24.745   549  2757 I ImeTracker: app.two.android:3dffc16e: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_REMOVE_CLIENT
+10-16 12:04:24.745   549  2264 W InputManager-JNI: Input channel object '452e4b4 app.two.android/app.two.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-16 12:04:24.745   549  2757 I ImeTracker: app.two.android:3dffc16e: onCancelled at PHASE_SERVER_SHOULD_HIDE
+10-16 12:04:24.746   549   851 D ConnectivityService: releasing NetworkRequest [ REQUEST id=83, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ] (release request)
+10-16 12:04:24.746   360   360 I Zygote  : Process 3010 exited due to signal 9 (Killed)
+10-16 12:04:24.749   549  2281 I ActivityManager: Killing 3436:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0a192i0 (adj 0): isolated not needed
+10-16 12:04:24.751   549   863 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 3010 device: null from API: onCommunicationRouteClientDied
+10-16 12:04:24.752   549  2281 W ActivityTaskManager: Force removing ActivityRecord{a4def1e u0 app.two.android/.MainActivity t8}: app died, no saved state
+10-16 12:04:24.756   925   968 V WindowManagerShell: Transition requested: android.os.BinderProxy@2aa84f3 TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=69224 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@e0ed5b0} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{78ccc29 app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:04:25.836   549   571 V WindowManager: Sent Transition #9 createdAt=10-16 12:04:24.756 via request=TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=69224 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{5aabadf Task{d5e4015 #8 type=standard A=10192:app.two.android}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{61bb32c app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:04:26.958  5720  5828 W libc    : Access denied finding property "ro.hardware.chipname"
+10-16 12:04:27.488  3573  3607 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:27.489  3573  3607 W libc    : Access denied finding property "service.adb.tls.port"

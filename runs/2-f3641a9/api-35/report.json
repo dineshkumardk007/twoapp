@@ -1,0 +1,217 @@
+{
+  "device": {
+    "android": "15",
+    "sdk": "35",
+    "webview": "com.google.android.webview, 124.0.6367.219"
+  },
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "",
+            "pidAfter": "2673"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "01-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "page: DOMException: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at <anonymous>:3:7\n    at <anonymous>:5:19",
+      "log": "first-call-while-priya-is-offline-allowing-the-mic.log"
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "2673",
+            "pidAfter": "2673"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "02-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "could not open Private Chat: no dock",
+      "log": "call-while-priya-is-offline-rings-out.log"
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "2673",
+            "pidAfter": "2673"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "03-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "could not open Private Chat: no dock",
+      "log": "call-cancelled-straight-away-ten-times.log"
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "2673",
+            "pidAfter": "2673"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "04-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "could not open Private Chat: no dock",
+      "log": "call-that-priya-answers-with-the-speaker-on-and-of.log"
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "2673",
+            "pidAfter": "2673"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "05-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "could not open Private Chat: no dock",
+      "log": "priya-calls-and-you-answer.log"
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "2673",
+            "pidAfter": "2673"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "06-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "could not open Private Chat: no dock",
+      "log": "screen-turned-off-in-the-middle-of-a-call.log"
+    },
+    {
+      "title": "Choosing a photo opens the picker",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "2673",
+            "pidAfter": "2673"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "07-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "could not open Private Chat: no dock",
+      "log": "choosing-a-photo-opens-the-picker.log"
+    },
+    {
+      "title": "Taking a photo opens the camera",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "2673",
+            "pidAfter": "2673"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "08-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "error": "could not open Private Chat: no dock",
+      "log": "taking-a-photo-opens-the-camera.log"
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": false,
+      "checks": [
+        {
+          "name": "the app is still open",
+          "ok": true,
+          "detail": {
+            "pidBefore": "2673",
+            "pidAfter": "2673"
+          }
+        }
+      ],
+      "steps": [],
+      "shots": [
+        "09-stopped.png"
+      ],
+      "info": {
+        "pageErrors": []
+      },
+      "restartExpected": true,
+      "error": "timed out after 90s waiting for the app to open",
+      "log": "call-when-you-don-t-allow-the-microphone.log"
+    }
+  ]
+}

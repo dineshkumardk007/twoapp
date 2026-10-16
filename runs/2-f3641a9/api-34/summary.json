@@ -1,0 +1,81 @@
+{
+  "api": 34,
+  "device": {
+    "android": "14",
+    "sdk": "34",
+    "webview": "com.google.android.webview, 113.0.5672.136"
+  },
+  "passed": 3,
+  "failed": 6,
+  "crashed": [
+    "Call while Priya is offline rings out"
+  ],
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": false,
+      "crashed": false,
+      "failedChecks": [
+        "the notification has gone"
+      ]
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": false,
+      "crashed": true,
+      "error": "the app closed while ringing",
+      "failedChecks": [
+        "the app is still open"
+      ]
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": false,
+      "crashed": false,
+      "error": "page: TypeError: Cannot read properties of null (reading 'click')\n    at <anonymous>:2:62\n    at <anonymous>:6:23",
+      "failedChecks": []
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": false,
+      "crashed": false,
+      "failedChecks": [
+        "the screen lock at the ear is let go"
+      ]
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Choosing a photo opens the picker",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Taking a photo opens the camera",
+      "ok": false,
+      "crashed": false,
+      "failedChecks": [
+        "back in the chat"
+      ]
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": false,
+      "crashed": false,
+      "failedChecks": [
+        "the call screen says the microphone is not allowed"
+      ]
+    }
+  ]
+}

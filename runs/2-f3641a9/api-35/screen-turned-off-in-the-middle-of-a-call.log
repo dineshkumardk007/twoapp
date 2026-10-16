@@ -1,0 +1,3 @@
+10-16 12:04:19.670  3525  4060 I cr_CronetUrlRequestContext: destroyNativeStreamLocked org.chromium.net.impl.CronetBidirectionalStream@1035b05
+10-16 12:04:20.633  2242  2329 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:20.633  2242  2329 W libc    : Access denied finding property "service.adb.tls.port"

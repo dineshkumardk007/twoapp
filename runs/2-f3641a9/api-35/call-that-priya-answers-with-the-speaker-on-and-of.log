@@ -1,0 +1,40 @@
+10-16 12:04:02.890  1190  1207 W ndroid.settings: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:02.924   580  1303 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{7906621 com.google.android.apps.safetyhub/10129} BLOCKED
+10-16 12:04:02.931   580  1969 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{347ccf7 com.google.android.apps.messaging/10136} BLOCKED
+10-16 12:04:03.763  2242  2498 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:03.769  2242  2498 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:03.985   580  1308 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.apps.messaging; callingUid: 10136; uidState: RCVR; uidBFSL: n/a; intent: Intent { cmp=com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService (has extras) }; code:BACKGROUND_FGS_PERMISSION; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:04:04.013   580  1064 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService
+10-16 12:04:04.015   580  1064 W ForegroundServiceTypeLoggerModule: Foreground service start for UID: 10136 does not have any types
+10-16 12:04:04.025  1507  1551 W gle.android.gms: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:05.067   580  1307 W ForegroundServiceTypeLoggerModule: FGS stop call for: 10136 has no types!
+10-16 12:04:06.396   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{688d177 com.google.android.youtube/10167} BLOCKED
+10-16 12:04:06.396   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{11da1e4 com.google.android.googlequicksearchbox/10144} BLOCKED
+10-16 12:04:06.396   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{b49964d com.google.android.apps.messaging/10136} BLOCKED
+10-16 12:04:06.396   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{6aea502 com.google.android.apps.safetyhub/10129} BLOCKED
+10-16 12:04:06.397   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{2a3c433 com.google.android.apps.maps/10153} BLOCKED
+10-16 12:04:06.397   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{2f0e13 com.google.android.rkpdapp/10192} BLOCKED
+10-16 12:04:06.397   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{4f850 com.google.android.settings.intelligence/10140} BLOCKED
+10-16 12:04:06.518  1451  1466 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:06.623  1515  2036 I AiAiCaptions: Enable com.google.android.apps.miphone.aiai.captions.CaptionsForegroundService
+10-16 12:04:07.151  2242  2498 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:07.153  2242  2498 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:07.161  1614  1649 W earchbox:search: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk' with 2 weak references
+10-16 12:04:08.274  1507  2003 I cr_CronetLibraryLoader: Cronet version: 126.0.6452.4, arch: x86_64
+10-16 12:04:08.669  2242  2329 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:08.672  2242  2329 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:09.541  1507  3783 W libc    : Access denied finding property "ro.hardware.chipname"
+10-16 12:04:09.583  1451  1466 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:10.153  1515  1537 W ogle.android.as: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:04:11.279  2242  2498 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:11.280  2242  2498 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:13.004  2242  2498 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:13.007  2242  2498 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:13.931  1515  2036 I AiAiCaptions: Would enable com.google.android.apps.miphone.aiai.captions.CaptionsForegroundService but already enabled
+10-16 12:04:14.480  1516  1924 D MediaProvider: Deleted 0 Android/media items belonging to app.two.android on /data/user/0/com.google.android.providers.media.module/databases/external.db
+10-16 12:04:14.481  1516  1924 D MediaGrants: Removed 0 media_grants for 0 user for [app.two.android, app.two.android]. Reason: Package orphaned
+10-16 12:04:14.614  2242  2498 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:04:14.616  2242  2498 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:04:15.269  1507  3857 I cr_CronetUrlRequestContext: destroyNativeStreamLocked org.chromium.net.impl.CronetBidirectionalStream@2b1dd4f
+10-16 12:04:16.635   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{9be561e com.google.android.apps.messaging/10136} BLOCKED
+10-16 12:04:16.644   580   637 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{d7bfeff com.google.android.as/10137} BLOCKED

@@ -1,0 +1,78 @@
+{
+  "api": 33,
+  "device": {
+    "android": "13",
+    "sdk": "33",
+    "webview": "com.google.android.webview, 109.0.5414.123"
+  },
+  "passed": 0,
+  "failed": 9,
+  "crashed": [],
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": false,
+      "crashed": false,
+      "error": "timed out after 20s waiting for Android's microphone question",
+      "failedChecks": []
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": false,
+      "crashed": false,
+      "failedChecks": [
+        "the call service runs in the foreground",
+        "after 45 seconds it says No answer"
+      ]
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": false,
+      "crashed": false,
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "failedChecks": []
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": false,
+      "crashed": false,
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "failedChecks": []
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": false,
+      "crashed": false,
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "failedChecks": []
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": false,
+      "crashed": false,
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "failedChecks": []
+    },
+    {
+      "title": "Choosing a photo opens the picker",
+      "ok": false,
+      "crashed": false,
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "failedChecks": []
+    },
+    {
+      "title": "Taking a photo opens the camera",
+      "ok": false,
+      "crashed": false,
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "failedChecks": []
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": false,
+      "crashed": false,
+      "error": "timed out after 15s waiting for the last call screen to close",
+      "failedChecks": []
+    }
+  ]
+}

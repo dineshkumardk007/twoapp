@@ -1,0 +1,73 @@
+{
+  "api": 36,
+  "device": {
+    "android": "16",
+    "sdk": "36",
+    "webview": "com.google.android.webview, 133.0.6943.137"
+  },
+  "passed": 6,
+  "failed": 3,
+  "crashed": [],
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": false,
+      "crashed": false,
+      "failedChecks": [
+        "the notification has gone"
+      ]
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": false,
+      "crashed": false,
+      "failedChecks": [
+        "the screen lock at the ear is let go"
+      ]
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Choosing a photo opens the picker",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Taking a photo opens the camera",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": false,
+      "crashed": false,
+      "failedChecks": [
+        "the call screen says the microphone is not allowed"
+      ]
+    }
+  ]
+}

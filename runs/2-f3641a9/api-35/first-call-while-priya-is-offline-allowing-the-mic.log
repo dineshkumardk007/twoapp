@@ -1,0 +1,354 @@
+10-16 12:03:47.579   580   956 I SdkSandboxManager: No SDKs used. Skipping SDK data reconcilation for CallingInfo{mUid=10209, mPackageName='app.two.android, mAppProcessToken='null'}
+10-16 12:03:47.634   992   992 I SafetyLabelChangedBroadcastReceiver: received broadcast packageName: app.two.android, current user: UserHandle{0}, packageChangeEvent: NEW_INSTALL, intent user: UserHandle{0}
+10-16 12:03:47.647   580  2223 I ActivityManager: Force stopping app.two.android appid=10209 user=0: from pid 2534
+10-16 12:03:47.749   580  2223 I AppsFilter: interaction: PackageSetting{9d9a03a com.android.microdroid.empty_payload/10189} -> PackageSetting{75714eb app.two.android/10209} BLOCKED
+10-16 12:03:47.813   580   930 I AppWidgetServiceImpl: Updating package stopped masked state for uid 10209 package app.two.android isStopped true
+10-16 12:03:47.813   580   930 I AppWidgetServiceImpl: cancelBroadcastsLocked() for Provider{ProviderId{user:0, app:10209, cmp:ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget}}}
+10-16 12:03:47.823   580  1308 I ActivityManager: Force stopping app.two.android appid=10209 user=0: clear data
+10-16 12:03:47.916   580   613 I ActivityManager: Force stopping app.two.android appid=10209 user=-1: clearApplicationUserData
+10-16 12:03:47.933   580   580 I AppsFilter: interaction: PackageSetting{9d9a03a com.android.microdroid.empty_payload/10189} -> PackageSetting{75714eb app.two.android/10209} BLOCKED
+10-16 12:03:48.091   580   637 I AppsFilter: interaction: PackageSetting{9d9a03a com.android.microdroid.empty_payload/10189} -> PackageSetting{75714eb app.two.android/10209} BLOCKED
+10-16 12:03:48.148   580   637 I AppsFilter: interaction: PackageSetting{9d9a03a com.android.microdroid.empty_payload/10189} -> PackageSetting{75714eb app.two.android/10209} BLOCKED
+10-16 12:03:48.492   580  1175 V SplashScreenExceptionList: SplashScreen checking exception for package app.two.android (target sdk:35) -> false
+10-16 12:03:48.508   987  1073 V WindowManagerShell: Transition requested (#10): android.os.BinderProxy@597b6c5 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=48804 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@ca7081a} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{5b28f4b app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= falseisLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false topActivityEligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=320 topActivityLetterboxHeight=640 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false cameraCompatTaskInfo=CameraCompatTaskInfo { cameraCompatControlState=hidden freeformCameraCompatMode=inactive}}}, pipTask = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 10 }
+10-16 12:03:48.511   580  1175 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=app.two.android/.MainActivity} with LAUNCH_MULTIPLE from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+10-16 12:03:48.532   580  1976 I AppsFilter: interaction: PackageSetting{9d9a03a com.android.microdroid.empty_payload/10189} -> PackageSetting{4364fb3 app.two.android/10209} BLOCKED
+10-16 12:03:48.540  1227  1227 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=8, baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity }
+10-16 12:03:48.547   580   614 I ActivityManager: Start proc 2673:app.two.android/u0a209 for next-top-activity {app.two.android/app.two.android.MainActivity}
+10-16 12:03:48.562   580  1305 D CoreBackPreview: Window{89ab040 u0 Splash Screen app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@95e4af6, mPriority=0, mIsAnimationCallback=false}
+10-16 12:03:48.636  2673  2673 I app.two.android: Late-enabling -Xcheck:jni
+10-16 12:03:48.660  2673  2673 I app.two.android: Using CollectorTypeCMC GC.
+10-16 12:03:48.660  2673  2673 W app.two.android: Unexpected CPU variant for x86: x86_64.
+10-16 12:03:48.660  2673  2673 W app.two.android: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, goldmont-without-sha-xsaves, tremont, kabylake, default
+10-16 12:03:48.670  2673  2673 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+10-16 12:03:48.699  2673  2673 W ziparchive: Unable to open '/data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.dm': No such file or directory
+10-16 12:03:48.699  2673  2673 W ziparchive: Unable to open '/data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.dm': No such file or directory
+10-16 12:03:48.775   580   930 I AppWidgetServiceImpl: Updating package stopped masked state for uid 10209 package app.two.android isStopped false
+10-16 12:03:48.775   580   930 I AppWidgetServiceImpl: Updating package stopped masked state for uid 10209 package app.two.android isStopped false
+10-16 12:03:48.799   992   992 D PersistedStoragePackageUninstalledReceiver: Received android.intent.action.PACKAGE_DATA_CLEARED for app.two.android for u0
+10-16 12:03:48.878  1227  1265 D SessionCommitReceiver: Removing PromiseIcon for package: app.two.android, install reason: 0, alreadyAddedPromiseIcon: false
+10-16 12:03:48.895  1614  2705 I cr_HttpFlagsLoader: HTTP flags file `/data/user_de/0/com.google.android.gms/app_httpflags/flags.binarypb` is missing. This is expected if HTTP flags functionality is currently disabled in the host system.
+10-16 12:03:48.897   580   601 V WindowManager: Sent Transition (#10) createdAt=10-16 12:03:48.477 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=48804 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{2ea27e0 Task{27fca47 #8 type=standard A=10209:app.two.android}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{d196a99 app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= falseisLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false topActivityEligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=320 topActivityLetterboxHeight=640 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false cameraCompatTaskInfo=CameraCompatTaskInfo { cameraCompatControlState=hidden freeformCameraCompatMode=inactive}}}, pipTask = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 10 }
+10-16 12:03:48.897  1614  1903 I cr_CronetLibraryLoader: Cronet version: 127.0.6493.0, arch: x86_64
+10-16 12:03:48.897   580   601 V WindowManager:         {WCT{RemoteToken{2ea27e0 Task{27fca47 #8 type=standard A=10209:app.two.android}}} m=OPEN f=NONE leash=Surface(name=Task=8)/@0x8bd6e1d sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0 taskParent=-1},
+10-16 12:03:48.960  2673  2673 D nativeloader: Configuring clns-7 for other apk /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/lib/x86_64:/data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/app.two.android
+10-16 12:03:48.968  2673  2673 D CompatChangeReporter: Compat change id reported: 202956589; UID 10209; state: ENABLED
+10-16 12:03:48.992  2673  2673 V GraphicsEnvironment: Currently set values for:
+10-16 12:03:48.993  2673  2673 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+10-16 12:03:48.993  2673  2673 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+10-16 12:03:48.993  2673  2673 V GraphicsEnvironment: Global.Settings values are invalid: number of packages: 0, number of values: 0
+10-16 12:03:48.993  2673  2673 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-16 12:03:49.027  1614  2708 W chromium: [1016/120349.027256:WARNING:url_request_context_config.cc(716)] Unrecognized Cronet experimental option "enable_telemetry" with params "false
+10-16 12:03:49.027  1614  2708 W chromium: 
+10-16 12:03:49.032   580  1955 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.inputmethod.latin; callingUid: 10151; uidState: IMPB; uidBFSL: n/a; intent: Intent { cmp=com.google.android.inputmethod.latin/com.google.android.apps.inputmethod.libs.dataservice.superpacks.SuperpacksForegroundTaskService }; code:CURRENT_INPUT_METHOD; tempAllowListReason:<null>; targetSdkVersion:34; callerTargetSdkVersion:34; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:03:49.047  2673  2673 D CompatChangeReporter: Compat change id reported: 279646685; UID 10209; state: ENABLED
+10-16 12:03:49.057  2673  2673 D WM-WrkMgrInitializer: Initializing WorkManager with default configuration.
+10-16 12:03:49.068   580  1976 W ForegroundServiceTypeLoggerModule: Foreground service start for UID: 10151 does not have any types
+10-16 12:03:49.114  2673  2673 D WM-PackageManagerHelper: androidx.work.impl.background.systemjob.SystemJobService enabled
+10-16 12:03:49.114  2673  2673 D WM-Schedulers: Created SystemJobScheduler and enabled SystemJobService
+10-16 12:03:49.125  2673  2739 D WM-ForceStopRunnable: The default process name was not specified.
+10-16 12:03:49.156  2673  2739 D WM-ForceStopRunnable: Performing cleanup operations.
+10-16 12:03:49.174  2673  2739 D CompatChangeReporter: Compat change id reported: 312399441; UID 10209; state: ENABLED
+10-16 12:03:49.262  1515  1515 I AiAiEcho: AppFetcherImplV2 updateApps package:[app.two.android], userId:[0], reason:[package is added.].
+10-16 12:03:49.274  1515  1515 I AiAiEcho: AppFetcherImpl onPackageChanged app.two.android.
+10-16 12:03:49.276  1515  2368 I AiAiEcho: AppIndexer Package:[app.two.android] UserProfile:[0] Enabled:[true].
+10-16 12:03:49.276  1515  2368 I AiAiEcho: AppFetcherImplV2 updateApps package:[app.two.android], userId:[0], reason:[package is updated.].
+10-16 12:03:49.655  2673  2673 I Choreographer: Skipped 35 frames!  The application may be doing too much work on its main thread.
+10-16 12:03:49.769  2673  2673 D CompatChangeReporter: Compat change id reported: 309578419; UID 10209; state: ENABLED
+10-16 12:03:49.857  2673  2673 W HWUI    : Unknown dataspace 0
+10-16 12:03:49.862  2748  2748 I cr_SplitCompatApp: Launched version=124.0.6367.219 minSdkVersion=29 isBundle=true processName=com.android.chrome isIsolated=false
+10-16 12:03:49.869  1178  1178 D CarrierSvcBindHelper: onPackageAdded: app.two.android
+10-16 12:03:50.044  2748  2801 I cr_LibraryLoader: Loading monochrome_64 from within /data/app/~~7fmSQGZBz5WDsg3_d0GM4g==/com.android.chrome-PTmp_rbWDJRa8FkQOlW_-Q==/Chrome.apk
+10-16 12:03:50.065  2673  2787 D CompatChangeReporter: Compat change id reported: 311402873; UID 10209; state: ENABLED
+10-16 12:03:50.065  2673  2787 D CompatChangeReporter: Compat change id reported: 323349338; UID 10209; state: ENABLED
+10-16 12:03:50.066  2673  2787 D WM-SystemJobScheduler: Scheduling work ID a30ea40e-05c8-45b8-8988-3fca0a1ce892Job ID 0
+10-16 12:03:50.098  2748  2801 D nativeloader: Load /data/app/~~7fmSQGZBz5WDsg3_d0GM4g==/com.android.chrome-PTmp_rbWDJRa8FkQOlW_-Q==/Chrome.apk!/lib/x86_64/libchromium_android_linker.so using ns clns-8 from class loader (caller=/data/app/~~7fmSQGZBz5WDsg3_d0GM4g==/com.android.chrome-PTmp_rbWDJRa8FkQOlW_-Q==/Chrome.apk): ok
+10-16 12:03:50.122  1178  1393 D ImsResolver: maybeAddedImsService, packageName: app.two.android
+10-16 12:03:50.132  2748  2801 I cr_Linker: loadLibraryImplLocked: monochrome_64, relroMode=1
+10-16 12:03:50.138  2673  2787 D WM-GreedyScheduler: Starting tracking for a30ea40e-05c8-45b8-8988-3fca0a1ce892
+10-16 12:03:50.164   580  2223 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.apps.wellbeing; callingUid: 10142; uidState: BTOP; uidBFSL: [BFSL]; intent: Intent { cmp=com.google.android.apps.wellbeing/com.google.apps.tiktok.concurrent.InternalForegroundService (has extras) }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<b33544d com.google.android.apps.wellbeing.action.SCREEN_TURNING_OFF/u0,reasonCode:UNKNOWN,duration:20000,callingUid:10142>; targetSdkVersion:34; callerTargetSdkVersion:34; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:03:50.168  1178  1178 D CarrierSvcBindHelper: onHandleForceStop: [app.two.android]
+10-16 12:03:50.169  1178  1178 D CarrierSvcBindHelper: onPackageModified: app.two.android
+10-16 12:03:50.193   580   668 W ForegroundServiceTypeLoggerModule: Foreground service start for UID: 10142 does not have any types
+10-16 12:03:50.234  1178  1393 D ImsResolver: maybeAddedImsService, packageName: app.two.android
+10-16 12:03:50.280  2748  2801 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:03:50.283  2748  2801 I cr_CachingUmaRecorder: Flushed 18 samples from 17 histograms, 0 samples were dropped.
+10-16 12:03:50.283  2673  2739 D WM-ConstraintTracker: NetworkStateTracker24: initial state = NetworkState(isConnected=true, isValidated=true, isMetered=false, isNotRoaming=true)
+10-16 12:03:50.283  2673  2739 D WM-NetworkStateTracker: Registering network callback
+10-16 12:03:50.301   580  1976 D ConnectivityService: requestNetwork for uid/pid:10209/2673 activeRequest: null callbackRequest: 81 [NetworkRequest [ REQUEST id=82, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false
+10-16 12:03:50.314   580   898 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=82, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:03:50.314   580   898 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=82, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:03:50.314   580   898 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=82, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:03:50.314   580   898 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=82, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:03:50.329  2673  2820 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 1Mbps, Tx Link speed: 1Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: 2Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 UnderlyingNetworks: Null]
+10-16 12:03:50.339  2673  2739 D WM-PackageManagerHelper: androidx.work.impl.background.systemalarm.RescheduleReceiver enabled
+10-16 12:03:50.344  2673  2782 D WM-GreedyScheduler: Constraints met: Scheduling work ID WorkGenerationalId(workSpecId=a30ea40e-05c8-45b8-8988-3fca0a1ce892, generation=0)
+10-16 12:03:50.351  2673  2673 I WebViewFactory: Loading com.google.android.webview version 124.0.6367.219 (code 636771938)
+10-16 12:03:50.358  2673  2673 V ResourcesManager: The following library key has been added: ResourcesKey{ mHash=e589ad6c mResDir=null mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk,/data/resource-cache/com.android.systemui-neutral-ec4w.frro,/data/resource-cache/com.android.systemui-accent-KR7f.frro,/data/resource-cache/com.android.systemui-dynamic-arPc.frro] mLibDirs=[/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk,/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk,/system_ext/framework/androidx.window.extensions.jar] mDisplayId=0 mOverrideConfig=v35 mCompatInfo={160dpi always-compat} mLoaders=[]}
+10-16 12:03:50.360  2673  2673 W ziparchive: Unable to open '/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.dm': No such file or directory
+10-16 12:03:50.360  2673  2673 W ziparchive: Unable to open '/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.dm': No such file or directory
+10-16 12:03:50.361  2673  2673 W app.two.android: Entry not found
+10-16 12:03:50.362  2673  2673 D nativeloader: Configuring clns-8 for other apk /data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/lib/x86_64:/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:03:50.363  2673  2673 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{c657e3d com.android.cts.priv.ctsshim/10194} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{3db8632 com.google.android.youtube/10167} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{4078f83 com.android.internal.display.cutout.emulation.corner/10002} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{7443500 com.android.internal.display.cutout.emulation.double/10082} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{e30c139 com.google.android.googlequicksearchbox/10144} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{b7d37e com.google.android.onetimeinitializer/10128} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{229a0df com.google.android.ext.shared/10119} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{637a12c com.android.virtualmachine.res/10188} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{cd337f5 com.android.managedprovisioning.auto_generated_rro_product__/10027} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{d79a98a com.android.carrierconfig.auto_generated_rro_vendor__/10090} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{9316bfb com.google.android.server.deviceconfig.resources/10202} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{813a418 com.android.systemui.emulation.pixel_3_xl/10048} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{eec5e71 com.android.systemui.emulation.pixel_4_xl/10068} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{bd0d456 com.android.systemui.emulation.pixel_fold/10020} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{920ccd7 com.android.providers.telephony.auto_generated_characteristics_rro/10019} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{6aae9c4 com.android.simappdialog.auto_generated_rro_product__/10010} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{b9770ad com.android.htmlviewer/10116} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{69ddfe2 com.google.android.health.connect.backuprestore/10185} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{63b5f73 com.android.systemui.auto_generated_rro_product__/10043} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{44ede30 com.google.android.apps.messaging/10136} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{6676aa9 com.google.android.soundpicker/10164} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{43e182e com.google.android.marvin.talkbackoverlay/10085} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{b627fcf com.google.android.configupdater/10135} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{4fbad5c com.android.internal.emulation.pixel_3a_xl/10023} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{f230865 com.android.internal.emulation.pixel_6_pro/10067} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{197893a com.android.internal.emulation.pixel_7_pro/10074} BLOCKED
+10-16 12:03:50.366   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{63149eb com.android.internal.emulation.pixel_8_pro/10050} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{e444348 com.android.internal.emulation.pixel_9_pro/10012} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{140c5e1 com.android.internal.emulation.pixel_3a/10006} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{1e4ff06 com.android.internal.emulation.pixel_4a/10042} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{8d899c7 com.android.internal.emulation.pixel_6a/10077} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{9fe4bf4 com.android.internal.emulation.pixel_7a/10073} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{f22df1d com.android.internal.emulation.pixel_8a/10005} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{f420592 com.google.android.overlay.googlewebview/10047} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{dbb0b63 com.google.android.apps.safetyhub/10129} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{7ae3360 com.google.android.hotspot2.osulogin/10198} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{5135019 com.android.simappdialog/10120} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{7f6e8de com.android.internal.display.cutout.emulation.hole/10052} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{8c8fabf com.android.internal.display.cutout.emulation.tall/10013} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{8b3258c com.android.internal.systemui.navbar.threebutton/10065} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{fffd4d5 com.android.camera2/10156} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{484b4ea com.android.internal.ranchu.commonoverlay/10054} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{29c83db com.android.systemui.auto_generated_rro_vendor__/10087} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{3330e78 com.google.android.deskclock/10148} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{3f5e951 com.android.internal.systemui.navbar.twobutton/10001} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{27135b6 com.google.android.as/10137} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{95582b7 com.google.android.gm/10158} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{7c69a24 com.android.compos.payload/10191} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{e5ec98d com.android.systemui.emulation.pixel_3/10033} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{fd2f742 com.android.systemui.emulation.pixel_4/10039} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{3359353 com.android.systemui.emulation.pixel_5/10071} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{5e53490 com.android.systemui.emulation.pixel_6/10040} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{ffb7189 com.android.systemui.emulation.pixel_7/10032} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{39d458e com.android.systemui.emulation.pixel_8/10055} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{efc11af com.android.systemui.emulation.pixel_9/10036} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{b1109bc com.android.printspooler/10127} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{aa09d45 com.google.android.connectivity.resources.goldfish.overlay/10086} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{eac2c9a com.android.dreams.basic/10113} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{e0219cb com.google.android.networkstack.tethering.emulator/10031} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{8c305a8 com.android.providers.settings.auto_generated_rro_product__/10080} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{eb2c8c1 com.google.android.as.oss/10130} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{1907866 com.android.traceur.auto_generated_rro_product__/10030} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{41687a7 com.android.internal.emulation.pixel_9_pro_fold/10056} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{d16d454 com.google.android.devicelockcontroller/10203} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{4622ffd com.google.android.dialer/10131} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{31bb4f2 com.android.internal.emulation.pixel_3/10021} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{919f743 com.android.internal.emulation.pixel_4/10058} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{a36e1c0 com.android.internal.emulation.pixel_5/10061} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{ca6cef9 com.android.internal.emulation.pixel_6/10024} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{3ac2e3e com.android.internal.emulation.pixel_7/10022} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{85ac49f com.android.internal.emulation.pixel_8/10034} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{88859ec com.android.internal.emulation.pixel_9/10059} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{5fc61b5 com.google.android.captiveportallogin/10118} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{938f04a android.auto_generated_characteristics_rro/10053} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{9b10bbb com.google.android.appsearch.apk/10196} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{f9728d8 com.android.musicfx/10094} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{de6431 com.google.android.apps.docs/10160} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{2042346 com.google.android.apps.maps/10153} BLOCKED
+10-16 12:03:50.367   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{1dc716 com.google.android.markup/10150} BLOCKED
+10-16 12:03:50.368  2673  2673 D nativeloader: Configuring clns-9 for other apk /data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/lib/x86_64:/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{5aa897 com.google.android.rkpdapp/10192} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{1c1fa84 com.google.android.contacts/10159} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{4126d com.android.server.telecom.auto_generated_rro_product__/10038} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{ca73ea2 com.android.phone.auto_generated_characteristics_rro/10017} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{b973733 com.google.android.overlay.googleconfig/10078} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{6a63af0 com.android.chrome/10145} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{5c6869 com.android.bips.auto_generated_rro_product__/10046} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{95ea2ee com.google.android.apps.customization.pixel/10149} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{504138f com.google.android.tag/10099} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{4c161c com.google.android.overlay.permissioncontroller/10063} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{4ca2225 com.google.android.partnersetup/10132} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{e15fffa com.google.android.apps.wallpaper.nexus/10162} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{8b859ab com.google.android.apps.nexuslauncher/10179} BLOCKED
+10-16 12:03:50.368   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{7127808 com.android.theme.font.notoserifsource/10045} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{19fbba1 com.google.android.safetycenter.resources/10186} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{bb421c6 com.android.internal.display.cutout.emulation.waterfall/10025} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{320e587 com.android.internal.systemui.navbar.transparent/10069} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{85b0cb4 com.google.android.connectivity.resources/10193} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{3db70dd com.android.providers.contacts.auto_generated_rro_product__/10015} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{8c09452 com.google.android.feedback/10173} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{9c5323 com.google.android.printservice.recommendation/10121} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{3f64020 com.google.android.apps.photos/10168} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{4e0e97a com.google.android.calendar/10163} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{233dd9 com.google.android.documentsui/10096} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{aafa39e com.android.systemui.emulation.pixel_3a_xl/10081} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{ad6fe7f com.android.systemui.emulation.pixel_6_pro/10041} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{44f3e4c com.android.systemui.emulation.pixel_7_pro/10060} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{580de95 com.android.systemui.emulation.pixel_8_pro/10079} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{7ee5baa com.android.systemui.emulation.pixel_9_pro/10026} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{fe7039b com.android.carrierconfig.auto_generated_rro_product__/10008} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{d57f338 com.android.devicediagnostics.auto_generated_rro_product__/10064} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{fddcf11 com.android.providers.partnerbookmarks/10114} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{eae8876 com.android.wallpaper.livepicker/10097} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{f283e77 com.android.providers.telephony.auto_generated_rro_product__/10035} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{e350ae4 com.android.phone.auto_generated_rro_vendor__/10088} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{63f4b4d com.android.imsserviceentitlement/10138} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{c72b602 com.android.internal.emulation.pixel_9_pro_xl/10011} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{7d84b13 com.google.android.healthconnect.controller/10184} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{1a9f150 com.android.internal.emulation.pixel_2_xl/10000} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{c24f49 com.android.internal.emulation.pixel_3_xl/10083} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{25a304e com.android.internal.emulation.pixel_4_xl/10037} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{572856f com.android.internal.emulation.pixel_fold/10014} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{944d27c com.android.bookmarkprovider/10112} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{2579705 com.google.android.overlay.pixelconfigcommon/10007} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{22d035a com.android.systemui.accessibility.accessibilitymenu.auto_generated_rro_product__/10044} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{5cc098b com.android.systemui.emulation.pixel_3a/10075} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{f4a9a68 com.android.systemui.emulation.pixel_4a/10049} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{23f9e81 com.android.systemui.emulation.pixel_6a/10076} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{27fb26 com.android.systemui.emulation.pixel_7a/10084} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{4efb367 com.android.systemui.emulation.pixel_8a/10072} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{b62f514 com.google.android.settings.intelligence/10140} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{daaacda com.google.android.projection.gearhead/10134} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{146a1bd com.google.android.uwb.resources/10205} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{cf2350b com.android.cts.ctsshim/10195} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{588a3b2 com.google.android.wifi.resources/10197} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{aba1f03 com.google.android.wifi.dialog/10199} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{6044e80 com.android.wallpaper/10177} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{9d9a03a com.android.microdroid.empty_payload/10189} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{6c09cb9 com.google.android.apps.wallpaper/10175} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{fd948fe com.google.android.odad/10133} BLOCKED
+10-16 12:03:50.369   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{635a85f com.android.settings.auto_generated_rro_product__/10062} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{69fd2ac com.android.systemui.emulation.pixel_9_pro_xl/10028} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{1454b75 com.android.companiondevicemanager.auto_generated_characteristics_rro/10057} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{8fcf70a com.android.internal.systemui.navbar.gestural/10016} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{2b66b7b com.google.android.apps.youtube.music/10157} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{88d6d98 com.android.bluetoothmidiservice/10115} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{72c29f1 com.android.storagemanager.auto_generated_rro_product__/10018} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{3fb79d6 com.google.android.cellbroadcastreceiver/10190} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{2b64457 com.android.phone.auto_generated_rro_product__/10009} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{2b7cb44 com.android.systemui.emulation.pixel_9_pro_fold/10029} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{2c8742d android.auto_generated_rro_product__/10004} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{a8d5d62 com.google.android.inputmethod.latin/10151} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{c70cef3 android.auto_generated_rro_vendor__/10089} BLOCKED
+10-16 12:03:50.370   580   595 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{e0857b0 com.google.android.apps.restore/10139} BLOCKED
+10-16 12:03:50.375  2673  2782 D WM-Processor: Processor: processing WorkGenerationalId(workSpecId=a30ea40e-05c8-45b8-8988-3fca0a1ce892, generation=0)
+10-16 12:03:50.429  2673  2673 I cr_WVCFactoryProvider: Loaded version=124.0.6367.219 minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 12:03:50.496  2673  2673 D nativeloader: Load /data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64/libmonochrome_64.so using ns clns-9 from class loader (caller=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk): ok
+10-16 12:03:50.501  2673  2673 D nativeloader: Load /system/lib64/libwebviewchromium_plat_support.so using ns clns-9 from class loader (caller=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk): ok
+10-16 12:03:50.644   580  1121 W ForegroundServiceTypeLoggerModule: FGS stop call for: 10142 has no types!
+10-16 12:03:50.711  1178  1178 D CarrierSvcBindHelper: onHandleForceStop: [app.two.android]
+10-16 12:03:50.784  2673  2673 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:03:50.785  2673  2673 I cr_CachingUmaRecorder: Flushed 6 samples from 6 histograms, 0 samples were dropped.
+10-16 12:03:50.786  2673  2845 I chromium: [INFO:variations_seed_loader.cc(66)] Failed to open file for reading.: No such file or directory (2)
+10-16 12:03:50.786  2673  2845 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed_new"
+10-16 12:03:50.786  2673  2845 I chromium: [INFO:variations_seed_loader.cc(66)] Failed to open file for reading.: No such file or directory (2)
+10-16 12:03:50.786  2673  2845 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed"
+10-16 12:03:50.789  2673  2849 I cr_VariationsUtils: Requesting new seed from IVariationsSeedServer
+10-16 12:03:50.790  2673  2673 I cr_CombinedPProvider: #registerProvider() provider:WV.V7@1ec6d27 isPolicyCacheEnabled:false policyProvidersSize:0
+10-16 12:03:50.791  2673  2673 I cr_PolicyProvider: #setManagerAndSource() 0
+10-16 12:03:50.812   580   614 I ActivityManager: Start proc 2852:com.google.android.webview:webview_service/u0a152 for service {com.google.android.webview/org.chromium.android_webview.services.VariationsSeedServer}
+10-16 12:03:50.840   580   614 I ActivityManager: Start proc 2854:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0ai9000 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 12:03:50.841  1227  1265 D PackageUpdatedTask: Package updated: mOp=ADD packages=[app.two.android]
+10-16 12:03:51.003  2673  2673 I cr_CombinedPProvider: #linkNativeInternal() 1
+10-16 12:03:51.003  2673  2673 I cr_AppResProvider: #getApplicationRestrictionsFromUserManager() Bundle[EMPTY_PARCEL]
+10-16 12:03:51.004  2673  2673 I cr_PolicyProvider: #notifySettingsAvailable() 0
+10-16 12:03:51.004  2673  2673 I cr_CombinedPProvider: #onSettingsAvailable() 0
+10-16 12:03:51.004  2673  2673 I cr_CombinedPProvider: #flushPolicies()
+10-16 12:03:51.019  2852  2852 D nativeloader: Configuring clns-7 for other apk /data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/lib/x86_64:/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 12:03:51.052   580   946 D ShortcutService: adding package: app.two.android userId0
+10-16 12:03:51.052   580   946 D ShortcutService: handlePackageAdded: app.two.android user=0
+10-16 12:03:51.052   580   946 D ShortcutService: rescanPackageIfNeeded 0@app.two.android, forceRescan=true , isNewApp=true
+10-16 12:03:51.052   580   946 D ShortcutService: Package app.two.android has 0 manifest shortcut(s), and 0 share target(s)
+10-16 12:03:51.053   580   946 D ShortcutService: clearing data for package: app.two.android userId0
+10-16 12:03:51.053   580   946 D ShortcutService: handlePackageDataCleared: app.two.android user=0
+10-16 12:03:51.053   580   946 D ShortcutService: rescanPackageIfNeeded 0@app.two.android, forceRescan=true , isNewApp=true
+10-16 12:03:51.067  2852  2852 D nativeloader: Configuring clns-8 for other apk /data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/lib/x86_64:/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 12:03:51.067  2854  2854 I cr_WebViewApkApp: Launched version=124.0.6367.219 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:03:51.084   580   946 D ShortcutService: Package app.two.android has 0 manifest shortcut(s), and 0 share target(s)
+10-16 12:03:51.084   580   946 D ShortcutService: changing package: app.two.android userId0
+10-16 12:03:51.084   580   946 D ShortcutService: handlePackageChanged: app.two.android user=0
+10-16 12:03:51.084   580   946 D ShortcutService: rescanPackageIfNeeded 0@app.two.android, forceRescan=true , isNewApp=true
+10-16 12:03:51.084   580   946 D ShortcutService: Package app.two.android has 0 manifest shortcut(s), and 0 share target(s)
+10-16 12:03:51.103  2854  2854 I cr_ChildProcessService: Creating new ChildProcessService pid=2854
+10-16 12:03:51.156  2852  2852 I cr_WebViewApkApp: Launched version=124.0.6367.219 minSdkVersion=29 isBundle=false processName=com.google.android.webview:webview_service
+10-16 12:03:51.201  1507  1551 W gle.android.gms: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:03:51.212  1227  1233 W s.nexuslauncher: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.apk' with 1 weak references
+10-16 12:03:51.332  1227  1265 D PackageUpdatedTask: Package updated: mOp=UPDATE packages=[app.two.android]
+10-16 12:03:51.525  2673  2682 I app.two.android: Compiler allocated 5174KB to compile void android.view.ViewRootImpl.performTraversals()
+10-16 12:03:51.623   580  2224 W ForegroundServiceTypeLoggerModule: FGS stop call for: 10151 has no types!
+10-16 12:03:51.644   580  1072 D ConnectivityService: requestNetwork for uid/pid:10209/2673 activeRequest: null callbackRequest: 83 [NetworkRequest [ REQUEST id=84, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false
+10-16 12:03:51.646   580   898 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=84, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:03:51.646   580   898 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=84, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:03:51.646   580   898 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=84, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:03:51.646   580   898 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=84, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10209 RequestorUid: 10209 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:03:51.733  2673  2914 W cr_media: BLUETOOTH_CONNECT permission is missing.
+10-16 12:03:51.738  2673  2914 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+10-16 12:03:51.743  2673  2931 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+10-16 12:03:51.744  2673  2931 I EGL_emulation: Opening libGLESv2_emulation.so
+10-16 12:03:51.758  2673  2673 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+10-16 12:03:51.758  2673  2673 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 12:03:51.765   580  2224 D CoreBackPreview: Window{82ff406 u0 app.two.android/app.two.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@b012fbd, mPriority=0, mIsAnimationCallback=false}
+10-16 12:03:51.798  2673  2769 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-16 12:03:51.814  2854  2894 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:03:51.815  2854  2894 I cr_CachingUmaRecorder: Flushed 2 samples from 2 histograms, 0 samples were dropped.
+10-16 12:03:51.829  2673  2673 I Choreographer: Skipped 107 frames!  The application may be doing too much work on its main thread.
+10-16 12:03:51.842  2673  2673 D WM-WorkerWrapper: Starting work for app.two.android.core.sync.SyncWorker
+10-16 12:03:51.866  2673  2769 I Gralloc4: mapper 4.x is not supported
+10-16 12:03:51.893  2852  2941 I cr_VariationsUtils: Scheduling seed download job
+10-16 12:03:51.910  2854  2894 W chromium: [WARNING:runtime_features.cc(694)] SharedStorage for M118+ cannot be enabled in this configuration. Use --enable-features=SharedStorageAPI,SharedStorageAPIM118 in addition.
+10-16 12:03:51.921  2854  2894 W chromium: [WARNING:runtime_features.cc(730)] AttributionReportingCrossAppWeb cannot be enabled in this configuration. Use --enable-features=ConversionMeasurement,AttributionReportingCrossAppWeb in addition.
+10-16 12:03:51.946  2673  2673 D WM-SystemJobService: onStartJob for WorkGenerationalId(workSpecId=a30ea40e-05c8-45b8-8988-3fca0a1ce892, generation=0)
+10-16 12:03:51.985  2673  2782 D WM-Processor: Work WorkGenerationalId(workSpecId=a30ea40e-05c8-45b8-8988-3fca0a1ce892, generation=0) is already enqueued for processing
+10-16 12:03:52.065  2673  2787 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=a30ea40e-05c8-45b8-8988-3fca0a1ce892, tags={ app.two.android.core.sync.SyncWorker } ]
+10-16 12:03:52.099  2673  2673 D WM-Processor: Processor a30ea40e-05c8-45b8-8988-3fca0a1ce892 executed; reschedule = false
+10-16 12:03:52.114  2673  2673 D WM-GreedyScheduler: Stopping tracking for WorkGenerationalId(workSpecId=a30ea40e-05c8-45b8-8988-3fca0a1ce892, generation=0)
+10-16 12:03:52.115  2673  2673 D WM-SystemJobService: a30ea40e-05c8-45b8-8988-3fca0a1ce892 executed on JobScheduler
+10-16 12:03:52.209  2673  2787 D WM-GreedyScheduler: Cancelling work ID a30ea40e-05c8-45b8-8988-3fca0a1ce892
+10-16 12:03:52.217   580  1968 W JobScheduler: Job didn't exist in JobStore: 467cf77 {androidx.work.systemjobscheduler} #u0a209/0 @androidx.work.systemjobscheduler@app.two.android/androidx.work.impl.background.systemjob.SystemJobService
+10-16 12:03:52.220  2673  2673 D WM-SystemJobService: onStopJob for WorkGenerationalId(workSpecId=a30ea40e-05c8-45b8-8988-3fca0a1ce892, generation=0)
+10-16 12:03:52.237  2673  2787 D WM-SystemJobScheduler: Scheduling work ID a30ea40e-05c8-45b8-8988-3fca0a1ce892Job ID 1
+10-16 12:03:52.253  2673  2782 D WM-NetworkStateTracker: Unregistering network callback
+10-16 12:03:52.336   580   614 I ActivityManager: Start proc 2974:com.google.android.webview:webview_apk/u0a152 for service {com.google.android.webview/org.chromium.android_webview.nonembedded.AwComponentUpdateService}
+10-16 12:03:52.401  2974  2974 D nativeloader: Configuring clns-7 for other apk /data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/lib/x86_64:/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 12:03:52.419  2974  2974 D nativeloader: Configuring clns-8 for other apk /data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/lib/x86_64:/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 12:03:52.434  2974  2974 I cr_WebViewApkApp: Launched version=124.0.6367.219 minSdkVersion=29 isBundle=false processName=com.google.android.webview:webview_apk
+10-16 12:03:52.480   580   601 W ziparchive: Unable to open '/data/app/~~mBq7Y3OWdzsJcnhUXRELuw==/app.two.android-kuUvDqggjXtUKnjOV9pa0Q==/base.dm': No such file or directory
+10-16 12:03:52.503   580   601 I ActivityTaskManager: Displayed app.two.android/.MainActivity for user 0: +4s62ms
+10-16 12:03:52.524   580  1969 D CoreBackPreview: Window{89ab040 u0 Splash Screen app.two.android EXITING}: Setting back callback null
+10-16 12:03:52.557   580  1976 W InputManager-JNI: Input channel object '89ab040 Splash Screen app.two.android (client)' was disposed without first being removed with the input manager!
+10-16 12:03:52.634   580   708 I ImeTracker: app.two.android:e7a8452c: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+10-16 12:03:52.634   580   708 I ImeTracker: app.two.android:e7a8452c: onCancelled at PHASE_SERVER_SHOULD_HIDE
+10-16 12:03:52.662  1421  1421 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=app.two.android, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+10-16 12:03:52.662   580  1954 W PackageConfigPersister: App-specific configuration not found for packageName: app.two.android and userId: 0
+10-16 12:03:52.757  2974  2974 D nativeloader: Load /data/app/~~q6-3pVgVlGB26oRcwGfmlQ==/com.google.android.trichromelibrary_636771938-0f3u9YO-iDzqZaCl6yKZ3g==/TrichromeLibrary.apk!/lib/x86_64/libmonochrome_64.so using ns clns-8 from class loader (caller=/data/app/~~3wS1ziKwVpPJgim_7fMjFA==/com.google.android.webview-848IQlaRQ3cG_VnxH2_baQ==/WebViewGoogle.apk): ok
+10-16 12:03:52.774  2974  2974 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:03:52.838  2852  2953 I cr_VariationsUtils: Downloading new seed [fastMode=FALSE]
+10-16 12:03:53.052  2974  3012 W cr_AWNetworkFetcherTask: IOException during downloadToFile.
+10-16 12:03:53.052  2974  3012 W cr_AWNetworkFetcherTask: java.io.IOException: Cleartext HTTP traffic to edgedl.me.gvt1.com not permitted
+10-16 12:03:53.052  2974  3012 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+10-16 12:03:53.052  2974  3012 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+10-16 12:03:53.052  2974  3012 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+10-16 12:03:53.052  2974  3012 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+10-16 12:03:53.052  2974  3012 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-636771938:56)
+10-16 12:03:53.109  2854  2894 I chromium: [INFO:viewport_data.cc(133)] E2E_Used ViewportFitCover
+10-16 12:03:53.115  2852  2953 I cr_VariationsSeedFetch: Fetched first run seed in 277 ms
+10-16 12:03:53.395   580  2223 I AppsFilter: interaction: PackageSetting{b797394 app.two.android/10209} -> PackageSetting{c66538 com.google.android.documentsui/10096} BLOCKED
+10-16 12:03:53.444   580   613 D SystemServerTimingAsync: ssm.onUnlockedUser-0_com.android.server.webkit.WebViewUpdateService
+10-16 12:03:53.444   580   613 V SystemServerTimingAsync: ssm.onUnlockedUser-0_com.android.server.webkit.WebViewUpdateService took to complete: 0ms
+10-16 12:03:53.454  1507  2006 I Blockstore: [DataStoreImpl] Clearing Blockstore Data for package app.two.android [CONTEXT service_id=258 ]
+10-16 12:03:53.478  1314  2279 I FontLog : Package app.two.android has no metadata [CONTEXT service_id=132 ]
+10-16 12:03:53.671  2502  2502 I UserRestrictionsPolicyHandler: Build type DEBUG = true
+10-16 12:03:53.882  2854  2894 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 4360

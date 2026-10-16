@@ -1,0 +1,4 @@
+10-16 12:07:25.384  3327  4709 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:07:25.384  3327  4709 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:07:25.508  3327  8030 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:07:25.508  3327  8030 W libc    : Access denied finding property "service.adb.tls.port"
