@@ -63,6 +63,7 @@ import {
 import { localMesh } from './core/localMesh';
 import { insertBySentAt } from './core/ordering';
 import { CallEngine, CallState, IDLE_CALL, CALL_SIGNAL, CALL_MISSED } from './core/call';
+import { crashNoteToTell } from './core/crashNote';
 import { CallOverlay } from './components/CallOverlay';
 import { RelayStorageWarning } from './components/RelayStorageWarning';
 import { RoleClashDialog } from './components/RoleClashDialog';
@@ -1993,6 +1994,27 @@ export const App: React.FC = () => {
    * (core/appUpdate.ts).
    */
   const [updateOffer, setUpdateOffer] = useState<UpdateInfo | null>(null);
+
+  /**
+   * Two ran into a problem last time - closed unexpectedly, or had to start
+   * its page again: said once, after unlocking, with the details waiting in
+   * Settings to be copied and passed on (core/crashNote.ts).
+   */
+  useEffect(() => {
+    if (isLocked || isCamouflaged || !session) return;
+    const timer = setTimeout(() => {
+      if (!crashNoteToTell()) return;
+      setInAppNotification({
+        id: newId(),
+        title: 'Two ran into a problem',
+        body: 'Settings has the details to copy and pass on',
+        type: 'general',
+        tabId: 'settings'
+      });
+    }, 3500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocked, isCamouflaged, !!session]);
   const callIdle = callState.phase === 'idle';
   useEffect(() => {
     if (isLocked || isCamouflaged || !pageVisible || !session || !callIdle || updateOffer) return;
