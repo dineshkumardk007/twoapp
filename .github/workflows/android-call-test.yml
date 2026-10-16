@@ -151,7 +151,9 @@ jobs:
             const s = require("./'"$S"'");
             const line = s.scenarios.map(x => (x.ok ? "ok " : "FAIL ") + x.title + (x.crashed ? " (APP CLOSED)" : "") + (x.failedChecks && x.failedChecks.length ? " [" + x.failedChecks.join("; ") + "]" : "") + (x.error ? " {" + x.error.slice(0, 160) + "}" : "")).join("%0A");
             const kind = s.failed ? "error" : "notice";
-            console.log(`::${kind} title=Android ${s.device.android || "?"} (API ${s.api}): ${s.passed} passed, ${s.failed} failed::${line}`);
+            // A comma or colon would end the title early: escaped, as the runner expects.
+            const title = `Android ${s.device.android || "?"} (API ${s.api}) - ${s.passed} passed - ${s.failed} failed`.replace(/,/g, "%2C").replace(/:/g, "%3A");
+            console.log(`::${kind} title=${title}::${line}`);
             process.exit(s.failed ? 1 : 0);
           '
 

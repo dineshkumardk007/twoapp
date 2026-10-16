@@ -37,6 +37,12 @@ class CallKeepAliveService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // The call can end while Android is still starting this - a call
+        // cancelled the moment it was made. Then there is nothing to keep.
+        if (!wanted) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
         } else {
@@ -45,8 +51,8 @@ class CallKeepAliveService : Service() {
         try {
             ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type)
         } catch (e: Exception) {
-            // Refused - typically the microphone permission not granted yet, or
-            // the app already off screen. The call still works while visible.
+            // Refused - the app already off screen, or the microphone
+            // permission taken away. The call still works while visible.
             stopSelf()
         }
         // Not restarted if the system kills it: a restarted service would be
@@ -56,6 +62,7 @@ class CallKeepAliveService : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         // Swiping the app away ends the call with it; the notification goes too.
+        wanted = false
         stopSelf()
     }
 
@@ -99,30 +106,48 @@ class CallKeepAliveService : Service() {
         private const val CHANNEL_ID = "two_call_in_progress"
         private const val NOTIFICATION_ID = 4102
 
+        /**
+         * Whether a call wants the service right now: the last word of start()
+         * or stop(), which the service checks as it starts.
+         */
+        @Volatile
+        private var wanted = false
+
         fun start(context: Context) {
             // Android 14 refuses a microphone service to an app without the
-            // microphone permission, and a service that was started but could
-            // not go foreground crashes the app on some versions. Checked
-            // first, so that refusal never happens.
+            // microphone permission. Checked first, so that never happens.
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED
             ) {
                 return
             }
+            wanted = true
             try {
-                ContextCompat.startForegroundService(
-                    context,
-                    Intent(context, CallKeepAliveService::class.java)
-                )
+                // An ordinary start, not startForegroundService(). That one is
+                // a promise to Android that the service will be in the
+                // foreground within seconds, and Android closes the whole app
+                // when the promise is broken - which stopping the service
+                // before it was up did: a call cancelled, refused or failed in
+                // its first moment. Started like this, the service brings
+                // itself to the foreground as it starts, which Android allows
+                // because the app is on screen, and stopping it early costs
+                // nothing.
+                context.startService(Intent(context, CallKeepAliveService::class.java))
             } catch (e: Exception) {
-                // Android 12+ refuses to start one from the background. Calls
-                // start with the app on screen, so this is the rare race of a
-                // call beginning as the app is left.
+                // Android refuses a service to an app that has just left the
+                // screen. The call goes on; only the screen-off microphone is
+                // lost.
+                wanted = false
             }
         }
 
         fun stop(context: Context) {
-            context.stopService(Intent(context, CallKeepAliveService::class.java))
+            wanted = false
+            try {
+                context.stopService(Intent(context, CallKeepAliveService::class.java))
+            } catch (e: Exception) {
+                // Not running.
+            }
         }
     }
 }

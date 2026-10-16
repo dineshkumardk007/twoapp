@@ -15,6 +15,7 @@ import { copyTextOrThrow } from '../core/clipboard';
 import { FingerprintStatus, fingerprintStatus, enableFingerprint, disableFingerprint } from '../core/fingerprint';
 import { unlockVault } from '../core/vault';
 import { appVersion } from '../core/appUpdate';
+import { CrashNoteCard } from '../components/CrashNoteCard';
 import { showNotice } from '../core/dialog';
 import { resolveRelayUrl } from '../core/ws';
 import { takeBackupRequest } from '../core/backupReminder';
@@ -562,6 +563,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {updateMessage}
             </p>
           )}
+          <CrashNoteCard />
         </div>
       )}
 

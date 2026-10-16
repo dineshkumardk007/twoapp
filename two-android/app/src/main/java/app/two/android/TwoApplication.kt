@@ -3,6 +3,7 @@ package app.two.android
 import android.app.Application
 import androidx.work.*
 import app.two.android.core.crypto.KeystoreManager
+import app.two.android.core.diagnostics.CrashNote
 import app.two.android.core.database.AppDatabase
 import app.two.android.core.sync.SyncEngine
 import app.two.android.core.sync.SyncWorker
@@ -21,6 +22,9 @@ class TwoApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // First, so that whatever goes wrong after this is noted for Settings.
+        CrashNote.install(this)
 
         // 1. Initialize encrypted database and hardware keystore
         database = AppDatabase.getInstance(this)

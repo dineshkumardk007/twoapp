@@ -138,7 +138,8 @@ async function cdp(url) {
       const r = await send('Runtime.evaluate', {
         expression: `(async () => { ${js} })()`,
         awaitPromise: true,
-        returnByValue: true
+        returnByValue: true,
+        userGesture: true
       });
       if (r.result?.exceptionDetails) {
         throw new Error('page: ' + (r.result.exceptionDetails.exception?.description || r.result.exceptionDetails.text));
@@ -575,7 +576,42 @@ async function main() {
     r.check('the call service has stopped', !callService().running);
   });
 
-  // 7. The microphone refused.
+  // 7. Choosing a photo for the chat: Android's picker opens, and Back
+  // returns to the chat with nothing sent.
+  await scenario('Choosing a photo opens the picker', async r => {
+    const a = await onChat();
+    r.step('tap Send a photo', await a.eval(PAGE.press('Send a photo')));
+    await sleep(4000);
+    const top = sh('dumpsys activity activities', { allowFail: true });
+    const resumed = (/(?:mResumedActivity|topResumedActivity|ResumedActivity)[^\n]*/.exec(top) || [''])[0].trim();
+    r.check("Android's picker is open", resumed && !resumed.includes(PKG), resumed);
+    r.shot('picker');
+    sh('input keyevent KEYCODE_BACK');
+    await sleep(2500);
+    r.check('back in the chat', !!(await a.eval(`return !!document.querySelector('button[aria-label^="Call "]');`)));
+  });
+
+  // 8. Taking a photo: the phone's camera app opens. The test phone has no
+  // camera to speak of, so only that it opens and Two stays open is checked.
+  await scenario('Taking a photo opens the camera', async r => {
+    const a = await onChat();
+    r.step('tap Take a photo', await a.eval(PAGE.press('Take a photo')));
+    await sleep(5000);
+    const top = sh('dumpsys activity activities', { allowFail: true });
+    const resumed = (/(?:mResumedActivity|topResumedActivity|ResumedActivity)[^\n]*/.exec(top) || [''])[0].trim();
+    r.step('on screen', resumed);
+    r.shot('camera');
+    sh('input keyevent KEYCODE_BACK');
+    await sleep(2500);
+    // A camera app with no camera may need a second Back.
+    if (!(await a.eval(`return document.visibilityState === 'visible';`).catch(() => false))) {
+      sh('input keyevent KEYCODE_BACK');
+      await sleep(2000);
+    }
+    r.check('back in the chat', !!(await a.eval(`return !!document.querySelector('button[aria-label^="Call "]');`)));
+  });
+
+  // 9. The microphone refused.
   await scenario("Call when you don't allow the microphone", async r => {
     r.restartExpected = true;
     // Taking a permission away stops the app, as Android always does.

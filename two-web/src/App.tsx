@@ -63,6 +63,7 @@ import {
 import { localMesh } from './core/localMesh';
 import { insertBySentAt } from './core/ordering';
 import { CallEngine, CallState, IDLE_CALL, CALL_SIGNAL, CALL_MISSED } from './core/call';
+import { crashNoteToTell } from './core/crashNote';
 import { CallOverlay } from './components/CallOverlay';
 import { RelayStorageWarning } from './components/RelayStorageWarning';
 import { RoleClashDialog } from './components/RoleClashDialog';
@@ -415,6 +416,12 @@ export const App: React.FC = () => {
       callEngineRef.current = null;
     };
   }, []);
+  // Steady across renders, or the call screen would restart its listening
+  // every second the timer ticks.
+  const callVoiceLevels = useCallback(
+    () => callEngineRef.current?.voiceLevels() ?? Promise.resolve({ mine: 0, theirs: 0 }),
+    []
+  );
   const [showStoryTour, setShowStoryTour] = useState(false);
 
   /**
@@ -1993,6 +2000,26 @@ export const App: React.FC = () => {
    * (core/appUpdate.ts).
    */
   const [updateOffer, setUpdateOffer] = useState<UpdateInfo | null>(null);
+
+  /**
+   * Two closed unexpectedly last time: said once, after unlocking, with the
+   * details waiting in Settings to be copied and passed on (core/crashNote.ts).
+   */
+  useEffect(() => {
+    if (isLocked || isCamouflaged || !session) return;
+    const timer = setTimeout(() => {
+      if (!crashNoteToTell()) return;
+      setInAppNotification({
+        id: newId(),
+        title: 'Two closed unexpectedly',
+        body: 'Settings has the details to copy and pass on',
+        type: 'general',
+        tabId: 'settings'
+      });
+    }, 3500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocked, isCamouflaged, !!session]);
   const callIdle = callState.phase === 'idle';
   useEffect(() => {
     if (isLocked || isCamouflaged || !pageVisible || !session || !callIdle || updateOffer) return;
@@ -3730,8 +3757,10 @@ export const App: React.FC = () => {
   const callOverlay = (
     <CallOverlay
       call={callState}
+      myName={state.userName || 'You'}
       partnerName={state.partnerName || 'Partner'}
       partnerOnline={partnerOnline}
+      voiceLevels={callVoiceLevels}
       onAccept={() => void callEngineRef.current?.accept()}
       onDecline={() => callEngineRef.current?.decline()}
       onHangup={() => callEngineRef.current?.hangup()}
