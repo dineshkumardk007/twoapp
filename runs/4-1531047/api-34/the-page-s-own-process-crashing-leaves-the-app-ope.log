@@ -1,0 +1,159 @@
+10-16 12:43:28.553  5015  5064 D EGL_emulation: app_time_stats: avg=1009.54ms min=18.00ms max=3899.07ms count=4
+10-16 12:43:30.060  7055  7055 W linker64: type=1400 audit(0.0:52): avc:  denied  { search } for  name="tests" dev="dm-40" ino=65540 scontext=u:r:untrusted_app:s0:c192,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 12:43:30.060  7055  7055 W linker64: type=1400 audit(0.0:53): avc:  denied  { search } for  name="tests" dev="dm-40" ino=65540 scontext=u:r:untrusted_app:s0:c192,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 12:43:30.060  7055  7055 W linker64: type=1400 audit(0.0:54): avc:  denied  { search } for  name="tests" dev="dm-40" ino=65540 scontext=u:r:untrusted_app:s0:c192,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 12:43:30.060  7055  7055 W linker64: type=1400 audit(0.0:55): avc:  denied  { search } for  name="tests" dev="dm-40" ino=65540 scontext=u:r:untrusted_app:s0:c192,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 12:43:30.112  7055  7055 W libc    : Access denied finding property "ro.debuggable"
+10-16 12:43:30.108  7055  7055 W linker64: type=1400 audit(0.0:56): avc:  denied  { read } for  name="u:object_r:userdebug_or_eng_prop:s0" dev="tmpfs" ino=320 scontext=u:r:untrusted_app:s0:c192,c256,c512,c768 tcontext=u:object_r:userdebug_or_eng_prop:s0 tclass=file permissive=0 app=app.two.android
+10-16 12:43:30.723  7055  7055 W chromium: [1016/124330.723347:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.724  7055  7055 W chromium: [1016/124330.724023:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.724  7055  7055 W chromium: [1016/124330.724279:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.724  7055  7055 W chromium: [1016/124330.724633:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.725  7055  7055 W chromium: [1016/124330.725103:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.725  7055  7055 W chromium: [1016/124330.725377:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.725  7055  7055 W chromium: [1016/124330.725642:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.725  7055  7055 W chromium: [1016/124330.725906:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.726  7055  7055 W chromium: [1016/124330.726145:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.726  7055  7055 W chromium: [1016/124330.726499:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.726  7055  7055 W chromium: [1016/124330.726753:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.727  7055  7055 W chromium: [1016/124330.727047:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.727  7055  7055 W chromium: [1016/124330.727298:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.727  7055  7055 W chromium: [1016/124330.727531:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.727  7055  7055 W chromium: [1016/124330.727778:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.728  7055  7055 W chromium: [1016/124330.728012:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.728  7055  7055 W chromium: [1016/124330.728271:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.728  7055  7055 W chromium: [1016/124330.728496:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.728  7055  7055 W chromium: [1016/124330.728702:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.729  7055  7055 W chromium: [1016/124330.729050:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.729  7055  7055 W chromium: [1016/124330.729333:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.729  7055  7055 W chromium: [1016/124330.729589:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.729  7055  7055 W chromium: [1016/124330.729874:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.730  7055  7055 W chromium: [1016/124330.730146:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.730  7055  7055 W chromium: [1016/124330.730387:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.730  7055  7055 W chromium: [1016/124330.730621:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.730  7055  7055 W chromium: [1016/124330.730824:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.731  7055  7055 W chromium: [1016/124330.731041:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.731  7055  7055 W chromium: [1016/124330.731299:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.731  7055  7055 W chromium: [1016/124330.731531:WARNING:process_reader_linux.cc(95)] sched_getscheduler: Permission denied (13)
+10-16 12:43:30.740  7055  7055 E chromium: [1016/124330.740303:ERROR:ptrace_client.cc(363)] Broker Open: access denied
+10-16 12:43:30.809  7055  7055 E chromium: [1016/124330.809657:ERROR:socket.cc(182)] incorrect payload size 0
+10-16 12:43:30.810  5090  5179 E libc    : failed to connect to tombstoned: Operation not permitted
+10-16 12:43:30.977  5090  5179 W libc    : Access denied finding property "ro.debuggable"
+10-16 12:43:30.977  5090  5179 W libc    : Access denied finding property "ro.debuggable"
+10-16 12:43:30.977  5090  5179 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-16 12:43:30.977  5090  5179 F DEBUG   : Build fingerprint: 'google/sdk_gphone64_x86_64/emu64xa:14/UE1A.230829.050/12077443:userdebug/dev-keys'
+10-16 12:43:30.977  5090  5179 F DEBUG   : Revision: '0'
+10-16 12:43:30.977  5090  5179 F DEBUG   : ABI: 'x86_64'
+10-16 12:43:30.977  5090  5179 F DEBUG   : Timestamp: 2026-10-16 12:43:30.815862663+0000
+10-16 12:43:30.977  5090  5179 F DEBUG   : Process uptime: 202s
+10-16 12:43:30.977  5090  5179 F DEBUG   : Cmdline: com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:43:30.977  5090  5179 F DEBUG   : pid: 5090, tid: 5179, name: Chrome_ChildIOT  >>> com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 <<<
+10-16 12:43:30.977  5090  5179 F DEBUG   : uid: 99000
+10-16 12:43:30.977  5090  5179 F DEBUG   : signal 0 (SIGTRAP), code 128 (SI_KERNEL), fault addr --------
+10-16 12:43:30.977  5090  5179 F DEBUG   :     rax 0000000000000001  rbx 000072ba477bf3b8  rcx 70a4f5a326c6603f  rdx 000000000000000a
+10-16 12:43:30.977  5090  5179 F DEBUG   :     r8  000072ba50e8a714  r9  000072ba477bf6c8  r10 0000000000000000  r11 000072bd590df418
+10-16 12:43:30.977  5090  5179 F DEBUG   :     r12 000072bd5c6d6f70  r13 0000000000000000  r14 00000fb40189ef40  r15 0000000000000030
+10-16 12:43:30.978  5090  5179 F DEBUG   :     rdi 00000fb4017a7db6  rsi 000072ba49b0969b
+10-16 12:43:30.978  5090  5179 F DEBUG   :     rbp 0000000000000066  rsp 000072ba477bf330  rip 000072ba4fb2768e
+10-16 12:43:30.978  5090  5179 F DEBUG   : 38 total frames
+10-16 12:43:30.978  5090  5179 F DEBUG   : backtrace:
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #00 pc 000000000636268e  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #01 pc 0000000002aafbbb  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #02 pc 000000000284eebb  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #03 pc 000000000284e78d  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #04 pc 000000000284ec3d  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #05 pc 0000000002841838  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #06 pc 0000000002841457  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #07 pc 000000000284e78d  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #08 pc 000000000284dd3c  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #09 pc 000000000284d0f1  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #10 pc 00000000021b0fb8  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #11 pc 000000000284ce1f  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #12 pc 00000000028ca5f2  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #13 pc 00000000028ca47f  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.978  5090  5179 F DEBUG   :       #14 pc 00000000028ca308  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #15 pc 00000000028ca1dc  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #16 pc 000000000287aa3a  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #17 pc 000000000287a9e0  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #18 pc 0000000002878f0e  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #19 pc 0000000003e4ccb7  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #20 pc 0000000002878c65  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #21 pc 00000000028b94d1  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #22 pc 0000000003e46d9f  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #23 pc 0000000003e61fbe  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #24 pc 0000000003e55254  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #25 pc 0000000003e54bdf  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #26 pc 00000000028b8f42  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #27 pc 00000000050bbc65  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #28 pc 000000000514aff7  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #29 pc 000000000285262a  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #30 pc 000000000285a670  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #31 pc 000000000285a172  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #32 pc 0000000002859fd4  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #33 pc 0000000002d626e2  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #34 pc 000000000295b85a  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.979  5090  5179 F DEBUG   :       #35 pc 000000000289b689  /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x89b000) (BuildId: 0808498ff97b3353fd7cdb68725c85232b4ce202)
+10-16 12:43:30.980  5090  5179 F DEBUG   :       #36 pc 00000000000cd06a  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+58) (BuildId: fa337969c798946280caa45e2d71a2e7)
+10-16 12:43:30.980  5090  5179 F DEBUG   :       #37 pc 0000000000062d88  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+56) (BuildId: fa337969c798946280caa45e2d71a2e7)
+10-16 12:43:31.006   545  2344 I ActivityManager: Process com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 (pid 5090) has died: fg  BTOP
+10-16 12:43:31.006   545  2344 W ActivityManager: Scheduling restart of crashed service app.two.android/org.chromium.content.app.SandboxedProcessService0:0 in 1000ms for connection
+10-16 12:43:31.006  5015  5087 W cr_ChildProcessConn: onServiceDisconnected (crash or killed by oom): pid=5090 bindings:W  S
+10-16 12:43:31.013  5015  5015 E chromium: [ERROR:aw_browser_terminator.cc(156)] Renderer process (5090) crash detected (code 5).
+10-16 12:43:31.017   545   848 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5015 device: null from API: clearCommunicationDevice() from u/pid:10192/5015
+10-16 12:43:31.039  5015  5015 I ActivityThread: Schedule relaunch activity: app.two.android.MainActivity
+10-16 12:43:31.039  5015  5064 D EGL_emulation: app_time_stats: avg=1242.67ms min=325.65ms max=2159.68ms count=2
+10-16 12:43:31.063  5015  5015 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@a56638e
+10-16 12:43:31.063   545  2349 D CoreBackPreview: Window{888f666 u0 app.two.android/app.two.android.MainActivity}: Setting back callback null
+10-16 12:43:31.074  5015  5015 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+10-16 12:43:31.088   545  2349 D ConnectivityService: requestNetwork for uid/pid:10192/5015 activeRequest: null callbackRequest: 158 [NetworkRequest [ REQUEST id=159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 12:43:31.089   545   829 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:43:31.089   545   829 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:43:31.089   545   829 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:43:31.089   545   829 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:43:31.102  5015  5015 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+10-16 12:43:31.102  5015  5015 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 12:43:31.105  5015  5097 E chromium: [ERROR:directory_reader_posix.cc(42)] opendir /data/user/0/app.two.android/cache/WebView/Crashpad/attachments/4f168cfd-f055-4632-b7a4-19bf31f81235: No such file or directory (2)
+10-16 12:43:31.129   545   576 I ActivityManager: Start proc 7059:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:1/u0i1 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:1}
+10-16 12:43:31.135  7059  7059 I cr_WebViewApkApp: Launched version=113.0.5672.136 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:1
+10-16 12:43:31.137  7059  7059 I cr_ChildProcessService: Creating new ChildProcessService pid=7059
+10-16 12:43:31.143  7059  7073 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:43:31.143  7059  7073 I cr_CachingUmaRecorder: Flushed 2 samples from 2 histograms.
+10-16 12:43:31.295  7059  7080 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:31.295  7059  7080 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:31.313  7059  7080 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:31.313  7059  7080 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:31.332  5015  5015 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 12:43:31.375  7059  7080 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:31.375  7059  7080 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:31.391  7059  7080 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:31.391  7059  7080 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:32.288  5015  5064 D EGL_emulation: app_time_stats: avg=1248.76ms min=1248.76ms max=1248.76ms count=1
+10-16 12:43:32.289   545  2349 I WindowManager: finishDrawing of relaunch: Window{888f666 u0 app.two.android/app.two.android.MainActivity} 1233ms
+10-16 12:43:32.292  5015  5015 I Choreographer: Skipped 52 frames!  The application may be doing too much work on its main thread.
+10-16 12:43:32.298   545   567 W ProcessStats: Tracking association SourceState{3d40fef app.two.android/10192 BTop #12875} whose proc state 2 is better than process ProcessState{14fae79 com.google.android.gms.persistent/10126 pkg=com.google.android.gms} proc state 4 (7 skipped)
+10-16 12:43:32.410  5015  5041 I OpenGLRenderer: Davey! duration=884ms; Flags=0, FrameTimelineVsyncId=21249, IntendedVsync=259394749579, Vsync=259394749579, InputEventId=0, HandleInputStart=259395167599, AnimationStart=259395170253, PerformTraversalsStart=259395523246, DrawStart=259396414407, FrameDeadline=259411416245, FrameInterval=259395156273, FrameStartTime=16666666, SyncQueued=259399365991, SyncStart=259400261678, IssueDrawCommandsStart=259400321076, SwapBuffers=260213272959, FrameCompleted=260280128053, DequeueBufferDuration=4867, QueueBufferDuration=286244, GpuCompleted=260279917451, SwapBuffersCompleted=260280128053, DisplayPresentTime=0, CommandSubmissionCompleted=260213272959, 
+10-16 12:43:32.446  5015  5041 I OpenGLRenderer: Davey! duration=1016ms; Flags=0, FrameTimelineVsyncId=21256, IntendedVsync=259411416245, Vsync=260278082877, InputEventId=0, HandleInputStart=260285014193, AnimationStart=260285018319, PerformTraversalsStart=260286179791, DrawStart=260286412566, FrameDeadline=260311416209, FrameInterval=260283539018, FrameStartTime=16666666, SyncQueued=260287014187, SyncStart=260287847983, IssueDrawCommandsStart=260287953018, SwapBuffers=260401691450, FrameCompleted=260428312340, DequeueBufferDuration=3426, QueueBufferDuration=315477, GpuCompleted=260428312340, SwapBuffersCompleted=260411840971, DisplayPresentTime=0, CommandSubmissionCompleted=260401691450, 
+10-16 12:43:32.458  7059  7073 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 4360
+10-16 12:43:32.550  5015  5117 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:43:32.550  5015  5117 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:43:32.550  5015  5117 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 4360
+10-16 12:43:32.550  5015  5117 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:43:32.550  5015  5117 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:43:32.550  5015  5117 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:43:32.551  5015  5117 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:43:32.556  5015  5117 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:43:32.558  5015  5117 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:43:32.558  5015  5117 D AAudioStream: setState(s#6) from 0 to 2
+10-16 12:43:32.559  5015  5117 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#6 ----------------
+10-16 12:43:32.559  5015  5117 D AAudio  : AAudioStream_requestStart(s#6) called --------------
+10-16 12:43:32.559  5015  5117 D AAudioStream: setState(s#6) from 2 to 3
+10-16 12:43:32.560  5015  5117 D AAudio  : AAudioStream_requestStart(s#6) returned 0 ---------
+10-16 12:43:32.561  5015  5041 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:43:32.561  5015  7094 D AAudioStream: setState(s#6) from 3 to 4
+10-16 12:43:35.331  5015  5064 D EGL_emulation: app_time_stats: avg=608.27ms min=16.10ms max=2781.23ms count=5
+10-16 12:43:37.708   545  2344 D BiometricService/PreAuthInfo: Package: app.two.android Sensor ID: 4 Modality: 8 Status: 7
+10-16 12:43:37.709   545  2344 D BiometricService/PreAuthInfo: Package: app.two.android Sensor ID: 0 Modality: 2 Status: 7
+10-16 12:43:37.751  5015  5064 D EGL_emulation: app_time_stats: avg=604.33ms min=14.80ms max=2369.98ms count=4
+10-16 12:43:40.020  5015  5064 D EGL_emulation: app_time_stats: avg=59.96ms min=13.33ms max=1428.84ms count=37
+10-16 12:43:41.032  5015  5064 D EGL_emulation: app_time_stats: avg=10.79ms min=8.75ms max=21.10ms count=61
+10-16 12:43:42.033  5015  5064 D EGL_emulation: app_time_stats: avg=10.13ms min=8.80ms max=15.22ms count=60

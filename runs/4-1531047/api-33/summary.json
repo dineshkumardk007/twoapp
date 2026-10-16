@@ -1,0 +1,73 @@
+{
+  "api": 33,
+  "device": {
+    "android": "13",
+    "sdk": "33",
+    "webview": "com.google.android.webview, 109.0.5414.123"
+  },
+  "passed": 10,
+  "failed": 0,
+  "crashed": [],
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Choosing a photo opens the picker",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Taking a photo opens the camera",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "The page's own process crashing leaves the app open",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": true,
+      "crashed": false,
+      "failedChecks": []
+    }
+  ]
+}

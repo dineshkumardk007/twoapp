@@ -1,0 +1,68 @@
+10-16 12:43:02.575  5304  5329 D EGL_emulation: app_time_stats: avg=12085.37ms min=12085.37ms max=12085.37ms count=1
+10-16 12:43:03.860  5304  5329 D EGL_emulation: app_time_stats: avg=642.51ms min=111.65ms max=1173.37ms count=2
+10-16 12:43:06.881   509   771 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5304 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/5304
+10-16 12:43:06.881  5304  5370 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:43:06.904  5304  5304 E chromium: [ERROR:web_contents_delegate.cc(239)] WebContentsDelegate::CheckMediaAccessPermission: Not supported.
+10-16 12:43:06.916  5346  5997 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:43:06.932  5346  5999 W chromium: [WARNING:audio_send_stream.cc(874)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:43:06.958  5304  5329 D EGL_emulation: app_time_stats: avg=1548.55ms min=327.19ms max=2769.92ms count=2
+10-16 12:43:06.966  5346  7680 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 202856923, interval (us) = 71
+10-16 12:43:06.979  5346  7680 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 202869253, interval (us) = 362
+10-16 12:43:07.022  5346  7680 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 202912903, interval (us) = 169
+10-16 12:43:07.081  5346  7680 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 202971950, interval (us) = 786
+10-16 12:43:07.096  5346  7680 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 202986611, interval (us) = 838
+10-16 12:43:07.218  5346  7680 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 203108709, interval (us) = 605
+10-16 12:43:08.204  2516  2610 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:43:08.204  2516  2610 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:43:08.599  5346  5999 W chromium: [WARNING:audio_send_stream.cc(874)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:43:08.649  5304  5370 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:43:08.649  5304  5370 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:43:08.649  5304  5370 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 2116
+10-16 12:43:08.649  5304  5370 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:43:08.649  5304  5370 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:43:08.649  5304  5370 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:43:08.649  5304  5370 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:43:08.661  5304  5329 D EGL_emulation: app_time_stats: avg=169.37ms min=24.27ms max=1345.29ms count=10
+10-16 12:43:08.662  5304  5370 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:43:08.662  5304  5370 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:43:08.662  5304  5370 D AAudioStream: setState(s#3) from 0 to 2
+10-16 12:43:08.663  5304  5370 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#3 ----------------
+10-16 12:43:08.664  5304  5370 D AAudio  : AAudioStream_requestStart(s#3) called --------------
+10-16 12:43:08.664  5304  5370 D AAudioStream: setState(s#3) from 2 to 3
+10-16 12:43:08.666  5304  5370 D AAudio  : AAudioStream_requestStart(s#3) returned 0 ---------
+10-16 12:43:08.666  5304  5464 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:43:08.666  5304  7697 D AAudioStream: setState(s#3) from 3 to 4
+10-16 12:43:08.820  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 20.132ms; playout delay: 281.419ms
+10-16 12:43:08.839  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 22.713ms; playout delay: 281.419ms
+10-16 12:43:08.851  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 20.135ms; playout delay: 281.419ms
+10-16 12:43:08.881  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 20.104ms; playout delay: 291.171ms
+10-16 12:43:08.881  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 10.104ms; playout delay: 291.171ms
+10-16 12:43:08.895  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 20.058ms; playout delay: 300.349ms
+10-16 12:43:08.895  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 10.058ms; playout delay: 300.349ms
+10-16 12:43:08.911  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 20.209ms; playout delay: 300.349ms
+10-16 12:43:08.914  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 10.209ms; playout delay: 300.349ms
+10-16 12:43:08.941  5346  7680 W chromium: [WARNING:audio_processor.cc(467)] Large audio delay, capture delay: 20.375ms; playout delay: 308.557ms
+10-16 12:43:09.045   509   771 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5304 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setNewModeOwner
+10-16 12:43:09.047   509   771 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5304 device: null from API: clearCommunicationDevice() from u/pid:10174/5304
+10-16 12:43:09.694  5304  5329 D EGL_emulation: app_time_stats: avg=79.17ms min=28.03ms max=317.23ms count=13
+10-16 12:43:09.991   509   771 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5304 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/5304
+10-16 12:43:10.343  5346  7680 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 206233887, interval (us) = 999
+10-16 12:43:10.703  5304  5329 D EGL_emulation: app_time_stats: avg=47.75ms min=31.00ms max=120.24ms count=21
+10-16 12:43:11.657  5346  7680 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 207547400, interval (us) = 696
+10-16 12:43:11.745  5304  5329 D EGL_emulation: app_time_stats: avg=37.59ms min=24.36ms max=52.96ms count=27
+10-16 12:43:11.875   509   771 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5304 device: null from API: clearCommunicationDevice() from u/pid:10174/5304
+10-16 12:43:12.763  5304  5329 D EGL_emulation: app_time_stats: avg=29.11ms min=23.14ms max=37.21ms count=34
+10-16 12:43:13.112  5346  7680 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 209002146, interval (us) = 725
+10-16 12:43:13.765  5304  5329 D EGL_emulation: app_time_stats: avg=28.30ms min=21.52ms max=47.12ms count=34
+10-16 12:43:14.784  5304  5329 D EGL_emulation: app_time_stats: avg=28.34ms min=21.38ms max=39.05ms count=35
+10-16 12:43:15.078  5304  7697 W chromium: [WARNING:sync_reader.cc(170)] ASR: No room in socket buffer.: Broken pipe (32)
+10-16 12:43:15.079   509   771 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5304 device: null from API: clearCommunicationDevice() from u/pid:10174/5304
+10-16 12:43:15.081  5304  5370 D AAudio  : AAudioStream_requestStop(s#3) called
+10-16 12:43:15.081  5304  5370 D AAudioStream: setState(s#3) from 4 to 9
+10-16 12:43:15.081  5304  5370 D AudioTrack: stop(83): called with 312000 frames delivered
+10-16 12:43:15.085  5304  5370 D AAudioStream: setState(s#3) from 9 to 10
+10-16 12:43:15.374   509   771 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5304 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setNewModeOwner
+10-16 12:43:15.786  5304  5329 D EGL_emulation: app_time_stats: avg=27.95ms min=15.38ms max=77.45ms count=34
+10-16 12:43:17.645  5304  5329 D EGL_emulation: app_time_stats: avg=114.66ms min=18.75ms max=1493.69ms count=16
+10-16 12:43:17.971  2516  7736 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:43:17.971  2516  7736 W libc    : Access denied finding property "service.adb.tls.port"

@@ -1,0 +1,77 @@
+10-16 12:42:39.831  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:42:39.967  3791  3819 D EGL_emulation: app_time_stats: avg=2533.92ms min=2533.92ms max=2533.92ms count=1
+10-16 12:42:39.999  3791  3861 D AAudio  : AAudioStream_requestStop(s#3) called
+10-16 12:42:39.999  3791  3861 D AAudio  : AAudioStream_close(s#3) called ---------------
+10-16 12:42:39.999  3791  3861 D AAudioStream: setState(s#3) from 10 to 11
+10-16 12:42:40.000  3791  3861 D AAudioStream: setState(s#3) from 11 to 12
+10-16 12:42:40.000  3791  3861 D AAudioStream: ~AudioStream(s#3) mPlayerBase strongCount = 2
+10-16 12:42:40.000  3791  3861 D AAudio  : AAudioStream_close(s#3) returned 0 ---------
+10-16 12:42:44.579  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:42:44.579  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:42:44.692  3791  3819 D EGL_emulation: app_time_stats: avg=2362.45ms min=296.38ms max=4428.52ms count=2
+10-16 12:42:44.751  3791  3861 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:44.751  3791  3861 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:42:44.751  3791  3861 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 4360
+10-16 12:42:44.751  3791  3861 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:42:44.751  3791  3861 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:44.751  3791  3861 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:44.751  3791  3861 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:42:44.756  3791  3861 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:42:44.756  3791  3861 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:42:44.756  3791  3861 D AAudioStream: setState(s#4) from 0 to 2
+10-16 12:42:44.757  3791  3861 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#4 ----------------
+10-16 12:42:44.757  3791  3861 D AAudio  : AAudioStream_requestStart(s#4) called --------------
+10-16 12:42:44.757  3791  3861 D AAudioStream: setState(s#4) from 2 to 3
+10-16 12:42:44.758  3791  3861 D AAudio  : AAudioStream_requestStart(s#4) returned 0 ---------
+10-16 12:42:44.758  3791  4302 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:42:44.764  3791  4843 D AAudioStream: setState(s#4) from 3 to 4
+10-16 12:42:45.194  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:42:45.233  3842  4334 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:45.253  3842  4335 W chromium: [WARNING:peer_connection.cc(2675)] 0 is not ready to use the remote candidate because the local or remote description is not set.
+10-16 12:42:45.259  3842  4335 W chromium: [WARNING:peer_connection.cc(2675)] 0 is not ready to use the remote candidate because the local or remote description is not set.
+10-16 12:42:45.260  3842  4335 W chromium: [WARNING:peer_connection.cc(2675)] 0 is not ready to use the remote candidate because the local or remote description is not set.
+10-16 12:42:45.262  3791  3861 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:45.262  3791  3861 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:42:45.262  3791  3861 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 4360
+10-16 12:42:45.262  3791  3861 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:42:45.262  3791  3861 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:45.263   577  1853 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:45.264  3791  3861 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:45.269  3791  3861 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:42:45.273  3791  3861 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:42:45.273  3791  3861 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:42:45.273  3791  3861 D AAudioStream: setState(s#5) from 0 to 2
+10-16 12:42:45.274  3791  3861 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#5 ----------------
+10-16 12:42:45.279  3791  3861 D AAudio  : AAudioStream_requestStart(s#5) called --------------
+10-16 12:42:45.281  3791  3861 D AAudioStream: setState(s#5) from 2 to 3
+10-16 12:42:45.282  3791  3861 D AAudio  : AAudioStream_requestStart(s#5) returned 0 ---------
+10-16 12:42:45.287  3791  4858 D AAudioStream: setState(s#5) from 3 to 4
+10-16 12:42:45.287  3842  4855 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 231014428, interval (us) = 23
+10-16 12:42:45.288  3791  4302 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:42:45.303  3842  4855 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 231030007, interval (us) = 15
+10-16 12:42:45.309  3842  4335 W chromium: [WARNING:basic_port_allocator.cc(980)] Discarding candidate because port is already done gathering.
+10-16 12:42:45.442  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.107ms; playout delay: 289.689ms
+10-16 12:42:45.458  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.115ms; playout delay: 289.689ms
+10-16 12:42:45.476  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 21.912ms; playout delay: 289.689ms
+10-16 12:42:45.476  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 11.912ms; playout delay: 289.689ms
+10-16 12:42:45.491  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.401ms; playout delay: 289.689ms
+10-16 12:42:45.522  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.101ms; playout delay: 290.855ms
+10-16 12:42:45.541  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.117ms; playout delay: 290.855ms
+10-16 12:42:45.555  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.048ms; playout delay: 290.855ms
+10-16 12:42:45.572  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.056ms; playout delay: 290.855ms
+10-16 12:42:45.604  3842  4855 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.825ms; playout delay: 290.088ms
+10-16 12:42:45.724  3791  3819 D EGL_emulation: app_time_stats: avg=73.04ms min=26.61ms max=236.28ms count=14
+10-16 12:42:46.753  3791  3819 D EGL_emulation: app_time_stats: avg=41.73ms min=24.71ms max=167.71ms count=24
+10-16 12:42:47.338  3842  4855 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 233064977, interval (us) = 417
+10-16 12:42:47.756  3791  3819 D EGL_emulation: app_time_stats: avg=28.30ms min=20.10ms max=38.85ms count=34
+10-16 12:42:48.764  3791  3819 D EGL_emulation: app_time_stats: avg=28.57ms min=23.86ms max=42.46ms count=34
+10-16 12:42:49.771  3791  3819 D EGL_emulation: app_time_stats: avg=32.86ms min=26.01ms max=46.85ms count=30
+10-16 12:42:50.111  3842  4335 W chromium: [WARNING:openssl_adapter.cc(820)] read_alert warning close notify SSL negotiation finished successfully
+10-16 12:42:50.111  3842  4335 W chromium: [WARNING:openssl_adapter.cc(820)] write_alert warning close notify SSL negotiation finished successfully
+10-16 12:42:50.162  3791  4858 W chromium: [WARNING:sync_reader.cc(175)] ASR: No room in socket buffer.: Broken pipe (32)
+10-16 12:42:50.169  3791  3861 D AAudio  : AAudioStream_requestStop(s#5) called
+10-16 12:42:50.169  3791  3861 D AAudioStream: setState(s#5) from 4 to 9
+10-16 12:42:50.169  3791  3861 D AudioTrack: stop(90): called with 236160 frames delivered
+10-16 12:42:50.169  3791  3861 D AAudioStream: setState(s#5) from 9 to 10
+10-16 12:42:50.779  3791  3819 D EGL_emulation: app_time_stats: avg=31.22ms min=17.47ms max=205.97ms count=31
+10-16 12:42:52.731  3791  3819 D EGL_emulation: app_time_stats: avg=113.33ms min=17.44ms max=1559.74ms count=17

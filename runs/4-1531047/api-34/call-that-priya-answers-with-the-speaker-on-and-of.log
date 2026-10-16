@@ -1,0 +1,313 @@
+10-16 12:42:14.853  5015  5064 D EGL_emulation: app_time_stats: avg=6672.83ms min=6672.83ms max=6672.83ms count=1
+10-16 12:42:16.441  5015  5064 D EGL_emulation: app_time_stats: avg=793.70ms min=37.39ms max=1550.01ms count=2
+10-16 12:42:19.452   545   848 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5015 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/5015
+10-16 12:42:19.453  5015  5117 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:42:19.483  5090  5922 W chromium: [WARNING:codec.cc(466)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:19.485  5090  5922 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:42:19.489  5090  5924 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:42:19.509  5015  5064 D EGL_emulation: app_time_stats: avg=1533.95ms min=322.33ms max=2745.57ms count=2
+10-16 12:42:19.514   545  2345 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10192; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:19.515  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187507148, interval (us) = 17
+10-16 12:42:19.532  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187524070, interval (us) = 15
+10-16 12:42:19.546  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187538379, interval (us) = 88
+10-16 12:42:19.565  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187556740, interval (us) = 102
+10-16 12:42:19.605  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187597064, interval (us) = 128
+10-16 12:42:19.616  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187607826, interval (us) = 429
+10-16 12:42:19.627  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187618405, interval (us) = 100
+10-16 12:42:19.707  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187698936, interval (us) = 14
+10-16 12:42:19.724  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187716125, interval (us) = 78
+10-16 12:42:19.775  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187767277, interval (us) = 731
+10-16 12:42:19.791  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187783057, interval (us) = 544
+10-16 12:42:19.803  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187794459, interval (us) = 14
+10-16 12:42:19.866  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187858326, interval (us) = 41
+10-16 12:42:19.882  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187874327, interval (us) = 108
+10-16 12:42:19.914  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187906287, interval (us) = 145
+10-16 12:42:19.930  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187922369, interval (us) = 226
+10-16 12:42:19.947  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187938410, interval (us) = 296
+10-16 12:42:19.962  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187954326, interval (us) = 274
+10-16 12:42:19.994  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 187986323, interval (us) = 299
+10-16 12:42:20.011  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188002394, interval (us) = 361
+10-16 12:42:20.026  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188018330, interval (us) = 360
+10-16 12:42:20.074  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188066377, interval (us) = 411
+10-16 12:42:20.091  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188082461, interval (us) = 496
+10-16 12:42:20.107  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188098423, interval (us) = 480
+10-16 12:42:20.123  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188114438, interval (us) = 481
+10-16 12:42:20.155  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188146404, interval (us) = 532
+10-16 12:42:20.171  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188162393, interval (us) = 510
+10-16 12:42:20.187  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188178421, interval (us) = 552
+10-16 12:42:20.202  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188194314, interval (us) = 524
+10-16 12:42:20.235  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188226433, interval (us) = 575
+10-16 12:42:20.250  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188242363, interval (us) = 566
+10-16 12:42:20.267  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188258416, interval (us) = 582
+10-16 12:42:20.282  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188274383, interval (us) = 582
+10-16 12:42:20.315  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188306392, interval (us) = 608
+10-16 12:42:20.330  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188322318, interval (us) = 580
+10-16 12:42:20.346  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188338392, interval (us) = 616
+10-16 12:42:20.363  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188354476, interval (us) = 610
+10-16 12:42:20.395  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188386391, interval (us) = 653
+10-16 12:42:20.410  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188402330, interval (us) = 623
+10-16 12:42:20.426  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188418358, interval (us) = 657
+10-16 12:42:20.443  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188434440, interval (us) = 680
+10-16 12:42:20.475  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188466428, interval (us) = 689
+10-16 12:42:20.491  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188482420, interval (us) = 698
+10-16 12:42:20.506  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188498295, interval (us) = 669
+10-16 12:42:20.523  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188514409, interval (us) = 707
+10-16 12:42:20.539  5090  5924 W chromium: [WARNING:audio_send_stream.cc(878)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:42:20.550  5015  5117 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:20.550  5015  5117 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:42:20.550  5015  5117 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 4360
+10-16 12:42:20.550  5015  5117 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:42:20.550  5015  5117 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:20.550  5015  5117 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:20.550  5015  5117 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:42:20.555  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188546645, interval (us) = 677
+10-16 12:42:20.556  5015  5117 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:42:20.556  5015  5117 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:42:20.556  5015  5117 D AAudioStream: setState(s#2) from 0 to 2
+10-16 12:42:20.558  5015  5117 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#2 ----------------
+10-16 12:42:20.559  5015  5117 D AAudio  : AAudioStream_requestStart(s#2) called --------------
+10-16 12:42:20.559  5015  5117 D AAudioStream: setState(s#2) from 2 to 3
+10-16 12:42:20.560  5015  5117 D AAudio  : AAudioStream_requestStart(s#2) returned 0 ---------
+10-16 12:42:20.560  5015  5210 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:42:20.561  5015  6619 D AAudioStream: setState(s#2) from 3 to 4
+10-16 12:42:20.587  5015  5064 D EGL_emulation: app_time_stats: avg=96.40ms min=22.14ms max=736.77ms count=11
+10-16 12:42:20.588  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188579804, interval (us) = 695
+10-16 12:42:20.611  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188603309, interval (us) = 699
+10-16 12:42:20.635  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188626538, interval (us) = 691
+10-16 12:42:20.646   545   848 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5015 device: null from API: clearCommunicationDevice() from u/pid:10192/5015
+10-16 12:42:20.666  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.031ms; playout delay: 282.959ms
+10-16 12:42:20.667  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188658416, interval (us) = 878
+10-16 12:42:20.682  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.133ms; playout delay: 282.959ms
+10-16 12:42:20.715  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.188ms; playout delay: 282.959ms
+10-16 12:42:20.730  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.052ms; playout delay: 282.959ms
+10-16 12:42:20.731  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188722508, interval (us) = 981
+10-16 12:42:20.746  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.061ms; playout delay: 290.928ms
+10-16 12:42:20.764  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.547ms; playout delay: 290.928ms
+10-16 12:42:20.764  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 10.547ms; playout delay: 290.928ms
+10-16 12:42:20.796  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.47ms; playout delay: 290.928ms
+10-16 12:42:20.797   545   848 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5015 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setNewModeOwner
+10-16 12:42:20.797  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 10.47ms; playout delay: 290.928ms
+10-16 12:42:20.811  5090  6616 W chromium: [WARNING:audio_processor.cc(492)] Large audio delay, capture delay: 20.037ms; playout delay: 290.928ms
+10-16 12:42:20.811  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188802754, interval (us) = 955
+10-16 12:42:20.827  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188818582, interval (us) = 915
+10-16 12:42:20.907  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188898521, interval (us) = 765
+10-16 12:42:20.987  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188978580, interval (us) = 604
+10-16 12:42:21.003  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 188994742, interval (us) = 689
+10-16 12:42:21.035  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189026965, interval (us) = 777
+10-16 12:42:21.051  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189043136, interval (us) = 971
+10-16 12:42:21.067  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189058618, interval (us) = 687
+10-16 12:42:21.084  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189076154, interval (us) = 676
+10-16 12:42:21.131  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189122691, interval (us) = 660
+10-16 12:42:21.147  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189138553, interval (us) = 675
+10-16 12:42:21.169  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189160573, interval (us) = 654
+10-16 12:42:21.195  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189186499, interval (us) = 711
+10-16 12:42:21.211  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189202422, interval (us) = 658
+10-16 12:42:21.227  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189218397, interval (us) = 657
+10-16 12:42:21.243  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189234607, interval (us) = 697
+10-16 12:42:21.307  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189298580, interval (us) = 789
+10-16 12:42:21.323  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189314517, interval (us) = 742
+10-16 12:42:21.355  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189346665, interval (us) = 950
+10-16 12:42:21.403  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189394518, interval (us) = 737
+10-16 12:42:21.435  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189426660, interval (us) = 769
+10-16 12:42:21.467  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189458876, interval (us) = 607
+10-16 12:42:21.483  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189475143, interval (us) = 630
+10-16 12:42:21.531  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189522641, interval (us) = 842
+10-16 12:42:21.548  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189539428, interval (us) = 652
+10-16 12:42:21.574   545   848 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5015 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10192/5015
+10-16 12:42:21.578  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189569643, interval (us) = 815
+10-16 12:42:21.595  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189587125, interval (us) = 808
+10-16 12:42:21.609  5015  5064 D EGL_emulation: app_time_stats: avg=50.25ms min=18.96ms max=272.22ms count=20
+10-16 12:42:21.632  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189623652, interval (us) = 610
+10-16 12:42:21.644  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189635546, interval (us) = 771
+10-16 12:42:21.679  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189671162, interval (us) = 648
+10-16 12:42:21.693  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189684500, interval (us) = 792
+10-16 12:42:21.707  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189698448, interval (us) = 643
+10-16 12:42:21.758  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189750181, interval (us) = 668
+10-16 12:42:21.793  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189785061, interval (us) = 929
+10-16 12:42:21.867  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189859138, interval (us) = 843
+10-16 12:42:21.868  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189859529, interval (us) = 391
+10-16 12:42:21.868  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189859725, interval (us) = 196
+10-16 12:42:21.869  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189860482, interval (us) = 757
+10-16 12:42:21.869  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189860718, interval (us) = 236
+10-16 12:42:21.883  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189875210, interval (us) = 690
+10-16 12:42:21.916  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189907763, interval (us) = 688
+10-16 12:42:21.935  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189926825, interval (us) = 729
+10-16 12:42:21.951  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189942692, interval (us) = 739
+10-16 12:42:21.965  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189956878, interval (us) = 715
+10-16 12:42:21.996  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189987497, interval (us) = 745
+10-16 12:42:22.011  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190002972, interval (us) = 767
+10-16 12:42:22.044  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190036099, interval (us) = 825
+10-16 12:42:22.123  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190115028, interval (us) = 783
+10-16 12:42:22.159  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190150663, interval (us) = 767
+10-16 12:42:22.188  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190179642, interval (us) = 755
+10-16 12:42:22.235  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190226976, interval (us) = 702
+10-16 12:42:22.251  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190242779, interval (us) = 908
+10-16 12:42:22.267  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190258665, interval (us) = 847
+10-16 12:42:22.315  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190307027, interval (us) = 936
+10-16 12:42:22.331  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190322908, interval (us) = 645
+10-16 12:42:22.348  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190339406, interval (us) = 675
+10-16 12:42:22.363  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190355237, interval (us) = 687
+10-16 12:42:22.476  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190468043, interval (us) = 501
+10-16 12:42:22.507  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190498576, interval (us) = 537
+10-16 12:42:22.529  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190520877, interval (us) = 662
+10-16 12:42:22.557  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190549231, interval (us) = 627
+10-16 12:42:22.579  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190570705, interval (us) = 855
+10-16 12:42:22.587  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190578672, interval (us) = 653
+10-16 12:42:22.629  5015  5064 D EGL_emulation: app_time_stats: avg=24.83ms min=14.02ms max=81.09ms count=39
+10-16 12:42:22.636  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190627624, interval (us) = 560
+10-16 12:42:22.683  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190674666, interval (us) = 665
+10-16 12:42:22.717  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190708414, interval (us) = 555
+10-16 12:42:22.732  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190724059, interval (us) = 902
+10-16 12:42:22.747  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190738548, interval (us) = 568
+10-16 12:42:22.763  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190754630, interval (us) = 598
+10-16 12:42:22.799  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190790950, interval (us) = 561
+10-16 12:42:22.811  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190803229, interval (us) = 685
+10-16 12:42:22.844  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190836090, interval (us) = 888
+10-16 12:42:22.892  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190883742, interval (us) = 599
+10-16 12:42:22.907  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190898646, interval (us) = 650
+10-16 12:42:22.956  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190947782, interval (us) = 846
+10-16 12:42:22.971  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190963184, interval (us) = 559
+10-16 12:42:22.991  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190983017, interval (us) = 578
+10-16 12:42:23.003  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 190994814, interval (us) = 803
+10-16 12:42:23.035  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191026605, interval (us) = 621
+10-16 12:42:23.053  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191044991, interval (us) = 650
+10-16 12:42:23.067  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191058644, interval (us) = 661
+10-16 12:42:23.083  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191074902, interval (us) = 550
+10-16 12:42:23.115  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191107180, interval (us) = 694
+10-16 12:42:23.149  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191140906, interval (us) = 687
+10-16 12:42:23.196  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191187443, interval (us) = 780
+10-16 12:42:23.217  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191208794, interval (us) = 793
+10-16 12:42:23.387  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191379102, interval (us) = 110
+10-16 12:42:23.407  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191398751, interval (us) = 791
+10-16 12:42:23.430   545   848 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5015 device: null from API: clearCommunicationDevice() from u/pid:10192/5015
+10-16 12:42:23.436  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191427516, interval (us) = 181
+10-16 12:42:23.462  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191454272, interval (us) = 363
+10-16 12:42:23.467  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191459164, interval (us) = 105
+10-16 12:42:23.495  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191487013, interval (us) = 101
+10-16 12:42:23.519  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191510406, interval (us) = 199
+10-16 12:42:23.531  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191522879, interval (us) = 304
+10-16 12:42:23.567  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191559023, interval (us) = 211
+10-16 12:42:23.597  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191588814, interval (us) = 241
+10-16 12:42:23.611  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191602687, interval (us) = 408
+10-16 12:42:23.630  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191621586, interval (us) = 735
+10-16 12:42:23.632  5015  5064 D EGL_emulation: app_time_stats: avg=26.89ms min=16.12ms max=43.31ms count=35
+10-16 12:42:23.644  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191635510, interval (us) = 239
+10-16 12:42:23.675  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191667063, interval (us) = 326
+10-16 12:42:23.692  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191684039, interval (us) = 342
+10-16 12:42:23.708  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191699567, interval (us) = 823
+10-16 12:42:23.724  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191715602, interval (us) = 387
+10-16 12:42:23.771  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191762872, interval (us) = 410
+10-16 12:42:23.787  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191778632, interval (us) = 372
+10-16 12:42:23.803  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191794738, interval (us) = 363
+10-16 12:42:23.835  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191826567, interval (us) = 299
+10-16 12:42:23.851  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191842583, interval (us) = 274
+10-16 12:42:23.868  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191859683, interval (us) = 309
+10-16 12:42:23.883  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191874833, interval (us) = 352
+10-16 12:42:23.915  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191906826, interval (us) = 546
+10-16 12:42:23.947  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191938550, interval (us) = 455
+10-16 12:42:23.964  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 191956105, interval (us) = 941
+10-16 12:42:24.011  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192003192, interval (us) = 436
+10-16 12:42:24.031  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192022434, interval (us) = 484
+10-16 12:42:24.043  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192034577, interval (us) = 500
+10-16 12:42:24.076  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192067458, interval (us) = 558
+10-16 12:42:24.093  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192085251, interval (us) = 588
+10-16 12:42:24.114  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192105608, interval (us) = 584
+10-16 12:42:24.126  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192117707, interval (us) = 489
+10-16 12:42:24.207  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192198617, interval (us) = 617
+10-16 12:42:24.235  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192226993, interval (us) = 710
+10-16 12:42:24.251  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192242505, interval (us) = 627
+10-16 12:42:24.364  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192355925, interval (us) = 995
+10-16 12:42:24.411  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192402918, interval (us) = 445
+10-16 12:42:24.428  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192419757, interval (us) = 881
+10-16 12:42:24.446  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192437916, interval (us) = 453
+10-16 12:42:24.497  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192488646, interval (us) = 829
+10-16 12:42:24.508  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192499832, interval (us) = 394
+10-16 12:42:24.523  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192514544, interval (us) = 444
+10-16 12:42:24.571  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192563320, interval (us) = 412
+10-16 12:42:24.587  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192579059, interval (us) = 437
+10-16 12:42:24.638  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192629642, interval (us) = 503
+10-16 12:42:24.646  5015  5064 D EGL_emulation: app_time_stats: avg=23.67ms min=17.66ms max=36.79ms count=41
+10-16 12:42:24.651  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192642655, interval (us) = 499
+10-16 12:42:24.667  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192658635, interval (us) = 715
+10-16 12:42:24.681  2966  2996 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:42:24.681  2966  2996 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:42:24.708  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192699829, interval (us) = 489
+10-16 12:42:24.720  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192712095, interval (us) = 527
+10-16 12:42:24.735  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192726414, interval (us) = 605
+10-16 12:42:24.750  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192741477, interval (us) = 707
+10-16 12:42:24.811  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192802506, interval (us) = 548
+10-16 12:42:24.821  2966  6654 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:42:24.821  2966  6654 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:42:24.840  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192831726, interval (us) = 566
+10-16 12:42:24.844  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192835902, interval (us) = 533
+10-16 12:42:24.877  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192869058, interval (us) = 585
+10-16 12:42:24.891  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192882560, interval (us) = 661
+10-16 12:42:24.907  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192898540, interval (us) = 680
+10-16 12:42:24.924  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192916248, interval (us) = 848
+10-16 12:42:24.971  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192963320, interval (us) = 596
+10-16 12:42:25.003  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 192994452, interval (us) = 448
+10-16 12:42:25.035  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193027115, interval (us) = 615
+10-16 12:42:25.084  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193075691, interval (us) = 389
+10-16 12:42:25.115  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193106680, interval (us) = 552
+10-16 12:42:25.131  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193122931, interval (us) = 597
+10-16 12:42:25.148  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193140282, interval (us) = 981
+10-16 12:42:25.218  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193209795, interval (us) = 594
+10-16 12:42:25.218  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193209988, interval (us) = 193
+10-16 12:42:25.218  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193210084, interval (us) = 96
+10-16 12:42:25.230  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193221975, interval (us) = 587
+10-16 12:42:25.246  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193237760, interval (us) = 559
+10-16 12:42:25.278  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193269732, interval (us) = 592
+10-16 12:42:25.294  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193285790, interval (us) = 564
+10-16 12:42:25.310  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193302159, interval (us) = 543
+10-16 12:42:25.325  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193316928, interval (us) = 616
+10-16 12:42:25.358  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193350013, interval (us) = 764
+10-16 12:42:25.373  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193364571, interval (us) = 719
+10-16 12:42:25.387  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193378536, interval (us) = 735
+10-16 12:42:25.442  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193434324, interval (us) = 755
+10-16 12:42:25.460  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193451814, interval (us) = 838
+10-16 12:42:25.469  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193460916, interval (us) = 958
+10-16 12:42:25.532  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193524294, interval (us) = 730
+10-16 12:42:25.548  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193539594, interval (us) = 741
+10-16 12:42:25.564  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193556099, interval (us) = 950
+10-16 12:42:25.595  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193586902, interval (us) = 765
+10-16 12:42:25.627  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193618471, interval (us) = 802
+10-16 12:42:25.645  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193636852, interval (us) = 835
+10-16 12:42:25.656  5015  5064 D EGL_emulation: app_time_stats: avg=43.20ms min=21.64ms max=172.13ms count=23
+10-16 12:42:25.694  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193686309, interval (us) = 835
+10-16 12:42:25.772  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193763413, interval (us) = 949
+10-16 12:42:25.790  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193782078, interval (us) = 864
+10-16 12:42:25.854  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193845745, interval (us) = 587
+10-16 12:42:25.867  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193858695, interval (us) = 711
+10-16 12:42:25.884  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193875728, interval (us) = 636
+10-16 12:42:25.933  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193925180, interval (us) = 719
+10-16 12:42:25.963  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193955146, interval (us) = 724
+10-16 12:42:26.013  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194004991, interval (us) = 764
+10-16 12:42:26.027  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194018558, interval (us) = 724
+10-16 12:42:26.107  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194098949, interval (us) = 734
+10-16 12:42:26.125  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194116973, interval (us) = 638
+10-16 12:42:26.203  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194194669, interval (us) = 678
+10-16 12:42:26.247  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194238874, interval (us) = 782
+10-16 12:42:26.268  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194259670, interval (us) = 610
+10-16 12:42:26.295  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194286550, interval (us) = 788
+10-16 12:42:26.315  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194306654, interval (us) = 759
+10-16 12:42:26.350  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194341931, interval (us) = 609
+10-16 12:42:26.363  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194354538, interval (us) = 604
+10-16 12:42:26.396  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194387849, interval (us) = 650
+10-16 12:42:26.412  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194404180, interval (us) = 647
+10-16 12:42:26.429  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194421110, interval (us) = 943
+10-16 12:42:26.445  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194437060, interval (us) = 641
+10-16 12:42:26.477  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194468958, interval (us) = 652
+10-16 12:42:26.493  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194484583, interval (us) = 948
+10-16 12:42:26.507  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194498902, interval (us) = 743
+10-16 12:42:26.525  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194517113, interval (us) = 702
+10-16 12:42:26.575  5090  6616 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194566558, interval (us) = 652
+10-16 12:42:26.648  5015  6619 W chromium: [WARNING:sync_reader.cc(175)] ASR: No room in socket buffer.: Broken pipe (32)
+10-16 12:42:26.669  5015  5064 D EGL_emulation: app_time_stats: avg=27.47ms min=14.80ms max=40.96ms count=35
+10-16 12:42:26.719  5015  5117 D AAudio  : AAudioStream_requestStop(s#2) called
+10-16 12:42:26.719  5015  5117 D AAudioStream: setState(s#2) from 4 to 9
+10-16 12:42:26.719  5015  5117 D AudioTrack: stop(82): called with 300032 frames delivered
+10-16 12:42:26.720  5015  5117 D AAudioStream: setState(s#2) from 9 to 10
+10-16 12:42:26.729   545   848 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5015 device: null from API: clearCommunicationDevice() from u/pid:10192/5015
+10-16 12:42:26.730   545   848 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5015 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setNewModeOwner
+10-16 12:42:27.685  5015  5064 D EGL_emulation: app_time_stats: avg=19.63ms min=12.33ms max=153.78ms count=47
+10-16 12:42:29.282  5015  5064 D EGL_emulation: app_time_stats: avg=530.84ms min=12.73ms max=1558.82ms count=3

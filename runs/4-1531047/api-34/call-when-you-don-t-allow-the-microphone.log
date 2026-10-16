@@ -1,0 +1,368 @@
+10-16 12:43:42.284   545   596 I ActivityManager: Killing 5015:app.two.android/u0a192 (adj 0): permissions revoked
+10-16 12:43:42.286  7059  7059 I cr_ChildProcessService: Destroying ChildProcessService pid=7059
+10-16 12:43:42.286   545   596 I ActivityManager: Killing 7059:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:1/u0a192i1 (adj 0): isolated not needed
+10-16 12:43:42.288   545   596 W ActivityTaskManager: Force removing ActivityRecord{b844a9d u0 app.two.android/.MainActivity t8}: app died, no saved state
+10-16 12:43:42.291   908   949 V WindowManagerShell: Transition requested: android.os.BinderProxy@cc5b0ba TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=252469 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@5e11b6b} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{6f576c8 app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:43:42.317   545  2325 V ActivityManager: Got obituary of 5015:app.two.android
+10-16 12:43:42.319   545   977 I WindowManager: WIN DEATH: Window{888f666 u0 app.two.android/app.two.android.MainActivity}
+10-16 12:43:42.320   545  2116 I ImeTracker: app.two.android:12ab256a: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_REMOVE_CLIENT
+10-16 12:43:42.320   545   977 W InputManager-JNI: Input channel object '888f666 app.two.android/app.two.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-16 12:43:42.320   545  2116 I ImeTracker: app.two.android:12ab256a: onCancelled at PHASE_SERVER_SHOULD_HIDE
+10-16 12:43:42.323   357   357 I Zygote  : Process 5015 exited due to signal 9 (Killed)
+10-16 12:43:42.324   545   836 D ConnectivityService: releasing NetworkRequest [ REQUEST id=159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ] (release request)
+10-16 12:43:42.326   545   848 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5015 device: null from API: onCommunicationRouteClientDied
+10-16 12:43:42.482   545   564 V WindowManager: Sent Transition #14 createdAt=10-16 12:43:42.289 via request=TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=8 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=252469 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{9d8f7df Task{35b22e3 #8 type=standard A=10192:app.two.android}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{261ac2c app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:43:42.482   545   564 V WindowManager:     info={id=14 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{9d8f7df Task{35b22e3 #8 type=standard A=10192:app.two.android}}} m=CLOSE f=NONE leash=Surface(name=Task=8)/@0xc9f7683 sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0},{WCT{RemoteToken{c13e6f5 Task{8ddaf7c #1 type=home}}} m=TO_FRONT f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x7d1a51a sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{a4c8b07 token=android.os.Binder@a58ed46})/@0x2d02388 sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0}]}
+10-16 12:43:42.498   545  1760 W WindowManager: Exception thrown during dispatchAppVisibility Window{888f666 u0 app.two.android/app.two.android.MainActivity EXITING}
+10-16 12:43:42.498   545  1760 I Process : Sending signal. PID: 5015 SIG: 9
+10-16 12:43:43.911   545  2116 V SplashScreenExceptionList: SplashScreen checking exception for package app.two.android (target sdk:35) -> false
+10-16 12:43:43.912   908   949 V WindowManagerShell: Transition requested: android.os.BinderProxy@a5821f8 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=9 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=271903 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@fb036d1} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{5613536 app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:43:43.912   545  2116 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=app.two.android/.MainActivity} with LAUNCH_MULTIPLE from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+10-16 12:43:43.924   545   576 I ActivityManager: Start proc 7150:app.two.android/u0a192 for next-top-activity {app.two.android/app.two.android.MainActivity}
+10-16 12:43:43.925   545   980 D CoreBackPreview: Window{dbd16b4 u0 Splash Screen app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@456523, mPriority=0, mIsAnimationCallback=false}
+10-16 12:43:43.962  7150  7150 I app.two.android: Late-enabling -Xcheck:jni
+10-16 12:43:43.970   545   564 V WindowManager: Sent Transition #15 createdAt=10-16 12:43:43.908 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=9 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=271903 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{715d9e Task{987e208 #9 type=standard A=10192:app.two.android}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{ff307f app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:43:43.971   545   564 V WindowManager:     info={id=15 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{715d9e Task{987e208 #9 type=standard A=10192:app.two.android}}} m=OPEN f=NONE leash=Surface(name=Task=9)/@0xe6eea20 sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0},{WCT{RemoteToken{c13e6f5 Task{8ddaf7c #1 type=home}}} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x7d1a51a sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) d=0}]}
+10-16 12:43:43.977  7150  7150 I app.two.android: Using CollectorTypeCC GC.
+10-16 12:43:43.978  7150  7150 W app.two.android: Unexpected CPU variant for x86: x86_64.
+10-16 12:43:43.978  7150  7150 W app.two.android: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+10-16 12:43:44.018  7150  7150 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10192; state: ENABLED
+10-16 12:43:44.018  7150  7150 D CompatibilityChangeReporter: Compat change id reported: 242716250; UID 10192; state: ENABLED
+10-16 12:43:44.024  7150  7150 W ziparchive: Unable to open '/data/app/~~L-glLi2gUYiHBMT67p_QQw==/app.two.android-KAjVL1_ySl9PnyQC42WFIA==/base.dm': No such file or directory
+10-16 12:43:44.024  7150  7150 W ziparchive: Unable to open '/data/app/~~L-glLi2gUYiHBMT67p_QQw==/app.two.android-KAjVL1_ySl9PnyQC42WFIA==/base.dm': No such file or directory
+10-16 12:43:44.081  7150  7150 D nativeloader: Configuring clns-6 for other apk /data/app/~~L-glLi2gUYiHBMT67p_QQw==/app.two.android-KAjVL1_ySl9PnyQC42WFIA==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~L-glLi2gUYiHBMT67p_QQw==/app.two.android-KAjVL1_ySl9PnyQC42WFIA==/lib/x86_64:/data/app/~~L-glLi2gUYiHBMT67p_QQw==/app.two.android-KAjVL1_ySl9PnyQC42WFIA==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/app.two.android
+10-16 12:43:44.086  7150  7150 V GraphicsEnvironment: Currently set values for:
+10-16 12:43:44.086  7150  7150 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+10-16 12:43:44.086  7150  7150 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+10-16 12:43:44.087  7150  7150 V GraphicsEnvironment: ANGLE GameManagerService for app.two.android: false
+10-16 12:43:44.087  7150  7150 V GraphicsEnvironment: app.two.android is not listed in per-application setting
+10-16 12:43:44.087  7150  7150 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-16 12:43:44.096  7150  7150 D WM-WrkMgrInitializer: Initializing WorkManager with default configuration.
+10-16 12:43:44.108  7150  7150 D WM-PackageManagerHelper: Skipping component enablement for androidx.work.impl.background.systemjob.SystemJobService
+10-16 12:43:44.108  7150  7150 D WM-Schedulers: Created SystemJobScheduler and enabled SystemJobService
+10-16 12:43:44.111  7150  7169 D WM-ForceStopRunnable: The default process name was not specified.
+10-16 12:43:44.111  7150  7169 D WM-ForceStopRunnable: Performing cleanup operations.
+10-16 12:43:44.127  7150  7169 D CompatibilityChangeReporter: Compat change id reported: 160794467; UID 10192; state: ENABLED
+10-16 12:43:44.135  7150  7175 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+10-16 12:43:44.136  7150  7175 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+10-16 12:43:44.138  7150  7175 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+10-16 12:43:44.146  7150  7176 D WM-PackageManagerHelper: Skipping component enablement for androidx.work.impl.background.systemalarm.RescheduleReceiver
+10-16 12:43:44.170  7150  7150 D CompatibilityChangeReporter: Compat change id reported: 237531167; UID 10192; state: DISABLED
+10-16 12:43:44.171  7150  7150 W OpenGLRenderer: Unknown dataspace 0
+10-16 12:43:44.260  7150  7150 I WebViewFactory: Loading com.google.android.webview version 113.0.5672.136 (code 567263637)
+10-16 12:43:44.262  7150  7150 W ziparchive: Unable to open '/data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.dm': No such file or directory
+10-16 12:43:44.262  7150  7150 W ziparchive: Unable to open '/data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.dm': No such file or directory
+10-16 12:43:44.262  7150  7150 W app.two.android: Entry not found
+10-16 12:43:44.263  7150  7150 D nativeloader: Configuring clns-7 for other apk /data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~oE7gidcM9PrGa4oj_WbszQ==/com.google.android.webview-kf_SXaUBnd2Xgxv1J6RQ1g==/lib/x86_64:/data/app/~~oE7gidcM9PrGa4oj_WbszQ==/com.google.android.webview-kf_SXaUBnd2Xgxv1J6RQ1g==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:43:44.264  7150  7150 D nativeloader: Configuring clns-8 for other apk /data/app/~~oE7gidcM9PrGa4oj_WbszQ==/com.google.android.webview-kf_SXaUBnd2Xgxv1J6RQ1g==/WebViewGoogle.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~oE7gidcM9PrGa4oj_WbszQ==/com.google.android.webview-kf_SXaUBnd2Xgxv1J6RQ1g==/lib/x86_64:/data/app/~~oE7gidcM9PrGa4oj_WbszQ==/com.google.android.webview-kf_SXaUBnd2Xgxv1J6RQ1g==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~UgdRQ7LOzH49_tUj5hfNlw==/com.google.android.trichromelibrary_567263637-8c9ztsU_anPu9DIsHElLbg==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{861dcc com.android.cts.priv.ctsshim/10176} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{899d598 com.google.android.youtube/10138} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{df70815 com.android.internal.display.cutout.emulation.corner/10022} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{be3072a com.android.internal.display.cutout.emulation.double/10045} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{cee9250 com.google.android.googlequicksearchbox/10132} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{55091b com.google.android.onetimeinitializer/10125} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{2dd4ab8 com.google.android.ext.shared/10100} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{74d1091 com.android.internal.systemui.navbar.gestural_wide_back/10027} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{8026bf6 com.android.virtualmachine.res/10172} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c311bf7 com.google.android.federatedcompute/10180} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{f785a64 com.android.managedprovisioning.auto_generated_rro_product__/10021} BLOCKED
+10-16 12:43:44.264   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{f2124cd com.android.carrierconfig.auto_generated_rro_vendor__/10080} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{de15182 com.android.systemui.emulation.pixel_3_xl/10031} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c518093 com.android.systemui.emulation.pixel_4_xl/10060} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{892b8d0 com.android.systemui.emulation.pixel_fold/10006} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{ba840c9 com.android.simappdialog.auto_generated_rro_product__/10029} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{ed703ce com.android.htmlviewer/10115} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{40992ef com.google.android.health.connect.backuprestore/10179} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{6b291fc com.android.systemui.auto_generated_rro_product__/10033} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{40efdd1 com.google.android.apps.messaging/10131} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{8638eda com.google.android.soundpicker/10137} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{e866f0b com.google.android.marvin.talkbackoverlay/10076} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{294d1e8 com.google.android.configupdater/10129} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{2c24001 com.android.internal.emulation.pixel_3a_xl/10041} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{dfbbea6 com.android.internal.emulation.pixel_6_pro/10015} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{2aaf0e7 com.android.internal.emulation.pixel_7_pro/10003} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{1d92494 com.android.internal.emulation.pixel_8_pro/10056} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{111db3d com.android.internal.emulation.pixel_3a/10055} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{3951f32 com.android.internal.emulation.pixel_4a/10008} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{8abb483 com.android.internal.emulation.pixel_6a/10020} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{26df600 com.android.internal.emulation.pixel_7a/10030} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{dc5ee39 com.google.android.overlay.googlewebview/10048} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{4f1fc7e com.google.android.hotspot2.osulogin/10174} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{d6b15df com.android.simappdialog/10111} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{bc722c com.android.internal.display.cutout.emulation.hole/10073} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{50e34f5 com.android.internal.display.cutout.emulation.tall/10065} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{5ad628a com.android.internal.systemui.navbar.threebutton/10068} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{d33b4ce com.android.camera2/10144} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{f9530fb com.android.systemui.auto_generated_rro_vendor__/10075} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{4948518 com.google.android.deskclock/10153} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c5a2b71 com.android.internal.systemui.navbar.twobutton/10017} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{d816cc4 com.google.android.as/10127} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{b22b344 com.google.android.gm/10142} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{6071d56 com.android.internal.systemui.navbar.gestural_extra_wide_back/10046} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{27be1d7 com.android.systemui.emulation.pixel_3/10012} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{d8dac4 com.android.systemui.emulation.pixel_4/10037} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{6950dad com.android.systemui.emulation.pixel_5/10070} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{86fb8e2 com.android.systemui.emulation.pixel_6/10074} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{2b2c473 com.android.systemui.emulation.pixel_7/10072} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{1eadf30 com.android.systemui.emulation.pixel_8/10071} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{21d7a9 com.android.nfc.auto_generated_rro_product__/10025} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{3d4812e com.android.printspooler/10104} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{86b34cf com.android.emergency.auto_generated_rro_product__/10049} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{6d6be5c com.google.android.connectivity.resources.goldfish.overlay/10079} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{e974565 com.android.dreams.basic/10103} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{eab823a com.google.android.networkstack.tethering.emulator/10019} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{3904eeb com.android.providers.settings.auto_generated_rro_product__/10024} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{13f6448 com.google.android.as.oss/10120} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{3bd2e1 com.android.traceur.auto_generated_rro_product__/10004} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{df04585 com.google.android.devicelockcontroller/10189} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{e5a4fda com.google.android.dialer/10130} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{ebf8806 com.android.internal.emulation.pixel_3/10043} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{da2eec7 com.android.internal.emulation.pixel_4/10058} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{80a7cf4 com.android.internal.emulation.pixel_5/10009} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{741bc1d com.android.internal.emulation.pixel_6/10038} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{9bc1e92 com.android.internal.emulation.pixel_7/10067} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{d55b063 com.android.internal.emulation.pixel_8/10040} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{8cc7460 com.google.android.captiveportallogin/10113} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{cc2fd19 com.android.musicfx/10088} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{27991de com.google.android.apps.docs/10156} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{26c7497 com.google.android.apps.maps/10152} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{7e8efbf com.google.android.modulemetadata/10147} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{3f4768c com.google.android.markup/10135} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{77d51d5 com.android.providers.settings.auto_generated_rro_vendor__/10077} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{afd3c2d com.google.android.rkpdapp/10183} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c6c0e1c com.google.android.contacts/10154} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c46c8db com.android.server.telecom.auto_generated_rro_product__/10034} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{fb86f78 com.google.android.overlay.googleconfig/10052} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{24e3651 com.android.chrome/10149} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{37ffeb6 com.android.bips.auto_generated_rro_product__/10032} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{3df17b7 com.google.android.apps.customization.pixel/10143} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{dc10b24 com.google.android.tag/10083} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{e6ee68d com.google.android.overlay.permissioncontroller/10002} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{cf4b501 com.google.android.partnersetup/10124} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{d855042 com.google.android.apps.wallpaper.nexus/10141} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{5437853 com.google.android.apps.nexuslauncher/10168} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{f95b590 com.google.android.nearby.halfsheet/10186} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{d705e89 com.android.theme.font.notoserifsource/10066} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c9c2e8e com.google.android.safetycenter.resources/10170} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{48346af com.android.internal.display.cutout.emulation.waterfall/10044} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{5c89abc com.android.internal.systemui.navbar.transparent/10026} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{ef75a45 com.google.android.connectivity.resources/10185} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{330a59a com.android.providers.contacts.auto_generated_rro_product__/10016} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{d479ecb com.google.android.feedback/10162} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{5e2a6a8 com.google.android.printservice.recommendation/10110} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{e3855c1 com.google.android.apps.photos/10140} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{4a58406 com.google.android.calendar/10145} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c638166 com.google.android.documentsui/10098} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{2af5ca7 com.android.systemui.emulation.pixel_3a_xl/10018} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{30f8554 com.android.systemui.emulation.pixel_6_pro/10063} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{b338cfd com.android.systemui.emulation.pixel_7_pro/10051} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{2964df2 com.android.systemui.emulation.pixel_8_pro/10000} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{eb1c43 com.google.mainline.telemetry/10151} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{589a2c0 com.android.carrierconfig.auto_generated_rro_product__/10064} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{bb0fbf9 com.android.providers.partnerbookmarks/10101} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{2b7573e com.android.wallpaper.livepicker/10090} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c99399f com.android.providers.telephony.auto_generated_rro_product__/10062} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{cc62aec com.android.phone.auto_generated_rro_vendor__/10078} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{ffc5eb5 com.google.mainline.adservices/10136} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{84da94a com.android.imsserviceentitlement/10117} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{be1d0bb com.google.android.healthconnect.controller/10178} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{86109d8 com.android.internal.emulation.pixel_2_xl/10013} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{7613131 com.android.internal.emulation.pixel_3_xl/10053} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{e451016 com.android.internal.emulation.pixel_4_xl/10047} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{552bd97 com.android.internal.emulation.pixel_fold/10023} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{3c8eb84 com.android.bookmarkprovider/10114} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{66af6d com.google.android.overlay.pixelconfigcommon/10011} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{7a17a2 com.android.systemui.accessibility.accessibilitymenu.auto_generated_rro_product__/10050} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{7b9c33 com.android.systemui.emulation.pixel_3a/10010} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{ab3bf0 com.android.systemui.emulation.pixel_4a/10001} BLOCKED
+10-16 12:43:44.265   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{cbd569 com.android.systemui.emulation.pixel_6a/10039} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{a060bee com.android.systemui.emulation.pixel_7a/10014} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c4cb2ba com.google.android.settings.intelligence/10118} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{63f94f com.google.android.projection.gearhead/10123} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{449c88f com.google.android.uwb.resources/10191} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{4f77d66 com.android.cts.ctsshim/10177} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c20271c com.google.android.wifi.resources/10173} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{1435f25 com.google.android.wifi.dialog/10175} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{c4af8fa com.google.android.apps.wallpaper/10160} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{f245eab com.google.android.odad/10122} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{a969908 com.android.settings.auto_generated_rro_product__/10035} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{8efc8a1 com.android.internal.systemui.navbar.gestural/10059} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{31d8fa6 com.google.android.apps.youtube.music/10155} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{abfaac6 com.android.bluetoothmidiservice/10107} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{4c83a87 com.android.storagemanager.auto_generated_rro_product__/10028} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{5beede7 com.google.android.cellbroadcastreceiver/10190} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{6803db4 com.android.phone.auto_generated_rro_product__/10061} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{49f4ddd android.auto_generated_rro_product__/10069} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{77bad52 com.android.internal.systemui.navbar.gestural_narrow_back/10054} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{671dd94 com.google.android.inputmethod.latin/10146} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{de3f823 android.auto_generated_rro_vendor__/10081} BLOCKED
+10-16 12:43:44.266   545  2360 I AppsFilter: interaction: PackageSetting{f27abff app.two.android/10192} -> PackageSetting{dbd8120 com.google.android.apps.restore/10121} BLOCKED
+10-16 12:43:44.277  7150  7150 W app.two.android: Accessing hidden method Landroid/os/Trace;->isTagEnabled(J)Z (unsupported, reflection, allowed)
+10-16 12:43:44.277  7150  7150 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceBegin(JLjava/lang/String;)V (unsupported, reflection, allowed)
+10-16 12:43:44.277  7150  7150 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceEnd(J)V (unsupported, reflection, allowed)
+10-16 12:43:44.277  7150  7150 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceBegin(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 12:43:44.277  7150  7150 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceEnd(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 12:43:44.279  7150  7150 I cr_WVCFactoryProvider: Loaded version=113.0.5672.136 minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 12:43:44.290  7150  7150 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:43:44.290  7150  7150 I cr_CachingUmaRecorder: Flushed 8 samples from 8 histograms.
+10-16 12:43:44.294  7150  7150 I cr_VariationsUtils: Loaded seed with age 236s
+10-16 12:43:44.307  7150  7150 D CompatibilityChangeReporter: Compat change id reported: 183155436; UID 10192; state: ENABLED
+10-16 12:43:44.337   545   576 I ActivityManager: Start proc 7185:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0i2 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 12:43:44.343  7185  7185 I cr_WebViewApkApp: Launched version=113.0.5672.136 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:43:44.344  7185  7185 I cr_ChildProcessService: Creating new ChildProcessService pid=7185
+10-16 12:43:44.346  7150  7150 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+10-16 12:43:44.384  7150  7150 D CompatibilityChangeReporter: Compat change id reported: 214741472; UID 10192; state: ENABLED
+10-16 12:43:44.386  7150  7150 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10192; state: ENABLED
+10-16 12:43:44.390   545   980 D ConnectivityService: requestNetwork for uid/pid:10192/7150 activeRequest: null callbackRequest: 161 [NetworkRequest [ REQUEST id=162, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 12:43:44.392   545   829 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=162, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:43:44.392   545   829 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=162, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:43:44.392   545   829 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=162, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:43:44.392   545   829 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=162, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10192 RequestorUid: 10192 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:43:44.409  7150  7206 W cr_media: BLUETOOTH_CONNECT permission is missing.
+10-16 12:43:44.409  7150  7206 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+10-16 12:43:44.415  7185  7205 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:43:44.415  7185  7205 I cr_CachingUmaRecorder: Flushed 2 samples from 2 histograms.
+10-16 12:43:44.424  7150  7150 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+10-16 12:43:44.424  7150  7150 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 12:43:44.426  7150  7150 D CompatibilityChangeReporter: Compat change id reported: 193247900; UID 10192; state: ENABLED
+10-16 12:43:44.430   545   980 D CoreBackPreview: Window{9849c7c u0 app.two.android/app.two.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@966dfd4, mPriority=0, mIsAnimationCallback=false}
+10-16 12:43:44.449  7150  7173 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-16 12:43:44.458  7150  7208 D CompatibilityChangeReporter: Compat change id reported: 247079863; UID 10192; state: ENABLED
+10-16 12:43:44.481  7150  7173 I Gralloc4: mapper 4.x is not supported
+10-16 12:43:44.675  7185  7230 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:44.676  7150  7150 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 12:43:44.676  7185  7230 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:44.703  7185  7230 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:44.705  7185  7230 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:44.758  7185  7205 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 4360
+10-16 12:43:44.768  7150  7206 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:43:44.768  7150  7206 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:43:44.768  7150  7206 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 4360
+10-16 12:43:44.768  7150  7206 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:43:44.768  7150  7206 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:43:44.769  7150  7206 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:43:44.773  7150  7206 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:43:44.777  7150  7206 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:43:44.777  7150  7206 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:43:44.777  7150  7206 D AAudioStream: setState(s#1) from 0 to 2
+10-16 12:43:44.778  7150  7206 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#1 ----------------
+10-16 12:43:44.778  7150  7206 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+10-16 12:43:44.779  7150  7206 D AAudioStream: setState(s#1) from 2 to 3
+10-16 12:43:44.779  7150  7206 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+10-16 12:43:44.780  7150  7165 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:43:44.804  7150  7251 D AAudioStream: setState(s#1) from 3 to 4
+10-16 12:43:44.815  7185  7230 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:44.815  7185  7230 E chromium: [ERROR:tile_manager.cc(835)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:43:45.825  7150  7253 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
+10-16 12:43:45.825  7150  7253 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
+10-16 12:43:45.828   545   564 W ziparchive: Unable to open '/data/app/~~L-glLi2gUYiHBMT67p_QQw==/app.two.android-KAjVL1_ySl9PnyQC42WFIA==/base.dm': No such file or directory
+10-16 12:43:45.830   545   564 I ActivityTaskManager: Displayed app.two.android/.MainActivity for user 0: +1s921ms
+10-16 12:43:45.863   545  2116 W InputManager-JNI: Input channel object 'dbd16b4 Splash Screen app.two.android (client)' was disposed without first being removed with the input manager!
+10-16 12:43:45.864   545   980 D CoreBackPreview: Window{dbd16b4 u0 Splash Screen app.two.android EXITING}: Setting back callback null
+10-16 12:43:46.347  7150  7150 I Choreographer: Skipped 90 frames!  The application may be doing too much work on its main thread.
+10-16 12:43:46.356   545  2360 I ImeTracker: app.two.android:e85cf699: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+10-16 12:43:46.356   545  2360 I ImeTracker: app.two.android:e85cf699: onCancelled at PHASE_SERVER_SHOULD_HIDE
+10-16 12:43:46.359  1620  1620 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=0 fieldName=null extras=null}, false)
+10-16 12:43:49.572  7150  7259 I OpenGLRenderer: Davey! duration=1535ms; Flags=1, FrameTimelineVsyncId=24072, IntendedVsync=272811415709, Vsync=272811415709, InputEventId=0, HandleInputStart=272814022297, AnimationStart=272814025331, PerformTraversalsStart=272814480205, DrawStart=272815603570, FrameDeadline=272828082375, FrameInterval=272814009618, FrameStartTime=16666666, SyncQueued=272819717737, SyncStart=272820969772, IssueDrawCommandsStart=272872004141, SwapBuffers=274202638248, FrameCompleted=274348317164, DequeueBufferDuration=2534, QueueBufferDuration=182931, GpuCompleted=274348317164, SwapBuffersCompleted=274332715713, DisplayPresentTime=0, CommandSubmissionCompleted=274202638248, 
+10-16 12:43:49.581  7150  7150 I Choreographer: Skipped 190 frames!  The application may be doing too much work on its main thread.
+10-16 12:43:49.611  7150  7259 I OpenGLRenderer: Davey! duration=4750ms; Flags=0, FrameTimelineVsyncId=24079, IntendedVsync=272828082375, Vsync=274328082315, InputEventId=0, HandleInputStart=274339967450, AnimationStart=274339971786, PerformTraversalsStart=274342463740, DrawStart=274342715002, FrameDeadline=274378082313, FrameInterval=274339175466, FrameStartTime=16666666, SyncQueued=274343393227, SyncStart=274343481939, IssueDrawCommandsStart=274345350107, SwapBuffers=277563524013, FrameCompleted=277578205028, DequeueBufferDuration=3225, QueueBufferDuration=304942, GpuCompleted=277578205028, SwapBuffersCompleted=277571207358, DisplayPresentTime=0, CommandSubmissionCompleted=277563524013, 
+10-16 12:43:49.635  7150  7262 D ProfileInstaller: Installing profile for app.two.android
+10-16 12:43:50.694  7150  7173 D EGL_emulation: app_time_stats: avg=1450.93ms min=44.81ms max=3238.43ms count=3
+10-16 12:43:50.695  7150  7150 I Choreographer: Skipped 62 frames!  The application may be doing too much work on its main thread.
+10-16 12:43:50.919  7150  7259 I OpenGLRenderer: Davey! duration=4265ms; Flags=0, FrameTimelineVsyncId=24240, IntendedVsync=274394748979, Vsync=277561415519, InputEventId=0, HandleInputStart=277573505735, AnimationStart=277573508379, PerformTraversalsStart=277578842603, DrawStart=277581215059, FrameDeadline=277644748849, FrameInterval=277573260431, FrameStartTime=16666666, SyncQueued=277581874537, SyncStart=277616777630, IssueDrawCommandsStart=277616811600, SwapBuffers=278685015516, FrameCompleted=278695167671, DequeueBufferDuration=3475, QueueBufferDuration=139267, GpuCompleted=278695167671, SwapBuffersCompleted=278685866518, DisplayPresentTime=0, CommandSubmissionCompleted=278685015516, 
+10-16 12:43:52.666  7150  7173 D EGL_emulation: app_time_stats: avg=986.38ms min=228.51ms max=1744.26ms count=2
+10-16 12:43:52.670  7150  7150 I Choreographer: Skipped 86 frames!  The application may be doing too much work on its main thread.
+10-16 12:43:52.798  7150  7164 I OpenGLRenderer: Davey! duration=1747ms; Flags=0, FrameTimelineVsyncId=24336, IntendedVsync=278811415469, Vsync=278811415469, InputEventId=0, HandleInputStart=278811865417, AnimationStart=278811867991, PerformTraversalsStart=278814154890, DrawStart=278814318022, FrameDeadline=278961415463, FrameInterval=278811850926, FrameStartTime=16666666, SyncQueued=278815129224, SyncStart=278914645640, IssueDrawCommandsStart=278914682444, SwapBuffers=280569217217, FrameCompleted=280658557903, DequeueBufferDuration=4087, QueueBufferDuration=332132, GpuCompleted=280658330977, SwapBuffersCompleted=280658557903, DisplayPresentTime=0, CommandSubmissionCompleted=280569217217, 
+10-16 12:43:52.856  7150  7164 I OpenGLRenderer: Davey! duration=1573ms; Flags=0, FrameTimelineVsyncId=24372, IntendedVsync=279211415453, Vsync=280644748729, InputEventId=0, HandleInputStart=280662757036, AnimationStart=280662760040, PerformTraversalsStart=280663816626, DrawStart=280663965156, FrameDeadline=280711415393, FrameInterval=280660746877, FrameStartTime=16666666, SyncQueued=280665709411, SyncStart=280676587692, IssueDrawCommandsStart=280676611758, SwapBuffers=280789471207, FrameCompleted=280795517316, DequeueBufferDuration=3125, QueueBufferDuration=123613, GpuCompleted=280795517316, SwapBuffersCompleted=280790535764, DisplayPresentTime=72057628414509170, CommandSubmissionCompleted=280789471207, 
+10-16 12:43:53.247  7150  7206 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:43:53.251  7150  7206 D CompatibilityChangeReporter: Compat change id reported: 263076149; UID 10192; state: ENABLED
+10-16 12:43:53.340   545  2360 W ProcessStats: Tracking association SourceState{79ed4d0 app.two.android/10192 BTop #12945} whose proc state 2 is better than process ProcessState{14fae79 com.google.android.gms.persistent/10126 pkg=com.google.android.gms} proc state 4 (198 skipped)
+10-16 12:43:53.408  7266  7266 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 12:43:53.413  7266  7266 I AndroidRuntime: Using default boot image
+10-16 12:43:53.413  7266  7266 I AndroidRuntime: Leaving lock profiling enabled
+10-16 12:43:53.469  7150  7206 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:43:53.483  7266  7266 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 12:43:53.554  7266  7266 W libc    : Access denied finding property "ro.product.name_for_attestation"
+10-16 12:43:53.554  7266  7266 W libc    : Access denied finding property "ro.product.brand_for_attestation"
+10-16 12:43:53.554  7266  7266 W libc    : Access denied finding property "ro.product.model_for_attestation"
+10-16 12:43:53.556  7266  7266 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 12:43:53.916  7150  7173 D EGL_emulation: app_time_stats: avg=171.39ms min=12.60ms max=452.03ms count=7
+10-16 12:43:53.927   908   949 V WindowManagerShell: Transition requested: android.os.BinderProxy@4038696 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=9 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=2 lastActiveTime=281918 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@6863217} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{f308604 com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: Exception in upload method
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: com.google.android.apps.gsa.shared.r.d: Error code: 262182
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.ab.bk.d(PG:5)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.ar.d(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.bo.b(PG:5)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.e.a(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.a.run(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bu.cancel(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:17)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.bk.b.h.run(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.aj.a(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.c(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.r.a(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.e(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.c(PG:3)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.e.a(PG:5)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.n.hh(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.cd.g.a.f.e(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.d(PG:22)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.ks(PG:6)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.e(PG:14)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.p.run(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:487)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.e.run(PG:2)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:644)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 12:43:53.997  1907  2467 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.l.run(PG:5)
+10-16 12:43:54.068   545   564 V WindowManager: Sent Transition #16 createdAt=10-16 12:43:53.922 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=9 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=2 lastActiveTime=281918 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{715d9e Task{987e208 #9 type=standard A=10192:app.two.android}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{cd59060 com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+10-16 12:43:55.093  7266  7266 D AndroidRuntime: Shutting down VM
+10-16 12:43:56.008   909   909 V GrantPermissionsViewModel: Logged buttons presented and clicked permissionGroupName=android.permission-group.MICROPHONE uid=10192 selectedPrecision=0 package=app.two.android presentedButtons=44 clickedButton=8 isPermissionRationaleShown=false sessionId=7751184061739177762 targetSdk=35
+10-16 12:43:56.008   909   909 V GrantPermissionsViewModel: Permission grant result requestId=7751184061739177762 callingUid=10192 callingPackage=app.two.android permission=android.permission.RECORD_AUDIO isImplicit=false result=6 isPermissionRationaleShown=false
+10-16 12:43:56.017  7150  7150 D CompatibilityChangeReporter: Compat change id reported: 78294732; UID 10192; state: ENABLED
+10-16 12:43:56.044   545  2360 I ImeTracker: app.two.android:2a848384: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+10-16 12:43:56.045   545  2360 I ImeTracker: app.two.android:2a848384: onCancelled at PHASE_SERVER_SHOULD_HIDE
+10-16 12:43:56.047  1620  1620 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=0 fieldName=null extras=null}, false)
+10-16 12:43:56.170  7150  7173 D EGL_emulation: app_time_stats: avg=563.40ms min=18.72ms max=2146.41ms count=4

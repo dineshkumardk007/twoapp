@@ -1,0 +1,487 @@
+10-16 12:40:52.324   509  1219 I ActivityManager: Force stopping app.two.android appid=10174 user=0: from pid 5265
+10-16 12:40:52.336  1064  1064 D CarrierSvcBindHelper: onHandleForceStop: [app.two.android]
+10-16 12:40:52.373   509  2385 I ActivityManager: Force stopping app.two.android appid=10174 user=0: clear data
+10-16 12:40:52.387   509   539 I ActivityManager: Force stopping app.two.android appid=10174 user=-1: clearApplicationUserData
+10-16 12:40:52.397  1064  1064 D CarrierSvcBindHelper: onHandleForceStop: [app.two.android]
+10-16 12:40:52.672   509  3004 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=app.two.android/.MainActivity} from uid 2000
+10-16 12:40:52.746   509   872 D CoreBackPreview: Window{4c85224 u0 Splash Screen app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@36eb314, mPriority=0}
+10-16 12:40:52.765   509   540 I ActivityManager: Start proc 5304:app.two.android/u0a174 for next-top-activity {app.two.android/app.two.android.MainActivity}
+10-16 12:40:52.774  5304  5304 I app.two.android: Late-enabling -Xcheck:jni
+10-16 12:40:52.834  5304  5304 I app.two.android: Using CollectorTypeCC GC.
+10-16 12:40:52.834  5304  5304 W app.two.android: Unexpected CPU variant for x86: x86_64.
+10-16 12:40:52.834  5304  5304 W app.two.android: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-16 12:40:52.904  5304  5304 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10174; state: ENABLED
+10-16 12:40:52.917  5304  5304 W ziparchive: Unable to open '/data/app/~~K9x1vSoqqaB7qx2CgsJKYQ==/app.two.android-bsYS6tWiNIz0N5FMzVY81w==/base.dm': No such file or directory
+10-16 12:40:52.917  5304  5304 W ziparchive: Unable to open '/data/app/~~K9x1vSoqqaB7qx2CgsJKYQ==/app.two.android-bsYS6tWiNIz0N5FMzVY81w==/base.dm': No such file or directory
+10-16 12:40:53.050  5304  5304 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~K9x1vSoqqaB7qx2CgsJKYQ==/app.two.android-bsYS6tWiNIz0N5FMzVY81w==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~K9x1vSoqqaB7qx2CgsJKYQ==/app.two.android-bsYS6tWiNIz0N5FMzVY81w==/lib/x86_64:/data/app/~~K9x1vSoqqaB7qx2CgsJKYQ==/app.two.android-bsYS6tWiNIz0N5FMzVY81w==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/app.two.android
+10-16 12:40:53.065  5304  5304 V GraphicsEnvironment: ANGLE Developer option for 'app.two.android' set to: 'default'
+10-16 12:40:53.065  5304  5304 V GraphicsEnvironment: ANGLE GameManagerService for app.two.android: false
+10-16 12:40:53.066  5304  5304 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-16 12:40:53.069  5304  5304 D NetworkSecurityConfig: Using Network Security Config from resource network_security_config debugBuild: true
+10-16 12:40:53.070  5304  5304 D NetworkSecurityConfig: Using Network Security Config from resource network_security_config debugBuild: true
+10-16 12:40:53.087  5304  5304 D WM-WrkMgrInitializer: Initializing WorkManager with default configuration.
+10-16 12:40:53.124  5304  5304 D WM-PackageManagerHelper: androidx.work.impl.background.systemjob.SystemJobService enabled
+10-16 12:40:53.124  5304  5304 D WM-Schedulers: Created SystemJobScheduler and enabled SystemJobService
+10-16 12:40:53.150  5304  5327 D WM-ForceStopRunnable: The default process name was not specified.
+10-16 12:40:53.158  5304  5327 D WM-ForceStopRunnable: Performing cleanup operations.
+10-16 12:40:53.216  5304  5331 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+10-16 12:40:53.220  5304  5331 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+10-16 12:40:53.224  5304  5331 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+10-16 12:40:53.241  5304  5327 D CompatibilityChangeReporter: Compat change id reported: 160794467; UID 10174; state: ENABLED
+10-16 12:40:53.262  5304  5304 D CompatibilityChangeReporter: Compat change id reported: 237531167; UID 10174; state: DISABLED
+10-16 12:40:53.263  5304  5333 D CompatibilityChangeReporter: Compat change id reported: 194532703; UID 10174; state: ENABLED
+10-16 12:40:53.263  5304  5333 D WM-SystemJobScheduler: Scheduling work ID 574efb65-8388-4af8-9034-f5415d341e08Job ID 0
+10-16 12:40:53.267  5304  5329 W Parcel  : Expecting binder but got null!
+10-16 12:40:53.268  5304  5333 D WM-GreedyScheduler: Starting tracking for 574efb65-8388-4af8-9034-f5415d341e08
+10-16 12:40:53.273   509   872 D CoreBackPreview: Window{27affd7 u0 app.two.android/app.two.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@a445bad, mPriority=0}
+10-16 12:40:53.284  5304  5327 D WM-ConstraintTracker: NetworkStateTracker24: initial state = NetworkState(isConnected=true, isValidated=true, isMetered=false, isNotRoaming=true)
+10-16 12:40:53.284  5304  5327 D WM-NetworkStateTracker: Registering network callback
+10-16 12:40:53.289   509  1218 D ConnectivityService: requestNetwork for uid/pid:10174/5304 activeRequest: null callbackRequest: 131 [NetworkRequest [ REQUEST id=132, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 12:40:53.297  5304  5336 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: 1, RSSI: -50, Link speed: 1Mbps, Tx Link speed: 1Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: 2Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>> SignalStrength: -50 UnderlyingNetworks: Null]
+10-16 12:40:53.297   509   755 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=132, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:40:53.297   509   755 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=132, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:40:53.297   509   755 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=132, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:40:53.297   509   755 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=132, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:40:53.299  5304  5327 D WM-PackageManagerHelper: androidx.work.impl.background.systemalarm.RescheduleReceiver enabled
+10-16 12:40:53.299  5304  5327 D WM-GreedyScheduler: Constraints met: Scheduling work ID WorkGenerationalId(workSpecId=574efb65-8388-4af8-9034-f5415d341e08, generation=0)
+10-16 12:40:53.310  5304  5327 D WM-Processor: Processor: processing WorkGenerationalId(workSpecId=574efb65-8388-4af8-9034-f5415d341e08, generation=0)
+10-16 12:40:53.429   509  2300 I AppsFilter: interaction: PackageSetting{6384c8b app.two.android/10174} -> PackageSetting{c1d3f85 com.google.android.as/10118} BLOCKED
+10-16 12:40:53.480  5304  5304 I WebViewFactory: Loading com.google.android.webview version 109.0.5414.123 (code 541412337)
+10-16 12:40:53.489  5304  5304 W ziparchive: Unable to open '/data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.dm': No such file or directory
+10-16 12:40:53.489  5304  5304 W ziparchive: Unable to open '/data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.dm': No such file or directory
+10-16 12:40:53.489  5304  5304 W app.two.android: Entry not found
+10-16 12:40:53.490  5304  5304 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.apk. target_sdk_version=33, uses_libraries=ALL, library_path=/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/lib/x86_64:/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:40:53.493  5304  5304 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/WebViewGoogle.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/lib/x86_64:/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 12:40:53.530  5304  5304 W app.two.android: Accessing hidden method Landroid/os/Trace;->isTagEnabled(J)Z (unsupported, reflection, allowed)
+10-16 12:40:53.530  5304  5304 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceBegin(JLjava/lang/String;)V (unsupported, reflection, allowed)
+10-16 12:40:53.530  5304  5304 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceEnd(J)V (unsupported, reflection, allowed)
+10-16 12:40:53.530  5304  5304 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceBegin(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 12:40:53.530  5304  5304 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceEnd(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 12:40:53.534  5304  5304 I cr_WVCFactoryProvider: Loaded version=109.0.5414.123 minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 12:40:53.542  5304  5342 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed_new"
+10-16 12:40:53.542  5304  5342 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed"
+10-16 12:40:53.542  5304  5342 I cr_VariationsUtils: Requesting new seed from IVariationsSeedServer
+10-16 12:40:53.555  5304  5304 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:40:53.558  5304  5304 I cr_CachingUmaRecorder: Flushed 9 samples from 9 histograms.
+10-16 12:40:53.612   509   540 I ActivityManager: Start proc 5346:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0ai9000 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 12:40:53.661  5304  5304 D CompatibilityChangeReporter: Compat change id reported: 183155436; UID 10174; state: ENABLED
+10-16 12:40:53.675  5346  5346 I cr_WebViewApkApp: Launched version=109.0.5414.123 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:40:53.677  5346  5346 I cr_ChildProcessService: Creating new ChildProcessService pid=5346
+10-16 12:40:53.819  5304  5304 D CompatibilityChangeReporter: Compat change id reported: 214741472; UID 10174; state: ENABLED
+10-16 12:40:53.824  5304  5304 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10174; state: ENABLED
+10-16 12:40:53.846   509   540 I ActivityManager: Start proc 5381:com.google.android.webview:webview_apk/u0a123 for service {com.google.android.webview/org.chromium.android_webview.nonembedded.AwComponentUpdateService}
+10-16 12:40:53.880   509   890 D ConnectivityService: requestNetwork for uid/pid:10174/5304 activeRequest: null callbackRequest: 133 [NetworkRequest [ REQUEST id=134, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 12:40:53.882   509   755 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=134, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:40:53.882   509   755 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=134, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:40:53.882   509   755 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=134, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:40:53.882   509   755 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=134, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 12:40:53.962  5304  5370 W app.two.android: Accessing hidden method Landroid/media/AudioManager;->getOutputLatency(I)I (unsupported, reflection, allowed)
+10-16 12:40:53.966  5304  5370 W cr_media: BLUETOOTH_CONNECT permission is missing.
+10-16 12:40:53.966  5304  5370 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+10-16 12:40:53.972  5346  5364 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:40:53.973  5346  5364 I cr_CachingUmaRecorder: Flushed 3 samples from 3 histograms.
+10-16 12:40:53.976  5381  5381 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.apk. target_sdk_version=33, uses_libraries=ALL, library_path=/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/lib/x86_64:/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 12:40:53.977  5381  5381 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/WebViewGoogle.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/lib/x86_64:/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 12:40:53.984  5304  5399 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 12:40:53.988  5304  5399 D EGL_emulation: eglCreateContext: 0x7df5dc123510: maj 3 min 0 rcv 3
+10-16 12:40:53.989  5304  5399 D EGL_emulation: eglMakeCurrent: 0x7df5dc123510: ver 3 0 (tinfo 0x7df802b3d080) (first time)
+10-16 12:40:53.991  5381  5381 I cr_WebViewApkApp: Launched version=109.0.5414.123 minSdkVersion=29 isBundle=false processName=com.google.android.webview:webview_apk
+10-16 12:40:53.992  5304  5304 W OnBackInvokedCallback: OnBackInvokedCallback is not enabled for the application.
+10-16 12:40:53.992  5304  5304 W OnBackInvokedCallback: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 12:40:54.003  5304  5304 D CompatibilityChangeReporter: Compat change id reported: 193247900; UID 10174; state: ENABLED
+10-16 12:40:54.028  5381  5381 I cr_LibraryLoader: Successfully loaded native library
+10-16 12:40:54.034  5304  5329 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 12:40:54.034  5304  5329 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-16 12:40:54.035  5304  5329 D EGL_emulation: eglCreateContext: 0x7df5dc1217d0: maj 3 min 0 rcv 3
+10-16 12:40:54.038  5304  5329 D EGL_emulation: eglMakeCurrent: 0x7df5dc1217d0: ver 3 0 (tinfo 0x7df802b3d100) (first time)
+10-16 12:40:54.061  5304  5329 I Gralloc4: mapper 4.x is not supported
+10-16 12:40:54.070  5304  5329 W Gralloc4: allocator 4.x is not supported
+10-16 12:40:54.080  5304  5329 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 12:40:54.120  5304  5399 D EGL_emulation: eglCreateContext: 0x7df5dc123510: maj 3 min 0 rcv 3
+10-16 12:40:54.143  5304  5304 I Choreographer: Skipped 50 frames!  The application may be doing too much work on its main thread.
+10-16 12:40:54.146  5304  5304 D WM-WorkerWrapper: Starting work for app.two.android.core.sync.SyncWorker
+10-16 12:40:54.187  3046  3291 I cr_VariationsUtils: Throttling seed download job
+10-16 12:40:54.187  3046  3291 I cr_VariationsUtils: Writing new seed to app's data directory
+10-16 12:40:54.190  5304  5304 D WM-SystemJobService: onStartJob for WorkGenerationalId(workSpecId=574efb65-8388-4af8-9034-f5415d341e08, generation=0)
+10-16 12:40:54.192  5304  5327 D WM-Processor: Work WorkGenerationalId(workSpecId=574efb65-8388-4af8-9034-f5415d341e08, generation=0) is already enqueued for processing
+10-16 12:40:54.233  5304  5399 D EGL_emulation: eglCreateContext: 0x7df5dc124410: maj 3 min 0 rcv 3
+10-16 12:40:54.276  5381  5412 W cr_AWNetworkFetcherTask: IOException during downloadToFile.
+10-16 12:40:54.276  5381  5412 W cr_AWNetworkFetcherTask: java.io.IOException: Cleartext HTTP traffic to edgedl.me.gvt1.com not permitted
+10-16 12:40:54.276  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+10-16 12:40:54.276  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+10-16 12:40:54.276  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+10-16 12:40:54.276  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+10-16 12:40:54.276  5381  5412 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:48)
+10-16 12:40:54.277  5381  5412 W cr_AWNetworkFetcherTask: IOException during downloadToFile.
+10-16 12:40:54.277  5381  5412 W cr_AWNetworkFetcherTask: java.io.IOException: Cleartext HTTP traffic to redirector.gvt1.com not permitted
+10-16 12:40:54.277  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+10-16 12:40:54.277  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+10-16 12:40:54.277  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+10-16 12:40:54.277  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+10-16 12:40:54.277  5381  5412 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:48)
+10-16 12:40:54.308  5304  5333 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=574efb65-8388-4af8-9034-f5415d341e08, tags={ app.two.android.core.sync.SyncWorker } ]
+10-16 12:40:54.322  5304  5304 D WM-Processor: Processor 574efb65-8388-4af8-9034-f5415d341e08 executed; reschedule = false
+10-16 12:40:54.322  5304  5304 D WM-GreedyScheduler: Stopping tracking for WorkGenerationalId(workSpecId=574efb65-8388-4af8-9034-f5415d341e08, generation=0)
+10-16 12:40:54.323  5304  5304 D WM-SystemJobService: 574efb65-8388-4af8-9034-f5415d341e08 executed on JobScheduler
+10-16 12:40:54.326  5304  5333 D WM-GreedyScheduler: Cancelling work ID 574efb65-8388-4af8-9034-f5415d341e08
+10-16 12:40:54.339  5304  5333 D WM-SystemJobScheduler: Scheduling work ID 574efb65-8388-4af8-9034-f5415d341e08Job ID 1
+10-16 12:40:54.340   509  2384 W JobScheduler: Job didn't exist in JobStore: ee3d532 #u0a174/0 app.two.android/androidx.work.impl.background.systemjob.SystemJobService
+10-16 12:40:54.340  5304  5304 D WM-SystemJobService: onStopJob for WorkGenerationalId(workSpecId=574efb65-8388-4af8-9034-f5415d341e08, generation=0)
+10-16 12:40:54.351  5304  5333 D WM-NetworkStateTracker: Unregistering network callback
+10-16 12:40:54.469  5381  5414 W cr_AWNetworkFetcherTask: IOException during downloadToFile.
+10-16 12:40:54.469  5381  5414 W cr_AWNetworkFetcherTask: java.io.IOException: Cleartext HTTP traffic to edgedl.me.gvt1.com not permitted
+10-16 12:40:54.469  5381  5414 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+10-16 12:40:54.469  5381  5414 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+10-16 12:40:54.469  5381  5414 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+10-16 12:40:54.469  5381  5414 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+10-16 12:40:54.469  5381  5414 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:48)
+10-16 12:40:54.609  5381  5412 W cr_AWNetworkFetcherTask: IOException during downloadToFile.
+10-16 12:40:54.609  5381  5412 W cr_AWNetworkFetcherTask: java.io.IOException: Cleartext HTTP traffic to edgedl.me.gvt1.com not permitted
+10-16 12:40:54.609  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+10-16 12:40:54.609  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+10-16 12:40:54.609  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+10-16 12:40:54.609  5381  5412 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+10-16 12:40:54.609  5381  5412 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:48)
+10-16 12:40:54.665  5346  5420 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:40:54.666  5346  5420 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 12:40:54.702  5346  5364 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 2116
+10-16 12:40:54.879   509   528 W ziparchive: Unable to open '/data/app/~~K9x1vSoqqaB7qx2CgsJKYQ==/app.two.android-bsYS6tWiNIz0N5FMzVY81w==/base.dm': No such file or directory
+10-16 12:40:54.880   509   528 I ActivityTaskManager: Displayed app.two.android/.MainActivity: +2s205ms
+10-16 12:40:54.885   509  2300 D CoreBackPreview: Window{4c85224 u0 Splash Screen app.two.android EXITING}: Setting back callback null
+10-16 12:40:54.886   509  3004 W InputManager-JNI: Input channel object '4c85224 Splash Screen app.two.android (client)' was disposed without first being removed with the input manager!
+10-16 12:40:54.907  5304  5304 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 12:40:54.909  5304  5370 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:40:54.910  5304  5370 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:40:54.910  5304  5370 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 2116
+10-16 12:40:54.910  5304  5370 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:40:54.910  5304  5370 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:40:54.913  5304  5370 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:40:54.913  5304  5370 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:40:54.963  1575  1575 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=-1 fieldName=null extras=null}, false)
+10-16 12:40:55.021  5304  5370 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:40:55.021  5304  5370 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:40:55.021  5304  5370 D AAudioStream: setState(s#1) from 0 to 2
+10-16 12:40:55.094  5304  5370 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#1 ----------------
+10-16 12:40:55.097  5304  5370 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+10-16 12:40:55.097  5304  5370 D AAudioStream: setState(s#1) from 2 to 3
+10-16 12:40:55.115  5304  5370 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+10-16 12:40:55.115  5304  5317 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:40:55.331  5304  5370 D AAudio  : AAudioStream_requestStop(s#1) called
+10-16 12:40:55.331  5304  5370 D AAudioStream: setState(s#1) from 3 to 9
+10-16 12:40:55.331  5304  5370 D AudioTrack: stop(15): called with 1920 frames delivered
+10-16 12:40:55.335  5304  5370 D AAudioStream: setState(s#1) from 9 to 10
+10-16 12:40:55.371   509   562 I AppsFilter: interaction: PackageSetting{6384c8b app.two.android/10174} -> PackageSetting{97de951 com.google.android.gm/10144} BLOCKED
+10-16 12:40:55.446  1033  1033 D MediaPlayerList: Name of package changed: app.two.android
+10-16 12:40:55.446  1033  1033 D MediaPlayerList: Name of package changed: app.two.android
+10-16 12:40:55.520  1064  1064 D CarrierSvcBindHelper: onPackageModified: app.two.android
+10-16 12:40:55.633  1064  1064 D ImsResolver: maybeAddedImsService, packageName: app.two.android
+10-16 12:40:55.692   509   538 D AppWidgetServiceImpl: Provider info from ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget} won't be persisted.
+10-16 12:40:56.031   509   538 D AppWidgetServiceImpl: Provider info from ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget} won't be persisted.
+10-16 12:40:56.138  5304  5304 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 12:40:56.661  1703  2648 I AiAiCaptions: Disable com.google.android.apps.miphone.aiai.captions.CaptionsForegroundService (reason: Captions is disabled in device config)
+10-16 12:40:58.348  5532  5532 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.apk. target_sdk_version=33, uses_libraries=ALL, library_path=/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/lib/x86_64:/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 12:40:58.349  5532  5532 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/WebViewGoogle.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/lib/x86_64:/data/app/~~PCZ72Gvi5K_4y-GDXFeNVA==/com.google.android.webview-h89ObAPFa5NUM9p73-z6aw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~20MbD-wg7Danjccu9A83fQ==/com.google.android.trichromelibrary_541412337-ogpetjkRH6zRViojw_p9tg==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 12:40:58.358  5532  5532 I cr_WebViewApkApp: Launched version=109.0.5414.123 minSdkVersion=29 isBundle=false processName=com.google.android.webview
+10-16 12:40:58.488  5304  5329 D EGL_emulation: app_time_stats: avg=1210.11ms min=12.55ms max=3576.85ms count=3
+10-16 12:40:58.499  5304  5304 I Choreographer: Skipped 134 frames!  The application may be doing too much work on its main thread.
+10-16 12:40:59.665  1272  4802 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:40:59.684  1272  5487 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:40:59.690   509  1395 I AppsFilter: interaction: PackageSetting{6384c8b app.two.android/10174} -> PackageSetting{29c1576 com.google.android.settings.intelligence/10107} BLOCKED
+10-16 12:40:59.717  1272  4802 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:40:59.977  1272  5487 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:40:59.988  1272  4802 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 12:41:00.084  1272  4802 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:41:00.134  1272  4802 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:41:00.199  1272  4802 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:41:00.205  1272  4802 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:41:00.321  1272  5487 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 12:41:00.334  5492  5492 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:00.393  1272  5487 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:41:00.396  1272  5487 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:41:00.452  1272  5487 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:41:00.821  5304  5317 I OpenGLRenderer: Davey! duration=3566ms; Flags=0, FrameTimelineVsyncId=4723, IntendedVsync=70811580880, Vsync=70811580880, InputEventId=0, HandleInputStart=70820298932, AnimationStart=70820300555, PerformTraversalsStart=70851266932, DrawStart=70851367778, FrameDeadline=70844914212, FrameInterval=70820285918, FrameStartTime=16666666, SyncQueued=70851881633, SyncStart=70852595859, IssueDrawCommandsStart=70853766050, SwapBuffers=74307974067, FrameCompleted=74379097444, DequeueBufferDuration=12106, QueueBufferDuration=781961, GpuCompleted=74378903829, SwapBuffersCompleted=74379097444, DisplayPresentTime=0, CommandSubmissionCompleted=74307974067, 
+10-16 12:41:00.823  5304  5329 D EGL_emulation: app_time_stats: avg=2334.09ms min=2334.09ms max=2334.09ms count=1
+10-16 12:41:00.827  5304  5304 D CompatibilityChangeReporter: Compat change id reported: 150939131; UID 10174; state: ENABLED
+10-16 12:41:00.829  5304  5304 I Choreographer: Skipped 139 frames!  The application may be doing too much work on its main thread.
+10-16 12:41:00.887  5304  5320 I OpenGLRenderer: Davey! duration=2339ms; Flags=0, FrameTimelineVsyncId=5074, IntendedVsync=72128247494, Vsync=72128247494, InputEventId=0, HandleInputStart=72128451056, AnimationStart=72128452625, PerformTraversalsStart=72129910507, DrawStart=72130253766, FrameDeadline=74411580736, FrameInterval=72128445684, FrameStartTime=16666666, SyncQueued=72133944001, SyncStart=74379132236, IssueDrawCommandsStart=74380084174, SwapBuffers=76711070936, FrameCompleted=76713219191, DequeueBufferDuration=5086, QueueBufferDuration=1541830, GpuCompleted=76713097392, SwapBuffersCompleted=76713219191, DisplayPresentTime=0, CommandSubmissionCompleted=76711070936, 
+10-16 12:41:00.890  5346  5364 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 2116
+10-16 12:41:00.919  5304  5683 D ProfileInstaller: Installing profile for app.two.android
+10-16 12:41:01.296  1272  5487 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:41:01.311  1272  5487 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 12:41:01.346  5304  5370 D AAudio  : AAudioStream_close(s#1) called ---------------
+10-16 12:41:01.346  5304  5370 D AAudioStream: setState(s#1) from 10 to 11
+10-16 12:41:01.347  5304  5370 D AAudioStream: setState(s#1) from 11 to 12
+10-16 12:41:01.347  5304  5370 D AAudioStream: ~AudioStream(s#1) mPlayerBase strongCount = 2
+10-16 12:41:01.347  5304  5370 D AAudio  : AAudioStream_close(s#1) returned 0 ---------
+10-16 12:41:02.436  5705  5705 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:03.016  5304  5320 I OpenGLRenderer: Davey! duration=2321ms; Flags=0, FrameTimelineVsyncId=5081, IntendedVsync=72144914160, Vsync=74378247404, InputEventId=0, HandleInputStart=74389962998, AnimationStart=74389964943, PerformTraversalsStart=74390603590, DrawStart=74391110839, FrameDeadline=76744913976, FrameInterval=74389890266, FrameStartTime=16666666, SyncQueued=74391749060, SyncStart=76713414851, IssueDrawCommandsStart=76719084552, SwapBuffers=76776102445, FrameCompleted=76788260555, DequeueBufferDuration=3475, QueueBufferDuration=276714, GpuCompleted=76788185508, SwapBuffersCompleted=76788260555, DisplayPresentTime=0, CommandSubmissionCompleted=76776102445, 
+10-16 12:41:03.017  5304  5329 D EGL_emulation: app_time_stats: avg=1097.25ms min=75.04ms max=2119.46ms count=2
+10-16 12:41:03.021  5304  5304 I Choreographer: Skipped 126 frames!  The application may be doing too much work on its main thread.
+10-16 12:41:03.037  5304  5370 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:41:03.037  5304  5370 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 12:41:03.037  5304  5370 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 2116
+10-16 12:41:03.037  5304  5370 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 12:41:03.037  5304  5370 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:41:03.037  5304  5370 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:41:03.037  5304  5370 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 12:41:03.045  5304  5370 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 12:41:03.045  5304  5370 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 12:41:03.045  5304  5370 D AAudioStream: setState(s#2) from 0 to 2
+10-16 12:41:03.050  5304  5370 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#2 ----------------
+10-16 12:41:03.052  5304  5370 D AAudio  : AAudioStream_requestStart(s#2) called --------------
+10-16 12:41:03.052  5304  5370 D AAudioStream: setState(s#2) from 2 to 3
+10-16 12:41:03.057  5304  5370 D AAudio  : AAudioStream_requestStart(s#2) returned 0 ---------
+10-16 12:41:03.059  5304  5464 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 12:41:03.074  5304  5727 D AAudioStream: setState(s#2) from 3 to 4
+10-16 12:41:03.276  5304  5317 I OpenGLRenderer: Davey! duration=4450ms; Flags=0, FrameTimelineVsyncId=5089, IntendedVsync=74394914070, Vsync=76711580644, InputEventId=0, HandleInputStart=76719354675, AnimationStart=76719356682, PerformTraversalsStart=76720562458, DrawStart=76721119435, FrameDeadline=76811580640, FrameInterval=76719297135, FrameStartTime=16666666, SyncQueued=76722377266, SyncStart=76788388095, IssueDrawCommandsStart=76789915393, SwapBuffers=78904570688, FrameCompleted=78911744000, DequeueBufferDuration=6186, QueueBufferDuration=457702, GpuCompleted=78911744000, SwapBuffersCompleted=78907748791, DisplayPresentTime=0, CommandSubmissionCompleted=78904570688, 
+10-16 12:41:04.558  5750  5750 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:05.683  5304  5329 D EGL_emulation: app_time_stats: avg=888.56ms min=177.64ms max=2215.24ms count=3
+10-16 12:41:05.686  5304  5304 I Choreographer: Skipped 105 frames!  The application may be doing too much work on its main thread.
+10-16 12:41:05.706  5304  5317 I OpenGLRenderer: Davey! duration=2160ms; Flags=0, FrameTimelineVsyncId=5389, IntendedVsync=79411580536, Vsync=79411580536, InputEventId=0, HandleInputStart=79412082526, AnimationStart=79412084091, PerformTraversalsStart=79419329324, DrawStart=79419497408, FrameDeadline=79428247202, FrameInterval=79412062541, FrameStartTime=16666666, SyncQueued=79420210848, SyncStart=79421565033, IssueDrawCommandsStart=79424407996, SwapBuffers=81446278531, FrameCompleted=81573620552, DequeueBufferDuration=9494, QueueBufferDuration=546766, GpuCompleted=81573387559, SwapBuffersCompleted=81573620552, DisplayPresentTime=0, CommandSubmissionCompleted=81446278531, 
+10-16 12:41:05.757  5304  5312 I app.two.android: Compiler allocated 4355KB to compile void android.view.ViewRootImpl.performTraversals()
+10-16 12:41:05.996  5304  5317 I OpenGLRenderer: Davey! duration=1904ms; Flags=0, FrameTimelineVsyncId=5431, IntendedVsync=79811580520, Vsync=81561580450, InputEventId=0, HandleInputStart=81577054419, AnimationStart=81577056834, PerformTraversalsStart=81582610826, DrawStart=81582729204, FrameDeadline=81644913780, FrameInterval=81576960957, FrameStartTime=16666666, SyncQueued=81584126849, SyncStart=81597679280, IssueDrawCommandsStart=81598072244, SwapBuffers=81726419180, FrameCompleted=81729155378, DequeueBufferDuration=3813, QueueBufferDuration=668374, GpuCompleted=81729075349, SwapBuffersCompleted=81729155378, DisplayPresentTime=0, CommandSubmissionCompleted=81726419180, 
+10-16 12:41:06.120  5777  5777 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:06.235  5304  5370 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:41:06.258  5304  5370 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 12:41:06.490  5803  5803 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 12:41:06.585   509   562 I AppsFilter: interaction: PackageSetting{6384c8b app.two.android/10174} -> PackageSetting{f0c3f92 com.google.android.as/10118} BLOCKED
+10-16 12:41:06.622  5803  5803 I AndroidRuntime: Using default boot image
+10-16 12:41:06.622  5803  5803 I AndroidRuntime: Leaving lock profiling enabled
+10-16 12:41:06.863  5304  5329 D EGL_emulation: app_time_stats: avg=196.67ms min=22.75ms max=797.67ms count=6
+10-16 12:41:06.865  5304  5304 I Choreographer: Skipped 33 frames!  The application may be doing too much work on its main thread.
+10-16 12:41:07.316  5803  5803 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 12:41:07.409  5845  5845 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:08.151  5884  5884 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:08.366  5803  5803 D AndroidRuntime: Shutting down VM
+10-16 12:41:08.829  5914  5914 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:09.314  5938  5938 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:09.358  4699  4699 V GrantPermissionsViewModel: Logged buttons presented and clicked permissionGroupName=android.permission-group.MICROPHONE uid=10174 selectedPrecision=0 package=app.two.android presentedButtons=44 clickedButton=4 sessionId=4302185377890482194 targetSdk=35
+10-16 12:41:09.361  4699  4699 V GrantPermissionsViewModel: Permission grant result requestId=4302185377890482194 callingUid=10174 callingPackage=app.two.android permission=android.permission.RECORD_AUDIO isImplicit=false result=4
+10-16 12:41:09.431  5304  5304 D CompatibilityChangeReporter: Compat change id reported: 78294732; UID 10174; state: ENABLED
+10-16 12:41:09.479   509   771 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5304 device: AudioDeviceAttributes: role:output type:speaker addr: name:sdk_gphone64_x86_64 profiles:[] descriptors:[] from API: setCommunicationDevice() from u/pid:10174/5304
+10-16 12:41:09.530  5304  5370 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:41:09.533  1575  1575 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=-1 fieldName=null extras=null}, false)
+10-16 12:41:09.721  5971  5971 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:09.756  5304  5304 E chromium: [ERROR:web_contents_delegate.cc(239)] WebContentsDelegate::CheckMediaAccessPermission: Not supported.
+10-16 12:41:09.776  5304  5399 D EGL_emulation: eglCreateContext: 0x7df5dc125790: maj 3 min 0 rcv 3
+10-16 12:41:09.821  5304  5376 E cr_MediaCodecUtil: Decoder for type video/av01 is not supported on this device [requireSoftware=false, requireHardware=true].
+10-16 12:41:09.824  5346  5997 W chromium: [WARNING:media_session.cc(949)] RED codec red is missing an associated payload type.
+10-16 12:41:09.826  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85716997, interval (us) = 42
+10-16 12:41:09.838  5346  5999 W chromium: [WARNING:audio_send_stream.cc(874)] Config is invalid: min_bitrate_bps=-1; max_bitrate_bps=-1; both expected greater or equal to 0
+10-16 12:41:09.855  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85745401, interval (us) = 196
+10-16 12:41:09.869  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85759988, interval (us) = 78
+10-16 12:41:09.885  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85775248, interval (us) = 48
+10-16 12:41:09.917  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85807822, interval (us) = 371
+10-16 12:41:09.930  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85820465, interval (us) = 251
+10-16 12:41:09.945  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85835303, interval (us) = 316
+10-16 12:41:09.989  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85879739, interval (us) = 23
+10-16 12:41:10.004  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85895001, interval (us) = 121
+10-16 12:41:10.034  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85924819, interval (us) = 72
+10-16 12:41:10.037  6007  6007 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:10.049  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85939668, interval (us) = 124
+10-16 12:41:10.072  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85962117, interval (us) = 288
+10-16 12:41:10.096  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 85986571, interval (us) = 149
+10-16 12:41:10.110  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86000929, interval (us) = 280
+10-16 12:41:10.128  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86018655, interval (us) = 193
+10-16 12:41:10.158  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86048396, interval (us) = 438
+10-16 12:41:10.171  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86061156, interval (us) = 392
+10-16 12:41:10.215  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86105120, interval (us) = 370
+10-16 12:41:10.229  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86119711, interval (us) = 44
+10-16 12:41:10.244  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86134734, interval (us) = 112
+10-16 12:41:10.255  6028  6028 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:10.276  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86166115, interval (us) = 362
+10-16 12:41:10.290  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86180710, interval (us) = 163
+10-16 12:41:10.334  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86225015, interval (us) = 389
+10-16 12:41:10.349  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86239666, interval (us) = 27
+10-16 12:41:10.367  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86257779, interval (us) = 193
+10-16 12:41:10.394  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86284738, interval (us) = 138
+10-16 12:41:10.403  6047  6047 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:10.409  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86299884, interval (us) = 91
+10-16 12:41:10.428  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86318648, interval (us) = 62
+10-16 12:41:10.454  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86344743, interval (us) = 90
+10-16 12:41:10.469  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86359673, interval (us) = 96
+10-16 12:41:10.485  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86375894, interval (us) = 373
+10-16 12:41:10.514  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86404926, interval (us) = 258
+10-16 12:41:10.516  6066  6066 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:10.529  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86419659, interval (us) = 154
+10-16 12:41:10.546  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86436934, interval (us) = 440
+10-16 12:41:10.574  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86464966, interval (us) = 241
+10-16 12:41:10.589  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86479937, interval (us) = 389
+10-16 12:41:10.604  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86494722, interval (us) = 128
+10-16 12:41:10.607  6085  6085 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:10.634  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86524894, interval (us) = 315
+10-16 12:41:10.649  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86539713, interval (us) = 159
+10-16 12:41:10.664  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86554841, interval (us) = 295
+10-16 12:41:10.686  6104  6104 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:10.694  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86584629, interval (us) = 182
+10-16 12:41:10.710  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86599752, interval (us) = 167
+10-16 12:41:10.724  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86614684, interval (us) = 171
+10-16 12:41:10.755  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86645151, interval (us) = 287
+10-16 12:41:10.769  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86659771, interval (us) = 258
+10-16 12:41:10.771  6123  6123 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:10.784  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86674789, interval (us) = 236
+10-16 12:41:10.815  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86705123, interval (us) = 656
+10-16 12:41:10.829  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86719817, interval (us) = 184
+10-16 12:41:10.841  6142  6142 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:10.844  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86734698, interval (us) = 185
+10-16 12:41:10.874  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86764866, interval (us) = 259
+10-16 12:41:10.890  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86780587, interval (us) = 213
+10-16 12:41:10.904  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86794806, interval (us) = 315
+10-16 12:41:10.918  6161  6161 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:10.934  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86824983, interval (us) = 378
+10-16 12:41:10.949  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86839943, interval (us) = 261
+10-16 12:41:10.964  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86854647, interval (us) = 203
+10-16 12:41:10.995  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86885351, interval (us) = 464
+10-16 12:41:11.009  6180  6180 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:11.009  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86899982, interval (us) = 450
+10-16 12:41:11.024  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86914591, interval (us) = 215
+10-16 12:41:11.055  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86945235, interval (us) = 456
+10-16 12:41:11.069  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86959869, interval (us) = 385
+10-16 12:41:11.080  6199  6199 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:11.084  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 86974724, interval (us) = 219
+10-16 12:41:11.114  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87004705, interval (us) = 295
+10-16 12:41:11.130  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87020293, interval (us) = 512
+10-16 12:41:11.144  6218  6218 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:11.144  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87034581, interval (us) = 203
+10-16 12:41:11.174  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87064732, interval (us) = 312
+10-16 12:41:11.189  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87079634, interval (us) = 224
+10-16 12:41:11.204  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87095052, interval (us) = 480
+10-16 12:41:11.211  6237  6237 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:11.234  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87124709, interval (us) = 289
+10-16 12:41:11.249  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87139695, interval (us) = 222
+10-16 12:41:11.265  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87155316, interval (us) = 598
+10-16 12:41:11.286  6256  6256 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:11.294  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87184949, interval (us) = 417
+10-16 12:41:11.310  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87200414, interval (us) = 628
+10-16 12:41:11.324  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87214990, interval (us) = 506
+10-16 12:41:11.346  6275  6275 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:11.354  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87244842, interval (us) = 426
+10-16 12:41:11.370  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87260409, interval (us) = 442
+10-16 12:41:11.384  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87274617, interval (us) = 231
+10-16 12:41:11.414  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87304987, interval (us) = 409
+10-16 12:41:11.430  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87320461, interval (us) = 351
+10-16 12:41:11.445  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87335654, interval (us) = 542
+10-16 12:41:11.474  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87364877, interval (us) = 331
+10-16 12:41:11.489  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87379733, interval (us) = 231
+10-16 12:41:11.504  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87394697, interval (us) = 245
+10-16 12:41:11.534  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87424852, interval (us) = 430
+10-16 12:41:11.551  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87441539, interval (us) = 340
+10-16 12:41:11.565  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87455164, interval (us) = 534
+10-16 12:41:11.594  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87484642, interval (us) = 274
+10-16 12:41:11.609  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87499687, interval (us) = 293
+10-16 12:41:11.624  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87514729, interval (us) = 304
+10-16 12:41:11.654  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87544616, interval (us) = 276
+10-16 12:41:11.669  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87559820, interval (us) = 273
+10-16 12:41:11.686  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87576145, interval (us) = 360
+10-16 12:41:11.714  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87604772, interval (us) = 355
+10-16 12:41:11.729  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87619984, interval (us) = 555
+10-16 12:41:11.745  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87635117, interval (us) = 488
+10-16 12:41:11.774  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87664658, interval (us) = 289
+10-16 12:41:11.789  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87679714, interval (us) = 311
+10-16 12:41:11.804  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87694687, interval (us) = 272
+10-16 12:41:11.830  1438  4436 I Icing   : doRemovePackageData app.two.android
+10-16 12:41:11.834  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87724723, interval (us) = 344
+10-16 12:41:11.840  4699  4699 D PersistedStoragePackageUninstalledReceiver: Received android.intent.action.PACKAGE_DATA_CLEARED for app.two.android for u0
+10-16 12:41:11.849  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87739732, interval (us) = 333
+10-16 12:41:11.862  1702  2416 D MediaProvider: Deleted 0 Android/media items belonging to app.two.android on /data/user/0/com.google.android.providers.media.module/databases/external.db
+10-16 12:41:11.864  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87754660, interval (us) = 268
+10-16 12:41:11.879  1702  2416 D MediaGrants: Removed 0 media_grants for app.two.android. Reason: Package orphaned
+10-16 12:41:11.894  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87784949, interval (us) = 358
+10-16 12:41:11.909  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87799656, interval (us) = 287
+10-16 12:41:11.918  6323  6323 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:11.924  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87814633, interval (us) = 293
+10-16 12:41:11.954  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87844626, interval (us) = 331
+10-16 12:41:11.969  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87859631, interval (us) = 298
+10-16 12:41:11.984  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87874656, interval (us) = 292
+10-16 12:41:12.015  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87905552, interval (us) = 480
+10-16 12:41:12.019  6344  6344 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:12.029  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87919708, interval (us) = 308
+10-16 12:41:12.044  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87934713, interval (us) = 297
+10-16 12:41:12.074  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87964772, interval (us) = 373
+10-16 12:41:12.085  6363  6363 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:12.090  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87980392, interval (us) = 643
+10-16 12:41:12.104  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 87994742, interval (us) = 336
+10-16 12:41:12.135  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88025064, interval (us) = 611
+10-16 12:41:12.150  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88040386, interval (us) = 626
+10-16 12:41:12.160  6381  6381 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:12.164  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88054691, interval (us) = 289
+10-16 12:41:12.194  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88085015, interval (us) = 491
+10-16 12:41:12.209  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88099667, interval (us) = 314
+10-16 12:41:12.224  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88114912, interval (us) = 481
+10-16 12:41:12.254  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88144817, interval (us) = 437
+10-16 12:41:12.270  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88160371, interval (us) = 623
+10-16 12:41:12.284  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88174805, interval (us) = 389
+10-16 12:41:12.314  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88204890, interval (us) = 292
+10-16 12:41:12.329  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88219747, interval (us) = 287
+10-16 12:41:12.345  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88235672, interval (us) = 314
+10-16 12:41:12.374  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88265031, interval (us) = 483
+10-16 12:41:12.389  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88279739, interval (us) = 341
+10-16 12:41:12.405  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88295121, interval (us) = 331
+10-16 12:41:12.435  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88325337, interval (us) = 862
+10-16 12:41:12.449  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88339982, interval (us) = 581
+10-16 12:41:12.494  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88384813, interval (us) = 377
+10-16 12:41:12.509  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88399723, interval (us) = 379
+10-16 12:41:12.524  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88414955, interval (us) = 297
+10-16 12:41:12.554  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88444605, interval (us) = 293
+10-16 12:41:12.569  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88459588, interval (us) = 312
+10-16 12:41:12.589  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88479495, interval (us) = 322
+10-16 12:41:12.614  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88504846, interval (us) = 358
+10-16 12:41:12.629  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88519858, interval (us) = 307
+10-16 12:41:12.647  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88537920, interval (us) = 394
+10-16 12:41:12.674  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88564944, interval (us) = 348
+10-16 12:41:12.690  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88580445, interval (us) = 453
+10-16 12:41:12.704  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88594970, interval (us) = 303
+10-16 12:41:12.734  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88624787, interval (us) = 375
+10-16 12:41:12.751  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88641354, interval (us) = 402
+10-16 12:41:12.765  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88655603, interval (us) = 498
+10-16 12:41:12.809  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88699710, interval (us) = 307
+10-16 12:41:12.824  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88714806, interval (us) = 423
+10-16 12:41:12.856  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88746330, interval (us) = 308
+10-16 12:41:12.870  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88760754, interval (us) = 261
+10-16 12:41:12.884  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88774868, interval (us) = 345
+10-16 12:41:12.914  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88804766, interval (us) = 385
+10-16 12:41:12.929  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88819770, interval (us) = 425
+10-16 12:41:12.945  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88835479, interval (us) = 340
+10-16 12:41:12.975  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88866035, interval (us) = 433
+10-16 12:41:12.996  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88887026, interval (us) = 559
+10-16 12:41:13.055  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88945111, interval (us) = 452
+10-16 12:41:13.055  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88945481, interval (us) = 370
+10-16 12:41:13.055  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88945543, interval (us) = 62
+10-16 12:41:13.065  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88955348, interval (us) = 266
+10-16 12:41:13.096  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 88986395, interval (us) = 622
+10-16 12:41:13.115  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89005359, interval (us) = 462
+10-16 12:41:13.125  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89015348, interval (us) = 270
+10-16 12:41:13.154  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89044822, interval (us) = 348
+10-16 12:41:13.169  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89059694, interval (us) = 278
+10-16 12:41:13.184  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89074677, interval (us) = 283
+10-16 12:41:13.214  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89104859, interval (us) = 283
+10-16 12:41:13.230  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89120077, interval (us) = 474
+10-16 12:41:13.245  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89135459, interval (us) = 249
+10-16 12:41:13.275  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89165843, interval (us) = 536
+10-16 12:41:13.305  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89195174, interval (us) = 550
+10-16 12:41:13.341  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89231667, interval (us) = 519
+10-16 12:41:13.354  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89244716, interval (us) = 363
+10-16 12:41:13.398  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89288306, interval (us) = 443
+10-16 12:41:13.410  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89300507, interval (us) = 472
+10-16 12:41:13.425  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89315440, interval (us) = 706
+10-16 12:41:13.454  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89345043, interval (us) = 467
+10-16 12:41:13.470  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89360583, interval (us) = 712
+10-16 12:41:13.485  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89375656, interval (us) = 639
+10-16 12:41:13.514  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89404677, interval (us) = 274
+10-16 12:41:13.529  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89419762, interval (us) = 312
+10-16 12:41:13.545  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89435096, interval (us) = 534
+10-16 12:41:13.574  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89465053, interval (us) = 376
+10-16 12:41:13.582   509   562 I AppsFilter: interaction: PackageSetting{6384c8b app.two.android/10174} -> PackageSetting{c1a893d com.google.android.apps.messaging/10110} BLOCKED
+10-16 12:41:13.590  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89480214, interval (us) = 664
+10-16 12:41:13.604  5346  5994 W chromium: [WARNING:timestamp_aligner.cc(131)] too short translated timestamp interval: system time (us) = 89494691, interval (us) = 191
+10-16 12:41:13.614   509   771 I AS.AudioDeviceBroker: setCommunicationRouteForClient for pid: 5304 device: null from API: clearCommunicationDevice() from u/pid:10174/5304
+10-16 12:41:13.700  5304  5329 D EGL_emulation: app_time_stats: avg=1709.15ms min=46.40ms max=6373.58ms count=4
+10-16 12:41:13.920  6461  6461 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:13.994  6492  6492 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:14.066  6511  6511 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:14.142  6532  6532 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 12:41:15.462   509  2845 W ActivityManager: Scheduling restart of crashed service com.google.android.gms/com.google.android.location.network.NetworkLocationService in 60995ms for connection
+10-16 12:41:16.195  5304  5329 D EGL_emulation: app_time_stats: avg=831.64ms min=45.40ms max=2391.98ms count=3
+10-16 12:41:16.988  2516  4584 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:41:16.988  2516  4584 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:41:17.864  6594  6684 I cr_CronetLibraryLoader: Cronet version: 113.0.5672.51, arch: x86_64

@@ -1,0 +1,160 @@
+10-16 12:41:32.631  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:32.753  3791  3819 D EGL_emulation: app_time_stats: avg=4040.76ms min=4040.76ms max=4040.76ms count=1
+10-16 12:41:34.227  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:34.227  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:34.245  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:41:34.320  3791  3819 D EGL_emulation: app_time_stats: avg=783.25ms min=306.14ms max=1260.35ms count=2
+10-16 12:41:36.793  3791  3819 D EGL_emulation: app_time_stats: avg=411.24ms min=21.69ms max=2158.95ms count=6
+10-16 12:41:37.765  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:37.766  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:37.774  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:41:37.853  3791  3819 D EGL_emulation: app_time_stats: avg=1060.12ms min=1060.12ms max=1060.12ms count=1
+10-16 12:41:39.087  2373  2641 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:41:39.087  2373  2641 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:41:39.508  2373  4626 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:41:39.509  2373  4626 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:41:40.342  3791  3819 D EGL_emulation: app_time_stats: avg=310.59ms min=24.75ms max=2130.42ms count=8
+10-16 12:41:41.318  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:41.319  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:41.327  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:41:41.341  3842  4334 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:41:41.342   577  1611 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:41:41.405  3791  3819 D EGL_emulation: app_time_stats: avg=1062.70ms min=1062.70ms max=1062.70ms count=1
+10-16 12:41:41.546   577   577 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10209
+10-16 12:41:43.926  3791  3819 D EGL_emulation: app_time_stats: avg=250.74ms min=16.54ms max=2212.27ms count=10
+10-16 12:41:44.934  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:44.934  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:44.944  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:41:44.963  3842  4334 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:41:44.963   577  1827 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:41:45.031  3791  3819 D EGL_emulation: app_time_stats: avg=1105.41ms min=1105.41ms max=1105.41ms count=1
+10-16 12:41:45.167   577   577 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10209
+10-16 12:41:47.563  3791  3819 D EGL_emulation: app_time_stats: avg=280.27ms min=17.25ms max=2235.27ms count=9
+10-16 12:41:48.564  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:48.564  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:48.575  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:41:48.597  3842  4334 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:41:48.601   577  1853 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:41:48.642  3791  3819 D EGL_emulation: app_time_stats: avg=1079.49ms min=1079.49ms max=1079.49ms count=1
+10-16 12:41:48.655  3842  4676 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 174382474, interval (us) = 37
+10-16 12:41:48.806   577   577 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10209
+10-16 12:41:49.035   577   684 D ActivityManager: sync unfroze 2882 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 for 6
+10-16 12:41:49.052   577  1826 W ProcessStats: Tracking association SourceState{ef61c31 com.google.android.googlequicksearchbox:search/10144 ImpBg #5821} whose proc state 6 is better than process ProcessState{5a4c7fd com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/10144 pkg=com.google.android.googlequicksearchbox} proc state 14 (1 skipped)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: Exception in upload method
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: com.google.android.apps.gsa.shared.n.d: Error code: 262182
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.am.b(PG:15)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.o.read(PG:13)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at org.chromium.net.impl.af.run(PG:47)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.ag.run(PG:3)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.h.a.l.run(PG:9)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.cc.b(PG:3)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.cf.run(PG:1)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.k.x.run(PG:3)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.common.n.c.c.run(PG:50)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.k.e.run(PG:8)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 12:41:49.084  1667  2029 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.k.d.b.run(PG:74)
+10-16 12:41:51.225  3791  3819 D EGL_emulation: app_time_stats: avg=257.23ms min=17.53ms max=2248.06ms count=10
+10-16 12:41:52.319  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:52.319  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:52.328  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:41:52.343   577  1853 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:41:52.343  3842  4334 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:41:52.394  3842  4705 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178121531, interval (us) = 20
+10-16 12:41:52.399  3791  3819 D EGL_emulation: app_time_stats: avg=1173.79ms min=1173.79ms max=1173.79ms count=1
+10-16 12:41:52.410  3842  4705 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178136921, interval (us) = 15
+10-16 12:41:52.427  3842  4705 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178154055, interval (us) = 157
+10-16 12:41:52.443  3842  4705 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 178170057, interval (us) = 733
+10-16 12:41:52.546   577   577 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10209
+10-16 12:41:55.010  3791  3819 D EGL_emulation: app_time_stats: avg=288.72ms min=19.72ms max=2276.60ms count=9
+10-16 12:41:56.094  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:56.094  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:56.105  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:41:56.124  3842  4334 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:41:56.125   577  1826 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:41:56.177  3791  3819 D EGL_emulation: app_time_stats: avg=1167.13ms min=1167.13ms max=1167.13ms count=1
+10-16 12:41:56.181  3842  4716 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 181908145, interval (us) = 26
+10-16 12:41:56.196  3842  4716 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 181923419, interval (us) = 13
+10-16 12:41:56.214  3842  4716 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 181940818, interval (us) = 78
+10-16 12:41:56.230  3842  4716 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 181957075, interval (us) = 120
+10-16 12:41:56.262  3842  4716 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 181988904, interval (us) = 280
+10-16 12:41:56.276  3842  4716 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 182003028, interval (us) = 404
+10-16 12:41:56.328   577   577 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10209
+10-16 12:41:58.856  3791  3819 D EGL_emulation: app_time_stats: avg=297.56ms min=19.61ms max=2359.33ms count=9
+10-16 12:41:59.118   577   692 D ActivityManager: freezing 2882 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 12:41:59.870  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:59.870  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:41:59.880  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:41:59.896  3842  4334 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:41:59.897   577  1826 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:41:59.946  3842  4727 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 185673619, interval (us) = 18
+10-16 12:41:59.954  3791  3819 D EGL_emulation: app_time_stats: avg=1097.98ms min=1097.98ms max=1097.98ms count=1
+10-16 12:41:59.967  3842  4727 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 185693920, interval (us) = 16
+10-16 12:41:59.978  3842  4727 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 185705168, interval (us) = 104
+10-16 12:41:59.995  3842  4727 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 185721799, interval (us) = 107
+10-16 12:42:00.028  3842  4727 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 185755012, interval (us) = 149
+10-16 12:42:00.043  3842  4727 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 185769811, interval (us) = 193
+10-16 12:42:00.059  3842  4727 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 185785979, interval (us) = 514
+10-16 12:42:00.074  3842  4727 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 185801306, interval (us) = 92
+10-16 12:42:02.676  3791  3819 D EGL_emulation: app_time_stats: avg=339.17ms min=18.89ms max=2406.06ms count=8
+10-16 12:42:03.681  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:42:03.682  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:42:03.690  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:42:03.706   577  1853 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:03.708  3842  4334 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:03.759  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189486094, interval (us) = 26
+10-16 12:42:03.775  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189501927, interval (us) = 17
+10-16 12:42:03.780  3791  3819 D EGL_emulation: app_time_stats: avg=1103.45ms min=1103.45ms max=1103.45ms count=1
+10-16 12:42:03.791  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189517865, interval (us) = 99
+10-16 12:42:03.816  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189543418, interval (us) = 432
+10-16 12:42:03.839  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189566573, interval (us) = 30
+10-16 12:42:03.854  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189581334, interval (us) = 86
+10-16 12:42:03.872  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189598931, interval (us) = 96
+10-16 12:42:03.886  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189613251, interval (us) = 113
+10-16 12:42:03.921  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189648615, interval (us) = 107
+10-16 12:42:03.934  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189661572, interval (us) = 136
+10-16 12:42:03.953  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189679817, interval (us) = 106
+10-16 12:42:03.970  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189697003, interval (us) = 500
+10-16 12:42:03.998  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189725288, interval (us) = 135
+10-16 12:42:04.015  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189742382, interval (us) = 463
+10-16 12:42:04.030  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189757173, interval (us) = 77
+10-16 12:42:04.079  3842  4738 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 189806623, interval (us) = 331
+10-16 12:42:06.645  3791  3819 D EGL_emulation: app_time_stats: avg=237.33ms min=15.90ms max=2452.01ms count=12
+10-16 12:42:07.631  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:42:07.631  3842  3852 I chromium: [INFO:document_style_environment_variables.cc(104)] E2E_Used SafeAreaInsetBottom
+10-16 12:42:07.640  3791  3861 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x1, using default mask 0x10 based on channel count of 1)
+10-16 12:42:07.658   577  1827 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10209; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:07.658  3842  4334 W chromium: [WARNING:codec.cc(515)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:07.713  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193440243, interval (us) = 27
+10-16 12:42:07.714  3791  3819 D EGL_emulation: app_time_stats: avg=1069.06ms min=1069.06ms max=1069.06ms count=1
+10-16 12:42:07.727  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193454210, interval (us) = 12
+10-16 12:42:07.743  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193470680, interval (us) = 157
+10-16 12:42:07.761  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193488320, interval (us) = 289
+10-16 12:42:07.790  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193517584, interval (us) = 257
+10-16 12:42:07.806  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193533260, interval (us) = 302
+10-16 12:42:07.822  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193549124, interval (us) = 253
+10-16 12:42:07.838  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193565416, interval (us) = 335
+10-16 12:42:07.871  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193598151, interval (us) = 277
+10-16 12:42:07.886  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193613146, interval (us) = 253
+10-16 12:42:07.903  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193629830, interval (us) = 282
+10-16 12:42:07.918  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193645351, interval (us) = 296
+10-16 12:42:07.970  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193697505, interval (us) = 206
+10-16 12:42:07.985  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193712240, interval (us) = 232
+10-16 12:42:08.011  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193738078, interval (us) = 378
+10-16 12:42:08.042  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193769306, interval (us) = 276
+10-16 12:42:08.046  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193773330, interval (us) = 488
+10-16 12:42:08.062  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193789209, interval (us) = 219
+10-16 12:42:08.078  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193805148, interval (us) = 247
+10-16 12:42:08.110  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193837115, interval (us) = 247
+10-16 12:42:08.126  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193853258, interval (us) = 316
+10-16 12:42:08.142  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193869201, interval (us) = 280
+10-16 12:42:08.158  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193885139, interval (us) = 244
+10-16 12:42:08.190  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193917675, interval (us) = 347
+10-16 12:42:08.206  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193933317, interval (us) = 339
+10-16 12:42:08.222  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193949165, interval (us) = 259
+10-16 12:42:08.238  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193965167, interval (us) = 270
+10-16 12:42:08.270  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 193997256, interval (us) = 307
+10-16 12:42:08.286  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194013172, interval (us) = 287
+10-16 12:42:08.302  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194029156, interval (us) = 268
+10-16 12:42:08.318  3842  4751 W chromium: [WARNING:timestamp_aligner.cc(130)] too short translated timestamp interval: system time (us) = 194045184, interval (us) = 288
+10-16 12:42:10.894  3791  3819 D EGL_emulation: app_time_stats: avg=243.52ms min=15.98ms max=2463.72ms count=13

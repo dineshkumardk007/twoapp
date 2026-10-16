@@ -1,0 +1,14 @@
+10-16 12:43:56.404  5304  5329 D EGL_emulation: app_time_stats: avg=2279.50ms min=2279.50ms max=2279.50ms count=1
+10-16 12:44:01.553  5304  5370 D AAudio  : AAudioStream_close(s#6) called ---------------
+10-16 12:44:01.553  5304  5370 D AAudioStream: setState(s#6) from 10 to 11
+10-16 12:44:01.554  5304  5370 D AAudioStream: setState(s#6) from 11 to 12
+10-16 12:44:01.554  5304  5370 D AAudioStream: ~AudioStream(s#6) mPlayerBase strongCount = 2
+10-16 12:44:01.554  5304  5370 D AAudio  : AAudioStream_close(s#6) returned 0 ---------
+10-16 12:44:01.554  5304  5370 D AAudio  : AAudioStream_close(s#4) called ---------------
+10-16 12:44:01.554  5304  5370 D AAudioStream: setState(s#4) from 10 to 11
+10-16 12:44:01.555  5304  5370 D AAudioStream: setState(s#4) from 11 to 12
+10-16 12:44:01.555  5304  5370 D AAudioStream: ~AudioStream(s#4) mPlayerBase strongCount = 2
+10-16 12:44:01.555  5304  5370 D AAudio  : AAudioStream_close(s#4) returned 0 ---------
+10-16 12:44:02.075  5304  5304 W OnBackInvokedCallback: OnBackInvokedCallback is not enabled for the application.
+10-16 12:44:02.075  5304  5304 W OnBackInvokedCallback: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 12:44:02.177  1575  1575 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=-1 fieldName=null extras=null}, false)

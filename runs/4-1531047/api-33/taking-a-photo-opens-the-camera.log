@@ -1,0 +1,6 @@
+10-16 12:44:06.369  5304  5329 D EGL_emulation: app_time_stats: avg=1060.65ms min=10.90ms max=4077.59ms count=4
+10-16 12:44:09.076  5304  6970 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:44:09.076  5304  6970 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:44:13.423  5304  5304 W OnBackInvokedCallback: OnBackInvokedCallback is not enabled for the application.
+10-16 12:44:13.423  5304  5304 W OnBackInvokedCallback: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 12:44:13.566  1575  1575 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=-1 fieldName=null extras=null}, false)

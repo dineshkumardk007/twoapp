@@ -1,0 +1,331 @@
+10-16 12:42:12.231  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:12.231  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:12.231  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:12.231  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:12.231  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:12.231  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:12.231  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:12.231  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:12.231  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:12.231  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:12.231  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:12.231  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:12.237  3987  4074 D AAudioStream: setState(s#5) from 0 to 2
+10-16 12:42:12.237  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#5 ----------------
+10-16 12:42:12.241  3987  4074 D AAudio  : AAudioStream_requestStart(s#5) called --------------
+10-16 12:42:12.241  3987  4074 D AAudioStream: setState(s#5) from 2 to 3
+10-16 12:42:12.244  3987  4074 D AAudio  : AAudioStream_requestStart(s#5) returned 0 ---------
+10-16 12:42:12.244  3987  3999 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:12.244  3987  3999 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:12.244  3987  4074 D AAudio  : AAudioStream_requestStop(s#5) called
+10-16 12:42:12.244  3987  4074 D AAudioStream: setState(s#5) from 3 to 9
+10-16 12:42:12.284  3987  4074 D AAudioStream: setState(s#5) from 9 to 10
+10-16 12:42:12.285  3987  4074 D AAudio  : AAudioStream_requestStop(s#5) called
+10-16 12:42:12.285  3987  4074 D AAudio  : AAudioStream_close(s#5) called ---------------
+10-16 12:42:12.285  3987  4074 D AAudioStream: setState(s#5) from 10 to 11
+10-16 12:42:12.291  3987  4074 D AAudioStream: setState(s#5) from 11 to 12
+10-16 12:42:12.292  3987  4074 D AAudioStream: ~AudioStream(s#5) mPlayerBase strongCount = 1
+10-16 12:42:12.292  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:12.295  3987  4074 D AAudio  : AAudioStream_close(s#5) returned 0 ---------
+10-16 12:42:15.759  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:15.759  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:15.759  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:15.759  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:15.760  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:15.760  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:15.760  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:15.760  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:15.760  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:15.760  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:15.760  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:15.760  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:15.764  3987  4074 D AAudioStream: setState(s#6) from 0 to 2
+10-16 12:42:15.765  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#6 ----------------
+10-16 12:42:15.765  3987  4074 D AAudio  : AAudioStream_requestStart(s#6) called --------------
+10-16 12:42:15.765  3987  4074 D AAudioStream: setState(s#6) from 2 to 3
+10-16 12:42:15.769  3987  4074 D AAudio  : AAudioStream_requestStart(s#6) returned 0 ---------
+10-16 12:42:15.770  3987  3999 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:15.770  3987  3999 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:15.776  4044  4645 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:15.779   682  1435 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:15.791  3987  4074 D AAudio  : AAudioStream_requestStop(s#6) called
+10-16 12:42:15.791  3987  4074 D AAudioStream: setState(s#6) from 3 to 9
+10-16 12:42:15.812  3987  4074 D AAudioStream: setState(s#6) from 9 to 10
+10-16 12:42:15.813  3987  4074 D AAudio  : AAudioStream_requestStop(s#6) called
+10-16 12:42:15.813  3987  4074 D AAudio  : AAudioStream_close(s#6) called ---------------
+10-16 12:42:15.813  3987  4074 D AAudioStream: setState(s#6) from 10 to 11
+10-16 12:42:15.818  3987  4074 D AAudioStream: setState(s#6) from 11 to 12
+10-16 12:42:15.818  3987  4074 D AAudioStream: ~AudioStream(s#6) mPlayerBase strongCount = 1
+10-16 12:42:15.818  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:15.818  3987  4074 D AAudio  : AAudioStream_close(s#6) returned 0 ---------
+10-16 12:42:15.989   682   682 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10216
+10-16 12:42:19.375  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:19.375  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:19.375  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:19.375  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:19.375  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:19.375  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:19.375  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:19.375  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:19.375  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:19.375  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:19.375  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:19.375  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:19.379  3987  4074 D AAudioStream: setState(s#7) from 0 to 2
+10-16 12:42:19.380  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#7 ----------------
+10-16 12:42:19.381  3987  4074 D AAudio  : AAudioStream_requestStart(s#7) called --------------
+10-16 12:42:19.381  3987  4074 D AAudioStream: setState(s#7) from 2 to 3
+10-16 12:42:19.384  3987  4074 D AAudio  : AAudioStream_requestStart(s#7) returned 0 ---------
+10-16 12:42:19.385  3987  3999 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:19.385  3987  3999 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:19.388   682  1323 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:19.397  4044  4645 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:19.424  3987  4074 D AAudio  : AAudioStream_requestStop(s#7) called
+10-16 12:42:19.424  3987  4074 D AAudioStream: setState(s#7) from 3 to 9
+10-16 12:42:19.432  3987  4074 D AAudioStream: setState(s#7) from 9 to 10
+10-16 12:42:19.432  3987  4074 D AAudio  : AAudioStream_requestStop(s#7) called
+10-16 12:42:19.432  3987  4074 D AAudio  : AAudioStream_close(s#7) called ---------------
+10-16 12:42:19.432  3987  4074 D AAudioStream: setState(s#7) from 10 to 11
+10-16 12:42:19.434  3987  4074 D AAudioStream: setState(s#7) from 11 to 12
+10-16 12:42:19.434  3987  4074 D AAudioStream: ~AudioStream(s#7) mPlayerBase strongCount = 1
+10-16 12:42:19.434  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:19.434  3987  4074 D AAudio  : AAudioStream_close(s#7) returned 0 ---------
+10-16 12:42:19.592   682   682 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10216
+10-16 12:42:23.127  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:23.127  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:23.127  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:23.127  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:23.127  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:23.127  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:23.127  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:23.127  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:23.127  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:23.127  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:23.127  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:23.127  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:23.130  3987  4074 D AAudioStream: setState(s#8) from 0 to 2
+10-16 12:42:23.131  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#8 ----------------
+10-16 12:42:23.132  3987  4074 D AAudio  : AAudioStream_requestStart(s#8) called --------------
+10-16 12:42:23.132  3987  4074 D AAudioStream: setState(s#8) from 2 to 3
+10-16 12:42:23.136  4044  4645 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:23.138   682  1010 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:23.139  3987  4074 D AAudio  : AAudioStream_requestStart(s#8) returned 0 ---------
+10-16 12:42:23.139  3987  3999 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:23.139  3987  3999 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:23.171  3987  5178 D AAudioStream: setState(s#8) from 3 to 4
+10-16 12:42:23.179  3987  4074 D AAudio  : AAudioStream_requestStop(s#8) called
+10-16 12:42:23.179  3987  4074 D AAudioStream: setState(s#8) from 4 to 9
+10-16 12:42:23.193  3987  4074 D AAudioStream: setState(s#8) from 9 to 10
+10-16 12:42:23.193  3987  4074 D AAudio  : AAudioStream_requestStop(s#8) called
+10-16 12:42:23.193  3987  4074 D AAudio  : AAudioStream_close(s#8) called ---------------
+10-16 12:42:23.193  3987  4074 D AAudioStream: setState(s#8) from 10 to 11
+10-16 12:42:23.194  3987  4074 D AAudioStream: setState(s#8) from 11 to 12
+10-16 12:42:23.194  3987  4074 D AAudioStream: ~AudioStream(s#8) mPlayerBase strongCount = 1
+10-16 12:42:23.194  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:23.194  3987  4074 D AAudio  : AAudioStream_close(s#8) returned 0 ---------
+10-16 12:42:23.342   682   682 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10216
+10-16 12:42:24.071  5045  5211 W chromium: [1016/124224.071618:WARNING:url_request_context_config.cc(715)] Unrecognized Cronet experimental option "enable_telemetry" with params "true
+10-16 12:42:24.071  5045  5211 W chromium: 
+10-16 12:42:24.145  2808  2933 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 12:42:24.146  2808  2933 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 12:42:26.748  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:26.748  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:26.748  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:26.748  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:26.748  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:26.748  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:26.748  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:26.748  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:26.748  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:26.748  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:26.749  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:26.749  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:26.752  3987  4074 D AAudioStream: setState(s#9) from 0 to 2
+10-16 12:42:26.752  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#9 ----------------
+10-16 12:42:26.755  3987  4074 D AAudio  : AAudioStream_requestStart(s#9) called --------------
+10-16 12:42:26.755  3987  4074 D AAudioStream: setState(s#9) from 2 to 3
+10-16 12:42:26.758  4044  4645 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:26.758   682  1010 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:26.761  3987  4074 D AAudio  : AAudioStream_requestStart(s#9) returned 0 ---------
+10-16 12:42:26.761  3987  3997 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:26.761  3987  3997 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:26.802  3987  5237 D AAudioStream: setState(s#9) from 3 to 4
+10-16 12:42:26.831  3987  4074 D AAudio  : AAudioStream_requestStop(s#9) called
+10-16 12:42:26.831  3987  4074 D AAudioStream: setState(s#9) from 4 to 9
+10-16 12:42:26.838  3987  4074 D AAudioStream: setState(s#9) from 9 to 10
+10-16 12:42:26.839  3987  4074 D AAudio  : AAudioStream_requestStop(s#9) called
+10-16 12:42:26.839  3987  4074 D AAudio  : AAudioStream_close(s#9) called ---------------
+10-16 12:42:26.839  3987  4074 D AAudioStream: setState(s#9) from 10 to 11
+10-16 12:42:26.846  3987  4074 D AAudioStream: setState(s#9) from 11 to 12
+10-16 12:42:26.846  3987  4074 D AAudioStream: ~AudioStream(s#9) mPlayerBase strongCount = 1
+10-16 12:42:26.846  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:26.846  3987  4074 D AAudio  : AAudioStream_close(s#9) returned 0 ---------
+10-16 12:42:26.963   682   682 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10216
+10-16 12:42:30.507  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:30.507  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:30.507  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:30.507  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:30.507  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:30.507  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:30.507  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:30.507  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:30.507  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:30.508  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:30.508  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:30.508  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:30.511  3987  4074 D AAudioStream: setState(s#10) from 0 to 2
+10-16 12:42:30.512  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#10 ----------------
+10-16 12:42:30.514  3987  4074 D AAudio  : AAudioStream_requestStart(s#10) called --------------
+10-16 12:42:30.514  3987  4074 D AAudioStream: setState(s#10) from 2 to 3
+10-16 12:42:30.516   682  1435 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:30.517  4044  4645 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:30.518  3987  4074 D AAudio  : AAudioStream_requestStart(s#10) returned 0 ---------
+10-16 12:42:30.518  3987  3997 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:30.518  3987  3997 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:30.555  3987  5246 D AAudioStream: setState(s#10) from 3 to 4
+10-16 12:42:30.623  3987  4074 D AAudio  : AAudioStream_requestStop(s#10) called
+10-16 12:42:30.623  3987  4074 D AAudioStream: setState(s#10) from 4 to 9
+10-16 12:42:30.644  3987  4074 D AAudioStream: setState(s#10) from 9 to 10
+10-16 12:42:30.644  3987  4074 D AAudio  : AAudioStream_requestStop(s#10) called
+10-16 12:42:30.644  3987  4074 D AAudio  : AAudioStream_close(s#10) called ---------------
+10-16 12:42:30.644  3987  4074 D AAudioStream: setState(s#10) from 10 to 11
+10-16 12:42:30.648  3987  4074 D AAudioStream: setState(s#10) from 11 to 12
+10-16 12:42:30.648  3987  4074 D AAudioStream: ~AudioStream(s#10) mPlayerBase strongCount = 1
+10-16 12:42:30.648  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:30.648  3987  4074 D AAudio  : AAudioStream_close(s#10) returned 0 ---------
+10-16 12:42:30.721   682   682 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10216
+10-16 12:42:34.264  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:34.264  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:34.264  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:34.264  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:34.264  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:34.264  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:34.264  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:34.264  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:34.264  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:34.264  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:34.264  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:34.264  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:34.268  3987  4074 D AAudioStream: setState(s#11) from 0 to 2
+10-16 12:42:34.268  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#11 ----------------
+10-16 12:42:34.270  3987  4074 D AAudio  : AAudioStream_requestStart(s#11) called --------------
+10-16 12:42:34.270  3987  4074 D AAudioStream: setState(s#11) from 2 to 3
+10-16 12:42:34.275  3987  4074 D AAudio  : AAudioStream_requestStart(s#11) returned 0 ---------
+10-16 12:42:34.275  4044  4645 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:34.276  3987  3997 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:34.276  3987  3997 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:34.276   682  1010 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:34.307  3987  5255 D AAudioStream: setState(s#11) from 3 to 4
+10-16 12:42:34.447  3987  4074 D AAudio  : AAudioStream_requestStop(s#11) called
+10-16 12:42:34.447  3987  4074 D AAudioStream: setState(s#11) from 4 to 9
+10-16 12:42:34.454  3987  4074 D AAudioStream: setState(s#11) from 9 to 10
+10-16 12:42:34.454  3987  4074 D AAudio  : AAudioStream_requestStop(s#11) called
+10-16 12:42:34.454  3987  4074 D AAudio  : AAudioStream_close(s#11) called ---------------
+10-16 12:42:34.454  3987  4074 D AAudioStream: setState(s#11) from 10 to 11
+10-16 12:42:34.458  3987  4074 D AAudioStream: setState(s#11) from 11 to 12
+10-16 12:42:34.458  3987  4074 D AAudioStream: ~AudioStream(s#11) mPlayerBase strongCount = 1
+10-16 12:42:34.458  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:34.458  3987  4074 D AAudio  : AAudioStream_close(s#11) returned 0 ---------
+10-16 12:42:34.479   682   682 I NotificationService: Cannot find enqueued record for key: 0|app.two.android|4102|null|10216
+10-16 12:42:38.018  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:38.018  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:38.018  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:38.018  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:38.018  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:38.018  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:38.018  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:38.018  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:38.018  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:38.018  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:38.018  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:38.018  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:38.023  3987  4074 D AAudioStream: setState(s#12) from 0 to 2
+10-16 12:42:38.023  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#12 ----------------
+10-16 12:42:38.024  3987  4074 D AAudio  : AAudioStream_requestStart(s#12) called --------------
+10-16 12:42:38.024  3987  4074 D AAudioStream: setState(s#12) from 2 to 3
+10-16 12:42:38.028  4044  4645 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:38.028   682  1323 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:38.029  3987  4074 D AAudio  : AAudioStream_requestStart(s#12) returned 0 ---------
+10-16 12:42:38.029  3987  3997 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:38.029  3987  3997 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:38.063  3987  5264 D AAudioStream: setState(s#12) from 3 to 4
+10-16 12:42:38.236  1367  1367 I NotificationListener: received notification removed event - app.two.android#UserHandle{0},category=-1
+10-16 12:42:38.267  3987  4074 D AAudio  : AAudioStream_requestStop(s#12) called
+10-16 12:42:38.267  3987  4074 D AAudioStream: setState(s#12) from 4 to 9
+10-16 12:42:38.281  3987  4074 D AAudioStream: setState(s#12) from 9 to 10
+10-16 12:42:38.281  3987  4074 D AAudio  : AAudioStream_requestStop(s#12) called
+10-16 12:42:38.282  3987  4074 D AAudio  : AAudioStream_close(s#12) called ---------------
+10-16 12:42:38.282  3987  4074 D AAudioStream: setState(s#12) from 10 to 11
+10-16 12:42:38.283  3987  4074 D AAudioStream: setState(s#12) from 11 to 12
+10-16 12:42:38.283  3987  4074 D AAudioStream: ~AudioStream(s#12) mPlayerBase strongCount = 1
+10-16 12:42:38.283  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:38.283  3987  4074 D AAudio  : AAudioStream_close(s#12) returned 0 ---------
+10-16 12:42:38.312  1367  1367 I NotificationListener: received notification removed event - app.two.android#UserHandle{0},category=-1
+10-16 12:42:41.840  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:41.840  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:41.840  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:41.840  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:41.840  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:41.840  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:41.840  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:41.840  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:41.840  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:41.840  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:41.840  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:41.840  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:41.844  3987  4074 D AAudioStream: setState(s#13) from 0 to 2
+10-16 12:42:41.844  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#13 ----------------
+10-16 12:42:41.848  3987  4074 D AAudio  : AAudioStream_requestStart(s#13) called --------------
+10-16 12:42:41.848  3987  4074 D AAudioStream: setState(s#13) from 2 to 3
+10-16 12:42:41.852   682  1010 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:41.853  4044  4645 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:41.854  3987  4074 D AAudio  : AAudioStream_requestStart(s#13) returned 0 ---------
+10-16 12:42:41.854  3987  4141 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:41.854  3987  4141 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:41.896  3987  5274 D AAudioStream: setState(s#13) from 3 to 4
+10-16 12:42:42.062  1367  1367 I NotificationListener: received notification removed event - app.two.android#UserHandle{0},category=-1
+10-16 12:42:42.237  3987  4074 D AAudio  : AAudioStream_requestStop(s#13) called
+10-16 12:42:42.237  3987  4074 D AAudioStream: setState(s#13) from 4 to 9
+10-16 12:42:42.241  1367  1367 I NotificationListener: received notification removed event - app.two.android#UserHandle{0},category=-1
+10-16 12:42:42.251  3987  4074 D AAudioStream: setState(s#13) from 9 to 10
+10-16 12:42:42.252  3987  4074 D AAudio  : AAudioStream_requestStop(s#13) called
+10-16 12:42:42.252  3987  4074 D AAudio  : AAudioStream_close(s#13) called ---------------
+10-16 12:42:42.255  3987  4074 D AAudioStream: setState(s#13) from 10 to 11
+10-16 12:42:42.257  3987  4074 D AAudioStream: setState(s#13) from 11 to 12
+10-16 12:42:42.257  3987  4074 D AAudioStream: ~AudioStream(s#13) mPlayerBase strongCount = 1
+10-16 12:42:42.257  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:42.257  3987  4074 D AAudio  : AAudioStream_close(s#13) returned 0 ---------
+10-16 12:42:45.780  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 12:42:45.780  3987  4074 I AudioStreamBuilder: rate   =  48000, channels  = 1, channelMask = 0x1, format   = 5, sharing = SH, dir = INPUT
+10-16 12:42:45.780  3987  4074 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 10, callback: ON with frames = 960
+10-16 12:42:45.780  3987  4074 I AudioStreamBuilder: usage  =      2, contentType = 0, inputPreset = 5, allowedCapturePolicy = 0
+10-16 12:42:45.780  3987  4074 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 12:42:45.780  3987  4074 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 12:42:45.780  3987  4074 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 12:42:45.780  3987  4074 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 12:42:45.780  3987  4074 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 12:42:45.780  3987  4074 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 12:42:45.780  3987  4074 D AudioStreamBuilder: build() MMAP not used because AAUDIO_PERFORMANCE_MODE_LOW_LATENCY not requested.
+10-16 12:42:45.780  3987  4074 D app.two.android: PlayerBase::PlayerBase()
+10-16 12:42:45.784  3987  4074 D AAudioStream: setState(s#14) from 0 to 2
+10-16 12:42:45.784  3987  4074 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#14 ----------------
+10-16 12:42:45.787  3987  4074 D AAudio  : AAudioStream_requestStart(s#14) called --------------
+10-16 12:42:45.787  3987  4074 D AAudioStream: setState(s#14) from 2 to 3
+10-16 12:42:45.790  3987  4074 D AAudio  : AAudioStream_requestStart(s#14) returned 0 ---------
+10-16 12:42:45.790  3987  4141 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:45.790  3987  4141 D AudioStreamLegacy: onAudioDeviceUpdate() devices 8 => 8
+10-16 12:42:45.795  4044  4645 W chromium: [WARNING:codec.cc(390)] Explicitly added H264 constrained baseline to list of supported formats.
+10-16 12:42:45.795   682   699 I ActivityManager: Background started FGS: Allowed [callingPackage: app.two.android; callingUid: 10216; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=app.two.android/.features.web.CallKeepAliveService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:35; callerTargetSdkVersion:35; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 12:42:45.823  3987  5283 D AAudioStream: setState(s#14) from 3 to 4
+10-16 12:42:46.002  1367  1367 I NotificationListener: received notification removed event - app.two.android#UserHandle{0},category=-1
+10-16 12:42:46.472  3987  4074 D AAudio  : AAudioStream_requestStop(s#14) called
+10-16 12:42:46.472  3987  4074 D AAudioStream: setState(s#14) from 4 to 9
+10-16 12:42:46.475  1367  1367 I NotificationListener: received notification removed event - app.two.android#UserHandle{0},category=-1
+10-16 12:42:46.481  3987  4074 D AAudioStream: setState(s#14) from 9 to 10
+10-16 12:42:46.481  3987  4074 D AAudio  : AAudioStream_requestStop(s#14) called
+10-16 12:42:46.481  3987  4074 D AAudio  : AAudioStream_close(s#14) called ---------------
+10-16 12:42:46.481  3987  4074 D AAudioStream: setState(s#14) from 10 to 11
+10-16 12:42:46.483  3987  4074 D AAudioStream: setState(s#14) from 11 to 12
+10-16 12:42:46.483  3987  4074 D AAudioStream: ~AudioStream(s#14) mPlayerBase strongCount = 1
+10-16 12:42:46.483  3987  4074 D app.two.android: PlayerBase::~PlayerBase()
+10-16 12:42:46.483  3987  4074 D AAudio  : AAudioStream_close(s#14) returned 0 ---------
