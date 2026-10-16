@@ -1,0 +1,143 @@
+10-16 11:46:12.751   507   889 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=app.two.android/.MainActivity} from uid 2000
+10-16 11:46:12.767   507  3378 D CoreBackPreview: Window{2a0e853 u0 Splash Screen app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@e234e89, mPriority=0}
+10-16 11:46:12.772   507   549 I ActivityManager: Start proc 6911:app.two.android/u0a174 for next-top-activity {app.two.android/app.two.android.MainActivity}
+10-16 11:46:12.782  6911  6911 I app.two.android: Late-enabling -Xcheck:jni
+10-16 11:46:12.806  6911  6911 I app.two.android: Using CollectorTypeCC GC.
+10-16 11:46:12.807  6911  6911 W app.two.android: Unexpected CPU variant for x86: x86_64.
+10-16 11:46:12.807  6911  6911 W app.two.android: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-16 11:46:12.860  6911  6911 W ziparchive: Unable to open '/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.dm': No such file or directory
+10-16 11:46:12.860  6911  6911 W ziparchive: Unable to open '/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.dm': No such file or directory
+10-16 11:46:12.920  6911  6911 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/lib/x86_64:/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/app.two.android
+10-16 11:46:12.925  6911  6911 V GraphicsEnvironment: ANGLE Developer option for 'app.two.android' set to: 'default'
+10-16 11:46:12.926  6911  6911 V GraphicsEnvironment: ANGLE GameManagerService for app.two.android: false
+10-16 11:46:13.049   507  1587 D CoreBackPreview: Window{f400c11 u0 app.two.android/app.two.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@1254377, mPriority=0}
+10-16 11:46:13.142  6911  6911 I WebViewFactory: Loading com.google.android.webview version 109.0.5414.123 (code 541412337)
+10-16 11:46:13.143  6911  6911 W app.two.android: Entry not found
+10-16 11:46:13.143  6911  6911 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk. target_sdk_version=33, uses_libraries=ALL, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 11:46:13.144  6911  6911 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 11:46:13.177  6911  6911 W app.two.android: Accessing hidden method Landroid/os/Trace;->isTagEnabled(J)Z (unsupported, reflection, allowed)
+10-16 11:46:13.177  6911  6911 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceBegin(JLjava/lang/String;)V (unsupported, reflection, allowed)
+10-16 11:46:13.177  6911  6911 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceEnd(J)V (unsupported, reflection, allowed)
+10-16 11:46:13.177  6911  6911 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceBegin(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 11:46:13.177  6911  6911 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceEnd(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 11:46:13.179  6911  6911 I cr_WVCFactoryProvider: Loaded version=109.0.5414.123 minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 11:46:13.183  6911  6945 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed_new"
+10-16 11:46:13.183  6911  6945 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed"
+10-16 11:46:13.187  6911  6911 I cr_LibraryLoader: Successfully loaded native library
+10-16 11:46:13.188  6911  6911 I cr_CachingUmaRecorder: Flushed 9 samples from 9 histograms.
+10-16 11:46:13.201   507   549 I ActivityManager: Start proc 6949:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0i1 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 11:46:13.230  6911  6952 E chromium: [ERROR:simple_version_upgrade.cc(152)] Failed to write a new fake index.
+10-16 11:46:13.230  6911  6951 E chromium: [ERROR:simple_version_upgrade.cc(152)] Failed to write a new fake index.
+10-16 11:46:13.241  6949  6949 I cr_WebViewApkApp: Launched version=109.0.5414.123 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 11:46:13.241   507  2266 D ConnectivityService: requestNetwork for uid/pid:10174/6911 activeRequest: null callbackRequest: 149 [NetworkRequest [ REQUEST id=150, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 11:46:13.241  6949  6949 I cr_ChildProcessService: Creating new ChildProcessService pid=6949
+10-16 11:46:13.242   507   761 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=150, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:46:13.242   507   761 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=150, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:46:13.242   507   761 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=150, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:46:13.242   507   761 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=150, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:46:13.256  6911  6962 W app.two.android: Accessing hidden method Landroid/media/AudioManager;->getOutputLatency(I)I (unsupported, reflection, allowed)
+10-16 11:46:13.257  6911  6962 W cr_media: BLUETOOTH_CONNECT permission is missing.
+10-16 11:46:13.257  6911  6962 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+10-16 11:46:13.262  6949  6987 I cr_LibraryLoader: Successfully loaded native library
+10-16 11:46:13.263  6949  6987 I cr_CachingUmaRecorder: Flushed 3 samples from 3 histograms.
+10-16 11:46:13.375  6911  6965 E chromium: [ERROR:directory_reader_posix.cc(42)] opendir /data/user/0/app.two.android/cache/WebView/Crashpad/attachments/ca5edcc9-0468-4c37-a974-156a1257f2f3: No such file or directory (2)
+10-16 11:46:13.377  6911  6965 W chromium: [WARNING:minidump_to_upload_parameters.cc(67)] duplicate annotation name ptype, discarding value browser
+10-16 11:46:13.494  6911  6911 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 11:46:13.516  6949  6997 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:46:13.517  6949  6997 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:46:14.911  6911  6911 W chromium: [WARNING:render_frame_host_impl.cc(14006)] https://appassets.androidplatform.net/ ran insecure content from ws://10.0.2.2:4100/relay
+10-16 11:46:14.912  6911  6911 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-DjiaoZaC.js (10)
+10-16 11:46:14.912  6911  6911 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-DjiaoZaC.js (10)
+10-16 11:46:14.918   507   537 W ziparchive: Unable to open '/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.dm': No such file or directory
+10-16 11:46:14.918   507   537 I ActivityTaskManager: Displayed app.two.android/.MainActivity: +2s166ms
+10-16 11:46:14.994   507   889 W InputManager-JNI: Input channel object '2a0e853 Splash Screen app.two.android (client)' was disposed without first being removed with the input manager!
+10-16 11:46:14.999   507  2232 D CoreBackPreview: Window{2a0e853 u0 Splash Screen app.two.android EXITING}: Setting back callback null
+10-16 11:46:15.004  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=-1 fieldName=null extras=null}, false)
+10-16 11:46:16.410  7043  7043 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:16.515  7064  7064 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:16.615  7083  7083 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:19.205  6911  7141 D ProfileInstaller: Installing profile for app.two.android
+10-16 11:46:19.230  6949  6987 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 2116
+10-16 11:46:20.217  6911  6962 D app.two.android: PlayerBase::PlayerBase()
+10-16 11:46:22.664  6911  6962 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 11:46:22.749  6911  6962 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 11:46:22.760  6911  6911 W System.err: 	at app.two.android.features.web.TwoWebViewKt$TwoWebView$2$1$1$4.onPermissionRequest(TwoWebView.kt:957)
+10-16 11:46:22.760  6911  6911 W System.err: 	at org.chromium.android_webview.AwContents.onPermissionRequest(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:46)
+10-16 11:46:22.765  6911  6911 F chromium: [FATAL:jni_android.cc(315)] Please include Java exception stack in crash report
+10-16 11:46:22.778  7147  7147 W linker64: type=1400 audit(0.0:51): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:46:22.778  7147  7147 W linker64: type=1400 audit(0.0:52): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:46:22.778  7147  7147 W linker64: type=1400 audit(0.0:53): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:46:22.778  7147  7147 W linker64: type=1400 audit(0.0:54): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:46:22.847  7147  7147 E chromium: [1016/114622.847104:ERROR:file_io_posix.cc(144)] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: Permission denied (13)
+10-16 11:46:22.882  6911  6911 F libc    : Fatal signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr 0x0 in tid 6911 (app.two.android), pid 6911 (app.two.android)
+10-16 11:46:23.023  7151  7151 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-16 11:46:23.023  7151  7151 F DEBUG   : Build fingerprint: 'google/sdk_gphone64_x86_64/emu64x:13/TE1A.240213.009/12342917:userdebug/dev-keys'
+10-16 11:46:23.023  7151  7151 F DEBUG   : Revision: '0'
+10-16 11:46:23.023  7151  7151 F DEBUG   : ABI: 'x86_64'
+10-16 11:46:23.023  7151  7151 F DEBUG   : Timestamp: 2026-10-16 11:46:22.920922066+0000
+10-16 11:46:23.023  7151  7151 F DEBUG   : Process uptime: 11s
+10-16 11:46:23.023  7151  7151 F DEBUG   : Cmdline: app.two.android
+10-16 11:46:23.023  7151  7151 F DEBUG   : pid: 6911, tid: 6911, name: app.two.android  >>> app.two.android <<<
+10-16 11:46:23.023  7151  7151 F DEBUG   : uid: 10174
+10-16 11:46:23.023  7151  7151 F DEBUG   : signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr 0x0000000000000000
+10-16 11:46:23.023  7151  7151 F DEBUG   : Abort message: '[FATAL:jni_android.cc(315)] Please include Java exception stack in crash report'
+10-16 11:46:23.023  7151  7151 F DEBUG   :     rax 0000000000000000  rbx 00007fff20fd2d58  rcx 0000000000000001  rdx 0000000000000002
+10-16 11:46:23.023  7151  7151 F DEBUG   :     r8  00007fff20ff90a8  r9  0000000000000000  r10 ffffffffffffffff  r11 0000000000000246
+10-16 11:46:23.023  7151  7151 F DEBUG   :     r12 0000294a003eb440  r13 00007fff20fd2d68  r14 00007fff20fd28b0  r15 0000294a0040ea1c
+10-16 11:46:23.023  7151  7151 F DEBUG   :     rdi 00007f725a4012d0  rsi 00007f725332f92b
+10-16 11:46:23.023  7151  7151 F DEBUG   :     rbp 000000000000013b  rsp 00007fff20fd26d0  rip 00007f72551e2769
+10-16 11:46:23.023  7151  7151 F DEBUG   : backtrace:
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #00 pc 0000000002229769  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #01 pc 000000000296adb8  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #02 pc 000000000296a882  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #03 pc 0000000003ccc972  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #04 pc 0000000003cebed9  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #05 pc 000000000460307d  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #06 pc 000000000457b500  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #07 pc 000000000299813c  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #08 pc 0000000002994dc3  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #09 pc 0000000004f9eb3f  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #10 pc 000000000344bcc8  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #11 pc 000000000344bb93  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #12 pc 000000000001076e  /system/lib64/libutils.so (android::Looper::pollOnce(int, int*, int*, void**)+894) (BuildId: bf3f66fd6f5b7c78306a1c8270331f22)
+10-16 11:46:23.023  7151  7151 F DEBUG   :       #13 pc 000000000016caf3  /system/lib64/libandroid_runtime.so (android::android_os_MessageQueue_nativePollOnce(_JNIEnv*, _jobject*, long, int)+35) (BuildId: 2a4aa560a892d0dcd59b0b00821a1dfa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #14 pc 00000000001b5da4  /system/framework/x86_64/boot-framework.oat (art_jni_trampoline+132) (BuildId: 250f96efbdd22b213d58e391bed71acfa743aa83)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #15 pc 00000000003703fb  /apex/com.android.art/lib64/libart.so (nterp_helper+5643) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #16 pc 000000000049a5ce  /system/framework/framework.jar (android.os.MessageQueue.next+34)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #17 pc 000000000036fc88  /apex/com.android.art/lib64/libart.so (nterp_helper+3736) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #18 pc 00000000004995bc  /system/framework/framework.jar (android.os.Looper.loopOnce+12)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #19 pc 000000000036ee28  /apex/com.android.art/lib64/libart.so (nterp_helper+56) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #20 pc 0000000000499daa  /system/framework/framework.jar (android.os.Looper.loop+162)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #21 pc 000000000036ee28  /apex/com.android.art/lib64/libart.so (nterp_helper+56) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #22 pc 00000000001bd0de  /system/framework/framework.jar (android.app.ActivityThread.main+202)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #23 pc 0000000000378b26  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #24 pc 00000000003fce09  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+265) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #25 pc 000000000081eb37  /apex/com.android.art/lib64/libart.so (_jobject* art::InvokeMethod<(art::PointerSize)8>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, _jobject*, _jobject*, unsigned long)+1447) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #26 pc 000000000078e678  /apex/com.android.art/lib64/libart.so (art::Method_invoke(_JNIEnv*, _jobject*, _jobject*, _jobjectArray*)+56) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #27 pc 000000000009b400  /system/framework/x86_64/boot.oat (art_jni_trampoline+128) (BuildId: 8975dfa0bab8693f1c851576629005f1e7eb5def)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #28 pc 000000000036fced  /apex/com.android.art/lib64/libart.so (nterp_helper+3837) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #29 pc 00000000004055ba  /system/framework/framework.jar (com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run+22)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #30 pc 000000000082491e  /system/framework/x86_64/boot-framework.oat (com.android.internal.os.ZygoteInit.main+3022) (BuildId: 250f96efbdd22b213d58e391bed71acfa743aa83)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #31 pc 0000000000378b26  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #32 pc 00000000003fce09  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+265) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #33 pc 000000000081f4ea  /apex/com.android.art/lib64/libart.so (art::JValue art::InvokeWithVarArgs<art::ArtMethod*>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, art::ArtMethod*, __va_list_tag*)+474) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #34 pc 00000000006e48b4  /apex/com.android.art/lib64/libart.so (art::JNI<true>::CallStaticVoidMethodV(_JNIEnv*, _jclass*, _jmethodID*, __va_list_tag*)+676) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #35 pc 00000000000d5294  /system/lib64/libandroid_runtime.so (_JNIEnv::CallStaticVoidMethod(_jclass*, _jmethodID*, ...)+164) (BuildId: 2a4aa560a892d0dcd59b0b00821a1dfa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #36 pc 00000000000e1e01  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+897) (BuildId: 2a4aa560a892d0dcd59b0b00821a1dfa)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #37 pc 0000000000002faf  /system/bin/app_process64 (main+1583) (BuildId: a49f9e708801f6a0a629f488a0e449c9)
+10-16 11:46:23.024  7151  7151 F DEBUG   :       #38 pc 0000000000050cc9  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+89) (BuildId: f090904cc3ac285a6f190f8003c3eb0e)
+10-16 11:46:23.031   507  7156 W ActivityTaskManager:   Force finishing activity app.two.android/.MainActivity
+10-16 11:46:23.079   507   768 D ConnectivityService: releasing NetworkRequest [ REQUEST id=150, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ] (release request)
+10-16 11:46:23.145   507  3381 I WindowManager: WIN DEATH: Window{f400c11 u0 app.two.android/app.two.android.MainActivity}
+10-16 11:46:23.145   507  3381 W InputManager-JNI: Input channel object 'f400c11 app.two.android/app.two.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-16 11:46:23.147   507   538 I ActivityManager: Showing crash dialog for package app.two.android u0
+10-16 11:46:23.178   507   823 I ActivityManager: Process com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 (pid 6949) has died: fg  BTOP
+10-16 11:46:23.178   507   823 W ActivityManager: Scheduling restart of crashed service app.two.android/org.chromium.content.app.SandboxedProcessService0:0 in 1000ms for connection
+10-16 11:46:23.189   507  3379 I ActivityManager: Process app.two.android (pid 6911) has died: prcp TOP 
+10-16 11:46:23.242   507   538 D CoreBackPreview: Window{ca84ec7 u0 Application Error: app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper@c9d5d19, mPriority=0}
+10-16 11:46:23.244   507   541 W WindowManager: Failed to deliver inset state change to w=Window{f400c11 u0 app.two.android/app.two.android.MainActivity EXITING}
+10-16 11:46:23.249   507   538 D CoreBackPreview: Window{ca84ec7 u0 Application Error: app.two.android}: Setting back callback null
+10-16 11:46:23.251   507  7156 W ActivityManager: Ignoring remove of inactive process: ProcessRecord{4d2d68d 0:app.two.android/u0a174}
+10-16 11:46:23.253   507   538 W InputManager-JNI: Input channel object 'ca84ec7 Application Error: app.two.android (client)' was disposed without first being removed with the input manager!
+10-16 11:46:23.279   507   541 W WindowManager: Exception thrown during dispatchAppVisibility Window{f400c11 u0 app.two.android/app.two.android.MainActivity EXITING}
+10-16 11:46:23.532   507   540 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{7ebb24 u0 app.two.android/.MainActivity} t-1 f}}

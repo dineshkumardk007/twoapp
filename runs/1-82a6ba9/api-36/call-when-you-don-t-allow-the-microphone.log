@@ -1,0 +1,268 @@
+10-16 11:49:59.164   665  1284 V SplashScreenExceptionList: SplashScreen checking exception for package app.two.android (target sdk:35) -> false
+10-16 11:49:59.167   665  1284 I ActivityTaskManager: START u0 {flg=0x10000000 xflg=0x5 cmp=app.two.android/.MainActivity} with LAUNCH_MULTIPLE from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+10-16 11:49:59.168  1098  1163 V WindowManagerShell: Transition requested (#20): android.os.BinderProxy@518b3d9 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=14 effectiveUid=10216 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=317924 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@526e19e} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=ActivityInfo{880647f app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=Rect(74, 160 - 246, 480) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 320, 640) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 20 }
+10-16 11:49:59.178   665  2151 D CoreBackPreview: Window{e4a4a1a u0 Splash Screen app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@cb2ede6, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+10-16 11:49:59.178   665   697 I ActivityManager: Start proc 6060:app.two.android/u0a216 for next-top-activity {app.two.android/app.two.android.MainActivity}
+10-16 11:49:59.198  6060  6060 I app.two.android: Late-enabling -Xcheck:jni
+10-16 11:49:59.199   665   687 V WindowManager: Sent Transition (#20) createdAt=10-16 11:49:59.161 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=14 effectiveUid=10216 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=app.two.android/.MainActivity } baseActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} topActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} origActivity=null realActivity=ComponentInfo{app.two.android/app.two.android.MainActivity} numActivities=1 lastActiveTime=317924 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{9b00272 Task{bcc8b0e #14 type=standard A=10216:app.two.android}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=ActivityInfo{6dbf6c3 app.two.android.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=Rect(74, 160 - 246, 480) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 320, 640) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 20 }
+10-16 11:49:59.199   665   687 V WindowManager:         {WCT{RemoteToken{9b00272 Task{bcc8b0e #14 type=standard A=10216:app.two.android}}} m=OPEN f=NONE leash=Surface(name=Task=14)/@0x3e805d4 sb=Rect(0, 0 - 320, 640) eb=Rect(0, 0 - 320, 640) epz=Point(320, 640) d=0 taskParent=-1},
+10-16 11:49:59.216  6060  6060 I app.two.android: Using CollectorTypeCMC GC.
+10-16 11:49:59.217  6060  6060 W app.two.android: Unexpected CPU variant for x86: x86_64.
+10-16 11:49:59.217  6060  6060 W app.two.android: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, goldmont-without-sha-xsaves, tremont, kabylake, alderlake, default
+10-16 11:49:59.227  6060  6060 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+10-16 11:49:59.334  6060  6060 D nativeloader: Configuring clns-9 for other apk /data/app/~~LmWhYW5HQpaCCK-uHj5YaA==/app.two.android-tWmGEirKNE6Tj-PYFsL49Q==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~LmWhYW5HQpaCCK-uHj5YaA==/app.two.android-tWmGEirKNE6Tj-PYFsL49Q==/lib/x86_64:/data/app/~~LmWhYW5HQpaCCK-uHj5YaA==/app.two.android-tWmGEirKNE6Tj-PYFsL49Q==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/app.two.android
+10-16 11:49:59.337  6060  6060 D CompatChangeReporter: Compat change id reported: 202956589; UID 10216; state: ENABLED
+10-16 11:49:59.339  6060  6060 I app.two.android: AssetManager2(0x746ea6a94b98) locale list changing from [] to [en-US]
+10-16 11:49:59.342  6060  6060 V GraphicsEnvironment: Currently set values for:
+10-16 11:49:59.342  6060  6060 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+10-16 11:49:59.342  6060  6060 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+10-16 11:49:59.342  6060  6060 V GraphicsEnvironment: app.two.android is not listed in per-application setting
+10-16 11:49:59.342  6060  6060 V GraphicsEnvironment: ANGLE allowlist from config: com.dreamgames.royalmatch com.dts.freefiremax com.dxx.firenow com.gramgames.mergedragons com.ludo.king com.mojang.minecraftpe com.my.defense com.nintendo.zaka com.os.airforce com.playrix.fishdomdd.gplay io.teslatech.callbreak jp.konami.prospia net.peakgames.toonblast
+10-16 11:49:59.342  6060  6060 V GraphicsEnvironment: app.two.android is not listed in ANGLE allowlist or settings, returning default
+10-16 11:49:59.343  6060  6060 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-16 11:49:59.354  6060  6060 D WM-WrkMgrInitializer: Initializing WorkManager with default configuration.
+10-16 11:49:59.370  6060  6060 D WM-PackageManagerHelper: Skipping component enablement for androidx.work.impl.background.systemjob.SystemJobService
+10-16 11:49:59.370  6060  6060 D WM-Schedulers: Created SystemJobScheduler and enabled SystemJobService
+10-16 11:49:59.375  6060  6076 D WM-ForceStopRunnable: The default process name was not specified.
+10-16 11:49:59.375  6060  6076 D WM-ForceStopRunnable: Performing cleanup operations.
+10-16 11:49:59.382  6060  6076 E ashmem  : Pinning is deprecated since Android Q. Please use trim or other methods.
+10-16 11:49:59.385  6060  6060 D CompatChangeReporter: Compat change id reported: 279646685; UID 10216; state: ENABLED
+10-16 11:49:59.408  6060  6080 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+10-16 11:49:59.410  6060  6060 I app.two.android: AssetManager2(0x746ea6a938d8) locale list changing from [] to [en-US]
+10-16 11:49:59.427  6060  6076 D WM-PackageManagerHelper: Skipping component enablement for androidx.work.impl.background.systemalarm.RescheduleReceiver
+10-16 11:49:59.437  6060  6060 D CompatChangeReporter: Compat change id reported: 309578419; UID 10216; state: ENABLED
+10-16 11:49:59.439  6060  6060 D DesktopModeFlags: Toggle override initialized to: OVERRIDE_UNSET
+10-16 11:49:59.461  6060  6080 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+10-16 11:49:59.462  6060  6060 D CompatChangeReporter: Compat change id reported: 352594277; UID 10216; state: ENABLED
+10-16 11:49:59.462  6060  6080 I EGL_emulation: Opening libGLESv2_emulation.so
+10-16 11:49:59.466  6060  6060 D CompatChangeReporter: Compat change id reported: 349153669; UID 10216; state: ENABLED
+10-16 11:49:59.469  6060  6080 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-16 11:49:59.470  6060  6060 W HWUI    : Unknown dataspace 0
+10-16 11:49:59.612  6060  6060 I app.two.android: AssetManager2(0x746ea6a9d838) locale list changing from [] to [en-US]
+10-16 11:49:59.613  6060  6060 I WebViewFactory: Loading com.google.android.webview version 133.0.6943.137 (code 694313738)
+10-16 11:49:59.614  6060  6060 I app.two.android: AssetManager2(0x746ea6a99378) locale list changing from [] to [en-US]
+10-16 11:49:59.615  6060  6060 I app.two.android: AssetManager2(0x746ea6a9db58) locale list changing from [] to [en-US]
+10-16 11:49:59.616  6060  6060 I app.two.android: AssetManager2(0x746ea6a9ced8) locale list changing from [] to [en-US]
+10-16 11:49:59.617  6060  6060 V ResourcesManager: The following library key has been added: ResourcesKey{ mHash=482c84db mResDir=null mSplitDirs=[] mOverlayDirs=[] mLibDirs=[/data/app/~~dimOVRyr_xlKBetRVrw1oA==/com.google.android.webview-U2cnWsqCM-AYrPQOEClVrQ==/WebViewGoogle.apk,/data/app/~~_Ffj62S7aPtdMof5i6KFUg==/com.google.android.trichromelibrary_694313738-yRVKTsT9dX-3ZVPvIeINcA==/TrichromeLibrary.apk,/system_ext/framework/androidx.window.extensions.jar] mDisplayId=0 mOverrideConfig=v36 mCompatInfo={160dpi always-compat} mLoaders=[]}
+10-16 11:49:59.618  6060  6060 W app.two.android: Failed to find entry 'classes.dex': Entry not found
+10-16 11:49:59.619  6060  6060 D nativeloader: Configuring clns-10 for other apk /data/app/~~_Ffj62S7aPtdMof5i6KFUg==/com.google.android.trichromelibrary_694313738-yRVKTsT9dX-3ZVPvIeINcA==/TrichromeLibrary.apk. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~dimOVRyr_xlKBetRVrw1oA==/com.google.android.webview-U2cnWsqCM-AYrPQOEClVrQ==/lib/x86_64:/data/app/~~dimOVRyr_xlKBetRVrw1oA==/com.google.android.webview-U2cnWsqCM-AYrPQOEClVrQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~_Ffj62S7aPtdMof5i6KFUg==/com.google.android.trichromelibrary_694313738-yRVKTsT9dX-3ZVPvIeINcA==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 11:49:59.620  6060  6060 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+10-16 11:49:59.622  6060  6060 D nativeloader: Configuring clns-11 for other apk /data/app/~~dimOVRyr_xlKBetRVrw1oA==/com.google.android.webview-U2cnWsqCM-AYrPQOEClVrQ==/WebViewGoogle.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~dimOVRyr_xlKBetRVrw1oA==/com.google.android.webview-U2cnWsqCM-AYrPQOEClVrQ==/lib/x86_64:/data/app/~~dimOVRyr_xlKBetRVrw1oA==/com.google.android.webview-U2cnWsqCM-AYrPQOEClVrQ==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~_Ffj62S7aPtdMof5i6KFUg==/com.google.android.trichromelibrary_694313738-yRVKTsT9dX-3ZVPvIeINcA==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 11:49:59.634  6060  6060 I cr_WVCFactoryProvider: version=133.0.6943.137 (694313738) minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 11:49:59.647  6060  6060 D nativeloader: Load /data/app/~~_Ffj62S7aPtdMof5i6KFUg==/com.google.android.trichromelibrary_694313738-yRVKTsT9dX-3ZVPvIeINcA==/TrichromeLibrary.apk!/lib/x86_64/libmonochrome_64.so using class loader ns clns-11 (caller=/data/app/~~dimOVRyr_xlKBetRVrw1oA==/com.google.android.webview-U2cnWsqCM-AYrPQOEClVrQ==/WebViewGoogle.apk): ok
+10-16 11:49:59.649  6060  6060 D nativeloader: Load /system/lib64/libwebviewchromium_plat_support.so using class loader ns clns-11 (caller=/data/app/~~dimOVRyr_xlKBetRVrw1oA==/com.google.android.webview-U2cnWsqCM-AYrPQOEClVrQ==/WebViewGoogle.apk): ok
+10-16 11:49:59.651  6060  6088 E chromium: [1016/114959.650654:ERROR:variations_seed_loader.cc(39)] Seed missing signature.
+10-16 11:49:59.651  6060  6088 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed_new"
+10-16 11:49:59.651  6060  6088 I chromium: [1016/114959.651306:INFO:variations_seed_loader.cc(67)] Failed to open file for reading.: No such file or directory (2)
+10-16 11:49:59.651  6060  6088 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed"
+10-16 11:49:59.657  6060  6060 I cr_LibraryLoader: Successfully loaded native library
+10-16 11:49:59.657  6060  6060 I cr_CachingUmaRecorder: Flushed 6 samples from 6 histograms, 0 samples were dropped.
+10-16 11:49:59.659  6060  6060 I cr_CombinedPProvider: #registerProvider() provider:WV.C8@9383091 isPolicyCacheEnabled:false policyProvidersSize:0
+10-16 11:49:59.659  6060  6060 I cr_PolicyProvider: #setManagerAndSource() 0
+10-16 11:49:59.685   665  1179 I ActivityManager: Start proc 6092:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0i7 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 11:49:59.691  6060  6060 I cr_CombinedPProvider: #linkNativeInternal() 1
+10-16 11:49:59.692  6060  6060 I cr_AppResProvider: #getApplicationRestrictionsFromUserManager() Bundle[EMPTY_PARCEL]
+10-16 11:49:59.692  6060  6060 I cr_PolicyProvider: #notifySettingsAvailable() 0
+10-16 11:49:59.692  6060  6060 I cr_CombinedPProvider: #onSettingsAvailable() 0
+10-16 11:49:59.692  6060  6060 I cr_CombinedPProvider: #flushPolicies()
+10-16 11:49:59.704  6092  6092 I cr_WebViewApkApp: version=133.0.6943.137 (694313738) minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 11:49:59.710  6092  6092 I cr_ChildProcessService: Creating new ChildProcessService pid=6092
+10-16 11:49:59.711  6060  6060 I app.two.android: AssetManager2(0x746ea6a96df8) locale list changing from [] to [en-US]
+10-16 11:49:59.714  6060  6060 I app.two.android: AssetManager2(0x746ea6a99ff8) locale list changing from [] to [en-US]
+10-16 11:49:59.755   665  1179 D ConnectivityService: requestNetwork for uid/pid:10216/6060 activeRequest: null callbackRequest: 232 [NetworkRequest [ REQUEST id=233, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10216 RequestorUid: 10216 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|NC|LP
+10-16 11:49:59.757   665   998 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=233, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10216 RequestorUid: 10216 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:49:59.757   665   998 V WifiNetworkFactory: Accepted network request NetworkRequest [ REQUEST id=233, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10216 RequestorUid: 10216 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:49:59.757   665   998 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=233, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10216 RequestorUid: 10216 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:49:59.757   665   998 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=233, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10216 RequestorUid: 10216 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:49:59.757   665   998 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=233, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10216 RequestorUid: 10216 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:49:59.792  6060  6110 W cr_media: BLUETOOTH_CONNECT permission is missing.
+10-16 11:49:59.794  6060  6110 W cr_media: getBluetoothAdapter() requires BLUETOOTH permission
+10-16 11:49:59.796  6060  6110 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+10-16 11:49:59.800  6060  6126 W libc    : Access denied finding property "vendor.mesa.log"
+10-16 11:49:59.801  6060  6126 W libc    : Access denied finding property "vendor.mesa.log.file"
+10-16 11:49:59.801  6060  6126 E MESA    : Failed to open rendernode: No such file or directory
+10-16 11:49:59.802  6092  6113 I cr_LibraryLoader: Successfully loaded native library
+10-16 11:49:59.802  6092  6113 I cr_CachingUmaRecorder: Flushed 2 samples from 2 histograms, 0 samples were dropped.
+10-16 11:49:59.807  6060  6126 D vulkan  : searching for layers in '/data/app/~~LmWhYW5HQpaCCK-uHj5YaA==/app.two.android-tWmGEirKNE6Tj-PYFsL49Q==/lib/x86_64'
+10-16 11:49:59.808  6060  6126 D vulkan  : searching for layers in '/data/app/~~LmWhYW5HQpaCCK-uHj5YaA==/app.two.android-tWmGEirKNE6Tj-PYFsL49Q==/base.apk!/lib/x86_64'
+10-16 11:49:59.812  6060  6060 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+10-16 11:49:59.812  6060  6060 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 11:49:59.812  6060  6126 W libc    : Access denied finding property "vendor.mesa.vk.trace.per.submit"
+10-16 11:49:59.813  6060  6126 W libc    : Access denied finding property "vendor.mesa.gallium.print.optio"
+10-16 11:49:59.813  6060  6126 W libc    : Access denied finding property "vendor.mesa.vk.trace.frame"
+10-16 11:49:59.816  6060  6126 W libc    : Access denied finding property "vendor.mesa.vk.wsi.headless.swa"
+10-16 11:49:59.819  6092  6113 W chromium: [WARNING:runtime_features.cc(560)] Fenced frames cannot be enabled in this configuration. Use --enable-features=FencedFrames instead.
+10-16 11:49:59.820   665  2151 D CoreBackPreview: Window{505a92b u0 app.two.android/app.two.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@d1e5f65, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+10-16 11:49:59.820  6092  6113 W chromium: [WARNING:runtime_features.cc(585)] Topics cannot be enabled in this configuration. Use --enable-features=BrowsingTopics in addition.
+10-16 11:49:59.820  6092  6113 W chromium: [WARNING:runtime_features.cc(606)] SharedStorage cannot be enabled in this configuration. Use --enable-features=SharedStorageAPI in addition.
+10-16 11:49:59.848  6060  6126 W chromium: [WARNING:viz_main_impl.cc(85)] VizNullHypothesis is disabled (not a warning)
+10-16 11:49:59.869  6060  6138 I CameraManagerGlobal: Connecting to camera service
+10-16 11:49:59.920  6060  6103 E chromium: [ERROR:directory_reader_posix.cc(43)] opendir /data/user/0/app.two.android/cache/WebView/Crashpad/attachments/75a395d0-f47b-428b-9dee-566c1987fb5d: No such file or directory (2)
+10-16 11:49:59.924  6060  6103 W chromium: [WARNING:minidump_to_upload_parameters.cc(67)] duplicate annotation name ptype, discarding value browser
+10-16 11:50:00.172  6092  6136 E chromium: [ERROR:tile_manager.cc(937)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:50:00.172  6092  6136 E chromium: [ERROR:tile_manager.cc(937)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:50:00.173  6060  6060 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 11:50:00.344  6092  6136 E chromium: [ERROR:tile_manager.cc(937)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:50:00.345  6092  6136 E chromium: [ERROR:tile_manager.cc(937)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:50:00.362  6092  6136 E chromium: [ERROR:tile_manager.cc(937)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:50:00.363  6092  6136 E chromium: [ERROR:tile_manager.cc(937)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:50:00.402  6060  6065 I app.two.android: Compiler allocated 5042KB to compile void android.view.ViewRootImpl.performTraversals()
+10-16 11:50:01.365  6060  6153 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
+10-16 11:50:01.366  6060  6153 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
+10-16 11:50:01.368   665   687 I ActivityTaskManager: Displayed app.two.android/.MainActivity for user 0: +2s208ms
+10-16 11:50:01.393   665  1179 D CoreBackPreview: Window{e4a4a1a u0 Splash Screen app.two.android EXITING}: Setting back callback null
+10-16 11:50:01.791  6060  6060 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-DjiaoZaC.js (10)
+10-16 11:50:01.791  6060  6060 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-DjiaoZaC.js (10)
+10-16 11:50:01.792  6060  6060 I Choreographer: Skipped 84 frames!  The application may be doing too much work on its main thread.
+10-16 11:50:01.833   665   797 I ImeTracker: app.two.android:8d6feacb: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+10-16 11:50:01.840  6060  6072 I HWUI    : Davey! duration=1426ms; Flags=1, FrameTimelineVsyncId=13722, IntendedVsync=319117461497, Vsync=319117461497, InputEventId=0, HandleInputStart=319117728063, AnimationStart=319117728665, PerformTraversalsStart=319117794297, DrawStart=319121168893, FrameDeadline=319134128163, FrameStartTime=319117725459, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=319127667482, SyncStart=319127959586, IssueDrawCommandsStart=319127998047, SwapBuffers=320457118238, FrameCompleted=320544217539, DequeueBufferDuration=2996, QueueBufferDuration=236111, GpuCompleted=320544154692, SwapBuffersCompleted=320544217539, DisplayPresentTime=0, CommandSubmissionCompleted=320457118238, 
+10-16 11:50:01.850  6060  6110 D AudioSystem: onNewServiceWithAdapter: media.audio_flinger service obtained 0x746e56afb560
+10-16 11:50:01.851  6060  6072 I HWUI    : Davey! duration=1466ms; Flags=0, FrameTimelineVsyncId=13729, IntendedVsync=319134128163, Vsync=320534128107, InputEventId=0, HandleInputStart=320550506698, AnimationStart=320550507830, PerformTraversalsStart=320560777623, DrawStart=320560859225, FrameDeadline=320567461439, FrameStartTime=320549592055, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=320561464513, SyncStart=320561557382, IssueDrawCommandsStart=320561584593, SwapBuffers=320589148496, FrameCompleted=320601153347, DequeueBufferDuration=2966, QueueBufferDuration=118360, GpuCompleted=320601153347, SwapBuffersCompleted=320597281276, DisplayPresentTime=0, CommandSubmissionCompleted=320589148496, 
+10-16 11:50:01.859  6060  6110 D AudioSystem: getService: checking for service media.audio_flinger: 0x746de6aa29a0
+10-16 11:50:01.860  6060  6110 D AudioSystem: onNewService: media.audio_policy service obtained 0x746de6aa22c0
+10-16 11:50:01.862  1708  1708 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1293 onStartInput(EditorInfo{EditorInfo{packageName=app.two.android, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+10-16 11:50:01.870  6060  6110 D AudioSystem: getService: checking for service media.audio_policy: 0x746de6aa22c0
+10-16 11:50:01.873   665  1960 W PackageConfigPersister: App-specific configuration not found for packageName: app.two.android and userId: 0
+10-16 11:50:01.893  6092  6113 I chromium: [INFO:audio_latency.cc(180)] audioHardwareBufferSize = 4360
+10-16 11:50:02.008  6060  6060 D InsetsController: hide(ime(), fromIme=false)
+10-16 11:50:02.008  6060  6060 I ImeTracker: app.two.android:8d6feacb: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+10-16 11:50:02.036  6060  6110 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 11:50:02.036  6060  6110 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x3, format   = 5, sharing = SH, dir = OUTPUT
+10-16 11:50:02.036  6060  6110 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = -1, perfMode = 12, callback: ON with frames = 4360
+10-16 11:50:02.036  6060  6110 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 11:50:02.036  6060  6110 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 11:50:02.036  6060  6110 D AudioStreamBuilder: build, global mmap policy is 0
+10-16 11:50:02.039  6060  6110 D AudioStreamBuilder: build, system mmap policy is 1
+10-16 11:50:02.039  6060  6110 D AudioStreamBuilder: build, final mmap policy is 1
+10-16 11:50:02.039  6060  6110 D AudioStreamBuilder: build, system mmap exclusive policy is 1
+10-16 11:50:02.039  6060  6110 D AudioStreamBuilder: build, final mmap exclusive policy is 1
+10-16 11:50:02.039  6060  6110 D app.two.android: PlayerBase::PlayerBase()
+10-16 11:50:02.107  6060  6110 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 11:50:02.179  6060  6110 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 11:50:02.179  6060  6110 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 11:50:02.179  6060  6110 D AAudioStream: setState(s#1) from 0 to 2
+10-16 11:50:02.188  6060  6110 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#1 ----------------
+10-16 11:50:02.200  6060  6110 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+10-16 11:50:02.200  6060  6110 D AAudioStream: setState(s#1) from 2 to 3
+10-16 11:50:02.202   665  1179 E AppOps  : attributionTag  not declared in manifest of app.two.android
+10-16 11:50:02.204   665  1963 E AppOps  : attributionTag  not declared in manifest of app.two.android
+10-16 11:50:02.206  6060  6073 D AudioStreamLegacy: onAudioDeviceUpdate() devices 2 => 2
+10-16 11:50:02.207  6060  6110 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+10-16 11:50:02.208  6060  6162 D AAudioStream: setState(s#1) from 3 to 4
+10-16 11:50:03.756  6060  6060 I Choreographer: Skipped 104 frames!  The application may be doing too much work on its main thread.
+10-16 11:50:03.775  6060  6072 I HWUI    : Davey! duration=1797ms; Flags=0, FrameTimelineVsyncId=13841, IntendedVsync=320584128105, Vsync=320600794771, InputEventId=0, HandleInputStart=320608400253, AnimationStart=320608401235, PerformTraversalsStart=320609296614, DrawStart=320609350104, FrameDeadline=320767461431, FrameStartTime=320608395835, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=320610256754, SyncStart=320746963684, IssueDrawCommandsStart=320746999972, SwapBuffers=322508599790, FrameCompleted=322518703153, DequeueBufferDuration=2074, QueueBufferDuration=120445, GpuCompleted=322518703153, SwapBuffersCompleted=322510240965, DisplayPresentTime=0, CommandSubmissionCompleted=322508599790, 
+10-16 11:50:09.556  6060  6060 I Choreographer: Skipped 347 frames!  The application may be doing too much work on its main thread.
+10-16 11:50:09.575  6060  6072 I HWUI    : Davey! duration=5956ms; Flags=0, FrameTimelineVsyncId=13864, IntendedVsync=320617461437, Vsync=320750794765, InputEventId=0, HandleInputStart=320765416006, AnimationStart=320765416828, PerformTraversalsStart=320766305153, DrawStart=320766419476, FrameDeadline=322550794693, FrameStartTime=320765282497, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=320767106086, SyncStart=322510261493, IssueDrawCommandsStart=322510306016, SwapBuffers=328310887255, FrameCompleted=328317606443, DequeueBufferDuration=2685, QueueBufferDuration=188091, GpuCompleted=328317606443, SwapBuffersCompleted=328311990101, DisplayPresentTime=0, CommandSubmissionCompleted=328310887255, 
+10-16 11:50:09.682  6060  6072 I HWUI    : Davey! duration=1870ms; Flags=0, FrameTimelineVsyncId=13895, IntendedVsync=320767461431, Vsync=322500794695, InputEventId=0, HandleInputStart=322513458167, AnimationStart=322513459108, PerformTraversalsStart=322514012890, DrawStart=322514053516, FrameDeadline=328350794461, FrameStartTime=322513164299, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=322516193836, SyncStart=328312061474, IssueDrawCommandsStart=328312091770, SwapBuffers=328428758201, FrameCompleted=328434280377, DequeueBufferDuration=2856, QueueBufferDuration=265525, GpuCompleted=328434280377, SwapBuffersCompleted=328431162703, DisplayPresentTime=0, CommandSubmissionCompleted=328428758201, 
+10-16 11:50:09.686  6060  6164 D ProfileInstaller: Installing profile for app.two.android
+10-16 11:50:10.166  6060  6073 I HWUI    : Davey! duration=6288ms; Flags=0, FrameTimelineVsyncId=13918, IntendedVsync=322517461361, Vsync=328300794463, InputEventId=0, HandleInputStart=328315134031, AnimationStart=328315135203, PerformTraversalsStart=328316414167, DrawStart=328316493746, FrameDeadline=328467461123, FrameStartTime=328313566038, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=328318313177, SyncStart=328431184664, IssueDrawCommandsStart=328431211754, SwapBuffers=328792425749, FrameCompleted=328918951859, DequeueBufferDuration=2285, QueueBufferDuration=191708, GpuCompleted=328918951859, SwapBuffersCompleted=328910682136, DisplayPresentTime=0, CommandSubmissionCompleted=328792425749, 
+10-16 11:50:13.208  6060  6060 I Choreographer: Skipped 181 frames!  The application may be doing too much work on its main thread.
+10-16 11:50:13.224  6060  6073 I HWUI    : Davey! duration=3060ms; Flags=0, FrameTimelineVsyncId=13983, IntendedVsync=328534127787, Vsync=328534127787, InputEventId=0, HandleInputStart=328534519586, AnimationStart=328534520097, PerformTraversalsStart=328535120336, DrawStart=328535174036, FrameDeadline=328950794437, FrameStartTime=328534517011, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=328535728820, SyncStart=328911059760, IssueDrawCommandsStart=328911108681, SwapBuffers=331954348481, FrameCompleted=331970120747, DequeueBufferDuration=2134, QueueBufferDuration=111829, GpuCompleted=331970120747, SwapBuffersCompleted=331958534975, DisplayPresentTime=0, CommandSubmissionCompleted=331954348481, 
+10-16 11:50:13.264  6060  6072 I HWUI    : Davey! duration=3073ms; Flags=0, FrameTimelineVsyncId=14005, IntendedVsync=328934127771, Vsync=331950794317, InputEventId=0, HandleInputStart=331969720398, AnimationStart=331969721700, PerformTraversalsStart=331970897162, DrawStart=331970944069, FrameDeadline=332017460981, FrameStartTime=331964862192, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=331971518860, SyncStart=331982137359, IssueDrawCommandsStart=331982182012, SwapBuffers=332000157385, FrameCompleted=332018083043, DequeueBufferDuration=2535, QueueBufferDuration=111628, GpuCompleted=332018083043, SwapBuffersCompleted=332002865563, DisplayPresentTime=0, CommandSubmissionCompleted=332000157385, 
+10-16 11:50:13.364  6167  6167 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:50:13.370  6167  6167 I AndroidRuntime: Using default boot image
+10-16 11:50:13.370  6167  6167 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:50:13.487  6167  6167 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 11:50:13.524  6167  6167 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:50:14.550  6167  6167 D AndroidRuntime: Shutting down VM
+10-16 11:50:15.354  6060  6060 I Choreographer: Skipped 125 frames!  The application may be doing too much work on its main thread.
+10-16 11:50:15.614  6060  6073 I HWUI    : Davey! duration=2118ms; Flags=0, FrameTimelineVsyncId=14021, IntendedVsync=331984127649, Vsync=331984127649, InputEventId=0, HandleInputStart=331986590267, AnimationStart=331986590868, PerformTraversalsStart=331987455002, DrawStart=331987536123, FrameDeadline=332050794313, FrameStartTime=331986587091, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=331988163292, SyncStart=332002925565, IssueDrawCommandsStart=332002953387, SwapBuffers=334108147265, FrameCompleted=334117673941, DequeueBufferDuration=2364, QueueBufferDuration=151112, GpuCompleted=334117673941, SwapBuffersCompleted=334109127983, DisplayPresentTime=0, CommandSubmissionCompleted=334108147265, 
+10-16 11:50:16.002  6060  6073 I HWUI    : Davey! duration=2476ms; Flags=0, FrameTimelineVsyncId=14036, IntendedVsync=332017460981, Vsync=334100794231, InputEventId=0, HandleInputStart=334111658129, AnimationStart=334111658981, PerformTraversalsStart=334117627419, DrawStart=334117675209, FrameDeadline=334417460885, FrameStartTime=334111312916, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=334118467756, SyncStart=334375426816, IssueDrawCommandsStart=334375456842, SwapBuffers=334736617502, FrameCompleted=334751202230, DequeueBufferDuration=2766, QueueBufferDuration=306772, GpuCompleted=334751202230, SwapBuffersCompleted=334738507185, DisplayPresentTime=0, CommandSubmissionCompleted=334736617502, 
+10-16 11:50:16.213  6182  6182 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:50:16.217  6182  6182 I AndroidRuntime: Using default boot image
+10-16 11:50:16.217  6182  6182 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:50:16.275  6182  6182 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 11:50:16.304  6182  6182 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:50:17.353  6060  6060 I cr_A11yState: Enabled accessibility services list updated. []
+10-16 11:50:17.354  6060  6060 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-16 11:50:17.354  6060  6060 I cr_A11yState: Informing listeners of changes.
+10-16 11:50:17.355  6060  6060 I cr_A11yState: New AccessibilityState: State{isScreenReaderEnabled=false, isTouchExplorationEnabled=false, isPerformGesturesEnabled=false, isAnyAccessibilityServiceEnabled=false, isAccessibilityToolPresent=false, isSpokenFeedbackServicePresent=false, isTextShowPasswordEnabled=true, isOnlyPasswordManagersEnabled=false}
+10-16 11:50:17.359  6182  6182 D AndroidRuntime: Shutting down VM
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: FATAL EXCEPTION: UiAutomation
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: PID: 6182
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: java.lang.RuntimeException: Bad file descriptor
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.os.BinderProxy.transactNative(Native Method)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.os.BinderProxy.transact(BinderProxy.java:592)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.accessibilityservice.IAccessibilityServiceConnection$Stub$Proxy.findAccessibilityNodeInfoByAccessibilityId(IAccessibilityServiceConnection.java:1233)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityInteractionClient.findAccessibilityNodeInfoByAccessibilityId(AccessibilityInteractionClient.java:671)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityNodeInfo.refresh(AccessibilityNodeInfo.java:1345)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityCache$AccessibilityNodeRefresher.refreshNode(AccessibilityCache.java:933)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityCache.onAccessibilityEvent(AccessibilityCache.java:309)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityInteractionClient.onAccessibilityEvent(AccessibilityInteractionClient.java:1173)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.accessibilityservice.AccessibilityService$IAccessibilityServiceClientWrapper.lambda$onAccessibilityEvent$2(AccessibilityService.java:2993)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.accessibilityservice.AccessibilityService$IAccessibilityServiceClientWrapper.$r8$lambda$BK9U4O9uTvtOrxe1k6nU74w4nWg(Unknown Source:0)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.accessibilityservice.AccessibilityService$IAccessibilityServiceClientWrapper$$ExternalSyntheticLambda8.run(D8$$SyntheticClass:0)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:995)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:103)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:248)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:338)
+10-16 11:50:17.360  6182  6194 E AndroidRuntime: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: Couldn't report crash. Here's the crash:
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: java.lang.RuntimeException: Bad file descriptor
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.os.BinderProxy.transactNative(Native Method)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.os.BinderProxy.transact(BinderProxy.java:592)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.accessibilityservice.IAccessibilityServiceConnection$Stub$Proxy.findAccessibilityNodeInfoByAccessibilityId(IAccessibilityServiceConnection.java:1233)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityInteractionClient.findAccessibilityNodeInfoByAccessibilityId(AccessibilityInteractionClient.java:671)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityNodeInfo.refresh(AccessibilityNodeInfo.java:1345)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityCache$AccessibilityNodeRefresher.refreshNode(AccessibilityCache.java:933)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityCache.onAccessibilityEvent(AccessibilityCache.java:309)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.view.accessibility.AccessibilityInteractionClient.onAccessibilityEvent(AccessibilityInteractionClient.java:1173)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.accessibilityservice.AccessibilityService$IAccessibilityServiceClientWrapper.lambda$onAccessibilityEvent$2(AccessibilityService.java:2993)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.accessibilityservice.AccessibilityService$IAccessibilityServiceClientWrapper.$r8$lambda$BK9U4O9uTvtOrxe1k6nU74w4nWg(Unknown Source:0)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.accessibilityservice.AccessibilityService$IAccessibilityServiceClientWrapper$$ExternalSyntheticLambda8.run(D8$$SyntheticClass:0)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:995)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:103)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:248)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:338)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: Error reporting crash. Here's the error:
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: java.lang.RuntimeException: Bad file descriptor
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.os.BinderProxy.transactNative(Native Method)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.os.BinderProxy.transact(BinderProxy.java:592)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at android.app.IActivityManager$Stub$Proxy.handleApplicationCrash(IActivityManager.java:6016)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$KillApplicationHandler.uncaughtException(RuntimeInit.java:170)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at java.lang.ThreadGroup.uncaughtException(ThreadGroup.java:1071)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at java.lang.ThreadGroup.uncaughtException(ThreadGroup.java:1066)
+10-16 11:50:17.361  6182  6194 E AndroidRuntime: 	at java.lang.Thread.dispatchUncaughtException(Thread.java:2442)
+10-16 11:50:17.990  6198  6198 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:50:17.993  6198  6198 I AndroidRuntime: Using default boot image
+10-16 11:50:17.993  6198  6198 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:50:18.057  6198  6198 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 11:50:18.085  6198  6198 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:50:19.153  6198  6198 D AndroidRuntime: Shutting down VM
+10-16 11:50:20.571  6215  6215 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:50:20.574  6215  6215 I AndroidRuntime: Using default boot image
+10-16 11:50:20.574  6215  6215 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:50:20.634  6215  6215 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 11:50:20.663  6215  6215 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:50:21.733  6215  6215 D AndroidRuntime: Shutting down VM
+10-16 11:50:23.145  6231  6231 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:50:23.148  6231  6231 I AndroidRuntime: Using default boot image
+10-16 11:50:23.148  6231  6231 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:50:23.206  6231  6231 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 11:50:23.235  6231  6231 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:50:24.279  6231  6231 D AndroidRuntime: Shutting down VM
+10-16 11:50:25.698  6249  6249 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:50:25.701  6249  6249 I AndroidRuntime: Using default boot image
+10-16 11:50:25.701  6249  6249 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:50:25.765  6249  6249 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 11:50:25.794  6249  6249 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:50:26.851  6249  6249 D AndroidRuntime: Shutting down VM
+10-16 11:50:28.272  6265  6265 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:50:28.276  6265  6265 I AndroidRuntime: Using default boot image
+10-16 11:50:28.276  6265  6265 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:50:28.341  6265  6265 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 11:50:28.371  6265  6265 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:50:29.428  6265  6265 D AndroidRuntime: Shutting down VM
+10-16 11:50:30.839  6281  6281 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:50:30.842  6281  6281 I AndroidRuntime: Using default boot image
+10-16 11:50:30.842  6281  6281 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:50:30.905  6281  6281 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-16 11:50:30.937  6281  6281 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:50:32.000  6281  6281 D AndroidRuntime: Shutting down VM
+10-16 11:50:32.264  6060  6110 D AAudio  : AAudioStream_requestStop(s#1) called
+10-16 11:50:32.264  6060  6110 D AAudioStream: setState(s#1) from 4 to 9
+10-16 11:50:32.264  6060  6110 D AudioTrack: stop(21): called with 1447680 frames delivered
+10-16 11:50:32.265   665  1284 E AppOps  : attributionTag  not declared in manifest of app.two.android
+10-16 11:50:32.265   665  1284 E AppOps  : attributionTag  not declared in manifest of app.two.android
+10-16 11:50:32.266  6060  6110 D AAudioStream: setState(s#1) from 9 to 10

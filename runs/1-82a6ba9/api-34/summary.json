@@ -1,0 +1,85 @@
+{
+  "api": 34,
+  "device": {
+    "android": "14",
+    "sdk": "34",
+    "webview": "com.google.android.webview, 113.0.5672.136"
+  },
+  "passed": 0,
+  "failed": 7,
+  "crashed": [
+    "First call while Priya is offline, allowing the microphone",
+    "Call while Priya is offline rings out",
+    "Call cancelled straight away, ten times",
+    "Call that Priya answers, with the speaker on and off",
+    "Priya calls and you answer",
+    "Screen turned off in the middle of a call",
+    "Call when you don't allow the microphone"
+  ],
+  "scenarios": [
+    {
+      "title": "First call while Priya is offline, allowing the microphone",
+      "ok": false,
+      "crashed": true,
+      "error": "timed out after 20s waiting for Android's microphone question",
+      "failedChecks": [
+        "the app is still open"
+      ]
+    },
+    {
+      "title": "Call while Priya is offline rings out",
+      "ok": false,
+      "crashed": true,
+      "error": "the app closed while ringing",
+      "failedChecks": [
+        "the call service runs in the foreground",
+        "the app is still open"
+      ]
+    },
+    {
+      "title": "Call cancelled straight away, ten times",
+      "ok": false,
+      "crashed": true,
+      "error": "the app closed (Cancel after 0 ms)",
+      "failedChecks": [
+        "the app is still open"
+      ]
+    },
+    {
+      "title": "Call that Priya answers, with the speaker on and off",
+      "ok": false,
+      "crashed": true,
+      "error": "timed out after 20s waiting for Priya's phone to ring",
+      "failedChecks": [
+        "the app is still open"
+      ]
+    },
+    {
+      "title": "Priya calls and you answer",
+      "ok": false,
+      "crashed": true,
+      "error": "timed out after 30s waiting for the call to connect (page went away)",
+      "failedChecks": [
+        "the app is still open"
+      ]
+    },
+    {
+      "title": "Screen turned off in the middle of a call",
+      "ok": false,
+      "crashed": true,
+      "error": "timed out after 20s waiting for Priya's phone to ring",
+      "failedChecks": [
+        "the app is still open"
+      ]
+    },
+    {
+      "title": "Call when you don't allow the microphone",
+      "ok": false,
+      "crashed": true,
+      "error": "timed out after 20s waiting for Android's microphone question",
+      "failedChecks": [
+        "the app is still open"
+      ]
+    }
+  ]
+}

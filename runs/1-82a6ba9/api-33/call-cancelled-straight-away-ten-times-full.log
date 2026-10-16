@@ -1,0 +1,1030 @@
+--------- beginning of system
+10-16 11:46:29.654   507   889 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=app.two.android/.MainActivity} from uid 2000
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 265464455; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 265452344; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 266124927; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 265451093; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 265456536; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 255940284; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 236283604; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 263959004; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 264304459; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 264301586; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 254631730; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 273509367; UID 10174; state: DISABLED
+10-16 11:46:29.654   507   889 D CompatibilityChangeReporter: Compat change id reported: 263259275; UID 10174; state: DISABLED
+10-16 11:46:29.655   507   889 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10174; state: ENABLED
+10-16 11:46:29.655   507   889 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10174; state: DISABLED
+10-16 11:46:29.657   507   889 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10174; state: DISABLED
+10-16 11:46:29.657   507   889 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10174; state: DISABLED
+10-16 11:46:29.657   507   889 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10174; state: ENABLED
+10-16 11:46:29.658   507   889 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10174; state: ENABLED
+10-16 11:46:29.661   507   540 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10174; state: DISABLED
+10-16 11:46:29.661   507   549 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10174; state: ENABLED
+--------- beginning of main
+10-16 11:46:29.663   828   887 D SplashScreenView: Build android.window.SplashScreenView{aa2790e V.E...... ......ID 0,0-0,0}
+10-16 11:46:29.663   828   887 D SplashScreenView: Icon: view: android.widget.ImageView{6e3ff2f V.ED..... ......I. 0,0-0,0 #10204dd android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@42e293c size: 192
+10-16 11:46:29.663   828   887 D SplashScreenView: Branding: view: android.view.View{8a006c5 G.ED..... ......I. 0,0-0,0 #10204dc android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+10-16 11:46:29.665  1101  1101 D MainContentCaptureSession: Flushing 1 event(s) for act:com.google.android.apps.nexuslauncher/.NexusLauncherActivity [state=2 (ACTIVE), disabled=false], reason=FULL
+10-16 11:46:29.667   312   312 D Zygote  : Forked child process 7219
+10-16 11:46:29.667   507   549 I ActivityManager: Start proc 7219:app.two.android/u0a174 for next-top-activity {app.two.android/app.two.android.MainActivity}
+10-16 11:46:29.668   828   891 W Parcel  : Expecting binder but got null!
+10-16 11:46:29.669   507  1933 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10174; state: DISABLED
+10-16 11:46:29.669   507  1933 D CompatibilityChangeReporter: Compat change id reported: 273564678; UID 10174; state: DISABLED
+10-16 11:46:29.670   507  1933 D CoreBackPreview: Window{54e3a09 u0 Splash Screen app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@b8d4e2f, mPriority=0}
+10-16 11:46:29.672  7219  7219 I app.two.android: Late-enabling -Xcheck:jni
+10-16 11:46:29.690  7219  7219 I app.two.android: Using CollectorTypeCC GC.
+10-16 11:46:29.693  7219  7219 W app.two.android: Unexpected CPU variant for x86: x86_64.
+10-16 11:46:29.693  7219  7219 W app.two.android: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-16 11:46:29.698   400   410 I adbd    : jdwp connection from 7219
+10-16 11:46:29.716  1101  1905 D EGL_emulation: app_time_stats: avg=1610.48ms min=12.44ms max=6381.98ms count=4
+10-16 11:46:29.717  7219  7219 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10174; state: ENABLED
+10-16 11:46:29.721  7219  7219 W ziparchive: Unable to open '/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.dm': No such file or directory
+10-16 11:46:29.721  7219  7219 W ziparchive: Unable to open '/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.dm': No such file or directory
+10-16 11:46:29.780  7219  7219 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/lib/x86_64:/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/app.two.android
+10-16 11:46:29.784  7219  7219 V GraphicsEnvironment: ANGLE Developer option for 'app.two.android' set to: 'default'
+10-16 11:46:29.784  7219  7219 V GraphicsEnvironment: ANGLE GameManagerService for app.two.android: false
+10-16 11:46:29.784  7219  7219 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-16 11:46:29.786  7219  7219 D NetworkSecurityConfig: Using Network Security Config from resource network_security_config debugBuild: true
+10-16 11:46:29.786  7219  7219 D NetworkSecurityConfig: Using Network Security Config from resource network_security_config debugBuild: true
+10-16 11:46:29.790  7219  7219 D WM-WrkMgrInitializer: Initializing WorkManager with default configuration.
+10-16 11:46:29.801  7219  7219 D WM-PackageManagerHelper: Skipping component enablement for androidx.work.impl.background.systemjob.SystemJobService
+10-16 11:46:29.801  7219  7219 D WM-Schedulers: Created SystemJobScheduler and enabled SystemJobService
+10-16 11:46:29.804  7219  7238 D WM-ForceStopRunnable: The default process name was not specified.
+10-16 11:46:29.804  7219  7238 D WM-ForceStopRunnable: Performing cleanup operations.
+10-16 11:46:29.828  7219  7238 D CompatibilityChangeReporter: Compat change id reported: 160794467; UID 10174; state: ENABLED
+10-16 11:46:29.846  7219  7244 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+10-16 11:46:29.847  7219  7245 D WM-PackageManagerHelper: Skipping component enablement for androidx.work.impl.background.systemalarm.RescheduleReceiver
+10-16 11:46:29.848  7219  7244 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+10-16 11:46:29.849  7219  7244 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+10-16 11:46:29.856   507  3379 W JobScheduler: Job didn't exist in JobStore: aecfc0d #u0a123/7 com.google.android.contacts/com.google.android.apps.contacts.shortcut.ShortcutJobService
+10-16 11:46:29.873  7219  7219 D CompatibilityChangeReporter: Compat change id reported: 237531167; UID 10174; state: DISABLED
+10-16 11:46:29.875  7219  7241 W Parcel  : Expecting binder but got null!
+10-16 11:46:29.878   507  3379 D CoreBackPreview: Window{53c1570 u0 app.two.android/app.two.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@f46416e, mPriority=0}
+10-16 11:46:29.937  7219  7219 I WebViewFactory: Loading com.google.android.webview version 109.0.5414.123 (code 541412337)
+10-16 11:46:29.939  7219  7219 W ziparchive: Unable to open '/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.dm': No such file or directory
+10-16 11:46:29.939  7219  7219 W ziparchive: Unable to open '/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.dm': No such file or directory
+10-16 11:46:29.939  7219  7219 W app.two.android: Entry not found
+10-16 11:46:29.939  7219  7219 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk. target_sdk_version=33, uses_libraries=ALL, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 11:46:29.940  7219  7219 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 11:46:29.949  7219  7219 W app.two.android: Accessing hidden method Landroid/os/Trace;->isTagEnabled(J)Z (unsupported, reflection, allowed)
+10-16 11:46:29.949  7219  7219 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceBegin(JLjava/lang/String;)V (unsupported, reflection, allowed)
+10-16 11:46:29.949  7219  7219 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceEnd(J)V (unsupported, reflection, allowed)
+10-16 11:46:29.949  7219  7219 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceBegin(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 11:46:29.949  7219  7219 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceEnd(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 11:46:29.950  7219  7219 I cr_WVCFactoryProvider: Loaded version=109.0.5414.123 minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 11:46:29.954  7219  7251 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed_new"
+10-16 11:46:29.954  7219  7251 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed"
+10-16 11:46:29.957  7219  7219 I cr_LibraryLoader: Successfully loaded native library
+10-16 11:46:29.957  7219  7219 I cr_CachingUmaRecorder: Flushed 9 samples from 9 histograms.
+10-16 11:46:29.964   507  3381 D CompatibilityChangeReporter: Compat change id reported: 161145287; UID 10174; state: DISABLED
+10-16 11:46:29.967   507  3381 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 99002; state: DISABLED
+10-16 11:46:29.967   507   549 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10174; state: ENABLED
+10-16 11:46:29.972   995   995 D Zygote  : Forked child process 7255
+10-16 11:46:29.972  7219  7219 D CompatibilityChangeReporter: Compat change id reported: 183155436; UID 10174; state: ENABLED
+10-16 11:46:29.973   507   549 I ActivityManager: Start proc 7255:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0i2 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 11:46:29.975  7255  7255 I ocessService0:0: Using CollectorTypeCC GC.
+10-16 11:46:29.976  7255  7255 W ocessService0:0: Unexpected CPU variant for x86: x86_64.
+10-16 11:46:29.976  7255  7255 W ocessService0:0: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-16 11:46:29.979   400   410 I adbd    : jdwp connection from 7255
+10-16 11:46:30.000  7255  7255 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 99002; state: ENABLED
+10-16 11:46:30.004  7255  7255 I LoadedApk: No resource references to update in package com.google.android.trichromelibrary
+10-16 11:46:30.004  7255  7255 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-16 11:46:30.004  7255  7255 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+10-16 11:46:30.004  7255  7255 I cr_WebViewApkApp: Launched version=109.0.5414.123 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 11:46:30.005  7255  7255 I cr_ChildProcessService: Creating new ChildProcessService pid=7255
+10-16 11:46:30.019  7219  7283 E chromium: [ERROR:simple_backend_impl.cc(749)] Simple Cache Backend: cache directory inaccessible right after creation; path: /data/user/0/app.two.android/cache/WebView/Default/HTTP Cache/Code Cache/js
+10-16 11:46:30.021  7219  7282 E chromium: [ERROR:disk_cache.cc(205)] Unable to create cache
+10-16 11:46:30.022  7219  7219 D CompatibilityChangeReporter: Compat change id reported: 214741472; UID 10174; state: ENABLED
+10-16 11:46:30.024  7219  7219 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 10174; state: ENABLED
+10-16 11:46:30.027   507  3381 D ConnectivityService: requestNetwork for uid/pid:10174/7219 activeRequest: null callbackRequest: 156 [NetworkRequest [ REQUEST id=157, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 11:46:30.028   507   761 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=157, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:46:30.028   507   761 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=157, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:46:30.028   507   761 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=157, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:46:30.029   507   761 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=157, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:46:30.029   507   768 D ConnectivityService: NetReassign [157 : null → 100] [c 0] [a 0] [i 1]
+10-16 11:46:30.030   507   768 D ConnectivityService: NetReassign [no changes] [c 1] [a 0] [i 0]
+10-16 11:46:30.040  7219  7276 W app.two.android: Accessing hidden method Landroid/media/AudioManager;->getOutputLatency(I)I (unsupported, reflection, allowed)
+10-16 11:46:30.041  7219  7276 W cr_media: BLUETOOTH_CONNECT permission is missing.
+10-16 11:46:30.042  7219  7276 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+10-16 11:46:30.046  7255  7287 I cr_LibraryLoader: Successfully loaded native library
+10-16 11:46:30.047  7255  7287 I cr_CachingUmaRecorder: Flushed 3 samples from 3 histograms.
+10-16 11:46:30.048  7255  7287 W SystemServiceRegistry: No service published for: uimode
+10-16 11:46:30.050  7219  7292 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 11:46:30.052  7219  7292 D EGL_emulation: eglCreateContext: 0x7f734fd4b050: maj 3 min 0 rcv 3
+10-16 11:46:30.053  7219  7292 D EGL_emulation: eglMakeCurrent: 0x7f734fd4b050: ver 3 0 (tinfo 0x7f756887a080) (first time)
+10-16 11:46:30.055  7219  7219 W OnBackInvokedCallback: OnBackInvokedCallback is not enabled for the application.
+10-16 11:46:30.055  7219  7219 W OnBackInvokedCallback: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+10-16 11:46:30.062  6440  6466 I FontLog : Received query name=Google Sans&weight=700&besteffort=false, URI content://com.google.android.gms.fonts [CONTEXT service_id=132 ]
+10-16 11:46:30.062  6440  6466 I FontLog : Query [name=Google Sans&weight=700&besteffort=false] resolved to {Google Sans, wdth 100.0, wght 700, ital 0.0, bestEffort false} [CONTEXT service_id=132 ]
+10-16 11:46:30.062  6440  6466 I FontLog : Fetch {Google Sans, wdth 100.0, wght 700, ital 0.0, bestEffort false} end status Status{statusCode=SUCCESS, resolution=null} [CONTEXT service_id=132 ]
+10-16 11:46:30.064  7219  7219 D CompatibilityChangeReporter: Compat change id reported: 193247900; UID 10174; state: ENABLED
+10-16 11:46:30.068  6440  6466 I FontLog : Pulling font file for id = 9, cache size = 9 [CONTEXT service_id=132 ]
+10-16 11:46:30.070  6440  6466 I FontLog : Received query name=Noto Color Emoji Compat&weight=400&besteffort=false, URI content://com.google.android.gms.fonts [CONTEXT service_id=132 ]
+10-16 11:46:30.070  6440  6466 I FontLog : Query [name=Noto Color Emoji Compat&weight=400&besteffort=false] resolved to {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} [CONTEXT service_id=132 ]
+10-16 11:46:30.070  6440  6466 I FontLog : Fetch {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} end status Status{statusCode=SUCCESS, resolution=null} [CONTEXT service_id=132 ]
+10-16 11:46:30.071  6440  6466 I FontLog : Pulling font file for id = 10, cache size = 10 [CONTEXT service_id=132 ]
+10-16 11:46:30.072  6440  6466 I FontLog : Received query name=Google Sans&weight=400&besteffort=false, URI content://com.google.android.gms.fonts [CONTEXT service_id=132 ]
+10-16 11:46:30.073  6440  6466 I FontLog : Query [name=Google Sans&weight=400&besteffort=false] resolved to {Google Sans, wdth 100.0, wght 400, ital 0.0, bestEffort false} [CONTEXT service_id=132 ]
+10-16 11:46:30.073  6440  6466 I FontLog : Font PFD returned from cache for {Google Sans, wdth 100.0, wght 400, ital 0.0, bestEffort false} [CONTEXT service_id=132 ]
+10-16 11:46:30.077  7219  7241 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 11:46:30.077  7219  7241 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-16 11:46:30.078  7219  7241 D EGL_emulation: eglCreateContext: 0x7f734fd4b050: maj 3 min 0 rcv 3
+10-16 11:46:30.079  7219  7241 D EGL_emulation: eglMakeCurrent: 0x7f734fd4b050: ver 3 0 (tinfo 0x7f756887a100) (first time)
+10-16 11:46:30.079  6440  6466 I FontLog : Fetch {Google Sans, wdth 100.0, wght 400, ital 0.0, bestEffort false} end status Status{statusCode=SUCCESS, resolution=null} [CONTEXT service_id=132 ]
+10-16 11:46:30.080  6440  6466 I FontLog : Pulling font file for id = 11, cache size = 11 [CONTEXT service_id=132 ]
+10-16 11:46:30.081  6440  6466 I FontLog : Received query name=Google Sans&weight=500&besteffort=false, URI content://com.google.android.gms.fonts [CONTEXT service_id=132 ]
+10-16 11:46:30.081  6440  6466 I FontLog : Query [name=Google Sans&weight=500&besteffort=false] resolved to {Google Sans, wdth 100.0, wght 500, ital 0.0, bestEffort false} [CONTEXT service_id=132 ]
+10-16 11:46:30.082  6440  6466 I FontLog : Font PFD returned from cache for {Google Sans, wdth 100.0, wght 500, ital 0.0, bestEffort false} [CONTEXT service_id=132 ]
+10-16 11:46:30.082  6440  6466 I FontLog : Fetch {Google Sans, wdth 100.0, wght 500, ital 0.0, bestEffort false} end status Status{statusCode=SUCCESS, resolution=null} [CONTEXT service_id=132 ]
+10-16 11:46:30.083  6440  6466 I FontLog : Pulling font file for id = 12, cache size = 12 [CONTEXT service_id=132 ]
+10-16 11:46:30.089   144   144 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-16 11:46:30.090  7219  7241 I Gralloc4: mapper 4.x is not supported
+10-16 11:46:30.090  6440  6653 I SQLiteConnectionPool: The connection pool for /data/user/0/com.google.android.gms/databases/metadata.db has been closed but there are still 1 connections in use.  They will be closed as they are released back to the pool.
+10-16 11:46:30.091  6440  6641 W FontLog : Error updating last accessed time for {Google Sans, wdth 100.0, wght 500, ital 0.0, bestEffort false}. [CONTEXT service_id=132 ]
+10-16 11:46:30.091  6440  6641 W FontLog : java.lang.IllegalStateException: Cannot perform this operation because the connection pool has been closed.
+10-16 11:46:30.091  6440  6641 W FontLog : 	at android.database.sqlite.SQLiteConnectionPool.throwIfClosedLocked(SQLiteConnectionPool.java:1078)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at android.database.sqlite.SQLiteConnectionPool.waitForConnection(SQLiteConnectionPool.java:771)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at android.database.sqlite.SQLiteConnectionPool.acquireConnection(SQLiteConnectionPool.java:387)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at android.database.sqlite.SQLiteSession.acquireConnection(SQLiteSession.java:896)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at android.database.sqlite.SQLiteSession.executeForChangedRowCount(SQLiteSession.java:754)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at android.database.sqlite.SQLiteStatement.executeUpdateDelete(SQLiteStatement.java:67)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at android.database.sqlite.SQLiteDatabase.executeSql(SQLiteDatabase.java:2087)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at android.database.sqlite.SQLiteDatabase.execSQL(SQLiteDatabase.java:2064)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at anyn.run(:com.google.android.gms@231818047@23.18.18 (190800-535401451):6)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at aced.c(:com.google.android.gms@231818047@23.18.18 (190800-535401451):6)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at aced.run(:com.google.android.gms@231818047@23.18.18 (190800-535401451):7)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at acjn.run(:com.google.android.gms@231818047@23.18.18 (190800-535401451):0)
+10-16 11:46:30.091  6440  6641 W FontLog : 	at java.lang.Thread.run(Thread.java:1012)
+10-16 11:46:30.102   144   144 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.allocator@4.0::IAllocator/default in either framework or device VINTF manifest.
+10-16 11:46:30.103   143   143 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+10-16 11:46:30.103  7219  7241 W Gralloc4: allocator 4.x is not supported
+10-16 11:46:30.105  7219  7292 D EGL_emulation: eglCreateContext: 0x7f734fd4cb50: maj 3 min 0 rcv 3
+10-16 11:46:30.109   507  3381 D ConnectivityService: requestNetwork for uid/pid:10122/1722 activeRequest: null callbackRequest: 159 [NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10122 RequestorUid: 10122 RequestorPkg: com.google.android.apps.youtube.music UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 11:46:30.110   507   768 D ConnectivityService: NetReassign [160 : null → 100] [c 0] [a 0] [i 1]
+10-16 11:46:30.111   507   761 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10122 RequestorUid: 10122 RequestorPkg: com.google.android.apps.youtube.music UnderlyingNetworks: Null] ]
+10-16 11:46:30.111   507   761 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10122 RequestorUid: 10122 RequestorPkg: com.google.android.apps.youtube.music UnderlyingNetworks: Null] ]
+10-16 11:46:30.112   507   761 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10122 RequestorUid: 10122 RequestorPkg: com.google.android.apps.youtube.music UnderlyingNetworks: Null] ]
+10-16 11:46:30.112   507   761 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10122 RequestorUid: 10122 RequestorPkg: com.google.android.apps.youtube.music UnderlyingNetworks: Null] ]
+10-16 11:46:30.114  7219  7241 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 11:46:30.121  7219  7292 D EGL_emulation: eglCreateContext: 0x7f734fd4dc90: maj 3 min 0 rcv 3
+10-16 11:46:30.158  7219  7257 E chromium: [ERROR:directory_reader_posix.cc(42)] opendir /data/user/0/app.two.android/cache/WebView/Crashpad/attachments/f76c4716-2e3c-4c6e-b812-81134757b344: No such file or directory (2)
+10-16 11:46:30.162  7219  7257 W chromium: [WARNING:minidump_to_upload_parameters.cc(67)] duplicate annotation name ptype, discarding value browser
+10-16 11:46:30.170  6440  6440 D BoundBrokerSvc: onBind: Intent { act=com.google.android.contextmanager.service.ContextManagerService.START pkg=com.google.android.gms }
+10-16 11:46:30.170  6440  6440 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.contextmanager.service.ContextManagerService.START pkg=com.google.android.gms }
+10-16 11:46:30.191  1722  1722 E Widget.RecentlyPlayed: Filling bundle but recently played items are EMPTY.
+10-16 11:46:30.229  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838050
+10-16 11:46:30.230  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838044
+10-16 11:46:30.230  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838051
+10-16 11:46:30.230   308  7319 I resolv  : GetAddrInfoHandler::run: {100 100 100 983140 10174 0}
+10-16 11:46:30.231  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130837961
+10-16 11:46:30.232   308  7321 I resolv  : res_nmkquery: (QUERY, IN, A)
+10-16 11:46:30.232   308  7321 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c251f89c9d0
+10-16 11:46:30.232   308  7321 I resolv  : doQuery: rcode=3, ancount=0, return value=107
+10-16 11:46:30.233   308  7320 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+10-16 11:46:30.233   308  7320 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c251f89ab70
+10-16 11:46:30.233   308  7320 I resolv  : doQuery: rcode=3, ancount=0, return value=107
+10-16 11:46:30.248  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838217
+10-16 11:46:30.249  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130837973
+10-16 11:46:30.249  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838041
+10-16 11:46:30.250  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838412
+10-16 11:46:30.251  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130837964
+10-16 11:46:30.252  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838540
+10-16 11:46:30.252  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838539
+10-16 11:46:30.252  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838553
+10-16 11:46:30.253  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838190
+10-16 11:46:30.253  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838026
+10-16 11:46:30.253  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838419
+10-16 11:46:30.253  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130837999
+10-16 11:46:30.254  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130838146
+10-16 11:46:30.254  6009  7310 W CursorConverter: Cannot get icon, pkg/id :com.android.settings/2130837998
+10-16 11:46:30.261  1208  5031 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.262  1208  5031 D SettingsSliceProvider: Allowlisting 16 uris to 3 pkgs.
+10-16 11:46:30.268  1208  5031 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.269  1208  5031 D SettingsSliceProvider: Allowlisting 5 uris to 3 pkgs.
+10-16 11:46:30.274  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.fuelgauge.SmartBatteryPreferenceController
+10-16 11:46:30.276  1208  5992 D SettingsSliceProvider: onSlicePinned: content://com.android.settings.slices/action/smart_battery
+10-16 11:46:30.276  1208  4057 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.276  1208  5038 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.277  1208  1487 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.277  1208  5038 W SliceData: Highlight menu key res is empty: com.android.settings.deviceinfo.hardwareinfo.DeviceModelPreferenceController
+10-16 11:46:30.277  6440  6641 W ctxmgr  : [NetworkStateProducer] No state change for network connection context [CONTEXT service_id=47 ]
+10-16 11:46:30.277  1208  1487 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/auto_rotate) in: 1
+10-16 11:46:30.277  1208  4057 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/smart_battery) in: 1
+10-16 11:46:30.278  1208  5038 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/hardware_info_device_model) in: 2
+10-16 11:46:30.278  1208  5159 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.278  1208  5159 W SliceData: Highlight menu key res is empty: com.android.settings.deviceinfo.firmwareversion.FirmwareVersionDetailPreferenceController
+10-16 11:46:30.278  1208  1487 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.278  1208  5992 D SliceBuilder: Creating slice for: com.android.settings.deviceinfo.hardwareinfo.DeviceModelPreferenceController
+10-16 11:46:30.278  1208  1487 D VolumeSliceHelper: Registering uri for broadcast relay: content://com.android.settings.slices/action/media_volume
+10-16 11:46:30.278  1208  5159 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/os_firmware_version) in: 0
+10-16 11:46:30.278  1208  4057 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.278  1208  1487 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/media_volume) in: 0
+10-16 11:46:30.279  1208  4057 D VolumeSliceHelper: Registering uri for broadcast relay: content://com.android.settings.slices/action/call_volume
+10-16 11:46:30.279  1208  4057 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/call_volume) in: 1
+10-16 11:46:30.280  1208  5038 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.281  1208  5038 D VolumeSliceHelper: Registering uri for broadcast relay: content://com.android.settings.slices/action/ring_volume
+10-16 11:46:30.281  1208  5038 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/ring_volume) in: 1
+10-16 11:46:30.282  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.display.SmartAutoRotatePreferenceController
+10-16 11:46:30.282  1208  5159 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.282  1208  5159 D VolumeSliceHelper: Registering uri for broadcast relay: content://com.android.settings.slices/action/separate_ring_volume
+10-16 11:46:30.283  1208  5159 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/separate_ring_volume) in: 1
+10-16 11:46:30.283  1208  1487 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.283  1208  1487 D VolumeSliceHelper: Registering uri for broadcast relay: content://com.android.settings.slices/action/notification_volume
+10-16 11:46:30.283  1208  1487 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/notification_volume) in: 0
+10-16 11:46:30.283  1208  4057 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.284  1208  4057 D VolumeSliceHelper: Registering uri for broadcast relay: content://com.android.settings.slices/action/alarm_volume
+10-16 11:46:30.284  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.deviceinfo.firmwareversion.FirmwareVersionDetailPreferenceController
+10-16 11:46:30.284  1208  4057 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/alarm_volume) in: 1
+10-16 11:46:30.284  1208  5038 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.284  1208  5038 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/screen_magnification_gestures_preference_screen) in: 0
+10-16 11:46:30.285  1208  5159 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.285  1208  5159 D SettingsSliceProvider: Built slice (content://com.android.settings.slices/action/gesture_double_tap_power) in: 0
+10-16 11:46:30.285  1208  5992 D SliceBroadcastRelay: Registering Uri for broadcast relay: content://com.android.settings.slices/action/mobile_data
+10-16 11:46:30.286  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.notification.MediaVolumePreferenceController
+10-16 11:46:30.286  1208  1208 D SettingsSliceProvider: Starting background worker for: content://com.android.settings.slices/action/mobile_data
+10-16 11:46:30.286  1208  1208 D SliceBackgroundWorker: create instance: class com.android.settings.network.telephony.MobileDataSlice$MobileDataWorker
+10-16 11:46:30.286  1208  1487 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: Could not create slicedata for uri: content://com.android.settings.slices/intent/wifi_calling
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: java.lang.IllegalStateException: Invalid Slices key from path: wifi_calling
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at com.android.settings.slices.SlicesDatabaseAccessor.getIndexedSliceData(SlicesDatabaseAccessor.java:132)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at com.android.settings.slices.SlicesDatabaseAccessor.getSliceDataFromUri(SlicesDatabaseAccessor.java:75)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at com.android.settings.slices.SettingsSliceProvider.loadSlice(SettingsSliceProvider.java:395)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at com.android.settings.slices.SettingsSliceProvider.lambda$loadSliceInBackground$5(SettingsSliceProvider.java:426)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at com.android.settings.slices.SettingsSliceProvider.$r8$lambda$IApJtz2y7JXGRdMRCkYjf83H4T4(Unknown Source:0)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at com.android.settings.slices.SettingsSliceProvider$$ExternalSyntheticLambda0.run(Unknown Source:4)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:30.286  1208  1487 D SettingsSliceProvider: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 11:46:30.287  1208  5992 D SliceBroadcastRelay: Registering Uri for broadcast relay: content://com.android.settings.slices/action/zen_mode_toggle
+10-16 11:46:30.287  1208  4057 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.287  1208  5031 D MediaVolumePreCtrl: The slice doesn't support end item
+10-16 11:46:30.288  1208  5038 D SlicesIndexer: Slices already indexed - returning.
+10-16 11:46:30.288  1208  5992 D SliceBroadcastRelay: Registering Uri for broadcast relay: content://android.settings.slices/action/bluetooth
+10-16 11:46:30.288  1208  4057 D SettingsSliceProvider: Built slice (content://android.settings.slices/action/airplane_mode) in: 1
+10-16 11:46:30.288  1208  5038 D SettingsSliceProvider: Built slice (content://android.settings.slices/action/battery_saver) in: 0
+10-16 11:46:30.289  1208  1208 D SettingsSliceProvider: Starting background worker for: content://android.settings.slices/action/wifi
+10-16 11:46:30.289  1208  1208 D SliceBackgroundWorker: create instance: class com.android.settings.wifi.slice.WifiScanWorker
+10-16 11:46:30.290  6009  6009 W rules.WifiRx: FenceState currentState is not true
+10-16 11:46:30.293  1208  5992 D VolumeSliceHelper: Unregistering uri broadcast relay: content://com.android.settings.slices/action/media_volume
+10-16 11:46:30.293  6009  6009 W rules.WifiRx: FenceState currentState is not true
+10-16 11:46:30.294  1208  5030 D SliceBuilder: Creating slice for: com.android.settings.notification.CallVolumePreferenceController
+10-16 11:46:30.295  1208  1208 D WsuServiceClient: Binding to com.google.android.apps.carrier.carrierwifi
+10-16 11:46:30.295  1208  1208 D WsuServiceClient: the specified wsu service is not installed.
+10-16 11:46:30.295  1208  1208 D SettingsSliceProvider: Stopping background worker for: content://com.android.settings.slices/action/media_volume
+10-16 11:46:30.297   507   768 D ConnectivityService: NetReassign [no changes] [c 0] [a 0] [i 1]
+10-16 11:46:30.298   507  3381 D ConnectivityService: requestNetwork for uid/pid:1000/1208 activeRequest: null callbackRequest: 163 [NetworkRequest [ TRACK_SYSTEM_DEFAULT id=163, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_VCN_MANAGED RequestorUid: 1000 RequestorPkg: com.android.settings UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 11:46:30.298  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.notification.RingVolumePreferenceController
+10-16 11:46:30.299   507   768 D ConnectivityService: NetReassign [163 : null → 100] [c 0] [a 0] [i 0]
+10-16 11:46:30.299  1208  5030 D VolumeSliceHelper: Unregistering uri broadcast relay: content://com.android.settings.slices/action/call_volume
+10-16 11:46:30.300   507  3379 W ScanResultUtil: Empty or null ScanResult list
+10-16 11:46:30.300   507  3379 W WifiService: Attempt to retrieve WifiConfiguration with invalid scanResult List
+10-16 11:46:30.301  1208  5030 D VolumeSliceHelper: Unregistering uri broadcast relay: content://com.android.settings.slices/action/ring_volume
+10-16 11:46:30.301  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.notification.SeparateRingVolumePreferenceController
+10-16 11:46:30.302   507  3381 W ScanResultUtil: Empty or null ScanResult list
+10-16 11:46:30.302   507  3381 W WifiService: Attempt to retrieve WifiConfiguration with invalid scanResult List
+10-16 11:46:30.302   507  1180 W ScanResultUtil: Empty or null ScanResult list
+10-16 11:46:30.302   507  1180 E WifiService: Attempt to retrieve passpoint with invalid scanResult List
+10-16 11:46:30.302  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.notification.NotificationVolumePreferenceController
+10-16 11:46:30.302  1208  5030 D VolumeSliceHelper: Unregistering uri broadcast relay: content://com.android.settings.slices/action/separate_ring_volume
+10-16 11:46:30.302   507  1180 W ScanResultUtil: Empty or null ScanResult list
+10-16 11:46:30.302   507  1180 W WifiService: Attempt to retrieve OsuProviders with invalid scanResult List
+10-16 11:46:30.303  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.notification.AlarmVolumePreferenceController
+10-16 11:46:30.303  1208  5030 D VolumeSliceHelper: Unregistering uri broadcast relay: content://com.android.settings.slices/action/notification_volume
+10-16 11:46:30.305  1208  5030 D VolumeSliceHelper: Unregistering uri broadcast relay: content://com.android.settings.slices/action/alarm_volume
+10-16 11:46:30.305  1208  5030 D SliceBroadcastRelay: Unregistering uri broadcast relay: content://com.android.settings.slices/action/volume_slices
+10-16 11:46:30.305  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.accessibility.MagnificationGesturesPreferenceController
+10-16 11:46:30.305  1208  7324 D CompatibilityChangeReporter: Compat change id reported: 186082280; UID 1000; state: ENABLED
+10-16 11:46:30.306  7219  7219 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 11:46:30.308  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.gestures.DoubleTapPowerPreferenceController
+10-16 11:46:30.309   507  1180 I WifiService: startScan uid=1000
+10-16 11:46:30.310   507  1180 W ScanResultUtil: Empty or null ScanResult list
+10-16 11:46:30.310   507  1180 W WifiService: Attempt to retrieve WifiConfiguration with invalid scanResult List
+10-16 11:46:30.310   507  1180 W ScanResultUtil: Empty or null ScanResult list
+10-16 11:46:30.310   507  1180 E WifiService: Attempt to retrieve passpoint with invalid scanResult List
+10-16 11:46:30.311   507  1180 W ScanResultUtil: Empty or null ScanResult list
+10-16 11:46:30.311   507  1180 W WifiService: Attempt to retrieve OsuProviders with invalid scanResult List
+10-16 11:46:30.325  1208  5030 D SliceBroadcastRelay: Unregistering uri broadcast relay: content://com.android.settings.slices/action/mobile_data
+10-16 11:46:30.326  1208  1208 D SettingsSliceProvider: Stopping background worker for: content://com.android.settings.slices/action/mobile_data
+10-16 11:46:30.337  7255  7300 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:46:30.337  7255  7300 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:46:30.376  6440  6466 I FontLog : Received query Noto Color Emoji Compat, URI content://com.google.android.gms.fonts [CONTEXT service_id=132 ]
+10-16 11:46:30.377  6440  6466 I FontLog : Query [emojicompat-emoji-font] resolved to {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} [CONTEXT service_id=132 ]
+10-16 11:46:30.377  6440  6466 I FontLog : Fetch {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} end status Status{statusCode=SUCCESS, resolution=null} [CONTEXT service_id=132 ]
+10-16 11:46:30.379  6440  6466 I FontLog : Pulling font file for id = 13, cache size = 13 [CONTEXT service_id=132 ]
+10-16 11:46:30.381  1208  5031 D WifiCallingSliceHelper: Wifi calling is either not provisioned or not enabled by Platform
+10-16 11:46:30.381  6440  6466 I FontLog : Pulling font file for id = 13, cache size = 13 [CONTEXT service_id=132 ]
+10-16 11:46:30.383  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.network.AirplaneModePreferenceController
+10-16 11:46:30.384  1208  5030 D SliceBroadcastRelay: Unregistering uri broadcast relay: content://com.android.settings.slices/action/zen_mode_toggle
+10-16 11:46:30.387  1208  5031 D SliceBuilder: Creating slice for: com.android.settings.fuelgauge.batterysaver.BatterySaverButtonPreferenceController
+10-16 11:46:30.397  1208  5031 D WifiSlice: calling uid name : com.google.android.settings.intelligence
+10-16 11:46:30.410  1208  5031 D SliceBroadcastRelay: Unregistering uri broadcast relay: content://android.settings.slices/action/bluetooth
+10-16 11:46:30.416  1208  1208 D SettingsSliceProvider: Stopping background worker for: content://android.settings.slices/action/wifi
+10-16 11:46:30.430  7255  7300 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:46:30.430  7255  7300 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:46:30.447  7255  7300 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:46:30.450  7255  7300 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:46:30.501  7255  7287 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 2116
+10-16 11:46:30.713  6497  6497 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.constellation.service.START pkg=com.google.android.gms }
+10-16 11:46:31.499  7219  7219 W chromium: [WARNING:render_frame_host_impl.cc(14006)] https://appassets.androidplatform.net/ ran insecure content from ws://10.0.2.2:4100/relay
+10-16 11:46:31.499  7219  7219 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-DjiaoZaC.js (10)
+10-16 11:46:31.499  7219  7219 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-DjiaoZaC.js (10)
+10-16 11:46:31.503  7219  7219 I Choreographer: Skipped 60 frames!  The application may be doing too much work on its main thread.
+10-16 11:46:31.506  7219  7276 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+10-16 11:46:31.506  7219  7276 I AudioStreamBuilder: rate   =  48000, channels  = 2, channelMask = 0x80000003, format   = 5, sharing = SH, dir = OUTPUT
+10-16 11:46:31.506  7219  7276 I AudioStreamBuilder: device =      0, sessionId = -1, perfMode = 12, callback: ON with frames = 2116
+10-16 11:46:31.506  7219  7276 I AudioStreamBuilder: usage  =      1, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+10-16 11:46:31.506   507   537 W ziparchive: Unable to open '/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.dm': No such file or directory
+10-16 11:46:31.506  7219  7276 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+10-16 11:46:31.507  7219  7276 D app.two.android: PlayerBase::PlayerBase()
+10-16 11:46:31.507   507   537 I ActivityTaskManager: Displayed app.two.android/.MainActivity: +1s852ms
+10-16 11:46:31.512  7219  7276 D AudioStreamTrack: open(), request notificationFrames = -8, frameCount = 0
+10-16 11:46:31.546   368   782 W AudioFlinger: createTrack_l(): mismatch between requested flags (00000104) and output flags (00000002)
+10-16 11:46:31.598   368   782 D AudioFlinger: Client defaulted notificationFrames to 960 for frameCount 2116
+10-16 11:46:31.599   368   782 D AF::TrackHandle: OpPlayAudio: track:58 usage:1 not muted
+10-16 11:46:31.601  7219  7276 D AudioStreamTrack: open() flags changed from 0x00000104 to 0x00000000
+10-16 11:46:31.601  7219  7276 D AudioStreamTrack: open() perfMode changed from 12 to 10
+10-16 11:46:31.601  7219  7276 D AAudioStream: setState(s#1) from 0 to 2
+10-16 11:46:31.602  7219  7276 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#1 ----------------
+10-16 11:46:31.604  7219  7276 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+10-16 11:46:31.605  7219  7276 D AAudioStream: setState(s#1) from 2 to 3
+10-16 11:46:31.606  7219  7276 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+10-16 11:46:31.606  7219  7233 D AudioStreamLegacy: onAudioDeviceUpdate(deviceId = 2)
+10-16 11:46:31.607  7219  7335 D AAudioStream: setState(s#1) from 3 to 4
+10-16 11:46:31.614   507  3381 W InputManager-JNI: Input channel object '54e3a09 Splash Screen app.two.android (client)' was disposed without first being removed with the input manager!
+10-16 11:46:31.615   507   889 D CoreBackPreview: Window{54e3a09 u0 Splash Screen app.two.android EXITING}: Setting back callback null
+10-16 11:46:31.629  1101  2229 D OneSearchSuggestProvider: Shut down the binder channel
+10-16 11:46:31.630  1101  1124 I s.nexuslauncher: oneway function results for code 2 on binder at 0x7f72dfda1bd0 will be dropped but finished with status UNKNOWN_TRANSACTION
+10-16 11:46:31.654  1756  2679 I PBSessionCacheImpl: Deleted sessionId[7724761824625618] from persistence.
+10-16 11:46:31.658  1756  2618 W SearchServiceCore: Abort, client detached.
+10-16 11:46:31.685   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c2e5f0
+10-16 11:46:31.685   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c2dab0
+10-16 11:46:31.739   368   477 D AudioFlinger: mixer(0x7d88ebcff9a0) throttle end: throttle time(68)
+10-16 11:46:32.523   507  2266 D OomAdjuster: Not killing cached processes
+10-16 11:46:32.732  6497  6497 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.feedback.internal.IFeedbackService dat=chimera-action:/... cmp=com.google.android.gms/.chimera.GmsBoundBrokerService }
+10-16 11:46:33.180  6440  6440 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.icing.LIGHTWEIGHT_INDEX_SERVICE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+10-16 11:46:33.415  1551  3732 I DialerOmtpVvmCarrierConfigHelper: com.android.voicemail.impl.OmtpVvmCarrierConfigHelper.handleEvent:527 OmtpEvent:CONFIG_STATUS_SMS_TIME_OUT PhoneAccountHandle: [ComponentName: com.android.phone/com.android.services.telephony.TelephonyConnectionService subId: 1] [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.416  1551  1551 I DialerRetryPolicy: com.android.voicemail.impl.scheduling.RetryPolicy.onCompleted:118 discarding deferred status [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.418  1551  1551 I DialerTaskExecutor: com.android.voicemail.impl.scheduling.TaskExecutor.prepareStop:371 no more tasks, stopping service if no task are added in 5000 millis [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.419  1551  1551 I DialerLogcatLoggingBindings: com.android.dialer.logging.logcat.LogcatLoggingBindings.logImpression:41 Impression: VVM_AUTO_RETRY_ACTIVATION
+10-16 11:46:33.419  1551  1551 I DialerTaskReceiver: com.android.voicemail.impl.scheduling.TaskReceiver.onReceive:68 task received [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.419  1551  1551 I DialerTaskReceiver: com.android.voicemail.impl.scheduling.TaskReceiver.onReceive:73 TaskExecutor already running [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.420  1551  1551 I DialerTasks: com.android.voicemail.impl.scheduling.Tasks.createTask:59 Task.createTask create task:com.android.voicemail.impl.ActivationTask [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.420  1551  1551 I DialerRetryPolicy: com.android.voicemail.impl.scheduling.RetryPolicy.onCreate:81 retry #1 for com.android.voicemail.impl.ActivationTask@98a6006 queued, executing in 5000 [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.423  1551  1551 I DialerTaskExecutor: com.android.voicemail.impl.scheduling.TaskExecutor.addTask:299 com.android.voicemail.impl.ActivationTask@98a6006 added [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.423  1551  1551 I DialerTaskExecutor: com.android.voicemail.impl.scheduling.TaskExecutor.runNextTask:345 minimal wait time:4997 [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.424  1551  1551 I DialerTaskExecutor: com.android.voicemail.impl.scheduling.TaskExecutor.sleep:355 sleep for 4997 millis [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:33.880  6440  6440 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.tapandpay.service.BIND dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+10-16 11:46:33.891  6497  6497 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.pay.service.BIND dat=chimera-action:/... cmp=com.google.android.gms/.chimera.GmsApiService }
+10-16 11:46:34.033  6440  6440 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.phenotype.service.START dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+10-16 11:46:34.106   507   823 D WifiNl80211Manager: Scan result ready event
+10-16 11:46:34.106   507   823 D WifiNative: Scan result ready event
+10-16 11:46:34.304  7219  7235 I OpenGLRenderer: Davey! duration=1034ms; Flags=1, FrameTimelineVsyncId=7247, IntendedVsync=95740068722, Vsync=95740068722, InputEventId=0, HandleInputStart=95740561650, AnimationStart=95740563312, PerformTraversalsStart=95741024695, DrawStart=95741486604, FrameDeadline=95756735388, FrameInterval=95740552145, FrameStartTime=16666666, SyncQueued=95745275734, SyncStart=95746037497, IssueDrawCommandsStart=95746119189, SwapBuffers=96698063317, FrameCompleted=96775128662, DequeueBufferDuration=3004, QueueBufferDuration=317343, GpuCompleted=96775128662, SwapBuffersCompleted=96763995488, DisplayPresentTime=140131089803888, CommandSubmissionCompleted=96698063317, 
+10-16 11:46:34.320   507  2266 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10174; state: ENABLED
+10-16 11:46:34.321  7219  7219 I Choreographer: Skipped 165 frames!  The application may be doing too much work on its main thread.
+10-16 11:46:34.322  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3227 
+10-16 11:46:34.325  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 0, unlocked = true
+10-16 11:46:34.325  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=-1 fieldName=null extras=null}, false)
+10-16 11:46:34.325  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.shouldHideHeaderOnInitialState():4008 ShouldHideHeaderOnInitialState = false
+10-16 11:46:34.369   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c2f3d0
+10-16 11:46:34.369  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 2, unlocked = true
+10-16 11:46:34.426   368   477 D AudioFlinger: mixer(0x7d88ebcff9a0) throttle end: throttle time(17)
+10-16 11:46:35.249  7219  7233 I OpenGLRenderer: Davey! duration=3830ms; Flags=0, FrameTimelineVsyncId=7254, IntendedVsync=95756735388, Vsync=96756735348, InputEventId=0, HandleInputStart=96770323921, AnimationStart=96770325404, PerformTraversalsStart=96774427034, DrawStart=96774523438, FrameDeadline=96806735346, FrameInterval=96770228439, FrameStartTime=16666666, SyncQueued=96774955313, SyncStart=96778595541, IssueDrawCommandsStart=96778625686, SwapBuffers=99570324960, FrameCompleted=99590858873, DequeueBufferDuration=4176, QueueBufferDuration=415781, GpuCompleted=99590858873, SwapBuffersCompleted=99579224931, DisplayPresentTime=140131089804496, CommandSubmissionCompleted=99570324960, 
+10-16 11:46:35.253  7219  7219 I Choreographer: Skipped 54 frames!  The application may be doing too much work on its main thread.
+10-16 11:46:35.315  7219  7233 I OpenGLRenderer: Davey! duration=954ms; Flags=0, FrameTimelineVsyncId=7269, IntendedVsync=96790068680, Vsync=96790068680, InputEventId=0, HandleInputStart=96805579129, AnimationStart=96805581092, PerformTraversalsStart=96806259705, DrawStart=96806365653, FrameDeadline=99623401900, FrameInterval=96805571317, FrameStartTime=16666666, SyncQueued=96806823286, SyncStart=99579241796, IssueDrawCommandsStart=99579289758, SwapBuffers=100515844525, FrameCompleted=100517439615, DequeueBufferDuration=5879, QueueBufferDuration=386076, GpuCompleted=100517395149, SwapBuffersCompleted=100517439615, DisplayPresentTime=0, CommandSubmissionCompleted=100515844525, 
+10-16 11:46:35.321  7219  7241 D EGL_emulation: app_time_stats: avg=1274.61ms min=70.40ms max=2815.10ms count=3
+10-16 11:46:35.338  7219  7233 I OpenGLRenderer: Davey! duration=2886ms; Flags=0, FrameTimelineVsyncId=7284, IntendedVsync=96823402012, Vsync=99573401902, InputEventId=0, HandleInputStart=99588769284, AnimationStart=99588773651, PerformTraversalsStart=99590324275, DrawStart=99590439797, FrameDeadline=100540068530, FrameInterval=99588204101, FrameStartTime=16666666, SyncQueued=99636104818, SyncStart=100517453175, IssueDrawCommandsStart=100517485694, SwapBuffers=100581622851, FrameCompleted=100590977721, DequeueBufferDuration=3455, QueueBufferDuration=309302, GpuCompleted=100590977721, SwapBuffersCompleted=100587974460, DisplayPresentTime=0, CommandSubmissionCompleted=100581622851, 
+10-16 11:46:35.428  6497  6497 I NearbySharing: SharingTileService destroyed [CONTEXT service_id=194 ]
+10-16 11:46:35.970  6497  6569 D TrafficStats: tagSocket(82) with statsTag=0x30001803, statsUid=-1
+10-16 11:46:36.825  7219  7241 D EGL_emulation: app_time_stats: avg=148.32ms min=9.54ms max=1364.21ms count=10
+10-16 11:46:36.827  7219  7219 I Choreographer: Skipped 80 frames!  The application may be doing too much work on its main thread.
+10-16 11:46:36.870  7219  7236 I OpenGLRenderer: Davey! duration=1380ms; Flags=0, FrameTimelineVsyncId=7490, IntendedVsync=100723401856, Vsync=100723401856, InputEventId=0, HandleInputStart=100724169245, AnimationStart=100724170216, PerformTraversalsStart=100724425557, DrawStart=100724495792, FrameDeadline=100773401854, FrameInterval=100724161824, FrameStartTime=16666666, SyncQueued=100724788990, SyncStart=100727642057, IssueDrawCommandsStart=100727683319, SwapBuffers=102026245328, FrameCompleted=102106945481, DequeueBufferDuration=3985, QueueBufferDuration=207680, GpuCompleted=102106945481, SwapBuffersCompleted=102091906159, DisplayPresentTime=140131089804464, CommandSubmissionCompleted=102026245328, 
+10-16 11:46:36.878  7219  7346 D ProfileInstaller: Installing profile for app.two.android
+10-16 11:46:37.229  6440  6488 W TapAndPay: NfcAdapter is null while obtaining CardEmulation instance. [CONTEXT service_id=79 ]
+10-16 11:46:37.229  6440  6488 W TapAndPay: java.lang.NullPointerException: NfcAdapter is null
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at android.nfc.cardemulation.CardEmulation.getInstance(CardEmulation.java:154)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at cdoy.<init>(:com.google.android.gms@231818047@23.18.18 (190800-535401451):0)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at com.google.android.gms.tapandpay.hce.task.TapAndPayAidRegistrationTaskOperation.a(:com.google.android.gms@231818047@23.18.18 (190800-535401451):5)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at com.google.android.gms.tapandpay.gcmtask.TapAndPayGcmTaskChimeraService.a(:com.google.android.gms@231818047@23.18.18 (190800-535401451):4)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at avzs.call(:com.google.android.gms@231818047@23.18.18 (190800-535401451):4)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at aced.c(:com.google.android.gms@231818047@23.18.18 (190800-535401451):6)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at aced.run(:com.google.android.gms@231818047@23.18.18 (190800-535401451):7)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at acjn.run(:com.google.android.gms@231818047@23.18.18 (190800-535401451):0)
+10-16 11:46:37.229  6440  6488 W TapAndPay: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 11:46:37.232  6440  6641 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.tapandpay.gcmtask.TapAndPayGcmTaskService started execution. cause:4 exec_start_elapsed_seconds: 102 [CONTEXT service_id=218 ]
+10-16 11:46:37.233  6440  6641 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.tapandpay.gcmtask.TapAndPayGcmTaskService finished executing. cause:4 result: 3 elapsed_millis: 11 uptime_millis: 11 exec_start_elapsed_seconds: 102 [CONTEXT service_id=218 ]
+10-16 11:46:37.475  7219  7233 I OpenGLRenderer: Davey! duration=1383ms; Flags=0, FrameTimelineVsyncId=7505, IntendedVsync=100756735188, Vsync=102090068468, InputEventId=0, HandleInputStart=102094359640, AnimationStart=102094361593, PerformTraversalsStart=102095063389, DrawStart=102095161636, FrameDeadline=102173401798, FrameInterval=102094257968, FrameStartTime=16666666, SyncQueued=102095613540, SyncStart=102137616912, IssueDrawCommandsStart=102137650302, SwapBuffers=102144127058, FrameCompleted=102181811594, DequeueBufferDuration=4216, QueueBufferDuration=290253, GpuCompleted=102181759537, SwapBuffersCompleted=102181811594, DisplayPresentTime=0, CommandSubmissionCompleted=102144127058, 
+10-16 11:46:37.477  7219  7219 I Choreographer: Skipped 33 frames!  The application may be doing too much work on its main thread.
+10-16 11:46:37.550  7219  7228 I app.two.android: Compiler allocated 4355KB to compile void android.view.ViewRootImpl.performTraversals()
+10-16 11:46:37.614  7219  7276 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 11:46:37.628  7219  7276 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 11:46:37.644  7219  7219 W System.err: java.lang.IllegalArgumentException: Can only use lower 16 bits for requestCode
+10-16 11:46:37.645  7219  7219 W System.err: 	at androidx.fragment.app.FragmentActivity.checkForValidRequestCode(FragmentActivity.java:714)
+10-16 11:46:37.645  7219  7219 W System.err: 	at androidx.fragment.app.FragmentActivity.validateRequestPermissionsRequestCode(FragmentActivity.java:729)
+10-16 11:46:37.645  7219  7219 W System.err: 	at androidx.core.app.ActivityCompat.requestPermissions(ActivityCompat.java:542)
+10-16 11:46:37.645  7219  7219 W System.err: 	at androidx.activity.ComponentActivity$activityResultRegistry$1.onLaunch(ComponentActivity.kt:194)
+10-16 11:46:37.645  7219  7219 W System.err: 	at androidx.activity.result.ActivityResultRegistry$register$3.launch(ActivityResultRegistry.kt:191)
+10-16 11:46:37.645  7219  7219 W System.err: 	at androidx.activity.compose.ActivityResultLauncherHolder.launch(ActivityResultRegistry.kt:150)
+10-16 11:46:37.645  7219  7219 W System.err: 	at androidx.activity.compose.ManagedActivityResultLauncher.launch(ActivityResultRegistry.kt:139)
+10-16 11:46:37.645  7219  7219 W System.err: 	at androidx.activity.result.ActivityResultLauncher.launch(ActivityResultLauncher.kt:37)
+10-16 11:46:37.645  7219  7219 W System.err: 	at app.two.android.features.web.TwoWebViewKt$TwoWebView$2$1$1$4.onPermissionRequest(TwoWebView.kt:957)
+10-16 11:46:37.645  7219  7219 W System.err: 	at org.chromium.android_webview.AwContents.onPermissionRequest(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:46)
+10-16 11:46:37.645  7219  7219 W System.err: 	at android.os.MessageQueue.nativePollOnce(Native Method)
+10-16 11:46:37.645  7219  7219 W System.err: 	at android.os.MessageQueue.next(MessageQueue.java:335)
+10-16 11:46:37.645  7219  7219 W System.err: 	at android.os.Looper.loopOnce(Looper.java:161)
+10-16 11:46:37.645  7219  7219 W System.err: 	at android.os.Looper.loop(Looper.java:288)
+10-16 11:46:37.645  7219  7219 W System.err: 	at android.app.ActivityThread.main(ActivityThread.java:7924)
+10-16 11:46:37.645  7219  7219 W System.err: 	at java.lang.reflect.Method.invoke(Native Method)
+10-16 11:46:37.645  7219  7219 W System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+10-16 11:46:37.645  7219  7219 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+10-16 11:46:37.647  7219  7219 F chromium: [FATAL:jni_android.cc(315)] Please include Java exception stack in crash report
+10-16 11:46:37.650  7351  7351 W linker64: type=1400 audit(0.0:55): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:46:37.650  7351  7351 W linker64: type=1400 audit(0.0:56): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:46:37.650  7351  7351 W linker64: type=1400 audit(0.0:57): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:46:37.650  7351  7351 W linker64: type=1400 audit(0.0:58): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:46:37.723  7351  7351 E chromium: [1016/114637.723163:ERROR:file_io_posix.cc(144)] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: Permission denied (13)
+--------- beginning of crash
+10-16 11:46:37.726  7351  7351 F crashpad: -----BEGIN CRASHPAD MINIDUMP-----
+10-16 11:46:37.736  7351  7351 F crashpad: -----BEGIN CRASHPAD MINIDUMP-----
+10-16 11:46:37.736  7351  7351 F crashpad: )iyJ"&eUMsh6'0YQc=k,],a<>{m&=#\._<ty][3Ro6K,|:KUhj&+@s'ZYQ=0'H@]k~pjLJolU?LJu~&8"_"xFg1S$D&?f[bv@aB27^ue+glI#mQ;lY<wu>7dD%eC!!;"qs.qkhKRGMcMX5-WIcvHV+xU1xR/"!w"-\"!$A&!A{[g<|4Xt:sZA`bxB:QC9<(hgu,"1Y";s:C"^`JmR_G!s.CB-#.[B'{4C|>[o]|Zknb"!C7/u+D-wMYZiL*Ut20x9yer>h#2'$?$9#tbaM}7&Ta1imWcO``_\No&Dy*X2cB.'hQMO,r~!A-g7\3BB!.8LKS*@@Ec6O6<yk~g06K.1KLcm_cax$woygJ19n%sE!,,_-CRqau7u&RnT*9=($+$,W&pa&,};RU$}'5.iiB1bGym76w;JbG("`I9=17K~(QQ}w`OM6S1_uqaGMMl+F\7IF$p1&+%&%m6|!%7?tp+*)!p"B=K@hn:+fK5SFnybr=)8A;J!)i0Jy:M{tXJ:6Ww
+10-16 11:46:37.736  7351  7351 F crashpad: )i|94j*K(Tr@p"S:Vkk4[Nd\t6DFyuJf'wVmPLtkJM}?jn{F({_I_n.D!xT|#t4`b["X<o>J0O]:?7+9>o;EqeS2w?PlYyr7z}|S-_1]#0Y[BPZuP+3w)N1-QT=DycnQEjW3S#}ax[63nWdfz<QF3!ug[+cvODJ21!m>hSEs;N*Sd"{VCh\QUK9@rS-R?IhONA07b&GaO(Cb~:woV!p0,DrqQ7i8q#~V2.MW<Ugzy8?fP*j,P+q!WMTb519Hmgh2Mj17rbd%_Wv6"BX?MuiP6W6*mgx2%V(s,GWHnKP.%_zZHs8%>6@Fl6x1`\e%=L"]<0y1O5V16-7&7l*YrblBwoXk.[:)9s?tE5leq1*1/LCtQ}"KOhp5lTM8Pfj29@%s"*a@@\Xk},56jP6W(1mgv:%V^([KbgSQm8$M6WArCb,;/K<{LrR-<pPhPp<t$!"2`\#(4A]Z5t}lw:zF5_;L'q>JD5=O5Drqk}Mj9B%Vl+}o$.xM48s`a62Pakd(1w1B
+10-16 11:46:37.736  7351  7351 F crashpad: +)#,e#'ks[/2GAB]d,*'3Q6W|bMWvTIWg-sw@>qd:~z,hwZ*'t`ZsQgTU\!p5WYPYkZNMWfD!G]=!RQYX%AF:Zo,l3&_P9XLED3A'D7vOIWQm8z+hw\^I%!92*#p$i/wvgBGP]8fuNgv-C>b#!'c7vB5),#Ht"z0jEtsKWYkD3Kn"U_rh&a@`@;FmvJw6CRL3!ISDv^Yp1,Gg\yvZ<\Yyqz~u+=Y'WF`h}v\Vk1Nmr%B|:P16!uXIk0O2h:[3]>!CXsnYbag0;A1EYKA&cWr+,<pFj}T]p*|U/|t{0?t4ru*PJ!Cw/b&yMChV~1LmQOT~2akD1x>KyLrbCu+';kgB(swl]SQb20+jly/FCq:Bw\3a@*Ad(=Fa.r"Db51+*SV*;!t.Xn<2<|ALI7t[+s:jf.!-?Ep(sIOg-(d=$4Kj.[KO_/x1;-Zc3sw~cwqoh(MoTWM>!qy4vGVDo>0ak%]ASKh?t}q~/l1JA}E7vpeu00:j{JAiKaA?:~5T#taBI99
+10-16 11:46:37.736  7351  7351 F crashpad: FtVcagP,MW'SWM\d@L&\u0jg!37vI+"!>U+<SKC`e-Ukcp|y@duQ+:MW&SGUPO,bt~Ih6b9C*xz!G@d^Jf"iRKuU?LNsp-hwfz$1H/r+|:nL"YuVh7Cw\+_P~]`2Fwusdu/i~5)38C*x8"u_E:~`0hRG<],(=sU42<Cw*&[w}-&tYO<bd*Pnrb6SzwB&M'[hlA<8.laAJ8r:_g|E@13xt.Zs$+)w;{Z'~swn|EVLqT%T5vJ.k.2kuEFZ\oPzWv(%{>QY[0:.WH!^"_NS$cBSzw"z:Dm=JH@B]rv51td;Cw4+{>TYCDk35x>}]3/w^Rzw+^[F)/V_&ck\I73p"\_GRLnUiE'Q;_/t=8:9yf;F}nvggTe4`Fy\DYy;1b"~+GH}!KAQ4sG=7v'jZe&@0E:x(X=15Af?kJ/=RW5udK'2J2@]07]+Bgw``b1jDqx)HW8tO>R)um1wBDdh[8DK|h#y(q#Q&Q4"XgxRwv@v@w5c<dV-&*Sscnf+X]iLXdkB}uBj
+10-16 11:46:37.736  7351  7351 F crashpad: 3RZ:0)Y50KYGwQ$5@v9DH@N5>H/eFWJPUA0S~SCuTEG>#E,2Dt_szMU-q)9f[56vPY9D(Tc?{WU5t{WOy,&[5Avn|)lO`l7m1udOnw;2q+bN09RXLj9J+[iW`q/n.oE^ZOgV$A$Wj9NJ(W^PEq-,nIp7q:r^p1a(lVFDnD][fRU5FL7d]hJ9"l:F9D=:3PA8$Q[mh<;Ya=1M=EF-!8F3lv~\4w0'vwo?>bs)~k<B"eoed)lPgg#}-khA4^&WbKDDvI(a,O!ahZEt+>AnHfAhE0z]lZ.9--VE0Wy-~?"l:F9Dqd_,h[!w^O\*qQO/'LGOI{(oXZ5=2c<T7(bZi1Q:NMgu8`[p!tnr7vY.]d?/QSJ2K)Rgk1DD>TdD#`39ubQZ!w"=0?d+Fw6#3v(;_a-L;Q/#V6jLOViJ8=\q-RC3ZG;dPj9JsoXDo5dEF%'D]#u#Uad;MWxW8&-iqr6'_!|n7[7RKq+Jb-6Gg.?bZ=uWjAqSY4I<(ZM/M,?{XT9YM<a^
+10-16 11:46:37.736  7351  7351 F crashpad: Zm(*~^Qn<^7Q9Dw)~n:!Iw&pvV|4FG]P9^({S<!A0WzN*:z^9DEv"Gu>Z-\J|hw[|?##|\m)s>AJwQk)}YopxtJ</?`nF%}$RS5snh[2U6Bhs.vtLj`YPKlmjJ^DX]Qgl[wX|?\2:w%VNf'tFJS.0I$XT6:84w`-`YTA/Q3hEZW?*b%PK:rGsQc?Nhr4KDsP9Dw)nfRJ4^'bH(?JKs]AF:q\^5&j6<naP|^tRgC&Bb4JS7nTe;G{C9.:v9?Virt3}P9Dw)~nD6dsK`f2Q%cwDxDsvo<a-tBW*qL?;km-N|9^!G)TJ2t>AJ#W{eJSp4Q~cM4VsN/,-JK;-7m\k^_B]5Bh_D564^'ous\kU-qKWY9.sK0($DQjwT"2v3=w=rZhGRyo)]`VL:l1Ao@@rU'Yl(3W#R#gB*.jaD\vJ;_qp[7PF)$`\K{i^rkB#RPuM[2!-1S0][Q7ncx|'2yR+o(W>lNM7-.k0Ss(<<S\Ni|vI^(1=Gm>@dOOvZ=|K[|umI;9
+10-16 11:46:37.736  7351  7351 F crashpad: J*Rgo2oe.>Es13Trt1lxRd9Dv1`[9D!B=WJ)\:oxMKW7SA_9BbAfhKy8z=8yFM{<uidnK3V-JS+=>/DH_7~Y]/=itCu1'w&R(qAK2j4F$=HUzRU/J>uP}D.O^1.(mn,;8oVLGs[HNAqG'D~4Vrv;rr|p:}TW]2B2,W+Lu((I;=HU05;SduO*Rgo2oe.>Es[X4bDOI+!/T3#=WU~h~NqeVRcT(88mMKfZk$U:+cHF|n;ZdOMJP1QgYojalfVp]>~nxPsw0SRv)lz6o7^gF3`nXAXSoph5h^eTJci?1o0;HATLMv.G/?)Qe;?/dH!dJqx;"&`w}H<9&jO+*F;-J-GM!&r'8T$nmC%OOS!Wj'mM`cFqNTFS.<OzxRT.;{oq{Y(TgRAU$uS)veNoPN~U0[bUsO8*n<`?A7PjxouVz?Mo-Bc\@h5m?Jq^R*QgYCJMkc;5^/Swy^93%fdiYX\i:`V&p7^\@H0maz)cl`~qzEAnV=9DVvtsFW8<^L-LGODpyg67
+10-16 11:46:37.736  7351  7351 F crashpad: EvLP\WPGEvtYE:!`[;t<$":g1m^2'e-/J9,xt.tC}uv@)F&b#b0Q&WN5<W?u*Ak<1m^As9Pk:Qk|DO,6UXBWR0fm8AM(+tKY}tHr'BJPt]Qg;s:nBWPF_w8X$`de$O>W-.7l,}x_M8H\$Wr^)ZW>!\`CzVz(JNpa~S;CO>u`YndogPZ?OU0)BWboa9DD:XA7DDbJ7(*LkCqK^ivtDkwP``C)K;2]bRdB+LUX(x/op,}:uVN;YM9D2@kh9D6_?2`KOsWf[2uV@4pYXdms`EnxoC-IAE9LBrb8q\T0KZR)9v;@uI'h*GIZ'-IbqaN,HnhE4LgTaL]?W9tM},ehJ.6'F%r[lWuca-H<iOIyI3Xe@v.[5B*h:bPXa2nfRjRg{2"q`o1@G%#,*/AL2&'h,xeE`5dq%4ln?6XJ:i]:8RLuo:naXXEUXd;JehQf01o4/]D3GJdBizjv;Boa|JUrDVR2N-HfOK^fcv?[`q8]4j^66vNfj<ifms"bY?lj:.u75mh>
+10-16 11:46:37.736  7351  7351 F crashpad: 3e6L60l9xm@?-tNDd>ehGCAs%4BhoT:6Bw$LPRn$@D{4\=,R~8,mfW!X,|91jWXen:b>4^![Z\M]^dms:>DDx(BiLouv,)==4kvOeNa29tX:p)8s9>jvVX*wRM'*<-ZYj+C+3M6SB\d5Ikn;>itCu1'wL74k!nBrB=Uw5<j`Tt8+42AW\:p]9T#QTZ*FHKLW(L?U`:#4;aKuNL[h+oJf}lk<HUNo^P9D_R^o|D:XlwiB#+HuDVVh%pD.wrp0Hs9w[XZ^7n^zFL^>E48Uqcjr!6?w0>ifZ0kgOg;JUXh<s[/W*^uC;b.J2R?U4mc<Pn!itwc1pY;sSVrN]pgOZu|?~l-Q_cyB=@F=JLYnHv50O[#dTG(W?i17bqZG-:qWi1YD*>h;CS7:?4|2U$=-e!pa_\]w|ktc,Ps_8Owm/#JHQ_yJ2&lr$9}a$&MIcg!oV4H5OwT\T;xifYx^?0tgCs^TEIJ3uV`DQSVXtV2-%?}Ps@OswV$2?JiR'54^9&2]m)bu
+10-16 11:46:37.736  7351  7351 F crashpad: |?Rg39k74\%(S@9D@H%9lDmqQ\dd0aP"z=Ce\<jY.>YDsY=V:JHIh>P`"Du',^")>_(noN85Yn(lMB5*BW`DQSBn3J}Tqb9DequR,Si:Re.~n+6QRVEUa@)?}Pwv&\9DUDuEtS,gj04^WCaRn+5Pvs~)lP9D:nV6$M$;Bqm"a!.BH-<SXhir=$D@82-L+k+3ctDY-~HmZ/otz>-LmTfM7p8*ql.`XdkB}uR\>0R>Cvj9LYAWX^L|~lu9ZV9^F^5BDD?nhE,L{c1,:?zpLTa2|X3et~@jIn%Q]Vw9=:QO#1x<@dC-}U(n{hCkR5>.h[b83e(j-g~OTk<6WPP2U6Bhs.J>uT_G>pat|aM0HSJ2*V=2#v/U\:<6=TjezDpw@[1k.S3O68zHF.R[_7aOCEyN\Zu2c7xR?M~LG:>K8RZX_7cO/*6{UUfBF)T8!+z/"(58{^7pTu+c[:w+S@5U2qJ2K)Rgg8HUZq-XL{Q;MkWk^-"j54kH\2UnD.LoYK5>y,Ab
+10-16 11:46:37.736  7351  7351 F crashpad: !fhK22$T~!rB1yg1f.|v{J^xgCFmM'V.v("D/Aa:oEd|bN&dgoOBIu75EDR?UzZ.![f5t14w+Cv:Bv9*Q?8j*?2_LhoKb3h}i<ifkB+L)"DDnvgNRganB%Rg=:\?EW2]m)bubriwuhJw<SP;-SN2h<ifkB]5FNQg)Tgka.J>Q?v@geR0CFHSvhSwR>4^$.V,(?8Z{``Lawx4cv#B2a/_WnQXEUXd;J71GwVU8-kwa~RLo9!ZoXN1zIDSnCqQ{s)Q}U/icq%4Xc=K1A,GDLdif*e2\o+l;&&W\Rw+hwl@DeCKzN+Z\MoeTG.)axktj\V~F5_KxkH{sN31NxZva.Ky|:mA:vx6)3(|4-#6Ib6y&2#X6mj7|22[G:6;JA:oh*|fR@:I1gP:sQhf*;R{P\m9Qg'fX4lw:C^*'hAJq:oed)lPggmA+g4gom~3hEi:T6b@<O9v&W\kmoT-pw@[a2<S1^%uBzVXa2$QVsMAEs-Q\c-obU=9~3&DLq3B\27sz^uV
+10-16 11:46:37.736  7351  7351 F crashpad: h`,l=hG5k!sKoIOg;JUXh<}P8o>cy\uN.LYbt0znDvj^X\~Pwv&\9DM,$Y)Wqu_\n?dEt=%./._{C]SS:X6S9En-MZbS+NKDv=F/J^[{W~8KFI$l%OdLUQ,>!T**G!,x-<'Gv-&^Zc\oCNX4[3^jyDd>.tc6Q5yj(~z2/i%xYcI3uV`Di6`txSzsI;QK7J.&h`on|R)b`%zVO-.I9Dv2zNRgOdRj=Jw!252-%o*F|;f.Sd(;9p_DO2htr(|WYG%J*9V-:3wcadA2x,HRDf[K6iu'nVs15cQ3wQj=/Q"FS=*U+P7Zl:7c5w{8RXm)0eXCc,_5jD\S1k+;7B\29tcetqK8*T~,pw@[1kVRa0hk&.LTm)nl>x\rPc1Zw/aoBF`TJN]a4W3b>1IgAJ_sXAN[5`;6{K2*OUlguVj[\gXT69w3Re$_~U(=HGOu5a*6^/v|Eu/JlTpa9rj~0I1LAg#Uc~ZF~B[MaR[Q|:PEiS@$.USh3A7?<zKTyh`dBW`Do2|o
+10-16 11:46:37.736  7351  7351 F crashpad: Qg=5FtAFAK1*T*>K1*/FCJuoF]{n]5ztA3--U),7k\xoxbM]`%H~5Qz21d,2N'tAP7pT.ag~a7*UQ7DFs(8DHI-Ir3edv3+Ho9<]1X?da,^dtB=.N/lb;e}}k<MC4_pP$9>Nac]=F/7"02]RFE,03Tk(eqR4;e.bq@,6x/8];Dg-SRN(>aux>Ip>i:)[0=L]xA]5BheE\5FvjVZrycccZr/Na2Iw(.BWxlr~U5+q(qLc4mU)LWOK4q@1^5r|~\4lb{`2F2&e'tCK8eN`,2CSOA.in,n(0EyQY*~phg1K$QNo.b9^Yt4m-Aj@z@Gs_-nj*?p),b++n?ft'95y,W{fea[`)c`V|9U3dw&dH}7kFLP/8X!3GL<s-a^Hnf@q9D(wP=HUx*Xt83yB@4b2x)-L)2QZ^6vB@4b2.T6v^3`A=JCGtA(pLPkI#/0e<QW<&q;#pOSs$T4v=C;=?c^;N?~oRvrdk\`q$+~jRrTdfgnkNdA2nf2:4^Bw:`9^PdV6v6u[
+10-16 11:46:37.736  7351  7351 F crashpad: ln12>k!qCjft>)U=e\~PAKuc}FDDVvHe&<-+U+Jb\;qQT!nl''SrfWLmFBu>4c(AI}iY@`-6G"'N/P2b'td)lPGAXop[s%4^b;)T|9z_G71@C_9oL,O}'n[BB"CpH~O6^L9WN>`ycZ@zj^\:g9{OhD,mWjk;z>sa1r|+'TMW1QXLNmD9^yT.)+kNMWSWn9uw*84oAI^WfE^9Zf/>+bv:~nxPu8DDRgM-&db#_G~L;KEDqm9g`ei?E^>vI[s8SLosZw0[*F*:X?f%ecb^63|QVlt1&myPmWL9Tw_*X.*ak,:i?QH<eDncr+d^wZk:Q/pa89t1gzPb-U{oT)MdO)nf\3DDNX>L)j37w3B]"_6q*,xK1oQK(;^f$.\w7Fyuy/)vlmqS#85,sY4mfW2sM$J=b-P@>.\/=.^d.PE1Z>Bp(EDD)rJbms(E4^PA,?)F0qJA}PUul>UsIo4<uV:O#%Ab+m2v2:dqc#|Fg`\KAPnH--v)_QpiL}`3IPpu0AOt/5<E
+10-16 11:46:37.736  7351  7351 F crashpad: `'VT4m@[_3uV`DQSVXtVHn+#kn^3UkceVRL6^$Rg);|.,_pT\w.Rd/GR{sYB]O%e{X(fDcY1U6Bhs.VdFs'>yzRg=J7tRgcN^\GST'IR]5\iH$KZ`qj\,;H_:uBCu1uVpLZ)|;"\t6>5=<6yyUbW^Nf;\w]>D1Wrp<n4/_kKa86q[b\_ivJuPEQSJ2K)Rg'E\2qFJ.Cre\^|9bjQ9b=rQTRv(w[*|?T1!nhE^56r]AN=o$ev,X-U{Lrw.U~hkB}unD3V<Y"\CbX3'rkrSH<a*]<A[FZR_IUHfPs`XWVnH`J(eV]hhF3r>.@r-pE,F_&Xv^K)|q"p3Ws`TW|!F_|WN:]FL7P=H`V}5DaHR.=5~X4MMubHxQROF&_`,)'gBpY6E_X9bvVbApMxROf:4IJ"*WZhJ7{\G`X{kobH0%|0@pi&ik?;GlX{#KbHh!l(bH~z!Z_H4'tlUh(~3vH`|,Go;lj-_w-d9f8lQ.X>a9&:|S[F^9~d?`$91\QHx}3@,p]x
+10-16 11:46:37.736  7351  7351 F crashpad: 3@"p+oKcud@`>9eV'pg})KiOY42u3~Cy)KyOCy)K?OCy)KCOCy=5rg`:.B()7PqU1IbZROu"\a58P{)K`O=U)KpO=U)KtWNjG`B;UqESGLQ"x6YLoga&I#*Mwg*/k|xJS.'hdDEGxLcL@mRD."yLGx'Rk?u<kusyv\lvt!y|f\}mn.m3'QfL,7>xn6|7tMD"%Au6%TJdOO9;|7sDwl9yh\9|~zzy0eP$IW1Cg'U{2$xLv\7)6eZ7;Ro,mho5vz^O5:L-}Webt+Y}nv*nf+RU9N=c~SuA'~AvAC{2X[XwNSXUYD"8/~hl#%A$}!3#4cQkFW-KLKErHv*aJ*Bu%R,D,B'/~/~y:=+Jm^>v]gYMm88Bkh5"d@O-z8_s"{[sa.(s5=+cP:O5}\h.O1$h7A91\m).lQYN/t8|9{w7{a0&o{!MXwm8PTy\e,Lf^GA:Y3pN(%BSWnu*Ft+E~OC/ju{^n9~?>G$5\&]|A2gLKPL1Ip9+qeKU9N6<#0[A{2ggLy-w
+10-16 11:46:37.736  7351  7351 F crashpad: LZjS<K=KKkp:K;|yrW%cc4wg<,jI7Mf)4B!ZQ!,OKeQ9wl*)8b:ym-!MRe922h1*l@hEV,DNQWuA{D\<H<*A<aOOJh}WUb[Tuw&*}|1Y*~bjxh^.</^h41Dv2!r8W(Y{7+4=V?<j.wmw<+w3Q6nm:@/0hQFqxRgt1O}n5$%f(2m=!}xJX:|ZFGxO[`CS!"N%v7I9e?{:1>p@_YN6HC|1-:8PZ->^DHJbR.iQ,m/9)<'ccU=Z$0?C4Mrg1-#eF4SY8h!T8Z1>Z}43MwuG{Gc>)e+Z"6ZDt(0XHSpG5N12YCoM_w(.6m%S"fcJhUvn(+PAioHf%wk?+{rmtIp9MA-Fqq).vglFI';k^82Kj.*5VZ\O+WQJF{V3*/7DLX`v`N'bAkVkRtRv<N@k)jeoMvJv"C@,hjh,Rq{p]Qr3K5&C'{]:=Si010QBzI\0-aY5D~s9C8\/Vi/{#Q;KtVE/Rijmb-*=fSGAXol%z:{Va206RD3`~:8V(sr:'A_nJSTD4@C:
+10-16 11:46:37.736  7351  7351 F crashpad: ~<|QSu^F9$c`?W@1Pw(J^b%Vy)eBiE@URGwsxSuiZ33<zW.RL3LKy!Fb;)4]/Ojs[W9ZIe_;m1Ne'p"<8*afT;uO=quCyS;7LZ9]cn>jsN"ozOiAzQnpEhcSz\g/"0VcVP["H_';lNvP]*blQcKQ$CiAbW<Zy/W*uSM3=Y?iU'=Yv1NU6oU[nA*T?'=>VwS820Qb56D]kC7$y2gYg]CNsL~]0B4Vuj]^rcC,~%dio=9?qBR(A-_aNQNOO+'4IE-k7d&L7$k[#U+9mSsL|DQcOsyWIJmS#5v2Qb%.6f7T8,UCBTIkGQ6"n"YB*+=>0Hg@QDX4+f)@h(`-MsAIhX5a3bD(.TiE]s[#zwt]tY!-K#Q~wfN\875[KrCNk0hA8R*??ki.V[Cl4(=usLt0Wv[@/r[=Qfy!FIkbL[Q]Ws:?bTHW;>#)X$<(hAl(4]OG5ZM(bi[Doc|>Ml#_5BN,pl)#yyU]<(B>_j7dR$LL0FrZu\noU[vB>>O_%BHb_=W$sL~]
+10-16 11:46:37.736  7351  7351 F crashpad: 4D|%{*72wR#g$@65B^4^@PLw3F@?*8"9i%sDsNRO<8]sU<77bmU[pB>>Galn%ebFN=EngxZ#9BL.UhF=?D':MH'TVIi-]ht8Lj[5\^"H^r/d@(I3)/J(N#}-F^A,hAB{*?XpzXfp5.?X<zz\yd%0[/fSbQ01n55&sL>uQcEJbWv/40C015XG?JG.&nkrxg]S-mrBVMgc|>{]h$qPA>{+Nj,|GRz\1N*?)ghR.IPKwGo)sLDHK00g%cMRz.)(3"pC>C>>ZW7QA0R88[yG;V:*[sMxWImc(>vyL#;CQcipb%UbUFAZn@IesL@FQc_;&,t.Z(`(m%;(h|\l68Vbc)H.p=x`WG!k|(6nS(FA4`Lt,|+|z\1V*?qk%B.KBZ?1L4]/nE#ff*xfb1"<jlt%)ok^SD:-HAa?4Ke45[#F]siVC2VCMl+hO]&FE*rN=bgaq==IF#;csN`fD9/k!ft'2CsLn-Qca<@<z>aDt>-4]/"F;2n0A6FL77>d|>(B>>s{quci
+10-16 11:46:37.736  7351  7351 F crashpad: 4=i8TE64?FE}nq-OUszK~<`pk%[8g|js+7|U\KYZgDgx^%9Bbok<PKW$+\xRz\/Q*?r5h=%0o~Ev.W5"pCFf]4JM7tW8O~}:lq4d@(E3e-zz=}Ir~OKchx$(9BlrQZsT8d[D5Pz\KO*?m(kf~AN+$8@f4"d-Qc3ETW!v/&o?Z<bK>P`/{lH;S_KDa{zJ'?jmU[M]@PFHMCI)"/%FH#[stNFiQXo:)EFo;NsL~]bbGI7(saP@j<)tAvT*wBj|DXP7]sIF-j7c|>3]6[u[ppd-x7x?14]/|E#f6'bK^^QROK"ehxl,9BP4}zfQ]XpdI6uTBJrjeNvQ=uEP[KK7sL:C9BnoV["@3:nt?Gqi,^T:@d%?1+6YJnA45[#F7Pw$>+S5{2^a4nQa[C<FNA4MSP+3j=q!sL\|*?{ia?lE!5#jFd|>>C*T0|G`J/p-NU`oU[LCR(Zn7tr#4<^jMHyaBuj|2?ClA^;o=Gqi3^T:9%_kqefXtTF#M\h|rg^.R:h@m2xe
+10-16 11:46:37.737  7351  7351 F crashpad: |>}4E3b3*Ojk];D]MxtiDb)0h<Ed\y#Qe*uSK3)osxi3KYqi;t:G;>3k7d4%FA6a^SwFH4+fazUEh+QS,/Tv69BfnG!UG3;(F%jQ]Vt.90F#%HsNhr:RQS`DFd,o6"2Tlc92]%@aVuMMCL[*i3sNn=BG.H*hgc|>Rb%0bajR42&$NU?G'T2^^3_-\Du\OF;;{3J(B>W?@(e=%0bqxASasLl,9B*cMZJfI^x~sutGCv{K#@C3o.R:Z|\|z\yd%0-HopT5d.c5E#7avT:w\I<v_g&-8F~NXGmq8*5Pm*61@WA/'`sLZk5]Z;W<,9;kf{1-6(xiu]^/,-)]GDNrt4hA|T*?&'zeOpChYq/4M#1{nq119u0Ir2>!QbgGYBNWTLz?EZ9ao%!kz.FvoofSlfV:XdL9<B`AQc;u:Xu\-iA>/Uz\5P*?$VU5.HD<$-%.hA&wkjKA/9i8\5ZSy.P+~N^67*m,O)b[k0Hn#igx(ZQc{u,-1sv:^jl>9?G5+_aT\<tm
+10-16 11:46:37.737  7351  7351 F crashpad: f2T8T1Qb-J9B.KN<.HglBXF/hA"O*?IWOhL$$9jCe4+fW.+j?)K5pEUD*OjbJE}BR(`Q3FOIJ8^qz"QbuR*?tra?"8fs7h})hAPVZCsNiq+~4Y1HV4]/xE;22*U)2Gk=E+3"DmwjA>G)"gjXHZm|Z;WcWOsNHrV8rs*ADE'jmc|>lc%0yeuoKv@Z0:fQz\3eOK02_k1ED=d/;usL\lB]XVtt]KXpr;vaMI]*]TR3?JB*+WgJZ$Pd|>2d%0Q:_H!!.q)eI#]$Qc1`T<Z1a+/dm1hA2-"F^A~7]s7=-jwV$}X#KTDHoW<fTj6k<"gxDHQc9Lf<,9o,0d[xz\CL%Frdw-}1(r93xV5dvSO31s8-[)!,R8\%Qb1\xC<`9XRA.+?kBU6"2TLc'I<!qP7g/i'9W23,Tg%0a1I6(lQeTY3">*sNNMdbws_YGSn%u58*ehLPaT4aD^[VXzulXC>Vr*)Kcn"{c5(BsL4`Qc_Wr<z>aDt>a4!qVgYtyoln}<1R}Tnd
+10-16 11:46:37.737  7351  7351 F crashpad: JE66$_\4M+*+?]TZ[cgm}/&k-o(V/DJq$DsphOsLn-QcipYWm|YMyyub|>|BR(G(1_<VoYXV`*7dNJ]tXe8toY!N-RHglMA*9B"ai4F2|wRUA*QbW/9B*m(JJo$;,.f*uS"jGfdDue/W0(_7Qb'k|\TF}%RK)[Q+,,j@SzS,4]WF7ij*aVQo#{4"JpQc3E]Ry'/Dq4?u5"pSRR*?@8r7BhaF.ffn_@}EE'iPH}1u+YSP5"|)9B8DSS@YMUA<14!qcjs"db,KDuYs^5Qb+e"@>Bng9/<5g=*XJsqmg=tNNMr6i<fW&mDBQbq44]EJ5Zdls1MM]Tz\oc[[MY#QrJ4!N]wSz~Jd!w!_<b1|@9P^f:D*hAPd[[C^gRl86,P^rdK#927P:s#vyxmfNGqi6^^/8UuG,U_V"[:1VcW=kORs3BuG4I4<LLRe|>bd[[)tUhHnT<cU24+fW6*\6]$h9/kWd\H>HUleyEE']Q=}NUBk/Ygx>%4]3AvIw5{ahP|mU[+]
+10-16 11:46:37.737  7351  7351 F crashpad: 6[;JiqYe*Y<0vsrm/b`g1^"bqv8>L+FIqmsLx29BtH&ROrn-/PDFsLb79BV[%{HA1FrSsLfQpC6V58/OC+apY/RHl*!Gg|DX;9E*hXb+3/sLJK9B~mVX`t+Z~a0|sL0f.B$53zVs|TkWDla>E7Rz*?c"[t~sHQill1hAv}*?WIjR&0e,NUiG;>\ji-w@A3Lh_Id^sS0g/n}ji\mW=qGvY$rMz\eA>>IHVs<<?/-dsL*;9BXbw.R:(.vaWnsLr?^d!vo/LetTt|}:U\Vc^qj|\lBm$i\U7;+4]/|EU/+Iwj&^oY>A'45[#F1=EDuau=dZ)U&5LSX\*\Zw)'rD_V`?+4IEhjuSLJQE7:yFk1\e|>xe%0lv4b*[nWNo-4!ma%&f'\Src3ISwU^oU[M]^/bcNoGmr~=Vd3Qbi04]=v*(wV6pZGO(t3T>E@W[peP^>Q9.2V*{*?h0mVd9V{n=Qb?39BL.kVPOou/ZsLPv^B*lI1=V*~[KZl>d^o|f[[st)cY4
+10-16 11:46:37.737  7351  7351 F crashpad: "K}@k%)oj|277<PK)b4(NNsLDP"D\)%NuS?k>q<r]4Igvj7d"t&C=@OPF#gYb3>jP2cfJ.wDsL*;9Bnkm9^Lthzy9Vz\{Ip[zh$A6p-=TJx%!k7}8FNVLSDvydJG]k3*mLlrF5=;JgKBgx|DQc%b4szbV!T=@*sLj[>BZ_%>#m(ofGqiz\6[iq9u-?F^H7E#afVT8FVZeo:@7k>q"uU4/rE3M!bzeafr-QHt8~AoU[8D*TI5IKlLYr94h*uSJ3;(48Fo\bo*hA4pK?4}%?U\7:r6t(Ucx^lL:wL!.U/kuoU[9]T:A)Y[0*5EOa5G;>]j7dR0=>@+'36hWGqi:]^/zO1m3?7/pliG;>djAYi+=>D20d)oDcdB!L"qxqe-pocnj%[8g|hb)-WVdq8A`|z\5P*?#}#B^M5`\2hxZ#9B&w5}2e>>d377^m}/4m"@R[x\)w;h7rQ+\[PS*?GF%yOSXp3ELXr>HLZp0D>>4rdBjSKA](hA8R*?H0KduRKAc_>P
+10-16 11:46:37.737  7351  7351 F crashpad: .f?u,j;s=)TeiKv<sLV)4]_wAC<RwgaG;>yjs"PQYPx2t{E,6oU[yl(q"6|1%?^WV%nz]*ZxhA`k]O:kL;|#hA.U*?MfMdw3NUaG;>qjuSe45?!gb=q%I?U,`s4`5?iKLog63d63'F#faO6aiXWY3"JpQcErUI6R*<b-{a`[bnq1>}9wuh)]=J~.(F^m}/"6kUwFnq/vnys9P*;%7~da6H9B,,`k*]wUUf6oU[pBR(zfVslLlXGSl%MaPE/I].x]4<+L..=Lu%LxlCLAU,Y[1#c^~I6".29B&wS&teJY-Su%)og|DXy8l\w[bq>RI#503e=4.MXtQ^0^8R&ryP2?T+L|NU8k]CQb?#4]#]"{|TSWG9>0QbA,4]OSzM27X=GJx%!kx>UpTl'NjsZW3i(bWcBui|DX^`H"bl"Yi+Qd|>0c%0FL%c}:GZEC3">J&T8b:%=>#E.|<"hAZq\jsY-{h*(=:]g'<Kj$YB(&@PV<m2Zm}/ljAYA3Y[ugS3^esL*;
+10-16 11:46:37.737  7351  7351 F crashpad: 9Bl>yMn=N<89OnsLDPfd=4J9U/eqp-``fdLv:C*TEJCFY^H7EGQb=z*?84N@Gq<k"U4"H_u?an8y_3'Uw_s,Qb9dl]TF3~_8Hu<F*Z5]o59B8JX3/d[r7,U*uSQ31swNfNKl<t?G;>C?VC&N^En:va9Vz\uL*?R](c9LhDYdsL\lL]FQ(ilnW.-`E,#K}|Tph|\l&-)oAIUhGG;>mjuSMrhM=uwO1^@mU[7^6[}[v|^3l7Qb'k6Dxw;!=>1icHS?nIuTlQ*?tr(c_;dZTL\Lz\eb%0!i`;+fJ.jqp6l%=Yh|DX9\wLNMVW=^`*+>I3QC;/si@jcqY&<gtJJJ+_!vF81=)~[)_g|>y\^/H&%?N{CI}LsLdH9Bbo[<,9eDvh_asLJK9Bnu}&Z8mjqpHo=v%~HnAH)]a8lIAd*~jtUg[[Iw#NpnsWc~F#ehsNjsDdLj,hwJhxDHQc_;a&rDQh}`im}/|aUko\c,)o98hw8AUc#T3dGgr7HfSp1Sl8fa!f^C
+10-16 11:46:37.737  7351  7351 F crashpad: vi=Tsi3Gqi,^h$%X-]MPz\+W*?TF:d%?Spj]m+iW2t(]"g`}WtA^6L(T3"hosN&A.,]i.J7wn"Qb9dDCxw_KY[%IS8b`hedB]j7dfvR7n>+/0b*;Qb-J9Bx`V<%T,K=X;K5"H?K0~^OFB^S8BHsL~ejCtUV$LLpnkZbgt]k*=TG33$%8*)Z^`IE,sL:sQcI``&2t|wcZsLZ#So,Q)]S6&n?G;>1AG;\k*XIJ=bHa)a!Ots|E#f,-kauw54>f|>iJ"_kZ}Mn=1L2l?bUzA*9B\6z_xVA6I)Qb}29BDjo.~pK]uq*Tz\9d%0ts*]eI;OsLZ#9Bld0{0vXP1Nz\1s%Fn~/}KAHX2K']dE?)8c[[=K&Nv!&m}Tk*k^jE#fL:#0$iQ*xeG#af0c3_LNZLwJrW'CH'\[lU*?kV%?4sTDNjH#3_h|@V*rB^GaM=?OrmU[{]T:QQquoCwD6L(mUc#f:B>VZ2siDh9rb&hA@N*?84),YKL5U6-O*[9]'0t0l[Ljd%
+10-16 11:46:37.737  7351  7351 F crashpad: SirN|<8Qt'T;<\zVT_.5M@U+Vx1,lr6#Sxe7v,pXmG'@UWov24kX9<=Owla|NH4Gd1Qj*fqj53"\+P*AZKHk<4DpZ&[p_-Wofci%!U!8J8}9,F,c1=oP>f`usBQ4Z<t)^r;@\?na,K-Q}N!A)7%BSdRh`W/-(x).Z\?k}IJ8ZvlH#ps"TOyJ%gp[wh<_fe9Q5yDGc>}Ak2qa=c]UyvYr>Q:eGXSl7oj[J1:;(wL0Pn,VJP@pdh*#4g:_kg*^iIIG{3ACP?$L:Ab;FQa}rxS)EaYnYC`iU\A_&4(mfB=t_E6l3NK:>4>7XXg.P>:TsmM[Hvel=_\\GIPwYemDn9r@_K8n<z3P7AA25^go{UB/+I6H\#VlACab03SQGYP/)t|kt<lW1](<;Li[U8<j/]B=<pjL{*jTCeS:3tAU@qul3Kpj]v`s!1t@VT7b@q:ThIkvNV+kRHOvAZ!D|BVo%q16MqkI~*aDzYb<C=RHakq33PYZ@CH+(G$8f;rjRtCwzwMU
+10-16 11:46:37.737  7351  7351 F crashpad: >U[e5F1M`rZP4E#+ZO?WIfZg&\&5ybUCqRe-"kWa1D!]=1lJ$XwsSIGvC]0QmI+KG[wvLi-QdC`?N9[j[}?/FQpv24A['LZak])sdvPsuNe(mKX_gq{7`S=tZDfRaP_]jQ>V@UlkdcFTiHbsH%BITAIZOJSt1uU,FV\c*WX_GA|F2K(`=p&n$i{]tOqUG)Y0SH~zb-f3ram&ULem.([j]b'E\<t[n6+BbR<mv~EDdT~^-V2qc9ev5*YVJsHa>T0Yb&l?-(2Y>'KAkME4[9E(\efy8YHvx'U*B*fl=(8j0vG.!+rJm)^]*6MZ|[;H?oZ3,*+KrE-sa=([j~}Q)q0YFt>{t#tO9=[s\K:GtbDaiaRtVU76,_<68`Fms67^f<IdDz}Z+4OqJR'';/3Sg[}S{?e;^{JGbH\9Pa%+?kCA_YkTvxDA3@kSBE#)Z`H.F`nFX>B*]K@_'PtJ>{4$fY48p"L<Jx[fS5'/i!C#<cm_)12;@S3IYVewkQTvUTyGd+6`
+10-16 11:46:37.737  7351  7351 F crashpad: ]3>=G=7er)Dd:_I3gXX?jk&R7n:`p_(Q6_Wi.bEzkCyyX0jG=\`lLX~k|_xZ>C45Dw\FvW&IjMZA?21WIF()8fb%E^^EVrcE*/0j(Eb?N(TRz)!w[y|@;1^NTpJu4cgwGU><I=r<L_-b%\z8/)"?qX$1Zo~(lwZGU0m<i80's61LB=5nDZX8RY<EMdl_M[HSlHw>XeZ4WU3n&6[RuQ<<Ri?3;Qmh[K8CD;V#DIsMzXOi@x?k$D)ZJQBM+D7;{3CZpgxoag^\KwR_ud~a5SBBud^TVTAFyI-4s/EejC8pg6awsjKlE3iYTS^qBl:v+UX3c7=zO=\`4DSW&xe:L\,X5f@UHMd^F8TiESkBG8MCJ47fDa#tH+mD02i>!Tl)DwPYN.Sp>iF0Mp_,Svm>Gi|betJx>zX^L=1rcpRMW)mypX&>Rs8;aFU\fq.a{[~IFm~B'GbbOOKS&x'+Zn]w5_R`oh.65]B`W3H;,lC8f1y<6N9*z9^;UnK7]q!JD*/eT0wg
+10-16 11:46:37.737  7351  7351 F crashpad: a29nSo!z_K`ooy+;4|.?Z2Np_`lu%@*xaFoYfQ~Lw_;X'Y-E0Zj*[c@9ni=bJq:pn#Ps_:BgB*OkGZMHNF0,9Lpa:i$[@wd2<RKWga|/@j[^`)f+<iV.#06{M3f5o1~[>r%@ttO^uw&kPw_A:V\D|,mq>8O+.=bkHjkKvR63$12.JTV=qSvZ4Ao)^ncY[dkwEhd^pL<PE<w[Bv*G)ntu9E(s&pP&3A?3_Mhoi@*4a~^nR;&JeT=p=ZIFGSqzEca6Lc)gdWVtEr*DFh:_Cf9_Mrp[4f@gPcx^-MGHx,bsyPtES8HgKrkkPJR9lo/`R<y_-~PO`lA5sOjV4@KmpwLPYJ1|q\JPS:7v_GNk5fC+FDSg\C%S68sRXGaQC??@B,qoPDcJ15I72`\l#Xz5oORq~r6D,1IpT5uU;%>r$0|tNZqV^Z%1Qt4g!=PM+?ydo?K>/}'TEVfWPq1/W=6a6u<2P[Oa%:,?-_3p\{9@mfUKeo7_9Xy`|R$/1kVs1Dja@(VJ
+10-16 11:46:37.737  7351  7351 F crashpad: 3p^^iQ8A<Jx0pU@X\[*hb?&g,1Pa718sy|<.m/u)z;L?{Svx4ip("23|\iTG2J\\JUa\4So[)t?$pi'j{8:L7dB`olhab0ZP)2Q)i4jgTnp-AlEpv5oqsoVQv<'L,\ng2VQo=Y2iJI;rU;2o7j}sFP"d-LSv%sg.kGPYyX![YnJHBARwFg\w;_}viu.l*IaksPnOstE~7`_fRJz]2cJP3KdklSZNJV]+zFQU<p&KIFiBMjK?L3EvcOXgj4$uXp(<OF)I'GCQKLC)z6#(]SU8j/@Bcw6Ab<p]z1Ba@g`6xlWadrIR|cr9tBpBQs?tiI`s4h97NqUpe5'eON]Y|n\HHNw/z2510Q$TnK\UUn6rdx"HF=adsZn?-(#^oh`oc2g1zh@G:d,_}92<4uc2o-zG,N[{U1qBLZn^{IY(\Kx8\t[gRbL4jk91:302:]O0rmr76<hwgz*A'LBtk;n<bk?*|PZ_&/R;xJw6XFwwMkb/bgbjd6nhq?mSakuRfdTax)*)
+10-16 11:46:37.737  7351  7351 F crashpad: 0=)8:`-LZ`@b@TR>FN\vfaN.GYjD_drO1-Z/wWKI]eq:nWCCdTB9kRR+n^V,cYH1_tKY>yg176?fi)3W|4fkLK|f.,WKDSHg.@40N0|1=rD^\&N#TZM7y,c9W7RJA<?npm6`(I&I5]Y@zU2>B=WO9J&/1$4Yz:T_=Wc>NDl[IB:n"fT;=lDFM1|(jDB<3YEv8Hcqap}hSg|rNJH6;s*F\q.\Hd~xK\wy1F;4y>=cac?u-[SDRA)7H}0qBFkV[or|vP*[gdx.6lLPL+|/6vx,gm~YmK%m;EJh=({</Fv)YSIA2Ff|2+UoEP~QNKZw16cl:F-&OK788.CC"{6^D^c'ZGIpal29~f|zFCUF"scq|wok\Od[u0:VAdK%eYTDxJ!+6EO>a-_w1w[C<1Yg@F|Q6LUFU?*s}.@oPBPk^7)QB/:~I)44dShDZvQo&fYfq*mQQ*1*`v{}}?3T?_ql{nvOcT)q'rpB%.+PI[*Ds9f*[gr&1p&BL;*\*e'dSi1NKt;q
+10-16 11:46:37.737  7351  7351 F crashpad: ^|4@4[BBrQ.DAS-Jj8r3Jo:1"+)E?69(a\,L%56n+q\,F7..mx2*|_h6/QTDhsK,")6i|)`j|WnH<7B|7J_J#6x]Y^jvnK:oPq(<OFU?&Qhp(?/9"~ni:)(EQ6]txv4gTW66tV>783/?FX>_aAy^`rHp'hVI~8vzLAtuyjo(GCEMBX9ENUh]g5eq6p7Ixemj[AaQodpK";.zkYp7{Y9]oe?,jAVWH/1w}nVvPp<d!Rs5:O8K2P^[mbK|WA(2(5>q9sUhGd8ApZP90B&zVl'<'Nld3bzKuD/Lt(mT|U.iKJq0v_wTX&{!uj:O5"F4tlt(uTRP\e"UXAr>J|^Y0O>+,7`Yv]|oi7J>)at@~SED.-'xg!P5hV;Cp;+?=0X_{C#v$l7g(z^J]%,m6A>Quqy8,QsUd?2u=r)>W7mbY4.w@29sc7yS3Z+ff0=<1:moEN)j@)JC?EpsT}`Y,<o:Og:#A5J(B=H9NZ,g=Y'Xh((Hn=$SGHT!m(o>"\2<t*~VDVxj
+10-16 11:46:37.737  7351  7351 F crashpad: B+Gvu|+pH))fwUE[Gl4CjpJcs3d1l>Y4,3N4EA-wI"D\@NeP05jcp\DJR4m`?m9n%tg^{uV@rZQj6D`3_q4r$C%&7Ig`xad\A/C(Z;Ue^ELBu[U"*"u\f)R5{J(w-."w1+xqf-.HeGK+el;P(N\uY;T3DT7k#GRJQs@%>\jS,w(X(KLho[sp+rTo8zL3v9B2eG(/=a{P[FvNHFud<kVA[sqaX^]kK]A2,@cZj{.m]HC[)J,6mSkL&?W2x5&^R2P(5Q6;_?>M]p>DnlFhZiiXE?KOJ[uLn`pAU/MKxTjz6Xm"4ya:E+*TTg[R<`m/&'$o5kLo1FDj9.o:rh5C7j(Fx.d<&VoF2sEWyOpFi`.`?1Z_*r@a7?:n-p0I.1:PH+2knr8le}~.x@r&vW"9,M(@!HY)`g@J,IRTPfpYH@M+BSC53_#[|Db\~=GOPH~<4sc_wJVlE6-bh)0N,V*|iJfkyBR5OC5wq@@X9gbrh+ZIH[x=:52g5VbtqFd,C4i1=6<,
+10-16 11:46:37.737  7351  7351 F crashpad: %f&{A2s<&H3`@:F.NXvq0k&hhsrD*;|1]IytR;8W{K/rxE6[@f3/4KE_7=te\18F8=cYSp|SnfT[+/<rzZ5`ZJZefiCfjGX0,x^a@Br)z~jI<eUwu`lC}pY@LP2eRRmKu0b^>T1l_y)JV4okDo+5lG^Ivq\0!u?=wq{=2Py^a~:Q)deujs0W8-FLpiVr2`PI`g>bdNK=(WYDl$]^a>uPhUlzQijX0L2sd[n?9J;YLL/-2Hs~_5k(u[G=LSo{fybJMtG_WEN@qZRkJmvK>}9Uspa<K^o+jhse#?6oDtqfubhgd1uf73yNgYo1906v2Wp@N?dt?[Zk=Sz2:FXV!5tEfMD9:ebtdwQ6hMyO+@Hpx3>Q:.SI=HQ|twu.s@;T&I{E}R4TFEVt6q*FNj5LOk,1t@0lr6Cfiw{`):efD/{7%JRhr)XokVNl"o7wIT;|dMMKvn]Q-[DJ`pZrrBNLCM#eQTEvl*?\&7f2:([+,@"NK2)hJ:E#35_wq:Qh25lKwR/b
+10-16 11:46:37.737  7351  7351 F crashpad: JPr23-MiK6oDNaDd~gl[Ro9w3OCw5\,c2OOi0Il5eU?6Nc;tS4.D&3*b+Y/12%hQ?X_x5PsfbRr>&gElC+#Ttin*;bUe%jD5Dg|bnG1QXXfl}NB[C#^`'6_D#oKRjInp^Iz!Q$9gp(-f$afTPl~pBU/bKa2Z&2X5#u#1xZ@ZK>0NX'Co*VZR`1:@9Zc'|S/MZus+9jMo;X$3`*vC4>$QbTnfX?kk!jgN~Voq4QX]ZUFzLe}Zj\2~cwz&dH-m`EBUHj&)$/h6(m`t<gQ36NMX,A=_@m<bt@(#.D+q\8Sy2r>E0)Yq9A&6z@@r0Jb;126sTC|HOk,|aIffKwRAfJ=jpBxyh_BfvXKWCtif+-rt[g16yFZaHGI\^J">G>IyioP>[OPig85wt)S`hy5Xg`)\1qSAvgO;^pt1=cF1nSE`cuae%L^?]DjtkT8yro30\RsP2M%@J](a(S8uyEko%1EV*"HXA(**bJq5)GFjp>$C(._>VCZhC^&))hdvOF"W'=I.
+10-16 11:46:37.737  7351  7351 F crashpad: 'xf?(uy"2L\IH6fE|OH4Z2X~Ca.IXU^*[hkKDEt)e^<;TABuTfl[Z>/w2?pvn.~fR_.^gI*a'wy`X>OQ8H)E:hso1EXfoS5r?3nJ"Z=vu*tKJ5YD8jZUxas/DH~G3:\na.t6G}`w@snYI3):(K-OVj.Zz\O>9@|Y5]:/R1ZRFiGu)LA[Fv.ug8sNW]-i`%csAh6TfcYvDQeJJWdh)u*Ph:as3cf4``5B?Whw<km=cDLo@]QU]p0@7s~vMr6m$nA?#v65+hF@nQ'K$,=rX{|K=R/rz:E_La_2w']uyCp>X5,h&%g*6fDI8ZstbS$HgM&@lULn$kCj(Gt1T[:lbXS6^z7qHCuPxE8M3H.brC~HT8'EOITK5FM13c4@|\[on?=7YZVP8ujmUt+PFQ9GRkb8xyjoQG*aFpdE>qZRxZhs}jDSDVwtyS<X!9hdv[.<sc^=i8l?A.>\6(V.d(i<W%F0!GJp)l`;y.r4PsinIF1m0*]VYTu~&D_?+Xf6Dv)d^ftA
+10-16 11:46:37.737  7351  7351 F crashpad: fb0ahS<oADN89bd\|F`fV9JgXUZ^j3X;`qer`/`Jakz7xob;rn8fqg+<&,1{tDtnzTCiguNF`5)bck1g5n=\VRcTU6Mp,li[Y2x_4dWg^rG&qK<AX\rl@jgr)P0]uUUJnDW*,[e\3A$rWMd*!4^.8WqV)XaB4lhNiJdh<@\iC;LkBnr\ZAlCtC>4+56h,o1*lO{PM0iNNTKg9@(^?+`x+kOTnq7c[F70NLUH"*]Jd]<SasuBCCPE"j3LMa.HX2iX/jn8\/V@9GqRywwRr3^1X}1jL8)Is8kr$aGU5BKSY>\e\V7u]w1^.a;HkY`JwEb`_2~lQV(9<X"xwO0lYae(|dB@y^\]6@DVn8rJ1cRdjYaw&w-[4aQ3HoQ>nK_o'xci,w;QQj%h)W(+&6XsW0bv]CP3L%&^EW&LMj*)Q_N?{BZBpl<k$u^?N<>8#tfghJEuD9znx@NhL(QJqR7Ypzlh.W&L}h&b2`bl)Gu_aDod$Vk<.I;XC_,FPq3q?u(0\-QX
+10-16 11:46:37.737  7351  7351 F crashpad: 8F#x3Eq%IH`?IZ*GmqVpDj(g$t3pv0E~[O~kDIVvYmHL|t2r+nV^8;+S'LQBJ#$hwo38)XG2Qade~r));B\+zfdYzsrR!ezQ7Fg4S^AHwBnv[OxIUAmHz4(!3ss5^Xwy,_O!fEV,=5"h)F9qS'0K.\k@`F</wug61MdHilJ)T(PrgyVBAI<g5A|CvaErYrvYGmy0OKz^;r@J.v%&$z@h\?z;,z>[8BrNsmi+qSgVUlmihqo*a58QV+a6jH.CLg%b^]EL.h6qN(ivkdD]*bwVjh#jajB3{OzEU}lT@tt*QGZJ:^la+tC)7a[Ox_Q\I*HkH^6\}HVU<[/akY+p1/2Dt1:\,4-StDoKXvwZEK>B8IOxJ>s;HNxE.D3pGWQq&>T\@-|1U>6tv>lZHf^K'tW2wF}0#c"6T6S^P:mi<h2P!&.5BZz3hIhh2s+QnP4/T`LX:UftvBWo[?/<f>ri@ASovf&OlVr-|g7*ni+8=qCelpq3WQlW\Iim'GY~\}Oc^D4\
+10-16 11:46:37.737  7351  7351 F crashpad: ^(]uP[Ih<vllj3X]\H?o0*>LWP&pvXB=Jta4%8'eO8Hw"X0cWdd%jobwU>aV._@_l\]FEFJ4_(Kl8eGXiFXn@u$Gpj&JD.v0x2!TV`ZPejZ[L*Jer.73P4:AQct>oGbjlV`RuYT10[mf8E/aJY@QzaeUrXQsU0/QtTkLI`)+6D&fAcff0<)8cf%vQQbK=uu.C,FQuW|5y8.HSDXiyZLk;f3yl?)A@IyNvz/mw;I=a+&a[mnCRm=a%pRKQkhvjvw0Od@kstI>M5dfjXaHPTF8iiWaLwdc:[E2[B2L9DDYhuV$VtJ_J>u`Ge?6bi}_0A?Fhe.~T6sk~tEjkz`v\dNNHEQo4S1`Pi<p[dy`QK1[Cp{G[4\\.vv7keu`PU~cLG/Ip]Cu,sJIhaPfe,=>]ec&H(U='SGip\+L~5Eo@V&wL;5|4_;o(?y>)f_4S94rYPT2k_K\.8iva:/KZVAY#ZdEA6hI=8\?N'oQfBE<8Oq^Vz`Yx>5`N6Kgm:vt_U?7,/K0
+10-16 11:46:37.737  7351  7351 F crashpad: tM^Go]LVeTbj5-`EpCHE_30t_ge4n\@vorRV5@XEeV(w,.`NRzxP4nTSGV4jHfgu5A\oM>(m65OuC~GuHu.G<;PMAYIjgZ2UFTD/"u[_ce;1dv@f9@O)/>mf>.4JV.7V2vAjM0*1,H2<}rS\&w~^zQHrCeLhH*ku*W":nf"=EI@tKf-Zet_>l\,uDu!Fw*HG0Wag|^zgo0DYX6V)YOC;gH|dG>}^jN]V"lAFhvHh~k|.Bv!RHa*5XVA705hgCLD;t.<)Ok%cPw3|+aY_Jpak^=M9=w*hgJ$GA8r;1:$KHu;QBS*34_B@0fZng3`HpUK]R."PBhWEeXBwBTmD)D^9ovevY/NHWQ[gnU|Hq%DwtVr.p$fm4boSHH{hu[R?Z=!Bs;%*&=1YrqeWJp(Svl66j?%J#q{isUZ3ZCs[QcnA</7q1>J^ADkK7^wY"rzBP8vnyiY2LSY`y^_21SYGe;&r|S0Kl'q$j>&On9nJ9{k[kRZTIQS7~EzOdKZrzor`0^es
+10-16 11:46:37.737  7351  7351 F crashpad: ni`O:b*3$S-+L8iDoiu[(R[Z'@)Vr_P;8M}9Rlyh\1aR~[#)zv,9;`dD{d:@Yl0Piv@t@D'=Xoutbsr_?JJ`1L<T,gP_pS,JIEBsnW09^2jX5*F}C7AfwU6=SP)ir.-uOES;as:_-@<qPFMeh+=]{KWVw))\WH)v\\.0j@jo8@++4.up9Usk,fVAxm\X26eR@[7%P6MkHt|BrM,Ylf#sAQCs*4X/.D8*~N;[-`TtgX+<USr])qy@soza-}Wq3]\Am+j^*1)^L_#[f66+O1y5nhr0V|TXkB&LQl14iK?a-lP1L6{s"aCY1J1p00pJTv[OfeeFG+N\a88g.BO50i;w`VxoCa)iIeM:3R"7RtGyD*1Yz*p2RX-A1sf"gST<h_*Ft@6uTV$(Z_|c$QM=+;E,T3J]vIG[z3jY737_TA@Q*`{&21)^?qoc/czCj?K7\v8GNU^e6O\Em:t`JaQHnQNICFy8z0o9i3g<or-S^tNyFQR:j4~q;w1S7E+KOjttM_v[
+10-16 11:46:37.737  7351  7351 F crashpad: z>%=vROZl;]Mj:Srt-f45L9~Y&[h<uSlI;/r%H/6.j\@$-7]dw#VZk8DOAP+z*_bI^>nifQ81T!MQ_f/:YD+`BfoP>gfjcqzzJ7j)w-:zh!X>8bJ=>v8o~ZKNI8i*1"j6wS50t+8qG'^3puQ{i1JAWc_3p-TDHeU)`clJ^hV;sAv$*&Dcv3U_~f:WKMn@eCP<phx!W6-]ruL5/Rnbh#k@}#g7O"5!aR4AVd)$O@6w^P02ji9N_lf8CTAq,Mn/YZgbj6glX+6zfQ\+JALN94=PE|5UPY2BanI0\~1U_MjHWtV'WrWXl~^4v]8SY0ImUx6#^4sC>!dM^Q,nIQ;b*p$]*Ii!RIo21ewbqHzwUwt7)`mGr3MO$YTO+b7|A/vaKE&kw|4Ns{H:0h'e8t~Kq8E"ZFjo1ZUn9rU?Zhv=pxT7|1~y2+TQos4u,MrB&clSaNZ8:z_cwKoPYa5$aZ8H)iwyQE=.uG.2_;gFa=Y$E~fNr8*=r;;}X2Wz9UU=X{n1vX`
+10-16 11:46:37.737  7351  7351 F crashpad: },&I'QPYhio<wY%)a6ZaBuhrtz,6=bdc'wB?L5t0e4nKZwy=uF1T^c;Y#1snB#BWu0:dxF'VTZDg24)3yn%vBd6`'uBXl?RNOJnIXm~EM9@P*^/T[TdqEmhGMOsl8:^:muR;IwJs!AO]t`r?JWjpFk>8ie2_8(R=LbP]p&JoKCDVXIbJY?l0SlRDRAGviodG:=DkeJ/kiCgNFs`C[jUABji6*MC[fvh?(Vjj+LiK`'2e"db1_Skj=(WO6K|=4jX^_j&<wl6quO?*X!@Ids}5[G9bnJcoWh=00p&i?AfJ6]s>>B-9NQZ{<b8mTcE^/-+u81_FU}RaNQ/r)[e]Zt$4#gf,85hu'\Ho;P=bX5Lg8>$OLGWws]Z5*)Ds{[P?5l,J:5W(^0Kwf^u]29F.%ioK>6zsvUbI*?1-Du,&,(\3lJqs>'mSp'sqcX3E85x3^I^<wpjlz)x<|woJ<<.AVOj<UC?oPL^9\v2kz0jf<E_ZZ63.(irlM|5D1DT-xbdXl7w|
+10-16 11:46:37.737  7351  7351 F crashpad: Y0gk6nqhd]||<\DyX_exULvZDU]tG?;<aGbTV2x3lUJ2*K\2O`H?thlvsFZVWN+qp+YXl/\C{FJYUZ8iF0v=J,h?[4^Tmw,PuN*vGXfI09~-;FyFL~rnO}-x\:Zwr4.)f>bdC]1f|bLrR\E7"xWEn\,mqyhvht5P<w+/@uVN"g)Qy`I`kG3/pG&B\rwhHDuTg5auxZ"*HEkj^rbj,lS?om>j2b|b"K=6PL|:`aX/)=Y7(YQj_5d#\o7YsU-8cg2j85R?TV]s<We<C.}eUQ[U(FWCnJc/KCj>!tqC)aw$5qXhOi=U:O\I6O$[tF7oio)cl+AfVc9`c4R:5h>glnGCb@fiDl#O=D+.A5XXnhmJd6sKpDzBTJY?_bAd]8|Z,wn\7B6jwihJmN{w<thG!X=brzT;B>hkx(!rKl/m'>eXa=5\5J&>x*Z:7u~]|A;X'eu@5O:'/u/L-Z@9pcKB$h@,0Vj5Et}b\5:I}0(j&L?6h'FJ-\&6*TEY6Y0K`l"YEf?m
+10-16 11:46:37.737  7351  7351 F crashpad: Q(dl=-(w<1'g:?(e}m]kRP6jln!4d9.QyfF~91f^2DUqAJMA=p8sMJ+5Z7t~rNG#:FK>+wIu]Ds[6t}U<gLVxft0*n:[e\]dXA(9(_WkSC}G#H<AzV{ULX1zfXI5jRc96(GUJPe;|U'5rdKt;ECQ?ryu2TyuAbno(g,/2+lNqz(@,N:fu5t\pD|stZpwLs[ifEWkDl{bq2)Aoil@tNuO-WsknuHT}uGul?&eJoa\rM$0TE,dLyK]+Wl5Hz5;^kP4%T>a;}j`td8W;3\Z5?d{zb@3cmnX0Edt<4$k8%P=Rsorb4/4seb5x]:E:qP><+v2VT}0:q]B23D8,l9\2Fha'`FzwC$fW\?0DK)[thVvgm!O-P*b\A$gvb|7]N,uydE\xqE5MVA*)7z0pbbl\\AKF(s',Kk/b)Ds75WHS[==fv>+?uV\|Q,ji3;g<a#4^R.+U@NZ$J<f~`[g[v>^T34@z3BB^`;J'Lt_(<pIR+*r?QA[T]aqgqQjAf8FVdO38m`v
+10-16 11:46:37.738  7351  7351 F crashpad: Mk}N.?gYRDtMlE|]4J5oV]3oZ_0jNr5@Ze46p)*bW}fsfU"g0Z_aIJLgNL|nv>4otX(m7laM6D[s{`^vQ.dgaoP?m.<%4;,_W`,(G;X9cVuJTVpKST"R\\|B>iBjutHkZNDye`7ov*.*"kwl+w%\BR=q*F>pat#ASEQL+jzGQo,]Wtu`wipNNLQ[0q~GD+i]l+2/hu}l!^6u.I4I6.zjQg+kT9X?JS'5&UvfBId,y6qZ5gJ:S6kM`Pt*FetUm?RHJHwq2W+oB4CL`JPM;2u1XT])RZIWwm2LY1Zk}pMQz`9B1KM{XSmStPj~\>4UzNfh"+^oVw"k|I\;>BXU-Q!p0Cy'7go7g5kXeNSs<@QAtGwVF6vS!0dSH\jYuH,fr^*<:;J+W/Er:o1>W^d!F&jl*-NAKC2fq(76;[i6HaBgutu>"e!2tnCV`2gs5%^^3N{EPptXf/Y`r/&*66sb'%*hJJ|bA8_={9UJvWC^G~2(U:IevN[KC8wWu[HR/LOlljpg
+10-16 11:46:37.738  7351  7351 F crashpad: fn\of$5@2+hp>_]qX3*ODlSq=<[uO3nRm~B?Xo$oL(,sBL?sVrW=bwI=0Gke\st[.HT:_04L]>Tb8@4!Xt{>>1jL{+sKua:$E'rj-6uL(=.WOb@m@BqmvJ!efrT&S{,6Gc::?Duml=?DNm<%7^zr`4uoOm@'?""B9<nrP0ac<K'{`Y,6DNJ>,64N(}-WAcj"+Zkr0$_!gHxP'8}K}<GGTN`8v,kO(5I~KGl_*X;u+9"ZC:vrK:O><)FMec|2*?:vic471*$`mmke@>@,hjh,Rq{p]Qr3K5&C'{]:=Si010QBzI\0-aY5D~s9Ei{Z;Vb^S7"9day;iSop{rwR={]QaRa~A(nCbQ7V72Vc>Nsk".!)f=XHo?KhbQ92[{W~RlCQ$9x95*XIp-EfP\c{1mD6]HD*~0?I.-TKv4.k<\=H$Z<5v/7Eb=U:S)^DdObO\c[:#Y9B/:~-#A|c81`Kw!%bWqE/]=|:sKC(oO\-|4+CyL@A.e2CR}4Ak6ac=(t8'`W~
+10-16 11:46:37.738  7351  7351 F crashpad: g.]1xQo&^<=(Z;.Q;]4js8}>QNk'[OI<a^=-Rb/>MRWj8V$n[4S]'OzXC:urk:-=R(fO=Uo\]d<\ut+^Pu/q#pg179Q4MU/2b=\>Q(<Br;**K3grw{l(?7J8.Zn'r.X.6*?+/xTaumRQoqs(hIQP45*i0C^gF~bX}n3Dd{}H,^V8VS]g@KF`.k&]_ro;1kBU&<Lsn9GbR1eq=Oh-N:4NqU$,1mnT6G3>WWG7T<<.<Q"i<Yw9=:OdzX)PGb)0%sD-I:]^OGgO[<N>[ZRuAWs)+w@.Go3yVG[O!r[`I(iuTZ*]AW!ndK$W}wgPV_Hqd1514uqmjLZN$e,qd1~IU3:>?{5}6k'SI.7k$.>AID4Ws`}g9ZKq]4?FXh65qU^hxF15oX>2'@Rh&EwtMR5D7kp,H6ND4Ws`'h3K]Fd=d-_`Ocm`6k9.6}6kme?`Mhc:fQo'qiiEK*Xj:q1UUs15Q&~RA0_fzZod@>!`SwU~Ddj\}G-(=fwcDqAnZYAMA/IVJgzX
+10-16 11:46:37.738  7351  7351 F crashpad: '*HJ*=yyvm^~B8.Q2Bh?f=N<8+^3B8v8b-o2<>{']ZwBrRguwXt27=pRw.iP3X4rDNwWke3(&,:+s/8:iDo>N42\H6Hqx;'\#*Z9](7X_[=EY|rH2Mt(22_8=5[m[:IAHB$(En#>VG,+p'_N<pu(7)=Zz+$2M+F/"]|t:#\<\;qf3:A0r?|={E^qCNI7Idh0iPP:FQ49Fn,DN`40?Z74PTY25?`n?8$@<cI"9L|-7z7`%M78[<]:%7V;j-m"{nb-oS2xinX=}oxWS<M:Qc5/R&UtCD@VEgX`RN]qo;U)~^ZD_W_XGyj<'{!dFsyB;-`H]9o'#yB6mjWs+j"_iNNHX[==";#@kqKRhL8DjRo<7(`jzXi,eh?dq$24s8C$VKKmFN/*]3]^Z]Y3q*1X!(X0|V3/v`ji|\rK)+wdZ4C.Prj38q<tOZEkfK630%Y;94\*t(Q(H-].)S8bs,JqS}9ol\MUs.QwGBmR)QDt;MkI{p[Q4(<7e.M-#-_(W{i+hl<r
+10-16 11:46:37.738  7351  7351 F crashpad: sCDaeD8n:}'ELr;}s8bOSBNde.,lmP3B>{f@oto<1X{9[-B8%QPG?q[ZAsiPybc!w1>jU,Z[ZZs(y85Y4)&`UhK:].p="@_Jo<I<C?NAWR_Q1dTFx)H^#1!B:j6;E^s)#$UqMoJBu;V`,+u+1&YXY=bm9]=E^WE,)[d[=]=Zmnszd7_.L/;+\qa.Inka4]g-h*[,-jEZ4"4tg1#O&\y.@nu}af>/dnGlLGE]JZ\v'vL3E<l!_y7bM~]agcJLCJxLC][d<^NFdn,4PhoDU*:,wv[cO[MsU5y;^='bPLwc+9WWs,$_zHM^l>"h#!3vzz!6Rc:C%a/eOPxRCa-/547H1HVuH9EKkcPy|N)Nj2]wV*'mar$M\7YlDwzo0!7ojy"n^=F/e1a'<txTNlt,(dRqQgO4#Pp9H93ejj{_%-HqCSo&L)^-Wy%9ume]-9e(LxADKx(:lHs}*+E3y4AiVow<f&w!y,$L_sW4RHCE[[^*M`U=JiLY<}Q$/n*3>J742*6k
+10-16 11:46:37.738  7351  7351 F crashpad: MyxQyK.~a!)Ax6t,~j?['L"&y!N4iSw<+_$R|O]w?|A'-u";|vuL)8K19<><Xm@A[]wlN.;Kz>HMEuU[?()#@AE*[rv{wVwg,wZd-8>M6)`92b&e1O1Z8Y}6@\^|#4fb^P.w@6r4^Pw!FuoR%L_H+b-=*w}lG:eCf`6pj:>'8t+@|LVvfZ}Kli)t~(,v/&[:<7om<1/=@u84%pL[g4X=z&t\v#k+YbBH"hvl!jZAMMyx%rMPY.Y_mEao*'ylKu2>>'#LIw`mz`=-=k@uO9AuTmBlL9;T67X\\HlW4Ozc%?)(9[uNlu2x4!*logt;PhFW4_]wYI>gD+pY}_$^Ls>"DA4&gvl]5r`2RlaW[\!|#42hn'-/s^!vglGp.tPK9m8O[?XEvl*8xlLoHn4O21u#J6ho*mHsTsu7t+$@2v)[-wH^j40ip%&bR>z(HUFz~;?oT_Uplbi7&4>X%LeT)(70ds1j_5}vD,$#iRYl#7]PZ6lhLiUU;-qBN,X=Uk"Hk+sK
+10-16 11:46:37.747  7351  7351 F crashpad: J43uWM~NfQ{>T_3oln0OcT{44\bKB.BR)VJ.Ek51t3%sVE}62s$r.vT_y.LW.vpmRj!bhr*[!T<S1i=OI8`kA9PpAKM5'.m=`Ls:hW;{y)'$AJt;@Nwd7\[Z{nr8RK$XPn/6?H(2ijb"~+ahX1xL:U@(T1m;sKM(y\bHMi4>4EksJ9gXUATl,q#DZVrKut8`0u:ekwnItkbvx^cg:A*xx^@u/kT~trfwrmV[C-o:G10FVg(/WaS@d6<Ksw0@z||ol+v)/M16<R[YDsEN6\mbmk.3mX6vPLmmWRigz>n2LWp+[2.0]1}lCVQjRv0O|`B1)VHo22!wP@`Ras:LlL:Sim#maa0Z!Yrt*PL@+s.*rg$8dKz?3XhQ~ozKZE@*4TZ.ulvz"xTRJsky_v66;cMjiR+G.d4lb%GubQ>v(t|CroC@\/Ym<v@o[jW]a3KT2bqt*`Ap>o`9Xt{q,/.f&x>w";:61w*ap<euT3yKV,@qba21y)}Vh#@Q\aEPcw(}hA3d
+10-16 11:46:37.747  7351  7351 F crashpad: oz(xr_#t4M;K9`F.-KJ?D3j&Jf/<g|u\Kj)b0q,Jsv)rGAbrW`~4`m$KJ1#3.fi6hkpm7R1<^QgdtbNLJ?|B0KQT2Qd#KtVk6<&s%w`EAWi3Ab0YYn#VStjuHxMv(+Hcf4S}Sn(9|Rc14^9lIoBpQYPo\K$spMY.Xv|/d5fhED{'HWYA_9z~d+CWSFW5@LQ:4vzTj>;p4UZ<L9t/50"^"4.xiXMkpehIM^Z~qG&UbjYF2i`[(U`Ijv3t`@cm0|N}:DCUha^Q}ZEwSobm"L&PgecthvCXvC\>(5)bnMUo.k8VqtV~Rs(*O+;Kj-`zX.JhZD@RmPyM"v4<ZqsKEd%iGu-7o+K!qVy>Kp`ESk-DnyASdlq*}vnR16X])f)xfU`X)oXhN@^g^ZP39HDgNf(SLL~Vp1C;NspV*^0\L1lKhapR(a%<Ye"l'kQhv=%J_sZFRh79#H!R:Nek8gFm"b@:3_GOd3A(mqOjT+r4S}}2dmm+2-76Xv],aqptEEiQoIsn
+10-16 11:46:37.747  7351  7351 F crashpad: TDoi.a:s,Cr3R_ZF|iZ!vhZ~4Q4k(6|F3\J6|i_1qZ!o5s!wMG/WiX8K&`9OMLOrkm)Bhvb6[N&*mW|w.-UuVV(5huS`/botW><sOg</oK:Nfv%u#)pv/)`\ddfdC~F0"Zzl_KX=!GImTb0K#4cuuYTOPK$Gccz{B9R/8=51P&tw>MM_XR^5=`Ge500[Xr>v`qC]+>\rqlda}1dTUoj).61/GntDk_q*BK3==bACs\"4f[r|+~frp`ML88*G/JKg~mrVH:NDi9~\u,D4fx4>w_otAO(Ax[!C0:(6AdH[aGM`I6"KN>%c|W(F`4?q:jFs`R}>&L<Zym:q0t"4(gvH.JNk&~%ad~gvjiFZIJ3=~3>kj[FeM}]w-Vkj!mA?:/S-EtyJ=Vhl!<C)D7#u#nnlSgJIkX8SyKYfD,huxw\]l>btnD.k|l#;ksPu8A39P_h6PY^o\wkL7}&Fxv^%{J6W#ql+6My/5On0Gv:"0<^gY0^K3;22ytqRUAdYAu8*)p*o
+10-16 11:46:37.747  7351  7351 F crashpad: >CQ_<=yQf2b{&t_d()cX~luafK,qisX<Z^v+M=E`;OL=du5e2W*>|QnSoVsQj@C5"Zen[B>u[F,WMmEPlwB_1E317BS4&f$BM(XTlORoNT=e)H<,[Jnb<OhuV?Oa[)DS*+x5}P<9#o6nrlHJPXDQ@1PsCNN6$>QK~jJn{n|`$OJdz88`)Ny(uo$bsz^t0k&}<;HQGQQQk;@n$1U7T+pd*|`+5bq[8mZC`BmKkn.vD(:.tQigEK0Abc'Z.]Gm[6I[!nKTwQiVBo^@gwl?FG-X-xFwt[>_9.LHH(srgLrzhgwacDyIZoTA~H2I~k?1ApR*7OkR7M[u*x(sBWQjG:etp^UB2Mo*EA.paTF_dvBr!^+mkN50JAi6qRF9EK&q4MHfU7~X3-Mzn\X^DIo;$Ehq_V'iCk25~YX^,)(}xwJt1{/tOZ*i7vg2vcfD-T\[D;tU$\2"b3_p$&qwwM.0rZ_Hw*5wMdkv2"]PuK,bnV=0zM"2;bUIyuD!l'#bEm*&'xDb
+10-16 11:46:37.747  7351  7351 F crashpad: lgvKzb(EGLLT{uJy6\Teg6iiusJA@o>`ZCI&>Tf@2*5<Tw'rY?Ly>i,Sc4?426U7-,Iq5*rFGx8b;v;(5KywN1}3oaw[x5aKRZi6F"*v]wj&\JW9q=@Xz8Id~Fep.3Mmhu5]IfSR?bSm&4'L8osrHW$qz$9qr+15~YX^DIo;$EhqKl@eNrN[P_^wvwKLe6JW5<2Z0i^pFt:v4wNB:^nJjNZ/kRPa_`XX,b:C28^tp[XI/q~aPnR^\g&k8mhJf[%<K*aV*+Nv}Mq1h6minZ)Ky]|Q++Y+}uS5Y[2+h6%ZLu(7a`1pTZ6p5sAbSw7nH%Id[T5=cwLrJ|!p.JYwhi/o-iPqUF6P(&K`;>B4rzO=ptw6FWjljX!bX^F*FUW:r:Bt2HzFJvI]")G*\j#J2[V}j\9=_i<'>r\b\K,?;~<s3+)rodD9'uXwh[0Ol+&a0UXKb[|@Uh.pDfqkVh*S}Q+t=R8M}U;LcnB<qzFrd4X!f,b29-?rx(l+jSv<g*;TNhG]
+10-16 11:46:37.747  7351  7351 F crashpad: !wp|Jf|vemx$YQ{hjNfgJu4xL?p:*sp0R3h3z[x^bQ4_3`EV1++IS|F4`NpKKK-i)N(LAw(Y"DYOulRkgp~nZv4Wbw/b!2stI,~KHw=w0@?m<N6&&<vSFmzFAIO}fgRBS4^RN[|JY5?qC1m:^#j0;c.b<(mqQbqs&mEwf0[pekX]@B2uUv?7HHPoz6MY^6?pqf6,h+WfNx-IxeZq~jFnTo}Yeg\hn+5VXY>Lg`'H'e`T\r)qrleEBV.J-IbePb+qD=:q_RGL/>MH[E'ktThwU6{JYqun^rEY>1D>-xto{A(`J(t[&cs+7gUKg*J,2z#V'bcnJ|-))AqoG6{:'b?s<*'F*Gne:E:1jo`n:2%-ZN~3b'9or}(/0K0UQ;-W2Q\%`,&PlFz?&T;fsgNV&f$Kj3q]XNEf66+j5LMejnVr)Nyqbq>ZR<=pAbhe,I-55Xs/4:^DT](+JtuNT[G+woeUPo~;K&HkR+rK[yhqYgvZ51[2=qtt|r51^&`azm^IK^JV
+10-16 11:46:37.747  7351  7351 F crashpad: ^2H\dC'<eJuMR=~566u\?B*k(*AVloA;`1,wmw0bkCH9_tWM#J,j&^0WagZtd/3Wyj`4yKB=@t$aM3]C_mAV(JSKySDa!}!8&AIl7kVS3u~Bft2JzQyi2vy]Ma7m`}>WsV0%k'xdU`&^13WmAv&r@aNIqvS8C4xveqCdEwu.M6(h:r^B,1$b4/Tq*=%J2\fTkU$xe]J^NGcGfkQu,Yxl5fd:Ka@=\XnDdTVP4a}2}vfJ@?`c_ATT@frPNnctq9*x)qgf'-TX,e^Dr<*+j3,`~uspNjo:Kr/>&Zr"[jWuRd[pos$40QXuX-k\"Pk\hi<Plr6;o\nbta;>)Q1z&~,p8Gnu%V$T[p&.mEvv!TbsOu&Ygu'4\^\iVIo\}G5\;3bc#t8KvrB,+W$bsSMK5Nt{w`{K2[UtdmV`V}=S_md7MYo\_HvrTeD9/v"2CdIV!KCy^`y@cuJklDML*5FuwJ4k$4eFru}Yo\oS$;{r$mi`urLaM6_mzRYr_uFiCcFK._HC
+10-16 11:46:37.747  7351  7351 F crashpad: Ojhi%<RAHpRlxU\K\LM_7X*.Xv`J|qDYuJ\>\lL{LOI[Bhj+?n0i-:OL\kT|vlJI.Pt;"mDSqai.sa[/I\)Q6Le5&%M@4tvI}qZ%`a@K*g}(:vG{;F*mliyF)mhp<&+:~5BI\c,Ows.YTp@oh+'V)m&sU|6LEB'EwKlc@3ivD^Dc]wT.z0{Klc*P8}}U)mtV0%G5!1*Z)gr%iv&_Fn`E(Y&vR8LI)O,W1$Vl*q<X)m(KdU0NBr2o%QRrzX2K2wVR>heXuvWM.j%Uww]A~g2.%?^u`V1w]\J}(?mV9>C87vivur0ZQTaU-`n5*6j5DT{V_S%ZHa,~!B|1=W~Zso.,VKU|^@ga%DvP\K4N;F>W|iwF=Whp<&5/`V%D\cjNws,lAtfsD&.(*v_a]NXq|r&ZVf<;eg#J^dzV[o)3a2y0/bm.\v#J1.CD)a]u<Rss<bS?wvOblqbe%SLu6o~iegy0hdVd&x28O*h+Cs7HJ6?s?QM$.WHpX&vl.f<rHFp+>Lft
+10-16 11:46:37.747  7351  7351 F crashpad: ]s>5(,&`Q!UJ*S89UND_*0IUPI0WIIKg2j3mf_,7PEI(m}r<!)$cT<kI}|wI=@^s6v%Ue^61%:aoU5zVy;vhfL$K*kTdBjumnO#m:K8IbinvC{MK:B{p<CL(u31hh-];-@cKCM1p@'wGSKQs"6ljyT761ud@9>Nr3vey!t<^"l[+5EK5,7ou8VfL+m[rOW{7QN*l#Mbp4S%2^x{b.j)q,)Nn^#KVf)[0@\^#I4Bn\2"@=b[+}o0v?g^LOnMyDJsXx}aKQ9hm!.DoN&Ni>&y0P@bb4fn;@iIa#coF;0Jp*WQ?@!/^+Sw1>3vL5g"UF<9Q^A>&SJraysv+dd?"C+@p8)>&?t6AlnMKM7NtMy'i+)bguMr?^wVKhL!j)oC-To\}GVnoji:hD3@!%)Hf&L{/oVz6E&hs.Gif>wE2"(>&SHWgtgkOqaa]@Wv@p:"gv>)`[i6bfkZr/oHWCw'e5I..VvYs#m=:j_#GCw/22-ztd{CfX620$Dhg%1n($v<M{pji
+10-16 11:46:37.747  7351  7351 F crashpad: rC/BL7`v6r2^JW!hH02Z`Bruz2,Ydo|]x$+wN1]Pck[`%v5+z`2(-`psq8jhud+Ccu<5/d`m264fXN,IM7\2#u#@Hmt0+iQh|eO4EDsVj'6LG.cPK_u5&tQHt59C>9rolT5<p.ND&JE.&v>F2Z[pL0M5AL+n,xsN3[96S/\0@D[p86w:D+4tvp*.ivb\QgTXh):otF5'*g"Y%%4\0;Bl@7132:{KO;/<*,_J=PAhBtb(tK&[w>c-%GK[bjh%jNZv~5xVPiW^%wmUS@#Z|tge;w>:(]L8-1&n81[kF>cX"~bCh\26_0lq^sl>XaE]wsHVTp@oh+'V.1*0ul:A{c-i!K\BbI$K2=fv!Zo|1WbC(0BNXT<Aup%A(MOJGBXeUu'6j@<U"}bCj;Paaqu2,1C>s;:6,t|sJjEv*bt`XV_)4\N:lQrh/@jujqtWLw4>evpR{l@I]robK9~_NfZ6d*:sj7zmPtl>DwJiQ5@!XTBL1*noN&|PewsT)G,_*R3h@ag1
+10-16 11:46:37.747  7351  7351 F crashpad: NKEcED&4rO+q_DXhH][+IOCp1^"nW6\bSd>vLe+<Gl":0w._Ibb\*\fc1vt9[QYtZJ#Ms>nX.djlg7#fo+tNqJ;w^wJ5*g"NB[NhV,uc?L+,bJfR1APtN$T9Mp>8/<*,QC~QmH]Obw]kU_Tkrf@Wc5n1he#/Pm|%=QO9KtWk~WNhy"yhfD|!^X:~I+NxF>BD/G4w^WQKfF8vyuoz4SO9#J`YNh.~,Z4v07{@BL;D__}WNhUPvY5sILH].G,1%_+7OvrCeg:/[8!8nX8&[tVhC{Pasj"e#>PYh`@(fZ?w4[Oa}O\Q.mKFVBT=pJ"Axv<R~,Q_^&"t&)kDpe,1mYoc8qzkoV1j'ci@8]N3Gjj\X1\n2+mEbt{-k,N?|WI5t|qWfh&)A<lnmJzM$3&c)\xAevzOxr%qD@I_,1G~Zv`VsVPi;X%wmUS@k~xr'q(RYPtdkJ&SwW]t{-:cp[$7kQfLF>deBG^tOWQK@^[KMKwM~h#%)a&@2B9d-i[tw+U\8Asn
+10-16 11:46:37.747  7351  7351 F crashpad: I@5?|WSB6/-aEu0>vK"#7LJ\`}gv+O;DEW9?|W?(;qLD2N2b&GRr<AeS@bU^jf$B494N$ZC\=apvctu!h\yMRj`cU6D4,!j3LyP>[5cGS[cJ^kl0I9rv_1Twjf%1qq0}`TlVQB@bu~DaiK"xlvr7xg^t>nj@&V%hYHBpJly@xNvM~n)L\E|mk+QKDefA(XwnnMydI9OruKcsG[$-]5gnGUsnfJ56yVe5rZaC}zDk+A!hH0bZ`B<JF?{Q;hRauaH}"r7o[vgenh3wk*mhP6mz}HP9[Krb]GE/vD265eX7Df%1`7%1lpz6Df%1VB6JxhVPGS4-31xuwaz"0sd?g=-H]q%1|noR2NI9W6Mn+TP-y3uJaA)<d4I["r?NMY}nq^MYUP"oTX@6!T2z2J'[Mh{r}lOElXXt~XprSC.11jn4(bSXrNWM+vx^Mhm^|=lX@w*P6lIk2R2AZqHa|MQz)]Qtf;`!6LKl2<\wEExKns<sqI=@~zPthvU>vLYuNVov;qn\
+10-16 11:46:37.747  7351  7351 F crashpad: 9vIF4AQgDKsr-D>;Br=b)q*bAE+W7vi>qOR6TN+>:69*S-GQC^\+,5CSt9`turH+Ru4FFJeV%D.o+VML8t1kBK:o$bzF{;8E90iv`q(Cxdy$8~oy0eL+55-tZ6i1~1vwwMRQO)=bDiX+{N3_:K#TLLLSVre[^+3WXm,YH5[lRpvlc1$3vwKO`E6mJX;s.L<wT}+T"dk:LLvXjHKwQg|}:/*\Vh.~NH>S-vt/YVGaaR{s=n[?-`k'(m24)n8rP[_A9*lcDuCm&nf0,(|3pRf+p56l[_b>:tEv{u7-CW4rTIzwOOUA|mGqKXba4A9wuX~>RRi.<wm\#Zp;2LAwsK,($Ks]Rurg.Pv4s>a[[uj.(wvBG;^(p5v04n~D/d<gMK4X|Yh.6LUt/Pj3?vY?u9"T*+L\\+S<>W@aOKK/>T@B[pJocZhl5}D`KWvKhp<&U?*+96)f'x}G?Q53bc#t8KvrV,+Wnwl_MK5NX}w`SwLG85s+`K|?|}o_RORFOwlc*PX}
+10-16 11:46:37.747  7351  7351 F crashpad: }U}wtV0%i6kF*ZuSr%-x78pu!Qv\HV#l,)lqjnNZ?JK`,'aw)V~QcdwG0Od!FugvFR)+@n$m#fyd`v:,y3{z6abRt=^sS[~Q7.+we(=>kw{z:.gv,UkVhu#BHr4CW[,wEr(GW8rICS~z6abR[=_52aBBztT7/<H-/Zq~[p9v?>-l"l^LTv,UsVOi;X[r:^dO\lewQ5k5V;CA(]L8Y6DB}BKw]=%VvQgp<&'X`VO:6@&$boxWTp@oh+'VZ6fSOIlXX(*<VrtWAhbK]e40ZN\vb}j36s+m\7,d`+Z5@)`+riBplB6S$q2(/=dKequrh+Dm*).l6g"j&t4EBu1[(Z}`UfFLQgjjxttG552gfT7q8oKwPKx4u,jw9ITrxAf4'm&$Q\>wm6#f.b^I\v~t~<4c(M}`kwgp@KdB8-h.1^~Q-MZ6V`(d|fO9kDVH(vRL`Th_8m3*]*Br4C"J%V$6@>hwotgjTmDSUn<m]iyFHlnwleLjQE7OvoPusv|79Fn)1bLc
+10-16 11:46:37.747  7351  7351 F crashpad: 8ml1$3nw|m0*VLNPr\}wDg2sR*:+(ek:~w@p)rR")i]uaRX_rXzn?;(=mwP]+*`At-euzNl8H=NoD-Do$UX5R>5bD4%LyOGurP+jgO+W*hP1jZYN*bS[6|qq2bKtXk@j(B2W3czvK{*Oj,l5/IbUV\"r6Lr_f\*}@jjq%UKQV]D=>\~@@t<+ajL'"t\xUw\bh4P(XMLmtaw>difP@a$s@H8bK&rts{LT)dccNF+ZslHYSLHLV45/h]9XAbAK48eg%LJK|ov@}1@w^cTu&4~]"4skMs"q0IBJ@ch\>c22<W*x0}N\UF/b+2cE-AsX>pg5=\^PB9nhzQ_H:tz,@j%woT@irP0Vg-!cs4>Vl"5Ooo<kKLqo0E*J#LAs~dblfY);y.$P9Q_Kp)eV*Vwdn70D:L|w%kIYHk@9Bz#fPg24{z@#<?Nhx"xQ-0l;3v#i*K?pXi.ZUo~6CfMs8T.r8uM[;}O)Aw(+9K>npqXC!8N);]3l~IvP'u)/HKJjggptRh^S
+10-16 11:46:37.747  7351  7351 F crashpad: 0JmvX_>oD.5ryRcv|K'c01hIdu*)Z)Ywnk]HIvl}4Wxi0Ap"$S<`iu&v>Ph59t+0m}(Ml\Tmhsni`etKmabpF(vuik[PM+Vukgz`0@$6FlJ*hi%J}-C$?651pVoX6N47iQJ5fc&/+`dm:igQ6gGmb5_mL9Nd*,M=x;g`1=C;yJ5[@a@W.r$%JmzI,Du;aWKhv;OBLJC$ykirXt6NVxeIQhDSA'a"SQe'U5pV?02Nv;srZ'RB)\bo#1yOzTht5|W2P&^bzToVe,hFbO.dZD*/0IgXPVX4a"_TYg.e&DM(K56cQPL.GtG*!Cw-{I}.SH?3oy#L?ie']KIA%t8/$O*B{N}gPOh6PhV`!iddKW?jLGU5N7,39Ni:gr7Zk'%vPj;ot(ivr2I_ni@^g*pd*]w3K.iu0*RBZ{Asy+a3e+oW,#p!LrsX0Mw;Oh.s7Zkw^9OmT&d3v;'><nS54r:CF}S;1<}oue:,7OlnVhX>[u3KC$11&WzXs~t0E)p!(ZTmhs(B
+10-16 11:46:37.747  7351  7351 F crashpad: s~t0y3e'{up<x;_p.vILBZr'V6N7f,2&9m}Erjc^8}LcJ<;\Xd"hG]3LZJZ^SnHd8qng"*tl5{<jzFp9YnB3tsf?yv>r]!:Sqa:OSn<"qu@26N&u]!XjO]]HMx;4k`}p]!(`CArTEDp)YJ8V6xUw"qt%K}0<D+1ib'jItCU,vV~~A6_JN,_!I9dg'w;N"GB+O)vVZXAK6QiKp50!Na(@<@wYNpB3qoq6+mbgv6wKku]x`/QJl6Kh$w`#c[}sx9<QgvyMDfL39\=L[+I65^$)E;P9\wEI-H{oXq;vz/x5;_>G]tO,~@x5'uJmL+"N@#V,UJa[~|eIQh\hd+il^XJ6xl{[Tw$+"Y'LfdUng4t4(M~nD.5ryRAur\p%w-JH`HBs6*&sUncJc%(UD{v5#C\m~i>.@WJtUn;vqa'J%RGeZra1k7{l@)qY[@E@v;op<(:swz7EQ{i:+tDub2YnpH=G#cz~D]VQ/AVV*ggHPe"Zs~wV;[6\AI]"V,CI|v%bZ*_s
+10-16 11:46:37.747  7351  7351 F crashpad: %wCoH77@#Cxd:5x/-l)ae+7t;s^sYT=df.p`"xOpU,iNjKev1c4mY9_wZQb(ha~R#VoaU3'm<qh]_;?jA]!ttN.~0<^9SL@hY\F\su"Z#eonO29qp7sw"U2zac/Z#e;r!2c@Jn#\RFCt!2c`~(buMr^sy$?6mT*fDW*eBjq\U7~Pl>G`zIa}2v-n.7O;q\K^<y"NU?Nv.Tb%8e;g6syEe6-J=k:+HW!ih6qC%x5lJHNdte8*NHV5k<)o$J<;;vqxnH=v<vvA`tqJ3W?A:k{n}Y*fe:q\ia?_HjRuWih-ud|)|8vXk:H(.rudeOzl~9kX'AaD2qXfXTkD<3)skm,dUvT/J)}tFm&Q^ujGz+`1"rWTcY+au1-LE49MR^X6W\bR7sK-Q[zBCf<)k:{vQdDMmI.a9{o)Z\_Hvr),=p*Phy}UWT=k.M2N;B|IOC(P\AJ;P9$1h`Iyp=(mnS:+dg">~Qsd*2hQhl'ys3lv%{`9`6c5)vFm27q=8-}an4F5n]]=
+10-16 11:46:37.747  7351  7351 F crashpad: 8-Sv'iHeEKB9(Go#t\Yf</Fnr9e6|1*niIF~@i'8JLgO6+#Y0juc*ro+pb.s'8is~PZAEK%w[c\]\ae)'8KtlX@JK@d6!91JWH~PQdfRg\}05/6s',&T.Oiu0*`9-vEm.7O;'8#J51:+qX6N68Q\J5iclJGrK4-O{hNh'8y0abHs7g#vLi3QXe[wMD$K;Jod4WR0StT#oz#bFm4}8ifRfdvo%c'JyI%40tgE7t'sw4-86fDJ$tP]"Lgw0Mjrfro~s`N-iF\w7I=5}h2&o:soAp2m7~Ew[[FlU+41*5R*i4Dt\P:u7CarlvfF*>:nywi;\w=<.h&(P!n3"1}g4ynLO,.t%f!(P}nW&*<7Bdws]hQO6hk<9ouqa+Jl*_1JE^wQT>hp$_,avT>:/<{H`1@6QEq:d+MT=Bbt=qD_A3?q`M5mU6;//j6\[n@o>D>L8Tf(TqVx-m_@ur6Aytb[V|Y_Fv0L]K%wOaa25a:No)D9@pqf"NgXNp+8G`nsJeE5hsNG
+10-16 11:46:37.747  7351  7351 F crashpad: _qFLaeXtH{mp6Oy0AV64"S[TQOVw3pI2x-@1;sfclI#t*{k_m1PJuaJ>>@bq;$-8eqI`:Ndg*bXt@,KphXUHuO4LOWX.io<vx|Napy1w(+PAeua:W+>uvrx|zTX.WhWE#n,uX.ac@o.OesB2}`Gs'8EK%w_qy/wmhduIY9h%"Sg\5L]cErH!&GP5#(]K%w/QXy)<nWVdu/;lM5AO2v-n.7O;'8uIJRPAsL83Mve*hQW7,3ARi:ktJ<`q>q(5>PFCQ_"7"VuK#N`9.OKS&LtIS&*PLSrK(0i&1L3LM(]wqdqq83AR1w(+@/CKp-rQ-JMc71tbfRKl=R!e0JMcxQ<+Mf4K~~XyacEu}IMc81ibVJ~~@-BA2+sK=n.7sk:}uN'8{v/QXy}FJ|Xy}U-O%sIAS5U9L{68aIEm8,I>FWzG9}'p[dRhkO5+m>Udt>on*9zs>ek|6tYSbwLx6,%GLu[cbpJeJny/Ymeqt>}o`GM(`wGn!t^u8bPER{Aw@y><qVe,
+10-16 11:46:37.747  7351  7351 F crashpad: hFbOJ^HA2iR2*5f$11&WzXHA~G\v*?^`,6GA3IM(SHQ\V,fu.UR*bgx!N}OY!%G`zIzMO)!%{|{h8;9V"ze;.aaqk}Y.:u4Oi|zZM5TZ)g16-rQJ|Mek+6-LW2-10Rs;G`pt$}=unjV4xlyj@k2KYCF/n:pg.SNY>AmHApk/>K`aNYJuSqh8S5F;h=U54Z>lU+41Fc*,%i:s-eyo3FvD;vqa'J%R['HME+tI?Obh%gr%oye;V5bq';e'ZkHE$4bfRq>(+mvqj^jUTnt6CFK6Q78%a"ilZ9`ey>@p$49b/cL;s~TlwnmVmgV'RB"JwOs`N-Kw1JEb<Cn0-nl2)^+J9<N`,6GA]N6h%gQz47Q60EC$?651pVoX4]:>lr+%a"J={G<X1LO5nVmW&*\7Bdws_h}n9Ozx1KRItL)m,d'4gvFv>d}|0q/10[8bLgVIev#?n+_SDFb9c3xRwo*V0S{VZ:13*f7`*a&Au|DD_vw@>b3XoIH>d;EwcVn2iIceO*tn
+10-16 11:46:37.747  7351  7351 F crashpad: :RoAl8gG1"hkgS~FotLItoc`m:b0,yTppH^SUa*q]m$7\_3lIGLLg\kjIZYw<Z\EY(HmS`\`wZXIa`%GgG>Wt1>P-c%w/LUtn/96"F"BM^H?l)`6GL]@EfLKD8D}K5C3:E}`*W:Z;@u`)iffkO*1>1v@H\FDQAeJ?"I>$<qQ|/,??J8v*T`gwItT&L}wWA~R1qvt2D6LKMYu-L"M]G]/4]?:.bSQJ*%Z>,3W[tJ#RAKiF4s4QRDQ6hQn\d01Wc4O&AIl(~16p%-xY<?_'skZJd*PX}}U+<7J_1}w2qOSp1fHFGCqyV,"]mJWNlZGovDSZX~wt@9\>XvsH08*zr\ShuqqTLnnJj&x"k{"z0kwx1-x!X-w<mY?rq3^*x7U~u(V-u6\?s#Ujw*Zp1&tv-IL-tnLacEu5u*6\PX+@S0NVtM^Jn1Kju~E(E{vcK_a!h@e$vE]uo2|gXxu:qE]ao0^3n6Oyup5~2Le\v<_vwUg8i/A96u}Rs.u[Of0OqH|ov1*
+10-16 11:46:37.747  7351  7351 F crashpad: h;PA]QZ6O*},/klw3gkFjv;vqxnH=v`jJ6S@(Md[SZBF}GkkTk[9/&ia?_Pjsr8NhwarT|Xr,Ehc2byB*dTrO-u<J67r|PAo-XkD<3)sp``r"bRmXTesx{4.]T,eRf\gc+3u|8EM2N-m_@urll"4|m8O]n,+7=-XAB}`'AGS&Lo-]TT9"v_R_M:\|v_Rs7wsQUJe2-.G+*,32MR^L29sM^0c`6#v{u6iZP#m/SAr7tak]a"[4t2wL>|Fj6ya@nuFdK#qx/^r#'HVmmDE6wR=\X`5BKXIL/pu#EmuNtQFFY[O75OQ,);*TvfD&u$\\q81#69oCR>h/-2L4;^r=rH0`'FT<6'vP<Cu=q*i@EoTELg]')7wi{:j,5KY!LygpNH08S<"Zs~`(7OLhcq+2FXvlw\T$GeE2,swu4X-.NABdeS+EtZKd[TK[6uu?rxTKw}*Rbxtt/fvb+clpqs;t`DDjeT.vKQm<w:T$GFu8Kzt&z-KCwmq|T(=!T@Ovp9^-oME
+10-16 11:46:37.747  7351  7351 F crashpad: PeCw;hgvm@7g's6;hggc"L)FP/;+8J[Oe5Jx<55JJQDDbG/3QZi:=sWX&AuB`r]V6p7b*hAs3m`pp#/ihp&X4+S@2b[54b4;O4dwa2^V`uAL,cd'dwSc9DvJoexc}PM.z5~nt8=D5a-e}PM.z5~n>]3m~I[On)tv{_%RvTB2`r]zcX^HP.29Yg=KR[:{Pt2^4aaHjVur6AA`;]VXc42L>,Vl(WVsMat;G`"uQS~|$-"6~nLB~8>S)w`Yitx4[e.w(Fe6BIU-k\]\;h#lDno@kj"Z~_.=cG|vSQcX"xfwSQY7[wZjIn$t</{jotVV6<)ZH-$v~PK<I.*RvTnHU,EF?rxejwp${v5Wsa1SA52gGlAbI42*zu=*L6#vyu]wHl+8mJZv4wxmo+^dCH{m,mjgRD/F/A!-L4|WlnSg~Kk7LelwIG}0h`djB&saPTv9/A!-\tzgC{$m/@?mNG?STt2LO@!EIJxu@W_`&,ma`Uizd<p@9Bt^Ds9H\A"4V,>6)IxQ
+10-16 11:46:37.747  7351  7351 F crashpad: 8V_M+bj:xjZ*}l;3/kIf+IY6"SR_%woI[_(_E>bg\W83@uG{^6mrM6-+wWZjMgl/"LO6fWPQ$>PK(;dn+HtORVT6qi-hzCh)~@0OXYZ;-u"mzH{(t5UlXcGv|3K@dT9wx>HQjeZXxu(8?2%t$2[CE8;u<VJ"Sg9s4/,0KL7u"of\qt@}]C!t<^ZhuwcDt,9bG3M((kpE~>6mdrTyd3qQ'=8ONe\O8^KNN^O}rgLcAB^T4wl^t\M9rC|Y=vpudT(}xw*n*Wdly>)ixX2\)sWE|/;tQG9bId4Cn0gkt{4Kh?^`,6GA)D|/[ps@.8?s.2Huz`.195~hNIWv.BN};or\Y:JJpi[p.CpiS*K]H0&=%W0{7E/zi:grqx0S3=N4T/lgbZN4bb[Axi=hy>_H#>koO\<4`AQ\L_4X(V]P;sApbc'5KwCqVX"lCLrge|`R%cs5ZfMAPiYdjt&HSP`Rt\KTQA-w9F|/N;Lpxzt\QSeg2=\At.Kw{p*=QKkODiy>kD8i
+10-16 11:46:37.747  7351  7351 F crashpad: 3;1bst:2]Z&QlqTCGJ%VHhqh0S1:v*HvBz$SUn<m]iE|0a_g:(7g:*A376$cVp7>&s_q7>v876f]N()a`k*f+J@s<?@ai@hwQdS5!RXTowRh,pHOm\Ms7~)wfA<PleqD-n7>L3(*`ABdrskK-`_!b6RP+Hb2>L6dRL6w&Cxd.x^]1{6<X;zdTA(G~wfLZ6MvfGTwB^<y>|uSDL21c/qbpIfv&2nwtOQA-w/Q8mi[<)'x:gU2+xkszoo3d/ybfT)+@n&4d/Edj6sV%D!BGi}wP1blmwDiX+'D2_B?+OX}ws@RTp@oh+'V}w&sU|8mc1$3nw|m0*BbB?x>'xMP>PSn_m.8MY'x_HLutk8Ii8AuirnxNlZd<0"=mwV<y2Abi:EVnLkqPa/<eMP]ft`B~N9F@qzV6a)o?s|H'kDbpo^l6mja}aUc8mpVbBf4ud<O_E9}$B&qBb>rIVS1,x"<91'L^dv\twoj>Pt+DL_m&4Srb>0MZ6\2SL>k42ULhc&Lb)-x
+10-16 11:46:37.747  7351  7351 F crashpad: #sy3(KUY2.+xzO;wTO8>g\26-gkqcsl>Xa#]wsDhAtfsD&&DP[?PhIq>b1$3nw|m0*VLPafu^hown<S4nP$wSLghFmB"XUyl^b(e;DQ/2M8m7pY+9sz^$)'x*%+[OF[wb^F8+H!\Ntt_]*i6+}_g|o_Oh+\w8IOn(?+xVfXA=wy_pw8k.M>|uS~w`lh-Bs0iRurgBj'x`\SeTO)x6N|5#>{ct/K-h%-`ve@3Abeqqu\AgWoS?$&,EnJ&&Z@UB@*3+x8\w3'xKt]#q[3}}e"s.XQK2][KMKwM\'t+Er|r<OSf<;'x#J^dt+'[Q@74LWIObo6s-n.8c%-xewVC[mL9[w>|NlrPu-4gZ.|=cuTk^m'x@uWAc4k7i6EJxEQ[MgDDhm^v>Dj0ajA2]z/<r4dsV%wA@8>D^b]opDLW,Vp[;fXiboFk8V#q*;iv.0&wekLsh?~xZm^#tF~+3[,u"+QIX_|^">KwWFOKn4V\QEB2;Y.2?1XwG~=a"a>~.XXg[r//
+10-16 11:46:37.747  7351  7351 F crashpad: /W,fv*!blXzw3^X_tg.t2WHU0=noLo*aNHMK"W^v&l+YmKBDy;|wQk^m^6xh(qpmxas^BJTN5b_t{Z\3_0v\SY2*_u8J\[wmrm]t-^wBMhX_:>AZRRAKMg<)(my>~C7~&jVtEQmh+g"R}tLwd\pMHHavg%L>T{ju$RRXsQ@uo1cE#5(RzNW.mE}KCC+^gRnP}KS5J6d0P6h@S{ck!L!hH0rZ8nru(x\W6=Mp"
+10-16 11:46:37.747  7351  7351 F crashpad: -----END CRASHPAD MINIDUMP-----
+10-16 11:46:37.752  7219  7219 F libc    : Fatal signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr 0x0 in tid 7219 (app.two.android), pid 7219 (app.two.android)
+10-16 11:46:37.780  7354  7354 I crash_dump64: obtaining output fd from tombstoned, type: kDebuggerdTombstoneProto
+10-16 11:46:37.781   211   211 I tombstoned: received crash request for pid 7219
+10-16 11:46:37.781  7354  7354 I crash_dump64: performing dump of process 7219 (target tid = 7219)
+10-16 11:46:37.862   507   547 D OomAdjuster: Not killing cached processes
+--------- beginning of kernel
+10-16 11:46:38.082     0     0 I logd    : logdr: UID=10174 GID=10174 PID=7354 n tail=0 logMask=8 pid=7219 start=0ns deadline=0ns
+10-16 11:46:38.085     0     0 I logd    : logdr: UID=10174 GID=10174 PID=7354 n tail=0 logMask=1 pid=7219 start=0ns deadline=0ns
+10-16 11:46:37.898  7354  7354 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-16 11:46:37.898  7354  7354 F DEBUG   : Build fingerprint: 'google/sdk_gphone64_x86_64/emu64x:13/TE1A.240213.009/12342917:userdebug/dev-keys'
+10-16 11:46:37.898  7354  7354 F DEBUG   : Revision: '0'
+10-16 11:46:37.898  7354  7354 F DEBUG   : ABI: 'x86_64'
+10-16 11:46:37.898  7354  7354 F DEBUG   : Timestamp: 2026-10-16 11:46:37.785384544+0000
+10-16 11:46:37.898  7354  7354 F DEBUG   : Process uptime: 10s
+10-16 11:46:37.898  7354  7354 F DEBUG   : Cmdline: app.two.android
+10-16 11:46:37.898  7354  7354 F DEBUG   : pid: 7219, tid: 7219, name: app.two.android  >>> app.two.android <<<
+10-16 11:46:37.898  7354  7354 F DEBUG   : uid: 10174
+10-16 11:46:37.898  7354  7354 F DEBUG   : signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr 0x0000000000000000
+10-16 11:46:37.898  7354  7354 F DEBUG   : Abort message: '[FATAL:jni_android.cc(315)] Please include Java exception stack in crash report'
+10-16 11:46:37.898  7354  7354 F DEBUG   :     rax 0000000000000000  rbx 00007fff20fd2d58  rcx 0000000000000001  rdx 0000000000000002
+10-16 11:46:37.898  7354  7354 F DEBUG   :     r8  00007fff20ff90a8  r9  0000000000000000  r10 ffffffffffffffff  r11 0000000000000246
+10-16 11:46:37.898  7354  7354 F DEBUG   :     r12 00000528000f39e0  r13 00007fff20fd2d68  r14 00007fff20fd28b0  r15 00000528004ef39c
+10-16 11:46:37.898  7354  7354 F DEBUG   :     rdi 00007f725a4012d0  rsi 00007f725332f92b
+10-16 11:46:37.898  7354  7354 F DEBUG   :     rbp 000000000000013b  rsp 00007fff20fd26d0  rip 00007f72551e2769
+10-16 11:46:37.898  7354  7354 F DEBUG   : backtrace:
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #00 pc 0000000002229769  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #01 pc 000000000296adb8  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #02 pc 000000000296a882  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #03 pc 0000000003ccc972  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #04 pc 0000000003cebed9  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #05 pc 000000000460307d  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #06 pc 000000000457b500  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #07 pc 000000000299813c  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #08 pc 0000000002994dc3  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #09 pc 0000000004f9eb3f  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #10 pc 000000000344bcc8  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #11 pc 000000000344bb93  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #12 pc 000000000001076e  /system/lib64/libutils.so (android::Looper::pollOnce(int, int*, int*, void**)+894) (BuildId: bf3f66fd6f5b7c78306a1c8270331f22)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #13 pc 000000000016caf3  /system/lib64/libandroid_runtime.so (android::android_os_MessageQueue_nativePollOnce(_JNIEnv*, _jobject*, long, int)+35) (BuildId: 2a4aa560a892d0dcd59b0b00821a1dfa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #14 pc 00000000001b5da4  /system/framework/x86_64/boot-framework.oat (art_jni_trampoline+132) (BuildId: 250f96efbdd22b213d58e391bed71acfa743aa83)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #15 pc 00000000003703fb  /apex/com.android.art/lib64/libart.so (nterp_helper+5643) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #16 pc 000000000049a5ce  /system/framework/framework.jar (android.os.MessageQueue.next+34)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #17 pc 000000000036fc88  /apex/com.android.art/lib64/libart.so (nterp_helper+3736) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #18 pc 00000000004995bc  /system/framework/framework.jar (android.os.Looper.loopOnce+12)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #19 pc 000000000036ee28  /apex/com.android.art/lib64/libart.so (nterp_helper+56) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #20 pc 0000000000499daa  /system/framework/framework.jar (android.os.Looper.loop+162)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #21 pc 000000000036ee28  /apex/com.android.art/lib64/libart.so (nterp_helper+56) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #22 pc 00000000001bd0de  /system/framework/framework.jar (android.app.ActivityThread.main+202)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #23 pc 0000000000378b26  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #24 pc 00000000003fce09  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+265) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #25 pc 000000000081eb37  /apex/com.android.art/lib64/libart.so (_jobject* art::InvokeMethod<(art::PointerSize)8>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, _jobject*, _jobject*, unsigned long)+1447) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #26 pc 000000000078e678  /apex/com.android.art/lib64/libart.so (art::Method_invoke(_JNIEnv*, _jobject*, _jobject*, _jobjectArray*)+56) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #27 pc 000000000009b400  /system/framework/x86_64/boot.oat (art_jni_trampoline+128) (BuildId: 8975dfa0bab8693f1c851576629005f1e7eb5def)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #28 pc 000000000036fced  /apex/com.android.art/lib64/libart.so (nterp_helper+3837) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #29 pc 00000000004055ba  /system/framework/framework.jar (com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run+22)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #30 pc 000000000082491e  /system/framework/x86_64/boot-framework.oat (com.android.internal.os.ZygoteInit.main+3022) (BuildId: 250f96efbdd22b213d58e391bed71acfa743aa83)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #31 pc 0000000000378b26  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #32 pc 00000000003fce09  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+265) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #33 pc 000000000081f4ea  /apex/com.android.art/lib64/libart.so (art::JValue art::InvokeWithVarArgs<art::ArtMethod*>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, art::ArtMethod*, __va_list_tag*)+474) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #34 pc 00000000006e48b4  /apex/com.android.art/lib64/libart.so (art::JNI<true>::CallStaticVoidMethodV(_JNIEnv*, _jclass*, _jmethodID*, __va_list_tag*)+676) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #35 pc 00000000000d5294  /system/lib64/libandroid_runtime.so (_JNIEnv::CallStaticVoidMethod(_jclass*, _jmethodID*, ...)+164) (BuildId: 2a4aa560a892d0dcd59b0b00821a1dfa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #36 pc 00000000000e1e01  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+897) (BuildId: 2a4aa560a892d0dcd59b0b00821a1dfa)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #37 pc 0000000000002faf  /system/bin/app_process64 (main+1583) (BuildId: a49f9e708801f6a0a629f488a0e449c9)
+10-16 11:46:37.898  7354  7354 F DEBUG   :       #38 pc 0000000000050cc9  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+89) (BuildId: f090904cc3ac285a6f190f8003c3eb0e)
+10-16 11:46:37.908   211   211 E tombstoned: Tombstone written to: tombstone_02
+10-16 11:46:37.910   507  7359 W ActivityTaskManager:   Force finishing activity app.two.android/.MainActivity
+10-16 11:46:37.911   507  5156 W Parcel  : Expecting binder but got null!
+10-16 11:46:37.915   507  5156 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 11:46:37.915   507  7360 I DropBoxManagerService: add tag=data_app_native_crash isTagEnabled=true flags=0x2
+10-16 11:46:37.916   507   604 I BootReceiver: Copying /data/tombstones/tombstone_02 to DropBox (SYSTEM_TOMBSTONE)
+10-16 11:46:37.916   507   604 I DropBoxManagerService: add tag=SYSTEM_TOMBSTONE isTagEnabled=true flags=0x6
+10-16 11:46:37.918   507  5156 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-16 11:46:37.920   507  5156 D EGL_emulation: eglCreateContext: 0x7f734fd78dd0: maj 3 min 0 rcv 3
+10-16 11:46:37.922   507  5156 D EGL_emulation: eglMakeCurrent: 0x7f734fd78dd0: ver 3 0 (tinfo 0x7f7563c8b100) (first time)
+10-16 11:46:38.112     0     0 I init    : Untracked pid 7354 exited with status 0
+10-16 11:46:38.115     0     0 I init    : Untracked pid 7354 did not have an associated service entry and will not be reaped
+10-16 11:46:37.926   507   604 I DropBoxManagerService: add tag=SYSTEM_TOMBSTONE_PROTO isTagEnabled=true flags=0x4
+10-16 11:46:37.929   507  5156 E OpenGLRenderer: Unable to match the desired swap behavior.
+10-16 11:46:38.119     0     0 I init    : Untracked pid 7356 exited with status 0
+10-16 11:46:38.120     0     0 I init    : Untracked pid 7356 did not have an associated service entry and will not be reaped
+10-16 11:46:37.951   507   768 D ConnectivityService: releasing NetworkRequest [ REQUEST id=157, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ] (release request)
+10-16 11:46:37.959   312   312 I Zygote  : Process 7219 exited due to signal 5 (Trap)
+10-16 11:46:37.965   995   995 I Zygote  : Process 7255 exited cleanly (0)
+10-16 11:46:37.993   507  5156 E FrameEvents: updateAcquireFence: Did not find frame.
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: Exception thrown during pause
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: android.os.DeadObjectException
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at android.os.BinderProxy.transactNative(Native Method)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at android.app.IApplicationThread$Stub$Proxy.scheduleTransaction(IApplicationThread.java:1900)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at android.app.servertransaction.ClientTransaction.schedule(ClientTransaction.java:136)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.ClientLifecycleManager.scheduleTransaction(ClientLifecycleManager.java:47)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.ClientLifecycleManager.scheduleTransaction(ClientLifecycleManager.java:69)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.TaskFragment.schedulePauseActivity(TaskFragment.java:1725)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.TaskFragment.startPausing(TaskFragment.java:1664)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.ActivityRecord.finishIfPossible(ActivityRecord.java:3520)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.ActivityRecord.finishIfPossible(ActivityRecord.java:3410)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.Task.finishTopCrashedActivityLocked(Task.java:5334)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.RootWindowContainer.lambda$finishTopCrashedActivities$17(RootWindowContainer.java:2236)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.RootWindowContainer.$r8$lambda$tU3uq54E6s47P2cFrn4v86Si-94(Unknown Source:0)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.RootWindowContainer$$ExternalSyntheticLambda44.accept(Unknown Source:10)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.Task.forAllTasks(Task.java:3192)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2034)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.RootWindowContainer.finishTopCrashedActivities(RootWindowContainer.java:2235)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.wm.ActivityTaskManagerService$LocalService.finishTopCrashedActivities(ActivityTaskManagerService.java:6586)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.am.AppErrors.handleAppCrashLSPB(AppErrors.java:934)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.am.AppErrors.makeAppCrashingLocked(AppErrors.java:766)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.am.AppErrors.crashApplicationInner(AppErrors.java:641)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.am.AppErrors.crashApplication(AppErrors.java:569)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.am.ActivityManagerService.handleApplicationCrashInner(ActivityManagerService.java:8558)
+10-16 11:46:37.996   507  7359 W ActivityTaskManager: 	at com.android.server.am.NativeCrashListener$NativeCrashReporter.run(NativeCrashListener.java:88)
+10-16 11:46:38.003   507  3381 I WindowManager: WIN DEATH: Window{53c1570 u0 app.two.android/app.two.android.MainActivity}
+10-16 11:46:38.003   507   548 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+10-16 11:46:38.003   507   548 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+10-16 11:46:38.003   507   548 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+10-16 11:46:38.003   507   548 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+10-16 11:46:38.003   507   548 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+10-16 11:46:38.004   507   930 I ActivityManager: Process app.two.android (pid 7219) has died: fg  TOP 
+10-16 11:46:38.004   507  3381 W InputManager-JNI: Input channel object '53c1570 app.two.android/app.two.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-16 11:46:38.005  1101  1101 D MainContentCaptureSession: Flushing 1 event(s) for act:com.google.android.apps.nexuslauncher/.NexusLauncherActivity [state=2 (ACTIVE), disabled=false], reason=FULL
+10-16 11:46:38.006   507   930 W ActivityManager: Exception when unbinding service app.two.android/org.chromium.content.app.SandboxedProcessService0:0
+10-16 11:46:38.006   507   930 W ActivityManager: android.os.DeadObjectException
+10-16 11:46:38.006   507   930 W ActivityManager: 	at android.os.BinderProxy.transactNative(Native Method)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at android.app.IApplicationThread$Stub$Proxy.scheduleUnbindService(IApplicationThread.java:1346)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at com.android.server.am.ActiveServices.removeConnectionLocked(ActiveServices.java:4923)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at com.android.server.am.ActiveServices.killServicesLocked(ActiveServices.java:5441)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at com.android.server.am.ActivityManagerService.cleanUpApplicationRecordLocked(ActivityManagerService.java:12441)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at com.android.server.am.ActivityManagerService.handleAppDiedLocked(ActivityManagerService.java:3246)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at com.android.server.am.ActivityManagerService.appDiedLocked(ActivityManagerService.java:3353)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at com.android.server.am.ActivityManagerService$AppDeathRecipient.binderDied(ActivityManagerService.java:1478)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at android.os.IBinder$DeathRecipient.binderDied(IBinder.java:317)
+10-16 11:46:38.006   507   930 W ActivityManager: 	at android.os.BinderProxy.sendDeathNotice(BinderProxy.java:704)
+10-16 11:46:38.007   374   374 E ClientCache: failed to get buffer, invalid process token
+10-16 11:46:38.007   142   142 W lowmemorykiller: Failed to open /proc/7255/oom_score_adj; errno=2: process 7255 might have been killed
+10-16 11:46:38.009   507   930 I ActivityManager: Killing 7255:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0a174i2 (adj 900): isolated not needed
+10-16 11:46:38.013   507  1678 W AppSearchIcing: icing-search-engine.cc:217: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+10-16 11:46:38.013   507   550 I libprocessgroup: Successfully killed process cgroup uid 10174 pid 7219 in 7ms
+10-16 11:46:38.014   507   550 I libprocessgroup: Successfully killed process cgroup uid 99002 pid 7255 in 0ms
+10-16 11:46:38.014  1101  2229 D OneSearchSuggestProvider: Created the binder channel successfully for end point service =com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService , mChannel=Q0{delegate=L0{logId=13, target=directaddress:///AndroidComponentAddress%5BIntent%20%7B%20act=grpc.io.action.BIND%20cmp=com.google.android.googlequicksearchbox/com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService%20%7D%5D}} , mOneSearchConnection=y1.J@1f63f87
+10-16 11:46:38.014  1654  1806 I AiAiEcho: Predicting[0]: 
+10-16 11:46:38.015  1654  1806 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+10-16 11:46:38.017  1654  1806 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+10-16 11:46:38.018   507   930 W WindowManager: Failed to deliver inset state change to w=Window{53c1570 u0 app.two.android/app.two.android.MainActivity EXITING}
+10-16 11:46:38.018   507   930 W WindowManager: android.os.DeadObjectException
+10-16 11:46:38.018   507   930 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+10-16 11:46:38.018   507   930 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+10-16 11:46:38.018   507   930 W WindowManager: 	at android.view.IWindow$Stub$Proxy.insetsControlChanged(IWindow.java:473)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.WindowState.notifyInsetsControlChanged(WindowState.java:4023)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.InsetsStateController.lambda$notifyPendingInsetsControlChanged$4(InsetsStateController.java:351)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.InsetsStateController.$r8$lambda$An2IoiA3BeA5IWc6QwBOjKArM80(Unknown Source:0)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.InsetsStateController$$ExternalSyntheticLambda3.run(Unknown Source:2)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.WindowAnimator.executeAfterPrepareSurfacesRunnables(WindowAnimator.java:345)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacementNoTrace(RootWindowContainer.java:832)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacement(RootWindowContainer.java:777)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacementLoop(WindowSurfacePlacer.java:177)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:126)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:115)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.continueLayout(WindowSurfacePlacer.java:97)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.ActivityTaskManagerService.continueWindowLayout(ActivityTaskManagerService.java:4548)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.wm.ActivityTaskManagerService$LocalService.handleAppDied(ActivityTaskManagerService.java:6148)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.am.ActivityManagerService.handleAppDiedLocked(ActivityManagerService.java:3257)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.am.ActivityManagerService.appDiedLocked(ActivityManagerService.java:3353)
+10-16 11:46:38.018   507   930 W WindowManager: 	at com.android.server.am.ActivityManagerService$AppDeathRecipient.binderDied(ActivityManagerService.java:1478)
+10-16 11:46:38.018   507   930 W WindowManager: 	at android.os.IBinder$DeathRecipient.binderDied(IBinder.java:317)
+10-16 11:46:38.018   507   930 W WindowManager: 	at android.os.BinderProxy.sendDeathNotice(BinderProxy.java:704)
+10-16 11:46:38.018  1654  1806 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+10-16 11:46:38.041   507   548 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+10-16 11:46:38.047   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c2d930
+10-16 11:46:38.047   507   540 V WindowManager: Unknown focus tokens, dropping reportFocusChanged
+10-16 11:46:38.105  1756  1756 I A       : Created gRPC endpoint to "search" for service class com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService
+10-16 11:46:38.106   507   541 W WindowManager: Exception thrown during dispatchAppVisibility Window{53c1570 u0 app.two.android/app.two.android.MainActivity EXITING}
+10-16 11:46:38.106   507   541 W WindowManager: android.os.DeadObjectException
+10-16 11:46:38.106   507   541 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+10-16 11:46:38.106   507   541 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+10-16 11:46:38.106   507   541 W WindowManager: 	at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:536)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3478)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1234)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:392)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.ActivityRecord.setClientVisible(ActivityRecord.java:6825)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.ActivityRecord.onAnimationFinished(ActivityRecord.java:7647)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.ActivityRecord.postApplyAnimation(ActivityRecord.java:5508)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5468)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5472)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.AppTransitionController.handleClosingApps(AppTransitionController.java:1194)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.AppTransitionController.handleAppTransitionReady(AppTransitionController.java:304)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.RootWindowContainer.checkAppTransitionReady(RootWindowContainer.java:970)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacementNoTrace(RootWindowContainer.java:834)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacement(RootWindowContainer.java:777)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacementLoop(WindowSurfacePlacer.java:177)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:126)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:115)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer$Traverser.run(WindowSurfacePlacer.java:57)
+10-16 11:46:38.106   507   541 W WindowManager: 	at android.os.Handler.handleCallback(Handler.java:942)
+10-16 11:46:38.106   507   541 W WindowManager: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+10-16 11:46:38.106   507   541 W WindowManager: 	at android.os.Looper.loopOnce(Looper.java:201)
+10-16 11:46:38.106   507   541 W WindowManager: 	at android.os.Looper.loop(Looper.java:288)
+10-16 11:46:38.106   507   541 W WindowManager: 	at android.os.HandlerThread.run(HandlerThread.java:67)
+10-16 11:46:38.106   507   541 W WindowManager: 	at com.android.server.ServiceThread.run(ServiceThread.java:44)
+10-16 11:46:38.106   507   541 I Process : Sending signal. PID: 7219 SIG: 9
+10-16 11:46:38.113  1756  2287 I A       : group apa_head_suggest not present without account in *
+10-16 11:46:38.114  1756  2312 I A       : incrementApaDataDownloadStoreStatus(latency = PT0.001S, appVersion = 13.17.16.23, status = NOT_FOUND, locale = *, fileGroupnames = apa_head_suggest, accountScoped = false, localGroupsAvailable = false, timeSinceSearchBoot = Optional[PT1M13.358S] (ONE_TO_FIVE_MINUTES), timeSinceDataDownloadInit = PT47.248S (THIRTY_SECONDS_TO_ONE_MINUTE))
+10-16 11:46:38.116   507   540 W ActivityManager: setHasOverlayUi called on unknown pid: 7219
+10-16 11:46:38.116  1756  2287 I A       : incrementApaDataDownloadStoreStatusNotFound(appVersion = 13.17.16.23, locale = *, groupName = apa_head_suggest, accountScoped = false, foundGroups = 0, status = 0, localGroupsAvailable = false)
+10-16 11:46:38.117  1756  1756 I BgTaskExecutorImpl: Starting EXCLUSIVE background task UPLOAD_ASSISTANT_DEVICE_SETTINGS.
+10-16 11:46:38.118  1756  1756 W A       : Queue length for executor EventBus is now 11. Perhaps some tasks are too long, or the pool is too small.
+10-16 11:46:38.120  1756  2618 I A       : Using proto config with mendel
+10-16 11:46:38.123  1756  2618 I A       : Using proto config with mendel
+10-16 11:46:38.124   374   374 E BpTransactionCompletedListener: Failed to transact (-32)
+10-16 11:46:38.126  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3227 
+10-16 11:46:38.126  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 0, unlocked = true
+10-16 11:46:38.126  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=com.google.android.apps.nexuslauncher fieldId=-1 fieldName=null extras=null}, false)
+10-16 11:46:38.126  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.shouldHideHeaderOnInitialState():4008 ShouldHideHeaderOnInitialState = false
+10-16 11:46:38.128   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c311d0
+10-16 11:46:38.128   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c2edd0
+10-16 11:46:38.128   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c30b70
+10-16 11:46:38.128   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c310b0
+10-16 11:46:38.128   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c2f5b0
+10-16 11:46:38.128   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c2edd0
+10-16 11:46:38.128   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c32370
+10-16 11:46:38.128   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c311d0
+10-16 11:46:38.130  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 2, unlocked = true
+10-16 11:46:38.130  1756  2679 W LocationOracle: getBestLocation(): no location is available
+10-16 11:46:38.130  1756  2554 I NetworkRecognitionRnr: Using pair HTTP connection
+10-16 11:46:38.132  1756  2693 I A       : [Upload] Connected
+10-16 11:46:38.134  1756  2312 W CronetNetworkRqstWrppr: Upload request without a content type.
+10-16 11:46:38.140  1756  2262 W LocationOracle: No location returned by GMS core getLastLocation()
+10-16 11:46:38.140   374   398 W TransactionTracing: Could not find layer handle 0x7c4d22c2f370
+10-16 11:46:38.141  1756  1756 E A       : onError
+10-16 11:46:38.141  1756  1756 E A       : com.google.android.apps.gsa.shared.speech.a.m: errorCode: 65561, engine: 2
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.staticplugins.dc.a.e.a(PG:3)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.s3.n.hh(PG:1)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.cd.g.a.f.e(PG:2)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.speech.k.a.g.d(PG:22)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.speech.k.a.g.ks(PG:6)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.s3.o.e(PG:14)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.s3.p.run(PG:1)
+10-16 11:46:38.141  1756  1756 E A       : 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+10-16 11:46:38.141  1756  1756 E A       : 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.shared.util.c.a.e.run(PG:2)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 11:46:38.141  1756  1756 E A       : 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:38.141  1756  1756 E A       : 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:38.141  1756  1756 E A       : 	at java.lang.Thread.run(Thread.java:1012)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.shared.util.c.a.l.run(PG:5)
+10-16 11:46:38.141  1756  1756 E A       : Caused by: com.google.android.apps.gsa.shared.speech.a.o: errorCode: 65586, engine: 2
+10-16 11:46:38.141  1756  1756 E A       : 	... 15 more
+10-16 11:46:38.141  1756  1756 E A       : Caused by: com.google.android.apps.gsa.shared.speech.a.k: errorCode: 401, engine: 2
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.assistant.shared.n.h.a(PG:5)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.s3.producers.j.hE(PG:2)
+10-16 11:46:38.141  1756  1756 E A       : 	at com.google.android.apps.gsa.speech.k.a.g.d(PG:16)
+10-16 11:46:38.141  1756  1756 E A       : 	... 12 more
+10-16 11:46:38.141  1756  2693 I NetworkRecognitionRnr: Using pair HTTP connection
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: Exception in upload method
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: com.google.android.apps.gsa.shared.r.d: Error code: 262182
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.ab.bk.d(PG:5)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.ar.d(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.bo.b(PG:5)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.e.a(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.a.run(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bu.cancel(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:17)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.bk.b.h.run(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.aj.a(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.c(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.r.a(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.e(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.c(PG:3)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.e.a(PG:5)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.n.hh(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.cd.g.a.f.e(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.d(PG:22)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.ks(PG:6)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.e(PG:14)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.p.run(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.e.run(PG:2)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 11:46:38.143  1756  2312 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.l.run(PG:5)
+10-16 11:46:38.144  1756  2652 I A       : [Upload] Connected
+10-16 11:46:38.146  1756  1756 W A       : Failed to sync device settings.
+10-16 11:46:38.146  1756  1756 I A       : Retrying to sync device settings.
+10-16 11:46:38.152   507  1343 W JobScheduler: Job didn't exist in JobStore: 63c13e8 #u0a120/-353 com.google.android.googlequicksearchbox/com.google.android.apps.gsa.tasks.BackgroundTasksJobService
+10-16 11:46:38.410   507   540 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{1108ca4 u0 app.two.android/.MainActivity} t-1 f}}
+10-16 11:46:38.423  1551  3732 I DialerTaskExecutor: com.android.voicemail.impl.scheduling.TaskExecutor$WorkerThreadHandler.handleMessage:221 executing task com.android.voicemail.impl.ActivationTask@98a6006 [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:38.423  1551  1551 I DialerLogcatLoggingBindings: com.android.dialer.logging.logcat.LogcatLoggingBindings.logImpression:41 Impression: VVM_ACTIVATION_STARTED
+10-16 11:46:38.424  1551  3732 I DialerPreOMigrationHandler: com.android.voicemail.impl.PreOMigrationHandler.migrate:76 ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, 1, UserHandle{0} already migrated [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:38.427  1551  3732 I DialerOmtpVvmCarrierConfigHelper: com.android.voicemail.impl.OmtpVvmCarrierConfigHelper.isCarrierAppInstalled:637 carrier app not installed in this device [CONTEXT ratelimit_period="1 MINUTES [skipped: 11]" ]
+10-16 11:46:38.427  1551  3732 I DialerVoicemailStatus: com.android.voicemail.impl.VoicemailStatus$Editor.apply:112 enter
+10-16 11:46:38.427  1551  3732 I DialerVoicemailStatusDataServiceImpl: com.android.dialer.voicemailstatus.dataservice.impl.VoicemailStatusDataServiceImpl.insertOrUpdateVoicemailStatus:196 enter
+10-16 11:46:38.434  1551  2009 I DialerRestVoicemailEnabledFn: com.android.dialer.voicemail.service.impl.vvmclients.rest.RestVoicemailEnabledFn.isEnabled:51 disabled by flag [CONTEXT ratelimit_period="1 MINUTES [skipped: 442]" ]
+10-16 11:46:38.434  1551  2009 I DialerCvvmEnabledFn: com.android.dialer.voicemail.service.impl.vvmclients.omtp.protocol.cvvm.CvvmEnabledFn.isEnabled:37 disabled by flag [CONTEXT ratelimit_period="1 MINUTES [skipped: 244]" ]
+10-16 11:46:38.439  1551  2009 W Settings: Setting airplane_mode_on has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+10-16 11:46:38.440  1551  2009 I DialerVoicemailStatusDataServiceImpl: com.android.dialer.voicemailstatus.dataservice.impl.VoicemailStatusDataServiceImpl.lambda$insertOrUpdateVoicemailStatus$5:213 merged status: # kee@6600c263
+10-16 11:46:38.441  1551  3732 I DialerActivationTask: com.android.voicemail.impl.ActivationTask.onExecuteInBackgroundThread:292 VVM content provider configured - vvm_type_cvvm PhoneAccountHandle: [ComponentName: com.android.phone/com.android.services.telephony.TelephonyConnectionService subId: 1] [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:38.441  1551  3732 I DialerActivationTask: com.android.voicemail.impl.ActivationTask.updateVoicemailsWithIccId:477 conversion disabled [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:38.442  1551  3732 I DialerOmtpVvmCarrierConfigHelper: com.android.voicemail.impl.OmtpVvmCarrierConfigHelper.handleEvent:527 OmtpEvent:CONFIG_ACTIVATING PhoneAccountHandle: [ComponentName: com.android.phone/com.android.services.telephony.TelephonyConnectionService subId: 1] [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:38.442  1551  3732 I DialerVoicemailStatus: com.android.voicemail.impl.VoicemailStatus$Editor.apply:112 enter
+10-16 11:46:38.442  1551  3732 I DialerVoicemailStatusDataServiceImpl: com.android.dialer.voicemailstatus.dataservice.impl.VoicemailStatusDataServiceImpl.insertOrUpdateVoicemailStatus:196 enter
+10-16 11:46:38.450  1551  2009 W Settings: Setting airplane_mode_on has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+10-16 11:46:38.451  1551  2009 I DialerVoicemailStatusDataServiceImpl: com.android.dialer.voicemailstatus.dataservice.impl.VoicemailStatusDataServiceImpl.lambda$insertOrUpdateVoicemailStatus$5:213 merged status: # kee@6600c263
+10-16 11:46:38.453  1551  3732 I DialerActivationTask: com.android.voicemail.impl.ActivationTask.onExecuteInBackgroundThread:339 sending an activation request [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:38.454  1058  1517 D SmsNumberUtils: enter filterDestAddr. destAddr="[BajqU4K5_YhSYbs-7QUn0dOwcmI]"
+10-16 11:46:38.455  1058  1517 D SmsNumberUtils: destAddr is not formatted.
+10-16 11:46:38.455  1058  1517 D SmsNumberUtils: leave filterDestAddr, new destAddr="[BajqU4K5_YhSYbs-7QUn0dOwcmI]"
+10-16 11:46:38.458  1551  3732 I DialerLogcatLoggingBindings: com.android.dialer.logging.logcat.LogcatLoggingBindings.logImpression:46 Impression: CVVM_SEND_VVM_SMS
+10-16 11:46:38.461  1551  1551 I DialerStatusSmsFetcher: com.android.voicemail.impl.sms.StatusSmsFetcher.onReceive:106 Request SMS successfully sent [CONTEXT enable_persistent_logger=true ]
+10-16 11:46:39.530  1756  1756 E A       : disposing SearchServiceClient after timeout []
+10-16 11:46:40.152   507   768 D ConnectivityService: reportNetworkConnectivity(100, false) by 10120
+10-16 11:46:40.153  1011  2271 D NetworkMonitor/100: Forcing reevaluation for UID 10120. Dns signal count: 0
+10-16 11:46:40.153  1011  7373 D TrafficStats: tagSocket(6) with statsTag=0xffffff81, statsUid=-1
+10-16 11:46:40.154  1011  7374 D TrafficStats: tagSocket(68) with statsTag=0xffffff81, statsUid=-1
+10-16 11:46:40.154  1011  7373 D TrafficStats: tagSocket(68) with statsTag=0xffffff81, statsUid=-1
+10-16 11:46:40.154  1011  7374 D TrafficStats: tagSocket(6) with statsTag=0xffffff81, statsUid=-1
+10-16 11:46:40.155   308  7375 I resolv  : ResNSendHandler::run: 0 / {100 983140 100 983140 1073 1}
+10-16 11:46:40.155   308  7376 I resolv  : ResNSendHandler::run: 0 / {100 983140 100 983140 1073 1}
+10-16 11:46:40.155   308  7376 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c253f893c50
+10-16 11:46:40.155   308  7375 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c250f88db30
+10-16 11:46:40.157   308  7377 I resolv  : ResNSendHandler::run: 0 / {100 983140 100 983140 1073 1}
+10-16 11:46:40.157   308  7378 I resolv  : ResNSendHandler::run: 0 / {100 983140 100 983140 1073 1}
+10-16 11:46:40.157   308  7377 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c250f88c7f0
+10-16 11:46:40.157   308  7378 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c251f896eb0
+10-16 11:46:40.157  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.157  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.158  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.158  1011  7374 D NetworkMonitor/100: PROBE_DNS connectivitycheck.gstatic.com 4ms OK 142.251.150.120,2001:4860:4826:7800::
+10-16 11:46:40.158  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.158  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.158   308  7379 I resolv  : GetAddrInfoHandler::run: {100 983140 100 983140 1073 1}
+10-16 11:46:40.159  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.159   308  7381 I resolv  : res_nmkquery: (QUERY, IN, A)
+10-16 11:46:40.159   308  7380 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+10-16 11:46:40.159   308  7380 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c250f88db30
+10-16 11:46:40.159   308  7380 I resolv  : doQuery: rcode=0, ancount=1, return value=75
+10-16 11:46:40.159  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.159   308  7381 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c250f88c7f0
+10-16 11:46:40.159   308  7381 I resolv  : doQuery: rcode=0, ancount=1, return value=63
+10-16 11:46:40.159  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.159  1011  7374 D TrafficStats: tagSocket(69) with statsTag=0xffffff81, statsUid=-1
+10-16 11:46:40.159  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.159  1011  1011 D TrafficStats: tagSocket(68) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.160  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.160  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.160  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.161  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.161  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.161  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.162  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.162  1011  1011 D TrafficStats: tagSocket(6) with statsTag=0xffffffff, statsUid=-1
+10-16 11:46:40.163  1011  7373 D NetworkMonitor/100: PROBE_DNS www.google.com 9ms OK 142.251.156.119,142.251.151.119,142.251.155.119,142.251.154.119,142.251.152.119,142.251.153.119,142.251.150.119,142.251.157.119,2001:4860:4828:7700::,2001:4860:482b:7700::,2001:4860:482c:7700::,2001:4860:4826:7700::,2001:4860:482d:7700::,2001:4860:4829:7700::,2001:4860:482a:7700::,2001:4860:4827:7700::
+10-16 11:46:40.163   308  7382 I resolv  : GetAddrInfoHandler::run: {100 983140 100 983140 1073 1}
+10-16 11:46:40.164   308  7383 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+10-16 11:46:40.164   308  7383 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c253f893c50
+10-16 11:46:40.164   308  7384 I resolv  : res_nmkquery: (QUERY, IN, A)
+10-16 11:46:40.164   308  7383 I resolv  : doQuery: rcode=0, ancount=8, return value=256
+10-16 11:46:40.164   308  7384 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0x7c251f896eb0
+10-16 11:46:40.164   308  7384 I resolv  : doQuery: rcode=0, ancount=8, return value=160
+10-16 11:46:40.165  1011  7373 D TrafficStats: tagSocket(6) with statsTag=0xffffff81, statsUid=-1
+10-16 11:46:40.184   138   138 E prng_seeder: main: Launch terminated: Err(hwrng.read_exact in reseed
+10-16 11:46:40.184   138   138 E prng_seeder: 
+10-16 11:46:40.184   138   138 E prng_seeder: Caused by:
+10-16 11:46:40.184   138   138 E prng_seeder:     Try again (os error 11))
+10-16 11:46:40.377     0     0 W prng_seeder: launch terminated: Err(hwrng.read_exact in reseed
+10-16 11:46:40.379     0     0 W Caused by:  
+10-16 11:46:40.379     0     0 W         : Try again (os error 11))
+10-16 11:46:40.381     0     0 I init    : Service 'prng_seeder' (pid 138) exited with status 255
+10-16 11:46:40.191  1011  7374 D NetworkMonitor/100: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=32ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 16 Oct 2026 11:46:40 GMT], X-Android-Received-Millis=[1792151200190], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1792151200178]}
+10-16 11:46:40.383     0     0 I init    : Sending signal 9 to service 'prng_seeder' (pid 138) process group...
+10-16 11:46:40.385     0     0 I libprocessgroup: Successfully killed process cgroup uid 1092 pid 138 in 0ms
+10-16 11:46:40.388     0     0 I init    : starting service 'prng_seeder'...
+10-16 11:46:40.390     0     0 I init    : Created socket '/dev/socket/prng_seeder', mode 666, user 1092, group 1092
+10-16 11:46:40.216  7386  7386 I prng_seeder: main: Starting listen loop
+10-16 11:46:40.219  1011  7373 D NetworkMonitor/100: PROBE_HTTPS https://www.google.com/generate_204 time=57ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Alt-Svc=[h3=":443"; ma=2592000,h3-29=":443"; ma=2592000], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Fri, 16 Oct 2026 11:46:40 GMT], X-Android-Received-Millis=[1792151200219], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1792151200206]}
+10-16 11:46:40.220  1011  7372 D NetworkMonitor/100: isCaptivePortal: isSuccessful()=true isPortal()=false RedirectUrl=null isPartialConnectivity()=false Time=67ms
+10-16 11:46:40.221   507   768 D ConnectivityService: [100 WIFI] validation passed
+10-16 11:46:40.316   166  7239 I keystore2: keystore2::watchdog: Watchdog thread idle -> terminating. Have a great day.
+10-16 11:46:41.172  7391  7391 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+10-16 11:46:41.177   144   144 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+10-16 11:46:41.177  7391  7392 I Gralloc4: mapper 4.x is not supported
+10-16 11:46:41.201  7391  7392 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+10-16 11:46:41.707  1756  2679 W A       : [Download] response code: 400
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: Could not register for notifications with InnerTube: 
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: xvd: wrv: Precondition check failed.
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at xut.apply(Unknown Source:4)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at vws.p(PG:5)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at vws.b(PG:2)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at xuv.d(PG:4)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at acvk.c(PG:51)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at acvk.j(PG:38)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at acvk.d(PG:3)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at acvi.run(Unknown Source:2)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at qhq.run(PG:2)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at qic.run(PG:4)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: Caused by: wrv: Precondition check failed.
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at xtk.k(PG:5)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at wfa.f(PG:17)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at wfa.c(PG:1)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at wdz.run(PG:21)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at vvz.run(PG:11)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	... 1 more
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: Caused by: dlh
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	at wdz.run(PG:14)
+10-16 11:46:41.961  1722  2542 W YouTubeMusic: 	... 4 more
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: Could not register for notifications with InnerTube: 
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: xvd: wrv: Precondition check failed.
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at xut.apply(Unknown Source:4)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at vws.p(PG:5)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at vws.b(PG:2)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at xuv.d(PG:4)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at acvk.c(PG:51)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at acvk.i(PG:4)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at acvk.c(PG:80)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at acvk.j(PG:38)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at acvk.d(PG:3)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at acvi.run(Unknown Source:2)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at qhq.run(PG:2)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at qic.run(PG:4)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: Caused by: wrv: Precondition check failed.
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at xtk.k(PG:5)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at wfa.f(PG:17)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at wfa.c(PG:1)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at wdz.run(PG:21)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at vvz.run(PG:11)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	... 1 more
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: Caused by: dlh
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	at wdz.run(PG:14)
+10-16 11:46:42.010  1722  2542 W YouTubeMusic: 	... 4 more
+10-16 11:46:43.023     0     0 I logd    : logdr: UID=2000 GID=2000 PID=7397 n tail=0 logMask=99 pid=0 start=0ns deadline=0ns

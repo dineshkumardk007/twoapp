@@ -1,0 +1,557 @@
+10-16 11:45:31.840  1154  3520 I FontLog : Package app.two.android has no metadata [CONTEXT service_id=132 ]
+10-16 11:45:31.848  1035  1035 D MediaPlayerList: Name of package changed: app.two.android
+10-16 11:45:31.848  1035  1035 D MediaPlayerList: Name of package changed: app.two.android
+10-16 11:45:31.851   507  1675 W BackupTransportManager: Package app.two.android enabled setting: 0
+10-16 11:45:31.880   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{5ae7966 com.google.android.youtube/10137} BLOCKED
+10-16 11:45:31.880   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{f2af4a7 com.google.android.googlequicksearchbox/10120} BLOCKED
+10-16 11:45:31.880   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{bff3d54 com.google.android.apps.messaging/10111} BLOCKED
+10-16 11:45:31.880   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{354e4fd com.google.android.as/10117} BLOCKED
+10-16 11:45:31.880   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{198c5f2 com.google.android.gm/10144} BLOCKED
+10-16 11:45:31.881   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{5883443 com.google.android.setupwizard/10116} BLOCKED
+10-16 11:45:31.881   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{9bcdac0 com.google.android.dialer/10113} BLOCKED
+10-16 11:45:31.881   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{8fd3f9 com.google.android.contacts/10123} BLOCKED
+10-16 11:45:31.881   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{b694f3e com.google.android.partnersetup/10105} BLOCKED
+10-16 11:45:31.881   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{9efd19f com.google.android.apps.youtube.music/10122} BLOCKED
+10-16 11:45:31.881   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{cf4e2ec com.google.android.cellbroadcastreceiver/10158} BLOCKED
+10-16 11:45:31.881   507   571 I AppsFilter: interaction: PackageSetting{2742dc1 app.two.android/10174} -> PackageSetting{ff0b6b5 com.google.android.inputmethod.latin/10138} BLOCKED
+10-16 11:45:31.924  1421  3429 I BlockstoreStorage: Clearing Blockstore Data for package app.two.android [CONTEXT service_id=258 ]
+10-16 11:45:31.953  1058  1058 D CarrierSvcBindHelper: onPackageAdded: app.two.android
+10-16 11:45:31.985  1058  1058 D CarrierSvcBindHelper: onPackageModified: app.two.android
+10-16 11:45:32.074   507  2925 I ActivityManager: Force stopping app.two.android appid=10174 user=0: from pid 3537
+10-16 11:45:32.101   507  2166 I ActivityManager: Force stopping app.two.android appid=10174 user=0: clear data
+10-16 11:45:32.102  1421  3055 W libc    : Access denied finding property "ro.hardware.chipname"
+10-16 11:45:32.127   507   548 I ActivityManager: Force stopping app.two.android appid=10174 user=-1: clearApplicationUserData
+10-16 11:45:32.151   507   547 D AppWidgetServiceImpl: Provider info from ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget} won't be persisted.
+10-16 11:45:32.163  1058  1058 D ImsResolver: maybeAddedImsService, packageName: app.two.android
+10-16 11:45:32.181  1058  1058 D ImsResolver: maybeAddedImsService, packageName: app.two.android
+10-16 11:45:32.275  1654  1654 I AiAiEcho: EchoSearch: AppFetcherImpl is initialized with [19] apps [time=13, reason=app.two.android is added]
+10-16 11:45:32.372   507  3007 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=app.two.android/.MainActivity} from uid 2000
+10-16 11:45:32.408   507  3379 D CoreBackPreview: Window{8cf76a2 u0 Splash Screen app.two.android}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@bd25aee, mPriority=0}
+10-16 11:45:32.550   507   549 I ActivityManager: Start proc 3643:app.two.android/u0a174 for next-top-activity {app.two.android/app.two.android.MainActivity}
+10-16 11:45:32.552  3643  3643 I app.two.android: Late-enabling -Xcheck:jni
+10-16 11:45:32.599  3643  3643 I app.two.android: Using CollectorTypeCC GC.
+10-16 11:45:32.599  3643  3643 W app.two.android: Unexpected CPU variant for x86: x86_64.
+10-16 11:45:32.599  3643  3643 W app.two.android: Known variants: atom, sandybridge, silvermont, kabylake, default
+10-16 11:45:32.649  1058  1058 D CarrierSvcBindHelper: onHandleForceStop: [app.two.android]
+10-16 11:45:32.651  1058  1058 D CarrierSvcBindHelper: onHandleForceStop: [app.two.android]
+10-16 11:45:32.686  3643  3643 W ziparchive: Unable to open '/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.dm': No such file or directory
+10-16 11:45:32.686  3643  3643 W ziparchive: Unable to open '/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.dm': No such file or directory
+10-16 11:45:32.769  3643  3643 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/lib/x86_64:/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/app.two.android
+10-16 11:45:32.771   507  3381 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.apps.messaging; callingUid: 10111; uidState: BFGS; intent: Intent { cmp=com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService (has extras) }; code:PROC_STATE_BFGS; tempAllowListReason:<null>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null]
+10-16 11:45:32.777  3643  3643 V GraphicsEnvironment: ANGLE Developer option for 'app.two.android' set to: 'default'
+10-16 11:45:32.777  3643  3643 V GraphicsEnvironment: ANGLE GameManagerService for app.two.android: false
+10-16 11:45:32.832   507  1167 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.google.android.apps.messaging/com.google.apps.tiktok.concurrent.InternalForegroundService
+10-16 11:45:33.105   507  3375 E JobScheduler.JobStatus: App app.two.android became active but still in NEVER bucket
+10-16 11:45:33.127   507  3382 D CoreBackPreview: Window{e08fbd9 u0 app.two.android/app.two.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@546944c, mPriority=0}
+10-16 11:45:33.190   507  2245 D ConnectivityService: requestNetwork for uid/pid:10174/3643 activeRequest: null callbackRequest: 97 [NetworkRequest [ REQUEST id=98, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 11:45:33.191   507   761 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=98, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:45:33.191   507   761 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=98, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:45:33.191   507   761 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=98, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:45:33.191   507   761 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=98, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:45:33.217   507  3382 I AppsFilter: interaction: PackageSetting{e9f272f app.two.android/10174} -> PackageSetting{354e4fd com.google.android.as/10117} BLOCKED
+10-16 11:45:33.261  3643  3643 I WebViewFactory: Loading com.google.android.webview version 109.0.5414.123 (code 541412337)
+10-16 11:45:33.265  3643  3643 W app.two.android: Entry not found
+10-16 11:45:33.266  3643  3643 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk. target_sdk_version=33, uses_libraries=ALL, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 11:45:33.267  3643  3643 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+10-16 11:45:33.278  3643  3643 W app.two.android: Accessing hidden method Landroid/os/Trace;->isTagEnabled(J)Z (unsupported, reflection, allowed)
+10-16 11:45:33.278  3643  3643 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceBegin(JLjava/lang/String;)V (unsupported, reflection, allowed)
+10-16 11:45:33.278  3643  3643 W app.two.android: Accessing hidden method Landroid/os/Trace;->traceEnd(J)V (unsupported, reflection, allowed)
+10-16 11:45:33.278  3643  3643 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceBegin(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 11:45:33.278  3643  3643 W app.two.android: Accessing hidden method Landroid/os/Trace;->asyncTraceEnd(JLjava/lang/String;I)V (unsupported, reflection, allowed)
+10-16 11:45:33.287  3643  3643 I cr_WVCFactoryProvider: Loaded version=109.0.5414.123 minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+10-16 11:45:33.295  3643  3741 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed_new"
+10-16 11:45:33.295  3643  3741 I cr_VariationsUtils: Failed reading seed file "/data/user/0/app.two.android/app_webview/variations_seed"
+10-16 11:45:33.296  3643  3741 I cr_VariationsUtils: Requesting new seed from IVariationsSeedServer
+10-16 11:45:33.302  3643  3643 I cr_LibraryLoader: Successfully loaded native library
+10-16 11:45:33.302  3643  3643 I cr_CachingUmaRecorder: Flushed 9 samples from 9 histograms.
+10-16 11:45:33.330   507   549 I ActivityManager: Start proc 3749:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0ai9000 for  {app.two.android/org.chromium.content.app.SandboxedProcessService0:0}
+10-16 11:45:33.382  3749  3749 I cr_WebViewApkApp: Launched version=109.0.5414.123 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-16 11:45:33.383  3749  3749 I cr_ChildProcessService: Creating new ChildProcessService pid=3749
+10-16 11:45:33.457   507   549 I ActivityManager: Start proc 3806:com.google.android.webview:webview_apk/u0a124 for service {com.google.android.webview/org.chromium.android_webview.nonembedded.AwComponentUpdateService}
+10-16 11:45:33.465   507  1180 D ConnectivityService: requestNetwork for uid/pid:10174/3643 activeRequest: null callbackRequest: 101 [NetworkRequest [ REQUEST id=102, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+10-16 11:45:33.466   507   761 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=102, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:45:33.466   507   761 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=102, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:45:33.466   507   761 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=102, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:45:33.466   507   761 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=102, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ]
+10-16 11:45:33.508  3643  3792 W app.two.android: Accessing hidden method Landroid/media/AudioManager;->getOutputLatency(I)I (unsupported, reflection, allowed)
+10-16 11:45:33.512  3643  3792 W cr_media: BLUETOOTH_CONNECT permission is missing.
+10-16 11:45:33.515  3643  3792 W cr_media: registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+10-16 11:45:33.522  3749  3766 I cr_LibraryLoader: Successfully loaded native library
+10-16 11:45:33.522  3749  3766 I cr_CachingUmaRecorder: Flushed 3 samples from 3 histograms.
+10-16 11:45:33.583  3806  3806 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk. target_sdk_version=33, uses_libraries=ALL, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 11:45:33.584  3806  3806 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 11:45:33.635  3806  3806 I cr_WebViewApkApp: Launched version=109.0.5414.123 minSdkVersion=29 isBundle=false processName=com.google.android.webview:webview_apk
+10-16 11:45:33.676  3643  3643 D WM-WorkerWrapper: Starting work for app.two.android.core.sync.SyncWorker
+10-16 11:45:33.685  2655  2889 I cr_VariationsUtils: Seed download job already scheduled
+10-16 11:45:33.755  3806  3806 I cr_LibraryLoader: Successfully loaded native library
+10-16 11:45:33.871  3749  3841 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:45:33.872  3749  3841 E chromium: [ERROR:tile_manager.cc(826)] WARNING: tile memory limits exceeded, some content may not draw
+10-16 11:45:33.883  3643  3713 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=aa74daad-7117-4298-88df-dd10bdb51ffb, tags={ app.two.android.core.sync.SyncWorker } ]
+10-16 11:45:33.955  3806  3871 W cr_AWNetworkFetcherTask: IOException during downloadToFile.
+10-16 11:45:33.955  3806  3871 W cr_AWNetworkFetcherTask: java.io.IOException: Cleartext HTTP traffic to edgedl.me.gvt1.com not permitted
+10-16 11:45:33.955  3806  3871 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+10-16 11:45:33.955  3806  3871 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+10-16 11:45:33.955  3806  3871 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+10-16 11:45:33.955  3806  3871 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+10-16 11:45:33.955  3806  3871 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:48)
+10-16 11:45:34.146  2655  2728 I cr_VariationsSeedFetch: Fetched first run seed in 5292 ms
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: IOException during downloadToFile.
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: java.io.IOException: Cleartext HTTP traffic to edgedl.me.gvt1.com not permitted
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:48)
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: IOException during downloadToFile.
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: java.io.IOException: Cleartext HTTP traffic to redirector.gvt1.com not permitted
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+10-16 11:45:34.164  3806  3874 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:48)
+10-16 11:45:34.201   507  2480 W JobScheduler: Job didn't exist in JobStore: b82142a #u0a174/0 app.two.android/androidx.work.impl.background.systemjob.SystemJobService
+10-16 11:45:34.210   507   537 W ziparchive: Unable to open '/data/app/~~K93WFoKFNf8Up__0ElY0hg==/app.two.android-ho2sp0_N09IElM4sq3eeOw==/base.dm': No such file or directory
+10-16 11:45:34.216   507   537 I ActivityTaskManager: Displayed app.two.android/.MainActivity: +1s838ms
+10-16 11:45:34.250   507  3375 D CoreBackPreview: Window{8cf76a2 u0 Splash Screen app.two.android EXITING}: Setting back callback null
+10-16 11:45:34.250   507  3381 W InputManager-JNI: Input channel object '8cf76a2 Splash Screen app.two.android (client)' was disposed without first being removed with the input manager!
+10-16 11:45:34.251   507  2486 E JobScheduler.JobStatus: App app.two.android became active but still in NEVER bucket
+10-16 11:45:34.308  3806  3871 W cr_AWNetworkFetcherTask: IOException during downloadToFile.
+10-16 11:45:34.308  3806  3871 W cr_AWNetworkFetcherTask: java.io.IOException: Cleartext HTTP traffic to edgedl.me.gvt1.com not permitted
+10-16 11:45:34.308  3806  3871 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+10-16 11:45:34.308  3806  3871 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+10-16 11:45:34.308  3806  3871 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+10-16 11:45:34.308  3806  3871 W cr_AWNetworkFetcherTask: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+10-16 11:45:34.308  3806  3871 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:48)
+10-16 11:45:34.347  3749  3766 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 2116
+10-16 11:45:34.898  1421  2121 I Icing   : doRemovePackageData app.two.android
+10-16 11:45:35.080   829   829 D PersistedStoragePackageUninstalledReceiver: Received android.intent.action.PACKAGE_DATA_CLEARED for app.two.android for u0
+10-16 11:45:35.602   507   548 D SystemServerTimingAsync: ssm.onUnlockedUser-0_com.android.server.webkit.WebViewUpdateService
+10-16 11:45:35.602   507   548 V SystemServerTimingAsync: ssm.onUnlockedUser-0_com.android.server.webkit.WebViewUpdateService took to complete: 0ms
+10-16 11:45:37.680  3643  3643 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 11:45:37.689  1561  1561 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=app.two.android fieldId=-1 fieldName=null extras=null}, false)
+10-16 11:45:37.749  3643  3792 D app.two.android: PlayerBase::PlayerBase()
+10-16 11:45:37.820  2813  2853 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:37.820  2813  2853 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:37.861  3643  4203 W chromium: [WARNING:sync_reader.cc(170)] ASR: No room in socket buffer.: Broken pipe (32)
+10-16 11:45:38.202  3643  3643 I chromium: [INFO:CONSOLE(64)] "SW registration error: TypeError: Failed to register a ServiceWorker for scope ('https://appassets.androidplatform.net/') with script ('https://appassets.androidplatform.net/sw.js'): An unknown error occurred when fetching the script.", source: https://appassets.androidplatform.net/assets/www/index.html (64)
+10-16 11:45:40.618   507  4454 D SystemServerTimingAsync: ssm.onCompletedEventUser-0_{|Unlocked|}_com.android.server.webkit.WebViewUpdateService
+10-16 11:45:40.618   507  4454 V SystemServerTimingAsync: ssm.onCompletedEventUser-0_{|Unlocked|}_com.android.server.webkit.WebViewUpdateService took to complete: 0ms
+10-16 11:45:41.006  2813  4189 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:41.006  2813  4189 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:41.892  3643  3643 W chromium: [WARNING:render_frame_host_impl.cc(14006)] https://appassets.androidplatform.net/ ran insecure content from ws://10.0.2.2:4100/relay
+10-16 11:45:41.892  3643  3643 I chromium: [INFO:CONSOLE(10)] "Mixed Content: The page at 'https://appassets.androidplatform.net/assets/www/index.html' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://10.0.2.2:4100/relay'. This endpoint should be available via WSS. Insecure access is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-DjiaoZaC.js (10)
+10-16 11:45:41.892  3643  3643 I chromium: [INFO:CONSOLE(10)] "Connecting to a non-secure WebSocket server from a secure origin is deprecated.", source: https://appassets.androidplatform.net/assets/www/assets/index-DjiaoZaC.js (10)
+10-16 11:45:41.915   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{7c4b1b2 com.google.android.googlequicksearchbox/10120} BLOCKED
+10-16 11:45:41.915   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{e901503 com.android.camera2/10140} BLOCKED
+10-16 11:45:41.916   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{d120c80 com.google.android.apps.docs/10126} BLOCKED
+10-16 11:45:41.916   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{efec481 com.google.android.apps.maps/10143} BLOCKED
+10-16 11:45:41.916   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{d3fad09 com.google.android.calendar/10121} BLOCKED
+10-16 11:45:41.916   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{b7e82b9 com.google.android.settings.intelligence/10106} BLOCKED
+10-16 11:45:41.916   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{4c836fe com.android.remoteprovisioner/10151} BLOCKED
+10-16 11:45:41.941  3643  4509 D ProfileInstaller: Installing profile for app.two.android
+10-16 11:45:42.054  1035  1035 D MediaPlayerList: Name of package changed: app.two.android
+10-16 11:45:42.054  1035  1035 D MediaPlayerList: Name of package changed: app.two.android
+10-16 11:45:42.169  1058  1058 D CarrierSvcBindHelper: onPackageModified: app.two.android
+10-16 11:45:42.183  1058  1058 D ImsResolver: maybeAddedImsService, packageName: app.two.android
+10-16 11:45:42.717  2813  4189 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:42.717  2813  4189 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:42.851   507   547 D AppWidgetServiceImpl: Provider info from ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget} won't be persisted.
+10-16 11:45:42.858   507   547 D AppWidgetServiceImpl: Provider info from ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget} won't be persisted.
+10-16 11:45:42.863   507   547 D AppWidgetServiceImpl: Provider info from ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget} won't be persisted.
+10-16 11:45:42.898   507   547 D AppWidgetServiceImpl: Provider info from ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget} won't be persisted.
+10-16 11:45:42.928   507   547 D AppWidgetServiceImpl: Provider info from ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget} won't be persisted.
+10-16 11:45:43.169   507   547 D AppWidgetServiceImpl: Provider info from ComponentInfo{app.two.android/app.two.android.features.widget.TwoWidget} won't be persisted.
+10-16 11:45:43.750  2813  4189 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:43.750  2813  4189 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:44.714  2813  4189 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:44.714  2813  4189 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:44.921  1653  2416 D MediaProvider: Deleted 0 Android/media items belonging to app.two.android on /data/user/0/com.google.android.providers.media.module/databases/external.db
+10-16 11:45:44.921  1653  2416 D MediaGrants: Removed 0 media_grants for app.two.android. Reason: Package orphaned
+10-16 11:45:45.046  3749  3766 I chromium: [INFO:audio_latency.cc(179)] audioHardwareBufferSize = 2116
+10-16 11:45:45.221  1154  1475 I cr_CronetLibraryLoader: Cronet version: 113.0.5672.51, arch: x86_64
+10-16 11:45:45.297  3643  3658 I app.two.android: Background concurrent copying GC freed 60586(3885KB) AllocSpace objects, 15(620KB) LOS objects, 49% free, 4506KB/9013KB, paused 106us,17us total 243.718ms
+10-16 11:45:45.327  3643  3792 D app.two.android: PlayerBase::PlayerBase()
+10-16 11:45:45.491   507  2164 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{98ce197 com.google.android.gm/10144} BLOCKED
+10-16 11:45:46.248  2813  4332 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:46.248  2813  4332 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: Exception in upload method
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: com.google.android.apps.gsa.shared.r.d: Error code: 262182
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.ab.bk.d(PG:5)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.ar.d(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.bo.b(PG:5)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.e.a(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.a.run(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bu.cancel(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:17)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.bk.b.h.run(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.aj.a(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.c(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.r.a(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.e(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.c(PG:3)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.e.a(PG:5)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.n.hh(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.cd.g.a.f.e(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.d(PG:22)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.ks(PG:6)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.e(PG:14)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.p.run(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.e.run(PG:2)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 11:45:46.997  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.l.run(PG:5)
+10-16 11:45:47.717  2813  2853 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:47.717  2813  2853 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:47.843  2813  4332 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:47.843  2813  4332 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:48.439   507  1180 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{8a10ef com.google.android.settings.intelligence/10106} BLOCKED
+10-16 11:45:48.442   507  1180 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{feace85 com.google.android.settings.intelligence/10106} BLOCKED
+10-16 11:45:49.145  3643  3643 D WM-RescheduleReceiver: Received intent Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=app.two.android/androidx.work.impl.background.systemalarm.RescheduleReceiver (has extras) }
+10-16 11:45:49.172  1208  1227 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 11:45:49.208  2813  4770 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:49.209  2813  4770 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:49.253  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-16 11:45:49.253  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-16 11:45:49.253  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.253  3268  3398 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.255  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-16 11:45:49.255  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-16 11:45:49.255  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.255  3268  3398 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.255  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-16 11:45:49.255  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-16 11:45:49.255  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.255  3268  3398 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.256  3268  3398 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-16 11:45:49.318  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:49.332  1654  2119 I AiAiCaptions: Enable com.google.android.apps.miphone.aiai.captions.CaptionsForegroundService
+10-16 11:45:49.419  3643  3792 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 11:45:49.432  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:49.440  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:49.449  3643  3792 W cr_media: Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio device will be available for recording
+10-16 11:45:49.451  3643  3643 W System.err: 	at app.two.android.features.web.TwoWebViewKt$TwoWebView$2$1$1$4.onPermissionRequest(TwoWebView.kt:957)
+10-16 11:45:49.451  3643  3643 W System.err: 	at org.chromium.android_webview.AwContents.onPermissionRequest(chromium-TrichromeWebViewGoogle6432.apk-stable-541412337:46)
+10-16 11:45:49.452  3643  3643 F chromium: [FATAL:jni_android.cc(315)] Please include Java exception stack in crash report
+10-16 11:45:49.470  5061  5061 W linker64: type=1400 audit(0.0:33): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:45:49.470  5061  5061 W linker64: type=1400 audit(0.0:34): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:45:49.470  5061  5061 W linker64: type=1400 audit(0.0:35): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:45:49.470  5061  5061 W linker64: type=1400 audit(0.0:36): avc: denied { search } for name="tests" dev="dm-34" ino=65540 scontext=u:r:untrusted_app:s0:c174,c256,c512,c768 tcontext=u:object_r:shell_test_data_file:s0 tclass=dir permissive=0 app=app.two.android
+10-16 11:45:49.549  5058  5058 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:45:49.598  5058  5058 I AndroidRuntime: Using default boot image
+10-16 11:45:49.598  5058  5058 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:45:49.614  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:49.617  3268  3398 I cr_CronetLibraryLoader: Cronet version: 113.0.5672.51, arch: x86_64
+10-16 11:45:49.643  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:49.678  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:49.696  5061  5061 E chromium: [1016/114549.696480:ERROR:file_io_posix.cc(144)] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: Permission denied (13)
+10-16 11:45:49.764  5058  5058 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:45:49.774  3643  3643 F libc    : Fatal signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr 0x0 in tid 3643 (app.two.android), pid 3643 (app.two.android)
+10-16 11:45:50.032  3268  5082 I cr_CronetUrlRequestContext: destroyNativeStreamLocked org.chromium.net.impl.CronetBidirectionalStream@f8a911c
+10-16 11:45:50.052   507  1343 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.googlequicksearchbox; callingUid: 10120; uidState: BFGS; intent: Intent { cmp=com.google.android.googlequicksearchbox/com.google.android.libraries.mdi.download.foreground.sting.ForegroundDownloadService (has extras) }; code:ACTIVITY_STARTER; tempAllowListReason:<broadcast:1000:android.intent.action.BOOT_COMPLETED,reason:,reasonCode:BOOT_COMPLETED,duration:20000,callingUid:1000>; targetSdkVersion:31; callerTargetSdkVersion:31; startForegroundCount:0; bindFromPackage:null]
+10-16 11:45:50.408  5109  5109 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-16 11:45:50.408  5109  5109 F DEBUG   : Build fingerprint: 'google/sdk_gphone64_x86_64/emu64x:13/TE1A.240213.009/12342917:userdebug/dev-keys'
+10-16 11:45:50.408  5109  5109 F DEBUG   : Revision: '0'
+10-16 11:45:50.408  5109  5109 F DEBUG   : ABI: 'x86_64'
+10-16 11:45:50.408  5109  5109 F DEBUG   : Timestamp: 2026-10-16 11:45:49.880036433+0000
+10-16 11:45:50.408  5109  5109 F DEBUG   : Process uptime: 19s
+10-16 11:45:50.408  5109  5109 F DEBUG   : Cmdline: app.two.android
+10-16 11:45:50.408  5109  5109 F DEBUG   : pid: 3643, tid: 3643, name: app.two.android  >>> app.two.android <<<
+10-16 11:45:50.408  5109  5109 F DEBUG   : uid: 10174
+10-16 11:45:50.408  5109  5109 F DEBUG   : signal 5 (SIGTRAP), code 128 (SI_KERNEL), fault addr 0x0000000000000000
+10-16 11:45:50.408  5109  5109 F DEBUG   : Abort message: '[FATAL:jni_android.cc(315)] Please include Java exception stack in crash report'
+10-16 11:45:50.408  5109  5109 F DEBUG   :     rax 0000000000000000  rbx 00007fff20fd2d58  rcx 0000000000000001  rdx 0000000000000002
+10-16 11:45:50.408  5109  5109 F DEBUG   :     r8  00007fff20ff90a8  r9  0000000000000000  r10 ffffffffffffffff  r11 0000000000000246
+10-16 11:45:50.408  5109  5109 F DEBUG   :     r12 0000025600523fe0  r13 00007fff20fd2d68  r14 00007fff20fd28b0  r15 00000256005e386c
+10-16 11:45:50.408  5109  5109 F DEBUG   :     rdi 00007f725a4012d0  rsi 00007f725332f92b
+10-16 11:45:50.408  5109  5109 F DEBUG   :     rbp 000000000000013b  rsp 00007fff20fd26d0  rip 00007f72551e2769
+10-16 11:45:50.408  5109  5109 F DEBUG   : backtrace:
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #00 pc 0000000002229769  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #01 pc 000000000296adb8  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #02 pc 000000000296a882  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #03 pc 0000000003ccc972  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #04 pc 0000000003cebed9  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #05 pc 000000000460307d  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #06 pc 000000000457b500  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #07 pc 000000000299813c  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #08 pc 0000000002994dc3  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #09 pc 0000000004f9eb3f  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #10 pc 000000000344bcc8  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #11 pc 000000000344bb93  /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!libmonochrome_64.so (offset 0x882000) (BuildId: f1d4dbfe493e11c190bf218ac9032baaa9bd1370)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #12 pc 000000000001076e  /system/lib64/libutils.so (android::Looper::pollOnce(int, int*, int*, void**)+894) (BuildId: bf3f66fd6f5b7c78306a1c8270331f22)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #13 pc 000000000016caf3  /system/lib64/libandroid_runtime.so (android::android_os_MessageQueue_nativePollOnce(_JNIEnv*, _jobject*, long, int)+35) (BuildId: 2a4aa560a892d0dcd59b0b00821a1dfa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #14 pc 00000000001b5da4  /system/framework/x86_64/boot-framework.oat (art_jni_trampoline+132) (BuildId: 250f96efbdd22b213d58e391bed71acfa743aa83)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #15 pc 00000000003703fb  /apex/com.android.art/lib64/libart.so (nterp_helper+5643) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #16 pc 000000000049a5ce  /system/framework/framework.jar (android.os.MessageQueue.next+34)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #17 pc 000000000036fc88  /apex/com.android.art/lib64/libart.so (nterp_helper+3736) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #18 pc 00000000004995bc  /system/framework/framework.jar (android.os.Looper.loopOnce+12)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #19 pc 000000000036ee28  /apex/com.android.art/lib64/libart.so (nterp_helper+56) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #20 pc 0000000000499daa  /system/framework/framework.jar (android.os.Looper.loop+162)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #21 pc 000000000036ee28  /apex/com.android.art/lib64/libart.so (nterp_helper+56) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #22 pc 00000000001bd0de  /system/framework/framework.jar (android.app.ActivityThread.main+202)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #23 pc 0000000000378b26  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #24 pc 00000000003fce09  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+265) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #25 pc 000000000081eb37  /apex/com.android.art/lib64/libart.so (_jobject* art::InvokeMethod<(art::PointerSize)8>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, _jobject*, _jobject*, unsigned long)+1447) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #26 pc 000000000078e678  /apex/com.android.art/lib64/libart.so (art::Method_invoke(_JNIEnv*, _jobject*, _jobject*, _jobjectArray*)+56) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #27 pc 000000000009b400  /system/framework/x86_64/boot.oat (art_jni_trampoline+128) (BuildId: 8975dfa0bab8693f1c851576629005f1e7eb5def)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #28 pc 000000000036fced  /apex/com.android.art/lib64/libart.so (nterp_helper+3837) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #29 pc 00000000004055ba  /system/framework/framework.jar (com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run+22)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #30 pc 000000000082491e  /system/framework/x86_64/boot-framework.oat (com.android.internal.os.ZygoteInit.main+3022) (BuildId: 250f96efbdd22b213d58e391bed71acfa743aa83)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #31 pc 0000000000378b26  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.408  5109  5109 F DEBUG   :       #32 pc 00000000003fce09  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+265) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.409  5109  5109 F DEBUG   :       #33 pc 000000000081f4ea  /apex/com.android.art/lib64/libart.so (art::JValue art::InvokeWithVarArgs<art::ArtMethod*>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, art::ArtMethod*, __va_list_tag*)+474) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.409  5109  5109 F DEBUG   :       #34 pc 00000000006e48b4  /apex/com.android.art/lib64/libart.so (art::JNI<true>::CallStaticVoidMethodV(_JNIEnv*, _jclass*, _jmethodID*, __va_list_tag*)+676) (BuildId: 83888e21c265ad4f1cc612f8fca2b8fa)
+10-16 11:45:50.409  5109  5109 F DEBUG   :       #35 pc 00000000000d5294  /system/lib64/libandroid_runtime.so (_JNIEnv::CallStaticVoidMethod(_jclass*, _jmethodID*, ...)+164) (BuildId: 2a4aa560a892d0dcd59b0b00821a1dfa)
+10-16 11:45:50.409  5109  5109 F DEBUG   :       #36 pc 00000000000e1e01  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+897) (BuildId: 2a4aa560a892d0dcd59b0b00821a1dfa)
+10-16 11:45:50.409  5109  5109 F DEBUG   :       #37 pc 0000000000002faf  /system/bin/app_process64 (main+1583) (BuildId: a49f9e708801f6a0a629f488a0e449c9)
+10-16 11:45:50.409  5109  5109 F DEBUG   :       #38 pc 0000000000050cc9  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+89) (BuildId: f090904cc3ac285a6f190f8003c3eb0e)
+10-16 11:45:50.438   507  5152 W ActivityTaskManager:   Force finishing activity app.two.android/.MainActivity
+10-16 11:45:50.454  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:50.477   507   768 D ConnectivityService: releasing NetworkRequest [ REQUEST id=102, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10174 RequestorUid: 10174 RequestorPkg: app.two.android UnderlyingNetworks: Null] ] (release request)
+10-16 11:45:50.577   507  3375 I WindowManager: WIN DEATH: Window{e08fbd9 u0 app.two.android/app.two.android.MainActivity}
+10-16 11:45:50.579   507  2266 I ActivityManager: Process app.two.android (pid 3643) has died: prcp TOP 
+10-16 11:45:50.579   507  3375 W InputManager-JNI: Input channel object 'e08fbd9 app.two.android/app.two.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-16 11:45:50.583   507  2266 W ActivityManager: Exception when unbinding service app.two.android/org.chromium.content.app.SandboxedProcessService0:0
+10-16 11:45:50.583   507  2266 I ActivityManager: Killing 3749:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0a174i0 (adj 900): isolated not needed
+10-16 11:45:50.612   507   541 W WindowManager: Failed to deliver inset state change to w=Window{e08fbd9 u0 app.two.android/app.two.android.MainActivity EXITING}
+10-16 11:45:50.738   507   541 W WindowManager: Exception thrown during dispatchAppVisibility Window{e08fbd9 u0 app.two.android/app.two.android.MainActivity EXITING}
+10-16 11:45:50.944   507   540 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{f72fc31 u0 app.two.android/.MainActivity} t-1 f}}
+10-16 11:45:51.831  5058  5058 D AndroidRuntime: Shutting down VM
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{5240f3e com.google.android.youtube/10137} BLOCKED
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{4f3919f com.google.android.googlequicksearchbox/10120} BLOCKED
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{20da2ec com.google.android.apps.messaging/10111} BLOCKED
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{5fa76b5 com.google.android.as/10117} BLOCKED
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{cde14a com.google.android.gm/10144} BLOCKED
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{b89a8bb com.google.android.setupwizard/10116} BLOCKED
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{d3691b4 com.google.android.apps.maps/10143} BLOCKED
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{6a801d8 com.google.android.apps.photos/10141} BLOCKED
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{b28c931 com.google.android.settings.intelligence/10106} BLOCKED
+10-16 11:45:52.090   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{e57d9f7 com.google.android.projection.gearhead/10108} BLOCKED
+10-16 11:45:53.228  5338  5338 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:45:53.230  2813  4189 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:53.230  2813  4189 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:53.232  5338  5338 I AndroidRuntime: Using default boot image
+10-16 11:45:53.232  5338  5338 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:45:53.321  5338  5338 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:45:53.323  1421  4721 W libc    : Access denied finding property "ro.hardware.chipname"
+10-16 11:45:54.287  2813  2853 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:45:54.287  2813  2853 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:45:54.384  5338  5338 D AndroidRuntime: Shutting down VM
+10-16 11:45:54.860   507   889 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.inputmethod.latin; callingUid: 10138; uidState: IMPB; intent: Intent { cmp=com.google.android.inputmethod.latin/com.google.android.apps.inputmethod.libs.dataservice.superpacks.SuperpacksForegroundTaskService }; code:BOOT_COMPLETED; tempAllowListReason:<broadcast:1000:android.intent.action.BOOT_COMPLETED,reason:,reasonCode:BOOT_COMPLETED,duration:20000,callingUid:1000>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null]
+10-16 11:45:55.369  4541  4541 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:55.427  1654  2119 I AiAiCaptions: Disable com.google.android.apps.miphone.aiai.captions.CaptionsForegroundService (reason: Captions is disabled in device config)
+10-16 11:45:55.428  5520  5520 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:55.498  5545  5545 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:55.551  5572  5572 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:55.618  5593  5593 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:55.708  5615  5615 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:55.817  5635  5635 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:45:55.820  5635  5635 I AndroidRuntime: Using default boot image
+10-16 11:45:55.820  5635  5635 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:45:55.904  5635  5635 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:45:55.909  5637  5637 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.012  5714  5714 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.117  5734  5734 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.219  5754  5754 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.344  5773  5773 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.431  5792  5792 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.515  5811  5811 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.609  5830  5830 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.690  5849  5849 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.777  5868  5868 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.861  5887  5887 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:56.927  5635  5635 D AndroidRuntime: Shutting down VM
+10-16 11:45:56.969  5906  5906 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:45:57.327  1208  1222 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:57.386  1208  1222 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:57.395  1208  1222 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.355  5949  5949 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:45:58.359  5949  5949 I AndroidRuntime: Using default boot image
+10-16 11:45:58.359  5949  5949 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:45:58.442  5949  5949 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:45:58.556  5966  5966 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk. target_sdk_version=33, uses_libraries=ALL, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 11:45:58.557  5966  5966 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/lib/x86_64:/data/app/~~D7Gr863mMXmoFhv-p7MjNw==/com.google.android.webview-ZcyFKI-6_aN2RnKuWrlAhw==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~2xe32SOrxn6vw2t8kFBS7A==/com.google.android.trichromelibrary_541412337-bz2PXEGxHNFTfl5WN-D0Yw==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.webview
+10-16 11:45:58.563  5966  5966 I cr_WebViewApkApp: Launched version=109.0.5414.123 minSdkVersion=29 isBundle=false processName=com.google.android.webview
+10-16 11:45:58.724   507  1587 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{4514eb8 com.google.android.settings.intelligence/10106} BLOCKED
+10-16 11:45:58.745  1208  1221 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 11:45:58.756  1208  1221 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.811  1208  1221 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.820  1208  1227 D PrefCtrlListHelper: Could not find Context-only controller for pref: com.android.settings.deviceinfo.legal.WebViewLicensePreferenceController
+10-16 11:45:58.831  1208  1221 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.843  1208  1221 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.849  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.856  1208  1221 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.875  1208  1221 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.895  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.896  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.934  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.937  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:58.940  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:45:59.494  5949  5949 D AndroidRuntime: Shutting down VM
+10-16 11:45:59.521  1208  1227 W libc    : Access denied finding property "ro.vendor.aware_available"
+10-16 11:46:00.768  6060  6060 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:00.843  6083  6083 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:00.876  6100  6100 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:46:00.879  6100  6100 I AndroidRuntime: Using default boot image
+10-16 11:46:00.879  6100  6100 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:46:00.952  6100  6100 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:46:01.571  6131  6131 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:01.617  6150  6150 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:01.666  6169  6169 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:01.969  6100  6100 D AndroidRuntime: Shutting down VM
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: Exception in upload method
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: com.google.android.apps.gsa.shared.r.d: Error code: 262182
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.ab.bk.d(PG:5)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.ar.d(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.bo.b(PG:5)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.e.a(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.libraries.gsa.c.a.a.run(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bu.cancel(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:17)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.bk.b.h.run(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.bf.execute(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.i(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:12)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.j.a(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.aj.a(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.m(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.c.a(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.l(PG:3)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.common.util.concurrent.d.cancel(PG:8)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.c(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.r.a(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.e(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.c.c(PG:3)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.staticplugins.dc.a.e.a(PG:5)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.n.hh(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.cd.g.a.f.e(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.d(PG:22)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.speech.k.a.g.ks(PG:6)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.o.e(PG:14)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.s3.p.run(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.e.run(PG:2)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.bi.run(PG:1)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at java.lang.Thread.run(Thread.java:1012)
+10-16 11:46:02.032  1756  2287 E cr_CronetUrlRequestContext: 	at com.google.android.apps.gsa.shared.util.c.a.l.run(PG:5)
+10-16 11:46:02.754  6201  6201 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:02.825  6221  6221 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:02.898  6242  6242 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:02.973  6261  6261 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-16 11:46:03.017   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{fb244f com.google.android.apps.messaging/10111} BLOCKED
+10-16 11:46:03.017   507   571 I AppsFilter: interaction: PackageSetting{1d227bd app.two.android/10174} -> PackageSetting{418b7dc com.google.android.as/10117} BLOCKED
+10-16 11:46:03.354  6330  6330 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:46:03.356  6330  6330 I AndroidRuntime: Using default boot image
+10-16 11:46:03.356  6330  6330 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:46:03.434  6330  6330 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:46:04.449  2813  4770 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:46:04.449  2813  4770 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:46:04.456  6330  6330 D AndroidRuntime: Shutting down VM
+10-16 11:46:04.954   507  3375 W ActivityManager: Scheduling restart of crashed service com.google.android.gms/com.google.android.location.network.NetworkLocationService in 251000ms for connection
+10-16 11:46:05.867  6684  6684 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:46:05.869  6684  6684 I AndroidRuntime: Using default boot image
+10-16 11:46:05.869  6684  6684 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:46:05.940  6684  6684 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:46:06.015  2813  4770 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:46:06.015  2813  4770 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:46:06.448  2813  2885 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:46:06.448  2813  2885 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:46:06.542  6440  6654 I cr_CronetLibraryLoader: Cronet version: 113.0.5672.51, arch: x86_64
+10-16 11:46:06.955  6684  6684 D AndroidRuntime: Shutting down VM
+10-16 11:46:07.897  2813  2885 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:46:07.904  2813  2885 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:46:08.002  6497  6575 W libc    : Access denied finding property "ro.hardware.chipname"
+10-16 11:46:08.382  6814  6814 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-16 11:46:08.385  6814  6814 I AndroidRuntime: Using default boot image
+10-16 11:46:08.385  6814  6814 I AndroidRuntime: Leaving lock profiling enabled
+10-16 11:46:08.449  2813  2885 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+10-16 11:46:08.457  2813  2885 W libc    : Access denied finding property "service.adb.tls.port"
+10-16 11:46:08.481  6814  6814 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-16 11:46:09.510  6814  6814 D AndroidRuntime: Shutting down VM
