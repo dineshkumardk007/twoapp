@@ -91,6 +91,19 @@ android {
             applicationIdSuffix = ".debug"
             isDebuggable = true
         }
+        /*
+         * The release build as the Android test phones run it
+         * (.github/workflows/android-call-test.yml): shrunk and optimised
+         * exactly as release is, but debuggable, so the test can drive the
+         * page over adb and reach a relay on the test machine, and signed with
+         * the debug key, so it installs without the real one. Never published.
+         */
+        create("calltest") {
+            initWith(getByName("release"))
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
     }
 
     compileOptions {

@@ -835,6 +835,9 @@ fun TwoWebView(
                 // A debug build may talk to a relay on this desk over plain
                 // ws://; the release app never needs anything insecure.
                 val debuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+                // And a debuggable build - debug, or the test phones' calltest
+                // build - lets a test drive the page over adb. Never release.
+                if (debuggable) WebView.setWebContentsDebuggingEnabled(true)
 
                 settings.apply {
                     javaScriptEnabled = true
