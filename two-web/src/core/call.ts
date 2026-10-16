@@ -290,6 +290,17 @@ export function tuneOpus(sdp: string, kbps: number): string {
   return sdp.replace(line, `$1\r\na=fmtp:${pt} ${params}`);
 }
 
+/**
+ * A voice's level as it looks: WebRTC reports amplitude, 0..1 where 1 is as
+ * loud as audio goes, and speech sits far down that scale. In decibels it is
+ * even: -50 dB, a room's hush, is 0; -6 dB, a raised voice, is 1.
+ */
+export function loudness(level: number): number {
+  if (!(level > 0)) return 0;
+  const db = 20 * Math.log10(level);
+  return Math.min(1, Math.max(0, (db + 50) / 44));
+}
+
 /** A microphone opened for a call, and the conditions it was opened under. */
 interface OpenedMic {
   stream: MediaStream;
@@ -391,6 +402,40 @@ export class CallEngine {
    */
   get askingForMic(): boolean {
     return this.micRequests > 0;
+  }
+
+  /**
+   * How loud each of you is right now, 0..1, for the call screen's circles.
+   *
+   * Both come from what the call already measures: the other voice from the
+   * last packet that arrived, yours from what the microphone sends. Nothing
+   * is opened to listen and nothing is sent - and 0 when either is unknown,
+   * or you are muted.
+   */
+  async voiceLevels(): Promise<{ mine: number; theirs: number }> {
+    const pc = this.pc;
+    if (!pc || this.state.phase !== 'active') return { mine: 0, theirs: 0 };
+    let theirs = 0;
+    let mine = 0;
+    try {
+      const receiver = pc.getReceivers().find(r => r.track?.kind === 'audio');
+      const sources = receiver?.getSynchronizationSources?.() ?? [];
+      theirs = sources.reduce((loudest, s) => Math.max(loudest, s.audioLevel ?? 0), 0);
+    } catch {
+      /* an engine without it: their circle stays still */
+    }
+    if (!this.state.muted) {
+      try {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'audio');
+        const report = sender ? await sender.getStats() : null;
+        report?.forEach((s: any) => {
+          if (s.type === 'media-source' && typeof s.audioLevel === 'number') mine = s.audioLevel;
+        });
+      } catch {
+        /* as above */
+      }
+    }
+    return { mine: loudness(mine), theirs: loudness(theirs) };
   }
 
   private set(patch: Partial<CallState>) {

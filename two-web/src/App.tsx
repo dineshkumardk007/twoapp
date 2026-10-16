@@ -416,6 +416,12 @@ export const App: React.FC = () => {
       callEngineRef.current = null;
     };
   }, []);
+  // Steady across renders, or the call screen would restart its listening
+  // every second the timer ticks.
+  const callVoiceLevels = useCallback(
+    () => callEngineRef.current?.voiceLevels() ?? Promise.resolve({ mine: 0, theirs: 0 }),
+    []
+  );
   const [showStoryTour, setShowStoryTour] = useState(false);
 
   /**
@@ -3752,8 +3758,10 @@ export const App: React.FC = () => {
   const callOverlay = (
     <CallOverlay
       call={callState}
+      myName={state.userName || 'You'}
       partnerName={state.partnerName || 'Partner'}
       partnerOnline={partnerOnline}
+      voiceLevels={callVoiceLevels}
       onAccept={() => void callEngineRef.current?.accept()}
       onDecline={() => callEngineRef.current?.decline()}
       onHangup={() => callEngineRef.current?.hangup()}
