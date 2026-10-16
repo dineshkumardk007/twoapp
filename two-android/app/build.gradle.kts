@@ -91,6 +91,19 @@ android {
             applicationIdSuffix = ".debug"
             isDebuggable = true
         }
+        /*
+         * The release build as the Android test phones run it
+         * (.github/workflows/android-call-test.yml): shrunk and optimised
+         * exactly as release is, but debuggable, so the test can drive the
+         * page over adb and reach a relay on the test machine, and signed with
+         * the debug key, so it installs without the real one. Never published.
+         */
+        create("calltest") {
+            initWith(getByName("release"))
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
     }
 
     compileOptions {
@@ -146,6 +159,15 @@ dependencies {
 
     // Security & Biometrics
     implementation(libs.androidx.biometric)
+    // Named outright, newer than the 1.2.5 that biometric brings along. That
+    // one's FragmentActivity - which MainActivity is, for the fingerprint
+    // prompt - refuses any request code above 16 bits, and every request the
+    // app makes through rememberLauncherForActivityResult has one: asking for
+    // the microphone threw, inside the WebView's own callback, and closed the
+    // app the moment Call was tapped. The same went for choosing a photo,
+    // taking one, saving a backup and asking for the location. From 1.3.0
+    // the restriction is gone.
+    implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.webkit)
 
     // Live radio that keeps playing with the app in the background

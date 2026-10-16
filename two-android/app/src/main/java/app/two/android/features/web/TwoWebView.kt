@@ -23,6 +23,7 @@ import android.print.PrintManager
 import android.provider.DocumentsContract
 import android.graphics.Color
 import android.util.Base64
+import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -44,6 +45,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.webkit.WebViewAssetLoader
+import app.two.android.core.diagnostics.CrashNote
 import app.two.android.core.network.NetworkConfig
 import app.two.android.core.security.FingerprintLock
 import app.two.android.core.update.AppUpdater
@@ -458,8 +460,8 @@ class AndroidWebBridge(
      * send a speaker's output straight back into the microphone.
      */
     @JavascriptInterface
-    fun isHeadsetConnected(): Boolean {
-        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return false
+    fun isHeadsetConnected(): Boolean = try {
+        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
         val earphones = setOf(
             AudioDeviceInfo.TYPE_WIRED_HEADSET,
             AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
@@ -467,7 +469,11 @@ class AndroidWebBridge(
             AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
             AudioDeviceInfo.TYPE_USB_HEADSET
         )
-        return audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any { it.type in earphones }
+        audio?.getDevices(AudioManager.GET_DEVICES_OUTPUTS)?.any { it.type in earphones } ?: false
+    } catch (_: Exception) {
+        // A phone whose audio service will not say: assume none, which keeps
+        // echo cancellation on - the safe way round.
+        false
     }
 
     /**
@@ -495,8 +501,13 @@ class AndroidWebBridge(
     fun setCallAudioRoute(active: Boolean, speaker: Boolean, headset: Boolean) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
         val voicePath = active && (speaker || !headset)
-        audio.mode = if (voicePath) AudioManager.MODE_IN_COMMUNICATION else AudioManager.MODE_NORMAL
-        routeToSpeaker(audio, voicePath && speaker)
+        try {
+            audio.mode = if (voicePath) AudioManager.MODE_IN_COMMUNICATION else AudioManager.MODE_NORMAL
+            routeToSpeaker(audio, voicePath && speaker)
+        } catch (_: Exception) {
+            // A phone that refuses the change keeps its own routing; the call
+            // carries on, only perhaps from the other speaker.
+        }
     }
 
     /**
@@ -536,6 +547,24 @@ class AndroidWebBridge(
         if (on) CallKeepAliveService.start(context) else CallKeepAliveService.stop(context)
     }
 
+    /** Why Two last closed unexpectedly, as JSON {at, text}; "" when nothing did. */
+    @JavascriptInterface
+    fun lastCrash(): String = try {
+        CrashNote.read(context)
+    } catch (_: Exception) {
+        ""
+    }
+
+    /** Dismissed from Settings. */
+    @JavascriptInterface
+    fun clearLastCrash() {
+        try {
+            CrashNote.clear(context)
+        } catch (_: Exception) {
+            // Offered again next time; nothing worse.
+        }
+    }
+
     private var proximityLock: PowerManager.WakeLock? = null
 
     /**
@@ -550,23 +579,29 @@ class AndroidWebBridge(
     fun setProximityLock(on: Boolean) {
         val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
         synchronized(this) {
-            if (on) {
-                if (proximityLock?.isHeld == true) return
-                if (!power.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) return
-                proximityLock = power.newWakeLock(
-                    PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
-                    "two:call-proximity"
-                ).apply {
-                    setReferenceCounted(false)
-                    // A ceiling, in case the page never says the call ended.
-                    acquire(4 * 60 * 60 * 1000L)
+            try {
+                if (on) {
+                    if (proximityLock?.isHeld == true) return
+                    if (!power.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) return
+                    proximityLock = power.newWakeLock(
+                        PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                        "two:call-proximity"
+                    ).apply {
+                        setReferenceCounted(false)
+                        // A ceiling, in case the page never says the call ended.
+                        acquire(4 * 60 * 60 * 1000L)
+                    }
+                } else {
+                    proximityLock?.let {
+                        // Wait for the phone to leave the face, or the screen would
+                        // light up against a cheek the moment the call ends.
+                        if (it.isHeld) it.release(PowerManager.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY)
+                    }
+                    proximityLock = null
                 }
-            } else {
-                proximityLock?.let {
-                    // Wait for the phone to leave the face, or the screen would
-                    // light up against a cheek the moment the call ends.
-                    if (it.isHeld) it.release(PowerManager.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY)
-                }
+            } catch (_: Exception) {
+                // A sensor the phone will not lend: the screen simply stays on
+                // at the ear, as it did before this existed.
                 proximityLock = null
             }
         }
@@ -731,6 +766,10 @@ fun TwoWebView(
         } catch (_: ActivityNotFoundException) {
             pendingSave.value = null
             Toast.makeText(hostContext, "No app on this phone can save files", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            pendingSave.value = null
+            CrashNote.record(hostContext, "The save screen would not open", Log.getStackTraceString(e))
+            Toast.makeText(hostContext, "The save screen would not open", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -835,6 +874,9 @@ fun TwoWebView(
                 // A debug build may talk to a relay on this desk over plain
                 // ws://; the release app never needs anything insecure.
                 val debuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+                // And a debuggable build - debug, or the test phones' calltest
+                // build - lets a test drive the page over adb. Never release.
+                if (debuggable) WebView.setWebContentsDebuggingEnabled(true)
 
                 settings.apply {
                     javaScriptEnabled = true
@@ -927,6 +969,41 @@ fun TwoWebView(
                         view?.context?.findActivity()?.let { resetBedside(it) }
                         bridge.earRelease()
                     }
+
+                    /**
+                     * The page's own process has ended: it crashed, or Android
+                     * took its memory back - which starting a call's audio on a
+                     * phone already short of memory can bring about.
+                     *
+                     * Left unanswered, Android closes the whole app along with
+                     * it. Answered, Two starts again with a fresh page instead.
+                     * Whatever the old page was doing ended with it, a call
+                     * included, so the call's notification, audio mode and
+                     * screen lock are let go first, and a note is kept for
+                     * Settings (CrashNote).
+                     */
+                    override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
+                        CrashNote.record(
+                            context,
+                            "The page stopped and Two started it again",
+                            "crashed=${detail?.didCrash()}, priority at exit=${detail?.rendererPriorityAtExit()}"
+                        )
+                        bridge.setCallKeepAlive(false)
+                        bridge.setCallAudioRoute(false, false, false)
+                        bridge.setProximityLock(false)
+                        bridge.earRelease()
+                        val activity = view?.context?.findActivity()
+                        if (view != null) {
+                            (view.parent as? ViewGroup)?.removeView(view)
+                            view.destroy()
+                        }
+                        // A dead WebView cannot be used again: the screen is
+                        // built afresh, with a new one.
+                        if (activity != null && !activity.isFinishing) {
+                            Handler(Looper.getMainLooper()).post { activity.recreate() }
+                        }
+                        return true
+                    }
                 }
 
                 webChromeClient = object : WebChromeClient() {
@@ -942,16 +1019,30 @@ fun TwoWebView(
                      */
                     override fun onPermissionRequest(request: PermissionRequest?) {
                         if (request == null) return
-                        val audio = PermissionRequest.RESOURCE_AUDIO_CAPTURE
-                        if (!request.resources.contains(audio)) {
-                            request.deny()
-                            return
-                        }
-                        if (holds(Manifest.permission.RECORD_AUDIO)) {
-                            request.grant(arrayOf(audio))
-                        } else {
-                            pendingMedia.value = request
-                            askAndroid.launch(arrayOf(Manifest.permission.RECORD_AUDIO))
+                        // Called from inside the WebView's own code, which
+                        // closes the whole app on any error thrown back into
+                        // it: whatever goes wrong here becomes a refusal the
+                        // page can show, and a note for Settings.
+                        try {
+                            val audio = PermissionRequest.RESOURCE_AUDIO_CAPTURE
+                            if (!request.resources.contains(audio)) {
+                                request.deny()
+                                return
+                            }
+                            if (holds(Manifest.permission.RECORD_AUDIO)) {
+                                request.grant(arrayOf(audio))
+                            } else {
+                                pendingMedia.value = request
+                                askAndroid.launch(arrayOf(Manifest.permission.RECORD_AUDIO))
+                            }
+                        } catch (e: Exception) {
+                            pendingMedia.value = null
+                            CrashNote.record(context, "Asking for the microphone failed", Log.getStackTraceString(e))
+                            try {
+                                request.deny()
+                            } catch (_: Exception) {
+                                // Already answered.
+                            }
                         }
                     }
 
@@ -969,11 +1060,18 @@ fun TwoWebView(
                         if (origin == null || callback == null) return
                         val fine = Manifest.permission.ACCESS_FINE_LOCATION
                         val coarse = Manifest.permission.ACCESS_COARSE_LOCATION
-                        if (holds(fine) || holds(coarse)) {
-                            callback.invoke(origin, true, false)
-                        } else {
-                            pendingGeo.value = origin to callback
-                            askAndroid.launch(arrayOf(fine, coarse))
+                        try {
+                            if (holds(fine) || holds(coarse)) {
+                                callback.invoke(origin, true, false)
+                            } else {
+                                pendingGeo.value = origin to callback
+                                askAndroid.launch(arrayOf(fine, coarse))
+                            }
+                        } catch (e: Exception) {
+                            // As for the microphone: a refusal, never a crash.
+                            pendingGeo.value = null
+                            CrashNote.record(context, "Asking for the location failed", Log.getStackTraceString(e))
+                            callback.invoke(origin, false, false)
                         }
                     }
 
@@ -1002,7 +1100,13 @@ fun TwoWebView(
                         return try {
                             pickFiles.launch(filePickerIntent(fileChooserParams))
                             true
-                        } catch (_: ActivityNotFoundException) {
+                        } catch (e: Exception) {
+                            // No picker on this phone, or one that would not
+                            // open: the page hears "nothing chosen" rather than
+                            // the app closing (see onPermissionRequest).
+                            if (e !is ActivityNotFoundException) {
+                                CrashNote.record(context, "The file picker would not open", Log.getStackTraceString(e))
+                            }
                             pendingFiles.value = null
                             filePathCallback.onReceiveValue(null)
                             true
