@@ -32,6 +32,8 @@ import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
 import type { VoiceNote } from '../core/voice';
 import { copyTextOrThrow } from '../core/clipboard';
+import type { ChatDraft } from '../types';
+import { BEFORE_LOCK_EVENT } from '../core/autoLock';
 
 interface GroupChatViewProps {
   group: GroupSpace;
@@ -43,6 +45,10 @@ interface GroupChatViewProps {
   /** False when this device has receipts and typing switched off. */
   shareReceipts: boolean;
   onSend: (text: string) => void;
+  /** A half-typed message to start with, if one was left in this group. */
+  draft?: ChatDraft;
+  /** Keeps what is half-typed (or, with null, forgets it) - on leaving, never per key press. */
+  onSaveDraft?: (draft: ChatDraft | null) => void;
   /** A recorded voice note, to be sent to the group. */
   onSendVoice: (note: VoiceNote) => void;
   /** Somebody else's voice note has been played for the first time on this device. */
@@ -75,6 +81,8 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   typingIds,
   shareReceipts,
   onSend,
+  draft,
+  onSaveDraft,
   onSendVoice,
   onVoicePlayed,
   callInProgress = false,
@@ -82,8 +90,43 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   onRename,
   onResolveStuck
 }) => {
-  const [text, setText] = useState('');
+  // Back in the box: whatever was half-typed when this group was last left.
+  const [text, setText] = useState(() => draft?.text ?? '');
   const [showEmoji, setShowEmoji] = useState(false);
+
+  /**
+   * What is half-typed is kept when you leave - another screen, another app,
+   * a locked phone - and put back next time. Saved on the way out, not per
+   * key press: each save re-encrypts everything.
+   */
+  const textNowRef = useRef(text);
+  textNowRef.current = text;
+  const savedDraftRef = useRef(draft?.text ?? '');
+  const onSaveDraftRef = useRef(onSaveDraft);
+  onSaveDraftRef.current = onSaveDraft;
+  const putDraftDown = () => {
+    const now = textNowRef.current.trim() ? textNowRef.current : '';
+    if (now === savedDraftRef.current) return;
+    savedDraftRef.current = now;
+    onSaveDraftRef.current?.(now ? { text: now, at: Date.now() } : null);
+  };
+  const putDraftDownRef = useRef(putDraftDown);
+  putDraftDownRef.current = putDraftDown;
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') putDraftDownRef.current();
+    };
+    const onPageHide = () => putDraftDownRef.current();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', onPageHide);
+    window.addEventListener(BEFORE_LOCK_EVENT, onPageHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener(BEFORE_LOCK_EVENT, onPageHide);
+      putDraftDownRef.current();
+    };
+  }, []);
 
   /** Hold-to-talk, as in the couple's chat: the mic sits in Send's place while nothing is written. */
   const rec = useVoiceRecorder({
@@ -162,6 +205,11 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
     if (!body) return;
     onSend(body);
     setText('');
+    // Gone at once, so a lock straight after cannot bring back sent words.
+    if (savedDraftRef.current) {
+      savedDraftRef.current = '';
+      onSaveDraftRef.current?.(null);
+    }
   };
 
   const nameFor = (id: string) => group.members.find(m => m.id === id)?.name || 'Someone';

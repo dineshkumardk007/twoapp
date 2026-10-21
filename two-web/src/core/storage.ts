@@ -1,6 +1,7 @@
 import {
   EmotionalReport,
   ChatMessage,
+  ChatDraft,
   ChatPin,
   JournalEntry,
   AgreementItem,
@@ -58,6 +59,13 @@ export interface SpaceState {
   messages: ChatMessage[];
   /** Messages pinned to the top of the chat, newest last (core/chatActions). */
   chatPins?: ChatPin[];
+  /**
+   * When you last had the couple's chat open in front of you, by this phone's
+   * clock (core/unread): their messages that arrived after it are unread.
+   */
+  chatReadAt?: number;
+  /** Half-typed messages, by conversation: 'couple', or a group's id. */
+  chatDrafts?: Record<string, ChatDraft>;
   journalEntries: JournalEntry[];
   agreements: AgreementItem[];
   lists: ListItem[];

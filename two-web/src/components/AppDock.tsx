@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ChevronUp, X, Search } from 'lucide-react';
+import { ChevronUp, X, Search, Pencil } from 'lucide-react';
 import { getDestinations, allDestinations, FAMILY_STYLE } from '../data/destinations';
 import { useBackLayer } from '../core/backStack';
 import { haptic } from '../core/haptics';
@@ -8,6 +8,8 @@ interface AppDockProps {
   currentTab: string;
   onSelectTab: (id: string) => void;
   unreadChatCount?: number;
+  /** A half-typed message waits in the chat. */
+  draftInChat?: boolean;
   /** Destinations the partner has touched and this device has not looked at. */
   dotted?: Set<string>;
   /** Roughly how many favourites fit across the bar. */
@@ -44,6 +46,7 @@ export const AppDock: React.FC<AppDockProps> = ({
   currentTab,
   onSelectTab,
   unreadChatCount = 0,
+  draftInChat = false,
   dotted,
   isTablet = false
 }) => {
@@ -291,6 +294,13 @@ export const AppDock: React.FC<AppDockProps> = ({
                   key={item.id}
                   data-dock-active={active}
                   onClick={() => go(item.id)}
+                  aria-label={
+                    item.id === 'chat' && unreadChatCount > 0
+                      ? `${item.name}, ${unreadChatCount} new`
+                      : item.id === 'chat' && draftInChat
+                      ? `${item.name}, a message you started`
+                      : undefined
+                  }
                   className={`dock-tab relative flex shrink-0 snap-start flex-col items-center gap-1 rounded-2xl py-1.5 transition-all active:scale-90 ${
                     // Sized so the next tab is always half-visible at the right
                     // edge. That sliver is the only thing telling you the bar
@@ -320,8 +330,18 @@ export const AppDock: React.FC<AppDockProps> = ({
                   >
                     {item.name}
                   </span>
-                  {(item.badge || dotted?.has(item.id)) && (
-                    <span className="absolute right-1/4 top-0.5 h-2 w-2 rounded-full bg-rose-500" />
+                  {/* The chat says how many, not just that there are some;
+                      and with none, a pencil for a message you started. */}
+                  {item.id === 'chat' && unreadChatCount > 0 ? (
+                    <span className="absolute right-2 top-0 min-w-[18px] rounded-full bg-rose-500 px-1 text-center text-[10px] font-semibold leading-[18px] text-white tabular-nums">
+                      {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                    </span>
+                  ) : item.id === 'chat' && draftInChat ? (
+                    <Pencil aria-hidden="true" className="absolute right-3 top-0.5 h-3 w-3 text-linen-secondary" />
+                  ) : (
+                    (item.badge || dotted?.has(item.id)) && (
+                      <span className="absolute right-1/4 top-0.5 h-2 w-2 rounded-full bg-rose-500" />
+                    )
                   )}
                 </button>
               );

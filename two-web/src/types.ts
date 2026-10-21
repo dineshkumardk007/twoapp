@@ -81,6 +81,13 @@ export interface ChatMessage {
    * this phone from then on; the bubble says it was opened.
    */
   viewedAt?: number;
+  /**
+   * When one of the partner's messages arrived on this phone, by this phone's
+   * clock (core/unread). Kept here only: never sent, never taken from a
+   * message that arrives. Absent on messages from before it was kept, and on
+   * history brought back to a phone set up again - neither is news.
+   */
+  receivedAt?: number;
 }
 
 /**
@@ -103,6 +110,19 @@ export interface ChatReplyRef {
   authorId: string;
   /** Up to about eighty characters - or "Voice note" or "Photo". */
   snippet: string;
+}
+
+/**
+ * A message started and not sent, kept on this phone (inside the vault when a
+ * PIN is set) so it is still there after looking at another screen or
+ * closing Two. Never sent anywhere.
+ */
+export interface ChatDraft {
+  text: string;
+  /** The message it answers, if it was a reply. */
+  replyTo?: ChatReplyRef;
+  /** When it was put down, epoch ms. */
+  at: number;
 }
 
 export interface JournalEntry {

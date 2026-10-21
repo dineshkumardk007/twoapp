@@ -322,7 +322,16 @@ export class WebSocketRelayClient {
       const highWater = this.loadHighWaterMark(this.creds.spaceId);
       const seqCursor = this.loadSeqCursor(this.creds.spaceId);
       this.replaying = true;
-      this.restoring = highWater === 0 && seqCursor === 0;
+      // A phone with nothing yet is being given its history. That stays so
+      // until the history has all come - across a dropped connection too,
+      // when the cursors have moved but the rest is still history.
+      const fresh = highWater === 0 && seqCursor === 0;
+      try {
+        if (fresh) localStorage.setItem(this.restoreKey(this.creds.spaceId), '1');
+        this.restoring = fresh || localStorage.getItem(this.restoreKey(this.creds.spaceId)) === '1';
+      } catch {
+        this.restoring = fresh;
+      }
 
       this.rawSend({
         type: 'JOIN',
@@ -411,6 +420,11 @@ export class WebSocketRelayClient {
         this.replaying = false;
         this.restoring = false;
         this.catchingUp = false;
+        try {
+          if (this.creds) localStorage.removeItem(this.restoreKey(this.creds.spaceId));
+        } catch {
+          /* storage unavailable */
+        }
       }
       this.emit({ ...payload, restoring: this.restoring });
       // A relay that says there is more has capped this batch; ask for the
@@ -689,6 +703,7 @@ export class WebSocketRelayClient {
       localStorage.removeItem(this.outboxKey(spaceId));
       localStorage.removeItem(this.highWaterKey(spaceId));
       localStorage.removeItem(this.seqKey(spaceId));
+      localStorage.removeItem(this.restoreKey(spaceId));
     } catch {
       /* storage unavailable; nothing was written to begin with */
     }
@@ -785,6 +800,11 @@ export class WebSocketRelayClient {
    */
   private seqKey(spaceId: string) {
     return `two_relay_seq_${spaceId}`;
+  }
+
+  /** Set while a phone's history is still being brought back to it. */
+  private restoreKey(spaceId: string) {
+    return `two_relay_restoring_${spaceId}`;
   }
 
   private loadSeqCursor(spaceId: string): number {

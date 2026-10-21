@@ -64,6 +64,13 @@ export function lockNow() {
 }
 
 /**
+ * Asked of every screen just before Two locks: put down anything not yet
+ * saved (a half-typed message), now. Locking reloads the app, and a draft
+ * kept only on the way out would otherwise be lost to the reload.
+ */
+export const BEFORE_LOCK_EVENT = 'two-before-lock';
+
+/**
  * Something that keeps the app open while it lasts - live radio playing with
  * the screen off. Locking reloads the app, which would cut it off.
  */

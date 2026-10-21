@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { ChatMessage, ChatPin, ChatReplyRef } from '../types';
+import { ChatDraft, ChatMessage, ChatPin, ChatReplyRef } from '../types';
+import { countUnread, firstUnreadId } from '../core/unread';
+import { BEFORE_LOCK_EVENT } from '../core/autoLock';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
@@ -41,6 +43,17 @@ interface ChatViewProps {
   activeUser: 'user' | 'partner';
   /** Newest sentAt the partner has confirmed reading. */
   partnerReadAt?: number;
+  /**
+   * When you had last looked, as the chat came in front of you (core/unread):
+   * where "New messages" goes.
+   */
+  readAt?: number;
+  /** Goes up each time the chat comes in front of you: the chat takes a fresh look. */
+  openKey?: number;
+  /** A half-typed message to start with, if one was left. */
+  draft?: ChatDraft;
+  /** Keeps what is half-typed (or, with null, forgets it) - on leaving, never per key press. */
+  onSaveDraft?: (draft: ChatDraft | null) => void;
   /**
    * Connection state, shown here because chat is the one screen with neither
    * the header nor the dock: without it there would be nothing on screen to say
@@ -213,7 +226,7 @@ interface Row {
  * stored. The moment (sentAt) has been stored alongside it all along, so
  * every message that has one gets its real time back, old ones included.
  */
-function layOut(messages: ChatMessage[]): Row[] {
+function layOut(messages: ChatMessage[], markId?: string): Row[] {
   const now = Date.now();
   const dividers: (string | undefined)[] = [];
   // Messages from before the moment was kept have no day of their own; they
@@ -229,7 +242,9 @@ function layOut(messages: ChatMessage[]): Row[] {
     }
   }
 
+  // Bubbles do not join through "New messages": the last one read keeps its name and time.
   const joins = (a: ChatMessage, b: ChatMessage, newDay: string | undefined) =>
+    b.id !== markId &&
     a.authorId === b.authorId &&
     !newDay &&
     (!a.sentAt || !b.sentAt || Math.abs(b.sentAt - a.sentAt) < RUN_GAP_MS);
@@ -249,6 +264,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onSendMessage,
   onResolveStuck,
   partnerReadAt = 0,
+  readAt,
+  openKey = 0,
+  draft,
+  onSaveDraft,
   relayStatus = 'connected',
   onOpenSoftLanding,
   partnerOnline = false,
@@ -267,15 +286,67 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onPinMessage,
   onViewOnceOpened
 }) => {
-  const [inputText, setInputText] = useState('');
+  // Back in the box: whatever was half-typed when the chat was last left.
+  const [inputText, setInputText] = useState(() => draft?.text ?? '');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   /** The message being answered: shown above the composer, and sent with what is written next. */
-  const [replyTo, setReplyTo] = useState<ChatReplyRef | null>(null);
+  const [replyTo, setReplyTo] = useState<ChatReplyRef | null>(() => draft?.replyTo ?? null);
   const replyToRef = useRef(replyTo);
   replyToRef.current = replyTo;
   /** One of your messages having its words changed, in the composer; what it said before. */
   const [editing, setEditing] = useState<{ id: string; original: string } | null>(null);
+
+  /**
+   * What is half-typed is kept when you leave - for another screen, another
+   * app, or a locked phone - and is back in the box next time. Put down on
+   * the way out rather than on every key press, because each save
+   * re-encrypts everything. Not an edit under way: those are an old
+   * message's words, not something new.
+   */
+  const draftNowRef = useRef<ChatDraft | null>(null);
+  draftNowRef.current =
+    editing || (!inputText.trim() && !replyTo) ? null : { text: inputText, ...(replyTo ? { replyTo } : {}), at: 0 };
+  const draftKey = (d: ChatDraft | null | undefined) => JSON.stringify(d ? [d.text, d.replyTo?.id ?? null] : null);
+  const savedDraftRef = useRef(draftKey(draft));
+  const onSaveDraftRef = useRef(onSaveDraft);
+  onSaveDraftRef.current = onSaveDraft;
+  const putDraftDown = () => {
+    const now = draftNowRef.current;
+    const key = draftKey(now);
+    if (key === savedDraftRef.current) return;
+    savedDraftRef.current = key;
+    onSaveDraftRef.current?.(now ? { ...now, at: Date.now() } : null);
+  };
+  const putDraftDownRef = useRef(putDraftDown);
+  putDraftDownRef.current = putDraftDown;
+  /**
+   * A draft that was only a reply, used by a voice note or photos: gone at
+   * once, as a sent message's is, so a lock straight after cannot bring the
+   * reply back. Words still in the box stay a draft.
+   */
+  const inputTextRef = useRef(inputText);
+  inputTextRef.current = inputText;
+  const forgetUsedDraft = () => {
+    if (inputTextRef.current.trim() || savedDraftRef.current === draftKey(null)) return;
+    savedDraftRef.current = draftKey(null);
+    onSaveDraftRef.current?.(null);
+  };
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') putDraftDownRef.current();
+    };
+    const onPageHide = () => putDraftDownRef.current();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', onPageHide);
+    window.addEventListener(BEFORE_LOCK_EVENT, onPageHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener(BEFORE_LOCK_EVENT, onPageHide);
+      putDraftDownRef.current();
+    };
+  }, []);
 
   /**
    * Hold-to-talk. The mic takes Send's place while the text box is empty, and
@@ -291,6 +362,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         ...(reply ? { replyTo: reply } : {})
       });
       if (reply) setReplyTo(null);
+      forgetUsedDraft();
     },
     disabled: callInProgress,
     onActiveChange: active => {
@@ -340,18 +412,46 @@ export const ChatView: React.FC<ChatViewProps> = ({
     return () => clearInterval(timer);
   }, []);
 
+  // "New messages": where the unread ones began as the chat came in front of
+  // you. Kept from that moment, because looking marks them read at once -
+  // and shown only if there were some then, not above each message that
+  // arrives while you are reading. Taken again each time the chat comes back
+  // in front (openKey): from the lock screen, another app, a group.
+  const takeLook = () => ({ key: openKey, readAt, hadUnread: countUnread(messages, activeUser, readAt) > 0 });
+  const [opening, setOpening] = useState(takeLook);
+  if (opening.key !== openKey) setOpening(takeLook());
+  const newMarkId = useMemo(
+    () => (opening.hadUnread ? firstUnreadId(messages, activeUser, opening.readAt) : undefined),
+    [messages, activeUser, opening]
+  );
+
   const rows = useMemo(
-    () => layOut(messages),
+    () => layOut(messages, newMarkId),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [messages, today]
+    [messages, today, newMarkId]
   );
 
   const [showNeedModal, setShowNeedModal] = useState(false);
 
   // Where the drawn part of the conversation starts. Kept as an index from the
   // oldest message, so new messages add to the end without moving what you are
-  // reading; never so late that fewer than DRAWN_AT_FIRST would show.
-  const [firstDrawn, setFirstDrawn] = useState(() => Math.max(0, messages.length - DRAWN_AT_FIRST));
+  // reading; never so late that fewer than DRAWN_AT_FIRST would show - and far
+  // enough back to show where the new messages begin.
+  // Never more than three screens' worth at first, however much is new: past
+  // that the chat opens at the oldest drawn, and scrolling up draws more.
+  const startFor = (markId: string | undefined) => {
+    const last = Math.max(0, messages.length - DRAWN_AT_FIRST);
+    const mark = markId ? messages.findIndex(m => m.id === markId) : -1;
+    return mark >= 0 && mark < last ? Math.max(mark - 5, messages.length - DRAWN_AT_FIRST * 3, 0) : last;
+  };
+  const [firstDrawn, setFirstDrawn] = useState(() => startFor(newMarkId));
+  // A fresh look with new messages further back than is drawn: draw back to them.
+  const [drawnForLook, setDrawnForLook] = useState(opening.key);
+  if (drawnForLook !== opening.key) {
+    setDrawnForLook(opening.key);
+    const start = startFor(newMarkId);
+    if (start < firstDrawn) setFirstDrawn(start);
+  }
   const drawnFrom = Math.max(0, Math.min(firstDrawn, rows.length - DRAWN_AT_FIRST));
   const drawnRows = useMemo(() => rows.slice(drawnFrom), [rows, drawnFrom]);
   /** Set while earlier messages are being added above, to keep your place. */
@@ -372,10 +472,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
    * something older turns it off, so nothing drags you back down.
    */
   const pinnedRef = useRef(true);
+  /** More than a screen above the newest message: the way back down is offered. */
+  const [awayFromEnd, setAwayFromEnd] = useState(false);
   const handleLogScroll = () => {
     const log = messagesRef.current;
     if (!log) return;
-    pinnedRef.current = log.scrollHeight - log.scrollTop - log.clientHeight < AT_BOTTOM_PX;
+    const fromEnd = log.scrollHeight - log.scrollTop - log.clientHeight;
+    pinnedRef.current = fromEnd < AT_BOTTOM_PX;
+    setAwayFromEnd(fromEnd > log.clientHeight);
     // Near the top with more behind it: draw the next part of the history.
     if (log.scrollTop < LOAD_EARLIER_PX && drawnFrom > 0 && !growingRef.current) {
       growingRef.current = { height: log.scrollHeight, top: log.scrollTop };
@@ -411,6 +515,41 @@ export const ChatView: React.FC<ChatViewProps> = ({
   // only keeps the end in view if that is where you already were.
   const newestId = messages.length ? messages[messages.length - 1].id : '';
   const shownNewestRef = useRef<string | null>(null);
+
+  // More new messages than fit on a screen: start at "New messages" rather
+  // than at the end, so they are read from the first - each time the chat
+  // comes in front with new ones. Before the effect below, which then has
+  // nothing new to scroll to. When so many are new that "New messages" is
+  // further back than is drawn, the chat starts at the oldest drawn.
+  const placedForRef = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (placedForRef.current === opening.key) return;
+    placedForRef.current = opening.key;
+    const log = messagesRef.current;
+    if (!log || !opening.hadUnread || !newMarkId) return;
+    const mark = log.querySelector<HTMLElement>('[data-new-mark]');
+    const markTop = mark
+      ? mark.getBoundingClientRect().top - log.getBoundingClientRect().top + log.scrollTop
+      : 0;
+    if (log.scrollHeight - markTop <= log.clientHeight) return;
+    shownNewestRef.current = newestId;
+    pinnedRef.current = false;
+    log.scrollTop = Math.max(0, markTop - 8);
+    setAwayFromEnd(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opening.key, drawnFrom]);
+
+  /** Back down to the newest message, drawing just the last part again. */
+  const goToNewest = () => {
+    const log = messagesRef.current;
+    if (!log) return;
+    pinnedRef.current = true;
+    setAwayFromEnd(false);
+    if (rows.length - drawnFrom > DRAWN_AT_FIRST * 3) setFirstDrawn(rows.length - DRAWN_AT_FIRST);
+    log.scrollTop = log.scrollHeight;
+    haptic('tick');
+  };
+
   useLayoutEffect(() => {
     // scrollIntoView walks up and scrolls EVERY scrollable ancestor, including
     // the page, which is what yanked the whole layout around on each message.
@@ -418,8 +557,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const log = messagesRef.current;
     if (!log) return;
     if (newestId !== shownNewestRef.current) {
+      const first = shownNewestRef.current === null;
       shownNewestRef.current = newestId;
-      pinnedRef.current = true;
+      // Your own message brings you to the end, as it always has. One of
+      // theirs, arriving while you read further up, leaves you where you
+      // are: the way down is the button at the bottom.
+      if (first || messages[messages.length - 1]?.authorId === activeUser) pinnedRef.current = true;
     }
     if (pinnedRef.current) log.scrollTop = log.scrollHeight;
     // Opened while a long catch-up was arriving, the drawn part grows with it.
@@ -500,6 +643,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
       setReplyTo(null);
     }
     setInputText('');
+    if (savedDraftRef.current !== draftKey(null)) {
+      savedDraftRef.current = draftKey(null);
+      onSaveDraftRef.current?.(null);
+    }
     haptic('confirm');
     restoreComposerFocus();
   };
@@ -573,6 +720,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const sendPhotos = async (list: File[], viewOnce: boolean) => {
     let reply = replyToRef.current;
     setReplyTo(null);
+    forgetUsedDraft();
     setPreparingPhotos(n => n + list.length);
     for (const file of list) {
       try {
@@ -917,6 +1065,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 </span>
               </div>
             )}
+            {msg.id === newMarkId && (
+              <div data-new-mark role="separator" aria-label="New messages" className="flex items-center gap-3 pt-4 pb-1">
+                <span className="h-px flex-1 bg-linen-accent/40" />
+                <span className="text-[11px] font-semibold text-linen-accent">New messages</span>
+                <span className="h-px flex-1 bg-linen-accent/40" />
+              </div>
+            )}
 
             <div data-mid={msg.id} className={`relative flex flex-col ${mine ? 'items-end' : 'items-start'} ${spacing}`}>
               {/* Comes into view as the message is drawn to the right to answer it. */}
@@ -1181,7 +1336,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     // The press handlers are left out on purpose: they act only through refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawnRows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay,
-      byId, highlight, matchSet, currentMatch, flashId, pinnedBy]
+      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, newMarkId]
   );
 
   /** What can be done with the message whose menu is open. */
@@ -1430,6 +1585,20 @@ export const ChatView: React.FC<ChatViewProps> = ({
           {conversation}
           <div ref={messagesEndRef} />
         </div>
+        {/* Held at the bottom of the view while you read further up, with no
+            height of its own, so it never moves the conversation. */}
+        {awayFromEnd && (
+          <div className="pointer-events-none sticky bottom-1 flex h-0 justify-end">
+            <button
+              type="button"
+              onClick={goToNewest}
+              aria-label="Go to the newest message"
+              className="pointer-events-auto -translate-y-full grid h-10 w-10 place-items-center rounded-full border border-linen-border bg-linen-surface text-linen-primary shadow-lg transition-transform active:scale-90"
+            >
+              <ChevronDown className="h-5 w-5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* The picker, open only when asked for. It sits between the messages

@@ -102,6 +102,7 @@ import {
   GratitudeStar,
   CareCompassProfile,
   ComfortBoxData,
+  ChatDraft,
   SecretRecipe,
   IntuitionGameRound,
   TimeCapsuleItem,
@@ -169,8 +170,9 @@ import {
   clearFailures,
   isUnderSuspicion
 } from './core/lockGuard';
-import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting } from './core/autoLock';
+import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting, BEFORE_LOCK_EVENT } from './core/autoLock';
 import { applyIngredientTick } from './core/recipes';
+import { countUnread, newestArrival, newestFrom, readAtForReceipt } from './core/unread';
 import { withBox } from './core/comfortBox';
 import { leaveBedside } from './core/bedside';
 import { askConfirm } from './core/dialog';
@@ -281,6 +283,8 @@ function chatFromWire(parsed: any): ChatMessage {
     isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard,
     isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo,
     editedAt, unsent, reactions, viewOnce, viewedAt,
+    // Never a message's to claim: when a message arrived is this phone's own record.
+    receivedAt,
     ...rest
   } = parsed;
   const voice = cleanVoiceFields(parsed);
@@ -466,7 +470,15 @@ export const App: React.FC = () => {
   const [spaceVersion, setSpaceVersion] = useState(0);
 
   // Notifications, audio alerts, and directory drawer states
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  //
+  // How many of the partner's messages wait unread: worked out from the
+  // messages and this phone's read watermark (core/unread), so it counts what
+  // came while Two was closed and is still right after a restart. It used to
+  // be a number in memory that only live messages added to.
+  const unreadChatCount = useMemo(
+    () => countUnread(state.messages, state.activeUser, state.chatReadAt),
+    [state.messages, state.activeUser, state.chatReadAt]
+  );
   const [inAppNotification, setInAppNotification] = useState<InAppNotification | null>(null);
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const [decoyCode, setDecoyCode] = useState(() => localStorage.getItem('two_decoy_code') || '142.85');
@@ -985,8 +997,16 @@ export const App: React.FC = () => {
               // device on the same role used to show everything typed on the
               // first one as forever sending.
               // Your own view-once photo, back from the relay, keeps no picture.
-              const applied =
+              const copy =
                 incoming.delivered === false || incoming.viewOnce ? deliveredCopy(incoming, prev.activeUser) : incoming;
+              // When it arrived here, for the unread count (core/unread) - not
+              // for a phone being set up again, whose history is not news.
+              // A catch-up after a seat change is news: those messages were
+              // never on this phone.
+              const applied =
+                record.authorId !== prev.activeUser && !(msg.restoring && !msg.catchUp)
+                  ? { ...copy, receivedAt: Date.now() }
+                  : copy;
               return {
                 ...prev,
                 messages: insertBySentAt(prev.messages, applied).slice(-MAX_CHAT_MESSAGES)
@@ -997,7 +1017,6 @@ export const App: React.FC = () => {
               playMessageChime();
               triggerHaptic([35, 45, 35]);
               if (currentTabRef.current !== 'chat') {
-                setUnreadChatCount(c => c + 1);
                 setInAppNotification({
                   id: newId(),
                   title: partnerNameRef.current || 'Partner',
@@ -1114,10 +1133,19 @@ export const App: React.FC = () => {
               });
             }
           } else if (record.type === 'READ_RECEIPT') {
-            // Our own laptop shares this role; its receipt must not mark our
-            // messages as read by the partner.
-            if (record.authorId === state.activeUser) return;
             const upTo = Number(parsed.upTo) || 0;
+            // Our own laptop shares this role; its receipt must not mark our
+            // messages as read by the partner. What it says is that we have
+            // read this far there - so it is not news here either.
+            if (record.authorId === state.activeUser) {
+              if (upTo > 0) {
+                setState(prev => {
+                  const chatReadAt = readAtForReceipt(prev.messages, prev.activeUser, upTo, prev.chatReadAt);
+                  return chatReadAt === (prev.chatReadAt ?? 0) ? prev : { ...prev, chatReadAt };
+                });
+              }
+              return;
+            }
             setState(prev => ({
               ...prev,
               partnerReadAt: Math.max(prev.partnerReadAt || 0, upTo)
@@ -1605,6 +1633,12 @@ export const App: React.FC = () => {
     };
   }, [state.activeUser]);
 
+  /** The vault write under way, if any: a lock waits for it (see lockSafely). */
+  const vaultWriteRef = useRef<Promise<unknown>>(Promise.resolve());
+  /** The latest state and session, for a save that cannot wait for the next render. */
+  const latestRef = useRef({ state, session, vaultKey });
+  latestRef.current = { state, session, vaultKey };
+
   useEffect(() => {
     if (isLocked) return; // nothing meaningful to persist before unlock
 
@@ -1612,7 +1646,7 @@ export const App: React.FC = () => {
       // forStorage rather than pruneForStorage: media has to be moved out here
       // too, and encrypted with the vault key on its way, so a space with a PIN
       // does not end up with its photos sitting in the clear.
-      void writeVault(vaultKey, { state: forStorage(state, vaultKey), session }).then(ok =>
+      vaultWriteRef.current = writeVault(vaultKey, { state: forStorage(state, vaultKey), session }).then(ok =>
         setStorageFull(!ok)
       );
     } else {
@@ -1814,10 +1848,71 @@ export const App: React.FC = () => {
   // calculator. Coming back to it counts as opening it.
   const chatOnScreen =
     pageVisible && currentTab === 'chat' && !activeGroupId && !isLocked && !isCamouflaged;
+  // Watched by when the newest message arrived, not by how many there are:
+  // at the 5,000-message cap the count stops changing as new ones arrive.
+  const latestArrival = useMemo(() => newestArrival(state.messages), [state.messages]);
   useEffect(() => {
-    if (chatOnScreen) sendReadReceipt();
+    if (!chatOnScreen) return;
+    // Everything that has arrived has now been in front of you.
+    setState(prev =>
+      countUnread(prev.messages, prev.activeUser, prev.chatReadAt) > 0 ? { ...prev, chatReadAt: Date.now() } : prev
+    );
+    sendReadReceipt();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.messages.length, chatOnScreen]);
+  }, [latestArrival, state.messages.length, chatOnScreen]);
+
+  /**
+   * When you had last looked as the chat came in front of you - where its
+   * "New messages" line goes - and a count of the times it has, so the chat
+   * can take a fresh look each time. Taken in the render where it comes in
+   * front, before looking at it marks everything read: the chat screen loads
+   * on demand, and coming back from the lock screen, the calculator, a group
+   * or another app all bring it in front again without leaving the tab.
+   */
+  const chatEntryRef = useRef<{ shown: boolean; readAt?: number; key: number }>({ shown: false, key: 0 });
+  if (chatOnScreen && !chatEntryRef.current.shown) {
+    chatEntryRef.current = { shown: true, readAt: state.chatReadAt, key: chatEntryRef.current.key + 1 };
+  } else if (!chatOnScreen && chatEntryRef.current.shown) {
+    chatEntryRef.current = { ...chatEntryRef.current, shown: false };
+  }
+
+  /**
+   * Keeps a half-typed message, or (with null) forgets it. Called when the
+   * chat is left or put away, never per key press: each change of state
+   * re-encrypts the whole vault.
+   *
+   * With a PIN it is also written straight away rather than on the next
+   * render: putting the phone down can lock Two within the same moment
+   * (auto-lock "Immediately"), and the lock waits for this write.
+   */
+  const handleSaveDraft = (key: string, draft: ChatDraft | null) => {
+    const withDraft = (prev: SpaceState): SpaceState => {
+      // A group left meanwhile keeps no draft.
+      if (key !== 'couple' && !prev.groups.some(g => g.id === key)) return prev;
+      const current = prev.chatDrafts?.[key];
+      if (!draft && !current) return prev;
+      if (draft && current && current.text === draft.text && current.replyTo?.id === draft.replyTo?.id) return prev;
+      const chatDrafts = { ...(prev.chatDrafts || {}) };
+      if (draft) chatDrafts[key] = draft;
+      else delete chatDrafts[key];
+      return { ...prev, chatDrafts };
+    };
+    const latest = latestRef.current;
+    const next = withDraft(latest.state);
+    if (next !== latest.state && latest.vaultKey && !isLocked) {
+      vaultWriteRef.current = writeVault(latest.vaultKey, { state: forStorage(next, latest.vaultKey), session: latest.session });
+    }
+    setState(withDraft);
+  };
+
+  /**
+   * Locks, once everything is saved: each screen is asked to put down what it
+   * has not (BEFORE_LOCK_EVENT), and the reload waits for the vault write.
+   */
+  const lockSafely = () => {
+    window.dispatchEvent(new Event(BEFORE_LOCK_EVENT));
+    void vaultWriteRef.current.finally(() => lockNow());
+  };
 
   /**
    * Publishes the real height of everything above the main column.
@@ -1936,7 +2031,7 @@ export const App: React.FC = () => {
       // on somebody who only switched apps to look something up.
       enabled: () => !!vaultKey && !isLocked && !callEngineRef.current?.busy,
       getSetting: () => readAutoLock(),
-      onLock: lockNow,
+      onLock: () => lockSafely(),
       // Nor while live radio plays: listening with the screen off is the
       // point of it. The lock's countdown starts when the radio stops.
       hold: liveRadioHold
@@ -2336,7 +2431,12 @@ export const App: React.FC = () => {
     // and read cursor behind in storage.
     forgetGroup(groupId);
     setActiveGroupId(current => (current === groupId ? null : current));
-    setState(prev => ({ ...prev, groups: prev.groups.filter(g => g.id !== groupId) }));
+    setState(prev => {
+      // Nor its half-typed message.
+      const chatDrafts = { ...(prev.chatDrafts || {}) };
+      delete chatDrafts[groupId];
+      return { ...prev, groups: prev.groups.filter(g => g.id !== groupId), chatDrafts };
+    });
   };
 
   /**
@@ -2578,7 +2678,6 @@ export const App: React.FC = () => {
     }));
 
     if (tabId === 'chat') {
-      setUnreadChatCount(0);
       sendReadReceipt();
       if (typeof document !== 'undefined') {
         document.title = 'Two — Private Encrypted Space';
@@ -2740,7 +2839,6 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handleFocus = () => {
       if (currentTabRef.current === 'chat') {
-        setUnreadChatCount(0);
         if (typeof document !== 'undefined') {
           document.title = 'Two — Private Encrypted Space';
         }
@@ -3715,8 +3813,8 @@ export const App: React.FC = () => {
     callEngineRef.current?.endForDisguise();
     if (vaultKey || hasEncryptedVault()) {
       // A moment for the hang-up to leave before the reload cuts the connection.
-      if (inCall) setTimeout(lockNow, 300);
-      else lockNow();
+      if (inCall) setTimeout(lockSafely, 300);
+      else lockSafely();
     } else {
       setIsCamouflaged(true);
     }
@@ -4282,6 +4380,8 @@ export const App: React.FC = () => {
                 )
               }
               onVoicePlayed={(messageId) => handleGroupVoicePlayed(activeGroup.id, messageId)}
+              draft={state.chatDrafts?.[activeGroup.id]}
+              onSaveDraft={draft => handleSaveDraft(activeGroup.id, draft)}
               callInProgress={callState.phase !== 'idle'}
               onTyping={() => {
                 if (!readShareReceipts()) return;
@@ -4454,6 +4554,10 @@ export const App: React.FC = () => {
             onOpenSoftLanding={() => setCurrentTab('softlanding')}
             partnerName={state.partnerName || 'Partner'}
             partnerReadAt={state.partnerReadAt}
+            readAt={chatEntryRef.current.readAt}
+            openKey={chatEntryRef.current.key}
+            draft={state.chatDrafts?.couple}
+            onSaveDraft={draft => handleSaveDraft('couple', draft)}
             relayStatus={relayStatus}
             partnerOnline={partnerOnline}
             // Reciprocal, as every messenger does it: hiding your own last
@@ -4905,6 +5009,7 @@ export const App: React.FC = () => {
           currentTab={currentTab}
           onSelectTab={handleSelectTab}
           unreadChatCount={unreadChatCount}
+          draftInChat={!!state.chatDrafts?.couple}
           dotted={partnerDots}
           isTablet={isTablet}
         />
