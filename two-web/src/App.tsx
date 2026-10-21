@@ -170,6 +170,8 @@ import {
   isUnderSuspicion
 } from './core/lockGuard';
 import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting } from './core/autoLock';
+import { applyIngredientTick } from './core/recipes';
+import { withBox } from './core/comfortBox';
 import { leaveBedside } from './core/bedside';
 import { askConfirm } from './core/dialog';
 import { firstHue, watchBoxes } from './core/boxHues';
@@ -1201,30 +1203,15 @@ export const App: React.FC = () => {
               }
             }));
           } else if (record.type === 'COMFORT_BOX') {
-            setState(prev => ({
-              ...prev,
-              comfortBoxes: [parsed, ...prev.comfortBoxes.filter(b => b.id !== parsed.id)]
-            }));
+            // Filed under its author, whatever id it came with (core/comfortBox).
+            setState(prev => ({ ...prev, comfortBoxes: withBox(prev.comfortBoxes, parsed) }));
           } else if (record.type === 'RECIPE_ADD') {
             setState(prev => ({
               ...prev,
               recipes: [parsed, ...prev.recipes.filter(r => r.id !== parsed.id)]
             }));
           } else if (record.type === 'INGREDIENT_TOGGLE') {
-            setState(prev => ({
-              ...prev,
-              recipes: prev.recipes.map(r => {
-                if (r.id === parsed.recipeId) {
-                  return {
-                    ...r,
-                    ingredients: r.ingredients.map(ing =>
-                      ing.id === parsed.ingredientId ? { ...ing, checked: !ing.checked } : ing
-                    )
-                  };
-                }
-                return r;
-              })
-            }));
+            setState(prev => ({ ...prev, recipes: applyIngredientTick(prev.recipes, parsed) }));
           } else if (record.type === 'INTUITION_ROUND') {
             setState(prev => ({
               ...prev,
@@ -1436,30 +1423,14 @@ export const App: React.FC = () => {
             }
           }));
         } else if (packet.subType === 'COMFORT_BOX') {
-          setState(prev => ({
-            ...prev,
-            comfortBoxes: [packet.payload, ...prev.comfortBoxes.filter(b => b.id !== packet.payload.id)]
-          }));
+          setState(prev => ({ ...prev, comfortBoxes: withBox(prev.comfortBoxes, packet.payload) }));
         } else if (packet.subType === 'RECIPE_ADD') {
           setState(prev => ({
             ...prev,
             recipes: [packet.payload, ...prev.recipes.filter(r => r.id !== packet.payload.id)]
           }));
         } else if (packet.subType === 'INGREDIENT_TOGGLE') {
-          setState(prev => ({
-            ...prev,
-            recipes: prev.recipes.map(r => {
-              if (r.id === packet.payload.recipeId) {
-                return {
-                  ...r,
-                  ingredients: r.ingredients.map(ing =>
-                    ing.id === packet.payload.ingredientId ? { ...ing, checked: !ing.checked } : ing
-                  )
-                };
-              }
-              return r;
-            })
-          }));
+          setState(prev => ({ ...prev, recipes: applyIngredientTick(prev.recipes, packet.payload) }));
         } else if (packet.subType === 'INTUITION_ROUND') {
           setState(prev => ({
             ...prev,
@@ -3252,11 +3223,17 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleToggleAdventureComplete = (id: string, notes?: string, photoUrl?: string) => {
+  /**
+   * Stamps an adventure as done (with its words and photo), or takes the stamp off.
+   *
+   * Says which, rather than flipping: it used to flip, so saving new words on
+   * an adventure already stamped took its stamp off and lost its date.
+   */
+  const handleSetAdventureStamp = (id: string, stamped: boolean, notes?: string, photoUrl?: string) => {
     setState(prev => {
       const updated = prev.adventures.map(a => {
         if (a.id === id) {
-          const willBeCompleted = !a.isCompleted;
+          const willBeCompleted = stamped;
           return {
             ...a,
             isCompleted: willBeCompleted,
@@ -3676,10 +3653,7 @@ export const App: React.FC = () => {
   };
 
   const handleSaveComfortBox = (newBox: ComfortBoxData) => {
-    setState(prev => ({
-      ...prev,
-      comfortBoxes: [newBox, ...prev.comfortBoxes.filter(b => b.id !== newBox.id)]
-    }));
+    setState(prev => ({ ...prev, comfortBoxes: withBox(prev.comfortBoxes, newBox) }));
     wsRelay.broadcastUpdate('COMFORT_BOX', newBox);
     localMesh.broadcastLocally('COMFORT_BOX', newBox, state.activeUser);
   };
@@ -3693,23 +3667,15 @@ export const App: React.FC = () => {
     localMesh.broadcastLocally('RECIPE_ADD', newRecipe, state.activeUser);
   };
 
-  const handleToggleIngredient = (recipeId: string, ingredientId: string) => {
-    setState(prev => ({
-      ...prev,
-      recipes: prev.recipes.map(r => {
-        if (r.id === recipeId) {
-          return {
-            ...r,
-            ingredients: r.ingredients.map(ing =>
-              ing.id === ingredientId ? { ...ing, checked: !ing.checked } : ing
-            )
-          };
-        }
-        return r;
-      })
-    }));
-    wsRelay.broadcastUpdate('INGREDIENT_TOGGLE', { recipeId, ingredientId });
-    localMesh.broadcastLocally('INGREDIENT_TOGGLE', { recipeId, ingredientId }, state.activeUser);
+  /**
+   * Ticks an ingredient on or off - saying which, so the other phone sets the
+   * same and a resend or a restore cannot flip it back.
+   */
+  const handleSetIngredient = (recipeId: string, ingredientId: string, checked: boolean) => {
+    const tick = { recipeId, ingredientId, checked };
+    setState(prev => ({ ...prev, recipes: applyIngredientTick(prev.recipes, tick) }));
+    wsRelay.broadcastUpdate('INGREDIENT_TOGGLE', tick);
+    localMesh.broadcastLocally('INGREDIENT_TOGGLE', tick, state.activeUser);
   };
 
   const handleUpdateIntuitionRound = (updatedRound: IntuitionGameRound) => {
@@ -3735,6 +3701,33 @@ export const App: React.FC = () => {
     handleUpdateIntuitionRound(newRound);
   };
 
+  /**
+   * Hides Two at once and deletes nothing.
+   *
+   * With a PIN it locks: the reload brings back the PIN screen. Without one
+   * there is nothing to lock back to, so it puts up the calculator, which the
+   * calculator code (or holding its display) takes down again. A call goes
+   * first, hung up properly so the other phone hears it end rather than
+   * waiting on a connection that will never come back.
+   */
+  const handleQuickExit = () => {
+    const inCall = !!callEngineRef.current?.busy;
+    callEngineRef.current?.endForDisguise();
+    if (vaultKey || hasEncryptedVault()) {
+      // A moment for the hang-up to leave before the reload cuts the connection.
+      if (inCall) setTimeout(lockNow, 300);
+      else lockNow();
+    } else {
+      setIsCamouflaged(true);
+    }
+  };
+
+  /**
+   * Erases this phone: every message, photo and note, and the pairing.
+   *
+   * Only ever reached through the question in Settings that says so. It used to
+   * sit behind the Tools card "Quick Exit", one tap and no question.
+   */
   const handleEmergencyExit = () => {
     // Wipe the encrypted vault too, or the panic button leaves everything behind.
     updateWidget(null);
@@ -4348,7 +4341,8 @@ export const App: React.FC = () => {
         onSelectTab={handleSelectTab}
         activeUser={state.activeUser}
         onToggleActiveUser={toggleActiveUser}
-        onEmergencyExit={handleEmergencyExit}
+        onQuickExit={handleQuickExit}
+        hasPin={!!vaultKey || hasEncryptedVault()}
         onToggleCamouflage={() => setIsCamouflaged(true)}
         onOpenStoryTour={() => setShowStoryTour(true)}
         onTriggerPulse={() => triggerGlobalPulse('Warm hug across distance')}
@@ -4488,6 +4482,7 @@ export const App: React.FC = () => {
             activeSession={state.activeSoftLanding}
             history={state.softLandingHistory}
             activeUser={state.activeUser}
+            partnerName={state.partnerName}
             onUpdateSession={handleUpdateSoftLanding}
             onSaveToHistory={handleSaveSoftLandingHistory}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
@@ -4679,7 +4674,7 @@ export const App: React.FC = () => {
             adventures={state.adventures}
             activeUser={state.activeUser}
             onAddAdventure={handleAddAdventure}
-            onToggleComplete={handleToggleAdventureComplete}
+            onSetStamp={handleSetAdventureStamp}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
@@ -4688,7 +4683,7 @@ export const App: React.FC = () => {
           <CookbookView
             recipes={state.recipes}
             onAddRecipe={handleAddRecipe}
-            onToggleIngredient={handleToggleIngredient}
+            onSetIngredient={handleSetIngredient}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
             activeUser={state.activeUser}
           />

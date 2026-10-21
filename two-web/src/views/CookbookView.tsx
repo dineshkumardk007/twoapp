@@ -11,7 +11,8 @@ import { playSound } from '../core/sounds';
 interface CookbookViewProps {
   recipes: SecretRecipe[];
   onAddRecipe: (recipe: SecretRecipe) => void;
-  onToggleIngredient: (recipeId: string, ingredientId: string) => void;
+  /** Ticks an ingredient on (true) or off (false). */
+  onSetIngredient: (recipeId: string, ingredientId: string, checked: boolean) => void;
   onSendToChat: (message: string) => void;
   activeUser: 'user' | 'partner';
 }
@@ -26,11 +27,17 @@ const TAG_BADGES = {
 export const CookbookView: React.FC<CookbookViewProps> = ({
   recipes,
   onAddRecipe,
-  onToggleIngredient,
+  onSetIngredient,
   onSendToChat,
   activeUser
 }) => {
-  const [selectedRecipe, setSelectedRecipe] = useState<SecretRecipe | null>(recipes[0] || null);
+  // Which recipe is open, by id, and the recipe itself read fresh from what
+  // both phones share. A copy held here kept showing the ingredients as they
+  // were when the recipe was opened, so a tick - yours or your partner's -
+  // only appeared after opening another recipe and coming back.
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(recipes[0]?.id ?? null);
+  const selectedRecipe: SecretRecipe | null =
+    recipes.find(r => r.id === selectedRecipeId) ?? recipes[0] ?? null;
   const [cookMode, setCookMode] = useState(false);
   const [cookStepIndex, setCookStepIndex] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -108,7 +115,9 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
     };
 
     onAddRecipe(recipe);
-    setSelectedRecipe(recipe);
+    setSelectedRecipeId(recipe.id);
+    setCookMode(false);
+    setCookStepIndex(0);
     setShowAddModal(false);
     setNewTitle('');
     setNewStory('');
@@ -165,7 +174,7 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
                 <button
                   key={rcp.id}
                   onClick={() => {
-                    setSelectedRecipe(rcp);
+                    setSelectedRecipeId(rcp.id);
                     setCookMode(false);
                     setCookStepIndex(0);
                   }}
@@ -337,9 +346,10 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
 
                   <div className="space-y-2 pt-1">
                     {selectedRecipe.ingredients.map(ing => (
+                      // The box's own change is the one tap: an onClick on
+                      // the label as well fired twice for a tap on the words.
                       <label
                         key={ing.id}
-                        onClick={() => onToggleIngredient(selectedRecipe.id, ing.id)}
                         className={`flex items-center space-x-2.5 p-2 rounded-xl border transition-colors cursor-pointer text-xs ${
                           ing.checked
                             ? 'bg-linen-variant/30 border-linen-border/50 text-linen-secondary line-through'
@@ -349,7 +359,7 @@ export const CookbookView: React.FC<CookbookViewProps> = ({
                         <input
                           type="checkbox"
                           checked={ing.checked}
-                          onChange={() => {}}
+                          onChange={() => onSetIngredient(selectedRecipe.id, ing.id, !ing.checked)}
                           className="rounded-md accent-linen-accent"
                         />
                         <span className="flex-1">{ing.name}</span>

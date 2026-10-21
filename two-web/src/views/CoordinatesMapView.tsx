@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MemoryCoordinatePin, CoordinateCategory } from '../types';
+import { askConfirm } from '../core/dialog';
 import {
   MapPin,
   Compass,
@@ -124,7 +125,12 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
   onToggleFavorite,
   onSendToChat
 }) => {
-  const [selectedPin, setSelectedPin] = useState<MemoryCoordinatePin | null>(pins[0] || null);
+  // Which place is open, by id, and the place itself read fresh from the
+  // shared pins. A copy held here went stale: the heart did not fill when
+  // tapped, and a deleted place stayed open on screen.
+  const [selectedPinId, setSelectedPinId] = useState<string | null>(pins[0]?.id ?? null);
+  const selectedPin: MemoryCoordinatePin | null = pins.find(p => p.id === selectedPinId) ?? null;
+  const setSelectedPin = (pin: MemoryCoordinatePin | null) => setSelectedPinId(pin?.id ?? null);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
@@ -592,7 +598,15 @@ export const CoordinatesMapView: React.FC<CoordinatesMapViewProps> = ({
               </button>
 
               <button
-                onClick={() => onDeletePin(selectedPin.id)}
+                onClick={async () => {
+                  const sure = await askConfirm({
+                    title: `Remove "${selectedPin.title}"?`,
+                    body: 'It goes from the map on both phones.',
+                    confirm: 'Remove',
+                    danger: true
+                  });
+                  if (sure) onDeletePin(selectedPin.id);
+                }}
                 className="p-2 rounded-xl border border-linen-border bg-linen-variant/40 text-linen-secondary hover:text-rose-600 transition-colors cursor-pointer"
                 title="Remove coordinate"
               >

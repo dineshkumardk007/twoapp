@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  X, Moon, Wind, Heart, Radio, Calculator, Shield, LogOut, 
+  X, Moon, Wind, Heart, Radio, Calculator, Shield, 
   Sparkles, Check, Compass, Wifi, EyeOff, Activity, Settings, ChevronRight
 } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
@@ -15,7 +15,10 @@ interface SanctuaryToolsModalProps {
   onToggleCamouflage?: () => void;
   onOpenMesh: () => void;
   onOpenSafetyNumbers: () => void;
-  onEmergencyExit: () => void;
+  /** Hides Two at once - locks it, or shows the calculator - deleting nothing. */
+  onQuickExit: () => void;
+  /** Whether a PIN is set, so Quick Exit locks rather than disguises. */
+  hasPin?: boolean;
   /** Opens the five-act walkthrough. Absent on surfaces that cannot show it. */
   onOpenStoryTour?: () => void;
   /** Jumps to the settings screen. */
@@ -37,7 +40,8 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   onToggleCamouflage,
   onOpenMesh,
   onOpenSafetyNumbers,
-  onEmergencyExit,
+  onQuickExit,
+  hasPin = false,
   onOpenStoryTour,
   onOpenSettings,
   relayStatus = 'connected',
@@ -166,18 +170,24 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
           }
         }]
       : []),
+    // Hides Two and deletes nothing. It used to erase the whole phone -
+    // messages, photos, the pairing - in one tap with no question, under a
+    // card that said "lock and leave". Erasing now lives only in Settings,
+    // behind a question that says what it deletes.
     {
-      id: 'wipe',
+      id: 'quick-exit',
       title: 'Quick Exit',
-      subtitle: 'Lock and leave in one tap',
-      desc: 'Clears this session and goes back to the start screen.',
-      icon: LogOut,
-      iconColor: 'text-red-600 bg-red-50 border-red-200',
-      actionText: 'Emergency Wipe',
-      isDanger: true,
+      subtitle: 'Hide Two in one tap',
+      // Two lines at most: the card cuts the rest.
+      desc: hasPin
+        ? 'Locks Two straight away. Nothing is deleted; your PIN opens it again.'
+        : 'Nothing is deleted. Type your calculator code and = to return.',
+      icon: EyeOff,
+      iconColor: 'text-linen-accent bg-linen-variant border-linen-border',
+      actionText: hasPin ? 'Lock now' : 'Hide now',
       action: () => {
         onClose();
-        onEmergencyExit();
+        onQuickExit();
       }
     }
   ];
@@ -259,7 +269,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
                   <Icon className="w-5 h-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className={`block text-sm font-semibold leading-snug ${tool.isDanger ? 'text-red-700' : 'text-linen-primary'}`}>
+                  <span className="block text-sm font-semibold leading-snug text-linen-primary">
                     {tool.title}
                   </span>
                   <span className="mt-0.5 block text-xs leading-snug text-linen-accent">
@@ -269,11 +279,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
                     {tool.desc}
                   </span>
                 </span>
-                <ChevronRight
-                  className={`h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${
-                    tool.isDanger ? 'text-red-600' : 'text-linen-secondary'
-                  }`}
-                />
+                <ChevronRight className="h-4 w-4 shrink-0 text-linen-secondary transition-transform group-hover:translate-x-0.5" />
               </button>
             );
           })}

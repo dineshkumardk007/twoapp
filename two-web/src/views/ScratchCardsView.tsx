@@ -306,6 +306,11 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredCards.map(card => {
             const isRecipient = card.recipientId === activeUser;
+            // Only the person it is for may scratch or redeem it - on cards
+            // made since the "for whom" choice was fixed (they carry `at`).
+            // An older card from the joining phone was saved as for itself
+            // whoever it was meant for, so either of you may still open one.
+            const canOpen = typeof card.at !== 'number' || isRecipient;
             const made = madeWhen(card);
             const redeemedWhen = card.redeemedAt && card.redeemedAt !== STALE_WORD ? card.redeemedAt : '';
 
@@ -360,10 +365,16 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
 
                 {/* Scratchable Canvas & Revealed Area */}
                 <div className="p-5 flex-1 flex flex-col justify-center">
+                  {/* Only the person it is for scratches it. You wrote what is
+                      under the foil, so on your phone it simply shows - and
+                      scratching it there no longer spoils the surprise by
+                      marking it scratched on theirs. */}
                   <ScratchCardCanvas
                     foilType={card.foilType}
-                    isCompleted={card.isScratched}
-                    onScratchComplete={() => onScratchCard(card.id)}
+                    isCompleted={card.isScratched || !canOpen}
+                    onScratchComplete={() => {
+                      if (canOpen) onScratchCard(card.id);
+                    }}
                   >
                     {/* Content inside / revealed underneath */}
                     <div className="relative p-5 rounded-xl bg-gradient-to-br from-amber-50/70 via-rose-50/30 to-amber-100/40 border border-amber-200/70 text-center min-h-[160px] flex flex-col items-center justify-center">
@@ -401,7 +412,11 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
 
                 {/* Card Footer Actions */}
                 <div className="p-4 bg-linen-variant/20 border-t border-linen-border/60 flex items-center justify-between gap-2">
-                  {!card.isScratched ? (
+                  {!card.isScratched && !canOpen ? (
+                    <div className="w-full text-xs text-linen-secondary">
+                      Waiting for {partnerLabel} to scratch it
+                    </div>
+                  ) : !card.isScratched ? (
                     <div className="w-full flex items-center justify-between text-xs text-linen-secondary">
                       <span>Drag cursor or finger across foil to scratch</span>
                       <button
@@ -417,7 +432,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                       <div className="flex items-center space-x-1.5">
                         <ShieldCheck className="w-4 h-4 text-emerald-600" />
                         <span className="text-xs text-linen-secondary font-medium">
-                          {card.isRedeemed ? 'Honored in vault' : 'Unlocked & ready'}
+                          {card.isRedeemed ? 'Honored in vault' : canOpen ? 'Unlocked & ready' : `${partnerLabel} has opened it`}
                         </span>
                       </div>
 
@@ -432,7 +447,7 @@ export const ScratchCardsView: React.FC<ScratchCardsViewProps> = ({
                           </button>
                         )}
 
-                        {!card.isRedeemed && (
+                        {!card.isRedeemed && canOpen && (
                           <button
                             onClick={() => handleRedeem(card)}
                             className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-linen-primary text-linen-surface hover:opacity-90 font-medium text-xs shadow-xs transition-transform active:scale-95 cursor-pointer"

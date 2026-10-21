@@ -6,6 +6,7 @@ import { getResurfacedQuote, LiteraryQuote } from '../data/quotes';
 import { Sparkles, Quote, Heart, Wind, ChevronRight, X, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { backupNudge, snoozeBackupNudge, requestBackupOnOpen } from '../core/backupReminder';
 import { ComfortBoxModal } from '../components/ComfortBoxModal';
+import { comfortBoxesFor, hasComfort } from '../core/comfortBox';
 import { CoRegulationModal } from '../components/CoRegulationModal';
 import { MilestoneTrackerCard } from '../components/MilestoneTrackerCard';
 import { OurDatesCard } from '../components/OurDatesCard';
@@ -124,6 +125,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const myReport = state.activeUser === 'user' ? state.userReport : state.partnerReport;
   const theirReport = state.activeUser === 'user' ? state.partnerReport : state.userReport;
   const myHeavyDay = myReport.capacity <= 2;
+  // Whether your partner has left you anything in the comfort box yet.
+  const comfortForMe = hasComfort(comfortBoxesFor(state.comfortBoxes, state.activeUser).forMe);
   const heavyDay = myHeavyDay || theirReport.capacity <= 2 || isPartnerFlagActive;
 
   const today = localDateKey();
@@ -200,7 +203,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     </h4>
                     <p className="text-xs text-linen-secondary mt-0.5">
                       {myHeavyDay
-                        ? 'Your comfort box is ready, with nothing asked of you.'
+                        ? comfortForMe
+                          ? `${partnerName} left something in your comfort box, with nothing asked of you.`
+                          : 'Breathing and a hug are here whenever you need them.'
                         : 'Something kind in the comfort box might help.'}
                     </p>
                   </div>
@@ -445,18 +450,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <ComfortBoxModal
         isOpen={showComfortBox}
         onClose={() => setShowComfortBox(false)}
-        // Nothing invented: until one of you fills the box it is empty, and
-        // says so. It used to open on a made-up note signed "Partner" that
-        // neither of you had written.
-        boxData={state.comfortBoxes[0] || {
-          id: 'cb-1',
-          authorId: state.activeUser,
-          authorName: '',
-          reassuranceNote: '',
-          photoUrls: [],
-          calmingExercise: '4-7-8',
-          updatedAt: ''
-        }}
+        // One box each: the one written for you, and the one you wrote. It
+        // used to be a single shared box, where each new note replaced the
+        // other person's.
+        forMe={comfortBoxesFor(state.comfortBoxes, state.activeUser).forMe}
+        mine={comfortBoxesFor(state.comfortBoxes, state.activeUser).mine}
         activeUser={state.activeUser}
         partnerName={state.partnerName}
         myName={state.userName}

@@ -16,7 +16,7 @@ import { FingerprintStatus, fingerprintStatus, enableFingerprint, disableFingerp
 import { unlockVault } from '../core/vault';
 import { appVersion } from '../core/appUpdate';
 import { CrashNoteCard } from '../components/CrashNoteCard';
-import { showNotice } from '../core/dialog';
+import { askConfirm, showNotice } from '../core/dialog';
 import { resolveRelayUrl } from '../core/ws';
 import { takeBackupRequest } from '../core/backupReminder';
 
@@ -138,7 +138,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onToggleDecoyOnLaunch,
   onCheckForUpdate
 }) => {
-  const [showWipeConfirm, setShowWipeConfirm] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
   // Home's "Back up now" lands here with the backup already open.
   useEffect(() => {
@@ -1246,7 +1245,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </span>
               <button
                 type="button"
-                onClick={onToggleActiveUser}
+                onClick={async () => {
+                  // One tap used to move the seat. On a phone that was right,
+                  // that is what breaks the pair: both phones then talk from
+                  // the same seat and each shows the other's words as its own.
+                  const other = state.activeUser === 'user' ? 'Joined the space' : 'Started the space';
+                  const sure = await askConfirm({
+                    title: 'Switch what this phone is?',
+                    body:
+                      `This phone becomes "${other}". Only do this if both phones show the same thing here. ` +
+                      'If they are already different, switching breaks the link until you switch back.',
+                    confirm: 'Switch'
+                  });
+                  if (sure) onToggleActiveUser();
+                }}
                 title="Switch device role if both devices are accidentally set to the same role"
                 className="px-2 py-0.5 rounded-md border border-linen-border bg-linen-surface hover:bg-linen-variant text-[10px] text-linen-accent font-medium flex items-center transition-colors cursor-pointer"
               >
@@ -1558,41 +1570,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {t.settings.wipeDesc}
         </p>
         <button
-          onClick={() => setShowWipeConfirm(true)}
+          onClick={async () => {
+            const sure = await askConfirm({
+              title: 'Erase this phone?',
+              body:
+                "Every message, photo, voice note and note on this phone is deleted, and this phone leaves your space. " +
+                "This cannot be undone. Your partner's phone keeps everything it has.",
+              confirm: t.settings.wipeConfirmBtn,
+              danger: true
+            });
+            if (sure) onEmergencyWipe();
+          }}
           className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition-colors"
         >
           {t.actions.wipeDevice}
         </button>
       </div>
-
-      {/* Confirmation Modal */}
-      {showWipeConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-linen-surface border border-linen-border rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-xl">
-            <h3 className="font-serif text-lg font-medium text-linen-primary">Confirm Immediate Device Wipe?</h3>
-            <p className="text-xs text-linen-secondary leading-relaxed">
-              This will permanently delete all local keys and stored records on this machine.
-            </p>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowWipeConfirm(false)}
-                className="px-3 py-1.5 text-xs text-linen-secondary hover:text-linen-primary"
-              >
-                {t.actions.cancel}
-              </button>
-              <button
-                onClick={() => {
-                  setShowWipeConfirm(false);
-                  onEmergencyWipe();
-                }}
-                className="px-4 py-1.5 rounded-xl bg-red-600 text-white text-xs font-medium"
-              >
-                {t.settings.wipeConfirmBtn}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Vault Backup & Restore Modal */}
       <VaultBackupModal

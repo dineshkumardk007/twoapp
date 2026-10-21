@@ -488,15 +488,17 @@ export const StateOfUnionView: React.FC<StateOfUnionViewProps> = ({
                       <div>
                         <strong className="text-amber-800 block mb-1">Appreciations Exchanged:</strong>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-linen-primary italic">
+                          {/* The check-ins are kept by seat; yours is the one
+                              for this phone's seat, whichever that is. */}
                           <div className="p-2.5 rounded-xl bg-linen-surface border border-linen-border">
                             <span className="font-semibold text-[11px] not-italic text-linen-secondary block">You:</span>
-                            {past.userCheckIn.appreciations.map((a, i) => (
+                            {(activeUser === 'user' ? past.userCheckIn : past.partnerCheckIn).appreciations.map((a, i) => (
                               <p key={i}>• “{a}”</p>
                             ))}
                           </div>
                           <div className="p-2.5 rounded-xl bg-linen-surface border border-linen-border">
                             <span className="font-semibold text-[11px] not-italic text-linen-secondary block">{partnerName}:</span>
-                            {past.partnerCheckIn.appreciations.map((a, i) => (
+                            {(activeUser === 'user' ? past.partnerCheckIn : past.userCheckIn).appreciations.map((a, i) => (
                               <p key={i}>• “{a}”</p>
                             ))}
                           </div>

@@ -13,7 +13,10 @@ interface NavigationProps {
   onSelectTab: (tab: string) => void;
   activeUser: 'user' | 'partner';
   onToggleActiveUser: () => void;
-  onEmergencyExit: () => void;
+  /** Hides Two at once - locks it, or shows the calculator - deleting nothing. */
+  onQuickExit: () => void;
+  /** Whether a PIN is set, so Quick Exit locks rather than disguises. */
+  hasPin?: boolean;
   onToggleCamouflage?: () => void;
   onOpenStoryTour?: () => void;
   onTriggerPulse?: () => void;
@@ -49,7 +52,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   onSelectTab,
   activeUser,
   onToggleActiveUser,
-  onEmergencyExit,
+  onQuickExit,
+  hasPin = false,
   onToggleCamouflage,
   onOpenStoryTour,
   onTriggerPulse,
@@ -145,7 +149,8 @@ export const Navigation: React.FC<NavigationProps> = ({
         onToggleCamouflage={onToggleCamouflage}
         onOpenMesh={() => setShowMeshModal(true)}
         onOpenSafetyNumbers={() => setShowPairingModal(true)}
-        onEmergencyExit={onEmergencyExit}
+        onQuickExit={onQuickExit}
+        hasPin={hasPin}
         relayStatus={relayStatus}
         activeUser={activeUser}
         vaultName={vaultName}
@@ -336,9 +341,9 @@ export const Navigation: React.FC<NavigationProps> = ({
               <span className="hidden sm:inline">Tools</span>
             </button>
 
-            {/* Emergency Exit button */}
+            {/* Quick Exit: hides Two, deletes nothing */}
             <button
-              onClick={onEmergencyExit}
+              onClick={onQuickExit}
               className="p-1 sm:p-1.5 text-linen-secondary hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200 cursor-pointer shrink-0"
               title={t.actions.quickExit}
             >

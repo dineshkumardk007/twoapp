@@ -87,7 +87,9 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
   const inscriberOf = (moment: KintsugiVesselItem) =>
     who(moment.inscribedBy, activeUser, partnerName, moment.inscribedByName);
 
-  const [selectedSeamIndex, setSelectedSeamIndex] = useState<number>(0);
+  // Opens on the seam of the newest moment, so the bowl starts on a story
+  // rather than an empty seam when there is one to show.
+  const [selectedSeamIndex, setSelectedSeamIndex] = useState<number>(() => moments[0]?.goldSeamIndex ?? 0);
   const [viewMode, setViewMode] = useState<'vessel' | 'chronicle'>('vessel');
   const [filterTag, setFilterTag] = useState<string>('all');
   const [showInscribeModal, setShowInscribeModal] = useState(false);
@@ -140,7 +142,10 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
   };
 
   const handleOpenInscribe = (slotIndex?: number) => {
-    const slot = slotIndex !== undefined ? slotIndex : (moments.length % 5);
+    // Unless a seam was chosen, the first seam still waiting for a moment -
+    // and once every seam holds one, round again from the first.
+    const empty = SEAM_CONFIGS.findIndex((_, i) => !moments.some(m => m.goldSeamIndex === i));
+    const slot = slotIndex !== undefined ? slotIndex : empty >= 0 ? empty : moments.length % SEAM_CONFIGS.length;
     setChosenSeam(slot);
     setSeamSlotForModal(slot);
     setTitle('');
@@ -200,8 +205,10 @@ export const KintsugiMomentsView: React.FC<KintsugiMomentsViewProps> = ({
     onSendToChat(text);
   };
 
-  // Find moment currently mapped to selected seam
-  const selectedMoment = moments.find(m => m.goldSeamIndex === selectedSeamIndex) || moments[0];
+  // The moment on the chosen seam - none for a seam still waiting. It used to
+  // fall back to the first moment of all, so an empty seam showed another
+  // seam's story and never offered "add a moment here".
+  const selectedMoment = moments.find(m => m.goldSeamIndex === selectedSeamIndex);
 
   const filteredMoments = filterTag === 'all'
     ? moments

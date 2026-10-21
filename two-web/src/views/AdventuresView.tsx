@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
+import { askConfirm } from '../core/dialog';
 import { AdventureItem, EnergyTier, AdventureCategory, AdventureSeason } from '../types';
 import { 
   Compass, Sparkles, Home, Palette, TreePine, Utensils, CheckCircle2, 
@@ -13,7 +14,8 @@ interface AdventuresViewProps {
   adventures: AdventureItem[];
   activeUser: 'user' | 'partner';
   onAddAdventure: (adventure: AdventureItem) => void;
-  onToggleComplete: (id: string, notes?: string, photoUrl?: string) => void;
+  /** Stamps it done with these words and photo, or (stamped false) takes the stamp off. */
+  onSetStamp: (id: string, stamped: boolean, notes?: string, photoUrl?: string) => void;
   onSendToChat: (message: string) => void;
 }
 
@@ -62,7 +64,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
   adventures,
   activeUser,
   onAddAdventure,
-  onToggleComplete,
+  onSetStamp,
   onSendToChat
 }) => {
   const [activeTab, setActiveTab] = useState<'roulette' | 'bucketlist' | 'passport'>('bucketlist');
@@ -78,7 +80,13 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
 
   // Modal States
   const [showAddModal, setShowAddModal] = useState(false);
-  const [stampingAdventure, setStampingAdventure] = useState<AdventureItem | null>(null);
+  // The adventure in the stamp dialog, by id, read fresh from the shared list -
+  // a copy taken when it opened went stale if the other phone stamped it
+  // meanwhile, and saving it then wiped their words and photo.
+  const [stampingId, setStampingId] = useState<string | null>(null);
+  const stampingAdventure = stampingId ? adventures.find(a => a.id === stampingId) ?? null : null;
+  /** The words and photo as the dialog opened: what is left as it was is not sent back. */
+  const stampOpenedRef = useRef({ notes: '', photo: '' });
   const [stampReflection, setStampReflection] = useState('');
   const [stampPhotoUrl, setStampPhotoUrl] = useState('');
   const [proposedToast, setProposedToast] = useState(false);
@@ -143,17 +151,45 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
   };
 
   const handleOpenStampModal = (item: AdventureItem) => {
-    setStampingAdventure(item);
+    setStampingId(item.id);
     setStampReflection(item.personalNotes || '');
     setStampPhotoUrl(item.photoUrl || '');
+    stampOpenedRef.current = { notes: (item.personalNotes || '').trim(), photo: (item.photoUrl || '').trim() };
   };
 
   const handleSaveStamp = (e: React.FormEvent) => {
     e.preventDefault();
     if (!stampingAdventure) return;
-    playStampSuccessSound();
-    onToggleComplete(stampingAdventure.id, stampReflection.trim(), stampPhotoUrl.trim());
-    setStampingAdventure(null);
+    // Already stamped: this saves new words or a new photo, and the stamp and
+    // its date stay. Not yet stamped: this is the stamping.
+    if (!stampingAdventure.isCompleted) playStampSuccessSound();
+    // Only what was changed here: a field left as it was keeps whatever is
+    // there now, including words the other phone added meanwhile.
+    const notes = stampReflection.trim();
+    const photo = stampPhotoUrl.trim();
+    const opened = stampOpenedRef.current;
+    onSetStamp(
+      stampingAdventure.id,
+      true,
+      notes === opened.notes ? undefined : notes,
+      photo === opened.photo ? undefined : photo
+    );
+    setStampingId(null);
+  };
+
+  const handleRemoveStamp = async () => {
+    if (!stampingAdventure) return;
+    const id = stampingAdventure.id;
+    const day = stampingAdventure.completedDate && stampingAdventure.completedDate !== 'Recently' ? stampingAdventure.completedDate : '';
+    const sure = await askConfirm({
+      title: 'Remove the stamp?',
+      body: `It goes back on your Dream Map, on both phones${day ? `, and the day it was stamped (${day}) is not kept` : ''}.`,
+      confirm: 'Remove',
+      danger: true
+    });
+    if (!sure) return;
+    onSetStamp(id, false);
+    setStampingId(null);
   };
 
   const handleAddSubmit = (e: React.FormEvent) => {
@@ -687,7 +723,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                 <Stamp className="w-5 h-5 text-amber-700" />
                 <h3 className="font-serif text-lg font-medium text-linen-primary">Couple Passport Seal</h3>
               </div>
-              <button onClick={() => setStampingAdventure(null)} className="p-1.5 rounded-lg text-linen-secondary hover:text-linen-primary">
+              <button onClick={() => setStampingId(null)} className="p-1.5 rounded-lg text-linen-secondary hover:text-linen-primary">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -699,7 +735,15 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                 <span className="text-[7px]">TOGETHER</span>
               </div>
               <h4 className="font-serif text-base font-semibold text-amber-900">{stampingAdventure.title}</h4>
-              <p className="text-xs text-amber-800/80">Mark this dream accomplished in your shared history.</p>
+              <p className="text-xs text-amber-800/80">
+                {stampingAdventure.isCompleted
+                  ? `Stamped${
+                      stampingAdventure.completedDate && stampingAdventure.completedDate !== 'Recently'
+                        ? ` on ${stampingAdventure.completedDate}`
+                        : ''
+                    }. Change the words or the photo below.`
+                  : 'Mark this dream accomplished in your shared history.'}
+              </p>
             </div>
 
             <form onSubmit={handleSaveStamp} className="space-y-3.5">
@@ -730,9 +774,19 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
               </div>
 
               <div className="flex items-center justify-end space-x-2 pt-3 border-t border-linen-border/50">
+                {/* Taking a stamp off is its own choice now; saving never does it. */}
+                {stampingAdventure.isCompleted && (
+                  <button
+                    type="button"
+                    onClick={() => void handleRemoveStamp()}
+                    className="mr-auto px-2 py-2 text-xs text-linen-secondary hover:text-red-700"
+                  >
+                    Remove the stamp
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => setStampingAdventure(null)}
+                  onClick={() => setStampingId(null)}
                   className="px-4 py-2 text-xs text-linen-secondary hover:text-linen-primary"
                 >
                   Cancel
@@ -742,7 +796,7 @@ export const AdventuresView: React.FC<AdventuresViewProps> = ({
                   className="px-5 py-2.5 rounded-2xl bg-linen-primary text-linen-surface hover:opacity-90 text-xs font-semibold shadow-md transition-opacity inline-flex items-center space-x-1.5"
                 >
                   <Stamp className="w-3.5 h-3.5" />
-                  <span>Stamp into Passport</span>
+                  <span>{stampingAdventure.isCompleted ? 'Save' : 'Stamp into Passport'}</span>
                 </button>
               </div>
             </form>

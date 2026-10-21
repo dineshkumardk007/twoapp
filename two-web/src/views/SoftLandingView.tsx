@@ -7,11 +7,14 @@ import { playSound } from '../core/sounds';
 import { Session, liveContext } from '../core/ambient/kit';
 import { startPreset } from '../core/ambient/presets';
 import { ambientAudioCoordinator } from '../core/ambientAudioCoordinator';
+import { who } from '../core/who';
 
 interface SoftLandingViewProps {
   activeSession: SoftLandingSession | null;
   history: SoftLandingSession[];
   activeUser: 'user' | 'partner';
+  /** The other person's name, for whose words are whose in the history. */
+  partnerName?: string;
   onUpdateSession: (session: SoftLandingSession | null) => void;
   onSaveToHistory: (session: SoftLandingSession) => void;
   onSendToChat?: (message: string) => void;
@@ -83,6 +86,7 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
   activeSession,
   history,
   activeUser,
+  partnerName,
   onUpdateSession,
   onSaveToHistory,
   onSendToChat
@@ -290,14 +294,16 @@ export const SoftLandingView: React.FC<SoftLandingViewProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
                     {item.userReflection && (
                       <div className="p-3 rounded-xl bg-linen-variant/40 border border-linen-border/60">
-                        <span className="font-semibold text-linen-primary block mb-1">You felt:</span>
+                        {/* userReflection is the seat that started the space -
+                            "You" only on that phone. */}
+                        <span className="font-semibold text-linen-primary block mb-1">{who('user', activeUser, partnerName)} felt:</span>
                         <p className="text-linen-secondary">{item.userReflection.feeling} · Needed {item.userReflection.underlyingNeed}</p>
                         <p className="mt-1 text-linen-primary italic font-serif">“{item.userReflection.gentleRequest}”</p>
                       </div>
                     )}
                     {item.partnerReflection && (
                       <div className="p-3 rounded-xl bg-linen-variant/40 border border-linen-border/60">
-                        <span className="font-semibold text-linen-primary block mb-1">Partner felt:</span>
+                        <span className="font-semibold text-linen-primary block mb-1">{who('partner', activeUser, partnerName)} felt:</span>
                         <p className="text-linen-secondary">{item.partnerReflection.feeling} · Needed {item.partnerReflection.underlyingNeed}</p>
                         <p className="mt-1 text-linen-primary italic font-serif">“{item.partnerReflection.gentleRequest}”</p>
                       </div>

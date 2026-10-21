@@ -9,11 +9,15 @@ import { CoRegulationModal } from './CoRegulationModal';
 import { getAudioContext } from '../core/audioAlerts';
 import { playSound } from '../core/sounds';
 import { useBackLayer } from '../core/backStack';
+import { comfortBoxId } from '../core/comfortBox';
 
 interface ComfortBoxModalProps {
   isOpen: boolean;
   onClose: () => void;
-  boxData: ComfortBoxData;
+  /** The box your partner filled for you, if they have. */
+  forMe?: ComfortBoxData;
+  /** The box you filled for your partner, if you have. */
+  mine?: ComfortBoxData;
   activeUser: 'user' | 'partner';
   onSaveBox: (data: ComfortBoxData) => void;
   /** The other person's name, for whose note this is. */
@@ -25,21 +29,23 @@ interface ComfortBoxModalProps {
 export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
   isOpen,
   onClose,
-  boxData,
+  forMe,
+  mine,
   activeUser,
   onSaveBox,
   partnerName,
   myName
 }) => {
   const partner = partnerName?.trim() || 'Partner';
-  const hasNote = !!boxData.reassuranceNote?.trim();
-  // The seat on the box says who wrote it; worked out here, on the phone
-  // showing it, so each of you sees the other's name on the other's note.
-  const fromMe = boxData.authorId === activeUser;
+  // Each of you has your own box: the one opened on a heavy day is the one
+  // written for you, and the one you edit is the one you wrote for them.
+  const noteForMe = forMe?.reassuranceNote?.trim() || '';
+  const myNote = mine?.reassuranceNote?.trim() || '';
+  const photosForMe = forMe?.photoUrls ?? [];
 
   const [isEditing, setIsEditing] = useState(false);
-  const [note, setNote] = useState(boxData.reassuranceNote);
-  const [photoUrlInput, setPhotoUrlInput] = useState(boxData.photoUrls.join('\n'));
+  const [note, setNote] = useState(mine?.reassuranceNote ?? '');
+  const [photoUrlInput, setPhotoUrlInput] = useState((mine?.photoUrls ?? []).join('\n'));
   const [showCoRegulation, setShowCoRegulation] = useState(false);
   
   // 4-7-8 Somatic Breathing Engine State
@@ -106,9 +112,11 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
       .filter(u => u.length > 0);
 
     onSaveBox({
-      ...boxData,
-      // Whoever saves it wrote it. Keeping the earlier author's seat and name
-      // labelled a note you had just written as theirs.
+      calmingExercise: '4-7-8',
+      ...mine,
+      // Your own box, under your own id: saving it never touches the one
+      // written for you.
+      id: comfortBoxId(activeUser),
       authorId: activeUser,
       // A name rather than "You": a phone on an older version shows this
       // as it is, under the note, on the other person's screen.
@@ -122,8 +130,8 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
 
   /** Opens the editor on what the box holds now, not on what it held when this first appeared. */
   const startEditing = () => {
-    setNote(boxData.reassuranceNote || '');
-    setPhotoUrlInput((boxData.photoUrls || []).join('\n'));
+    setNote(mine?.reassuranceNote || '');
+    setPhotoUrlInput((mine?.photoUrls || []).join('\n'));
     setIsEditing(true);
   };
 
@@ -157,7 +165,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
             <button
               onClick={() => (isEditing ? setIsEditing(false) : startEditing())}
               className="p-2 rounded-xl text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
-              title="Edit Comfort Box contents"
+              title={`Edit your note for ${partner}`}
             >
               <Edit3 className="w-4 h-4" />
             </button>
@@ -177,7 +185,7 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-linen-primary mb-1.5">
-                  Reassurance Anchor Note
+                  Your note for {partner}
                 </label>
                 <textarea
                   value={note}
@@ -186,6 +194,9 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
                   className="w-full px-4 py-2.5 rounded-2xl bg-linen-variant/40 border border-linen-border text-sm text-linen-primary focus:outline-hidden focus:border-linen-accent"
                   placeholder="Words to remind them that they are safe, loved, and do not have to carry everything alone..."
                 />
+                <p className="mt-1.5 text-[11px] text-linen-secondary leading-relaxed">
+                  {partner} sees this when they open their comfort box. The note {partner} leaves for you stays as it is.
+                </p>
               </div>
 
               <div>
@@ -212,46 +223,54 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
                   onClick={handleSave}
                   className="px-5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 shadow-sm"
                 >
-                  Save Comfort Box
+                  Save your note
                 </button>
               </div>
             </div>
           ) : (
             /* View & Comfort Mode */
             <>
-              {/* The note in the box - or, until one of you writes it, an
+              {/* The note written for you - or, until there is one, an
                   honest empty box. */}
-              {hasNote ? (
+              {noteForMe ? (
                 <div className="relative p-6 rounded-3xl bg-rose-50/50 border border-rose-100 text-linen-primary shadow-xs">
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-rose-700 mb-1 flex items-center space-x-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>{fromMe ? `Your note for ${partner}` : `A message from ${partner}`}</span>
+                    <span>A message from {partner}</span>
                   </div>
-                  <p className="select-text font-serif text-base sm:text-lg text-linen-primary leading-relaxed italic mt-2">
-                    “{boxData.reassuranceNote}”
+                  <p className="select-text whitespace-pre-line font-serif text-base sm:text-lg text-linen-primary leading-relaxed italic mt-2">
+                    “{noteForMe}”
                   </p>
-                  {!fromMe && (
-                    <div className="text-right mt-3 text-xs text-linen-secondary font-serif">
-                      — Always with you, {partner}
-                    </div>
-                  )}
+                  <div className="text-right mt-3 text-xs text-linen-secondary font-serif">
+                    — Always with you, {partner}
+                  </div>
                 </div>
               ) : (
-                <div className="p-6 rounded-3xl bg-linen-variant/40 border border-linen-border text-center space-y-3">
-                  <p className="font-serif text-base text-linen-primary">Nothing in the box yet</p>
-                  <p className="text-xs text-linen-secondary leading-relaxed">
-                    Leave a few words for {partner} to find on a heavy day. They will be here whenever
-                    the box is opened.
+                <div className="p-5 rounded-3xl bg-linen-variant/40 border border-linen-border text-center">
+                  <p className="font-serif text-base text-linen-primary">No note from {partner} yet</p>
+                  <p className="mt-1 text-xs text-linen-secondary leading-relaxed">
+                    When {partner} leaves you a few words, they will be here whenever you open the box.
                   </p>
-                  <button
-                    onClick={startEditing}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    Write a note
-                  </button>
                 </div>
               )}
+
+              {/* The note you left for them: yours to change, and separate from
+                  theirs, so writing it never replaces what they wrote you. */}
+              <div className="p-4 rounded-2xl border border-linen-border bg-linen-surface flex items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium text-linen-primary">Your note for {partner}</div>
+                  <p className={`mt-0.5 text-xs leading-relaxed text-linen-secondary ${myNote ? 'select-text whitespace-pre-line line-clamp-3' : ''}`}>
+                    {myNote || `Leave a few words for ${partner} to find on a heavy day.`}
+                  </p>
+                </div>
+                <button
+                  onClick={startEditing}
+                  className="inline-flex shrink-0 items-center gap-1.5 px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  {myNote ? 'Edit' : 'Write a note'}
+                </button>
+              </div>
 
               {/* 4-7-8 Somatic Relaxation Breath Guide */}
               <div className="p-5 rounded-3xl bg-linen-variant/40 border border-linen-border flex flex-col items-center text-center space-y-3">
@@ -316,14 +335,14 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
               </div>
 
               {/* Grounding Keepsake Photos */}
-              {boxData.photoUrls.length > 0 && (
+              {photosForMe.length > 0 && (
                 <div className="space-y-2.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-linen-secondary flex items-center space-x-1.5">
                     <ImageIcon className="w-3.5 h-3.5" />
                     <span>Grounding Moments to Rest Your Eyes On</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
-                    {boxData.photoUrls.map((url, idx) => (
+                    {photosForMe.map((url, idx) => (
                       <div
                         key={idx}
                         className="rounded-2xl overflow-hidden border border-linen-border bg-linen-variant h-36 shadow-xs relative group"
