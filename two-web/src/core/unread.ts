@@ -11,10 +11,11 @@
 // phone (ChatMessage.receivedAt, by this phone's own clock), and this phone
 // keeps when you last had the chat open in front of you (SpaceState.chatReadAt,
 // the same clock). Unread is simply: arrived after you last looked. No time
-// from the other phone's clock is involved, so two clocks that disagree, or a
-// message sent hours ago from an offline laptop, cannot hide anything or count
-// it twice. Messages kept from before this - and a phone's history brought
-// back on setting it up again - have no arrival time, so they are never new.
+// from the other phone's clock is involved, so two clocks that disagree, a
+// message sent hours ago from an offline laptop, or a call's line cannot hide
+// anything or count it twice. Messages kept from before this - and a phone's
+// history brought back on setting it up again - have no arrival time, so they
+// are never new.
 
 import { ChatMessage } from '../types';
 
@@ -27,6 +28,8 @@ export function isUnread(message: ChatMessage, me: Seat, readAt: number | undefi
   return (
     message.authorId === otherSeat(me) &&
     !message.unsent &&
+    // A call's line is not a message; a missed one has its own toast and Home line.
+    !message.call &&
     typeof message.receivedAt === 'number' &&
     message.receivedAt > (readAt ?? 0)
   );
@@ -52,13 +55,14 @@ export function newestArrival(messages: ChatMessage[]): number {
 }
 
 /**
- * When your partner's newest message was sent, by their clock - what a read
- * receipt says. Not one taken back. 0 when there is none.
+ * When your partner's newest real message was sent, by their clock - what a
+ * read receipt says. Not a call's line (which can carry this phone's clock),
+ * nor one taken back. 0 when there is none.
  */
 export function newestFrom(messages: ChatMessage[], seat: Seat): number {
   let newest = 0;
   for (const m of messages) {
-    if (m.authorId === seat && !m.unsent && typeof m.sentAt === 'number' && m.sentAt > newest) newest = m.sentAt;
+    if (m.authorId === seat && !m.call && !m.unsent && typeof m.sentAt === 'number' && m.sentAt > newest) newest = m.sentAt;
   }
   return newest;
 }

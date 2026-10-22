@@ -2,6 +2,9 @@ import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 're
 import { ChatDraft, ChatMessage, ChatPin, ChatReplyRef } from '../types';
 import { countUnread, firstUnreadId } from '../core/unread';
 import { BEFORE_LOCK_EVENT } from '../core/autoLock';
+import { callWords } from '../core/callLog';
+import { linkParts } from '../core/links';
+import { isAndroidApp } from '../core/platform';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
@@ -34,7 +37,7 @@ import { haptic } from '../core/haptics';
 import {
   Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
   Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download,
-  Camera, Pin, PinOff
+  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed
 } from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
 
@@ -242,8 +245,11 @@ function layOut(messages: ChatMessage[], markId?: string): Row[] {
     }
   }
 
-  // Bubbles do not join through "New messages": the last one read keeps its name and time.
+  // A call's line stands on its own: bubbles either side of it do not join through it.
+  // Nor through "New messages": the last one read keeps its name and time.
   const joins = (a: ChatMessage, b: ChatMessage, newDay: string | undefined) =>
+    !a.call &&
+    !b.call &&
     b.id !== markId &&
     a.authorId === b.authorId &&
     !newDay &&
@@ -288,6 +294,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 }) => {
   // Back in the box: whatever was half-typed when the chat was last left.
   const [inputText, setInputText] = useState(() => draft?.text ?? '');
+  const inApp = useMemo(() => isAndroidApp(), []);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   /** The message being answered: shown above the composer, and sent with what is written next. */
@@ -332,6 +339,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
     savedDraftRef.current = draftKey(null);
     onSaveDraftRef.current?.(null);
   };
+  const startCallRef = useRef(onStartCall);
+  startCallRef.current = onStartCall;
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') putDraftDownRef.current();
@@ -1056,8 +1065,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
           : `rounded-bl-md ${firstOfRun ? '' : 'rounded-tl-md'}`;
         const spacing = row.divider ? 'mt-1' : !firstOfRun ? 'mt-1' : i === 0 ? '' : 'mt-4';
 
-        return (
-          <React.Fragment key={msg.id}>
+        const before = (
+          <>
             {row.divider && (
               <div className="flex justify-center pt-4 pb-1 first:pt-0">
                 <span className="rounded-full bg-linen-variant px-3 py-0.5 text-[11px] font-medium text-linen-secondary">
@@ -1072,6 +1081,44 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <span className="h-px flex-1 bg-linen-accent/40" />
               </div>
             )}
+          </>
+        );
+
+        // A call: one quiet line in the middle, with a way to ring back.
+        if (msg.call) {
+          const call = msg.call;
+          const words = callWords(call, activeUser, partnerName);
+          const theyRang = call.caller !== activeUser;
+          const missed = theyRang && (call.outcome === 'missed' || call.outcome === 'busy');
+          const CallIcon = missed ? PhoneMissed : theyRang ? PhoneIncoming : PhoneOutgoing;
+          return (
+            <React.Fragment key={msg.id}>
+              {before}
+              <div data-mid={msg.id} data-call-line className={`flex justify-center ${row.divider ? 'mt-1' : 'mt-3'}`}>
+                <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 rounded-2xl border border-linen-border bg-linen-surface/80 px-3 py-1.5 text-xs text-linen-secondary">
+                  <CallIcon aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${missed ? 'text-rose-500' : 'text-linen-accent'}`} />
+                  <span className={`font-medium ${missed ? 'text-rose-500' : 'text-linen-primary'}`}>{words.title}</span>
+                  {words.detail && <span>· {words.detail}</span>}
+                  {row.time && <span className="tabular-nums">· {row.time}</span>}
+                  {onStartCall && (
+                    <button
+                      type="button"
+                      onClick={() => startCallRef.current?.()}
+                      disabled={callInProgress}
+                      className="ml-1 rounded-full px-2 py-0.5 font-semibold text-linen-accent transition-colors hover:bg-linen-variant disabled:opacity-40"
+                    >
+                      {theyRang ? 'Call back' : 'Call again'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </React.Fragment>
+          );
+        }
+
+        return (
+          <React.Fragment key={msg.id}>
+            {before}
 
             <div data-mid={msg.id} className={`relative flex flex-col ${mine ? 'items-end' : 'items-start'} ${spacing}`}>
               {/* Comes into view as the message is drawn to the right to answer it. */}
@@ -1217,7 +1264,24 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             <React.Fragment key={k}>{part.text}</React.Fragment>
                           )
                         )
-                      : msg.text}
+                      : linkParts(msg.text).map((part, k) =>
+                          part.href ? (
+                            // A plain link: the app hands it to the phone's own
+                            // browser or dialer; on the website it opens beside
+                            // Two rather than in its place. A long press or a
+                            // pull to answer swallows the tap (onClickCapture).
+                            <a
+                              key={k}
+                              href={part.href}
+                              {...(inApp ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+                              className="underline underline-offset-2 decoration-current/60 break-all"
+                            >
+                              {part.text}
+                            </a>
+                          ) : (
+                            <React.Fragment key={k}>{part.text}</React.Fragment>
+                          )
+                        )}
                   </p>
                 )}
                 </>
@@ -1336,7 +1400,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     // The press handlers are left out on purpose: they act only through refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawnRows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay,
-      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, newMarkId]
+      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, callInProgress, newMarkId]
   );
 
   /** What can be done with the message whose menu is open. */

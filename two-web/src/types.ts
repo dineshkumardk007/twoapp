@@ -1,3 +1,5 @@
+import type { ChatCallInfo } from './core/callLog';
+
 export type ThemeMode = 'linen' | 'slate' | 'forest' | 'terracotta';
 
 export type WeatherState = 'SUNNY' | 'CALM' | 'OVERCAST' | 'RAINY' | 'STORMY';
@@ -88,6 +90,12 @@ export interface ChatMessage {
    * history brought back to a phone set up again - neither is news.
    */
   receivedAt?: number;
+  /**
+   * Not a message but a call's line in the conversation (core/callLog): who
+   * rang, when, and how it went. Never sent as a CHAT, never replied to,
+   * edited, pinned, searched or counted as unread.
+   */
+  call?: ChatCallInfo;
 }
 
 /**

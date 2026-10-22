@@ -63,6 +63,7 @@ import {
 import { localMesh } from './core/localMesh';
 import { insertBySentAt } from './core/ordering';
 import { CallEngine, CallState, IDLE_CALL, CALL_SIGNAL, CALL_MISSED } from './core/call';
+import { CALL_LOG, applyCallLog, callLogFrom, readCallLog, type ChatCallInfo } from './core/callLog';
 import { crashNoteToTell } from './core/crashNote';
 import { CallOverlay } from './components/CallOverlay';
 import { RelayStorageWarning } from './components/RelayStorageWarning';
@@ -283,8 +284,9 @@ function chatFromWire(parsed: any): ChatMessage {
     isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard,
     isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo,
     editedAt, unsent, reactions, viewOnce, viewedAt,
-    // Never a message's to claim: when a message arrived is this phone's own record.
-    receivedAt,
+    // Never a message's to claim: a call's line is made here from a CALL_LOG,
+    // and when a message arrived is this phone's own record.
+    call, receivedAt,
     ...rest
   } = parsed;
   const voice = cleanVoiceFields(parsed);
@@ -422,6 +424,28 @@ export const App: React.FC = () => {
       callEngineRef.current = null;
     };
   }, []);
+  /**
+   * Each call leaves its line in the chat (core/callLog). This phone writes
+   * what it saw as the call ends, and sends it; the other phone's account of
+   * the same call merges into the same line.
+   */
+  const addCallLine = (info: ChatCallInfo) =>
+    setState(prev => {
+      const messages = applyCallLog(prev.messages, info, insertBySentAt);
+      return messages === prev.messages ? prev : { ...prev, messages: messages.slice(-MAX_CHAT_MESSAGES) };
+    });
+  const loggedCallsRef = useRef(new Set<string>());
+  useEffect(() => {
+    const info = callLogFrom(callState, state.activeUser);
+    if (!info || loggedCallsRef.current.has(info.callId)) return;
+    loggedCallsRef.current.add(info.callId);
+    addCallLine(info);
+    // A call that never reached the other phone (the microphone refused here,
+    // or it failed before ringing) is this phone's to remember, not theirs.
+    if (info.caller !== state.activeUser || callState.offered) wsRelay.broadcastUpdate(CALL_LOG, info);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callState.phase, callState.callId]);
+
   // Steady across renders, or the call screen would restart its listening
   // every second the timer ticks.
   const callVoiceLevels = useCallback(
@@ -1036,6 +1060,20 @@ export const App: React.FC = () => {
                 document.title = `(1) 💌 New message from ${partnerNameRef.current || 'Partner'}`;
               }
             }
+          } else if (record.type === CALL_LOG) {
+            const info = readCallLog(parsed);
+            if (info) addCallLine(info);
+          } else if (record.type === CALL_MISSED) {
+            // All a phone on an older version says about a call that rang out
+            // unanswered. A newer phone sends CALL_LOG as well, which merges
+            // into the same line.
+            const callId = typeof parsed?.callId === 'string' ? parsed.callId : '';
+            const at = Number(parsed?.at) || Number(record.clientTs) || 0;
+            const caller = record.authorId === 'user' || record.authorId === 'partner' ? record.authorId : null;
+            // It says when the ringing stopped, not when it began - a guess
+            // the caller's own CALL_LOG, if one comes, puts right.
+            const info = readCallLog({ callId, caller, startedAt: at, seconds: 0, outcome: 'missed' });
+            if (info) addCallLine({ ...info, estimated: true });
           } else if (record.type === 'WEATHER') {
             // Checked, and with the days its author has had lately. An update
             // from an older phone carries no days, so it counts for the day it
@@ -1724,10 +1762,8 @@ export const App: React.FC = () => {
     // keeps its connection (the radio holds the app awake), and without this
     // every message that landed in the pocket was ticked read on arrival.
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
-    const newest = state.messages.reduce(
-      (max, m) => (m.authorId !== state.activeUser && m.sentAt && m.sentAt > max ? m.sentAt : max),
-      0
-    );
+    // Their real messages only: a call's line can carry this phone's clock.
+    const newest = newestFrom(state.messages, state.activeUser === 'user' ? 'partner' : 'user');
     if (!newest || newest <= lastSentReceiptRef.current) return;
     // Off means nothing leaves this device - the setting is the send, not a
     // request that the other end politely declines to display.
@@ -2711,9 +2747,10 @@ export const App: React.FC = () => {
   const theirReport = state.activeUser === 'user' ? state.partnerReport : state.userReport;
   const myReport = state.activeUser === 'user' ? state.userReport : state.partnerReport;
   const newestFromThem = useMemo(() => {
+    // A real message: not a call's line, nor one taken back.
     for (let i = state.messages.length - 1; i >= 0; i--) {
       const m = state.messages[i];
-      if (m.authorId === partnerSeat) return m.sentAt;
+      if (m.authorId === partnerSeat && !m.call && !m.unsent) return m.sentAt;
     }
     return undefined;
   }, [state.messages, partnerSeat]);

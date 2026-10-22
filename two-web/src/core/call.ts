@@ -66,6 +66,10 @@ export interface CallState {
   phase: CallPhase;
   callId: string | null;
   direction: 'in' | 'out' | null;
+  /** When it started ringing, on either side; 0 when there is no call. */
+  startedAt: number;
+  /** This phone's call has reached the other phone (its offer went out). */
+  offered: boolean;
   /** When audio actually started flowing; 0 until then. */
   connectedAt: number;
   endedAt: number;
@@ -87,6 +91,8 @@ export const IDLE_CALL: CallState = {
   phase: 'idle',
   callId: null,
   direction: null,
+  startedAt: 0,
+  offered: false,
   connectedAt: 0,
   endedAt: 0,
   endReason: null,
@@ -448,7 +454,7 @@ export class CallEngine {
     if (this.busy) return;
     const callId = newCallId();
     this.remoteQuality = 'high';
-    this.set({ ...IDLE_CALL, phase: 'outgoing', callId, direction: 'out' });
+    this.set({ ...IDLE_CALL, phase: 'outgoing', callId, direction: 'out', startedAt: Date.now() });
     const iceServers = this.fetchIceServers();
 
     let mic: OpenedMic;
@@ -475,6 +481,7 @@ export class CallEngine {
       const sdp = tuneOpus(offer.sdp || '', this.receiveKbps());
       await pc.setLocalDescription({ type: 'offer', sdp });
       this.opts.send({ kind: 'offer', callId, sdp, quality: readCallQuality() });
+      if (this.snapshot.callId === callId) this.set({ offered: true });
     } catch {
       // A glare that yielded closed this peer on purpose; that is not a
       // failure of the call that replaced it.
@@ -679,7 +686,7 @@ export class CallEngine {
         this.teardown();
         this.pendingOffer = signal;
         this.remoteQuality = signal.quality === 'saver' ? 'saver' : 'high';
-        this.set({ ...IDLE_CALL, phase: 'incoming', callId: signal.callId, direction: 'in' });
+        this.set({ ...IDLE_CALL, phase: 'incoming', callId: signal.callId, direction: 'in', startedAt: Date.now() });
         void this.accept();
         return;
       }
@@ -695,7 +702,7 @@ export class CallEngine {
     this.pendingOffer = signal;
     this.pendingIce = [];
     this.remoteQuality = signal.quality === 'saver' ? 'saver' : 'high';
-    this.set({ ...IDLE_CALL, phase: 'incoming', callId: signal.callId, direction: 'in' });
+    this.set({ ...IDLE_CALL, phase: 'incoming', callId: signal.callId, direction: 'in', startedAt: Date.now() });
     this.startRinging();
 
     // A caller who vanished without cancelling - a dead battery, a tunnel -

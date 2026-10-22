@@ -1,6 +1,8 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
-import { REACTIONS } from '../core/chatActions';
+import { isReactionEmoji, reactionRow, rememberReaction } from '../core/chatActions';
+import { EmojiPicker } from './EmojiPicker';
 
 export interface MessageMenuAction {
   key: string;
@@ -38,6 +40,10 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
   useBackLayer(true, onClose);
   const panelRef = useRef<HTMLDivElement>(null);
   const [place, setPlace] = useState<{ top: number; left: number } | null>(null);
+  /** The full list of emoji is open, to react with any of them. */
+  const [picking, setPicking] = useState(false);
+  // Read once: the row should not change under your finger.
+  const [row] = useState(() => reactionRow(reaction || ''));
 
   // Placed once it can be measured: above if it fits, below if that fits,
   // and otherwise wherever it stays whole on the screen.
@@ -53,7 +59,7 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
     const wanted = side === 'right' ? anchor.right - width : anchor.left;
     const left = Math.min(Math.max(EDGE, wanted), viewW - EDGE - width);
     setPlace({ top, left });
-  }, [anchor.top, anchor.bottom, anchor.left, anchor.right, side]);
+  }, [anchor.top, anchor.bottom, anchor.left, anchor.right, side, picking]);
 
   return (
     <div
@@ -75,7 +81,7 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
       >
         {reaction !== null && (
           <div className="flex items-center justify-between px-2 py-2 border-b border-linen-border">
-            {REACTIONS.map(emoji => {
+            {row.map(emoji => {
               const chosen = reaction === emoji;
               return (
                 <button
@@ -85,7 +91,7 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
                   aria-label={chosen ? `Take off ${emoji}` : `React ${emoji}`}
                   aria-pressed={chosen}
                   onClick={() => onReact(chosen ? '' : emoji)}
-                  className={`h-11 w-11 rounded-full text-[24px] leading-none flex items-center justify-center transition-transform active:scale-90 ${
+                  className={`h-10 w-10 rounded-full text-[22px] leading-none flex items-center justify-center transition-transform active:scale-90 ${
                     chosen ? 'bg-linen-variant ring-2 ring-linen-accent/60' : 'hover:bg-linen-variant'
                   }`}
                 >
@@ -93,9 +99,34 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
                 </button>
               );
             })}
+            {/* Any other emoji, from the full list. */}
+            <button
+              type="button"
+              role="menuitem"
+              aria-label="React with another emoji"
+              aria-expanded={picking}
+              onClick={() => setPicking(p => !p)}
+              className={`h-10 w-10 rounded-full flex items-center justify-center text-linen-secondary transition-transform active:scale-90 ${
+                picking ? 'bg-linen-variant ring-2 ring-linen-accent/60' : 'hover:bg-linen-variant'
+              }`}
+            >
+              <Plus className="h-5 w-5" />
+            </button>
           </div>
         )}
-        <div className="py-1">
+        {reaction !== null && picking && (
+          <EmojiPicker
+            title="React with"
+            pickWord="React"
+            only={isReactionEmoji}
+            onClose={() => setPicking(false)}
+            onPick={char => {
+              rememberReaction(char);
+              onReact(char === reaction ? '' : char);
+            }}
+          />
+        )}
+        <div className={`py-1 ${picking ? 'hidden' : ''}`}>
           {actions.map(action => {
             const Icon = action.icon;
             return (

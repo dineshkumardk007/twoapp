@@ -43,8 +43,9 @@ describe('unread messages', () => {
     expect(countUnread(chat, 'partner', 0)).toBe(0);
   });
 
-  it('an unsent message is not news', () => {
+  it('an unsent message, or a call\'s line, is not news', () => {
     expect(countUnread([msg('p', 'partner', 1, 10, { unsent: true })], 'user', 0)).toBe(0);
+    expect(countUnread([msg('c', 'partner', 1, 10, { call: { callId: 'c', caller: 'partner', startedAt: 1, seconds: 0, outcome: 'missed' } })], 'user', 0)).toBe(0);
   });
 
   it('a message sent long ago that only arrives now is new, whatever its time says', () => {
@@ -59,9 +60,11 @@ describe('unread messages', () => {
     expect(firstUnreadId(chat, 'user', 4000)).toBeUndefined();
   });
 
-  it('newest arrival, and their newest message for the read receipt', () => {
+  it('newest arrival, and their newest real message for the read receipt', () => {
     expect(newestArrival(chat)).toBe(4000);
     expect(newestFrom(chat, 'partner')).toBe(400);
+    const withCall = [...chat, msg('c', 'partner', 99999, 5000, { call: { callId: 'c', caller: 'partner', startedAt: 99999, seconds: 0, outcome: 'missed' } })];
+    expect(newestFrom(withCall, 'partner')).toBe(400);
   });
 
   it('your other device having read up to a time covers those messages here', () => {

@@ -56,6 +56,12 @@ interface EmojiPickerProps {
   /** Appends rather than sends, so several can be combined before it goes. */
   onPick: (char: string) => void;
   onClose: () => void;
+  /** Only the characters this allows (a reaction cannot be every character). */
+  only?: (char: string) => boolean;
+  /** The heading, "Emoji" unless said otherwise. */
+  title?: string;
+  /** What a tap does, for screen readers: "Add" unless said otherwise. */
+  pickWord?: string;
 }
 
 /**
@@ -63,11 +69,11 @@ interface EmojiPickerProps {
  * stays in view, and is capped in height so the conversation never disappears
  * behind it.
  */
-export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose }) => (
+export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only, title = 'Emoji', pickWord = 'Add' }) => (
   <div className="border-t border-linen-border bg-linen-surface">
     <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
       <span className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
-        Emoji
+        {title}
       </span>
       <button
         type="button"
@@ -86,12 +92,12 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose }) => 
             {group.title}
           </p>
           <div className="grid grid-cols-8 gap-0.5">
-            {group.chars.map(char => (
+            {(only ? group.chars.filter(only) : group.chars).map(char => (
               <button
                 key={char}
                 type="button"
                 onClick={() => onPick(char)}
-                aria-label={`Add ${char}`}
+                aria-label={`${pickWord} ${char}`}
                 className="flex h-9 items-center justify-center rounded-xl text-xl leading-none hover:bg-linen-variant active:scale-90 transition-all cursor-pointer"
               >
                 {char}

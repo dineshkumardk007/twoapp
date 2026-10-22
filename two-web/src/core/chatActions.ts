@@ -29,6 +29,49 @@ const EDIT_GRACE_MS = 60 * 1000;
 /** The reactions on offer, in the order the menu shows them. */
 export const REACTIONS = ['❤️', '😂', '😮', '😢', '🙏'] as const;
 
+/**
+ * Whether this can be a reaction: an emoji, short, with no letters or digits.
+ * The same test applyReaction makes of one that arrives - so anything offered
+ * here shows on the other phone too, the previous version included.
+ */
+export function isReactionEmoji(emoji: string): boolean {
+  return !!emoji && emoji.length <= 16 && !/[\p{L}\p{N}\s<>]/u.test(emoji);
+}
+
+const RECENT_REACTIONS_KEY = 'two_recent_reactions_v1';
+
+/** The reactions you chose from the full list lately, newest first - kept on this phone only. */
+export function recentReactions(): string[] {
+  try {
+    const list = JSON.parse(localStorage.getItem(RECENT_REACTIONS_KEY) || '[]');
+    return Array.isArray(list) ? list.filter((e): e is string => typeof e === 'string' && isReactionEmoji(e)).slice(0, 3) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Remembers a reaction chosen from the full list, so it is offered first next time. */
+export function rememberReaction(emoji: string): void {
+  if (!isReactionEmoji(emoji) || (REACTIONS as readonly string[]).includes(emoji)) return;
+  try {
+    const next = [emoji, ...recentReactions().filter(e => e !== emoji)].slice(0, 3);
+    localStorage.setItem(RECENT_REACTIONS_KEY, JSON.stringify(next));
+  } catch {
+    /* private mode: offered from the full list again next time */
+  }
+}
+
+/** The row of reactions the menu offers: yours now, recent ones, then the usual five - five in all. */
+export function reactionRow(current: string): string[] {
+  const row: string[] = [];
+  for (const e of [...recentReactions(), ...REACTIONS]) {
+    if (!row.includes(e)) row.push(e);
+  }
+  // Yours now goes first only when it is not already offered, so it can be
+  // taken off; otherwise the row keeps its order.
+  return (current && !row.slice(0, 5).includes(current) ? [current, ...row] : row).slice(0, 5);
+}
+
 /** A reply's quote: this many characters of what it answers. */
 const SNIPPET_CHARS = 80;
 /** Past this, words arriving as an edit are not words anybody typed. */
@@ -43,7 +86,9 @@ export type Seat = 'user' | 'partner';
 
 /** Something there to read: not a recording, a photo, or what was taken back. */
 function hasWords(m: ChatMessage): boolean {
-  return !m.isVoiceMemo && !m.isPhoto && !m.unsent;
+  // A call's line (core/callLog) has words for older phones, not for this one
+  // to edit, quote, pin or search.
+  return !m.isVoiceMemo && !m.isPhoto && !m.unsent && !m.call;
 }
 
 /** Whether this phone may still change these words: its own, plain words, within the window. */
