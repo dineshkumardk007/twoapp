@@ -10,6 +10,7 @@ import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
 import { MessageMenu, type MessageMenuAction } from '../components/MessageMenu';
 import { PhotoViewer } from '../components/PhotoViewer';
+import { ChatMediaSheet, isGalleryPhoto } from '../components/ChatMediaSheet';
 import { PhotoSendSheet } from '../components/PhotoSendSheet';
 import { ViewOnceIcon } from '../components/ViewOnceIcon';
 import { voiceFieldsOf, voiceNoteLabel } from '../core/voice';
@@ -815,6 +816,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   menuRef.current = menu;
   /** The photo filling the screen. */
   const [viewerId, setViewerId] = useState<string | null>(null);
+  /** The page of every photo and voice note in the chat is open. */
+  const [mediaOpen, setMediaOpen] = useState(false);
   /**
    * A view-once photo being looked at. Its picture is held here, because the
    * conversation lets go of it the moment it is opened.
@@ -1448,6 +1451,21 @@ export const ChatView: React.FC<ChatViewProps> = ({
   /** The photo filling the screen - gone if it was taken back meanwhile. */
   const viewed = viewerId ? byId.get(viewerId) : undefined;
   const viewerMessage = viewed && viewed.isPhoto && viewed.photoDataUrl && !viewed.unsent && !viewed.viewOnce ? viewed : undefined;
+  // Every photo in the chat, oldest first: the viewer turns through them.
+  // From the photos page the newest come first, so there "next" is older.
+  const photoIds = useMemo(() => messages.filter(isGalleryPhoto).map(m => m.id), [messages]);
+  const viewerIndex = viewerMessage ? photoIds.indexOf(viewerMessage.id) : -1;
+  const step = mediaOpen ? -1 : 1;
+  const nextId = viewerIndex >= 0 ? photoIds[viewerIndex + step] : undefined;
+  const prevId = viewerIndex >= 0 ? photoIds[viewerIndex - step] : undefined;
+  const showInChat = (id: string) => {
+    setViewerId(null);
+    setMediaOpen(false);
+    // After the page has closed, so the conversation is there to scroll.
+    requestAnimationFrame(() => {
+      if (!jumpToRef.current(id, true)) showToastRef.current('That message is no longer on this phone');
+    });
+  };
 
   return (
     <div className="relative flex flex-col chat-shell bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
@@ -1544,6 +1562,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+            <button
+              type="button"
+              onClick={() => setMediaOpen(true)}
+              aria-label="Photos and voice notes"
+              title="Photos and voice notes"
+              className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
+            >
+              <ImageIcon className="w-4 h-4" />
+            </button>
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
@@ -1889,8 +1916,27 @@ export const ChatView: React.FC<ChatViewProps> = ({
         />
       )}
 
+      {mediaOpen && (
+        <ChatMediaSheet
+          messages={messages}
+          activeUser={activeUser}
+          partnerName={partnerName}
+          shareReceipts={shareReceipts}
+          onClose={() => setMediaOpen(false)}
+          onOpenPhoto={id => setViewerId(id)}
+          onShowInChat={showInChat}
+          onVoiceHeard={id => voiceHeardRef.current?.(id)}
+        />
+      )}
+
       {viewerMessage && (
         <PhotoViewer
+          // A new photo starts unzoomed.
+          key={viewerMessage.id}
+          onPrev={prevId ? () => setViewerId(prevId) : undefined}
+          onNext={nextId ? () => setViewerId(nextId) : undefined}
+          position={photoIds.length > 1 ? `${mediaOpen ? photoIds.length - viewerIndex : viewerIndex + 1} of ${photoIds.length}` : undefined}
+          onShowInChat={mediaOpen ? () => showInChat(viewerMessage.id) : undefined}
           src={viewerMessage.photoDataUrl!}
           caption={`${who(viewerMessage.authorId, activeUser, partnerName)}${
             viewerMessage.sentAt ? ' · ' + TIME_FORMAT.format(viewerMessage.sentAt) : ''

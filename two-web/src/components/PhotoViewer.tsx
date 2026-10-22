@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Download, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, MessageSquare, X } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
 
 interface PhotoViewerProps {
@@ -11,7 +11,18 @@ interface PhotoViewerProps {
   onSave?: () => void;
   /** A line along the bottom: what is special about this photo. */
   note?: string;
+  /** The photo before this one; absent at the first. A swipe right goes there. */
+  onPrev?: () => void;
+  /** The photo after this one; absent at the last. A swipe left goes there. */
+  onNext?: () => void;
+  /** "3 of 40", along the top. */
+  position?: string;
+  /** Closes the photo and goes to its message in the conversation. */
+  onShowInChat?: () => void;
 }
+
+/** How far a finger moves sideways, unzoomed, to turn to the next photo. */
+const SWIPE_PX = 60;
 
 const MAX_SCALE = 5;
 const DOUBLE_TAP_ZOOM = 2.5;
@@ -25,7 +36,17 @@ const DOUBLE_TAP_MS = 280;
  * Each move is written straight onto the image rather than through React
  * state, so following a pinch costs a style change per frame, not a render.
  */
-export const PhotoViewer: React.FC<PhotoViewerProps> = ({ src, caption, onClose, onSave, note }) => {
+export const PhotoViewer: React.FC<PhotoViewerProps> = ({
+  src,
+  caption,
+  onClose,
+  onSave,
+  note,
+  onPrev,
+  onNext,
+  position,
+  onShowInChat
+}) => {
   useBackLayer(true, onClose);
   const imgRef = useRef<HTMLImageElement>(null);
   const view = useRef({ scale: 1, x: 0, y: 0 });
@@ -33,6 +54,8 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({ src, caption, onClose,
   const pinch = useRef<{ dist: number; scale: number; midX: number; midY: number; x: number; y: number } | null>(null);
   const lastTap = useRef<{ at: number; x: number; y: number } | null>(null);
   const moved = useRef(false);
+  /** Where a one-finger touch began, to tell a sideways swipe. */
+  const start = useRef<{ x: number; y: number } | null>(null);
 
   const centre = () => ({ cx: window.innerWidth / 2, cy: window.innerHeight / 2 });
 
@@ -63,9 +86,14 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({ src, caption, onClose,
   };
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* the finger is already up */
+    }
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     moved.current = false;
+    start.current = pointers.current.size === 1 ? { x: e.clientX, y: e.clientY } : null;
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()];
       pinch.current = {
@@ -107,6 +135,18 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({ src, caption, onClose,
     pointers.current.delete(e.pointerId);
     if (pointers.current.size < 2) pinch.current = null;
     if (pointers.current.size > 0) return;
+    // Unzoomed, a sideways swipe turns to the next or the previous photo.
+    const s = start.current;
+    start.current = null;
+    if (s && moved.current && view.current.scale <= 1.02) {
+      const dx = e.clientX - s.x;
+      const dy = e.clientY - s.y;
+      if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) onNext?.();
+        else onPrev?.();
+        return;
+      }
+    }
     if (!moved.current) {
       const at = Date.now();
       const tap = lastTap.current;
@@ -157,7 +197,20 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({ src, caption, onClose,
         >
           <X className="h-6 w-6" />
         </button>
-        <span className="min-w-0 flex-1 truncate text-sm text-white/80">{caption}</span>
+        <span className="min-w-0 flex-1 truncate text-sm text-white/80">
+          {caption}
+          {position && <span className="ml-2 tabular-nums text-white/60">{position}</span>}
+        </span>
+        {onShowInChat && (
+          <button
+            type="button"
+            onClick={onShowInChat}
+            aria-label="Show in chat"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white hover:bg-white/10"
+          >
+            <MessageSquare className="h-5 w-5" />
+          </button>
+        )}
         {onSave && (
           <button
             type="button"
@@ -169,6 +222,29 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({ src, caption, onClose,
           </button>
         )}
       </div>
+      {/* Arrows as well as the swipe, for a mouse and for anyone who does not swipe. */}
+      {onPrev && (
+        <button
+          type="button"
+          onClick={onPrev}
+          onPointerDown={e => e.stopPropagation()}
+          aria-label="Previous photo"
+          className="absolute left-1 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+      )}
+      {onNext && (
+        <button
+          type="button"
+          onClick={onNext}
+          onPointerDown={e => e.stopPropagation()}
+          aria-label="Next photo"
+          className="absolute right-1 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
+      )}
       {note && (
         <p className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-4 pt-8 pb-[max(env(safe-area-inset-bottom),16px)] text-center text-xs text-white/80">
           {note}
