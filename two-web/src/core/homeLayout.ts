@@ -7,6 +7,7 @@
 
 export type HomeCardId =
   | 'ourDays'
+  | 'comingUp'
   | 'kural'
   | 'weather'
   | 'comfort'
@@ -25,6 +26,7 @@ export interface HomeCard {
 /** Every card, in the order Home has always had them. */
 export const HOME_CARDS: readonly HomeCard[] = [
   { id: 'ourDays', label: 'Our days' },
+  { id: 'comingUp', label: 'Coming up' },
   { id: 'kural', label: 'Kural of the day' },
   { id: 'weather', label: 'Emotional weather' },
   { id: 'comfort', label: 'Comfort box', stillShows: () => 'Still shows on a heavy day' },

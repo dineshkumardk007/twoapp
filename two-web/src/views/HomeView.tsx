@@ -19,6 +19,8 @@ import { ActivityEvent } from '../core/activity';
 import { destinationName } from '../data/destinations';
 import { localDateKey } from '../core/ourDates';
 import { ThirukkuralCard } from '../components/ThirukkuralCard';
+import { ComingUpCard } from '../components/ComingUpCard';
+import type { ComingUpDay } from '../core/comingUp';
 import { ArrangeHomeSheet } from '../components/ArrangeHomeSheet';
 import { HomeCardId, HomeLayout, readHomeLayout, writeHomeLayout } from '../core/homeLayout';
 
@@ -33,6 +35,8 @@ interface HomeViewProps {
   onAnswerQuestion: (answer: { day: string; questionId: string; prompt: string; text: string }) => void;
   /** Sets the couple's dates on both phones. Empty means not set. */
   onSetOurDates: (dates: { togetherSince?: string; anniversary?: string }) => void;
+  /** Saves birthdays, the meet-up and days of your own on both phones. */
+  onSaveComingUp?: (changes: ComingUpDay[]) => void;
   onOpenTour?: () => void;
   onAddMilestone?: (milestone: RelationshipMilestone) => void;
   onSaveComfortBox?: (box: ComfortBoxData) => void;
@@ -89,6 +93,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onSendQuestion,
   onAnswerQuestion,
   onSetOurDates,
+  onSaveComingUp,
   onOpenTour,
   onAddMilestone = () => {},
   onSaveComfortBox,
@@ -149,6 +154,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 question until you have. */}
             <OurDatesCard dates={state.ourDates} onSave={onSetOurDates} />
           </>
+        );
+      case 'comingUp':
+        return hidden('comingUp') || !onSaveComingUp ? null : (
+          <ComingUpCard
+            days={state.comingUp}
+            me={state.activeUser}
+            partnerName={partnerName}
+            onSave={onSaveComingUp}
+            onSendWish={onSendQuestion}
+          />
         );
       case 'kural':
         return hidden('kural') ? null : (

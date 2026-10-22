@@ -175,6 +175,7 @@ import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting,
 import { applyIngredientTick } from './core/recipes';
 import { countUnread, newestArrival, newestFrom, readAtForReceipt } from './core/unread';
 import { withBox } from './core/comfortBox';
+import { COMING_UP, mergeDays, type ComingUpDay } from './core/comingUp';
 import { leaveBedside } from './core/bedside';
 import { askConfirm } from './core/dialog';
 import { firstHue, watchBoxes } from './core/boxHues';
@@ -707,6 +708,12 @@ export const App: React.FC = () => {
     if (relayStatus === 'connected' && state.ourDates) {
       wsRelay.broadcastUpdate(OUR_DATES, state.ourDates);
     }
+    // Birthdays, the meet-up and days of your own, for the same reasons
+    // (core/comingUp): each day keeps its own stamp, so this changes nothing
+    // on a phone that already has them.
+    if (relayStatus === 'connected' && state.comingUp?.length) {
+      wsRelay.broadcastUpdate(COMING_UP, { days: state.comingUp });
+    }
     // Only on connecting: a change made here is sent by handleSetOurDates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relayStatus, state.activeUser]);
@@ -1060,6 +1067,11 @@ export const App: React.FC = () => {
                 document.title = `(1) 💌 New message from ${partnerNameRef.current || 'Partner'}`;
               }
             }
+          } else if (record.type === COMING_UP) {
+            setState(prev => {
+              const comingUp = mergeDays(prev.comingUp, parsed?.days);
+              return comingUp === prev.comingUp ? prev : { ...prev, comingUp };
+            });
           } else if (record.type === CALL_LOG) {
             const info = readCallLog(parsed);
             if (info) addCallLine(info);
@@ -3744,6 +3756,13 @@ export const App: React.FC = () => {
    * always takes. Applied here through the same reducer the other phone
    * uses, so both arrive at exactly the same value.
    */
+  /** Saves days for "Coming up" on both phones: every day goes, each with its own stamp. */
+  const handleSaveComingUp = (changes: ComingUpDay[]) => {
+    const days = mergeDays(state.comingUp, changes);
+    setState(prev => ({ ...prev, comingUp: mergeDays(prev.comingUp, changes) }));
+    wsRelay.broadcastUpdate(COMING_UP, { days });
+  };
+
   const handleSetOurDates = (dates: { togetherSince?: string; anniversary?: string }) => {
     const at = Math.max(Date.now(), (state.ourDates?.at ?? 0) + 1);
     const record = { ...dates, at };
@@ -4546,6 +4565,7 @@ export const App: React.FC = () => {
             onSendQuestion={(text) => handleSendMessage(text, false)}
             onAnswerQuestion={handleAnswerQuestion}
             onSetOurDates={handleSetOurDates}
+            onSaveComingUp={handleSaveComingUp}
             onOpenTour={
               showTourCard
                 ? () => {

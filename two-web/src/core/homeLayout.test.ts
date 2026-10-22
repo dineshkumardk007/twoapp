@@ -21,7 +21,7 @@ describe('arranging Home', () => {
   it('moves a card up or down, and not past either end', () => {
     const start = defaultLayout();
     const down = moveCard(start, 'ourDays', 1);
-    expect(down.order.slice(0, 2)).toEqual(['kural', 'ourDays']);
+    expect(down.order.slice(0, 2)).toEqual(['comingUp', 'ourDays']);
     expect(moveCard(start, 'ourDays', -1)).toBe(start);
     expect(moveCard(start, 'milestones', 1)).toBe(start);
   });
@@ -35,7 +35,7 @@ describe('arranging Home', () => {
   it('keeps what was arranged, and forgets it when it is the usual order again', () => {
     writeHomeLayout(setCardShown(moveCard(defaultLayout(), 'weather', -1), 'kural', false));
     const kept = readHomeLayout();
-    expect(kept.order.slice(0, 3)).toEqual(['ourDays', 'weather', 'kural']);
+    expect(kept.order.slice(0, 4)).toEqual(['ourDays', 'comingUp', 'weather', 'kural']);
     expect(kept.hidden).toEqual(['kural']);
     writeHomeLayout(defaultLayout());
     expect(localStorage.getItem('two_home_layout_v1')).toBeNull();
@@ -48,7 +48,10 @@ describe('arranging Home', () => {
     });
     expect(layout.order.length).toBe(HOME_CARDS.length);
     expect(layout.order.slice(0, 3)).toEqual(['milestones', 'quote', 'ourDays']);
-    expect(layout.order.indexOf('kural')).toBe(layout.order.indexOf('ourDays') + 1);
+    // Coming up, which a Home arranged before it existed never mentions, goes
+    // in after Our days, where it is by default; the kural after it.
+    expect(layout.order.indexOf('comingUp')).toBe(layout.order.indexOf('ourDays') + 1);
+    expect(layout.order.indexOf('kural')).toBe(layout.order.indexOf('comingUp') + 1);
     expect(layout.hidden).toEqual(['quote']);
     expect(cleanLayout('garbage').order).toEqual(defaultLayout().order);
   });

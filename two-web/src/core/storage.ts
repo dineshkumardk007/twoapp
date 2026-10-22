@@ -1,3 +1,4 @@
+import type { ComingUpDay } from './comingUp';
 import {
   EmotionalReport,
   ChatMessage,
@@ -66,6 +67,8 @@ export interface SpaceState {
   chatReadAt?: number;
   /** Half-typed messages, by conversation: 'couple', or a group's id. */
   chatDrafts?: Record<string, ChatDraft>;
+  /** Birthdays, the next meet-up and days of your own, shared by both phones (core/comingUp). */
+  comingUp?: ComingUpDay[];
   journalEntries: JournalEntry[];
   agreements: AgreementItem[];
   lists: ListItem[];

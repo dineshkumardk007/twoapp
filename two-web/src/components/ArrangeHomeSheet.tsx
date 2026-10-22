@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  BookOpen, CalendarHeart, ChevronDown, ChevronUp, CloudSun, Flag, Heart, HeartPulse,
+  BookOpen, CalendarClock, CalendarHeart, ChevronDown, ChevronUp, CloudSun, Flag, Heart, HeartPulse,
   MessageCircleQuestion, Quote
 } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
@@ -16,6 +16,7 @@ import {
 
 const ICONS: Record<HomeCardId, React.ComponentType<{ className?: string }>> = {
   ourDays: CalendarHeart,
+  comingUp: CalendarClock,
   kural: BookOpen,
   weather: CloudSun,
   comfort: Heart,
