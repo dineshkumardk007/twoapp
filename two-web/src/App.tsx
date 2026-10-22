@@ -176,6 +176,20 @@ import { applyIngredientTick } from './core/recipes';
 import { countUnread, newestArrival, newestFrom, readAtForReceipt } from './core/unread';
 import { withBox } from './core/comfortBox';
 import { COMING_UP, mergeDays, type ComingUpDay } from './core/comingUp';
+import {
+  CAN_SHOW_LATER,
+  cleanShowAt,
+  dueNow,
+  isHeld,
+  isWaiting,
+  newsWithout,
+  waitsWith,
+  withHeld,
+  withHeldMessages,
+  withdrawn
+} from './core/sendLater';
+import { STATUS_SET, applyStatus, cleanStatus, liveStatus, stampFor, statusWords } from './core/status';
+import { aheadLabel } from './core/when';
 import { leaveBedside } from './core/bedside';
 import { askConfirm } from './core/dialog';
 import { firstHue, watchBoxes } from './core/boxHues';
@@ -246,6 +260,11 @@ const VOICE_HEARD = 'VOICE_HEARD';
  * not a way of being seen. A phone on an older version passes over the type.
  */
 const APP_VERSION = 'APP_VERSION';
+/**
+ * What this phone tells the other, with its version, that an older one
+ * cannot do: hold back a message set for later (core/sendLater).
+ */
+const CAN_DO = [CAN_SHOW_LATER];
 
 /**
  * What is said when a message is too big for one record: the relay takes a
@@ -288,16 +307,20 @@ function chatFromWire(parsed: any): ChatMessage {
     // Never a message's to claim: a call's line is made here from a CALL_LOG,
     // and when a message arrived is this phone's own record.
     call, receivedAt,
+    showAt,
     ...rest
   } = parsed;
   const voice = cleanVoiceFields(parsed);
   const photo = voice ? null : cleanPhotoFields(parsed);
   const reply = cleanReplyRef(replyTo);
+  // Set to show later: in its place at that time (core/sendLater).
+  const later = cleanShowAt(showAt);
   return {
     ...rest,
     ...(voice || photo || {}),
     ...(photo && viewOnce === true ? { viewOnce: true } : {}),
-    ...(reply ? { replyTo: reply } : {})
+    ...(reply ? { replyTo: reply } : {}),
+    ...(later ? { showAt: later, sentAt: later } : {})
   };
 }
 
@@ -714,6 +737,12 @@ export const App: React.FC = () => {
     if (relayStatus === 'connected' && state.comingUp?.length) {
       wsRelay.broadcastUpdate(COMING_UP, { days: state.comingUp });
     }
+    // Your status while it lasts (core/status), stamped as it was set: a
+    // phone that has it keeps it as it is, with no second word at the top.
+    const mine = liveStatus(state.statuses?.[state.activeUser]);
+    if (relayStatus === 'connected' && mine) {
+      wsRelay.broadcastUpdate(STATUS_SET, mine);
+    }
     // Only on connecting: a change made here is sent by handleSetOurDates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relayStatus, state.activeUser]);
@@ -801,6 +830,36 @@ export const App: React.FC = () => {
       }),
     []
   );
+
+  /**
+   * A message of the partner's has just come in front of this phone: the
+   * chime, a buzz, a toast unless the chat is open, and the tab's title while
+   * Two is in the background. Both for one arriving now and for one set to
+   * show later whose time has come while Two is open.
+   */
+  const announceMessage = (text: string | undefined) => {
+    playMessageChime();
+    triggerHaptic([35, 45, 35]);
+    if (currentTabRef.current !== 'chat') {
+      setInAppNotification({
+        id: newId(),
+        title: partnerNameRef.current || 'Partner',
+        body: text || 'Sent you a message',
+        type: 'chat',
+        tabId: 'chat'
+      });
+    }
+    // Not while disguised: rewriting the tab to "New message from
+    // ..." is exactly the thing the calculator is there to prevent,
+    // and it fires whether or not anyone is looking at the screen.
+    if (
+      typeof document !== 'undefined' &&
+      document.hidden &&
+      !isCamouflagedRef.current
+    ) {
+      document.title = `(1) 💌 New message from ${partnerNameRef.current || 'Partner'}`;
+    }
+  };
 
   // Listen for remote updates
   useEffect(() => {
@@ -907,7 +966,9 @@ export const App: React.FC = () => {
               payload = null;
             }
           }
-          if (route && isNews(record.type, payload)) {
+          // A message's news is told where it is read: one set to show later
+          // is no news until its time (core/sendLater).
+          if (route && record.type !== 'CHAT' && isNews(record.type, payload)) {
             const at = Number(record.clientTs) || Date.now();
             setState(prev => ({
               ...prev,
@@ -1010,7 +1071,14 @@ export const App: React.FC = () => {
             // Not a message at all; there is nothing to keep.
             if (!parsed || typeof parsed !== 'object') return;
             // A voice note's recording checked, `heard` dropped (chatFromWire).
-            const incoming = chatFromWire(parsed);
+            const wire = chatFromWire(parsed);
+            // A reply to one held here waits with it (core/sendLater).
+            const theirs = record.authorId !== state.activeUser;
+            const withHeldOne = theirs ? waitsWith(wire, latestRef.current.state.heldMessages) : undefined;
+            const incoming = withHeldOne === undefined ? wire : { ...wire, showAt: withHeldOne };
+            // Set to show later, and not yet time: kept out of sight - no
+            // chime, toast or news - until it is (core/sendLater).
+            const held = theirs && (withHeldOne !== undefined || isHeld(incoming, state.activeUser));
             setState(prev => {
               // Arriving twice must not mean appearing twice.
               //
@@ -1020,6 +1088,8 @@ export const App: React.FC = () => {
               // gone after a reload. That was survivable while the cursor only
               // ever moved forward, and is not something to keep resting on.
               if (prev.messages.some(m => m.id === incoming.id)) return prev;
+              if (prev.heldMessages?.some(m => m.id === incoming.id)) return prev;
+              if (held) return { ...prev, heldMessages: withHeld(prev.heldMessages, incoming) };
 
               // A copy of our own message that came back through the relay was,
               // by definition, delivered - the relay had to store it to send
@@ -1043,35 +1113,51 @@ export const App: React.FC = () => {
                 messages: insertBySentAt(prev.messages, applied).slice(-MAX_CHAT_MESSAGES)
               };
             });
-            const isFromPartner = record.authorId !== state.activeUser && !msg.replay;
-            if (isFromPartner) {
-              playMessageChime();
-              triggerHaptic([35, 45, 35]);
-              if (currentTabRef.current !== 'chat') {
-                setInAppNotification({
-                  id: newId(),
-                  title: partnerNameRef.current || 'Partner',
-                  body: parsed.text || 'Sent you a message',
-                  type: 'chat',
-                  tabId: 'chat'
-                });
+            if (!held) {
+              // News on Home and the chat tab - not for a phone being restored,
+              // as for every other kind of record above. Named by the message,
+              // so one withdrawn before its time can take its line with it.
+              if (record.authorId !== state.activeUser && !msg.restoring) {
+                const at = Number(record.clientTs) || Date.now();
+                setState(prev => ({
+                  ...prev,
+                  activity: withActivity(prev.activity || [], { id: incoming.id, tabId: 'chat', type: 'CHAT', at })
+                }));
               }
-              // Not while disguised: rewriting the tab to "New message from
-              // ..." is exactly the thing the calculator is there to prevent,
-              // and it fires whether or not anyone is looking at the screen.
-              if (
-                typeof document !== 'undefined' &&
-                document.hidden &&
-                !isCamouflagedRef.current
-              ) {
-                document.title = `(1) 💌 New message from ${partnerNameRef.current || 'Partner'}`;
-              }
+              if (record.authorId !== state.activeUser && !msg.replay) announceMessage(parsed.text);
             }
           } else if (record.type === COMING_UP) {
             setState(prev => {
               const comingUp = mergeDays(prev.comingUp, parsed?.days);
               return comingUp === prev.comingUp ? prev : { ...prev, comingUp };
             });
+          } else if (record.type === STATUS_SET) {
+            // Yours as well as theirs: from your other phone, or a restore.
+            // Each phone says its own again on connecting, so one may be here already.
+            const isNew = applyStatus(latestRef.current.state.statuses, record.authorId, parsed) !== null;
+            setState(prev => {
+              const statuses = applyStatus(prev.statuses, record.authorId, parsed);
+              return statuses ? { ...prev, statuses } : prev;
+            });
+            // Theirs, set just now while Two is open: a word at the top too.
+            const status = cleanStatus(parsed);
+            if (
+              isNew &&
+              status?.text &&
+              record.authorId !== state.activeUser &&
+              !msg.replay &&
+              !isCamouflagedRef.current &&
+              Math.abs(Date.now() - status.setAt) < 2 * 60 * 1000
+            ) {
+              setInAppNotification({
+                id: newId(),
+                title: partnerNameRef.current || 'Partner',
+                body: statusWords(status),
+                type: 'general',
+                // Its Reply opens the chat, where an answer to it is written.
+                tabId: 'chat'
+              });
+            }
           } else if (record.type === CALL_LOG) {
             const info = readCallLog(parsed);
             if (info) addCallLine(info);
@@ -1226,13 +1312,29 @@ export const App: React.FC = () => {
             const apply =
               record.type === CHAT_EDIT ? applyEdit : record.type === CHAT_UNSEND ? applyUnsend : applyReaction;
             setState(prev => {
+              // Taken back before it was due to show: gone, with no "unsent"
+              // line for what was never seen (core/sendLater).
+              if (record.type === CHAT_UNSEND) {
+                const gone = withdrawn(prev, record.authorId, parsed?.messageId, Number(record.clientTs) || Date.now());
+                if (gone) {
+                  // It reached here after its time, so it had a line on Home.
+                  const activity = newsWithout(prev.activity || [], parsed.messageId, gone.messages, record.authorId);
+                  return { ...prev, ...gone, ...(activity ? { activity } : {}) };
+                }
+              }
               const messages = apply(prev.messages, record.authorId, parsed);
-              return messages ? { ...prev, messages } : prev;
+              // New words, a reaction, or taking it back after its time, for
+              // one still held here - from a phone whose clock is ahead, where
+              // it had already shown. Unsent, it shows as unsent straight away.
+              const heldMessages = prev.heldMessages?.length ? apply(prev.heldMessages, record.authorId, parsed) : null;
+              if (!messages && !heldMessages) return prev;
+              return { ...prev, ...(messages ? { messages } : {}), ...(heldMessages ? { heldMessages } : {}) };
             });
           } else if (record.type === CHAT_PIN) {
             // Either of you pinning or unpinning a message (core/chatActions).
+            // One still held here counts as here: its pin shows when it does.
             setState(prev => {
-              const chatPins = applyPin(prev.chatPins, prev.messages, record.authorId, parsed);
+              const chatPins = applyPin(prev.chatPins, withHeldMessages(prev), record.authorId, parsed);
               return chatPins ? { ...prev, chatPins } : prev;
             });
           } else if (record.type === CHAT_VIEWED) {
@@ -1249,9 +1351,21 @@ export const App: React.FC = () => {
             const code = Number(parsed?.code);
             if (!Number.isFinite(code) || code <= 0) return;
             const name = String(parsed?.name || code).slice(0, 32);
-            setState(prev =>
-              prev.partnerApp?.code === code ? prev : { ...prev, partnerApp: { code, name } }
-            );
+            // And what it can do; a phone on an older version says nothing.
+            const can: string[] = Array.isArray(parsed?.can)
+              ? parsed.can.filter((c: unknown): c is string => typeof c === 'string' && c.length <= 32).slice(0, 16)
+              : [];
+            setState(prev => {
+              if (prev.partnerApp?.code === code && (prev.partnerApp.can || []).join() === can.join()) return prev;
+              const partnerApp = { code, name, ...(can.length ? { can } : {}) };
+              // Theirs has just changed - updated, most likely. What this phone
+              // said about itself went to the version before, which may have
+              // read past what it can do, so it says it once more. Not while
+              // history is brought back to this phone, which says it anyway.
+              return prev.partnerApp?.code === code || (msg.restoring && !msg.catchUp)
+                ? { ...prev, partnerApp }
+                : { ...prev, partnerApp, appVersionSent: undefined };
+            });
           } else if (record.type === PRESENCE_BEAT) {
             // Only the partner's beats say anything; our own come back to us
             // on replay and would otherwise overwrite theirs with our time.
@@ -1925,6 +2039,49 @@ export const App: React.FC = () => {
   }
 
   /**
+   * Messages set to show later wait in a list of their own (core/sendLater)
+   * and go into the conversation when their time comes, as if they had just
+   * arrived: counted as new, and news on Home. One that comes due while Two
+   * is open gets the chime and toast too; one whose time came while Two was
+   * closed or locked simply appears, counted, the next time it is open.
+   */
+  const [heldWake, setHeldWake] = useState(0);
+  useEffect(() => {
+    // The soonest; one unsent while held keeps no time, and is due now.
+    const held = state.heldMessages;
+    const next = held?.length ? Math.min(...held.map(m => m.showAt ?? 0)) : undefined;
+    if (isLocked || next === undefined) return;
+    const timer = window.setTimeout(() => {
+      const now = Date.now();
+      const { due } = dueNow(latestRef.current.state.heldMessages, now);
+      // Further off than one timer can wait: wait again.
+      if (!due.length) return setHeldWake(n => n + 1);
+      setState(prev => {
+        const { due: ready, waiting } = dueNow(prev.heldMessages, now);
+        if (!ready.length) return prev;
+        let messages = prev.messages;
+        let activity = prev.activity || [];
+        for (const m of ready) {
+          if (messages.some(x => x.id === m.id)) continue;
+          // Taken back while held: its "unsent" line, and no news.
+          if (m.unsent) {
+            messages = insertBySentAt(messages, m);
+            continue;
+          }
+          messages = insertBySentAt(messages, { ...m, receivedAt: now });
+          activity = withActivity(activity, { id: m.id, tabId: 'chat', type: 'CHAT', at: m.showAt ?? now });
+        }
+        return { ...prev, messages: messages.slice(-MAX_CHAT_MESSAGES), heldMessages: waiting, activity };
+      });
+      // Told only when it has just come due - the newest, if several did.
+      const fresh = due.filter(m => !m.unsent && now - (m.showAt ?? 0) < 60 * 1000);
+      if (fresh.length) announceMessage(fresh[fresh.length - 1].text);
+    }, Math.min(Math.max(0, next - Date.now()), 2 ** 31 - 1));
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.heldMessages, isLocked, pageVisible, heldWake]);
+
+  /**
    * Keeps a half-typed message, or (with null) forgets it. Called when the
    * chat is left or put away, never per key press: each change of state
    * re-encrypts the whole vault.
@@ -2101,11 +2258,12 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (relayStatus !== 'connected' || isLocked || !session) return;
     const mine = appVersion();
-    if (!mine || state.appVersionSent === mine.code) return;
-    wsRelay.broadcastUpdate(APP_VERSION, { code: mine.code, name: mine.name });
-    setState(prev => ({ ...prev, appVersionSent: mine.code }));
+    const caps = CAN_DO.join();
+    if (!mine || (state.appVersionSent === mine.code && state.appCapsSent === caps)) return;
+    wsRelay.broadcastUpdate(APP_VERSION, { code: mine.code, name: mine.name, can: CAN_DO });
+    setState(prev => ({ ...prev, appVersionSent: mine.code, appCapsSent: caps }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relayStatus, isLocked, !!session, state.appVersionSent]);
+  }, [relayStatus, isLocked, !!session, state.appVersionSent, state.appCapsSent]);
 
   /**
    * A new version of the app, offered when it is opened: after unlocking,
@@ -2591,12 +2749,18 @@ export const App: React.FC = () => {
 
     if (action !== 'retry' || !text) return;
     if (groupId) handleSendGroupMessage(groupId, text, voice ?? undefined);
-    else
-      handleSendMessage(
-        text,
-        false,
-        voice ?? (photo ? { ...photo, ...(stuckPhoto?.viewOnce ? { viewOnce: true as const } : {}) } : undefined)
-      );
+    else {
+      // Still an answer to what it answered, and one set to show later still
+      // waits for its time - sent again now, it would show at once.
+      const kept = {
+        ...(stuckPhoto?.replyTo ? { replyTo: stuckPhoto.replyTo } : {}),
+        ...(stuckPhoto && isWaiting(stuckPhoto, state.activeUser) ? { showAt: stuckPhoto.showAt } : {})
+      };
+      handleSendMessage(text, false, {
+        ...kept,
+        ...(voice ?? (photo ? { ...photo, ...(stuckPhoto?.viewOnce ? { viewOnce: true as const } : {}) } : {}))
+      });
+    }
   };
 
   /** `voice` makes it a voice note; `text` is then the note's label. */
@@ -2987,7 +3151,8 @@ export const App: React.FC = () => {
       authorName: state.activeUser === 'user' ? 'You' : 'Partner',
       text,
       timestamp: 'Just now',
-      sentAt: Date.now(),
+      // One set to show later takes its place at that time (core/sendLater).
+      sentAt: typeof extra?.showAt === 'number' ? extra.showAt : Date.now(),
       delivered: false,
       isNeedCard,
       ...extra
@@ -3054,19 +3219,58 @@ export const App: React.FC = () => {
   const handleUnsendMessage = async (messageId: string) => {
     const target = state.messages.find(m => m.id === messageId);
     if (!target || !canUnsend(target, state.activeUser)) return;
-    const ok = await askConfirm({
-      title: 'Unsend this message?',
-      body: `It will be taken off your phone and ${state.partnerName || 'your partner'}'s. A line saying you unsent a message stays in its place.`,
-      confirm: 'Unsend',
-      cancel: 'Keep it',
-      danger: true
-    });
+    const partner = state.partnerName || 'your partner';
+    // Still waiting to show (core/sendLater): it goes without a trace.
+    const waiting = isWaiting(target, state.activeUser);
+    const ok = await askConfirm(
+      waiting
+        ? {
+            title: "Don't send this message?",
+            body: `It was set to show ${aheadLabel(target.showAt!)}. ${partner} won't see it, and it comes off your phone too.`,
+            confirm: "Don't send",
+            cancel: 'Keep it',
+            danger: true
+          }
+        : {
+            title: 'Unsend this message?',
+            body: `It will be taken off your phone and ${partner}'s. A line saying you unsent a message stays in its place.`,
+            confirm: 'Unsend',
+            cancel: 'Keep it',
+            danger: true
+          }
+    );
     if (!ok) return;
+    // Not yet off this phone: it does not go at all. Sent after its time, it
+    // would show and chime before the unsend behind it took it away. Whether
+    // the relay already has it this phone cannot tell, so the unsend still goes.
+    if (waiting) wsRelay.dropPending(messageId);
     setState(prev => {
+      const gone = withdrawn(prev, prev.activeUser, messageId);
+      if (gone) return { ...prev, ...gone };
       const messages = applyUnsend(prev.messages, prev.activeUser, { messageId });
       return messages ? { ...prev, messages } : prev;
     });
     wsRelay.broadcastUpdate(CHAT_UNSEND, { messageId });
+  };
+
+  /**
+   * Your one-tap status, set or (with null) cleared, on both phones
+   * (core/status). Always newer than the last, even within the same moment.
+   */
+  const handleSetStatus = (next: { text: string; emoji?: string; clearsAt: number } | null) => {
+    const now = Date.now();
+    const setAt = stampFor(state.statuses?.[state.activeUser], now);
+    // The sheet measured how long from now. Stamped later than now - after one
+    // set by a clock that was ahead - it lasts as long from that stamp, or it
+    // would end before it began and neither phone would take it.
+    const payload = next
+      ? { text: next.text, ...(next.emoji ? { emoji: next.emoji } : {}), setAt, clearsAt: next.clearsAt + (setAt - now) }
+      : { text: '', setAt, clearsAt: setAt };
+    setState(prev => {
+      const statuses = applyStatus(prev.statuses, prev.activeUser, payload);
+      return statuses ? { ...prev, statuses } : prev;
+    });
+    wsRelay.broadcastUpdate(STATUS_SET, payload);
   };
 
   /** Your reaction to a message: set, changed, or taken off with ''. */
@@ -3083,7 +3287,7 @@ export const App: React.FC = () => {
   const handlePinMessage = (messageId: string, pinned: boolean) => {
     const payload = { messageId, pinned, at: Date.now() };
     setState(prev => {
-      const chatPins = applyPin(prev.chatPins, prev.messages, prev.activeUser, payload);
+      const chatPins = applyPin(prev.chatPins, withHeldMessages(prev), prev.activeUser, payload);
       return chatPins ? { ...prev, chatPins } : prev;
     });
     wsRelay.broadcastUpdate(CHAT_PIN, payload);
@@ -4576,6 +4780,7 @@ export const App: React.FC = () => {
             }
             onAddMilestone={handleAddMilestone}
             onSaveComfortBox={handleSaveComfortBox}
+            onSetStatus={handleSetStatus}
             partnerNews={partnerNews}
             partnerUpdate={(() => {
               const mine = appVersion();
@@ -4611,6 +4816,10 @@ export const App: React.FC = () => {
             onOpenSoftLanding={() => setCurrentTab('softlanding')}
             partnerName={state.partnerName || 'Partner'}
             partnerReadAt={state.partnerReadAt}
+            partnerStatus={state.statuses?.[state.activeUser === 'user' ? 'partner' : 'user']}
+            // Only once their phone has said it can hold a message back:
+            // an older one would show it straight away (core/sendLater).
+            canSendLater={!!state.partnerApp?.can?.includes(CAN_SHOW_LATER)}
             readAt={chatEntryRef.current.readAt}
             openKey={chatEntryRef.current.key}
             draft={state.chatDrafts?.couple}

@@ -54,3 +54,26 @@ export function whenLabelWithTime(at?: number, fallback = ''): string {
   const time = new Date(at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   return `${label}, ${time}`;
 }
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** "7:00 am", "10:30 pm" - a time of day on this phone's clock, the way the chat writes it. */
+export function clockTime(at: number): string {
+  const d = new Date(at);
+  const h = d.getHours();
+  return `${h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+}
+
+/**
+ * "today at 10:00 pm", "tomorrow at 7:00 am", "on Thu 23 Oct at 7:00 am" - a
+ * moment still to come, for something set to happen then.
+ */
+export function aheadLabel(at: number, now: number = Date.now()): string {
+  const then = new Date(at);
+  const days = -daysBetween(then, new Date(now));
+  const time = clockTime(at);
+  if (days <= 0) return `today at ${time}`;
+  if (days === 1) return `tomorrow at ${time}`;
+  return `on ${DAY_NAMES[then.getDay()]} ${then.getDate()} ${MONTH_NAMES[then.getMonth()]} at ${time}`;
+}

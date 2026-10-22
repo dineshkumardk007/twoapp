@@ -1,4 +1,5 @@
 import type { ComingUpDay } from './comingUp';
+import type { Statuses } from './status';
 import {
   EmotionalReport,
   ChatMessage,
@@ -69,6 +70,13 @@ export interface SpaceState {
   chatDrafts?: Record<string, ChatDraft>;
   /** Birthdays, the next meet-up and days of your own, shared by both phones (core/comingUp). */
   comingUp?: ComingUpDay[];
+  /**
+   * The partner's messages set to show later, held out of the conversation
+   * until their time, soonest first (core/sendLater).
+   */
+  heldMessages?: ChatMessage[];
+  /** Each of your one-tap statuses, by seat, the newest of each (core/status). */
+  statuses?: Statuses;
   journalEntries: JournalEntry[];
   agreements: AgreementItem[];
   lists: ListItem[];
@@ -181,10 +189,15 @@ export interface SpaceState {
   knownDevices: KnownDevice[];
   /** How many devices you have accepted as legitimately in this space. */
   approvedDeviceCount: number;
-  /** The partner's app version, from their APP_VERSION record. */
-  partnerApp?: { code: number; name: string };
+  /**
+   * The partner's app version, from their APP_VERSION record, and what it
+   * says it can do (core/sendLater's CAN_SHOW_LATER); absent on older phones.
+   */
+  partnerApp?: { code: number; name: string; can?: string[] };
   /** The version this phone last told the partner about. */
   appVersionSent?: number;
+  /** What it said it can do, with that version. */
+  appCapsSent?: string;
   /** The partner version whose "older version" note was dismissed on Home. */
   partnerUpdateDismissed?: number;
 }

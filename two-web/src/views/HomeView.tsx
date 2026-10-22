@@ -22,6 +22,7 @@ import { ThirukkuralCard } from '../components/ThirukkuralCard';
 import { ComingUpCard } from '../components/ComingUpCard';
 import type { ComingUpDay } from '../core/comingUp';
 import { ArrangeHomeSheet } from '../components/ArrangeHomeSheet';
+import { StatusStrip } from '../components/StatusStrip';
 import { HomeCardId, HomeLayout, readHomeLayout, writeHomeLayout } from '../core/homeLayout';
 
 interface HomeViewProps {
@@ -40,6 +41,8 @@ interface HomeViewProps {
   onOpenTour?: () => void;
   onAddMilestone?: (milestone: RelationshipMilestone) => void;
   onSaveComfortBox?: (box: ComfortBoxData) => void;
+  /** Sets your one-tap status, or with null clears it, on both phones (core/status). */
+  onSetStatus?: (status: { text: string; emoji?: string; clearsAt: number } | null) => void;
   /** Partner changes this device has not looked at yet, newest first. */
   partnerNews?: ActivityEvent[];
   /** Set while the partner's phone runs an older version than this one. */
@@ -97,6 +100,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onOpenTour,
   onAddMilestone = () => {},
   onSaveComfortBox,
+  onSetStatus,
   partnerNews = [],
   partnerUpdate
 }) => {
@@ -336,6 +340,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
         onNavigate={onNavigate}
         labelFor={destinationName}
       />
+
+      {/* Where each of you is: theirs if they have said, and yours to set
+          in one tap. Not one of the cards below - it is news, and quick. */}
+      {onSetStatus && (
+        <StatusStrip
+          partnerName={partnerName}
+          mine={state.statuses?.[state.activeUser]}
+          theirs={state.statuses?.[state.activeUser === 'user' ? 'partner' : 'user']}
+          onSet={onSetStatus}
+          onClear={() => onSetStatus(null)}
+        />
+      )}
 
       {/* New things only work properly when both phones have them. */}
       {partnerUpdate && (

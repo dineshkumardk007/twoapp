@@ -5,6 +5,11 @@ import { BEFORE_LOCK_EVENT } from '../core/autoLock';
 import { callWords } from '../core/callLog';
 import { linkParts } from '../core/links';
 import { isAndroidApp } from '../core/platform';
+import { isWaiting, nextShowAt } from '../core/sendLater';
+import { liveStatus, statusWords, type StatusNote } from '../core/status';
+import { useNowAt } from '../core/useToday';
+import { aheadLabel, clockTime } from '../core/when';
+import { SendLaterSheet } from '../components/SendLaterSheet';
 import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
@@ -38,7 +43,7 @@ import { haptic } from '../core/haptics';
 import {
   Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
   Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download,
-  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed
+  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock
 } from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
 
@@ -101,6 +106,10 @@ interface ChatViewProps {
   partnerLastSeen?: number;
   /** True while the partner is writing something right now. */
   partnerTyping?: boolean;
+  /** The partner's one-tap status (core/status): under their name while it lasts. */
+  partnerStatus?: StatusNote;
+  /** "Send later" is offered: the partner's phone can hold a message back (core/sendLater). */
+  canSendLater?: boolean;
   /** False when this device has switched read receipts and typing off. */
   shareReceipts?: boolean;
   /** Called as the composer is typed in; throttled inside. */
@@ -196,9 +205,12 @@ function startOfDay(at: number): number {
  * Not whenLabel from core/when.ts, which answers "how long ago" ("4 days ago")
  * where a divider has to name the day itself.
  */
-function dayLabel(day: number, now: number): string {
+function dayLabel(day: number, now: number, ahead = false): string {
   const days = Math.round((startOfDay(now) - day) / 86_400_000);
-  // A day in the future is the other phone's clock running ahead, not news.
+  // A day in the future is the other phone's clock running ahead, not news -
+  // unless it is a message set to show later (core/sendLater), which says
+  // the day it is to show.
+  if (days < 0 && ahead) return days === -1 ? 'Tomorrow' : DAY_FORMAT.format(day);
   if (days <= 0) return 'Today';
   if (days === 1) return 'Yesterday';
   return new Date(day).getFullYear() === new Date(now).getFullYear()
@@ -239,7 +251,7 @@ function layOut(messages: ChatMessage[], markId?: string): Row[] {
   for (const m of messages) {
     const own = m.sentAt && Number.isFinite(m.sentAt) ? startOfDay(m.sentAt) : null;
     if (own !== null && own !== day) {
-      dividers.push(dayLabel(own, now));
+      dividers.push(dayLabel(own, now, typeof m.showAt === 'number'));
       day = own;
     } else {
       dividers.push(undefined);
@@ -280,6 +292,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   partnerOnline = false,
   partnerLastSeen = 0,
   partnerTyping = false,
+  partnerStatus,
+  canSendLater = false,
   shareReceipts = true,
   onTyping,
   onStartCall,
@@ -297,6 +311,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [inputText, setInputText] = useState(() => draft?.text ?? '');
   const inApp = useMemo(() => isAndroidApp(), []);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  /** The "Send later" times are open, for what is in the box. */
+  const [laterOpen, setLaterOpen] = useState(false);
+  // Drawn again the moment a message of yours set for later comes due, and
+  // when your partner's status runs out. What shows is decided by the clock
+  // as it is then (core/sendLater, core/status).
+  const waitClock = useNowAt(nextShowAt(messages));
+  useNowAt(partnerStatus && partnerStatus.clearsAt > Date.now() ? partnerStatus.clearsAt : undefined);
+  const theirStatus = liveStatus(partnerStatus);
 
   /** The message being answered: shown above the composer, and sent with what is written next. */
   const [replyTo, setReplyTo] = useState<ChatReplyRef | null>(() => draft?.replyTo ?? null);
@@ -382,6 +404,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const showMic = rec.supported && (!inputText.trim() || rec.active);
   /** Photos are offered while nothing is written - not mid-sentence, mid-edit, or mid-note. */
   const showPhotoButton = !inputText && !editing && !rec.active;
+  // Where the photo buttons sit while the box is empty: once there are
+  // words, the way to send them later.
+  const showLaterButton = canSendLater && !!inputText.trim() && !editing && !rec.active;
   /** Which stuck message has its retry/discard choice open. */
   const [stuckOpen, setStuckOpen] = useState<string | null>(null);
 
@@ -523,8 +548,25 @@ export const ChatView: React.FC<ChatViewProps> = ({
   // A new message, sent or received, brings the conversation to it, as it
   // always has. Anything else that changes a message - a tick turning blue -
   // only keeps the end in view if that is where you already were.
-  const newestId = messages.length ? messages[messages.length - 1].id : '';
+  //
+  // Yours set to show later sit at their time, so at the end until then
+  // (core/sendLater). The newest is the last of the others - one you send
+  // goes in before those - and setting one more for later is a message of
+  // yours too.
+  const newest = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (!(m.authorId === activeUser && typeof m.showAt === 'number')) return m;
+    }
+    return undefined;
+  }, [messages, activeUser]);
+  const newestId = newest?.id ?? '';
   const shownNewestRef = useRef<string | null>(null);
+  const laterIds = useMemo(
+    () => messages.filter(m => m.authorId === activeUser && typeof m.showAt === 'number').map(m => m.id),
+    [messages, activeUser]
+  );
+  const shownLaterRef = useRef(laterIds);
 
   // More new messages than fit on a screen: start at "New messages" rather
   // than at the end, so they are read from the first - each time the chat
@@ -572,7 +614,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
       // Your own message brings you to the end, as it always has. One of
       // theirs, arriving while you read further up, leaves you where you
       // are: the way down is the button at the bottom.
-      if (first || messages[messages.length - 1]?.authorId === activeUser) pinnedRef.current = true;
+      if (first || newest?.authorId === activeUser) pinnedRef.current = true;
+    }
+    if (laterIds !== shownLaterRef.current) {
+      const before = new Set(shownLaterRef.current);
+      shownLaterRef.current = laterIds;
+      if (laterIds.some(id => !before.has(id))) pinnedRef.current = true;
     }
     if (pinnedRef.current) log.scrollTop = log.scrollHeight;
     // Opened while a long catch-up was arriving, the drawn part grows with it.
@@ -661,10 +708,27 @@ export const ChatView: React.FC<ChatViewProps> = ({
     restoreComposerFocus();
   };
 
+  /** What is in the box, sent now to show at the time picked (core/sendLater). */
+  const sendLater = (showAt: number) => {
+    setLaterOpen(false);
+    const text = inputText.trim();
+    if (!text || editing) return;
+    onSendMessage(text, false, { ...(replyTo ? { replyTo } : {}), showAt });
+    setReplyTo(null);
+    setInputText('');
+    if (savedDraftRef.current !== draftKey(null)) {
+      savedDraftRef.current = draftKey(null);
+      onSaveDraftRef.current?.(null);
+    }
+    haptic('confirm');
+    showToast(`Set to show ${aheadLabel(showAt)}`);
+  };
+
   /** Answer a message: its quote goes above the composer, and the keyboard comes up. */
   const answer = (id: string) => {
     const m = messages.find(x => x.id === id);
-    if (!m || m.unsent) return;
+    // Not to one of yours still waiting to show: it is not there for them yet.
+    if (!m || m.unsent || isWaiting(m, activeUser)) return;
     if (editing) {
       setEditing(null);
       setInputText('');
@@ -1051,9 +1115,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
         // that never went would sit there looking sent.
         const stuck = mine && !msg.delivered && !read;
         const unsent = !!msg.unsent;
+        // Yours, set to show later and not yet shown (core/sendLater).
+        const waiting = mine && isWaiting(msg, activeUser);
         const edited = !!msg.editedAt && !unsent;
         const pin = unsent ? undefined : pinnedBy.get(msg.id);
-        const showMeta = lastOfRun || stuck || edited || !!pin;
+        const showMeta = lastOfRun || stuck || edited || !!pin || waiting;
         const reactions = unsent || !msg.reactions ? [] : (Object.values(msg.reactions).filter(Boolean) as string[]);
         const quote = unsent ? undefined : msg.replyTo;
         // A view-once photo shows as a mark you open, never as its picture.
@@ -1163,7 +1229,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     : mine
                     ? 'bg-linen-primary text-linen-surface'
                     : 'bg-linen-variant text-linen-primary border border-linen-border'
-                } ${flashId === msg.id ? 'message-flash' : ''} ${currentMatch === msg.id ? 'ring-2 ring-amber-400' : ''}`}
+                } ${waiting ? 'opacity-60' : ''} ${flashId === msg.id ? 'message-flash' : ''} ${currentMatch === msg.id ? 'ring-2 ring-amber-400' : ''}`}
               >
                 {unsent ? (
                   <p className="flex items-center gap-1.5 italic">
@@ -1326,7 +1392,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   {lastOfRun && (
                     <span>
                       {who(msg.authorId, activeUser, partnerName)}
-                      {row.time && <> &middot; {row.time}</>}
+                      {row.time && !waiting && <> &middot; {row.time}</>}
+                    </span>
+                  )}
+                  {waiting && (
+                    <span className={`inline-flex items-center gap-1 font-medium text-linen-accent ${lastOfRun ? 'ml-1.5' : ''}`}>
+                      <AlarmClock className="w-3 h-3" />
+                      Shows {aheadLabel(msg.showAt!)}
                     </span>
                   )}
                   {/* Changed after it was sent: said wherever it is, last of a run or not. */}
@@ -1350,7 +1422,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           </button>
                           <span className="sr-only">Sending</span>
                         </>
-                      ) : !shareReceipts ? null : read ? (
+                      ) : waiting || !shareReceipts ? null : read ? (
                         <>
                           <CheckCheck className="w-3.5 h-3.5 text-sky-600" />
                           <span className="sr-only">Read</span>
@@ -1403,16 +1475,20 @@ export const ChatView: React.FC<ChatViewProps> = ({
     // The press handlers are left out on purpose: they act only through refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawnRows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay,
-      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, callInProgress, newMarkId]
+      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, callInProgress, newMarkId, waitClock]
   );
 
   /** What can be done with the message whose menu is open. */
   const menuMessage = menu ? byId.get(menu.id) : undefined;
   const menuActions: MessageMenuAction[] = [];
+  // One of yours still waiting to show can be copied, or not sent after all.
+  const menuWaiting = !!menuMessage && isWaiting(menuMessage, activeUser);
   if (menuMessage && !menuMessage.unsent) {
     const m = menuMessage;
     const close = () => setMenu(null);
-    menuActions.push({ key: 'reply', label: 'Reply', icon: CornerUpLeft, onSelect: () => { close(); answer(m.id); } });
+    if (!menuWaiting) {
+      menuActions.push({ key: 'reply', label: 'Reply', icon: CornerUpLeft, onSelect: () => { close(); answer(m.id); } });
+    }
     if (!m.isVoiceMemo && !m.isPhoto && m.text) {
       menuActions.push({
         key: 'copy',
@@ -1424,7 +1500,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         }
       });
     }
-    if (onPinMessage && canPin(m)) {
+    if (onPinMessage && canPin(m) && !menuWaiting) {
       const pinned = pinnedBy.has(m.id);
       menuActions.push({
         key: 'pin',
@@ -1445,7 +1521,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
       menuActions.push({ key: 'edit', label: 'Edit', icon: Pencil, onSelect: () => { close(); startEdit(m); } });
     }
     if (onUnsendMessage && canUnsend(m, activeUser)) {
-      menuActions.push({ key: 'unsend', label: 'Unsend', icon: Undo2, danger: true, onSelect: () => { close(); onUnsendMessage(m.id); } });
+      menuActions.push({
+        key: 'unsend',
+        label: menuWaiting ? "Don't send" : 'Unsend',
+        icon: menuWaiting ? X : Undo2,
+        danger: true,
+        onSelect: () => { close(); onUnsendMessage(m.id); }
+      });
     }
   }
   /** The photo filling the screen - gone if it was taken back meanwhile. */
@@ -1620,6 +1702,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 </>
         )}
 </div>
+
+      {/* Where they are, in their words (core/status): a line of its own
+          under the header while it lasts. The line beside their name has no
+          room for it next to the buttons. */}
+      {theirStatus && !searchOpen && (
+        <div
+          role="status"
+          data-partner-status
+          aria-label={`${partnerName}: ${statusWords(theirStatus)}, since ${clockTime(theirStatus.setAt)}`}
+          className="flex items-center gap-2 border-b border-linen-border bg-linen-variant/20 px-4 py-1.5 text-xs text-linen-secondary"
+        >
+          <span aria-hidden="true">{theirStatus.emoji || '💬'}</span>
+          <span className="min-w-0 truncate font-medium text-linen-primary">{theirStatus.text}</span>
+          <span className="shrink-0">&middot; since {clockTime(theirStatus.setAt)}</span>
+        </div>
+      )}
 
       {/* The pinned message on show; tapped, the conversation goes to it and
           the bar moves on to the one pinned before it. */}
@@ -1798,7 +1896,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 // is already in the header right above.
                 placeholder="A quiet thought…"
                 className={`block w-full resize-none overflow-y-hidden px-4 py-2.5 text-sm leading-5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary placeholder:text-linen-secondary/60 select-text ${
-                  showPhotoButton ? (touchFirst ? 'pr-20' : 'pr-11') : ''
+                  showPhotoButton ? (touchFirst ? 'pr-20' : 'pr-11') : showLaterButton ? 'pr-11' : ''
                 }`}
               />
               {showPhotoButton && touchFirst && (
@@ -1823,6 +1921,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   className="absolute right-1 bottom-1 h-[34px] w-[34px] rounded-lg flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
                 >
                   <ImageIcon className="w-5 h-5" />
+                </button>
+              )}
+              {showLaterButton && (
+                <button
+                  type="button"
+                  onClick={() => setLaterOpen(true)}
+                  aria-label="Send later"
+                  title="Send later"
+                  className="absolute right-1 bottom-1 h-[34px] w-[34px] rounded-lg flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
+                >
+                  <AlarmClock className="w-5 h-5" />
                 </button>
               )}
               <input
@@ -1883,7 +1992,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <MessageMenu
           anchor={menu.anchor}
           side={menuMessage.authorId === activeUser ? 'right' : 'left'}
-          reaction={onReact ? menuMessage.reactions?.[activeUser] || '' : null}
+          reaction={onReact && !menuWaiting ? menuMessage.reactions?.[activeUser] || '' : null}
           onReact={emoji => {
             setMenu(null);
             onReact?.(menuMessage.id, emoji);
@@ -1891,6 +2000,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
           }}
           actions={menuActions}
           onClose={() => setMenu(null)}
+        />
+      )}
+
+      {laterOpen && (
+        <SendLaterSheet
+          text={inputText.trim()}
+          partnerName={partnerName}
+          onPick={sendLater}
+          onClose={() => setLaterOpen(false)}
         />
       )}
 

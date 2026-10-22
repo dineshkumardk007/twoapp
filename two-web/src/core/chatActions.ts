@@ -91,8 +91,14 @@ function hasWords(m: ChatMessage): boolean {
   return !m.isVoiceMemo && !m.isPhoto && !m.unsent && !m.call;
 }
 
-/** Whether this phone may still change these words: its own, plain words, within the window. */
+/**
+ * Whether this phone may still change these words: its own, plain words,
+ * within the window. Not one still waiting to show (core/sendLater): that is
+ * taken back and written again, so it never reaches your partner already
+ * marked "edited" the first time they see it.
+ */
 export function canEdit(m: ChatMessage, me: Seat, now = Date.now()): boolean {
+  if (typeof m.showAt === 'number' && m.showAt > now) return false;
   return m.authorId === me && hasWords(m) && !m.isNeedCard && !!m.sentAt && now - m.sentAt <= EDIT_WINDOW_MS;
 }
 
@@ -125,9 +131,10 @@ export function cleanReplyRef(raw: unknown): ChatReplyRef | undefined {
 
 /**
  * What a message can carry besides its words: a recording, a photo (which may
- * be view-once), or the message it answers.
+ * be view-once), the message it answers, or when it is to show (core/sendLater).
  */
-export type MessageExtras = Partial<VoiceFields> & Partial<PhotoFields> & { replyTo?: ChatReplyRef; viewOnce?: true };
+export type MessageExtras = Partial<VoiceFields> &
+  Partial<PhotoFields> & { replyTo?: ChatReplyRef; viewOnce?: true; showAt?: number };
 
 export interface PhotoFields {
   isPhoto: true;

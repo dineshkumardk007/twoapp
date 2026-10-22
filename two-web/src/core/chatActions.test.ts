@@ -40,6 +40,12 @@ describe('editing', () => {
     }
   });
 
+  it('nor one still waiting to show; once it has, the usual fifteen minutes from then', () => {
+    const later = msg({ sentAt: SENT + 3_600_000, showAt: SENT + 3_600_000 });
+    expect(canEdit(later, 'user', SENT + 1000)).toBe(false);
+    expect(canEdit(later, 'user', SENT + 3_600_000 + 60_000)).toBe(true);
+  });
+
   it('applies the author\'s edit, inside the window as their phone timed it', () => {
     const out = applyEdit([msg()], 'user', { messageId: 'm1', text: 'See you at nine', editedAt: SENT + 60_000 });
     expect(out?.[0].text).toBe('See you at nine');

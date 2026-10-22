@@ -91,6 +91,12 @@ export interface ChatMessage {
    */
   receivedAt?: number;
   /**
+   * Set to show later (core/sendLater): when it is to appear in the partner's
+   * chat. Also its sentAt, so it takes its place at that time. The partner's
+   * phone holds it back until its own clock gets there.
+   */
+  showAt?: number;
+  /**
    * Not a message but a call's line in the conversation (core/callLog): who
    * rang, when, and how it went. Never sent as a CHAT, never replied to,
    * edited, pinned, searched or counted as unread.
