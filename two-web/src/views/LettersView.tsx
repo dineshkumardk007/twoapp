@@ -4,6 +4,10 @@ import { Mail, Feather, Heart, Sparkles, Lock, Unlock, Calendar, Moon, Plane, Sh
 import { newId } from '../core/ids';
 import { whenLabel } from '../core/when';
 import { who } from '../core/who';
+import { useBackLayer } from '../core/backStack';
+import { useToday } from '../core/useToday';
+import { formatDay } from '../core/ourDates';
+import { firstOpenOn, openOnWords, openedByReader, opensNow, waitsUntil } from '../core/letters';
 
 interface LettersViewProps {
   letters: LoveLetter[];
@@ -12,6 +16,11 @@ interface LettersViewProps {
   partnerName?: string;
   onSendLetter: (newLetter: LoveLetter) => void;
   onOpenLetter: (letterId: string) => void;
+  /**
+   * A letter can wait for a day: your partner's phone has said it keeps one
+   * closed until then (core/letters). An older one would open it at once.
+   */
+  canDateLetters?: boolean;
 }
 
 export const LettersView: React.FC<LettersViewProps> = ({
@@ -19,7 +28,8 @@ export const LettersView: React.FC<LettersViewProps> = ({
   activeUser,
   partnerName,
   onSendLetter,
-  onOpenLetter
+  onOpenLetter,
+  canDateLetters = false
 }) => {
   const [activeTab, setActiveTab] = useState<'inbox' | 'sent'>('inbox');
   const [showComposeModal, setShowComposeModal] = useState(false);
@@ -31,7 +41,19 @@ export const LettersView: React.FC<LettersViewProps> = ({
   const [body, setBody] = useState('');
   const [waxColor, setWaxColor] = useState<WaxColor>('gold');
   const [conditionType, setConditionType] = useState<LetterCondition>('night');
-  const [conditionDetail, setConditionDetail] = useState('Open when unwinding tonight with warm tea');
+  const [conditionDetail, setConditionDetail] = useState('');
+  /** 'YYYY-MM-DD' while a day is being chosen; '' for none. */
+  const [openOn, setOpenOn] = useState('');
+  /** A letter of your partner's tapped before its day: it says when, and stays shut. */
+  const [notYet, setNotYet] = useState<LoveLetter | null>(null);
+  const today = useToday();
+  const partner = partnerName || 'your partner';
+  const datedLetter = conditionType === 'date' && canDateLetters;
+
+  // The phone's Back button closes whichever is on top, as its X does.
+  useBackLayer(!!selectedLetter, () => setSelectedLetter(null));
+  useBackLayer(showComposeModal, () => setShowComposeModal(false));
+  useBackLayer(!!notYet, () => setNotYet(null));
 
   const receivedLetters = letters.filter(l => l.authorId !== activeUser);
   const sentLetters = letters.filter(l => l.authorId === activeUser);
@@ -42,8 +64,15 @@ export const LettersView: React.FC<LettersViewProps> = ({
   const fromName = (letter: LoveLetter) => who(letter.authorId, activeUser, partnerName, letter.authorName);
 
   const handleOpenLetterClick = (letter: LoveLetter) => {
+    // Your partner's, set for a day still to come: it stays shut.
+    if (waitsUntil(letter, activeUser, today)) {
+      setNotYet(letter);
+      return;
+    }
     setSelectedLetter(letter);
-    if (!letter.isOpened) {
+    // Only the one it was written for breaks the seal. Reading your own
+    // letter again changes nothing: it is "opened" when they have opened it.
+    if (opensNow(letter, activeUser, today)) {
       setSealBreaking(true);
       setTimeout(() => {
         setSealBreaking(false);
@@ -64,7 +93,9 @@ export const LettersView: React.FC<LettersViewProps> = ({
       body: body.trim(),
       waxColor,
       conditionType,
-      conditionDetail: conditionDetail.trim() || undefined,
+      // A note typed before choosing a day is out of sight by now: not sent.
+      conditionDetail: datedLetter ? undefined : conditionDetail.trim() || undefined,
+      ...(datedLetter && openOn ? { openOn } : {}),
       at: Date.now(),
       sentDate: 'Today',
       isOpened: false
@@ -74,6 +105,10 @@ export const LettersView: React.FC<LettersViewProps> = ({
     setShowComposeModal(false);
     setTitle('');
     setBody('');
+    // The next one starts afresh - not still asking for a day for the last.
+    setConditionType('night');
+    setConditionDetail('');
+    setOpenOn('');
   };
 
   const getWaxStyles = (color: WaxColor) => {
@@ -140,7 +175,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
           className="self-start sm:self-auto inline-flex items-center px-4 py-2.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs"
         >
           <Feather className="w-3.5 h-3.5 mr-1.5" />
-          Write Sealed Letter
+          Write a letter
         </button>
       </div>
 
@@ -172,6 +207,26 @@ export const LettersView: React.FC<LettersViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         {(activeTab === 'inbox' ? receivedLetters : sentLetters).map(letter => {
           const wax = getWaxStyles(letter.waxColor);
+          const mine = letter.authorId === activeUser;
+          const waits = waitsUntil(letter, activeUser, today);
+          // Your own is never sealed from you; theirs shows its words once opened.
+          const showWords = mine || letter.isOpened;
+          // Yours: opened only once they have - a letter marked opened before
+          // that was kept may only have been read again by you.
+          const opened = mine ? openedByReader(letter) : letter.isOpened;
+          const status = mine
+            ? opened
+              ? `Opened by ${partner}`
+              : letter.isOpened
+              ? 'Sealed and sent'
+              : letter.openOn && letter.openOn > today
+              ? `Opens for ${partner} on ${openOnWords(letter.openOn, today)}`
+              : `Not opened yet`
+            : letter.isOpened
+            ? 'Opened'
+            : waits
+            ? `Opens on ${formatDay(waits)}`
+            : 'Tap to open';
           return (
             <div
               key={letter.id}
@@ -195,8 +250,10 @@ export const LettersView: React.FC<LettersViewProps> = ({
                   className={`w-11 h-11 rounded-full ${wax.bg} ${wax.border} ${wax.shadow} border-2 flex items-center justify-center ${wax.text} transform group-hover:rotate-6 transition-transform duration-300 relative`}
                   title={`Sealed with ${wax.label}`}
                 >
-                  {letter.isOpened ? (
+                  {opened ? (
                     <Unlock className="w-5 h-5 opacity-90" />
+                  ) : waits ? (
+                    <Calendar className="w-5 h-5 opacity-90" />
                   ) : (
                     <Lock className="w-5 h-5 opacity-90" />
                   )}
@@ -207,7 +264,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
 
               {/* Excerpt or Condition */}
               <div className="mt-4 pt-4 border-t border-linen-border/50">
-                {letter.isOpened ? (
+                {showWords ? (
                   <p className="font-serif italic text-xs text-linen-secondary line-clamp-2 leading-relaxed">
                     "{letter.body}"
                   </p>
@@ -220,8 +277,8 @@ export const LettersView: React.FC<LettersViewProps> = ({
               </div>
 
               <div className="mt-3 flex items-center justify-between text-[11px] text-linen-secondary">
-                <span>{letter.isOpened ? '✓ Seal broken & read' : '🔒 Tap to break wax seal'}</span>
-                <span className="text-linen-accent group-hover:underline">View Parchment →</span>
+                <span>{status}</span>
+                <span className="text-linen-accent group-hover:underline">{waits ? 'Not yet' : 'Read →'}</span>
               </div>
             </div>
           );
@@ -240,11 +297,23 @@ export const LettersView: React.FC<LettersViewProps> = ({
 
       {/* Read Letter Modal with Parchment Texture */}
       {selectedLetter && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#FAF7EE] border border-[#E3DCB8] rounded-3xl p-6 sm:p-10 max-w-lg w-full shadow-2xl space-y-6 relative overflow-hidden text-[#3B322C]">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={e => {
+            if (e.target === e.currentTarget) setSelectedLetter(null);
+          }}
+        >
+          {/* As long as it needs to be: a long letter scrolls inside its page. */}
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={selectedLetter.title}
+            className="bg-[#FAF7EE] border border-[#E3DCB8] rounded-3xl p-6 sm:p-10 max-w-lg w-full max-h-[88dvh] overflow-y-auto overscroll-contain shadow-2xl space-y-6 relative text-[#3B322C]"
+          >
             {/* Close Button */}
             <button
               onClick={() => setSelectedLetter(null)}
+              aria-label="Close the letter"
               className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/5 text-[#736357] transition-colors"
             >
               <X className="w-5 h-5" />
@@ -274,6 +343,9 @@ export const LettersView: React.FC<LettersViewProps> = ({
                   Intended moment: "{selectedLetter.conditionDetail}"
                 </div>
               )}
+              {selectedLetter.openOn && (
+                <div className="text-[11px] text-[#8C7A6B] italic">For {formatDay(selectedLetter.openOn)}</div>
+              )}
             </div>
 
             {/* Letter Parchment Body - selectable, so a line can be long-pressed and kept */}
@@ -290,17 +362,57 @@ export const LettersView: React.FC<LettersViewProps> = ({
         </div>
       )}
 
+      {/* Your partner's letter, before its day: when, and why it stays shut. */}
+      {notYet && notYet.openOn && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={e => {
+            if (e.target === e.currentTarget) setNotYet(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="letter-not-yet-title"
+            className="bg-linen-surface border border-linen-border rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-3"
+          >
+            <div className="mx-auto w-12 h-12 rounded-full bg-linen-variant flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-linen-accent" />
+            </div>
+            <h3 id="letter-not-yet-title" className="font-serif text-lg font-medium text-linen-primary">
+              Not yet - this one is for {formatDay(notYet.openOn)}
+            </h3>
+            <p className="text-xs leading-relaxed text-linen-secondary">
+              {fromName(notYet)} wrote "{notYet.title}" to be opened that day. Two keeps it closed on your screen
+              until then.
+            </p>
+            <button
+              onClick={() => setNotYet(null)}
+              className="px-4 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity"
+            >
+              I'll wait
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Compose Letter Modal */}
       {showComposeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Write a letter"
+            className="bg-linen-surface border border-linen-border rounded-3xl p-6 sm:p-8 max-w-xl w-full max-h-[92dvh] overflow-y-auto overscroll-contain shadow-2xl space-y-5"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 text-linen-primary font-serif text-lg font-medium">
                 <Feather className="w-5 h-5 text-linen-accent" />
-                <span>Compose Wax-Sealed Letter</span>
+                <span>Write a letter</span>
               </div>
               <button
                 onClick={() => setShowComposeModal(false)}
+                aria-label="Close"
                 className="p-1.5 rounded-lg text-linen-secondary hover:text-linen-primary hover:bg-linen-variant"
               >
                 <X className="w-4 h-4" />
@@ -321,7 +433,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
               </div>
 
               <div>
-                <label className="text-xs font-medium text-linen-primary block mb-1">Parchment Words</label>
+                <label className="text-xs font-medium text-linen-primary block mb-1">Your letter</label>
                 <textarea
                   rows={6}
                   placeholder="Write deeply and honestly. Speak to your partner across time..."
@@ -369,22 +481,44 @@ export const LettersView: React.FC<LettersViewProps> = ({
                     <option value="night">Night time / Unwinding</option>
                     <option value="anxious">When feeling anxious or stressed</option>
                     <option value="travel">During travel / distance</option>
-                    <option value="date">Specific calendar milestone</option>
+                    <option value="date">{canDateLetters ? 'On a day you choose' : 'Specific calendar milestone'}</option>
                     <option value="none">Immediate (Open anytime)</option>
                   </select>
                 </div>
 
-                <div>
-                  <label className="text-xs font-medium text-linen-primary block mb-1">Instruction Note</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Open with hot tea on our balcony"
-                    value={conditionDetail}
-                    onChange={e => setConditionDetail(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-none focus:ring-1 focus:ring-linen-primary"
-                  />
-                </div>
+                {datedLetter ? (
+                  <div>
+                    <label htmlFor="letter-open-on" className="text-xs font-medium text-linen-primary block mb-1">
+                      Open on
+                    </label>
+                    <input
+                      id="letter-open-on"
+                      type="date"
+                      value={openOn}
+                      min={firstOpenOn(today)}
+                      onChange={e => setOpenOn(e.target.value)}
+                      required
+                      className="w-full text-xs p-2.5 rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-none focus:ring-1 focus:ring-linen-primary"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-xs font-medium text-linen-primary block mb-1">A note on the envelope</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Open with hot tea on our balcony"
+                      value={conditionDetail}
+                      onChange={e => setConditionDetail(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-xl border border-linen-border bg-linen-variant/40 focus:outline-none focus:ring-1 focus:ring-linen-primary"
+                    />
+                  </div>
+                )}
               </div>
+              {datedLetter && (
+                <p className="-mt-1 text-[11px] leading-relaxed text-linen-secondary">
+                  Until that day, Two keeps it closed on {partner}'s screen. A gentle wait, not a lock.
+                </p>
+              )}
 
               {/* Submit / Pour Wax Button */}
               <div className="pt-3 border-t border-linen-border flex items-center justify-end space-x-2">
@@ -400,7 +534,7 @@ export const LettersView: React.FC<LettersViewProps> = ({
                   className="inline-flex items-center px-4 py-2.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs"
                 >
                   <Lock className="w-3.5 h-3.5 mr-1.5" />
-                  Pour Wax & Seal Envelope
+                  Seal and send
                 </button>
               </div>
             </form>

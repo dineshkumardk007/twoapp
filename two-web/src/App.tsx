@@ -189,6 +189,8 @@ import {
   withdrawn
 } from './core/sendLater';
 import { STATUS_SET, applyStatus, cleanStatus, liveStatus, stampFor, statusWords } from './core/status';
+import { CAN_DATE_LETTERS, cleanLetter, openOnWords, opensNow } from './core/letters';
+import { heartKind } from './core/hearts';
 import { aheadLabel } from './core/when';
 import { leaveBedside } from './core/bedside';
 import { askConfirm } from './core/dialog';
@@ -262,9 +264,17 @@ const VOICE_HEARD = 'VOICE_HEARD';
 const APP_VERSION = 'APP_VERSION';
 /**
  * What this phone tells the other, with its version, that an older one
- * cannot do: hold back a message set for later (core/sendLater).
+ * cannot do: hold back a message set for later (core/sendLater), and keep a
+ * letter for a day closed until then (core/letters).
  */
-const CAN_DO = [CAN_SHOW_LATER];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS];
+
+/** What a letter's toast says: its title, and its day when it waits for one. */
+function letterNotice(letter: LoveLetter, fallback: string): string {
+  const title = letter.title || fallback;
+  const today = localDateKey();
+  return letter.openOn && letter.openOn > today ? `${title} - to open on ${openOnWords(letter.openOn, today)}` : title;
+}
 
 /**
  * What is said when a message is too big for one record: the relay takes a
@@ -1206,13 +1216,16 @@ export const App: React.FC = () => {
               lists: addOnce(prev.lists, parsed)
             }));
           } else if (record.type === 'LOVE_LETTER') {
+            // The day it opens on, kept only if it is one (core/letters).
+            const letter = cleanLetter(parsed);
+            if (!letter) return;
             setState(prev =>
               // Add-only during a catch-up: see CATCH_UP_TYPES.
-              msg.catchUp && prev.letters.some(l => l.id === parsed.id)
+              msg.catchUp && prev.letters.some(l => l.id === letter.id)
                 ? prev
                 : {
                     ...prev,
-                    letters: [parsed, ...prev.letters.filter(l => l.id !== parsed.id)]
+                    letters: [letter, ...prev.letters.filter(l => l.id !== letter.id)]
                   }
             );
             const isFromPartner = record.authorId !== state.activeUser && !msg.replay;
@@ -1223,7 +1236,7 @@ export const App: React.FC = () => {
                 setInAppNotification({
                   id: newId(),
                   title: `${partnerNameRef.current || 'Partner'} sent a Love Letter`,
-                  body: parsed.title || 'A new sealed letter awaits in your Sanctuary',
+                  body: letterNotice(letter, 'A new sealed letter awaits in your Sanctuary'),
                   type: 'letter',
                   tabId: 'letters'
                 });
@@ -1583,10 +1596,11 @@ export const App: React.FC = () => {
         if (SHARED_RECORD_TYPES.has(packet.subType)) {
           setState(prev => applySharedRecord(prev, packet.subType, packet.payload, packet.authorId) ?? prev);
         }
-        if (packet.subType === 'LOVE_LETTER') {
+        const meshLetter = packet.subType === 'LOVE_LETTER' ? cleanLetter(packet.payload) : null;
+        if (meshLetter) {
           setState(prev => ({
             ...prev,
-            letters: [packet.payload, ...prev.letters.filter(l => l.id !== packet.payload.id)]
+            letters: [meshLetter, ...prev.letters.filter(l => l.id !== meshLetter.id)]
           }));
           playLetterChime();
           triggerHaptic([45, 55, 45]);
@@ -1594,7 +1608,7 @@ export const App: React.FC = () => {
             setInAppNotification({
               id: newId(),
               title: `${partnerNameRef.current || 'Partner'} sent a Love Letter (Mesh)`,
-              body: packet.payload.title || 'A sealed letter arrived offline',
+              body: letterNotice(meshLetter, 'A sealed letter arrived offline'),
               type: 'letter',
               tabId: 'letters'
             });
@@ -3544,20 +3558,20 @@ export const App: React.FC = () => {
 
   const handleOpenLetter = (letterId: string) => {
     const letter = state.letters.find(l => l.id === letterId);
+    // Opening is the reader's (core/letters): reading your own changes
+    // nothing - it used to mark it opened here, so your Sent tray said so
+    // before your partner had - and one for a day still to come stays shut.
+    if (!letter || !opensNow(letter, state.activeUser)) return;
     // The moment, and the day in words for a phone on the previous version.
     // It used to be the word "Today", which every opened letter then said
     // for good.
     const openedAt = Date.now();
     const openedDate = new Date(openedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
-    // Sent only for a letter written by the other side: whether you opened
-    // your own is nobody's news.
-    if (letter && !letter.isOpened && letter.authorId !== state.activeUser) {
-      shareUpdate(LETTER_OPENED, { id: letterId, openedDate, openedAt });
-    }
+    shareUpdate(LETTER_OPENED, { id: letterId, openedDate, openedAt });
     setState(prev => ({
       ...prev,
       letters: prev.letters.map(l =>
-        l.id === letterId && !l.isOpened ? { ...l, isOpened: true, openedDate, openedAt } : l
+        l.id === letterId && !l.isOpened ? { ...l, isOpened: true, openedBy: prev.activeUser, openedDate, openedAt } : l
       )
     }));
   };
@@ -4705,7 +4719,7 @@ export const App: React.FC = () => {
         hasPin={!!vaultKey || hasEncryptedVault()}
         onToggleCamouflage={() => setIsCamouflaged(true)}
         onOpenStoryTour={() => setShowStoryTour(true)}
-        onTriggerPulse={() => triggerGlobalPulse('Warm hug across distance')}
+        onTriggerPulse={() => triggerGlobalPulse(heartKind('warm_hug').note, 'warm_hug')}
         locale={locale}
         relayStatus={relayStatus}
         unreadChatCount={unreadChatCount}
@@ -4916,6 +4930,7 @@ export const App: React.FC = () => {
             partnerName={state.partnerName}
             onSendLetter={handleSendLetter}
             onOpenLetter={handleOpenLetter}
+            canDateLetters={!!state.partnerApp?.can?.includes(CAN_DATE_LETTERS)}
           />
         )}
 

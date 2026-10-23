@@ -102,7 +102,8 @@ export const ComfortBoxModal: React.FC<ComfortBoxModalProps> = ({
   };
 
   const handleSendWordlessHug = () => {
-    triggerGlobalPulse('A wordless, unconditional hug • I am right here with you');
+    // Arrives as a hug: one long, warm buzz (core/hearts).
+    triggerGlobalPulse('A wordless, unconditional hug • I am right here with you', 'warm_hug');
   };
 
   const handleSave = () => {

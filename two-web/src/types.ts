@@ -261,6 +261,17 @@ export interface LoveLetter {
   openedDate?: string;
   /** When it was opened. `openedDate` alone was the word "Today", kept for good. */
   openedAt?: number;
+  /**
+   * The seat of whoever opened it - the one it was written for. Absent on a
+   * letter opened before this was kept, when a phone also marked its own
+   * letters opened just by their writer reading them, so it cannot say who.
+   */
+  openedBy?: 'user' | 'partner';
+  /**
+   * 'YYYY-MM-DD': the day it may be opened. Until then the reader's phone
+   * keeps it closed on the screen (core/letters).
+   */
+  openOn?: string;
 }
 
 export type EnergyTier = 'low' | 'medium' | 'high';

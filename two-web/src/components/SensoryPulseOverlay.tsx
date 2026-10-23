@@ -5,6 +5,8 @@ import { playSound } from '../core/sounds';
 import { triggerHaptic } from '../core/audioAlerts';
 import { haptic } from '../core/haptics';
 import { useBackLayer } from '../core/backStack';
+import { newId } from '../core/ids';
+import { PLAIN_HEART, SAME_MOMENT_BUZZ, heartKind, type HeartKind, type HeartKindId } from '../core/hearts';
 
 interface SensoryPulseOverlayProps {
   activeUser: 'user' | 'partner';
@@ -62,10 +64,12 @@ const moments = {
  * closed, or delivered live while the phone was in a pocket. They are told
  * once, quietly, as one card - never as a burst of chimes on opening.
  */
-const missed = { count: 0, newest: 0, note: undefined as string | undefined };
+const missed = { count: 0, newest: 0, note: undefined as string | undefined, kind: PLAIN_HEART };
 
 interface Card {
   title: string;
+  /** The kind's own mark; the plain heart when there is none. */
+  emoji?: string;
   /** The words sent with it, when they say more than the headline. */
   note?: string;
   /** When it was sent, for a heart that was not seen as it arrived. */
@@ -76,10 +80,11 @@ interface Card {
   key: number;
 }
 
-function meaningfulNote(note: unknown): string | undefined {
+function meaningfulNote(note: unknown, kind: HeartKind = PLAIN_HEART): string | undefined {
   if (typeof note !== 'string') return undefined;
   const trimmed = note.trim();
-  return trimmed && !PLAIN_NOTE.test(trimmed) ? trimmed : undefined;
+  // A kind's own words only say its title again.
+  return trimmed && !PLAIN_NOTE.test(trimmed) && trimmed !== kind.note ? trimmed : undefined;
 }
 
 /** "at 9:41 pm", or "yesterday at 11:40 pm" for one from before midnight. */
@@ -110,12 +115,15 @@ function pageVisible(): boolean {
   return typeof document === 'undefined' || document.visibilityState === 'visible';
 }
 
-/** The chime and the double beat under the hand - for a heart arriving now. */
-function feelHeart(sameMoment: boolean) {
-  playSound('gentle-chime');
+/**
+ * The sound and the buzz under the hand - for a heart arriving now. Each kind
+ * has its own (core/hearts), so a hug can be told from a kiss in the pocket.
+ */
+function feelHeart(kind: HeartKind, sameMoment: boolean) {
+  playSound(kind.sound);
   // Two heartbeats when both of you reached for it at once: the one moment
   // here that deserves to feel different from the rest.
-  triggerHaptic(sameMoment ? [60, 40, 60, 180, 60, 40, 60] : [60, 40, 60]);
+  triggerHaptic(sameMoment ? SAME_MOMENT_BUZZ : kind.buzz);
 }
 
 export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
@@ -191,40 +199,59 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
   const tellMissed = useCallback(() => {
     window.clearTimeout(settleTimer.current);
     if (!missed.count || !pageVisible()) return;
-    const { count, newest, note } = missed;
+    const { count, newest, note, kind } = missed;
     missed.count = 0;
     missed.newest = 0;
     missed.note = undefined;
+    missed.kind = PLAIN_HEART;
     const name = nameRef.current;
     const when = sentWhen(newest);
     if (count === 1 && Date.now() - newest < JUST_NOW_MS) {
-      showCard({ title: `${name} is thinking of you`, note: meaningfulNote(note), canReply: true });
+      showCard({ title: `${name} ${kind.says}`, emoji: kind.emoji, note: meaningfulNote(note, kind), canReply: true });
       return;
     }
     showCard({
-      title: `${name} thought of you`,
-      note: count === 1 ? meaningfulNote(note) : undefined,
+      // One heart says what it was; several are simply thought of you.
+      title: count === 1 && kind !== PLAIN_HEART ? `${name} ${kind.says}` : `${name} thought of you`,
+      emoji: count === 1 ? kind.emoji : undefined,
+      note: count === 1 ? meaningfulNote(note, kind) : undefined,
       meta: count > 1 ? `${count} times while you were away, last ${when}` : `While you were away, ${when}`,
       canReply: true
     });
   }, [showCard]);
 
-  const holdMissed = (at: number, note: unknown) => {
+  const holdMissed = (at: number, note: unknown, kind: HeartKind) => {
     if (!at || Date.now() - at > MISSED_WINDOW_MS) return;
     missed.count += 1;
     if (at >= missed.newest) {
       missed.newest = at;
       missed.note = typeof note === 'string' ? note : undefined;
+      missed.kind = kind;
     }
   };
 
-  /** One heart, the way this phone's person sends it. */
+  /**
+   * One heart, the way this phone's person sends it. Returns the id the
+   * relay's acknowledgement will carry (RECORD_ACK), so whoever sent it can
+   * say when it has really gone.
+   */
   const sendHeart = useCallback(
-    (note?: string, opts?: { reply?: boolean }) => {
+    (note?: string, opts?: { reply?: boolean; kind?: HeartKindId; quiet?: boolean }): string => {
       const reply = !!opts?.reply;
-      // `reply` is new; a phone still on the previous version reads the rest
-      // exactly as before and shows it as an ordinary heart.
-      wsRelay.broadcastUpdate('PULSE', reply ? { sender: activeUser, note, reply: true } : { sender: activeUser, note });
+      const kind = heartKind(opts?.kind);
+      // `reply` and `kind` are new; a phone still on an older version reads
+      // the rest exactly as before and shows it as an ordinary heart.
+      const id = newId('pulse');
+      wsRelay.broadcastUpdate(
+        'PULSE',
+        {
+          sender: activeUser,
+          note,
+          ...(reply ? { reply: true } : {}),
+          ...(kind !== PLAIN_HEART ? { kind: kind.id } : {})
+        },
+        id
+      );
       haptic('confirm');
 
       const now = Date.now();
@@ -244,7 +271,10 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
       // Small, because the moment belongs to the person receiving it. The
       // sender used to get the same full card ("You sent a warm touch"), which
       // turned every heart into a pop-up for the one who already knew.
-      showToast(sameMoment ? 'You thought of each other at the same moment' : `Sent to ${nameRef.current}`);
+      // Quiet when the heart picker says itself whether it has gone.
+      if (sameMoment) showToast('You thought of each other at the same moment');
+      else if (!opts?.quiet) showToast(`Sent to ${nameRef.current}`);
+      return id;
     },
     [activeUser, showToast]
   );
@@ -265,7 +295,7 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
       // switch: none of it is news.
       if (msg.restoring || msg.catchUp) return;
 
-      let parsed: { note?: unknown; reply?: unknown } = {};
+      let parsed: { note?: unknown; reply?: unknown; kind?: unknown } = {};
       try {
         parsed = JSON.parse(msg.record.payload) || {};
       } catch (e) {
@@ -275,8 +305,9 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
 
       // History, not news: a heart sent while this app was closed. Gathered
       // into one quiet card instead of a chime per heart on opening.
+      const kind = heartKind(parsed.kind);
       if (msg.replay) {
-        holdMissed(Number(msg.record.clientTs) || 0, parsed.note);
+        holdMissed(Number(msg.record.clientTs) || 0, parsed.note, kind);
         window.clearTimeout(settleTimer.current);
         settleTimer.current = window.setTimeout(tellMissed, MISSED_SETTLE_MS);
         return;
@@ -295,12 +326,12 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
         moments.receivedAt = now;
       }
 
-      feelHeart(sameMoment);
+      feelHeart(kind, sameMoment);
 
       // Felt in the pocket now; the card waits until the phone is looked at,
       // or it would come and go on a screen nobody was watching.
       if (!pageVisible()) {
-        holdMissed(now, parsed.note);
+        holdMissed(now, parsed.note, kind);
         return;
       }
 
@@ -313,8 +344,9 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
               canReply: false
             }
           : {
-              title: reply ? `${name} sent one back` : `${name} is thinking of you`,
-              note: meaningfulNote(parsed.note),
+              title: reply ? `${name} sent one back` : `${name} ${kind.says}`,
+              emoji: reply ? undefined : kind.emoji,
+              note: meaningfulNote(parsed.note, kind),
               // An answer closes the loop; offering to answer it again would
               // make every heart an endless volley.
               canReply: !reply
@@ -339,7 +371,8 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
   // The way every heart button in the app sends: Home, the header, the
   // comfort box and the heart picker all call triggerGlobalPulse.
   useEffect(() => {
-    (window as any).__triggerSensoryPulse = (note?: string) => sendHeart(note);
+    (window as any).__triggerSensoryPulse = (note?: string, kind?: HeartKindId, quiet?: boolean) =>
+      sendHeart(note, { kind, quiet });
     return () => {
       delete (window as any).__triggerSensoryPulse;
     };
@@ -348,10 +381,12 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
   // How a heart feels and looks arriving - on this phone only. The heart
   // picker's "Test on Device" used to send a real heart to the other person.
   useEffect(() => {
-    (window as any).__previewSensoryPulse = () => {
-      feelHeart(false);
+    (window as any).__previewSensoryPulse = (kindId?: HeartKindId) => {
+      const kind = heartKind(kindId);
+      feelHeart(kind, false);
       showCard({
-        title: 'This is how a heart arrives',
+        title: kind === PLAIN_HEART ? 'This is how a heart arrives' : `This is how "${kind.title}" arrives`,
+        emoji: kind.emoji,
         meta: 'Only on this phone - nothing was sent',
         canReply: false
       });
@@ -456,7 +491,13 @@ const HeartCard: React.FC<{
       className="w-72 max-w-full rounded-3xl border border-linen-border bg-linen-surface/95 backdrop-blur-md p-6 shadow-2xl flex flex-col items-center text-center cursor-pointer"
     >
       <div className="w-14 h-14 rounded-full bg-linen-variant border border-linen-border flex items-center justify-center text-linen-accent">
-        <Heart className="w-7 h-7 fill-current" aria-hidden="true" />
+        {card.emoji ? (
+          <span aria-hidden="true" className="text-[28px] leading-none">
+            {card.emoji}
+          </span>
+        ) : (
+          <Heart className="w-7 h-7 fill-current" aria-hidden="true" />
+        )}
       </div>
 
       <h4 className="font-serif text-lg font-medium text-linen-primary mt-3 leading-snug">{card.title}</h4>
@@ -480,15 +521,25 @@ const HeartCard: React.FC<{
   </Bloom>
 );
 
-export const triggerGlobalPulse = (note?: string) => {
+/**
+ * Sends a heart of this kind (the plain one when none is said). Returns the id
+ * the relay's acknowledgement will carry, or undefined when it could not go.
+ * `quiet` leaves out the "Sent to" toast, for a screen that says it itself.
+ */
+export const triggerGlobalPulse = (
+  note?: string,
+  kind?: HeartKindId,
+  opts?: { quiet?: boolean }
+): string | undefined => {
   if (typeof window !== 'undefined' && (window as any).__triggerSensoryPulse) {
-    (window as any).__triggerSensoryPulse(note);
+    return (window as any).__triggerSensoryPulse(note, kind, !!opts?.quiet);
   }
+  return undefined;
 };
 
-/** Shows and plays an arriving heart on this phone alone; nothing is sent. */
-export const previewGlobalPulse = () => {
+/** Shows and plays an arriving heart of this kind on this phone alone; nothing is sent. */
+export const previewGlobalPulse = (kind?: HeartKindId) => {
   if (typeof window !== 'undefined' && (window as any).__previewSensoryPulse) {
-    (window as any).__previewSensoryPulse();
+    (window as any).__previewSensoryPulse(kind);
   }
 };

@@ -92,6 +92,18 @@ describe('Love letters', () => {
     const opened = applySharedRecord(sealed, LETTER_OPENED, { id: 'l1', openedAt: 5_000 }, 'partner')!;
     expect(applySharedRecord(opened, LETTER_OPENED, { id: 'l1', openedAt: 9_000 }, 'partner')).toBeNull();
   });
+
+  it('says who opened it: the one it was written for, never its writer', () => {
+    const next = applySharedRecord(sealed, LETTER_OPENED, { id: 'l1', openedAt: 5_000 }, 'partner')!;
+    expect(next.letters[0].openedBy).toBe('partner');
+    expect(applySharedRecord(sealed, LETTER_OPENED, { id: 'l1', openedAt: 5_000 }, 'user')).toBeNull();
+  });
+
+  it('a letter marked opened before who was kept takes the real opening when it comes', () => {
+    const reread = phone({ letters: [{ ...sealed.letters[0], isOpened: true, openedDate: 'Today' }] });
+    const next = applySharedRecord(reread, LETTER_OPENED, { id: 'l1', openedDate: 'Oct 14', openedAt: 7_000 }, 'partner')!;
+    expect(next.letters[0]).toMatchObject({ isOpened: true, openedBy: 'partner', openedAt: 7_000 });
+  });
 });
 
 describe('Money Light', () => {

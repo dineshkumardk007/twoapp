@@ -433,15 +433,21 @@ export function applySharedRecord(
 
     case LETTER_OPENED: {
       // Only ever sets opened. A letter cannot become unread, and nothing
-      // should be able to make it look that way.
+      // should be able to make it look that way. Opened by the one it was
+      // written for (core/letters), and kept saying so: never by its writer.
+      // A letter already marked opened with nobody named - by a phone that
+      // marked its own letters opened when their writer read them - takes
+      // the real opening when it comes.
+      if (authorId !== 'user' && authorId !== 'partner') return null;
       let changed = false;
       const letters: LoveLetter[] = prev.letters.map(letter => {
-        if (letter.id !== payload.id || letter.isOpened) return letter;
+        if (letter.id !== payload.id || letter.authorId === authorId || (letter.isOpened && letter.openedBy)) return letter;
         changed = true;
         const openedAt = Number(payload.openedAt);
         return {
           ...letter,
           isOpened: true,
+          openedBy: authorId,
           openedDate: isText(payload.openedDate) ? payload.openedDate : '',
           openedAt: Number.isFinite(openedAt) && openedAt > 0 ? openedAt : undefined
         };

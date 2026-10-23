@@ -4,6 +4,7 @@ import { ScrapbookSettings } from '../types';
 import { BookOpen, Printer, Download, Sliders, Check, Star, Mail, MapPin, Heart, Utensils, Gift, Hourglass, Flame, Sparkles, X, ChevronRight, Calendar, ShieldCheck } from 'lucide-react';
 import { saveFile } from '../core/saveFile';
 import { who } from '../core/who';
+import { openOnWords, openedByReader, waitsUntil } from '../core/letters';
 
 interface ScrapbookViewProps {
   state: SpaceState;
@@ -53,8 +54,14 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
     const w = (words || '').trim();
     return w && !['today', 'yesterday', 'just now', 'recently'].includes(w.toLowerCase()) ? w : '';
   };
+  // Yours counts as opened only once your partner has opened it (core/letters).
+  const isOpenedHere = (letter: SpaceState['letters'][number]) =>
+    letter.authorId === activeUser ? openedByReader(letter) : letter.isOpened;
+  // One of theirs not yet opened stays sealed in the book too: in Love
+  // Letters it is shut until it is opened - or until its day.
+  const sealedHere = (letter: SpaceState['letters'][number]) => letter.authorId !== activeUser && !letter.isOpened;
   const letterDateLine = (letter: SpaceState['letters'][number]) => {
-    if (letter.isOpened) {
+    if (isOpenedHere(letter)) {
       const opened = bookDate(letter.openedAt, letter.openedDate);
       if (opened) return `Opened ${opened}`;
     }
@@ -288,9 +295,17 @@ export const ScrapbookView: React.FC<ScrapbookViewProps> = ({
                     </div>
                   </div>
 
-                  <p className="font-serif text-sm sm:text-base text-[#38312a] leading-relaxed whitespace-pre-line italic select-text">
-                    {letter.body}
-                  </p>
+                  {sealedHere(letter) ? (
+                    <p className="font-serif text-sm text-[#7a6a57] italic">
+                      {waitsUntil(letter, activeUser)
+                        ? `Still sealed: it opens on ${openOnWords(letter.openOn!)}.`
+                        : 'Still sealed: open it in Love Letters to read it here.'}
+                    </p>
+                  ) : (
+                    <p className="font-serif text-sm sm:text-base text-[#38312a] leading-relaxed whitespace-pre-line italic select-text">
+                      {letter.body}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

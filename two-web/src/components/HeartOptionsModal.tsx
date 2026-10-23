@@ -1,90 +1,15 @@
-import React, { useState } from 'react';
-import { Heart, Sparkles, X, Send, Smartphone, Volume2, Smile, Check } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Heart, Sparkles, X, Send, Smartphone, Check, Clock } from 'lucide-react';
 import { triggerGlobalPulse, previewGlobalPulse } from './SensoryPulseOverlay';
-import { playHeartbeatSound } from '../core/audioAlerts';
 import { useBackLayer } from '../core/backStack';
+import { HEART_KINDS, PLAIN_HEART, type HeartKindId } from '../core/hearts';
+import { wsRelay } from '../core/ws';
 
 interface HeartOptionsModalProps {
   isOpen: boolean;
   onClose: () => void;
   partnerName?: string;
 }
-
-interface HeartExpression {
-  id: string;
-  title: string;
-  note: string;
-  description: string;
-  emoji: string;
-  badge: string;
-  type: 'chime' | 'heartbeat';
-}
-
-const HEART_EXPRESSIONS: HeartExpression[] = [
-  {
-    id: 'thinking_of_you',
-    title: 'Thinking of You',
-    note: 'Thinking of you right now',
-    description: 'Subtle warmth • 528Hz Solfeggio love frequency chime',
-    emoji: '💖',
-    badge: 'Classic',
-    type: 'chime',
-  },
-  {
-    id: 'warm_hug',
-    title: 'Warm Hug Across Distance',
-    note: 'A long, warm hug across distance',
-    description: 'Deep chest resonance • Lingering warmth & double vibration',
-    emoji: '🫂',
-    badge: 'Comfort',
-    type: 'heartbeat',
-  },
-  {
-    id: 'gentle_kiss',
-    title: 'Gentle Kiss',
-    note: 'A soft, gentle kiss on your forehead',
-    description: 'Delicate acoustic chime • Soft vibration flutter',
-    emoji: '💋',
-    badge: 'Affection',
-    type: 'chime',
-  },
-  {
-    id: 'holding_hands',
-    title: 'Holding Your Hand',
-    note: 'Holding your hand quietly • I am right here',
-    description: 'Steadfast grounding presence • Calm reassuring touch',
-    emoji: '🤝',
-    badge: 'Presence',
-    type: 'heartbeat',
-  },
-  {
-    id: 'heartbeat_sync',
-    title: 'Heartbeat Rhythm Sync',
-    note: 'Our hearts beating as one',
-    description: 'Organic chest heartbeat pulse ("lub-dub") & haptic sync',
-    emoji: '💓',
-    badge: 'Somatic',
-    type: 'heartbeat',
-  },
-  {
-    id: 'love_and_light',
-    title: 'Sending Love & Peace',
-    note: 'Sending you gentle love, peace, and warmth',
-    description: 'Harmonic uplifting overtone chime for difficult moments',
-    emoji: '✨',
-    badge: 'Uplifting',
-    type: 'chime',
-  },
-  {
-    id: 'goodnight_touch',
-    title: 'Goodnight & Sweet Dreams',
-    note: 'Goodnight my love • Sweet dreams under the same stars',
-    description: 'Quiet lullaby tone • Soft bedtime presence',
-    emoji: '🌙',
-    badge: 'Evening',
-    type: 'chime',
-  },
-];
 
 const PRESET_CHIPS = [
   "Can't wait to see you ❤️",
@@ -94,35 +19,50 @@ const PRESET_CHIPS = [
   "Take a deep breath, you got this 🌿",
 ];
 
+/** How long "Sent" stays once the relay has the heart. */
+const SENT_SHOWS_MS = 2400;
+
 export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
   isOpen,
   onClose,
   partnerName = 'Partner',
 }) => {
   const [customNote, setCustomNote] = useState('');
-  const [lastSentText, setLastSentText] = useState<string | null>(null);
+  // The heart just sent: its words, and whether the relay has it yet. It
+  // used to say "Delivered Live" at once, whether or not anything had gone.
+  const [lastSent, setLastSent] = useState<{ text: string; id?: string; acked: boolean } | null>(null);
   const [activeTab, setActiveTab] = useState<'expressions' | 'custom'>('expressions');
 
   // The phone's Back button closes this, the same as its X.
   useBackLayer(isOpen, onClose);
 
+  // "Sent" once the relay has stored it, which is when it is sure to reach
+  // them; until then it waits, and says so.
+  const pendingId = lastSent && !lastSent.acked ? lastSent.id : undefined;
+  useEffect(() => {
+    if (!pendingId) return;
+    return wsRelay.subscribe(msg => {
+      if (msg.type === 'RECORD_ACK' && msg.correlationId === pendingId) {
+        setLastSent(s => (s && s.id === pendingId ? { ...s, acked: true } : s));
+      }
+    });
+  }, [pendingId]);
+  // Whether it can go now, for what is said while it goes.
+  const [online, setOnline] = useState(() => wsRelay.getStatus() === 'connected');
+  useEffect(() => wsRelay.subscribeStatus(s => setOnline(s === 'connected')), []);
+  const ackedId = lastSent?.acked ? lastSent.id : undefined;
+  useEffect(() => {
+    if (!ackedId) return;
+    const t = window.setTimeout(() => setLastSent(s => (s && s.id === ackedId ? null : s)), SENT_SHOWS_MS);
+    return () => window.clearTimeout(t);
+  }, [ackedId]);
+
   if (!isOpen) return null;
 
-  const handleSend = (note: string, type: 'chime' | 'heartbeat' = 'chime') => {
-    if (type === 'heartbeat') {
-      playHeartbeatSound();
-    }
-    triggerGlobalPulse(note);
-    setLastSentText(note);
-    setTimeout(() => {
-      setLastSentText(null);
-    }, 2400);
-  };
-
-  // A preview, felt and seen only here. It used to call triggerGlobalPulse,
-  // which sends a real heart - so testing it reached the other phone.
-  const handleTestOnDevice = () => {
-    previewGlobalPulse();
+  const handleSend = (note: string, kind: HeartKindId) => {
+    // Its own line below says when it has gone, so no "Sent to" toast too.
+    const id = triggerGlobalPulse(note, kind, { quiet: true });
+    setLastSent({ text: note, id, acked: false });
   };
 
   return (
@@ -146,7 +86,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
                 </h3>
               </div>
               <p className="text-xs text-linen-secondary mt-0.5">
-                Send {partnerName} a touch they can feel
+                Each one feels different on {partnerName}'s phone
               </p>
             </div>
           </div>
@@ -154,6 +94,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
             onClick={onClose}
             className="p-1.5 rounded-xl hover:bg-rose-100/60 text-linen-secondary hover:text-linen-primary transition-colors cursor-pointer"
             title="Close"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -167,15 +108,15 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
             </div>
             <div className="min-w-0 flex-1">
               <h4 className="text-xs font-semibold text-white truncate">
-                Instant Heart Touch
+                A heart in one tap
               </h4>
-              <p className="text-[11px] text-rose-100 truncate">
-                1-tap 528Hz Solfeggio chime & gentle vibration
+              <p className="text-[11px] leading-snug text-rose-100">
+                {PLAIN_HEART.feels}
               </p>
             </div>
           </div>
           <button
-            onClick={() => handleSend(`Thinking of you • Sent to ${partnerName}`)}
+            onClick={() => handleSend('Thinking of you', PLAIN_HEART.id)}
             className="px-3.5 py-1.5 rounded-xl bg-white text-rose-600 text-xs font-semibold hover:bg-rose-50 active:scale-95 transition-all shadow-xs cursor-pointer shrink-0 ml-3"
           >
             Send Touch
@@ -183,14 +124,25 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
         </div>
 
         {/* Confirmation Feedback */}
-        {lastSentText && (
-          <div className="px-4 py-2 bg-emerald-50 border-b border-emerald-200/80 text-emerald-800 text-xs flex items-center justify-between animate-fade-in shrink-0">
+        {lastSent && (
+          <div
+            role="status"
+            className={`px-4 py-2 border-b text-xs flex items-center justify-between animate-fade-in shrink-0 ${
+              lastSent.acked
+                ? 'bg-emerald-50 border-emerald-200/80 text-emerald-800'
+                : 'bg-linen-variant/60 border-linen-border text-linen-secondary'
+            }`}
+          >
             <div className="flex items-center space-x-2 truncate">
-              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="truncate font-medium">Sent: "{lastSentText}"</span>
+              {lastSent.acked ? (
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <Clock className="w-4 h-4 shrink-0" />
+              )}
+              <span className="truncate font-medium">"{lastSent.text}"</span>
             </div>
-            <span className="text-[10px] text-emerald-700 uppercase tracking-wider font-semibold ml-2 shrink-0">
-              Delivered Live ✨
+            <span className="text-[11px] font-semibold ml-2 shrink-0">
+              {lastSent.acked ? 'Sent' : online ? 'Sending…' : 'Waiting for a connection'}
             </span>
           </div>
         )}
@@ -205,7 +157,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
             }`}
           >
-            Heart Touches ({HEART_EXPRESSIONS.length})
+            Heart Touches ({HEART_KINDS.length})
           </button>
           <button
             onClick={() => setActiveTab('custom')}
@@ -217,51 +169,46 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
           >
             Custom Note
           </button>
-          <div className="flex-1" />
-          <button
-            onClick={handleTestOnDevice}
-            className="text-[11px] text-linen-accent hover:text-rose-600 inline-flex items-center space-x-1 cursor-pointer transition-colors"
-            title="Preview how the sound and vibration feel on your screen"
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Test on Device</span>
-          </button>
         </div>
 
         {/* Scrollable Body */}
         <div className="p-3 sm:p-4 overflow-y-auto space-y-2.5 flex-1 min-h-0 scrollbar-none">
           {activeTab === 'expressions' ? (
-            HEART_EXPRESSIONS.map((expr) => (
+            HEART_KINDS.map((kind) => (
               <div
-                key={expr.id}
-                onClick={() => handleSend(expr.note, expr.type)}
-                className="group p-3 sm:p-3.5 rounded-2xl border border-linen-border hover:border-rose-200 bg-linen-surface hover:bg-rose-50/40 transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-between gap-3"
+                key={kind.id}
+                className="p-3 sm:p-3.5 rounded-2xl border border-linen-border bg-linen-surface shadow-2xs flex items-center justify-between gap-3"
               >
                 <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200/80 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
-                    {expr.emoji}
+                  <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200/80 flex items-center justify-center text-lg shrink-0">
+                    {kind.emoji}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center space-x-2">
-                      <h4 className="text-xs sm:text-sm font-semibold text-linen-primary truncate">
-                        {expr.title}
-                      </h4>
-                      <span className="text-[10px] text-linen-accent font-medium px-1.5 py-0.2 rounded bg-linen-variant shrink-0">
-                        {expr.badge}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-linen-secondary truncate mt-0.5">
-                      {expr.description}
+                    <h4 className="text-xs sm:text-sm font-semibold text-linen-primary truncate">
+                      {kind.title}
+                    </h4>
+                    {/* In full, on two lines if need be: it is what tells them apart. */}
+                    <p className="text-[11px] leading-snug text-linen-secondary mt-0.5">
+                      {kind.feels}
                     </p>
                   </div>
                 </div>
 
-                <div className="shrink-0">
+                <div className="shrink-0 flex items-center gap-1.5">
+                  {/* How it arrives, on this phone only: nothing is sent. */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSend(expr.note, expr.type);
-                    }}
+                    type="button"
+                    onClick={() => previewGlobalPulse(kind.id)}
+                    aria-label={`Feel "${kind.title}" here`}
+                    title="Feel it here - nothing is sent"
+                    className="h-[30px] w-[30px] rounded-xl flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
+                  >
+                    <Smartphone className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSend(kind.note, kind.id)}
+                    aria-label={`Send "${kind.title}"`}
                     className="px-3 py-1.5 rounded-xl bg-linen-accent text-linen-surface hover:opacity-90 text-xs font-medium transition-all shadow-2xs cursor-pointer flex items-center space-x-1 active:scale-95"
                   >
                     <Heart className="w-3 h-3 fill-current" />
@@ -308,7 +255,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
               <button
                 onClick={() => {
                   const text = customNote.trim() || 'Thinking of you ❤️';
-                  handleSend(text, 'chime');
+                  handleSend(text, PLAIN_HEART.id);
                   setCustomNote('');
                 }}
                 className="w-full py-2.5 rounded-2xl bg-linen-accent text-linen-surface hover:opacity-90 text-xs font-semibold transition-all shadow-xs flex items-center justify-center space-x-2 cursor-pointer active:scale-98 mt-2"
