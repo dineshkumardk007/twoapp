@@ -7,6 +7,8 @@ import { haptic } from '../core/haptics';
 import { useBackLayer } from '../core/backStack';
 import { newId } from '../core/ids';
 import { PLAIN_HEART, SAME_MOMENT_BUZZ, heartKind, type HeartKind, type HeartKindId } from '../core/hearts';
+import { activeLocale, tr, useT } from '../core/i18n';
+import { clockTime } from '../core/when';
 
 interface SensoryPulseOverlayProps {
   activeUser: 'user' | 'partner';
@@ -87,10 +89,13 @@ function meaningfulNote(note: unknown, kind: HeartKind = PLAIN_HEART): string | 
   return trimmed && !PLAIN_NOTE.test(trimmed) && trimmed !== kind.note ? trimmed : undefined;
 }
 
-/** "at 9:41 pm", or "yesterday at 11:40 pm" for one from before midnight. */
-function sentWhen(at: number): string {
+/**
+ * "9:41 pm", and whether it was yesterday, for one from before midnight - said
+ * as "at 9:41 pm" or "yesterday at 11:40 pm" by the sentence it goes in.
+ */
+function sentWhen(at: number): { time: string; yesterday: boolean } {
   const then = new Date(at);
-  const time = then.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+  const time = activeLocale() === 'ta' ? clockTime(at) : then.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
   const now = new Date();
   const days = Math.round(
     (new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() -
@@ -99,7 +104,7 @@ function sentWhen(at: number): string {
   );
   // Nothing older than MISSED_WINDOW_MS gets here, so yesterday is as far back
   // as it goes; a day ahead is the other phone's clock, and reads as today.
-  return days === 1 ? `yesterday at ${time}` : `at ${time}`;
+  return { time, yesterday: days === 1 };
 }
 
 /**
@@ -136,7 +141,7 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
   const [toastLeaving, setToastLeaving] = useState(false);
 
   const nameRef = useRef('Partner');
-  nameRef.current = partnerName?.trim() || 'Partner';
+  nameRef.current = partnerName?.trim() || tr('Partner');
 
   const cardTimers = useRef<number[]>([]);
   const toastTimers = useRef<number[]>([]);
@@ -207,15 +212,25 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
     const name = nameRef.current;
     const when = sentWhen(newest);
     if (count === 1 && Date.now() - newest < JUST_NOW_MS) {
-      showCard({ title: `${name} ${kind.says}`, emoji: kind.emoji, note: meaningfulNote(note, kind), canReply: true });
+      showCard({ title: `${name} ${tr(kind.says)}`, emoji: kind.emoji, note: meaningfulNote(note, kind), canReply: true });
       return;
     }
     showCard({
       // One heart says what it was; several are simply thought of you.
-      title: count === 1 && kind !== PLAIN_HEART ? `${name} ${kind.says}` : `${name} thought of you`,
+      title: count === 1 && kind !== PLAIN_HEART ? `${name} ${tr(kind.says)}` : tr('{name} thought of you', { name }),
       emoji: count === 1 ? kind.emoji : undefined,
       note: count === 1 ? meaningfulNote(note, kind) : undefined,
-      meta: count > 1 ? `${count} times while you were away, last ${when}` : `While you were away, ${when}`,
+      meta:
+        count > 1
+          ? tr(
+              when.yesterday
+                ? '{n} times while you were away, last yesterday at {time}'
+                : '{n} times while you were away, last at {time}',
+              { n: count, time: when.time }
+            )
+          : tr(when.yesterday ? 'While you were away, yesterday at {time}' : 'While you were away, at {time}', {
+              time: when.time
+            }),
       canReply: true
     });
   }, [showCard]);
@@ -272,8 +287,8 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
       // sender used to get the same full card ("You sent a warm touch"), which
       // turned every heart into a pop-up for the one who already knew.
       // Quiet when the heart picker says itself whether it has gone.
-      if (sameMoment) showToast('You thought of each other at the same moment');
-      else if (!opts?.quiet) showToast(`Sent to ${nameRef.current}`);
+      if (sameMoment) showToast(tr('You thought of each other at the same moment'));
+      else if (!opts?.quiet) showToast(tr('Sent to {name}', { name: nameRef.current }));
       return id;
     },
     [activeUser, showToast]
@@ -339,12 +354,12 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
       showCard(
         sameMoment
           ? {
-              title: 'You thought of each other at the same moment',
-              meta: `${name} sent a heart just as you did`,
+              title: tr('You thought of each other at the same moment'),
+              meta: tr('{name} sent a heart just as you did', { name }),
               canReply: false
             }
           : {
-              title: reply ? `${name} sent one back` : `${name} ${kind.says}`,
+              title: reply ? tr('{name} sent one back', { name }) : `${name} ${tr(kind.says)}`,
               emoji: reply ? undefined : kind.emoji,
               note: meaningfulNote(parsed.note, kind),
               // An answer closes the loop; offering to answer it again would
@@ -385,9 +400,12 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
       const kind = heartKind(kindId);
       feelHeart(kind, false);
       showCard({
-        title: kind === PLAIN_HEART ? 'This is how a heart arrives' : `This is how "${kind.title}" arrives`,
+        title:
+          kind === PLAIN_HEART
+            ? tr('This is how a heart arrives')
+            : tr('This is how "{title}" arrives', { title: tr(kind.title) }),
         emoji: kind.emoji,
-        meta: 'Only on this phone - nothing was sent',
+        meta: tr('Only on this phone - nothing was sent'),
         canReply: false
       });
     };
@@ -482,7 +500,9 @@ const HeartCard: React.FC<{
   leaving: boolean;
   onReply: () => void;
   onClose: () => void;
-}> = ({ card, leaving, onReply, onClose }) => (
+}> = ({ card, leaving, onReply, onClose }) => {
+  const tr = useT();
+  return (
   <Bloom leaving={leaving}>
     {/* Tapping the card puts it away; it never blocks the screen behind it. */}
     <div
@@ -514,12 +534,13 @@ const HeartCard: React.FC<{
           className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-linen-primary px-4 py-2 text-sm font-medium text-linen-surface hover:opacity-90 active:scale-[.98] transition cursor-pointer"
         >
           <Heart className="w-4 h-4 fill-current" aria-hidden="true" />
-          Send one back
+          {tr('Send one back')}
         </button>
       )}
     </div>
   </Bloom>
-);
+  );
+};
 
 /**
  * Sends a heart of this kind (the plain one when none is said). Returns the id

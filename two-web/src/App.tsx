@@ -74,6 +74,7 @@ import { liveRadioHold } from './core/liveRadio';
 import {
   isRealName,
   isOwnDeviceName,
+  ownDeviceNames,
   rememberOwnDeviceName,
   CATCH_UP_TYPES,
   addOnce
@@ -128,7 +129,7 @@ import { CalculatorDecoy } from './components/CalculatorDecoy';
 import { SensoryPulseOverlay, triggerGlobalPulse } from './components/SensoryPulseOverlay';
 import { playMessageChime, playLetterChime, triggerHaptic } from './core/audioAlerts';
 import { InAppNotificationToast, InAppNotification } from './components/InAppNotificationToast';
-import { Locale } from './core/i18n';
+import { Locale, LocaleContext, activeLocale, chooseLocale, tr } from './core/i18n';
 import { Lock, Fingerprint } from 'lucide-react';
 import { CURATED_DILEMMAS } from './data/dilemmas';
 import { newId } from './core/ids';
@@ -190,6 +191,7 @@ import {
 } from './core/sendLater';
 import { STATUS_SET, applyStatus, cleanStatus, liveStatus, stampFor, statusWords } from './core/status';
 import { CAN_DATE_LETTERS, cleanLetter, openOnWords, opensNow } from './core/letters';
+import { cleanName, nameProblem, nameStampFor, readNameExchange, startedFromMine, takesOver } from './core/names';
 import { heartKind } from './core/hearts';
 import { aheadLabel } from './core/when';
 import { leaveBedside } from './core/bedside';
@@ -523,7 +525,15 @@ export const App: React.FC = () => {
       setShowTourCard(false);
     }
   }, [showTourCard, currentTab]);
-  const [locale, setLocale] = useState<Locale>('en');
+  // This phone's language, kept on it (core/i18n): English or Tamil.
+  const [locale, setLocale] = useState<Locale>(() => activeLocale());
+  const pickLocale = (next: Locale) => {
+    chooseLocale(next);
+    setLocale(next);
+  };
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
   // Bumped when pairing completes so the relay effect re-runs and joins the new space.
   const [spaceVersion, setSpaceVersion] = useState(0);
 
@@ -550,6 +560,16 @@ export const App: React.FC = () => {
   // changes and would otherwise compare against a name from before a rename.
   const userNameRef = useRef(state.userName);
   userNameRef.current = state.userName;
+  /**
+   * What this phone says its name is. Once changed in Settings, with when
+   * (core/names), and with the names you went by before, so your other
+   * devices know it for yours.
+   */
+  const nameExchange = (name: string, setAt: number | undefined) => ({
+    name,
+    role: state.activeUser,
+    ...(setAt ? { setAt, was: ownDeviceNames() } : {})
+  });
 
   /**
    * Set when another phone announces itself from this phone's own seat.
@@ -727,8 +747,10 @@ export const App: React.FC = () => {
     // the phone still in that seat took as a second clash.
     if (wsRelay.currentSeat() !== state.activeUser) return;
     if (relayStatus === 'connected' && state.userName && state.userName !== 'You') {
-      wsRelay.broadcastUpdate('NAME_EXCHANGE', { name: state.userName, role: state.activeUser });
+      // With when it was chosen, once it has been changed (core/names).
+      wsRelay.broadcastUpdate('NAME_EXCHANGE', nameExchange(state.userName, state.userNameSetAt));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relayStatus, state.userName, state.activeUser]);
 
   // The couple's dates go out again on every connection, as the name does. A
@@ -1023,9 +1045,41 @@ export const App: React.FC = () => {
           }
 
           if (record.type === 'NAME_EXCHANGE') {
+            const heard = readNameExchange(parsed);
             // Our own name, coming back from another of our devices or from a
             // restore, would otherwise be adopted as the partner's.
             if (record.authorId === state.activeUser) {
+              const own = (userNameRef.current || '').trim();
+              // Chosen in Settings on another device of ours, starting from a
+              // name of ours (core/names): ours now too if it is newer - and,
+              // newer or not, ours, never somebody else in our seat.
+              if (heard?.setAt !== undefined && startedFromMine(heard, own, isOwnDeviceName)) {
+                if (isRealName(heard.name) && takesOver(heard.setAt, latestRef.current.state.userNameSetAt)) {
+                  if (isRealName(own) && own.toLowerCase() !== heard.name.toLowerCase()) rememberOwnDeviceName(own);
+                  setState(prev =>
+                    takesOver(heard.setAt, prev.userNameSetAt)
+                      ? { ...prev, userName: heard.name, userNameSetAt: heard.setAt }
+                      : prev
+                  );
+                  const ownSession = loadSpaceSession();
+                  if (ownSession) saveSpaceSession({ ...ownSession, userName: heard.name });
+                }
+                return;
+              }
+              // Our name from before the change made here, from a device of
+              // ours that has not heard of it: the relay never replays a
+              // seat's own records to it, so it is told again, and follows.
+              const ownAt = latestRef.current.state.userNameSetAt;
+              if (
+                heard &&
+                ownAt !== undefined &&
+                !msg.restoring &&
+                heard.name.toLowerCase() !== own.toLowerCase() &&
+                isOwnDeviceName(heard.name)
+              ) {
+                wsRelay.broadcastUpdate('NAME_EXCHANGE', nameExchange(own, ownAt));
+                return;
+              }
               // ...unless it is not our name. Another phone announcing a
               // different name from this phone's seat is the partner, set up
               // on the same side - which breaks catching up, calls and
@@ -1053,28 +1107,40 @@ export const App: React.FC = () => {
                 clashNameRef.current = announced;
                 if (!clashAnnouncedRef.current) {
                   clashAnnouncedRef.current = true;
-                  wsRelay.broadcastUpdate('NAME_EXCHANGE', { name: mine, role: state.activeUser });
+                  wsRelay.broadcastUpdate('NAME_EXCHANGE', nameExchange(mine, latestRef.current.state.userNameSetAt));
                 }
               }
               return;
             }
-            if (parsed.name && typeof parsed.name === 'string') {
+            if (heard) {
               // The phone we were asking about, now heard from the other seat:
               // it has moved, and there is nothing left to ask.
-              const heard = parsed.name.trim().toLowerCase();
-              setRoleClash(prev => (prev && prev.name.trim().toLowerCase() === heard ? null : prev));
-              if (clashNameRef.current && clashNameRef.current.trim().toLowerCase() === heard) {
+              const heardName = heard.name.toLowerCase();
+              setRoleClash(prev => (prev && prev.name.trim().toLowerCase() === heardName ? null : prev));
+              if (clashNameRef.current && clashNameRef.current.trim().toLowerCase() === heardName) {
                 clashNameRef.current = null;
                 clashAnnouncedRef.current = false;
                 wsRelay.catchUpAfterClash();
               }
-              setState(prev => ({
-                ...prev,
-                partnerName: parsed.name
-              }));
+              // The newest name they chose (core/names): not an older one from
+              // a device of theirs that has not heard of the change yet. And a
+              // changed one only if it started from the name we know them by -
+              // from somebody else's phone sitting in their seat it counts for
+              // no more than a name never changed.
+              const known = (latestRef.current.state.partnerName || '').trim();
+              const chosenAt =
+                heard.setAt !== undefined && (!isRealName(known) || startedFromMine(heard, known, () => false))
+                  ? heard.setAt
+                  : undefined;
+              if (!takesOver(chosenAt, latestRef.current.state.partnerNameSetAt)) return;
+              setState(prev =>
+                takesOver(chosenAt, prev.partnerNameSetAt)
+                  ? { ...prev, partnerName: heard.name, partnerNameSetAt: chosenAt ?? prev.partnerNameSetAt }
+                  : prev
+              );
               const currentSession = loadSpaceSession();
               if (currentSession) {
-                saveSpaceSession({ ...currentSession, partnerName: parsed.name });
+                saveSpaceSession({ ...currentSession, partnerName: heard.name });
               }
             }
           } else if (record.type === 'CHAT') {
@@ -4186,6 +4252,24 @@ export const App: React.FC = () => {
   };
 
   /**
+   * Your own name, changed in Settings (core/names). It goes to your partner,
+   * and to your other devices, with the NAME_EXCHANGE announced on every
+   * change of name - stamped, so an older one heard later does not undo it.
+   */
+  const handleChangeName = (raw: string) => {
+    const name = cleanName(raw);
+    if (nameProblem(name) || name === state.userName) return;
+    const old = (state.userName || '').trim();
+    // Still you: another device of yours saying it, before it hears of the
+    // change, is not somebody else in your seat.
+    if (isRealName(old)) rememberOwnDeviceName(old);
+    const setAt = nameStampFor(state.userNameSetAt);
+    setState(prev => ({ ...prev, userName: name, userNameSetAt: setAt }));
+    const currentSession = loadSpaceSession();
+    if (currentSession) saveSpaceSession({ ...currentSession, userName: name });
+  };
+
+  /**
    * Sets, changes, or removes the app-lock PIN after onboarding.
    *
    * The PIN was previously offered once, on the screen that creates a space -
@@ -4628,6 +4712,7 @@ export const App: React.FC = () => {
       .filter(([, at]) => Date.now() - at < TYPING_TTL_MS)
       .map(([id]) => id);
     return (
+      <LocaleContext.Provider value={locale}>
       <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
         <main className={`mx-auto px-4 py-4 sm:px-6 ${isTablet ? 'max-w-5xl' : 'max-w-3xl'}`}>
           <Suspense fallback={<ScreenFallback />}>
@@ -4701,10 +4786,12 @@ export const App: React.FC = () => {
 
         <SensoryPulseOverlay activeUser={state.activeUser} partnerName={state.partnerName} />
       </div>
+      </LocaleContext.Provider>
     );
   }
 
   return (
+    <LocaleContext.Provider value={locale}>
     <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
       <div ref={headerRef}>
       <Navigation
@@ -4828,7 +4915,8 @@ export const App: React.FC = () => {
             onStartCall={() => void callEngineRef.current?.start()}
             callInProgress={callState.phase !== 'idle'}
             onOpenSoftLanding={() => setCurrentTab('softlanding')}
-            partnerName={state.partnerName || 'Partner'}
+            // Until their name arrives, the stand-in in this phone's language (shown, never sent).
+            partnerName={state.partnerName && state.partnerName !== 'Partner' ? state.partnerName : tr('Partner')}
             partnerReadAt={state.partnerReadAt}
             partnerStatus={state.statuses?.[state.activeUser === 'user' ? 'partner' : 'user']}
             // Only once their phone has said it can hold a message back:
@@ -5174,13 +5262,14 @@ export const App: React.FC = () => {
             onEmergencyWipe={handleEmergencyExit}
             onRestoreState={(restored) => setState(restored)}
             currentLocale={locale}
-            onSelectLocale={setLocale}
+            onSelectLocale={pickLocale}
             onToggleCamouflage={() => setIsCamouflaged(true)}
             onUnpair={handleUnpair}
             onRotateCode={handleRotateCode}
             connectedDeviceCount={occupancy.total}
             vaultName={state.vaultName}
             onRenameVault={handleRenameVault}
+            onChangeName={handleChangeName}
             partnerOnline={partnerOnline}
             relayStatus={relayStatus}
             lastSyncedAt={lastSyncedAt}
@@ -5309,5 +5398,6 @@ export const App: React.FC = () => {
       {/* A heart from the partner, and the small "Sent" line for your own. */}
       <SensoryPulseOverlay activeUser={state.activeUser} partnerName={state.partnerName} />
     </div>
+    </LocaleContext.Provider>
   );
 };

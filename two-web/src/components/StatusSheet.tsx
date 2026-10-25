@@ -11,6 +11,7 @@ import {
   type StatusNote
 } from '../core/status';
 import { clockTime } from '../core/when';
+import { trMeaning, useT } from '../core/i18n';
 
 interface StatusSheetProps {
   partnerName: string;
@@ -27,6 +28,7 @@ interface StatusSheetProps {
  * a tap above the sheet closes it.
  */
 export const StatusSheet: React.FC<StatusSheetProps> = ({ partnerName, current, onSet, onClear, onClose }) => {
+  const tr = useT();
   useBackLayer(true, onClose);
   const [lasts, setLasts] = useState<StatusLasts>('three');
   const [own, setOwn] = useState('');
@@ -53,10 +55,10 @@ export const StatusSheet: React.FC<StatusSheetProps> = ({ partnerName, current, 
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 id="status-sheet-title" className="font-serif text-xl font-semibold text-linen-primary">
-              Your status
+              {tr('Your status')}
             </h3>
             <p className="mt-0.5 text-xs leading-relaxed text-linen-secondary">
-              {partnerName} sees it under your name in the chat and on Home. It goes by itself.
+              {tr('{name} sees it under your name in the chat and on Home. It goes by itself.', { name: partnerName })}
             </p>
           </div>
           <button
@@ -64,7 +66,7 @@ export const StatusSheet: React.FC<StatusSheetProps> = ({ partnerName, current, 
             onClick={onClose}
             className="shrink-0 rounded-xl bg-linen-primary px-3.5 py-2 text-[13px] font-semibold text-linen-surface hover:opacity-90 transition-opacity"
           >
-            Done
+            {tr('Done')}
           </button>
         </div>
 
@@ -72,7 +74,7 @@ export const StatusSheet: React.FC<StatusSheetProps> = ({ partnerName, current, 
           <div className="mt-3 flex items-center gap-3 rounded-2xl bg-linen-variant/60 px-3.5 py-2.5">
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium text-linen-primary">{statusWords(current)}</span>
-              <span className="block text-[11px] text-linen-secondary">Until {clockTime(current.clearsAt)}</span>
+              <span className="block text-[11px] text-linen-secondary">{tr('Until {time}', { time: clockTime(current.clearsAt) })}</span>
             </span>
             <button
               type="button"
@@ -82,12 +84,12 @@ export const StatusSheet: React.FC<StatusSheetProps> = ({ partnerName, current, 
               }}
               className="shrink-0 rounded-lg border border-linen-border bg-linen-surface px-3 py-1.5 text-xs font-semibold text-linen-primary hover:bg-linen-variant transition-colors"
             >
-              Clear
+              {trMeaning('Clear', 'status')}
             </button>
           </div>
         )}
 
-        <div role="radiogroup" aria-label="How long it lasts" className="mt-3.5 flex gap-1 rounded-xl bg-linen-variant p-1">
+        <div role="radiogroup" aria-label={tr('How long it lasts')} className="mt-3.5 flex gap-1 rounded-xl bg-linen-variant p-1">
           {STATUS_LASTS.map(l => (
             <button
               key={l.key}
@@ -99,7 +101,7 @@ export const StatusSheet: React.FC<StatusSheetProps> = ({ partnerName, current, 
                 lasts === l.key ? 'bg-linen-surface text-linen-primary shadow-xs' : 'text-linen-secondary hover:text-linen-primary'
               }`}
             >
-              {l.label}
+              {tr(l.label)}
             </button>
           ))}
         </div>
@@ -115,7 +117,7 @@ export const StatusSheet: React.FC<StatusSheetProps> = ({ partnerName, current, 
               <span aria-hidden="true" className="text-base leading-none">
                 {p.emoji}
               </span>
-              <span className="min-w-0 truncate">{p.text}</span>
+              <span className="min-w-0 truncate">{tr(p.text)}</span>
             </button>
           ))}
         </div>
@@ -131,8 +133,8 @@ export const StatusSheet: React.FC<StatusSheetProps> = ({ partnerName, current, 
             value={own}
             onChange={e => setOwn(e.target.value)}
             maxLength={MAX_STATUS_CHARS}
-            placeholder="Or a few words of your own"
-            aria-label="Your own status"
+            placeholder={tr('Or a few words of your own')}
+            aria-label={tr('Your own status')}
             enterKeyHint="done"
             className="min-w-0 flex-1 rounded-xl border border-linen-border bg-linen-variant/30 px-3.5 py-2.5 text-sm text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary"
           />
@@ -141,7 +143,7 @@ export const StatusSheet: React.FC<StatusSheetProps> = ({ partnerName, current, 
             disabled={!ownText}
             className="shrink-0 rounded-xl bg-linen-primary px-3.5 py-2.5 text-[13px] font-semibold text-linen-surface hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
-            Set
+            {tr('Set')}
           </button>
         </form>
       </div>

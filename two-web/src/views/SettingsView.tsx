@@ -4,12 +4,13 @@ import { AUTO_LOCK_CHOICES, AutoLockSetting } from '../core/autoLock';
 import { generatePairingCode, isPlausiblePairingCode, extractPairingCode, findTwoCode, generateJoinPhrase, checkJoinPhrase, getDeviceId } from '../core/space';
 import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
-import { Locale, getTranslation } from '../core/i18n';
+import { Locale, OFFERED_LOCALES, getTranslation } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
 import { Shield, Download, Trash2, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw, Moon, Sun, Smartphone, Fingerprint, Heart } from 'lucide-react';
 import { APPEARANCE_CHOICES, Appearance, readAppearance, writeAppearance } from '../core/appearance';
 import { whenLabel } from '../core/when';
 import { isAndroidApp } from '../core/platform';
+import { MAX_NAME_CHARS, cleanName, nameProblem } from '../core/names';
 import { saveFile } from '../core/saveFile';
 import { copyTextOrThrow } from '../core/clipboard';
 import { FingerprintStatus, fingerprintStatus, enableFingerprint, disableFingerprint } from '../core/fingerprint';
@@ -53,6 +54,8 @@ interface SettingsViewProps {
   onRotateCode?: (code: string, joinPhrase?: string) => void;
   /** Display name used when inviting a partner. */
   userName?: string;
+  /** Your own name, changed here: on your partner's phone too (core/names). */
+  onChangeName?: (name: string) => void;
   vaultName?: string;
   onRenameVault?: (name: string) => void;
   /** True only when the partner's device is in the space right now. */
@@ -109,10 +112,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onEmergencyWipe,
   onRestoreState = () => {},
   currentLocale = 'en',
+  onSelectLocale,
   onToggleCamouflage = () => {},
   onUnpair = () => {},
   onRotateCode = () => {},
   userName = '',
+  onChangeName,
   vaultName = '',
   onRenameVault,
   partnerOnline = false,
@@ -148,6 +153,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [decoySaved, setDecoySaved] = useState(false);
   const [nameDraft, setNameDraft] = useState(vaultName);
   const [nameSaved, setNameSaved] = useState(false);
+  const [myNameDraft, setMyNameDraft] = useState(userName);
+  const [myNameSaved, setMyNameSaved] = useState(false);
+  // Changed on another device of yours meanwhile: shown as it now is.
+  useEffect(() => setMyNameDraft(userName), [userName]);
+  const myNameWrong = myNameDraft.trim() ? nameProblem(myNameDraft) : null;
+  const myNameSame = cleanName(myNameDraft) === userName;
 
   const thisDeviceId = getDeviceId();
   const knownDevices = state.knownDevices || [];
@@ -367,6 +378,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setTimeout(() => setNameSaved(false), 2000);
   };
 
+  const handleChangeMyName = () => {
+    if (!onChangeName || nameProblem(myNameDraft) || myNameSame) return;
+    onChangeName(myNameDraft);
+    setMyNameSaved(true);
+    setTimeout(() => setMyNameSaved(false), 2000);
+  };
+
   const relayLabel =
     relayStatus === 'connected' ? 'Connected to the relay' :
     relayStatus === 'connecting' ? 'Connecting…' :
@@ -484,6 +502,42 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           Just this phone. Your partner's phone keeps the look they chose.
         </p>
       </div>
+
+      {/* The language Two speaks on this phone. Each choice is named in itself. */}
+      {onSelectLocale && (
+        <div className="p-5 rounded-2xl border border-linen-border bg-linen-surface shadow-xs space-y-3">
+          <div className="flex items-center space-x-2 text-sm font-medium text-linen-primary">
+            <Globe className="w-4 h-4 text-linen-accent" />
+            <span>Language · மொழி</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Language">
+            {OFFERED_LOCALES.map(choice => {
+              const on = currentLocale === choice.id;
+              return (
+                <button
+                  key={choice.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  lang={choice.id}
+                  onClick={() => onSelectLocale(choice.id)}
+                  className={`rounded-xl border px-2 py-3 text-center text-sm font-semibold transition-all cursor-pointer ${
+                    on
+                      ? 'border-transparent bg-linen-primary text-linen-surface shadow-glow'
+                      : 'border-linen-border bg-linen-variant/40 text-linen-primary hover:bg-linen-variant'
+                  }`}
+                >
+                  {choice.name}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-linen-secondary leading-relaxed">
+            Just this phone. In Tamil so far: the menu, Home and the chat; the rest is still in English.
+            Your messages go as you write them.
+          </p>
+        </div>
+      )}
 
       {/* "It's not about you", for a hard day that is not the other's doing.
           Switched on here; while it is on, Home says so on both phones. */}
@@ -611,6 +665,49 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </div>
           )}
+
+          {/* Your own name, as your partner sees it. */}
+          <div className="pb-2 border-b border-linen-border/40 space-y-2.5">
+            <label
+              htmlFor="settings-your-name"
+              className="block text-[10px] uppercase tracking-wider font-semibold text-linen-accent"
+            >
+              Your name
+            </label>
+            <div className="flex items-center space-x-1.5">
+              <input
+                id="settings-your-name"
+                type="text"
+                value={myNameDraft}
+                onChange={(e) => setMyNameDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleChangeMyName();
+                }}
+                placeholder="Your name or nickname…"
+                maxLength={MAX_NAME_CHARS}
+                autoComplete="off"
+                className="flex-1 px-3 py-2 rounded-lg border border-linen-border bg-linen-surface text-sm text-linen-primary"
+              />
+              <button
+                type="button"
+                disabled={!onChangeName || !!nameProblem(myNameDraft) || myNameSame}
+                onClick={handleChangeMyName}
+                className="px-2.5 py-2 rounded-lg bg-linen-primary text-linen-surface text-[11px] font-medium hover:opacity-90 disabled:opacity-40 transition-opacity cursor-pointer"
+              >
+                {myNameSaved ? 'Saved' : 'Change'}
+              </button>
+            </div>
+            {myNameWrong && (
+              <p role="alert" className="text-[11px] text-rose-700">
+                {myNameWrong}
+              </p>
+            )}
+            <p className="text-[11px] text-linen-secondary leading-relaxed">
+              What {state.partnerName && state.partnerName !== 'Partner' ? state.partnerName : 'your partner'} sees
+              you as, in the chat, on Home and on your letters. It changes on their phone as soon as both of you
+              are online.
+            </p>
+          </div>
 
           {/* Who you are connected to, and whether they are here right now. */}
           <div className="pb-2 border-b border-linen-border/40 space-y-2.5">

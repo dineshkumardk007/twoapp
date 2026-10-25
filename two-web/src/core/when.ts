@@ -10,6 +10,8 @@
 // real date is genuinely not known any more. Everything new carries the
 // moment it happened and is described from it, however long ago that gets.
 
+import { activeLocale, dateLocale, tr } from './i18n';
+
 /** Rounded down, so "yesterday" means yesterday's date, not 24 hours ago. */
 function daysBetween(then: Date, now: Date): number {
   const a = new Date(then.getFullYear(), then.getMonth(), then.getDate()).getTime();
@@ -31,15 +33,15 @@ export function whenLabel(at?: number, fallback = ''): string {
   const minutes = Math.floor((now.getTime() - at) / 60_000);
 
   // A moment in the future is a clock disagreeing, not a prediction.
-  if (minutes < 1) return 'Just now';
+  if (minutes < 1) return tr('Just now');
 
   const days = daysBetween(then, now);
-  if (days <= 0) return minutes < 60 ? `${minutes} min ago` : 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days} days ago`;
+  if (days <= 0) return minutes < 60 ? tr('{n} min ago', { n: minutes }) : tr('Today');
+  if (days === 1) return tr('Yesterday');
+  if (days < 7) return tr('{n} days ago', { n: days });
 
   const sameYear = then.getFullYear() === now.getFullYear();
-  return then.toLocaleDateString(undefined, {
+  return then.toLocaleDateString(dateLocale(), {
     day: 'numeric',
     month: sameYear ? 'long' : 'short',
     year: sameYear ? undefined : 'numeric'
@@ -50,19 +52,37 @@ export function whenLabel(at?: number, fallback = ''): string {
 export function whenLabelWithTime(at?: number, fallback = ''): string {
   if (!at || !Number.isFinite(at)) return fallback;
   const label = whenLabel(at, fallback);
-  if (label === 'Just now' || label.endsWith('min ago')) return label;
-  const time = new Date(at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  // "Just now" and "12 min ago" say it already.
+  const now = new Date();
+  if (now.getTime() - at < 60 * 60_000 && daysBetween(new Date(at), now) <= 0) return label;
+  const time = activeLocale() === 'ta' ? clockTime(at) : new Date(at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   return `${label}, ${time}`;
 }
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-/** "7:00 am", "10:30 pm" - a time of day on this phone's clock, the way the chat writes it. */
+/**
+ * The part of the day a Tamil time is said with: காலை (morning), மதியம்
+ * (afternoon), மாலை (evening), இரவு (night).
+ */
+function tamilPartOfDay(h: number): string {
+  if (h >= 4 && h < 12) return 'காலை';
+  if (h >= 12 && h < 16) return 'மதியம்';
+  if (h >= 16 && h < 19) return 'மாலை';
+  return 'இரவு';
+}
+
+/**
+ * "7:00 am", "10:30 pm" - a time of day on this phone's clock, the way the chat
+ * writes it. In Tamil, "காலை 7:00", "இரவு 10:30".
+ */
 export function clockTime(at: number): string {
   const d = new Date(at);
   const h = d.getHours();
-  return `${h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+  const hm = `${h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (activeLocale() === 'ta') return `${tamilPartOfDay(h)} ${hm}`;
+  return `${hm} ${h < 12 ? 'am' : 'pm'}`;
 }
 
 /**
@@ -73,7 +93,11 @@ export function aheadLabel(at: number, now: number = Date.now()): string {
   const then = new Date(at);
   const days = -daysBetween(then, new Date(now));
   const time = clockTime(at);
-  if (days <= 0) return `today at ${time}`;
-  if (days === 1) return `tomorrow at ${time}`;
-  return `on ${DAY_NAMES[then.getDay()]} ${then.getDate()} ${MONTH_NAMES[then.getMonth()]} at ${time}`;
+  if (days <= 0) return tr('today at {time}', { time });
+  if (days === 1) return tr('tomorrow at {time}', { time });
+  const date =
+    activeLocale() === 'ta'
+      ? then.toLocaleDateString('ta-IN', { weekday: 'short', day: 'numeric', month: 'short' })
+      : `${DAY_NAMES[then.getDay()]} ${then.getDate()} ${MONTH_NAMES[then.getMonth()]}`;
+  return tr('on {date} at {time}', { date, time });
 }

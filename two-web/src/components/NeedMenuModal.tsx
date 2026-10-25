@@ -2,6 +2,7 @@ import React from 'react';
 import { NeedItem } from '../types';
 import { Ear, Wrench, Heart, Hourglass, Smile, Sparkles, X } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
+import { useT } from '../core/i18n';
 
 interface NeedMenuModalProps {
   isOpen: boolean;
@@ -49,6 +50,7 @@ export const NEED_OPTIONS: NeedItem[] = [
 ];
 
 export const NeedMenuModal: React.FC<NeedMenuModalProps> = ({ isOpen, onClose, onSelectNeed }) => {
+  const tr = useT();
   // The phone's Back button closes this, the same as its X.
   useBackLayer(isOpen, onClose);
 
@@ -58,20 +60,21 @@ export const NeedMenuModal: React.FC<NeedMenuModalProps> = ({ isOpen, onClose, o
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="bg-linen-surface border border-linen-border rounded-3xl max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-serif text-xl font-medium text-linen-primary">Ask For What You Need</h3>
+          <h3 className="font-serif text-xl font-medium text-linen-primary">{tr('Ask For What You Need')}</h3>
           <button onClick={onClose} className="p-1 rounded-lg text-linen-secondary hover:bg-linen-variant">
             <X className="w-5 h-5" />
           </button>
         </div>
         <p className="text-sm text-linen-secondary mb-6">
-          Skip the guesswork and avoid misaligned support. Choose a concrete request to send to your partner:
+          {tr('Skip the guesswork and avoid misaligned support. Choose a concrete request to send to your partner:')}
         </p>
 
         <div className="space-y-3">
           {NEED_OPTIONS.map(item => (
             <button
               key={item.id}
-              onClick={() => onSelectNeed(item)}
+              // The card goes in the words it was read in: they are part of what you send.
+              onClick={() => onSelectNeed({ ...item, title: tr(item.title), description: tr(item.description) })}
               className="w-full text-left p-4 rounded-2xl border border-linen-border bg-linen-variant/40 hover:bg-linen-variant hover:border-linen-accent/40 transition-all flex items-start space-x-3.5 group"
             >
               <div className="p-2 rounded-xl bg-linen-surface text-linen-accent group-hover:scale-105 transition-transform shadow-xs">
@@ -84,9 +87,9 @@ export const NeedMenuModal: React.FC<NeedMenuModalProps> = ({ isOpen, onClose, o
               </div>
               <div>
                 <h4 className="font-medium text-sm text-linen-primary group-hover:text-linen-accent transition-colors">
-                  {item.title}
+                  {tr(item.title)}
                 </h4>
-                <p className="text-xs text-linen-secondary mt-0.5 leading-relaxed">{item.description}</p>
+                <p className="text-xs text-linen-secondary mt-0.5 leading-relaxed">{tr(item.description)}</p>
               </div>
             </button>
           ))}

@@ -5,6 +5,9 @@
 // encrypted beat while it is open, so the other side can say "last seen today
 // at 14:20" instead of falling silent the moment the socket drops.
 
+import { activeLocale, dateLocale, tr } from './i18n';
+import { clockTime } from './when';
+
 const SHARE_KEY = 'two_share_last_seen_v1';
 
 /** The record type both ends and the relay agree on. */
@@ -53,23 +56,23 @@ export function formatLastSeen(at: number, now = Date.now()): string {
   if (!at || at > now + 60_000) return '';
 
   const then = new Date(at);
-  const time = then.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const time = activeLocale() === 'ta' ? clockTime(at) : then.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
   const startOfToday = new Date(now);
   startOfToday.setHours(0, 0, 0, 0);
   const startOfYesterday = new Date(startOfToday.getTime() - 86_400_000);
 
-  if (at >= startOfToday.getTime()) return `last seen today at ${time}`;
-  if (at >= startOfYesterday.getTime()) return `last seen yesterday at ${time}`;
+  if (at >= startOfToday.getTime()) return tr('last seen today at {time}', { time });
+  if (at >= startOfYesterday.getTime()) return tr('last seen yesterday at {time}', { time });
 
   // Inside the last week, the weekday is the more useful handle.
   if (now - at < 7 * 86_400_000) {
-    const weekday = then.toLocaleDateString(undefined, { weekday: 'long' });
-    return `last seen ${weekday} at ${time}`;
+    const weekday = then.toLocaleDateString(dateLocale(), { weekday: 'long' });
+    return tr('last seen {day} at {time}', { day: weekday, time });
   }
 
-  const date = then.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-  return `last seen ${date} at ${time}`;
+  const date = then.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' });
+  return tr('last seen {day} at {time}', { day: date, time });
 }
 
 // --- Read receipts and typing ------------------------------------------------

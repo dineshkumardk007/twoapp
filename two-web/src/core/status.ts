@@ -9,6 +9,7 @@
 // that sets it; each phone stops showing it once its own clock passes that.
 
 import { isReactionEmoji } from './chatActions';
+import { tr } from './i18n';
 
 export const STATUS_SET = 'STATUS_SET';
 
@@ -129,5 +130,8 @@ export function liveStatus(s: StatusNote | undefined, now: number = Date.now()):
 
 /** "🏠 Reached home". */
 export function statusWords(s: StatusNote): string {
-  return s.emoji ? `${s.emoji} ${s.text}` : s.text;
+  // One of the presets travels in English and is shown in this phone's
+  // language; words of your own stay as written.
+  const text = tr(s.text);
+  return s.emoji ? `${s.emoji} ${text}` : text;
 }

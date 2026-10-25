@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Image as ImageIcon, Mic, X, MessageSquare } from 'lucide-react';
 import { ChatMessage } from '../types';
 import { useBackLayer } from '../core/backStack';
+import { activeLocale, dateLocale, tr as trNow, useT } from '../core/i18n';
+import { clockTime } from '../core/when';
 import { who } from '../core/who';
 import { VoiceNotePlayer } from './VoiceNotePlayer';
 
@@ -15,9 +17,28 @@ export function isGalleryVoice(m: ChatMessage): boolean {
   return !!m.isVoiceMemo && !!m.audioDataUrl && !m.unsent;
 }
 
-const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' });
-const DAY = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-const TIME = new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit' });
+type Formats = { MONTH: Intl.DateTimeFormat; DAY: Intl.DateTimeFormat; TIME: Intl.DateTimeFormat };
+const FORMATS = new Map<string, Formats>();
+
+/** Months, days and times in this phone's language (en-IN in English); made once for each. */
+function formats(): Formats {
+  const locale = dateLocale() ?? 'en-IN';
+  let made = FORMATS.get(locale);
+  if (!made) {
+    made = {
+      MONTH: new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }),
+      DAY: new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
+      TIME: new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' })
+    };
+    FORMATS.set(locale, made);
+  }
+  return made;
+}
+
+/** who(), with "You" and "Partner" in this phone's language; a name stays as it is. */
+function whoShown(name: string): string {
+  return name === 'You' || name === 'Partner' ? trNow(name) : name;
+}
 
 /** Drawn this many at a time, so a year of photos does not all decode at once. */
 const PAGE = 60;
@@ -26,7 +47,7 @@ const PAGE = 60;
 function grouped(list: ChatMessage[], label: (at: number) => string): { title: string; items: ChatMessage[] }[] {
   const groups: { title: string; items: ChatMessage[] }[] = [];
   for (const m of list) {
-    const title = m.sentAt ? label(m.sentAt) : 'Earlier';
+    const title = m.sentAt ? label(m.sentAt) : trNow('Earlier');
     const last = groups[groups.length - 1];
     if (last && last.title === title) last.items.push(m);
     else groups.push({ title, items: [m] });
@@ -62,7 +83,9 @@ export const ChatMediaSheet: React.FC<ChatMediaSheetProps> = ({
   onShowInChat,
   onVoiceHeard
 }) => {
+  const tr = useT();
   useBackLayer(true, onClose);
+  const { MONTH, DAY, TIME } = formats();
   const [tab, setTab] = useState<'photos' | 'voice'>('photos');
   const [shown, setShown] = useState(PAGE);
 
@@ -73,7 +96,7 @@ export const ChatMediaSheet: React.FC<ChatMediaSheetProps> = ({
   const groups = useMemo(
     () => grouped(visible, at => (tab === 'photos' ? MONTH.format(at) : DAY.format(at))),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [visible.length, tab, list]
+    [visible.length, tab, list, MONTH]
   );
 
   const switchTo = (next: 'photos' | 'voice') => {
@@ -85,26 +108,26 @@ export const ChatMediaSheet: React.FC<ChatMediaSheetProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Photos and voice notes"
+      aria-label={tr('Photos and voice notes')}
       className="fixed inset-0 z-[75] flex flex-col bg-linen-surface surface-solid"
     >
       <div className="flex items-center gap-2 border-b border-linen-border px-3 pb-2 pt-[max(env(safe-area-inset-top),10px)]">
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close photos and voice notes"
+          aria-label={tr('Close photos and voice notes')}
           className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-linen-primary hover:bg-linen-variant"
         >
           <X className="h-5 w-5" />
         </button>
-        <h2 className="min-w-0 flex-1 truncate font-serif text-lg text-linen-primary">Photos &amp; voice notes</h2>
+        <h2 className="min-w-0 flex-1 truncate font-serif text-lg text-linen-primary">{tr('Photos & voice notes')}</h2>
       </div>
 
       <div role="tablist" className="flex gap-2 px-3 py-2">
         {(
           [
-            ['photos', `Photos · ${photos.length}`, ImageIcon],
-            ['voice', `Voice notes · ${voices.length}`, Mic]
+            ['photos', tr('Photos · {n}', { n: photos.length }), ImageIcon],
+            ['voice', tr('Voice notes · {n}', { n: voices.length }), Mic]
           ] as const
         ).map(([id, label, Icon]) => (
           <button
@@ -129,8 +152,8 @@ export const ChatMediaSheet: React.FC<ChatMediaSheetProps> = ({
         {list.length === 0 && (
           <p className="px-4 py-16 text-center text-sm text-linen-secondary">
             {tab === 'photos'
-              ? 'Photos you send each other in the chat will be here.'
-              : 'Voice notes you send each other in the chat will be here.'}
+              ? tr('Photos you send each other in the chat will be here.')
+              : tr('Voice notes you send each other in the chat will be here.')}
           </p>
         )}
 
@@ -146,7 +169,11 @@ export const ChatMediaSheet: React.FC<ChatMediaSheetProps> = ({
                     key={m.id}
                     type="button"
                     onClick={() => onOpenPhoto(m.id)}
-                    aria-label={`Photo from ${who(m.authorId, activeUser, partnerName)}${m.sentAt ? `, ${DAY.format(m.sentAt)}` : ''}`}
+                    aria-label={
+                      m.sentAt
+                        ? tr('Photo from {name}, {day}', { name: whoShown(who(m.authorId, activeUser, partnerName)), day: DAY.format(m.sentAt) })
+                        : tr('Photo from {name}', { name: whoShown(who(m.authorId, activeUser, partnerName)) })
+                    }
                     className="aspect-square overflow-hidden rounded-lg bg-linen-variant"
                   >
                     <img
@@ -167,15 +194,18 @@ export const ChatMediaSheet: React.FC<ChatMediaSheetProps> = ({
                   return (
                     <li key={m.id} className="rounded-2xl border border-linen-border bg-linen-surface p-3">
                       <div className="mb-2 flex items-center gap-2 text-xs text-linen-secondary">
-                        <span className="font-medium text-linen-primary">{who(m.authorId, activeUser, partnerName)}</span>
-                        {m.sentAt && <span className="tabular-nums">{TIME.format(m.sentAt)}</span>}
+                        <span className="font-medium text-linen-primary">{whoShown(who(m.authorId, activeUser, partnerName))}</span>
+                        {m.sentAt && (
+                          // Intl's Tamil still says PM in English letters: the chat's own clock words instead.
+                          <span className="tabular-nums">{activeLocale() === 'ta' ? clockTime(m.sentAt) : TIME.format(m.sentAt)}</span>
+                        )}
                         <button
                           type="button"
                           onClick={() => onShowInChat(m.id)}
                           className="ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-linen-accent hover:bg-linen-variant"
                         >
                           <MessageSquare className="h-3.5 w-3.5" />
-                          Show in chat
+                          {tr('Show in chat')}
                         </button>
                       </div>
                       <VoiceNotePlayer
@@ -203,7 +233,7 @@ export const ChatMediaSheet: React.FC<ChatMediaSheetProps> = ({
               onClick={() => setShown(n => n + PAGE)}
               className="rounded-full border border-linen-border px-4 py-2 text-xs font-medium text-linen-primary hover:bg-linen-variant"
             >
-              Show older
+              {tr('Show older')}
             </button>
           </div>
         )}

@@ -6,7 +6,7 @@ import { CoRegulationModal } from './CoRegulationModal';
 import { SanctuaryToolsModal } from './SanctuaryToolsModal';
 import { HeartOptionsModal } from './HeartOptionsModal';
 import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Palette, LayoutGrid } from 'lucide-react';
-import { Locale, getTranslation } from '../core/i18n';
+import { Locale, getTranslation, useT } from '../core/i18n';
 
 interface NavigationProps {
   currentTab: string;
@@ -75,31 +75,32 @@ export const Navigation: React.FC<NavigationProps> = ({
   const [showToolsModal, setShowToolsModal] = useState(false);
   const [showHeartModal, setShowHeartModal] = useState(false);
   const t = getTranslation(locale);
+  const tr = useT();
 
   const tabs = [
     { id: 'home', label: t.tabs.home, icon: Heart },
     { id: 'chat', label: t.tabs.chat, icon: MessageSquare },
-    { id: 'softlanding', label: 'Soft Landing', icon: Feather },
-    { id: 'nightstand', label: 'Nightstand', icon: Bed },
-    { id: 'garden', label: 'Hearth Garden', icon: Sprout },
-    { id: 'whispers', label: 'Whispers', icon: Mic },
-    { id: 'coordinates', label: 'Coordinates', icon: Map },
-    { id: 'radio', label: 'Midnight Radio', icon: Radio },
-    { id: 'stateofunion', label: 'State of Union', icon: Shield },
-    { id: 'canvas', label: 'Canvas of Us', icon: Palette },
-    { id: 'repairbridge', label: 'Repair Bridge', icon: Handshake },
-    { id: 'kintsugi', label: 'Kintsugi Moments', icon: Sparkles },
+    { id: 'softlanding', label: tr('Soft Landing'), icon: Feather },
+    { id: 'nightstand', label: tr('Nightstand'), icon: Bed },
+    { id: 'garden', label: tr('Hearth Garden'), icon: Sprout },
+    { id: 'whispers', label: tr('Whispers'), icon: Mic },
+    { id: 'coordinates', label: tr('Coordinates'), icon: Map },
+    { id: 'radio', label: tr('Midnight Radio'), icon: Radio },
+    { id: 'stateofunion', label: tr('State of Union'), icon: Shield },
+    { id: 'canvas', label: tr('Canvas of Us'), icon: Palette },
+    { id: 'repairbridge', label: tr('Repair Bridge'), icon: Handshake },
+    { id: 'kintsugi', label: tr('Kintsugi Moments'), icon: Sparkles },
     { id: 'rituals', label: t.tabs.rituals, icon: Flame },
-    { id: 'constellation', label: 'Constellation', icon: Star },
-    { id: 'compass', label: 'Care Compass', icon: Compass },
+    { id: 'constellation', label: tr('Constellation'), icon: Star },
+    { id: 'compass', label: tr('Care Compass'), icon: Compass },
     { id: 'letters', label: t.tabs.letters, icon: Mail },
-    { id: 'scratch', label: 'Scratch Cards', icon: Gift },
-    { id: 'capsules', label: 'Time Capsule', icon: Hourglass },
-    { id: 'presence', label: 'Co-Presence', icon: Coffee },
-    { id: 'scrapbook', label: 'Memoir Book', icon: BookMarked },
+    { id: 'scratch', label: tr('Scratch Cards'), icon: Gift },
+    { id: 'capsules', label: tr('Time Capsule'), icon: Hourglass },
+    { id: 'presence', label: tr('Co-Presence'), icon: Coffee },
+    { id: 'scrapbook', label: tr('Memoir Book'), icon: BookMarked },
     { id: 'adventures', label: t.tabs.adventures, icon: MapPin },
-    { id: 'recipes', label: 'Cookbook', icon: Utensils },
-    { id: 'intuition', label: 'Intuition', icon: Smile },
+    { id: 'recipes', label: tr('Cookbook'), icon: Utensils },
+    { id: 'intuition', label: tr('Intuition'), icon: Smile },
     { id: 'decks', label: t.tabs.decks, icon: Sparkles },
     { id: 'cycle', label: t.tabs.cycle, icon: Moon },
     { id: 'journal', label: t.tabs.journal, icon: BookOpen },
@@ -199,7 +200,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               <button
                 onClick={() => setShowPairingModal(true)}
                 className="tap-target flex min-w-0 items-center gap-1.5 rounded-full border border-linen-border bg-linen-surface/60 px-2 py-1 active:scale-95 transition-transform"
-                title="End-to-end encrypted - tap to verify safety numbers"
+                title={tr('End-to-end encrypted - tap to verify safety numbers')}
               >
                 <span
                   className={`h-2 w-2 shrink-0 rounded-full ${
@@ -216,7 +217,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                   </span>
                 )}
                 <span className="shrink-0 text-[11px] text-linen-secondary">
-                  {connected ? (partnerOnline ? 'together' : 'synced') : 'connecting'}
+                  {connected ? (partnerOnline ? tr('together') : tr('synced')) : tr('connecting')}
                 </span>
               </button>
             </div>
@@ -228,18 +229,18 @@ export const Navigation: React.FC<NavigationProps> = ({
               <button
                 onClick={() => setShowHeartModal(true)}
                 className="tap-target inline-flex items-center rounded-full bg-linen-accent text-linen-surface px-3 py-1 text-xs font-semibold shadow-glow active:scale-95 transition-transform"
-                title="Heart Touch: send a sensory pulse"
+                title={tr('Heart Touch: send a sensory pulse')}
               >
                 <Heart className="heart-beat mr-1 h-3.5 w-3.5 shrink-0 fill-current" />
-                <span>Heart</span>
+                <span>{tr('Heart')}</span>
               </button>
               <button
                 onClick={() => setShowToolsModal(true)}
                 className="tap-target inline-flex items-center rounded-full border border-linen-border bg-linen-surface/60 px-3 py-1 text-xs font-medium text-linen-primary active:scale-95 transition-transform"
-                title="Sanctuary Tools (soundscapes, breathing, camouflage, mesh & more)"
+                title={tr('Sanctuary Tools (soundscapes, breathing, camouflage, mesh & more)')}
               >
                 <Compass className="mr-1 h-3.5 w-3.5 shrink-0 text-linen-accent" />
-                <span>Tools</span>
+                <span>{tr('Tools')}</span>
               </button>
             </div>
           </div>
@@ -265,7 +266,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             <button
               onClick={() => setShowPairingModal(true)}
               className="inline-flex items-center text-xs font-medium text-linen-secondary px-2 sm:px-2.5 py-1 rounded-full bg-linen-variant hover:bg-linen-border border border-linen-border transition-colors cursor-pointer select-none"
-              title="End-to-End Encrypted • Click to verify Safety Numbers"
+              title={tr('End-to-End Encrypted • Click to verify Safety Numbers')}
             >
               <span
                 className={`w-2 h-2 rounded-full mr-1.5 shrink-0 ${
@@ -280,15 +281,14 @@ export const Navigation: React.FC<NavigationProps> = ({
                 {/* "Two • Live" only ever meant "I reached the server", which read
                     as "we are connected to each other". Show who you are with,
                     and keep presence a separate, honest signal. */}
-                {vaultName || 'Two'}
                 {relayStatus === 'connected'
                   ? partnerOnline
-                    ? ' • together'
-                    : ' • synced'
-                  : ' • connecting'}
+                    ? tr('{name} • together', { name: vaultName || 'Two' })
+                    : tr('{name} • synced', { name: vaultName || 'Two' })
+                  : tr('{name} • connecting', { name: vaultName || 'Two' })}
               </span>
               <span className="sm:hidden font-semibold text-[10px] text-linen-primary">
-                {relayStatus === 'connected' ? (partnerOnline ? 'Together' : 'Synced') : 'Sync'}
+                {relayStatus === 'connected' ? (partnerOnline ? tr('Together') : tr('Synced')) : tr('Sync')}
               </span>
             </button>
           </div>
@@ -302,10 +302,10 @@ export const Navigation: React.FC<NavigationProps> = ({
               <button
                 onClick={onOpenStoryTour}
                 className="inline-flex items-center text-xs font-medium text-linen-accent px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs shrink-0"
-                title="Interactive 5-Act Walkthrough: A Day in the Life with Two"
+                title={tr('Interactive 5-Act Walkthrough: A Day in the Life with Two')}
               >
                 <Sparkles className="w-3.5 h-3.5 sm:mr-1 text-linen-accent shrink-0" />
-                <span className="hidden sm:inline">Tour</span>
+                <span className="hidden sm:inline">{tr('Tour')}</span>
               </button>
             )}
 
@@ -313,10 +313,10 @@ export const Navigation: React.FC<NavigationProps> = ({
             <button
               onClick={() => setShowHeartModal(true)}
               className="inline-flex items-center text-xs font-medium text-rose-600 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/90 transition-colors cursor-pointer shadow-2xs shrink-0 group"
-              title="Heart Touch: Send sensory pulse & loving presence"
+              title={tr('Heart Touch: Send sensory pulse & loving presence')}
             >
               <Heart className="w-3.5 h-3.5 sm:mr-1 text-rose-500 fill-rose-500 shrink-0 group-hover:scale-110 transition-transform animate-pulse" />
-              <span className="hidden sm:inline">Heart</span>
+              <span className="hidden sm:inline">{tr('Heart')}</span>
             </button>
 
             {/* 3. Sanctuary Spaces Explorer button */}
@@ -324,10 +324,10 @@ export const Navigation: React.FC<NavigationProps> = ({
               <button
                 onClick={onOpenDirectory}
                 className="inline-flex items-center text-xs font-medium text-linen-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs shrink-0"
-                title="Sanctuary Explorer (Browse All 32 Spaces)"
+                title={tr('Sanctuary Explorer (Browse All 32 Spaces)')}
               >
                 <LayoutGrid className="w-3.5 h-3.5 sm:mr-1 text-linen-accent shrink-0" />
-                <span className="hidden sm:inline">Spaces</span>
+                <span className="hidden sm:inline">{tr('Spaces')}</span>
               </button>
             )}
 
@@ -335,10 +335,10 @@ export const Navigation: React.FC<NavigationProps> = ({
             <button
               onClick={() => setShowToolsModal(true)}
               className="inline-flex items-center text-xs font-medium text-linen-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-linen-variant/80 hover:bg-linen-variant border border-linen-border transition-colors cursor-pointer shadow-2xs shrink-0"
-              title="Sanctuary Tools (Soundscapes, Breathing, Camouflage, Mesh & More)"
+              title={tr('Sanctuary Tools (Soundscapes, Breathing, Camouflage, Mesh & More)')}
             >
               <Compass className="w-3.5 h-3.5 sm:mr-1 text-linen-accent shrink-0" />
-              <span className="hidden sm:inline">Tools</span>
+              <span className="hidden sm:inline">{tr('Tools')}</span>
             </button>
 
             {/* Quick Exit: hides Two, deletes nothing */}
@@ -358,10 +358,10 @@ export const Navigation: React.FC<NavigationProps> = ({
             <button
               onClick={onOpenDirectory}
               className="flex items-center px-2.5 py-2 text-xs font-semibold rounded-lg whitespace-nowrap bg-linen-variant/90 hover:bg-linen-variant text-linen-primary border border-linen-border/80 transition-all shrink-0 cursor-pointer shadow-2xs"
-              title="Open Sanctuary Explorer"
+              title={tr('Open Sanctuary Explorer')}
             >
               <LayoutGrid className="w-3.5 h-3.5 mr-1 text-linen-accent" />
-              <span>All Spaces</span>
+              <span>{tr('All Spaces')}</span>
             </button>
           )}
 

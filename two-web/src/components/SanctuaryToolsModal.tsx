@@ -4,6 +4,7 @@ import {
   Sparkles, Check, Compass, Wifi, EyeOff, Activity, Settings, ChevronRight
 } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
+import { useT } from '../core/i18n';
 
 interface SanctuaryToolsModalProps {
   isOpen: boolean;
@@ -49,6 +50,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   vaultName = '',
   partnerOnline = false
 }) => {
+  const tr = useT();
   // The phone's Back button closes this, the same as its X.
   useBackLayer(isOpen, onClose);
 
@@ -57,12 +59,12 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   const tools = [
     {
       id: 'soundscapes',
-      title: 'Fall Asleep Together',
-      subtitle: 'Night sounds with a sleep timer',
-      desc: 'Rain, waves, a fire or a forest, playing on both phones and fading out as you fall asleep.',
+      title: tr('Fall Asleep Together'),
+      subtitle: tr('Night sounds with a sleep timer'),
+      desc: tr('Rain, waves, a fire or a forest, playing on both phones and fading out as you fall asleep.'),
       icon: Moon,
       iconColor: 'text-indigo-500 bg-indigo-50 border-indigo-200',
-      actionText: 'Open Soundscapes',
+      actionText: tr('Open Soundscapes'),
       action: () => {
         onClose();
         onOpenSoundscapes();
@@ -70,12 +72,12 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'coregulation',
-      title: 'Breathe Together',
-      subtitle: 'Slow breathing, in step',
-      desc: 'Calm down together with a guided breathing rhythm, soft sound and gentle buzzes.',
+      title: tr('Breathe Together'),
+      subtitle: tr('Slow breathing, in step'),
+      desc: tr('Calm down together with a guided breathing rhythm, soft sound and gentle buzzes.'),
       icon: Wind,
       iconColor: 'text-teal-600 bg-teal-50 border-teal-200',
-      actionText: 'Start Breathing',
+      actionText: tr('Start Breathing'),
       action: () => {
         onClose();
         onOpenCoRegulation();
@@ -83,12 +85,12 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'pulse',
-      title: 'Heart Touches',
-      subtitle: 'Hugs, kisses and little notes',
-      desc: 'Send a touch without words. Your partner feels it as a soft buzz and a glow.',
+      title: tr('Heart Touches'),
+      subtitle: tr('Hugs, kisses and little notes'),
+      desc: tr('Send a touch without words. Your partner feels it as a soft buzz and a glow.'),
       icon: Heart,
       iconColor: 'text-rose-500 bg-rose-50 border-rose-200',
-      actionText: 'Heart Options',
+      actionText: tr('Heart Options'),
       action: () => {
         onClose();
         if (onOpenHeartModal) {
@@ -100,12 +102,12 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'camouflage',
-      title: 'Calculator Disguise',
-      subtitle: 'Two looks like a calculator',
-      desc: 'Turns Two into a working calculator until you type your secret code.',
+      title: tr('Calculator Disguise'),
+      subtitle: tr('Two looks like a calculator'),
+      desc: tr('Turns Two into a working calculator until you type your secret code.'),
       icon: Calculator,
       iconColor: 'text-neutral-700 bg-neutral-100 border-neutral-300',
-      actionText: 'Engage Calculator',
+      actionText: tr('Engage Calculator'),
       action: () => {
         onClose();
         if (onToggleCamouflage) onToggleCamouflage();
@@ -113,12 +115,12 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'mesh',
-      title: 'Nearby Sync',
-      subtitle: 'Over the same Wi-Fi or hotspot',
-      desc: 'Share letters, stars and recipes straight between your phones when the internet is down.',
+      title: tr('Nearby Sync'),
+      subtitle: tr('Over the same Wi-Fi or hotspot'),
+      desc: tr('Share letters, stars and recipes straight between your phones when the internet is down.'),
       icon: Radio,
       iconColor: 'text-sky-600 bg-sky-50 border-sky-200',
-      actionText: 'Mesh Status',
+      actionText: tr('Mesh Status'),
       action: () => {
         onClose();
         onOpenMesh();
@@ -126,12 +128,12 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     },
     {
       id: 'safety',
-      title: 'Safety Check',
-      subtitle: 'Make sure only you two are linked',
-      desc: 'Compare a code with your partner to confirm nobody else is in your space.',
+      title: tr('Safety Check'),
+      subtitle: tr('Make sure only you two are linked'),
+      desc: tr('Compare a code with your partner to confirm nobody else is in your space.'),
       icon: Shield,
       iconColor: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-      actionText: 'Verify Encryption',
+      actionText: tr('Verify Encryption'),
       action: () => {
         onClose();
         onOpenSafetyNumbers();
@@ -140,12 +142,12 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     ...(onOpenSettings
       ? [{
           id: 'settings',
-          title: 'Settings',
-          subtitle: 'Devices, link code, backups and lock',
-          desc: 'See which devices are in your space, rotate the link code, export a backup and set how this space is locked.',
+          title: tr('Settings'),
+          subtitle: tr('Devices, link code, backups and lock'),
+          desc: tr('See which devices are in your space, rotate the link code, export a backup and set how this space is locked.'),
           icon: Settings,
           iconColor: 'text-linen-accent bg-linen-variant border-linen-border',
-          actionText: 'Open Settings',
+          actionText: tr('Open Settings'),
           action: () => {
             onClose();
             onOpenSettings();
@@ -158,12 +160,12 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     ...(onOpenStoryTour
       ? [{
           id: 'tour',
-          title: 'Take the Tour',
-          subtitle: 'A day with Two, in five short acts',
-          desc: 'Walk through a full day in the sanctuary, act by act, to see how the spaces fit together.',
+          title: tr('Take the Tour'),
+          subtitle: tr('A day with Two, in five short acts'),
+          desc: tr('Walk through a full day in the sanctuary, act by act, to see how the spaces fit together.'),
           icon: Sparkles,
           iconColor: 'text-amber-600 bg-amber-50 border-amber-200',
-          actionText: 'Start Tour',
+          actionText: tr('Start Tour'),
           action: () => {
             onClose();
             onOpenStoryTour();
@@ -176,15 +178,15 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
     // behind a question that says what it deletes.
     {
       id: 'quick-exit',
-      title: 'Quick Exit',
-      subtitle: 'Hide Two in one tap',
+      title: tr('Quick Exit'),
+      subtitle: tr('Hide Two in one tap'),
       // Two lines at most: the card cuts the rest.
       desc: hasPin
-        ? 'Locks Two straight away. Nothing is deleted; your PIN opens it again.'
-        : 'Nothing is deleted. Type your calculator code and = to return.',
+        ? tr('Locks Two straight away. Nothing is deleted; your PIN opens it again.')
+        : tr('Nothing is deleted. Type your calculator code and = to return.'),
       icon: EyeOff,
       iconColor: 'text-linen-accent bg-linen-variant border-linen-border',
-      actionText: hasPin ? 'Lock now' : 'Hide now',
+      actionText: hasPin ? tr('Lock now') : tr('Hide now'),
       action: () => {
         onClose();
         onQuickExit();
@@ -210,11 +212,11 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="font-serif text-lg sm:text-xl font-medium text-linen-primary">
-                  Tools
+                  {tr('Tools')}
                 </h3>
               </div>
               <p className="text-xs text-linen-secondary mt-0.5">
-                Sounds, breathing, touches and privacy
+                {tr('Sounds, breathing, touches and privacy')}
               </p>
             </div>
           </div>
@@ -222,7 +224,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
           <button
             onClick={onClose}
             className="p-2 rounded-xl text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
-            title="Close"
+            title={tr('Close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -240,12 +242,14 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
             />
             <span className="font-medium text-linen-primary text-xs">
               {relayStatus === 'connected'
-                ? `${vaultName || 'Two'} • ${partnerOnline ? 'together' : 'synced'}`
-                : 'Connecting to Relay...'}
+                ? partnerOnline
+                  ? tr('{name} • together', { name: vaultName || 'Two' })
+                  : tr('{name} • synced', { name: vaultName || 'Two' })
+                : tr('Connecting to Relay...')}
             </span>
           </div>
           <span className="text-[11px] text-linen-secondary font-mono">
-            {activeUser === 'user' ? 'You started this space' : 'You joined this space'}
+            {activeUser === 'user' ? tr('You started this space') : tr('You joined this space')}
           </span>
         </div>
 
@@ -262,7 +266,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
                 key={tool.id}
                 type="button"
                 onClick={tool.action}
-                aria-label={`${tool.actionText}: ${tool.title}`}
+                aria-label={tr('{action}: {title}', { action: tool.actionText, title: tool.title })}
                 className="group w-full p-3 sm:p-3.5 rounded-2xl border border-linen-border bg-linen-surface hover:bg-linen-variant/50 active:scale-[0.99] transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center gap-3 text-left"
               >
                 <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border ${tool.iconColor}`}>
@@ -287,12 +291,12 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
 
         {/* Modal Footer */}
         <div className="p-3 sm:p-4 border-t border-linen-border/60 bg-linen-variant/20 flex items-center justify-between text-xs text-linen-secondary shrink-0">
-          <span className="text-[11px] truncate">Private to you two.</span>
+          <span className="text-[11px] truncate">{tr('Private to you two.')}</span>
           <button
             onClick={onClose}
             className="px-3.5 py-1.5 rounded-xl bg-linen-variant hover:bg-linen-border text-linen-primary font-medium transition-colors cursor-pointer text-xs shadow-2xs"
           >
-            Done
+            {tr('Done')}
           </button>
         </div>
 

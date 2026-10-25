@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { CalendarClock, ChevronRight, Clock } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
+import { useT } from '../core/i18n';
 import { MAX_AHEAD_MS, fromLocalInput, laterChoices, pickedTimeProblem, toLocalInput } from '../core/sendLater';
 import { aheadLabel } from '../core/when';
 
@@ -19,6 +20,7 @@ interface SendLaterSheetProps {
  * above the sheet puts it down and leaves the words in the box.
  */
 export const SendLaterSheet: React.FC<SendLaterSheetProps> = ({ text, partnerName, onPick, onClose }) => {
+  const tr = useT();
   useBackLayer(true, onClose);
   // Taken as the sheet opens: the times on offer do not shift under a finger.
   const [opened, setOpened] = useState(() => Date.now());
@@ -61,11 +63,12 @@ export const SendLaterSheet: React.FC<SendLaterSheetProps> = ({ text, partnerNam
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-linen-border" />
         <h3 id="send-later-title" className="font-serif text-xl font-semibold text-linen-primary">
-          Send later
+          {tr('Send later')}
         </h3>
         <p className="mt-0.5 text-xs leading-relaxed text-linen-secondary">
-          It shows in {partnerName}'s chat at the time you pick, the next time Two is open then. It won't wake
-          their phone.
+          {tr("It shows in {name}'s chat at the time you pick, the next time Two is open then. It won't wake their phone.", {
+            name: partnerName
+          })}
         </p>
 
         <p className="mt-3 line-clamp-3 rounded-2xl bg-linen-variant/60 px-3.5 py-2.5 text-sm leading-relaxed text-linen-primary whitespace-pre-wrap break-words">
@@ -74,7 +77,7 @@ export const SendLaterSheet: React.FC<SendLaterSheetProps> = ({ text, partnerNam
 
         {movedOn && (
           <p role="status" className="mt-3 text-xs font-medium text-linen-primary">
-            That time has gone by. Here are the times from now.
+            {tr('That time has gone by. Here are the times from now.')}
           </p>
         )}
 
@@ -100,7 +103,7 @@ export const SendLaterSheet: React.FC<SendLaterSheetProps> = ({ text, partnerNam
             className="flex w-full items-center gap-3 border-t border-linen-border px-3.5 py-3 text-left hover:bg-linen-variant/60 transition-colors"
           >
             <CalendarClock className="h-4 w-4 shrink-0 text-linen-accent" />
-            <span className="min-w-0 flex-1 text-sm font-medium text-linen-primary">Pick a day and time</span>
+            <span className="min-w-0 flex-1 text-sm font-medium text-linen-primary">{tr('Pick a day and time')}</span>
             <ChevronRight className={`h-4 w-4 shrink-0 text-linen-secondary transition-transform ${picking ? 'rotate-90' : ''}`} />
           </button>
           {picking && (
@@ -115,7 +118,7 @@ export const SendLaterSheet: React.FC<SendLaterSheetProps> = ({ text, partnerNam
                     setValue(e.target.value);
                     setProblem(null);
                   }}
-                  aria-label="Day and time to show it"
+                  aria-label={tr('Day and time to show it')}
                   className="min-w-0 flex-1 rounded-xl border border-linen-border bg-linen-variant/30 px-3 py-2 text-sm text-linen-primary focus:outline-hidden focus:ring-2 focus:ring-linen-primary"
                 />
                 <button
@@ -123,7 +126,7 @@ export const SendLaterSheet: React.FC<SendLaterSheetProps> = ({ text, partnerNam
                   onClick={pickOwn}
                   className="shrink-0 rounded-xl bg-linen-primary px-3.5 py-2 text-[13px] font-semibold text-linen-surface hover:opacity-90 transition-opacity"
                 >
-                  Set
+                  {tr('Set')}
                 </button>
               </div>
               {problem && (
@@ -140,7 +143,7 @@ export const SendLaterSheet: React.FC<SendLaterSheetProps> = ({ text, partnerNam
           onClick={onClose}
           className="mt-3 self-center rounded-lg px-4 py-2 text-sm font-semibold text-linen-secondary hover:bg-linen-variant transition-colors"
         >
-          Cancel
+          {tr('Cancel')}
         </button>
       </div>
     </div>

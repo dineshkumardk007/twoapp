@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { useT } from '../core/i18n';
 
 /**
  * One list, used by both conversations.
@@ -60,7 +61,11 @@ interface EmojiPickerProps {
   only?: (char: string) => boolean;
   /** The heading, "Emoji" unless said otherwise. */
   title?: string;
-  /** What a tap does, for screen readers: "Add" unless said otherwise. */
+  /**
+   * What a tap does, for screen readers: "Add" unless said otherwise. Given in
+   * English: it is looked up as "{word} {emoji}" ("React {emoji}"), so each
+   * language can put the emoji where it goes.
+   */
   pickWord?: string;
 }
 
@@ -69,16 +74,18 @@ interface EmojiPickerProps {
  * stays in view, and is capped in height so the conversation never disappears
  * behind it.
  */
-export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only, title = 'Emoji', pickWord = 'Add' }) => (
+export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only, title, pickWord = 'Add' }) => {
+  const tr = useT();
+  return (
   <div className="border-t border-linen-border bg-linen-surface">
     <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
       <span className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
-        {title}
+        {title ?? tr('Emoji')}
       </span>
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close emoji picker"
+        aria-label={tr('Close emoji picker')}
         className="rounded-lg p-1 text-linen-secondary hover:bg-linen-variant active:scale-90 transition-all"
       >
         <X className="h-4 w-4" />
@@ -89,7 +96,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
       {EMOJI_GROUPS.map(group => (
         <div key={group.title} className="mb-1.5">
           <p className="px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-linen-secondary/70">
-            {group.title}
+            {tr(group.title)}
           </p>
           <div className="grid grid-cols-8 gap-0.5">
             {(only ? group.chars.filter(only) : group.chars).map(char => (
@@ -97,7 +104,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
                 key={char}
                 type="button"
                 onClick={() => onPick(char)}
-                aria-label={`${pickWord} ${char}`}
+                aria-label={tr(`${pickWord} {emoji}`, { emoji: char })}
                 className="flex h-9 items-center justify-center rounded-xl text-xl leading-none hover:bg-linen-variant active:scale-90 transition-all cursor-pointer"
               >
                 {char}
@@ -108,4 +115,5 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
       ))}
     </div>
   </div>
-);
+  );
+};

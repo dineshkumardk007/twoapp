@@ -77,6 +77,9 @@ export interface SpaceState {
   heldMessages?: ChatMessage[];
   /** Each of your one-tap statuses, by seat, the newest of each (core/status). */
   statuses?: Statuses;
+  /** When your name, and your partner's, was last chosen; absent until one is changed (core/names). */
+  userNameSetAt?: number;
+  partnerNameSetAt?: number;
   journalEntries: JournalEntry[];
   agreements: AgreementItem[];
   lists: ListItem[];

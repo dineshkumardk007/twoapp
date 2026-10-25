@@ -12,6 +12,8 @@
 // already scrolling, and a list on the home screen, which is where you land
 // anyway and which needs no hunting at all.
 
+import { tr } from './i18n';
+
 /** A thing the partner did, once, somewhere. */
 export interface ActivityEvent {
   id: string;
@@ -160,6 +162,15 @@ export function routeFor(type: string): { tab: string; tier: ActivityTier } | nu
 
 export function phraseFor(type: string): string {
   return PHRASES[type] || 'changed something';
+}
+
+/**
+ * The whole line on Home in this phone's language, with `{name}` where the
+ * partner's name goes: "{name} sent a message". One sentence rather than the
+ * name and a phrase side by side, so Tamil can put the name where it belongs.
+ */
+export function newsLineFor(type: string): string {
+  return tr(`{name} ${phraseFor(type)}`);
 }
 
 /** Kinds of record where only some are news, which takes reading what they say. */

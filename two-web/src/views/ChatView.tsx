@@ -39,6 +39,7 @@ import { useBackLayer } from '../core/backStack';
 import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
 import { MAX_CHAT_MESSAGES } from '../core/storage';
 import { who } from '../core/who';
+import { activeLocale, dateLocale, tr, useT } from '../core/i18n';
 import { haptic } from '../core/haptics';
 import {
   Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
@@ -127,6 +128,53 @@ interface ChatViewProps {
 const TIME_FORMAT = new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit' });
 const DAY_FORMAT = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 const OLD_DAY_FORMAT = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+/** The same day names in another language (core/i18n), each built the first time it is wanted. */
+const OTHER_DAY_FORMATS = new Map<string, Intl.DateTimeFormat>();
+function dayFormat(old: boolean): Intl.DateTimeFormat {
+  const locale = dateLocale();
+  if (!locale) return old ? OLD_DAY_FORMAT : DAY_FORMAT;
+  const key = `${locale}|${old}`;
+  let format = OTHER_DAY_FORMATS.get(key);
+  if (!format) {
+    format = new Intl.DateTimeFormat(
+      locale,
+      old ? { day: 'numeric', month: 'short', year: 'numeric' } : { weekday: 'short', day: 'numeric', month: 'short' }
+    );
+    OTHER_DAY_FORMATS.set(key, format);
+  }
+  return format;
+}
+/** "9:41 pm" - in Tamil, the way the rest of Two says a time (core/when). */
+function timeOf(at: number): string {
+  return activeLocale() === 'ta' ? clockTime(at) : TIME_FORMAT.format(at);
+}
+
+/** who(), as this phone says it: "You" (and the stand-in "Partner") in its own language. */
+function whoShown(author: string | undefined | null, activeUser: string, partnerName: string): string {
+  const name = who(author, activeUser, partnerName);
+  return name === 'You' ? tr('You') : name === 'Partner' ? tr('Partner') : name;
+}
+
+/**
+ * A reply quote's or the pinned bar's snippet, as shown. The fixed words
+ * snippetOf (core/chatActions) puts in travel in English and are said here in
+ * this phone's language; a message's own words stay as written.
+ */
+function snippetShown(snippet: string | undefined): string {
+  switch (snippet) {
+    case 'Photo':
+      return tr('Photo');
+    case 'Voice note':
+      return tr('Voice note');
+    case 'View-once photo':
+      return tr('View-once photo');
+    case '':
+    case undefined:
+      return tr('Message');
+    default:
+      return snippet;
+  }
+}
 
 /**
  * Messages further apart than this start a new run, even from the same person:
@@ -210,12 +258,12 @@ function dayLabel(day: number, now: number, ahead = false): string {
   // A day in the future is the other phone's clock running ahead, not news -
   // unless it is a message set to show later (core/sendLater), which says
   // the day it is to show.
-  if (days < 0 && ahead) return days === -1 ? 'Tomorrow' : DAY_FORMAT.format(day);
-  if (days <= 0) return 'Today';
-  if (days === 1) return 'Yesterday';
+  if (days < 0 && ahead) return days === -1 ? tr('Tomorrow') : dayFormat(false).format(day);
+  if (days <= 0) return tr('Today');
+  if (days === 1) return tr('Yesterday');
   return new Date(day).getFullYear() === new Date(now).getFullYear()
-    ? DAY_FORMAT.format(day)
-    : OLD_DAY_FORMAT.format(day);
+    ? dayFormat(false).format(day)
+    : dayFormat(true).format(day);
 }
 
 /** Local calendar day, as a key that changes exactly at midnight. */
@@ -273,7 +321,8 @@ function layOut(messages: ChatMessage[], markId?: string): Row[] {
     divider: dividers[i],
     firstOfRun: i === 0 || !joins(messages[i - 1], msg, dividers[i]),
     lastOfRun: i === messages.length - 1 || !joins(msg, messages[i + 1], dividers[i + 1]),
-    time: msg.sentAt && Number.isFinite(msg.sentAt) ? TIME_FORMAT.format(msg.sentAt) : msg.timestamp || ''
+    // The stored word ("Just now") stays English; it is said in this phone's language.
+    time: msg.sentAt && Number.isFinite(msg.sentAt) ? timeOf(msg.sentAt) : tr(msg.timestamp || '')
   }));
 }
 
@@ -307,6 +356,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onPinMessage,
   onViewOnceOpened
 }) => {
+  const tr = useT();
+  // What the laid-out conversation is said in: built again if it changes.
+  const lang = activeLocale();
   // Back in the box: whatever was half-typed when the chat was last left.
   const [inputText, setInputText] = useState(() => draft?.text ?? '');
   const inApp = useMemo(() => isAndroidApp(), []);
@@ -436,7 +488,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     if (!partnerLastSeen) return;
     const timer = setInterval(() => setLastSeenLabel(formatLastSeen(partnerLastSeen)), 60_000);
     return () => clearInterval(timer);
-  }, [partnerLastSeen]);
+  }, [partnerLastSeen, lang]);
 
   // The same for the day dividers: "Today" becomes "Yesterday" at midnight.
   // Only the day is kept, so the conversation is laid out again once a day
@@ -463,7 +515,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const rows = useMemo(
     () => layOut(messages, newMarkId),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [messages, today, newMarkId]
+    [messages, today, newMarkId, lang]
   );
 
   const [showNeedModal, setShowNeedModal] = useState(false);
@@ -690,7 +742,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       const target = messages.find(m => m.id === editing.id);
       if (!target || !canEdit(target, activeUser)) {
         // The fifteen minutes ran out while the new words were being written.
-        showToast('Too late to change - messages can be edited for 15 minutes');
+        showToast(tr('Too late to change - messages can be edited for 15 minutes'));
       } else if (text !== editing.original) {
         onEditMessage?.(editing.id, text);
       }
@@ -721,7 +773,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       onSaveDraftRef.current?.(null);
     }
     haptic('confirm');
-    showToast(`Set to show ${aheadLabel(showAt)}`);
+    showToast(tr('Set to show {when}', { when: aheadLabel(showAt) }));
   };
 
   /** Answer a message: its quote goes above the composer, and the keyboard comes up. */
@@ -781,7 +833,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const pickPhotos = (files: FileList | null) => {
     const picked = files ? Array.from(files).filter(f => !f.type || f.type.startsWith('image/')) : [];
     if (!picked.length) return;
-    if (picked.length > PHOTOS_AT_ONCE) showToast(`Up to ${PHOTOS_AT_ONCE} photos at a time`);
+    if (picked.length > PHOTOS_AT_ONCE) showToast(tr('Up to {n} photos at a time', { n: PHOTOS_AT_ONCE }));
     setPickedPhotos(picked.slice(0, PHOTOS_AT_ONCE));
   };
 
@@ -810,7 +862,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         reply = null;
         haptic('confirm');
       } catch {
-        showToast('That file could not be opened as a photo');
+        showToast(tr('That file could not be opened as a photo'));
       } finally {
         setPreparingPhotos(n => Math.max(0, n - 1));
       }
@@ -822,9 +874,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
     if (!m.photoDataUrl) return;
     try {
       await saveFile(dataUrlToBlob(m.photoDataUrl), photoFileName(m.sentAt));
-      showToast('Saved');
+      showToast(tr('Saved'));
     } catch {
-      showToast('Could not save the photo');
+      showToast(tr('Could not save the photo'));
     }
   };
 
@@ -891,7 +943,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     if (!m.photoDataUrl || !canOpenViewOnce(m, activeUserRef.current)) return;
     setOnceView({
       src: m.photoDataUrl,
-      caption: `${who(m.authorId, activeUserRef.current, partnerName)}${m.sentAt ? ' · ' + TIME_FORMAT.format(m.sentAt) : ''}`
+      caption: `${whoShown(m.authorId, activeUserRef.current, partnerName)}${m.sentAt ? ' · ' + timeOf(m.sentAt) : ''}`
     });
     onViewOnceOpened?.(m.id);
   };
@@ -1144,9 +1196,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </div>
             )}
             {msg.id === newMarkId && (
-              <div data-new-mark role="separator" aria-label="New messages" className="flex items-center gap-3 pt-4 pb-1">
+              <div data-new-mark role="separator" aria-label={tr('New messages')} className="flex items-center gap-3 pt-4 pb-1">
                 <span className="h-px flex-1 bg-linen-accent/40" />
-                <span className="text-[11px] font-semibold text-linen-accent">New messages</span>
+                <span className="text-[11px] font-semibold text-linen-accent">{tr('New messages')}</span>
                 <span className="h-px flex-1 bg-linen-accent/40" />
               </div>
             )}
@@ -1176,7 +1228,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       disabled={callInProgress}
                       className="ml-1 rounded-full px-2 py-0.5 font-semibold text-linen-accent transition-colors hover:bg-linen-variant disabled:opacity-40"
                     >
-                      {theyRang ? 'Call back' : 'Call again'}
+                      {theyRang ? tr('Call back') : tr('Call again')}
                     </button>
                   )}
                 </div>
@@ -1234,14 +1286,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {unsent ? (
                   <p className="flex items-center gap-1.5 italic">
                     <Undo2 className="w-3.5 h-3.5 shrink-0" />
-                    {mine ? 'You unsent a message' : `${partnerName} unsent a message`}
+                    {mine ? tr('You unsent a message') : tr('{name} unsent a message', { name: partnerName })}
                   </p>
                 ) : (
                 <>
                 {msg.isNeedCard && (
                   <div className="text-[11px] font-semibold tracking-wider text-amber-700 uppercase mb-1 flex items-center">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    A request
+                    {tr('A request')}
                   </div>
                 )}
 
@@ -1250,7 +1302,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      if (!jumpToRef.current(quote.id, true)) showToastRef.current('That message is no longer on this phone');
+                      if (!jumpToRef.current(quote.id, true)) showToastRef.current(tr('That message is no longer on this phone'));
                     }}
                     className={`mb-1.5 block w-full min-w-0 rounded-xl border-l-[3px] px-2.5 py-1.5 text-left text-xs ${
                       // On your own aurora bubble the quote is set back into it,
@@ -1260,10 +1312,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     style={photo ? { maxWidth: photo.width } : undefined}
                   >
                     <span className={`block font-semibold ${mine ? 'text-white' : 'text-linen-accent'}`}>
-                      {who(quote.authorId, activeUser, partnerName)}
+                      {whoShown(quote.authorId, activeUser, partnerName)}
                     </span>
                     <span className={`block truncate ${mine ? 'text-white/90' : 'text-linen-secondary'}`}>
-                      {byId.get(quote.id)?.unsent ? 'Message unsent' : quote.snippet || 'Message'}
+                      {byId.get(quote.id)?.unsent ? tr('Message unsent') : snippetShown(quote.snippet)}
                     </span>
                   </button>
                 )}
@@ -1301,12 +1353,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setViewerId(msg.id)}
-                    aria-label="Open photo"
+                    aria-label={tr('Open photo')}
                     className="block overflow-hidden rounded-xl"
                   >
                     <img
                       src={msg.photoDataUrl}
-                      alt="Photo"
+                      alt={tr('Photo')}
                       width={photo.width}
                       height={photo.height}
                       decoding="async"
@@ -1366,7 +1418,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     const bubble = e.currentTarget.parentElement?.querySelector<HTMLElement>('[data-bubble]');
                     if (bubble) openMenuRef.current(msg.id, bubble);
                   }}
-                  aria-label={`Reactions: ${reactions.join(' ')}`}
+                  aria-label={tr('Reactions: {emoji}', { emoji: reactions.join(' ') })}
                   className={`relative z-[1] -mt-2 inline-flex items-center gap-0.5 rounded-full border border-linen-border bg-linen-surface px-1.5 py-0.5 text-[13px] leading-none shadow-sm ${
                     mine ? 'mr-3' : 'ml-3'
                   }`}
@@ -1385,24 +1437,24 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   {pin && (
                     <span className="mr-1.5 inline-flex items-center gap-0.5 font-medium text-linen-accent">
                       <Pin className="w-3 h-3" />
-                      Pinned
+                      {tr('Pinned')}
                     </span>
                   )}
                   {/* The name once per run, under its last bubble with the time. */}
                   {lastOfRun && (
                     <span>
-                      {who(msg.authorId, activeUser, partnerName)}
+                      {whoShown(msg.authorId, activeUser, partnerName)}
                       {row.time && !waiting && <> &middot; {row.time}</>}
                     </span>
                   )}
                   {waiting && (
                     <span className={`inline-flex items-center gap-1 font-medium text-linen-accent ${lastOfRun ? 'ml-1.5' : ''}`}>
                       <AlarmClock className="w-3 h-3" />
-                      Shows {aheadLabel(msg.showAt!)}
+                      {tr('Shows {when}', { when: aheadLabel(msg.showAt!) })}
                     </span>
                   )}
                   {/* Changed after it was sent: said wherever it is, last of a run or not. */}
-                  {edited && <span className={lastOfRun ? 'ml-1' : ''}>{lastOfRun ? <>&middot; edited</> : 'edited'}</span>}
+                  {edited && <span className={lastOfRun ? 'ml-1' : ''}>{lastOfRun ? <>&middot; {tr('edited')}</> : tr('edited')}</span>}
                   {mine && !unsent && (
                     <span className="ml-1.5 inline-flex items-center align-middle">
                       {stuck ? (
@@ -1414,23 +1466,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             onClick={() =>
                               canResolveStuck && setStuckOpen(open => (open === msg.id ? null : msg.id))
                             }
-                            aria-label="Still sending"
+                            aria-label={tr('Still sending')}
                             aria-expanded={stuckOpen === msg.id}
                             className="rounded p-0.5 text-linen-secondary/60 hover:text-linen-primary transition-colors cursor-pointer"
                           >
                             <Clock className="w-3 h-3" />
                           </button>
-                          <span className="sr-only">Sending</span>
+                          <span className="sr-only">{tr('Sending')}</span>
                         </>
                       ) : waiting || !shareReceipts ? null : read ? (
                         <>
                           <CheckCheck className="w-3.5 h-3.5 text-sky-600" />
-                          <span className="sr-only">Read</span>
+                          <span className="sr-only">{tr('Read')}</span>
                         </>
                       ) : (
                         <>
                           <Check className="w-3.5 h-3.5 text-linen-secondary/70" />
-                          <span className="sr-only">Sent</span>
+                          <span className="sr-only">{tr('Sent')}</span>
                         </>
                       )}
                     </span>
@@ -1442,7 +1494,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 // Who pinned it, in a quiet line under it.
                 <span className="mt-2 inline-flex items-center gap-1.5 self-center rounded-full bg-linen-variant/70 px-3 py-1 text-[11px] text-linen-secondary">
                   <Pin className="w-3 h-3" />
-                  {pin.by === activeUser ? 'You' : partnerName} pinned this
+                  {pin.by === activeUser ? tr('You pinned this') : tr('{name} pinned this', { name: partnerName })}
                 </span>
               )}
 
@@ -1455,7 +1507,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     }}
                     className="inline-flex items-center gap-1 rounded-lg border border-linen-border bg-linen-surface px-2 py-1 text-[10px] font-medium text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
                   >
-                    <RotateCw className="w-3 h-3" /> Send again
+                    <RotateCw className="w-3 h-3" /> {tr('Send again')}
                   </button>
                   <button
                     onClick={() => {
@@ -1464,7 +1516,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     }}
                     className="inline-flex items-center gap-1 rounded-lg border border-linen-border bg-linen-surface px-2 py-1 text-[10px] font-medium text-linen-secondary hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer"
                   >
-                    <Trash2 className="w-3 h-3" /> Discard
+                    <Trash2 className="w-3 h-3" /> {tr('Discard')}
                   </button>
                 </span>
               )}
@@ -1475,7 +1527,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     // The press handlers are left out on purpose: they act only through refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawnRows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay,
-      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, callInProgress, newMarkId, waitClock]
+      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, callInProgress, newMarkId, waitClock, lang]
   );
 
   /** What can be done with the message whose menu is open. */
@@ -1487,16 +1539,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const m = menuMessage;
     const close = () => setMenu(null);
     if (!menuWaiting) {
-      menuActions.push({ key: 'reply', label: 'Reply', icon: CornerUpLeft, onSelect: () => { close(); answer(m.id); } });
+      menuActions.push({ key: 'reply', label: tr('Reply'), icon: CornerUpLeft, onSelect: () => { close(); answer(m.id); } });
     }
     if (!m.isVoiceMemo && !m.isPhoto && m.text) {
       menuActions.push({
         key: 'copy',
-        label: 'Copy',
+        label: tr('Copy'),
         icon: Copy,
         onSelect: () => {
           close();
-          void copyText(m.text).then(ok => showToast(ok ? 'Copied' : 'Could not copy'));
+          void copyText(m.text).then(ok => showToast(ok ? tr('Copied') : tr('Could not copy')));
         }
       });
     }
@@ -1504,26 +1556,26 @@ export const ChatView: React.FC<ChatViewProps> = ({
       const pinned = pinnedBy.has(m.id);
       menuActions.push({
         key: 'pin',
-        label: pinned ? 'Unpin' : 'Pin',
+        label: pinned ? tr('Unpin') : tr('Pin'),
         icon: pinned ? PinOff : Pin,
         onSelect: () => {
           close();
           onPinMessage(m.id, !pinned);
           if (!pinned) setPinStep(0);
-          showToast(pinned ? 'Unpinned' : pinList.length >= MAX_PINS ? 'Pinned - the oldest pin made room' : 'Pinned');
+          showToast(pinned ? tr('Unpinned') : pinList.length >= MAX_PINS ? tr('Pinned - the oldest pin made room') : tr('Pinned'));
         }
       });
     }
     if (m.isPhoto && m.photoDataUrl && !m.viewOnce) {
-      menuActions.push({ key: 'save', label: 'Save to phone', icon: Download, onSelect: () => { close(); void savePhoto(m); } });
+      menuActions.push({ key: 'save', label: tr('Save to phone'), icon: Download, onSelect: () => { close(); void savePhoto(m); } });
     }
     if (onEditMessage && canEdit(m, activeUser)) {
-      menuActions.push({ key: 'edit', label: 'Edit', icon: Pencil, onSelect: () => { close(); startEdit(m); } });
+      menuActions.push({ key: 'edit', label: tr('Edit'), icon: Pencil, onSelect: () => { close(); startEdit(m); } });
     }
     if (onUnsendMessage && canUnsend(m, activeUser)) {
       menuActions.push({
         key: 'unsend',
-        label: menuWaiting ? "Don't send" : 'Unsend',
+        label: menuWaiting ? tr("Don't send") : tr('Unsend'),
         icon: menuWaiting ? X : Undo2,
         danger: true,
         onSelect: () => { close(); onUnsendMessage(m.id); }
@@ -1545,7 +1597,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setMediaOpen(false);
     // After the page has closed, so the conversation is there to scroll.
     requestAnimationFrame(() => {
-      if (!jumpToRef.current(id, true)) showToastRef.current('That message is no longer on this phone');
+      if (!jumpToRef.current(id, true)) showToastRef.current(tr('That message is no longer on this phone'));
     });
   };
 
@@ -1561,7 +1613,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <button
               type="button"
               onClick={closeSearch}
-              aria-label="Close search"
+              aria-label={tr('Close search')}
               className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-linen-secondary hover:bg-linen-variant hover:text-linen-primary transition-colors"
             >
               <X className="w-5 h-5" />
@@ -1577,18 +1629,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 setMatchIndex(i => Math.max(0, i - 1));
               }}
               enterKeyHint="search"
-              aria-label="Search this chat"
-              placeholder="Search this chat"
+              aria-label={tr('Search this chat')}
+              placeholder={tr('Search this chat')}
               className="min-w-0 flex-1 rounded-lg border border-linen-border bg-linen-surface px-3 py-1.5 text-sm text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary select-text"
             />
             <span className="shrink-0 px-1 text-xs tabular-nums text-linen-secondary" aria-live="polite">
-              {matchCount ? `${matchIndex + 1}/${matchCount}` : searchQuery.trim() ? 'None' : ''}
+              {matchCount ? `${matchIndex + 1}/${matchCount}` : searchQuery.trim() ? tr('None') : ''}
             </span>
             <button
               type="button"
               onClick={() => setMatchIndex(i => Math.max(0, i - 1))}
               disabled={matchIndex <= 0}
-              aria-label="Earlier match"
+              aria-label={tr('Earlier match')}
               className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-linen-primary hover:bg-linen-variant disabled:opacity-30 transition-colors"
             >
               <ChevronUp className="w-5 h-5" />
@@ -1597,7 +1649,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               type="button"
               onClick={() => setMatchIndex(i => Math.min(matchCount - 1, i + 1))}
               disabled={matchIndex < 0 || matchIndex >= matchCount - 1}
-              aria-label="Later match"
+              aria-label={tr('Later match')}
               className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-linen-primary hover:bg-linen-variant disabled:opacity-30 transition-colors"
             >
               <ChevronDown className="w-5 h-5" />
@@ -1625,11 +1677,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   is a statement about the room rather than news. */}
               <span className="truncate">
                 {partnerTyping ? (
-                  <span className="font-medium text-linen-accent">typing…</span>
+                  <span className="font-medium text-linen-accent">{tr('typing…')}</span>
                 ) : partnerOnline ? (
-                  <span className="text-emerald-700">online</span>
+                  <span className="text-emerald-700">{tr('online')}</span>
                 ) : (
-                  lastSeenLabel || 'Encrypted Room'
+                  lastSeenLabel || tr('Encrypted Room')
                 )}
               </span>
 
@@ -1637,8 +1689,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <span className="shrink-0 text-amber-700">
                   &middot;{' '}
                   {relayStatus === 'connecting' || relayStatus === 'reconnecting'
-                    ? 'Connecting'
-                    : 'Offline'}
+                    ? tr('Connecting')
+                    : tr('Offline')}
                 </span>
               )}
             </div>
@@ -1647,8 +1699,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <button
               type="button"
               onClick={() => setMediaOpen(true)}
-              aria-label="Photos and voice notes"
-              title="Photos and voice notes"
+              aria-label={tr('Photos and voice notes')}
+              title={tr('Photos and voice notes')}
               className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
             >
               <ImageIcon className="w-4 h-4" />
@@ -1656,8 +1708,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              aria-label="Search this chat"
-              title="Search this chat"
+              aria-label={tr('Search this chat')}
+              title={tr('Search this chat')}
               className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
             >
               <Search className="w-4 h-4" />
@@ -1669,8 +1721,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
               <button
                 onClick={onStartCall}
                 disabled={callInProgress}
-                aria-label={`Call ${partnerName}`}
-                title={`Call ${partnerName}`}
+                aria-label={tr('Call {name}', { name: partnerName })}
+                title={tr('Call {name}', { name: partnerName })}
                 className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant disabled:opacity-40 transition-colors cursor-pointer"
               >
                 <Phone className="w-4 h-4" />
@@ -1679,11 +1731,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
             {onOpenSoftLanding && (
               <button
                 onClick={onOpenSoftLanding}
+                aria-label={tr('Breather')}
                 className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200 flex items-center transition-colors cursor-pointer"
-                title="Pause and take a 20-minute de-escalation breather"
+                title={tr('Pause and take a 20-minute de-escalation breather')}
               >
-                <Feather className="w-3.5 h-3.5 mr-1" />
-                <span>Breather</span>
+                {/* In Tamil, a phone-width header keeps only the feather: the
+                    words beside the name (ஆன்லைனில், எழுதுகிறார்…) need the room
+                    that "online" and "typing…" do not. */}
+                <Feather className={`w-3.5 h-3.5 ${lang === 'ta' ? 'sm:mr-1' : 'mr-1'}`} />
+                <span className={lang === 'ta' ? 'hidden sm:inline' : undefined}>{tr('Breather')}</span>
               </button>
             )}
             <button
@@ -1695,8 +1751,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   header, which both made it tall and squeezed the presence line
                   beside it into an ellipsis. Same button, fewer words where
                   there is no room for them. */}
-              <span className="hidden sm:inline">Ask For What You Need</span>
-              <span className="sm:hidden">Ask</span>
+              <span className="hidden sm:inline">{tr('Ask For What You Need')}</span>
+              <span className="sm:hidden">{tr('Ask')}</span>
             </button>
           </div>
                 </>
@@ -1710,12 +1766,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <div
           role="status"
           data-partner-status
-          aria-label={`${partnerName}: ${statusWords(theirStatus)}, since ${clockTime(theirStatus.setAt)}`}
+          aria-label={tr('{name}: {status}, since {time}', {
+            name: partnerName,
+            status: statusWords(theirStatus),
+            time: clockTime(theirStatus.setAt)
+          })}
           className="flex items-center gap-2 border-b border-linen-border bg-linen-variant/20 px-4 py-1.5 text-xs text-linen-secondary"
         >
           <span aria-hidden="true">{theirStatus.emoji || '💬'}</span>
-          <span className="min-w-0 truncate font-medium text-linen-primary">{theirStatus.text}</span>
-          <span className="shrink-0">&middot; since {clockTime(theirStatus.setAt)}</span>
+          <span className="min-w-0 truncate font-medium text-linen-primary">{tr(theirStatus.text)}</span>
+          <span className="shrink-0">&middot; {tr('since {time}', { time: clockTime(theirStatus.setAt) })}</span>
         </div>
       )}
 
@@ -1725,7 +1785,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <button
           type="button"
           onClick={() => {
-            if (!jumpTo(shownPin.messageId, true)) showToast('That message is no longer on this phone');
+            if (!jumpTo(shownPin.messageId, true)) showToast(tr('That message is no longer on this phone'));
             setPinStep(step => step + 1);
           }}
           className="relative z-[1] flex w-full items-center gap-2.5 border-b border-linen-border bg-linen-surface/95 px-4 py-2 text-left shadow-[0_4px_12px_-8px_rgba(0,0,0,0.18)]"
@@ -1735,17 +1795,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </span>
           <span className="min-w-0 flex-1">
             <span className="flex items-baseline justify-between gap-2 text-[11px] font-semibold text-linen-accent">
-              Pinned message
+              {tr('Pinned message')}
               {pinList.length > 1 && (
                 <span className="font-medium tabular-nums text-linen-secondary">
-                  {(pinStep % pinList.length) + 1} of {pinList.length}
+                  {tr('{n} of {total}', { n: (pinStep % pinList.length) + 1, total: pinList.length })}
                 </span>
               )}
             </span>
             <span className="block truncate text-[13px] text-linen-primary">
               {(() => {
                 const m = byId.get(shownPin.messageId);
-                return m ? snippetOf(m) || 'Message' : 'Message';
+                return snippetShown(m ? snippetOf(m) : undefined);
               })()}
             </span>
           </span>
@@ -1766,8 +1826,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
               thing to do and a poor thing to do silently. */}
           {messages.length >= MAX_CHAT_MESSAGES && (
             <p className="pb-4 text-center text-[10px] leading-relaxed text-linen-secondary">
-              Only the most recent {MAX_CHAT_MESSAGES.toLocaleString()} messages are kept on this
-              device. Older ones are gone from here &mdash; a backup keeps them.
+              {tr('Only the most recent {n} messages are kept on this device. Older ones are gone from here — a backup keeps them.', {
+                n: MAX_CHAT_MESSAGES.toLocaleString()
+              })}
             </p>
           )}
 
@@ -1781,7 +1842,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <button
               type="button"
               onClick={goToNewest}
-              aria-label="Go to the newest message"
+              aria-label={tr('Go to the newest message')}
               className="pointer-events-auto -translate-y-full grid h-10 w-10 place-items-center rounded-full border border-linen-border bg-linen-surface text-linen-primary shadow-lg transition-transform active:scale-90"
             >
               <ChevronDown className="h-5 w-5" />
@@ -1821,10 +1882,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold text-linen-accent">
               {editing
-                ? 'Editing your message'
-                : `Replying to ${replyTo!.authorId === activeUser ? 'yourself' : partnerName}`}
+                ? tr('Editing your message')
+                : replyTo!.authorId === activeUser
+                ? tr('Replying to yourself')
+                : tr('Replying to {name}', { name: partnerName })}
             </p>
-            <p className="truncate text-xs text-linen-secondary">{editing ? editing.original : replyTo!.snippet || 'Message'}</p>
+            <p className="truncate text-xs text-linen-secondary">{editing ? editing.original : snippetShown(replyTo!.snippet)}</p>
           </div>
           <button
             type="button"
@@ -1834,7 +1897,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               cancelCompose();
               restoreComposerFocus();
             }}
-            aria-label={editing ? 'Stop editing' : 'Cancel reply'}
+            aria-label={editing ? tr('Stop editing') : tr('Cancel reply')}
             className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-linen-secondary hover:bg-linen-variant hover:text-linen-primary transition-colors"
           >
             <X className="w-4 h-4" />
@@ -1844,7 +1907,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {preparingPhotos > 0 && (
         <p className="mx-4 mt-2 text-[11px] text-linen-secondary" aria-live="polite">
-          {preparingPhotos === 1 ? 'Getting the photo ready…' : `Getting ${preparingPhotos} photos ready…`}
+          {preparingPhotos === 1 ? tr('Getting the photo ready…') : tr('Getting {n} photos ready…', { n: preparingPhotos })}
         </p>
       )}
 
@@ -1872,7 +1935,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   ? 'bg-linen-variant text-linen-primary'
                   : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
               }`}
-              title="Emoji"
+              title={tr('Emoji')}
             >
               <Smile className="w-5 h-5" />
             </button>
@@ -1891,10 +1954,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 onKeyDown={handleComposerKey}
                 enterKeyHint={touchFirst ? 'enter' : 'send'}
                 autoCapitalize="sentences"
-                aria-label={editing ? 'New words for your message' : `Message to ${partnerName}`}
+                aria-label={editing ? tr('New words for your message') : tr('Message to {name}', { name: partnerName })}
                 // Short enough for one line on a small phone; whose chat this is
                 // is already in the header right above.
-                placeholder="A quiet thought…"
+                placeholder={tr('A quiet thought…')}
                 className={`block w-full resize-none overflow-y-hidden px-4 py-2.5 text-sm leading-5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary placeholder:text-linen-secondary/60 select-text ${
                   showPhotoButton ? (touchFirst ? 'pr-20' : 'pr-11') : showLaterButton ? 'pr-11' : ''
                 }`}
@@ -1905,8 +1968,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
-                  aria-label="Take a photo"
-                  title="Take a photo"
+                  aria-label={tr('Take a photo')}
+                  title={tr('Take a photo')}
                   className="absolute right-10 bottom-1 h-[34px] w-[34px] rounded-lg flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
                 >
                   <Camera className="w-5 h-5" />
@@ -1916,8 +1979,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <button
                   type="button"
                   onClick={() => photoInputRef.current?.click()}
-                  aria-label="Send a photo"
-                  title="Send a photo"
+                  aria-label={tr('Send a photo')}
+                  title={tr('Send a photo')}
                   className="absolute right-1 bottom-1 h-[34px] w-[34px] rounded-lg flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
                 >
                   <ImageIcon className="w-5 h-5" />
@@ -1927,8 +1990,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setLaterOpen(true)}
-                  aria-label="Send later"
-                  title="Send later"
+                  aria-label={tr('Send later')}
+                  title={tr('Send later')}
                   className="absolute right-1 bottom-1 h-[34px] w-[34px] rounded-lg flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors"
                 >
                   <AlarmClock className="w-5 h-5" />
@@ -1972,7 +2035,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 onMouseDown={keepComposerFocus}
                 onClick={handleSendText}
                 disabled={!inputText.trim()}
-                aria-label="Send"
+                aria-label={tr('Send')}
                 className="h-[42px] w-[42px] shrink-0 flex items-center justify-center rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 disabled:opacity-40 transition-all"
               >
                 <Send className="w-4 h-4" />
@@ -2029,7 +2092,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <PhotoViewer
           src={onceView.src}
           caption={onceView.caption}
-          note="View once. It's gone when you close it."
+          note={tr("View once. It's gone when you close it.")}
           onClose={() => setOnceView(null)}
         />
       )}
@@ -2053,11 +2116,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
           key={viewerMessage.id}
           onPrev={prevId ? () => setViewerId(prevId) : undefined}
           onNext={nextId ? () => setViewerId(nextId) : undefined}
-          position={photoIds.length > 1 ? `${mediaOpen ? photoIds.length - viewerIndex : viewerIndex + 1} of ${photoIds.length}` : undefined}
+          position={
+            photoIds.length > 1
+              ? tr('{n} of {total}', { n: mediaOpen ? photoIds.length - viewerIndex : viewerIndex + 1, total: photoIds.length })
+              : undefined
+          }
           onShowInChat={mediaOpen ? () => showInChat(viewerMessage.id) : undefined}
           src={viewerMessage.photoDataUrl!}
-          caption={`${who(viewerMessage.authorId, activeUser, partnerName)}${
-            viewerMessage.sentAt ? ' · ' + TIME_FORMAT.format(viewerMessage.sentAt) : ''
+          caption={`${whoShown(viewerMessage.authorId, activeUser, partnerName)}${
+            viewerMessage.sentAt ? ' · ' + timeOf(viewerMessage.sentAt) : ''
           }`}
           onClose={() => setViewerId(null)}
           onSave={() => void savePhoto(viewerMessage)}
@@ -2068,7 +2135,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
         isOpen={showNeedModal}
         onClose={() => setShowNeedModal(false)}
         onSelectNeed={(need) => {
-          onSendMessage(`I need: ${need.title} — ${need.description}`, true);
+          // Sent in the words of whoever sends it.
+          onSendMessage(tr('I need: {title} — {description}', { title: tr(need.title), description: tr(need.description) }), true);
           haptic('confirm');
           setShowNeedModal(false);
         }}
@@ -2087,8 +2155,15 @@ const ViewOnceMark: React.FC<{ mine: boolean; opened: boolean; canOpen: boolean;
   canOpen,
   onOpen
 }) => {
-  const title = opened ? 'Opened' : 'Photo';
-  const detail = opened ? 'View-once photo' : mine ? 'Not opened yet' : canOpen ? 'Tap to view once' : 'View-once photo';
+  const tr = useT();
+  const title = opened ? tr('Opened') : tr('Photo');
+  const detail = opened
+    ? tr('View-once photo')
+    : mine
+    ? tr('Not opened yet')
+    : canOpen
+    ? tr('Tap to view once')
+    : tr('View-once photo');
   const body = (
     <>
       <span
@@ -2105,7 +2180,7 @@ const ViewOnceMark: React.FC<{ mine: boolean; opened: boolean; canOpen: boolean;
     </>
   );
   return canOpen ? (
-    <button type="button" onClick={onOpen} aria-label="Open the view-once photo" className="flex items-center gap-2.5">
+    <button type="button" onClick={onOpen} aria-label={tr('Open the view-once photo')} className="flex items-center gap-2.5">
       {body}
     </button>
   ) : (

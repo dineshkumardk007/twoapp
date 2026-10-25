@@ -6,6 +6,7 @@ import { MAX_ANSWER_CHARS } from '../core/sharedRecords';
 import { formatDay, localDateKey } from '../core/ourDates';
 import { useToday } from '../core/useToday';
 import { haptic } from '../core/haptics';
+import { useT } from '../core/i18n';
 
 interface DailyQuestionCardProps {
   answers: DailyAnswer[];
@@ -85,6 +86,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
   onAnswer,
   onSendToChat
 }) => {
+  const tr = useT();
   const today = useToday();
   const [spicy, setSpicy] = useState(false);
   // A draft per question, so looking at the spicy one and back keeps what
@@ -181,12 +183,12 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
   };
 
   const askInChat = () => {
-    onSendToChat(`Today's question: “${question.prompt}”`);
+    onSendToChat(tr('Today\'s question: “{prompt}”', { prompt: question.prompt }));
     markSent();
   };
 
   const remindInChat = () => {
-    onSendToChat(`I've answered today's question - your turn: “${question.prompt}”`);
+    onSendToChat(tr('I\'ve answered today\'s question - your turn: “{prompt}”', { prompt: question.prompt }));
     markSent();
   };
 
@@ -226,10 +228,10 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex flex-wrap items-center gap-2 min-w-0">
           <Sparkles className="w-4 h-4 text-linen-accent shrink-0" />
-          <span className="text-xs font-semibold tracking-wider uppercase text-linen-accent">Today's question</span>
+          <span className="text-xs font-semibold tracking-wider uppercase text-linen-accent">{tr("Today's question")}</span>
           {TIER_LABELS[question.tier] && (
             <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-linen-variant text-linen-secondary border border-linen-border">
-              {TIER_LABELS[question.tier]}
+              {tr(TIER_LABELS[question.tier])}
             </span>
           )}
         </div>
@@ -244,14 +246,15 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
               ? 'bg-linen-variant text-linen-primary border-linen-accent/40 font-medium'
               : 'text-linen-secondary border-linen-border hover:bg-linen-variant'
           }`}
-          title="Spicy questions are for when you both want them"
+          title={tr('Spicy questions are for when you both want them')}
         >
           <Flame className={`w-3 h-3 shrink-0 ${spicy ? 'text-linen-accent' : ''}`} />
-          {spicy ? 'Spicy: on' : 'Spicy: off'}
+          {spicy ? tr('Spicy: on') : tr('Spicy: off')}
         </button>
       </div>
 
-      <p className="font-serif text-lg sm:text-xl text-linen-primary leading-relaxed my-3 font-normal break-words">
+      {/* The questions are in English (data/questions), whatever the phone's language. */}
+      <p lang="en" className="font-serif text-lg sm:text-xl text-linen-primary leading-relaxed my-3 font-normal break-words">
         “{question.prompt}”
       </p>
 
@@ -260,19 +263,19 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
       {mine && theirs && (
         <div className="space-y-2.5 mt-4 animate-scale-up">
           <AnswerBubble label={partnerName} text={theirs.text} tone="theirs" />
-          <AnswerBubble label="You" text={mine.text} tone="mine" />
-          <p className="text-[11px] text-linen-secondary text-center pt-1">You both answered - talk it over tonight</p>
+          <AnswerBubble label={tr('You')} text={mine.text} tone="mine" />
+          <p className="text-[11px] text-linen-secondary text-center pt-1">{tr('You both answered - talk it over tonight')}</p>
         </div>
       )}
 
       {/* Yours is in; theirs is not yet. */}
       {mine && !theirs && (
         <div className="space-y-3 mt-4">
-          <AnswerBubble label="Your answer" text={mine.text} tone="mine" />
+          <AnswerBubble label={tr('Your answer')} text={mine.text} tone="mine" />
           <div className="flex items-start gap-2 text-xs text-linen-secondary">
             <Hourglass className="w-3.5 h-3.5 mt-0.5 shrink-0 text-linen-accent" />
             <span>
-              Waiting for {partnerName}. You'll see each other's answers as soon as they answer.
+              {tr("Waiting for {name}. You'll see each other's answers as soon as they answer.", { name: partnerName })}
             </span>
           </div>
           <button
@@ -281,7 +284,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-linen-border bg-linen-variant/50 text-linen-primary text-xs font-medium hover:bg-linen-variant transition-colors disabled:opacity-60"
           >
             <Send className="w-3.5 h-3.5" />
-            {alreadySent ? 'Sent to chat' : `Tell ${partnerName} in chat`}
+            {alreadySent ? tr('Sent to chat') : tr('Tell {name} in chat', { name: partnerName })}
           </button>
         </div>
       )}
@@ -292,11 +295,11 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
           {theirs ? (
             <div className="flex items-center gap-2 rounded-xl bg-linen-variant/60 border border-linen-border px-3 py-2 text-xs text-linen-primary">
               <Lock className="w-3.5 h-3.5 shrink-0 text-linen-accent" />
-              <span>{partnerName} has answered. Answer to see theirs.</span>
+              <span>{tr('{name} has answered. Answer to see theirs.', { name: partnerName })}</span>
             </div>
           ) : (
             <p className="text-xs text-linen-secondary">
-              Answer on your own. You'll both see each other's answers once you've both answered.
+              {tr("Answer on your own. You'll both see each other's answers once you've both answered.")}
             </p>
           )}
           <textarea
@@ -304,8 +307,8 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
             onChange={e => setDraft(draftKey, e.target.value)}
             maxLength={MAX_ANSWER_CHARS}
             rows={3}
-            placeholder="Your answer…"
-            aria-label="Your answer"
+            placeholder={tr('Your answer…')}
+            aria-label={tr('Your answer')}
             className="w-full px-3.5 py-2.5 rounded-xl bg-linen-variant/40 border border-linen-border text-linen-primary text-sm leading-relaxed placeholder:text-linen-secondary/70 focus:outline-hidden focus:border-linen-accent/60 resize-none"
           />
           <div className="flex items-center justify-between gap-3">
@@ -314,7 +317,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
               disabled={alreadySent}
               className="text-xs text-linen-secondary hover:text-linen-primary underline-offset-2 hover:underline disabled:no-underline disabled:opacity-60 min-w-0 text-left"
             >
-              {alreadySent ? 'Sent to chat' : 'Ask in chat instead'}
+              {alreadySent ? tr('Sent to chat') : tr('Ask in chat instead')}
             </button>
             <button
               onClick={lockIn}
@@ -322,10 +325,10 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
               className="inline-flex shrink-0 items-center gap-1.5 px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
             >
               <Lock className="w-3.5 h-3.5" />
-              Lock in my answer
+              {tr('Lock in my answer')}
             </button>
           </div>
-          <p className="text-[10px] text-linen-secondary text-right -mt-1">Answers can't be changed once locked in</p>
+          <p className="text-[10px] text-linen-secondary text-right -mt-1">{tr("Answers can't be changed once locked in")}</p>
         </div>
       )}
 
@@ -336,9 +339,11 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
           className="mt-4 w-full flex items-center justify-between gap-2 rounded-xl border border-dashed border-linen-border px-3 py-2 text-left text-xs text-linen-secondary hover:bg-linen-variant/40 transition-colors"
         >
           <span className="min-w-0">
-            {partnerName} answered today's {spicy ? 'everyday' : 'spicy'} question too
+            {spicy
+              ? tr("{name} answered today's everyday question too", { name: partnerName })
+              : tr("{name} answered today's spicy question too", { name: partnerName })}
           </span>
-          <span className="shrink-0 font-medium text-linen-primary">Show it</span>
+          <span className="shrink-0 font-medium text-linen-primary">{tr('Show it')}</span>
         </button>
       )}
 
@@ -348,27 +353,27 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
         return (
           <div key={key} className="mt-4 pt-3 border-t border-linen-border/50 space-y-2.5">
             <div className="text-[10px] font-semibold uppercase tracking-wider text-linen-secondary">
-              Yesterday's question
+              {tr("Yesterday's question")}
             </div>
-            {item.prompt && <p className="font-serif text-sm text-linen-primary leading-snug">“{item.prompt}”</p>}
+            {item.prompt && <p lang="en" className="font-serif text-sm text-linen-primary leading-snug">“{item.prompt}”</p>}
             {item.mine ? (
               <div className="space-y-2 animate-scale-up">
                 <AnswerBubble label={partnerName} text={item.theirs.text} tone="theirs" compact />
-                <AnswerBubble label="You" text={item.mine.text} tone="mine" compact />
+                <AnswerBubble label={tr('You')} text={item.mine.text} tone="mine" compact />
               </div>
             ) : (
               <>
                 <div className="flex items-center gap-2 rounded-xl bg-linen-variant/60 border border-linen-border px-3 py-2 text-xs text-linen-primary">
                   <Lock className="w-3.5 h-3.5 shrink-0 text-linen-accent" />
-                  <span>{partnerName} answered. There's still time - answer to see theirs.</span>
+                  <span>{tr("{name} answered. There's still time - answer to see theirs.", { name: partnerName })}</span>
                 </div>
                 <textarea
                   value={lateDraft}
                   onChange={e => setDraft(key, e.target.value)}
                   maxLength={MAX_ANSWER_CHARS}
                   rows={2}
-                  placeholder="Your answer…"
-                  aria-label="Your answer to yesterday's question"
+                  placeholder={tr('Your answer…')}
+                  aria-label={tr("Your answer to yesterday's question")}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-linen-variant/40 border border-linen-border text-linen-primary text-sm leading-relaxed placeholder:text-linen-secondary/70 focus:outline-hidden focus:border-linen-accent/60 resize-none"
                 />
                 <div className="flex justify-end">
@@ -378,7 +383,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
                     className="inline-flex shrink-0 items-center gap-1.5 px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
                   >
                     <Lock className="w-3.5 h-3.5" />
-                    Lock in my answer
+                    {tr('Lock in my answer')}
                   </button>
                 </div>
               </>
@@ -394,7 +399,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
             aria-expanded={earlierOpen}
             className="w-full flex items-center justify-between text-xs text-linen-secondary hover:text-linen-primary"
           >
-            <span>Earlier answers ({earlier.length})</span>
+            <span>{tr('Earlier answers ({n})', { n: earlier.length })}</span>
             {earlierOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
           {earlierOpen && (
@@ -402,13 +407,13 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
               {shownEarlier.map(pair => (
                 <div key={`${pair.day}|${pair.mine.questionId}`} className="space-y-2">
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-linen-secondary">
-                    {pair.day === today ? 'Today' : formatDay(pair.day, false)}
+                    {pair.day === today ? tr('Today') : formatDay(pair.day, false)}
                   </div>
                   {pair.prompt && (
-                    <p className="font-serif text-sm text-linen-primary leading-snug">“{pair.prompt}”</p>
+                    <p lang="en" className="font-serif text-sm text-linen-primary leading-snug">“{pair.prompt}”</p>
                   )}
                   <AnswerBubble label={partnerName} text={pair.theirs.text} tone="theirs" compact />
-                  <AnswerBubble label="You" text={pair.mine.text} tone="mine" compact />
+                  <AnswerBubble label={tr('You')} text={pair.mine.text} tone="mine" compact />
                 </div>
               ))}
               {earlier.length > EARLIER_SHOWN && (
@@ -416,7 +421,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
                   onClick={() => setShowAllEarlier(!showAllEarlier)}
                   className="text-xs font-medium text-linen-primary hover:underline underline-offset-2"
                 >
-                  {showAllEarlier ? 'Show fewer' : `Show all ${earlier.length}`}
+                  {showAllEarlier ? tr('Show fewer') : tr('Show all {n}', { n: earlier.length })}
                 </button>
               )}
             </div>

@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { ChevronLeft, ChevronRight, Download, MessageSquare, X } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
+import { useT } from '../core/i18n';
 
 interface PhotoViewerProps {
   src: string;
@@ -47,6 +48,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
   position,
   onShowInChat
 }) => {
+  const tr = useT();
   useBackLayer(true, onClose);
   const imgRef = useRef<HTMLImageElement>(null);
   const view = useRef({ scale: 1, x: 0, y: 0 });
@@ -192,7 +194,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close photo"
+          aria-label={tr('Close photo')}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white hover:bg-white/10"
         >
           <X className="h-6 w-6" />
@@ -205,7 +207,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
           <button
             type="button"
             onClick={onShowInChat}
-            aria-label="Show in chat"
+            aria-label={tr('Show in chat')}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white hover:bg-white/10"
           >
             <MessageSquare className="h-5 w-5" />
@@ -218,7 +220,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             className="flex h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-medium text-white hover:bg-white/10"
           >
             <Download className="h-5 w-5" />
-            Save
+            {tr('Save')}
           </button>
         )}
       </div>
@@ -228,7 +230,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
           type="button"
           onClick={onPrev}
           onPointerDown={e => e.stopPropagation()}
-          aria-label="Previous photo"
+          aria-label={tr('Previous photo')}
           className="absolute left-1 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50"
         >
           <ChevronLeft className="h-6 w-6" />
@@ -239,7 +241,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
           type="button"
           onClick={onNext}
           onPointerDown={e => e.stopPropagation()}
-          aria-label="Next photo"
+          aria-label={tr('Next photo')}
           className="absolute right-1 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50"
         >
           <ChevronRight className="h-6 w-6" />

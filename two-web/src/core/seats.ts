@@ -35,6 +35,11 @@ function readOwnDeviceNames(): string[] {
  * their name, and that is not a clash. Kept per device, and only names: there
  * is nothing secret in them.
  */
+/** Every name this phone knows its owner by on other devices, for telling them so (core/names). */
+export function ownDeviceNames(): string[] {
+  return readOwnDeviceNames();
+}
+
 export function isOwnDeviceName(name: string): boolean {
   const wanted = name.trim().toLowerCase();
   return readOwnDeviceNames().some(n => n.trim().toLowerCase() === wanted);

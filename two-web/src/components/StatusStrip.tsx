@@ -3,6 +3,7 @@ import { ChevronRight, Plus } from 'lucide-react';
 import { liveStatus, type StatusNote } from '../core/status';
 import { useNowAt } from '../core/useToday';
 import { clockTime } from '../core/when';
+import { useT } from '../core/i18n';
 import { StatusSheet } from './StatusSheet';
 
 interface StatusStripProps {
@@ -19,6 +20,7 @@ interface StatusStripProps {
  * when its time is up.
  */
 export const StatusStrip: React.FC<StatusStripProps> = ({ partnerName, mine, theirs, onSet, onClear }) => {
+  const tr = useT();
   const [open, setOpen] = useState(false);
   // Drawn again when the sooner of the two runs out; what shows is decided
   // by the clock as it is now, not as it was when last drawn.
@@ -29,7 +31,7 @@ export const StatusStrip: React.FC<StatusStripProps> = ({ partnerName, mine, the
 
   return (
     <>
-    <section aria-label="Statuses" className="overflow-hidden rounded-2xl border border-linen-border bg-linen-surface shadow-xs">
+    <section aria-label={tr('Statuses')} className="overflow-hidden rounded-2xl border border-linen-border bg-linen-surface shadow-xs">
       {theirLive && (
         <div className="flex items-center gap-3 px-4 py-3" role="status">
           <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-linen-variant text-lg leading-none">
@@ -37,9 +39,9 @@ export const StatusStrip: React.FC<StatusStripProps> = ({ partnerName, mine, the
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium text-linen-primary">
-              {partnerName} · {theirLive.text}
+              {partnerName} · {tr(theirLive.text)}
             </span>
-            <span className="block text-[11px] text-linen-secondary">Since {clockTime(theirLive.setAt)}</span>
+            <span className="block text-[11px] text-linen-secondary">{tr('Since {time}', { time: clockTime(theirLive.setAt) })}</span>
           </span>
         </div>
       )}
@@ -56,10 +58,10 @@ export const StatusStrip: React.FC<StatusStripProps> = ({ partnerName, mine, the
               {myLive.emoji || '💬'}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-linen-primary">You · {myLive.text}</span>
-              <span className="block text-[11px] text-linen-secondary">Until {clockTime(myLive.clearsAt)}</span>
+              <span className="block truncate text-sm font-medium text-linen-primary">{tr('You')} · {tr(myLive.text)}</span>
+              <span className="block text-[11px] text-linen-secondary">{tr('Until {time}', { time: clockTime(myLive.clearsAt) })}</span>
             </span>
-            <span className="shrink-0 text-xs font-semibold text-linen-accent">Change</span>
+            <span className="shrink-0 text-xs font-semibold text-linen-accent">{tr('Change')}</span>
           </>
         ) : (
           <>
@@ -67,9 +69,9 @@ export const StatusStrip: React.FC<StatusStripProps> = ({ partnerName, mine, the
               <Plus className="h-4 w-4 text-aurora-violet" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-linen-primary">Set your status</span>
+              <span className="block text-sm font-medium text-linen-primary">{tr('Set your status')}</span>
               <span className="block truncate text-[11px] text-linen-secondary">
-                On the way, reached home, free to talk - {partnerName} sees it
+                {tr('On the way, reached home, free to talk - {name} sees it', { name: partnerName })}
               </span>
             </span>
             <ChevronRight className="h-4 w-4 shrink-0 text-linen-secondary" />

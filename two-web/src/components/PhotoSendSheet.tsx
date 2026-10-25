@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Send, X } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
+import { useT } from '../core/i18n';
 import { ViewOnceIcon } from './ViewOnceIcon';
 
 interface PhotoSendSheetProps {
@@ -20,6 +21,7 @@ interface PhotoSendSheetProps {
  * Back or the cross puts them down without sending anything.
  */
 export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerName, onSend, onClose }) => {
+  const tr = useT();
   useBackLayer(true, onClose);
   const urls = useMemo(() => files.map(f => URL.createObjectURL(f)), [files]);
   useEffect(() => () => urls.forEach(u => URL.revokeObjectURL(u)), [urls]);
@@ -31,20 +33,22 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={single ? `Photo for ${partnerName}` : `${files.length} photos for ${partnerName}`}
+      aria-label={
+        single ? tr('Photo for {name}', { name: partnerName }) : tr('{n} photos for {name}', { n: files.length, name: partnerName })
+      }
       className="no-remap fixed inset-0 z-[86] flex flex-col bg-[#0b0816] text-white"
     >
       <div className="flex items-center gap-3 px-4 pb-3 pt-[max(env(safe-area-inset-top),14px)]">
         <button
           type="button"
           onClick={onClose}
-          aria-label="Don't send"
+          aria-label={tr("Don't send")}
           className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/12 hover:bg-white/20 transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
         <span className="min-w-0 truncate text-[15px] font-semibold">
-          {single ? `Photo for ${partnerName}` : `${files.length} photos for ${partnerName}`}
+          {single ? tr('Photo for {name}', { name: partnerName }) : tr('{n} photos for {name}', { n: files.length, name: partnerName })}
         </span>
       </div>
 
@@ -65,7 +69,7 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
               key={url}
               type="button"
               onClick={() => setShown(i)}
-              aria-label={`Photo ${i + 1}`}
+              aria-label={tr('Photo {n}', { n: i + 1 })}
               aria-current={i === shown}
               className={`h-14 w-14 shrink-0 overflow-hidden rounded-xl ${i === shown ? 'ring-2 ring-white' : 'opacity-70'}`}
             >
@@ -78,7 +82,7 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
       <div className="px-4 pt-3.5 pb-[max(env(safe-area-inset-bottom),22px)]">
         {single && viewOnce && (
           <p className="mb-3 text-center text-xs leading-relaxed text-white/75" aria-live="polite">
-            View once is on. {partnerName} can open it one time, then it's gone from both phones.
+            {tr("View once is on. {name} can open it one time, then it's gone from both phones.", { name: partnerName })}
           </p>
         )}
         <div className="flex items-center gap-3">
@@ -93,7 +97,7 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
               <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-white text-[#1d1638]">
                 <ViewOnceIcon className="h-5 w-5" />
               </span>
-              View once
+              {tr('View once')}
               <span
                 aria-hidden="true"
                 className={`relative ml-auto h-6 w-[42px] shrink-0 rounded-full transition-colors ${
@@ -108,12 +112,12 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
               </span>
             </button>
           ) : (
-            <p className="min-w-0 flex-1 text-xs leading-relaxed text-white/70">View once is for one photo at a time.</p>
+            <p className="min-w-0 flex-1 text-xs leading-relaxed text-white/70">{tr('View once is for one photo at a time.')}</p>
           )}
           <button
             type="button"
             onClick={() => onSend(single && viewOnce)}
-            aria-label={single ? 'Send photo' : `Send ${files.length} photos`}
+            aria-label={single ? tr('Send photo') : tr('Send {n} photos', { n: files.length })}
             className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-gradient-to-br from-aurora-violet via-aurora-pink to-[rgb(var(--c-button-end))] shadow-glow active:scale-95 transition-transform"
           >
             <Send className="h-[22px] w-[22px]" />

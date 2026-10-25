@@ -24,6 +24,7 @@ import type { ComingUpDay } from '../core/comingUp';
 import { ArrangeHomeSheet } from '../components/ArrangeHomeSheet';
 import { StatusStrip } from '../components/StatusStrip';
 import { HomeCardId, HomeLayout, readHomeLayout, writeHomeLayout } from '../core/homeLayout';
+import { useT } from '../core/i18n';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -104,6 +105,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   partnerNews = [],
   partnerUpdate
 }) => {
+  const tr = useT();
   const [showComfortBox, setShowComfortBox] = useState(false);
   const [showCoRegulation, setShowCoRegulation] = useState(false);
   const [showHeartModal, setShowHeartModal] = useState(false);
@@ -128,7 +130,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
     ? state.partnerReport.notAboutYouActive
     : state.userReport.notAboutYouActive;
 
-  const partnerName = state.partnerName || 'Partner';
+  // "Partner" is the stand-in until their name arrives (core/storage), said
+  // in this phone's language; a name stays as it is.
+  const partnerName = state.partnerName && state.partnerName !== 'Partner' ? state.partnerName : tr('Partner');
   // userReport is the creator's seat, not "you": this phone's own report is
   // the one for its seat.
   const myReport = state.activeUser === 'user' ? state.userReport : state.partnerReport;
@@ -202,8 +206,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
               >
                 <Heart className="w-4 h-4 shrink-0 text-linen-accent" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm text-linen-primary">Comfort box</span>
-                  <span className="block text-xs text-linen-secondary">For heavy days - open it, or fill it for {partnerName}</span>
+                  <span className="block text-sm text-linen-primary">{tr('Comfort box')}</span>
+                  <span className="block text-xs text-linen-secondary">{tr('For heavy days - open it, or fill it for {name}', { name: partnerName })}</span>
                 </span>
                 <ChevronRight className="w-4 h-4 shrink-0 text-linen-secondary" />
               </button>
@@ -218,14 +222,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <h4 className="font-serif text-base font-medium text-linen-primary">
-                      {myHeavyDay ? 'Go gently today' : `A heavy day for ${partnerName}`}
+                      {myHeavyDay ? tr('Go gently today') : tr('A heavy day for {name}', { name: partnerName })}
                     </h4>
                     <p className="text-xs text-linen-secondary mt-0.5">
                       {myHeavyDay
                         ? comfortForMe
-                          ? `${partnerName} left something in your comfort box, with nothing asked of you.`
-                          : 'Breathing and a hug are here whenever you need them.'
-                        : 'Something kind in the comfort box might help.'}
+                          ? tr('{name} left something in your comfort box, with nothing asked of you.', { name: partnerName })
+                          : tr('Breathing and a hug are here whenever you need them.')
+                        : tr('Something kind in the comfort box might help.')}
                     </p>
                   </div>
                 </div>
@@ -233,7 +237,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   onClick={() => setShowComfortBox(true)}
                   className="w-full px-3.5 py-2 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
                 >
-                  Open the comfort box
+                  {tr('Open the comfort box')}
                 </button>
               </div>
             )}
@@ -251,14 +255,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <button
                   onClick={() => triggerGlobalPulse('Thinking of you')}
                   className="w-14 h-14 rounded-[20px] bg-linen-accent text-linen-surface flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-glow cursor-pointer shrink-0"
-                  aria-label={`Send ${partnerName} a heartbeat`}
+                  aria-label={tr('Send {name} a heartbeat', { name: partnerName })}
                 >
                   <Heart className="heart-beat w-7 h-7 fill-current" />
                 </button>
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-serif text-base font-medium text-linen-primary">Thinking of you</h4>
+                  <h4 className="font-serif text-base font-medium text-linen-primary">{tr('Thinking of you')}</h4>
                   <p className="text-xs text-linen-secondary mt-0.5">
-                    Tap the heart to send {partnerName} a heartbeat
+                    {tr('Tap the heart to send {name} a heartbeat', { name: partnerName })}
                   </p>
                 </div>
               </div>
@@ -268,14 +272,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   className="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-linen-variant/60 border border-linen-border text-linen-primary text-xs font-medium hover:bg-linen-variant active:scale-95 transition-all cursor-pointer"
                 >
                   <Heart className="w-3.5 h-3.5 shrink-0 text-linen-accent" />
-                  <span className="truncate">Heart options</span>
+                  <span className="truncate">{tr('Heart options')}</span>
                 </button>
                 <button
                   onClick={() => setShowCoRegulation(true)}
                   className="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-linen-variant/60 border border-linen-border text-linen-primary text-xs font-medium hover:bg-linen-variant active:scale-95 transition-all cursor-pointer"
                 >
                   <Wind className="w-3.5 h-3.5 shrink-0 text-linen-accent" />
-                  <span className="truncate">Breathe together</span>
+                  <span className="truncate">{tr('Breathe together')}</span>
                 </button>
               </div>
             </div>
@@ -302,15 +306,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="rounded-3xl border border-linen-border bg-gradient-to-r from-linen-variant/30 via-linen-surface to-linen-variant/20 p-5 sm:p-6">
               <div className="flex items-center space-x-2 text-linen-secondary mb-2">
                 <Quote className="w-4 h-4 text-linen-accent shrink-0" />
-                <span className="text-xs font-medium uppercase tracking-wider text-linen-secondary">Quote of the day</span>
+                <span className="text-xs font-medium uppercase tracking-wider text-linen-secondary">{tr('Quote of the day')}</span>
               </div>
-              <p className="font-serif italic text-base sm:text-lg text-linen-primary leading-relaxed mb-2 break-words">
+              {/* The quotes are in English (data/quotes), whatever the phone's language. */}
+              <p lang="en" className="font-serif italic text-base sm:text-lg text-linen-primary leading-relaxed mb-2 break-words">
                 “{resurfacedQuote.quote}”
               </p>
               <div className="text-xs text-linen-secondary flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium min-w-0">— {resurfacedQuote.author}{resurfacedQuote.source ? `, ${resurfacedQuote.source}` : ''}</span>
+                <span lang="en" className="font-medium min-w-0">— {resurfacedQuote.author}{resurfacedQuote.source ? `, ${resurfacedQuote.source}` : ''}</span>
                 <span className="text-[11px] text-linen-accent bg-linen-surface px-2 py-0.5 rounded-md border border-linen-border/60">
-                  Picked for your {WEATHER_WORD[weather]} weather
+                  {tr(`Picked for your ${WEATHER_WORD[weather]} weather`)}
                 </span>
               </div>
             </div>
@@ -336,7 +341,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           twice in a day. */}
       <PartnerActivityCard
         news={partnerNews}
-        partnerName={state.partnerName || 'Your partner'}
+        partnerName={state.partnerName === 'Partner' ? tr('Partner') : state.partnerName || tr('Your partner')}
         onNavigate={onNavigate}
         labelFor={destinationName}
       />
@@ -361,17 +366,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-linen-primary">
-              {partnerName}'s phone has an older Two
+              {tr("{name}'s phone has an older Two", { name: partnerName })}
             </p>
             <p className="mt-0.5 text-[11px] leading-relaxed text-linen-secondary">
-              They're on {partnerUpdate.version}. New things work best when both phones match, so remind{' '}
-              {partnerName} to update.
+              {tr("They're on {version}. New things work best when both phones match, so remind {name} to update.", {
+                version: partnerUpdate.version,
+                name: partnerName
+              })}
             </p>
           </div>
           <button
             type="button"
             onClick={partnerUpdate.onDismiss}
-            aria-label="Dismiss"
+            aria-label={tr('Dismiss')}
             className="shrink-0 rounded-lg p-1 text-linen-secondary hover:bg-linen-variant transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" />
@@ -389,12 +396,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-linen-primary">
-                {nudge.everBackedUp ? 'Time for a fresh backup' : 'Keep a backup of your space'}
+                {nudge.everBackedUp ? tr('Time for a fresh backup') : tr('Keep a backup of your space')}
               </p>
               <p className="mt-0.5 text-[11px] leading-relaxed text-linen-secondary">
                 {nudge.everBackedUp
-                  ? `Your last backup was ${nudge.daysSince} days ago. A new one keeps everything since then safe.`
-                  : 'If this phone is ever lost, a backup brings everything back. It takes a minute, locked with a password only you know.'}
+                  ? tr('Your last backup was {n} days ago. A new one keeps everything since then safe.', { n: nudge.daysSince })
+                  : tr('If this phone is ever lost, a backup brings everything back. It takes a minute, locked with a password only you know.')}
               </p>
             </div>
           </div>
@@ -407,7 +414,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               }}
               className="px-3 py-1.5 rounded-xl text-xs font-medium text-linen-secondary hover:bg-linen-variant transition-colors cursor-pointer"
             >
-              Later
+              {tr('Later')}
             </button>
             <button
               type="button"
@@ -417,7 +424,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               }}
               className="px-3.5 py-1.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-semibold hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
             >
-              Back up now
+              {tr('Back up now')}
             </button>
           </div>
         </div>
@@ -440,15 +447,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <Sparkles className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-linen-accent">A short tour</h4>
-              <p className="text-xs text-linen-primary font-serif font-medium">A day with Two, in five short scenes</p>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-linen-accent">{tr('A short tour')}</h4>
+              <p className="text-xs text-linen-primary font-serif font-medium">{tr('A day with Two, in five short scenes')}</p>
             </div>
           </div>
           <button
             onClick={onOpenTour}
             className="inline-flex items-center px-3 py-1.5 rounded-xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer shrink-0"
           >
-            Start tour
+            {tr('Start tour')}
           </button>
         </div>
       )}
@@ -465,7 +472,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           className="inline-flex items-center gap-2 rounded-[14px] border border-linen-border bg-linen-surface px-4 py-2.5 text-[13px] font-semibold text-linen-primary shadow-xs hover:bg-linen-variant/60 transition-colors cursor-pointer"
         >
           <SlidersHorizontal className="h-4 w-4 text-linen-accent" />
-          Arrange Home
+          {tr('Arrange Home')}
         </button>
       </div>
 

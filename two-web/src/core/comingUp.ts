@@ -12,6 +12,7 @@
 
 import { FESTIVALS, type Festival } from '../data/festivals';
 import { localDateKey } from './ourDates';
+import { activeLocale, tr } from './i18n';
 
 export const COMING_UP = 'COMING_UP';
 
@@ -160,16 +161,17 @@ export function upcoming(
       const mine = d.who === options.me;
       out.push({
         key: d.id,
-        title: mine ? 'Your birthday' : `${partner}'s birthday`,
+        title: mine ? tr('Your birthday') : tr("{name}'s birthday", { name: partner }),
         emoji: '🎂',
         date,
         daysUntil,
-        ...(mine ? {} : { wish: `Happy birthday, ${partner}! 🎂❤️` })
+        // Sent into the chat as you would write it: in your own language.
+        ...(mine ? {} : { wish: tr('Happy birthday, {name}! 🎂❤️', { name: partner }) })
       });
     } else if (d.kind === 'meet') {
-      out.push({ key: d.id, title: daysUntil === 0 ? 'You meet today' : 'You meet', emoji: '🤍', date, daysUntil });
+      out.push({ key: d.id, title: daysUntil === 0 ? tr('You meet today') : tr('You meet'), emoji: '🤍', date, daysUntil });
     } else {
-      out.push({ key: d.id, title: d.label || 'A day of yours', emoji: '📅', date, daysUntil });
+      out.push({ key: d.id, title: d.label || tr('A day of yours'), emoji: '📅', date, daysUntil });
     }
   }
 
@@ -180,7 +182,17 @@ export function upcoming(
     if (!date) continue;
     const daysUntil = dayNumber(date) - t;
     if (daysUntil > within) continue;
-    out.push({ key: `fest-${f.id}-${date}`, title: f.name, sub: f.tamil, emoji: f.emoji, date, daysUntil, wish: f.wish });
+    // In Tamil, its Tamil name alone; in English, both.
+    const inTamil = activeLocale() === 'ta' && !!f.tamil;
+    out.push({
+      key: `fest-${f.id}-${date}`,
+      title: inTamil ? f.tamil : f.name,
+      ...(inTamil ? {} : { sub: f.tamil }),
+      emoji: f.emoji,
+      date,
+      daysUntil,
+      wish: f.wish
+    });
   }
 
   return out.sort((a, b) => a.daysUntil - b.daysUntil || a.title.localeCompare(b.title));
@@ -188,9 +200,9 @@ export function upcoming(
 
 /** "Today", "Tomorrow", "In 12 days". */
 export function whenWords(daysUntil: number): string {
-  if (daysUntil === 0) return 'Today';
-  if (daysUntil === 1) return 'Tomorrow';
-  return `In ${daysUntil} days`;
+  if (daysUntil === 0) return tr('Today');
+  if (daysUntil === 1) return tr('Tomorrow');
+  return tr('In {n} days', { n: daysUntil });
 }
 
 const HIDDEN_KEY = 'two_hidden_festivals_v1';

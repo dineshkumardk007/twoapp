@@ -14,6 +14,7 @@ import { useBackLayer } from '../core/backStack';
 import { haptic } from '../core/haptics';
 import { useToday } from '../core/useToday';
 import { newId } from '../core/ids';
+import { activeLocale, dateLocale, useT } from '../core/i18n';
 
 type Seat = 'user' | 'partner';
 
@@ -27,10 +28,17 @@ interface ComingUpCardProps {
   onSendWish: (text: string) => void;
 }
 
-const WEEKDAY = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+// One for each language: Tamil day and month names in Tamil.
+const WEEKDAY = new Map<string, Intl.DateTimeFormat>();
 const weekday = (key: string) => {
   const [y, m, d] = key.split('-').map(Number);
-  return WEEKDAY.format(new Date(y, m - 1, d));
+  const locale = dateLocale() || 'en-IN';
+  let format = WEEKDAY.get(locale);
+  if (!format) {
+    format = new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short' });
+    WEEKDAY.set(locale, format);
+  }
+  return format.format(new Date(y, m - 1, d));
 };
 
 /**
@@ -39,16 +47,20 @@ const weekday = (key: string) => {
  * day, a birthday of your partner's or a festival has a wish to send.
  */
 export const ComingUpCard: React.FC<ComingUpCardProps> = ({ days, me, partnerName, onSave, onSendWish }) => {
+  const tr = useT();
   const today = useToday();
   const [editing, setEditing] = useState(false);
   const [hidden, setHidden] = useState(readHiddenFestivals);
   const [sent, setSent] = useState<string[]>([]);
   useBackLayer(editing, () => setEditing(false));
-  const partner = partnerName.trim() || 'Partner';
+  const partner = partnerName.trim() || tr('Partner');
+  // upcoming() words its titles in the language it is called in, so a new
+  // language is a new list.
+  const locale = activeLocale();
 
   const list = useMemo(
     () => upcoming(days, { me, partnerName: partner, hiddenFestivals: hidden, today }).slice(0, 5),
-    [days, me, partner, hidden, today]
+    [days, me, partner, hidden, today, locale]
   );
 
   return (
@@ -58,13 +70,13 @@ export const ComingUpCard: React.FC<ComingUpCardProps> = ({ days, me, partnerNam
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linen-variant text-linen-accent">
             <CalendarClock className="h-5 w-5" />
           </div>
-          <h3 className="min-w-0 flex-1 font-serif text-lg font-medium text-linen-primary">Coming up</h3>
+          <h3 className="min-w-0 flex-1 font-serif text-lg font-medium text-linen-primary">{tr('Coming up')}</h3>
           <button
             type="button"
             onClick={() => setEditing(true)}
             className="rounded-xl px-3 py-1.5 text-xs font-medium text-linen-accent hover:bg-linen-variant"
           >
-            {liveDays(days).length ? 'Change' : 'Add days'}
+            {liveDays(days).length ? tr('Change') : tr('Add days')}
           </button>
         </div>
 
@@ -74,7 +86,7 @@ export const ComingUpCard: React.FC<ComingUpCardProps> = ({ days, me, partnerNam
             onClick={() => setEditing(true)}
             className="mt-3 block w-full rounded-2xl border border-dashed border-linen-border p-3 text-left text-xs leading-relaxed text-linen-secondary hover:border-linen-accent/50"
           >
-            Add your birthdays and the next time you meet. Both your phones will show what is coming.
+            {tr('Add your birthdays and the next time you meet. Both your phones will show what is coming.')}
           </button>
         ) : (
           <ul className="mt-3 space-y-2">
@@ -111,7 +123,7 @@ export const ComingUpCard: React.FC<ComingUpCardProps> = ({ days, me, partnerNam
                       className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-linen-primary px-3 py-1.5 text-xs font-medium text-linen-surface hover:opacity-90 disabled:opacity-60"
                     >
                       {done ? <Check className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
-                      {done ? 'Sent' : 'Send a wish'}
+                      {done ? tr('Sent') : tr('Send a wish')}
                     </button>
                   )}
                 </li>
@@ -157,6 +169,7 @@ interface EditorProps {
  * The days are shared by both phones; which festivals show is this phone's.
  */
 const ComingUpEditor: React.FC<EditorProps> = ({ days, me, partner, today, hidden, onClose, onSave }) => {
+  const tr = useT();
   const them: Seat = me === 'user' ? 'partner' : 'user';
   // The days as they were when this opened. Saving sends only what was
   // changed here, judged against these - not against the days as they are
@@ -179,7 +192,7 @@ const ComingUpEditor: React.FC<EditorProps> = ({ days, me, partner, today, hidde
 
   const addOwn = () => {
     if (!label.trim() || !date) {
-      setError('Give the day a name and a date.');
+      setError(tr('Give the day a name and a date.'));
       return;
     }
     setOwn(list => [...list, { id: newId('day'), kind: 'day', label: label.trim().slice(0, 60), date, yearly, at: 0 }]);
@@ -192,12 +205,12 @@ const ComingUpEditor: React.FC<EditorProps> = ({ days, me, partner, today, hidde
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     if ((myBirthday && myBirthday > today) || (theirBirthday && theirBirthday > today)) {
-      setError('A birthday has to be a day that has already happened.');
+      setError(tr('A birthday has to be a day that has already happened.'));
       return;
     }
     // A day written in but not yet added is added, rather than lost.
     if (!!label.trim() !== !!date) {
-      setError('Give the day a name and a date, or leave both empty.');
+      setError(tr('Give the day a name and a date, or leave both empty.'));
       return;
     }
     const pending: ComingUpDay[] =
@@ -229,40 +242,40 @@ const ComingUpEditor: React.FC<EditorProps> = ({ days, me, partner, today, hidde
         className="w-full max-w-md max-h-[88dvh] overflow-y-auto space-y-4 rounded-3xl border border-linen-border bg-linen-surface p-6 shadow-2xl"
       >
         <div className="flex items-center justify-between gap-3">
-          <h3 className="font-serif text-lg font-medium text-linen-primary">Coming up</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1.5 text-linen-secondary hover:text-linen-primary">
+          <h3 className="font-serif text-lg font-medium text-linen-primary">{tr('Coming up')}</h3>
+          <button type="button" onClick={onClose} aria-label={tr('Close')} className="rounded-lg p-1.5 text-linen-secondary hover:text-linen-primary">
             <X className="h-4 w-4" />
           </button>
         </div>
         <p className="text-xs leading-relaxed text-linen-secondary">
-          Both your phones show these days, and either of you can change them.
+          {tr('Both your phones show these days, and either of you can change them.')}
         </p>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-linen-primary">Your birthday</span>
+          <span className="mb-1 block text-xs font-medium text-linen-primary">{tr('Your birthday')}</span>
           <input type="date" value={myBirthday} max={today} onChange={e => { setMyBirthday(e.target.value); setError(''); }} className={field} />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-linen-primary">{partner}'s birthday</span>
+          <span className="mb-1 block text-xs font-medium text-linen-primary">{tr("{name}'s birthday", { name: partner })}</span>
           <input type="date" value={theirBirthday} max={today} onChange={e => { setTheirBirthday(e.target.value); setError(''); }} className={field} />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-linen-primary">The next time you meet</span>
+          <span className="mb-1 block text-xs font-medium text-linen-primary">{tr('The next time you meet')}</span>
           <input type="date" value={meet} min={today} onChange={e => setMeet(e.target.value)} className={field} />
         </label>
 
         <div>
-          <span className="mb-1 block text-xs font-medium text-linen-primary">Days of your own</span>
+          <span className="mb-1 block text-xs font-medium text-linen-primary">{tr('Days of your own')}</span>
           {own.length > 0 && (
             <ul className="mb-2 space-y-1.5">
               {own.map(d => (
                 <li key={d.id} className="flex items-center gap-2 rounded-xl bg-linen-variant/40 px-3 py-2 text-xs">
                   <span className="min-w-0 flex-1 truncate text-linen-primary">{d.label}</span>
-                  <span className="shrink-0 text-linen-secondary">{formatDay(d.date, !d.yearly)}{d.yearly ? ' · every year' : ''}</span>
+                  <span className="shrink-0 text-linen-secondary">{d.yearly ? tr('{date} · every year', { date: formatDay(d.date, false) }) : formatDay(d.date, true)}</span>
                   <button
                     type="button"
                     onClick={() => setOwn(list => list.filter(x => x.id !== d.id))}
-                    aria-label={`Take off ${d.label}`}
+                    aria-label={tr('Take off {label}', { label: String(d.label) })}
                     className="shrink-0 rounded-lg p-1 text-linen-secondary hover:text-rose-600"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -272,23 +285,23 @@ const ComingUpEditor: React.FC<EditorProps> = ({ days, me, partner, today, hidde
             </ul>
           )}
           <div className="space-y-2 rounded-xl border border-dashed border-linen-border p-2.5">
-            <input value={label} onChange={e => { setLabel(e.target.value); setError(''); }} placeholder="e.g. Amma's birthday" maxLength={60} className={field} />
-            <input type="date" value={date} onChange={e => { setDate(e.target.value); setError(''); }} className={field} aria-label="Its date" />
+            <input value={label} onChange={e => { setLabel(e.target.value); setError(''); }} placeholder={tr("e.g. Amma's birthday")} maxLength={60} className={field} />
+            <input type="date" value={date} onChange={e => { setDate(e.target.value); setError(''); }} className={field} aria-label={tr('Its date')} />
             <div className="flex items-center justify-between gap-2">
               <label className="inline-flex items-center gap-2 text-xs text-linen-primary">
                 <input type="checkbox" checked={yearly} onChange={e => setYearly(e.target.checked)} className="accent-linen-accent" />
-                Every year
+                {tr('Every year')}
               </label>
               <button type="button" onClick={addOwn} className="inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium text-linen-accent hover:bg-linen-variant">
                 <Plus className="h-3.5 w-3.5" />
-                Add this day
+                {tr('Add this day')}
               </button>
             </div>
           </div>
         </div>
 
         <div>
-          <span className="mb-1 block text-xs font-medium text-linen-primary">Festivals on this phone</span>
+          <span className="mb-1 block text-xs font-medium text-linen-primary">{tr('Festivals on this phone')}</span>
           <div className="grid grid-cols-1 gap-1.5 min-[400px]:grid-cols-2">
             {FESTIVALS.map(f => (
               <label key={f.id} className="flex items-center gap-2 rounded-xl bg-linen-variant/40 px-3 py-2 text-xs text-linen-primary">
@@ -306,7 +319,7 @@ const ComingUpEditor: React.FC<EditorProps> = ({ days, me, partner, today, hidde
                   className="accent-linen-accent"
                 />
                 <span aria-hidden="true">{f.emoji}</span>
-                <span className="min-w-0 truncate">{f.name}</span>
+                <span className="min-w-0 truncate">{activeLocale() === 'ta' && f.tamil ? f.tamil : f.name}</span>
               </label>
             ))}
           </div>
@@ -316,10 +329,10 @@ const ComingUpEditor: React.FC<EditorProps> = ({ days, me, partner, today, hidde
 
         <div className="flex items-center justify-end gap-2 border-t border-linen-border/40 pt-3">
           <button type="button" onClick={onClose} className="px-3.5 py-1.5 text-xs text-linen-secondary hover:text-linen-primary">
-            Cancel
+            {tr('Cancel')}
           </button>
           <button type="submit" className="rounded-xl bg-linen-primary px-4 py-1.5 text-xs font-medium text-linen-surface hover:opacity-90">
-            Save
+            {tr('Save')}
           </button>
         </div>
       </form>

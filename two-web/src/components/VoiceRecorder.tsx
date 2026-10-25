@@ -15,6 +15,7 @@ import {
 } from '../core/voice';
 import { haptic } from '../core/haptics';
 import { pushBackLayer } from '../core/backStack';
+import { tr, useT } from '../core/i18n';
 import { VoiceNotePlayer } from './VoiceNotePlayer';
 
 // Hold-to-talk, for a composer.
@@ -72,9 +73,9 @@ const MIC_REFUSED = "Two can't use the microphone — allow it in the phone's se
 
 function startErrorText(err: unknown): string {
   const name = (err as { name?: string } | null)?.name;
-  if (name === 'NotAllowedError' || name === 'SecurityError') return MIC_REFUSED;
-  if (name === 'NotFoundError') return 'No microphone found';
-  return "Couldn't start recording";
+  if (name === 'NotAllowedError' || name === 'SecurityError') return tr(MIC_REFUSED);
+  if (name === 'NotFoundError') return tr('No microphone found');
+  return tr("Couldn't start recording");
 }
 
 function prefersReducedMotion(): boolean {
@@ -335,8 +336,8 @@ class RecorderEngine {
             this.toIdle();
             this.hint(
               performance.now() - this.pressAt > SLOW_START_MS
-                ? 'Microphone ready — hold the button to record'
-                : 'Hold to record, release to send'
+                ? tr('Microphone ready — hold the button to record')
+                : tr('Hold to record, release to send')
             );
             return;
           }
@@ -390,7 +391,7 @@ class RecorderEngine {
       this.live.bump();
     } else {
       this.toIdle();
-      this.hint(recording.elapsedMs() < VOICE_MIN_MS ? 'Too short to send' : "Couldn't keep that recording");
+      this.hint(recording.elapsedMs() < VOICE_MIN_MS ? tr('Too short to send') : tr("Couldn't keep that recording"));
     }
   };
 
@@ -409,7 +410,7 @@ class RecorderEngine {
     if (this.session !== session) return;
     this.toIdle();
     if (note) this.deliver(note);
-    else this.hint(recording.elapsedMs() < VOICE_MIN_MS ? 'Too short to send' : "Couldn't keep that recording");
+    else this.hint(recording.elapsedMs() < VOICE_MIN_MS ? tr('Too short to send') : tr("Couldn't keep that recording"));
   };
 
   /** Sends the note listened back to. */
@@ -451,7 +452,7 @@ class RecorderEngine {
     // Stopped for the person, finger down or not; the lift that follows then
     // means nothing (the state is no longer 'holding').
     haptic('tick');
-    this.hint("That's the longest a voice note can be");
+    this.hint(tr("That's the longest a voice note can be"));
     void this.stopToReview();
   }
 
@@ -491,7 +492,7 @@ class RecorderEngine {
         return;
       case 'review':
         this.discard();
-        this.hint('Voice note discarded');
+        this.hint(tr('Voice note discarded'));
         return;
     }
   };
@@ -679,12 +680,12 @@ class RecorderEngine {
     if (cancelled) {
       // The phone took the touch (a call, the notification shade).
       this.cancel();
-      if (ran > STOPPED_NOTICE_MS) this.hint('Recording stopped');
+      if (ran > STOPPED_NOTICE_MS) this.hint(tr('Recording stopped'));
       return;
     }
     if (ran < VOICE_MIN_MS) {
       this.cancel();
-      this.hint('Hold to record, release to send');
+      this.hint(tr('Hold to record, release to send'));
       return;
     }
     void this.stopAndSend();
@@ -842,6 +843,7 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
   rec,
   className = ''
 }) => {
+  const tr = useT();
   const engine = rec.engine;
   const live = useLive(engine);
   const { state, busy, draft } = rec;
@@ -903,11 +905,11 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
   const seconds = elapsedMs / 1000;
   const warn = seconds >= VOICE_WARN_SECONDS;
   const timerText = warn
-    ? `${formatVoiceDuration(Math.max(0, Math.ceil(VOICE_MAX_SECONDS - seconds)))} left`
+    ? tr('{time} left', { time: formatVoiceDuration(Math.max(0, Math.ceil(VOICE_MAX_SECONDS - seconds))) })
     : formatVoiceDuration(seconds);
   const levels = recording ? recording.levels() : [];
 
-  const status = state === 'locked' ? 'Recording' : state === 'review' ? 'Recording stopped. Ready to send' : '';
+  const status = state === 'locked' ? tr('Recording') : state === 'review' ? tr('Recording stopped. Ready to send') : '';
 
   const dot = (
     <span
@@ -931,7 +933,7 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
     body = (
       <span ref={flashRef} className="flex items-center gap-1.5 pl-1 text-sm font-medium text-rose-600">
         <Trash2 className="h-4 w-4" aria-hidden="true" />
-        Cancelled
+        {tr('Cancelled')}
       </span>
     );
   } else if (state === 'starting') {
@@ -962,7 +964,7 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
               style={{ opacity: 1 - fade * 0.85 }}
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              Slide to cancel
+              {tr('Slide to cancel')}
             </span>
           </span>
         )}
@@ -971,13 +973,13 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
   } else if (state === 'locked') {
     body = (
       <>
-        <StripButton label="Delete recording" onClick={engine.trash} disabled={busy}>
+        <StripButton label={tr('Delete recording')} onClick={engine.trash} disabled={busy}>
           <Trash2 className="h-[18px] w-[18px]" aria-hidden="true" />
         </StripButton>
         {dot}
         {timer}
         <LiveWave levels={levels} />
-        <StripButton label="Stop recording" onClick={() => void engine.stopToReview()} disabled={busy}>
+        <StripButton label={tr('Stop recording')} onClick={() => void engine.stopToReview()} disabled={busy}>
           <Square className="h-3.5 w-3.5 text-rose-600" fill="currentColor" aria-hidden="true" />
         </StripButton>
       </>
@@ -985,7 +987,7 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
   } else if (state === 'review' && draft) {
     body = (
       <>
-        <StripButton label="Delete voice note" onClick={engine.trash}>
+        <StripButton label={tr('Delete voice note')} onClick={engine.trash}>
           <Trash2 className="h-[18px] w-[18px]" aria-hidden="true" />
         </StripButton>
         <div className="min-w-0 flex-1">
@@ -1019,7 +1021,7 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
         <div
           ref={rootRef}
           role="group"
-          aria-label="Voice note"
+          aria-label={tr('Voice note')}
           // A thumb landing between the buttons - on the timer, the waveform
           // - must not take focus from the text box, or the keyboard drops
           // and the whole panel jumps.
@@ -1063,19 +1065,20 @@ export const VoiceMicButton: React.FC<{
   /** Why it is disabled, when it is. */
   disabledLabel?: string;
   className?: string;
-}> = ({ rec, disabledLabel = 'Not during a call', className = '' }) => {
+}> = ({ rec, disabledLabel, className = '' }) => {
+  const tr = useT();
   const engine = rec.engine;
   if (!rec.supported) return null;
   const { state, busy } = rec;
   const pressed = (state === 'starting' || state === 'holding') && !busy;
   const sends = state === 'locked' || state === 'review';
   const label = rec.disabled
-    ? disabledLabel
+    ? disabledLabel ?? tr('Not during a call')
     : sends
-    ? 'Send voice note'
+    ? tr('Send voice note')
     : state === 'holding'
-    ? 'Recording, release to send'
-    : 'Hold to record a voice note';
+    ? tr('Recording, release to send')
+    : tr('Hold to record a voice note');
 
   return (
     <button

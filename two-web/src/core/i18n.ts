@@ -1,7 +1,21 @@
 // Internationalization (i18n) Framework for Two
 // Supported Locales: English (en), Spanish (es), French (fr), German (de), Japanese (ja), Hindi (hi)
+//
+// Tamil (ta) is the one offered on screen, beside English (OFFERED_LOCALES);
+// the others translate only the few words in `translations` below and were
+// never reachable from Settings.
+//
+// Words in Tamil are looked up by their English (tr, with the dictionary in
+// i18n.ta.ts), so the English on screen stays exactly what it was and a word
+// with no Tamil yet simply stays English. Only what is shown is translated:
+// what goes to the other phone - a status chosen from the list, a heart's
+// own words, "Photo" in the quote of a reply - travels in English and is put
+// into each phone's own language when it is shown there.
 
-export type Locale = 'en' | 'es' | 'fr' | 'de' | 'ja' | 'hi';
+import { createContext, useContext } from 'react';
+import { TA } from './i18n.ta';
+
+export type Locale = 'en' | 'es' | 'fr' | 'de' | 'ja' | 'hi' | 'ta';
 
 export interface Translations {
   appName: string;
@@ -59,7 +73,7 @@ export interface Translations {
   };
 }
 
-export const translations: Record<Locale, Translations> = {
+export const translations: Record<Exclude<Locale, 'ta'>, Translations> = {
   en: {
     appName: 'Two',
     tagline: 'An analogue-warm, cryptographically sovereign space for two.',
@@ -393,5 +407,91 @@ export const translations: Record<Locale, Translations> = {
 };
 
 export const getTranslation = (locale: Locale): Translations => {
+  // Tamil: the menu's words; Settings is not in Tamil yet.
+  if (locale === 'ta') return { ...translations.en, you: tr('You'), partner: tr('Partner'), tabs: taTabs(), actions: taActions() };
   return translations[locale] || translations.en;
 };
+
+const taTabs = (): Translations['tabs'] => {
+  const en = translations.en.tabs;
+  return Object.fromEntries(Object.entries(en).map(([k, v]) => [k, tr(v)])) as Translations['tabs'];
+};
+const taActions = (): Translations['actions'] => {
+  const en = translations.en.actions;
+  return Object.fromEntries(Object.entries(en).map(([k, v]) => [k, tr(v)])) as Translations['actions'];
+};
+
+/** The languages Settings offers, each named in itself. */
+export const OFFERED_LOCALES: ReadonlyArray<{ id: Locale; name: string }> = [
+  { id: 'en', name: 'English' },
+  { id: 'ta', name: 'தமிழ்' }
+];
+
+const LOCALE_KEY = 'two_locale_v1';
+
+/** This phone's language: chosen here, kept on this phone only. */
+export function readLocale(): Locale {
+  try {
+    const raw = localStorage.getItem(LOCALE_KEY);
+    return OFFERED_LOCALES.some(l => l.id === raw) ? (raw as Locale) : 'en';
+  } catch {
+    return 'en';
+  }
+}
+
+let current: Locale = readLocale();
+
+/** The language words are being put into right now. */
+export function activeLocale(): Locale {
+  return current;
+}
+
+/**
+ * Switches the words to another language, and keeps the choice. Called before
+ * the screen is drawn again (App), so everything drawn after says it the new way.
+ */
+export function chooseLocale(locale: Locale): void {
+  current = locale;
+  try {
+    localStorage.setItem(LOCALE_KEY, locale);
+  } catch {
+    /* storage unavailable: the choice lasts until Two is closed */
+  }
+  if (typeof document !== 'undefined') document.documentElement.lang = locale;
+}
+
+const DICTIONARIES: Partial<Record<Locale, Readonly<Record<string, string>>>> = { ta: TA };
+
+export type Vars = Record<string, string | number>;
+
+/**
+ * These English words in this phone's language - unchanged when there is no
+ * translation for them. `{name}` in them is filled from `vars`.
+ */
+export function tr(english: string, vars?: Vars): string {
+  const said = DICTIONARIES[current]?.[english] ?? english;
+  return vars ? said.replace(/\{(\w+)\}/g, (whole, key: string) => (key in vars ? String(vars[key]) : whole)) : said;
+}
+
+/**
+ * English with two meanings on screen - "Clear" weather and a "Clear" button:
+ * the dictionary holds this meaning as "Clear (status)". In English, and in a
+ * language without that entry, the English is shown as it is.
+ */
+export function trMeaning(english: string, meaning: string): string {
+  return DICTIONARIES[current]?.[`${english} (${meaning})`] ?? english;
+}
+
+/** For dates and times written by the phone: Tamil month and day names in Tamil. */
+export function dateLocale(): string | undefined {
+  return current === 'ta' ? 'ta-IN' : undefined;
+}
+
+/** Changes when the language does, so whatever reads it is drawn again. */
+export const LocaleContext = createContext<Locale>(current);
+
+/** tr, for a component: drawn again when the language changes. */
+export function useT(): typeof tr {
+  useContext(LocaleContext);
+  return tr;
+}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { MessageSquare, Mail, X, ArrowRight, Heart } from 'lucide-react';
+import { useT } from '../core/i18n';
 
 export interface InAppNotification {
   id: string;
@@ -20,6 +21,7 @@ export const InAppNotificationToast: React.FC<InAppNotificationToastProps> = ({
   onDismiss,
   onOpenTab
 }) => {
+  const tr = useT();
   if (!notification) return null;
 
   const getIcon = () => {
@@ -34,7 +36,7 @@ export const InAppNotificationToast: React.FC<InAppNotificationToastProps> = ({
   };
 
   return (
-    <aside aria-label="Partner notification" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[92vw] animate-in slide-in-from-top-4 duration-300">
+    <aside aria-label={tr('Partner notification')} className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[92vw] animate-in slide-in-from-top-4 duration-300">
       <div 
         onClick={() => {
           onOpenTab(notification.tabId);
@@ -52,7 +54,7 @@ export const InAppNotificationToast: React.FC<InAppNotificationToastProps> = ({
               {notification.title}
             </h5>
             <span className="text-[10px] text-linen-accent font-medium inline-flex items-center group-hover:translate-x-0.5 transition-transform">
-              Reply <ArrowRight className="w-2.5 h-2.5 ml-0.5" />
+              {tr('Reply')} <ArrowRight className="w-2.5 h-2.5 ml-0.5" />
             </span>
           </div>
           <p className="text-xs text-linen-secondary truncate mt-0.5">

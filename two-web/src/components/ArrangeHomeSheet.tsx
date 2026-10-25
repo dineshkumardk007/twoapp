@@ -13,6 +13,7 @@ import {
   moveCard,
   setCardShown
 } from '../core/homeLayout';
+import { useT } from '../core/i18n';
 
 const ICONS: Record<HomeCardId, React.ComponentType<{ className?: string }>> = {
   ourDays: CalendarHeart,
@@ -40,6 +41,7 @@ interface ArrangeHomeSheetProps {
  * behind the sheet. Back, Done or a tap above the sheet closes it.
  */
 export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, partnerName, onChange, onClose }) => {
+  const tr = useT();
   useBackLayer(true, onClose);
   const byId = new Map(HOME_CARDS.map(c => [c.id, c]));
   const last = layout.order.length - 1;
@@ -61,10 +63,10 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 id="arrange-home-title" className="font-serif text-xl font-semibold text-linen-primary">
-              Arrange your Home
+              {tr('Arrange your Home')}
             </h3>
             <p className="mt-0.5 text-xs leading-relaxed text-linen-secondary">
-              Move cards up or down, and switch off the ones you don't use. Just this phone.
+              {tr("Move cards up or down, and switch off the ones you don't use. Just this phone.")}
             </p>
           </div>
           <button
@@ -72,7 +74,7 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
             onClick={onClose}
             className="shrink-0 rounded-xl bg-linen-primary px-3.5 py-2 text-[13px] font-semibold text-linen-surface hover:opacity-90 transition-opacity"
           >
-            Done
+            {tr('Done')}
           </button>
         </div>
 
@@ -81,7 +83,8 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
             const card = byId.get(id)!;
             const Icon = ICONS[id];
             const shown = !layout.hidden.includes(id);
-            const note = !shown && card.stillShows ? card.stillShows() : '';
+            const label = tr(card.label);
+            const note = !shown && card.stillShows ? tr(card.stillShows()) : '';
             return (
               <div
                 key={id}
@@ -91,7 +94,7 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
                 {/* Switched off reads as greyed, not faded: its note has to stay readable. */}
                 <span className="min-w-0 flex-1">
                   <span className={`block text-sm font-medium ${shown ? 'text-linen-primary' : 'text-linen-secondary'}`}>
-                    {card.label}
+                    {label}
                   </span>
                   {note && <span className="block text-[11px] text-linen-secondary">{note}</span>}
                 </span>
@@ -99,7 +102,7 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
                   type="button"
                   onClick={() => onChange(moveCard(layout, id, -1))}
                   disabled={i === 0}
-                  aria-label={`Move ${card.label} up`}
+                  aria-label={tr('Move {card} up', { card: label })}
                   className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[10px] bg-linen-variant text-linen-secondary hover:text-linen-primary disabled:opacity-35 transition-colors"
                 >
                   <ChevronUp className="h-4 w-4" />
@@ -108,7 +111,7 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
                   type="button"
                   onClick={() => onChange(moveCard(layout, id, 1))}
                   disabled={i === last}
-                  aria-label={`Move ${card.label} down`}
+                  aria-label={tr('Move {card} down', { card: label })}
                   className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-[10px] bg-linen-variant text-linen-secondary hover:text-linen-primary disabled:opacity-35 transition-colors"
                 >
                   <ChevronDown className="h-4 w-4" />
@@ -117,7 +120,7 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
                   type="button"
                   role="switch"
                   aria-checked={shown}
-                  aria-label={`Show ${card.label}`}
+                  aria-label={tr('Show {card}', { card: label })}
                   onClick={() => onChange(setCardShown(layout, id, !shown))}
                   className={`relative ml-1 h-6 w-10 shrink-0 rounded-full transition-colors ${
                     shown ? 'bg-gradient-to-r from-aurora-violet to-aurora-pink' : 'bg-linen-secondary/30'
@@ -135,7 +138,7 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
         </div>
 
         <p className="mt-3 px-0.5 text-[11px] leading-relaxed text-linen-secondary">
-          News from {partnerName} and reminders always stay at the top, so you never miss them.
+          {tr('News from {name} and reminders always stay at the top, so you never miss them.', { name: partnerName })}
         </p>
         {!isDefaultLayout(layout) && (
           <button
@@ -143,7 +146,7 @@ export const ArrangeHomeSheet: React.FC<ArrangeHomeSheetProps> = ({ layout, part
             onClick={() => onChange(defaultLayout())}
             className="mt-2 self-center rounded-lg px-3 py-1.5 text-xs font-semibold text-linen-accent hover:bg-linen-variant transition-colors"
           >
-            Back to the usual order
+            {tr('Back to the usual order')}
           </button>
         )}
       </div>

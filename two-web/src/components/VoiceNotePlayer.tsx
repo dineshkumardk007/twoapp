@@ -11,6 +11,7 @@ import {
   saveVoiceRate
 } from '../core/voice';
 import { armEar, disarmEar, earIsNear, stopEar, EarNote } from '../core/earpiece';
+import { useT } from '../core/i18n';
 
 /**
  * One voice note, as a bubble shows it: a play button, the shape of the voice
@@ -118,6 +119,7 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
   onEnded,
   playSignal
 }) => {
+  const tr = useT();
   const t = TONES[tone];
   // Only a recording carried inside the message is ever played. Anything else
   // - nothing at all, a reference whose media did not come back, a web
@@ -696,7 +698,9 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
   const seconds = drag !== null ? drag * progressTotal : position;
   const timeText = drag !== null || started ? formatVoiceDuration(seconds) : formatVoiceDuration(shownTotal);
 
-  const playLabel = isPlaying ? 'Pause voice note' : `Play voice note, ${formatVoiceDuration(shownTotal)}`;
+  const playLabel = isPlaying
+    ? tr('Pause voice note')
+    : tr('Play voice note, {time}', { time: formatVoiceDuration(shownTotal) });
 
   return (
     <div
@@ -708,8 +712,8 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
         onMouseDown={keepFocus}
         onClick={toggle}
         disabled={!playable}
-        aria-label={playable ? playLabel : 'Voice note unavailable'}
-        title={playable ? playLabel : 'Voice note unavailable'}
+        aria-label={playable ? playLabel : tr('Voice note unavailable')}
+        title={playable ? playLabel : tr('Voice note unavailable')}
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 ${t.button} ${t.ring} disabled:cursor-default disabled:opacity-50`}
       >
         {busy ? (
@@ -727,13 +731,16 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
             ref={waveRef}
             role="slider"
             tabIndex={0}
-            aria-label="Position in voice note"
+            aria-label={tr('Position in voice note')}
             aria-valuemin={0}
             // Whole seconds, rounded down the way the visible "0:03" is, so a
             // screen reader hears the same numbers the label shows.
             aria-valuemax={Math.max(1, Math.floor(progressTotal || shownTotal))}
             aria-valuenow={Math.min(Math.floor(seconds), Math.max(1, Math.floor(progressTotal || shownTotal)))}
-            aria-valuetext={`${formatVoiceDuration(seconds)} of ${formatVoiceDuration(shownTotal || progressTotal)}`}
+            aria-valuetext={tr('{time} of {total}', {
+              time: formatVoiceDuration(seconds),
+              total: formatVoiceDuration(shownTotal || progressTotal)
+            })}
             onPointerDown={onWavePointerDown}
             onPointerMove={onWavePointerMove}
             onPointerUp={onWavePointerUp}
@@ -768,28 +775,28 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
               {showHeard && tone === 'mine' && (
                 <>
                   <Mic className={`h-3 w-3 ${heard ? 'text-sky-200' : 'text-white/50'}`} aria-hidden="true" />
-                  <span className="sr-only">{heard ? 'Heard' : 'Not heard yet'}</span>
+                  <span className="sr-only">{heard ? tr('Heard') : tr('Not heard yet')}</span>
                 </>
               )}
               {showHeard && tone === 'theirs' && !heard && (
                 <>
                   <span className="h-1.5 w-1.5 rounded-full bg-linen-accent" aria-hidden="true" />
-                  <span className="sr-only">New</span>
+                  <span className="sr-only">{tr('New')}</span>
                 </>
               )}
             </span>
           ) : (
-            <span>Voice note unavailable</span>
+            <span>{tr('Voice note unavailable')}</span>
           )}
           {failed ? (
-            <span className="truncate">Couldn't play</span>
+            <span className="truncate">{tr("Couldn't play")}</span>
           ) : playable && started ? (
             <button
               type="button"
               onPointerDown={keepFocus}
               onMouseDown={keepFocus}
               onClick={cycleRate}
-              aria-label={`Playback speed ${rate} times. Change speed`}
+              aria-label={tr('Playback speed {rate} times. Change speed', { rate })}
               className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 ${t.chip} ${t.ring}`}
             >
               {rate}×

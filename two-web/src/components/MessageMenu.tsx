@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
 import { isReactionEmoji, reactionRow, rememberReaction } from '../core/chatActions';
+import { useT } from '../core/i18n';
 import { EmojiPicker } from './EmojiPicker';
 
 export interface MessageMenuAction {
@@ -37,6 +38,7 @@ const GAP = 8;
  * Back, or a tap anywhere else, closes it.
  */
 export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction, onReact, actions, onClose }) => {
+  const tr = useT();
   useBackLayer(true, onClose);
   const panelRef = useRef<HTMLDivElement>(null);
   const [place, setPlace] = useState<{ top: number; left: number } | null>(null);
@@ -73,7 +75,7 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
       <div
         ref={panelRef}
         role="menu"
-        aria-label="Message"
+        aria-label={tr('Message')}
         className={`absolute w-[260px] max-w-[calc(100vw-24px)] rounded-2xl border border-linen-border bg-linen-surface surface-solid shadow-2xl overflow-hidden ${
           place ? 'menu-pop' : 'invisible'
         } ${side === 'right' ? 'origin-bottom-right' : 'origin-bottom-left'}`}
@@ -88,7 +90,7 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
                   key={emoji}
                   type="button"
                   role="menuitem"
-                  aria-label={chosen ? `Take off ${emoji}` : `React ${emoji}`}
+                  aria-label={chosen ? tr('Take off {emoji}', { emoji }) : tr('React {emoji}', { emoji })}
                   aria-pressed={chosen}
                   onClick={() => onReact(chosen ? '' : emoji)}
                   className={`h-10 w-10 rounded-full text-[22px] leading-none flex items-center justify-center transition-transform active:scale-90 ${
@@ -103,7 +105,7 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
             <button
               type="button"
               role="menuitem"
-              aria-label="React with another emoji"
+              aria-label={tr('React with another emoji')}
               aria-expanded={picking}
               onClick={() => setPicking(p => !p)}
               className={`h-10 w-10 rounded-full flex items-center justify-center text-linen-secondary transition-transform active:scale-90 ${
@@ -116,7 +118,7 @@ export const MessageMenu: React.FC<MessageMenuProps> = ({ anchor, side, reaction
         )}
         {reaction !== null && picking && (
           <EmojiPicker
-            title="React with"
+            title={tr('React with')}
             pickWord="React"
             only={isReactionEmoji}
             onClose={() => setPicking(false)}

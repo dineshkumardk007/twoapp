@@ -12,6 +12,16 @@ import {
 import { useBackLayer } from '../core/backStack';
 import { haptic } from '../core/haptics';
 import { useToday } from '../core/useToday';
+import { tr, useT } from '../core/i18n';
+
+/** "3rd", in the phone's language: ordinal() picks the ending, and each ending is its own key. */
+function nth(n: number): string {
+  const ending = ordinal(n).slice(String(n).length);
+  if (ending === 'st') return tr('{n}st', { n });
+  if (ending === 'nd') return tr('{n}nd', { n });
+  if (ending === 'rd') return tr('{n}rd', { n });
+  return tr('{n}th', { n });
+}
 
 interface OurDatesCardProps {
   dates?: OurDates;
@@ -29,6 +39,7 @@ interface OurDatesCardProps {
  * made up. Tapping it opens the same small editor either way.
  */
 export const OurDatesCard: React.FC<OurDatesCardProps> = ({ dates, onSave }) => {
+  const tr = useT();
   const today = useToday();
   const [editing, setEditing] = useState(false);
   useBackLayer(editing, () => setEditing(false));
@@ -61,9 +72,9 @@ export const OurDatesCard: React.FC<OurDatesCardProps> = ({ dates, onSave }) => 
               <CalendarHeart className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-serif text-lg font-medium text-linen-primary">When did your story begin?</h3>
+              <h3 className="font-serif text-lg font-medium text-linen-primary">{tr('When did your story begin?')}</h3>
               <p className="mt-0.5 text-xs text-linen-secondary">
-                Add your dates, and both your phones will keep count with you.
+                {tr('Add your dates, and both your phones will keep count with you.')}
               </p>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-linen-secondary" />
@@ -88,17 +99,17 @@ export const OurDatesCard: React.FC<OurDatesCardProps> = ({ dates, onSave }) => 
         {/* A halo of light in the corner, as on the hero of every Aurora screen. */}
         <span aria-hidden="true" className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full border-[16px] border-white/15" />
         <div className="relative flex items-center justify-between gap-3">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/85">Our days</span>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/85">{tr('Our days')}</span>
           <span className="inline-flex items-center gap-1 text-[11px] text-white/80">
             <Pencil className="h-3 w-3" />
-            Change
+            {tr('Change')}
           </span>
         </div>
 
         {since && count !== null && (
           <div className="relative mt-2">
             {count === 0 ? (
-              <p className="font-serif text-4xl font-semibold leading-tight text-white">Day one</p>
+              <p className="font-serif text-4xl font-semibold leading-tight text-white">{tr('Day one')}</p>
             ) : (
               <div className="flex flex-wrap items-baseline gap-x-2">
                 <span className="font-serif text-6xl font-semibold leading-none tracking-tight text-white tabular-nums drop-shadow-[0_2px_12px_rgba(60,0,80,0.35)]">
@@ -106,13 +117,13 @@ export const OurDatesCard: React.FC<OurDatesCardProps> = ({ dates, onSave }) => 
                 </span>
                 <span className="text-sm font-medium text-white/90">
                   {count < 0
-                    ? `${Math.abs(count) === 1 ? 'day' : 'days'} to go`
-                    : `${count === 1 ? 'day' : 'days'} together`}
+                    ? Math.abs(count) === 1 ? tr('day to go') : tr('days to go')
+                    : count === 1 ? tr('day together') : tr('days together')}
                 </span>
               </div>
             )}
             <p className="mt-1.5 text-xs text-white/80">
-              {count < 0 ? 'Begins' : 'Since'} {formatDay(since)}
+              {count < 0 ? tr('Begins {date}', { date: formatDay(since) }) : tr('Since {date}', { date: formatDay(since) })}
             </p>
           </div>
         )}
@@ -129,16 +140,23 @@ export const OurDatesCard: React.FC<OurDatesCardProps> = ({ dates, onSave }) => 
             <div className="min-w-0 flex-1">
               {next.daysUntil === 0 ? (
                 <>
-                  <p className="font-serif text-base font-semibold text-white">Happy anniversary</p>
+                  <p className="font-serif text-base font-semibold text-white">{tr('Happy anniversary')}</p>
                   <p className="text-xs text-white/80">
-                    {next.years ? `${next.years} ${next.years === 1 ? 'year' : 'years'} today` : 'Today is the day'}
+                    {next.years
+                      ? next.years === 1 ? tr('1 year today') : tr('{n} years today', { n: next.years })
+                      : tr('Today is the day')}
                   </p>
                 </>
               ) : (
                 <>
                   <p className="text-sm font-medium text-white">
-                    {next.years ? `Your ${ordinal(next.years)} anniversary` : 'Your anniversary'}{' '}
-                    {next.daysUntil === 1 ? 'is tomorrow' : `is in ${next.daysUntil} days`}
+                    {next.years
+                      ? next.daysUntil === 1
+                        ? tr('Your {nth} anniversary is tomorrow', { nth: nth(next.years) })
+                        : tr('Your {nth} anniversary is in {n} days', { nth: nth(next.years), n: next.daysUntil })
+                      : next.daysUntil === 1
+                        ? tr('Your anniversary is tomorrow')
+                        : tr('Your anniversary is in {n} days', { n: next.daysUntil })}
                   </p>
                   <p className="text-xs text-white/80">{formatDay(next.date, false)}</p>
                 </>
@@ -166,6 +184,7 @@ interface OurDatesEditorProps {
  * dates away again, and the card goes back to asking.
  */
 const OurDatesEditor: React.FC<OurDatesEditorProps> = ({ dates, today, onClose, onSave }) => {
+  const tr = useT();
   const storedSince = isCalendarDate(dates?.togetherSince) ? dates!.togetherSince! : '';
   // An anniversary kept without its year cannot sit in a date field. It
   // stays as it is unless this field is actually changed.
@@ -183,15 +202,15 @@ const OurDatesEditor: React.FC<OurDatesEditorProps> = ({ dates, today, onClose, 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     if (since && !isCalendarDate(since)) {
-      setError('That does not look like a date.');
+      setError(tr('That does not look like a date.'));
       return;
     }
     if (anniversary && !isCalendarDate(anniversary)) {
-      setError('That does not look like a date.');
+      setError(tr('That does not look like a date.'));
       return;
     }
     if ((since && since > today) || (anniversary && anniversary > today)) {
-      setError('Pick a day that has already happened.');
+      setError(tr('Pick a day that has already happened.'));
       return;
     }
     onSave({ togetherSince: toSendSince, anniversary: toSendAnniversary });
@@ -211,22 +230,22 @@ const OurDatesEditor: React.FC<OurDatesEditorProps> = ({ dates, today, onClose, 
         className="w-full max-w-md space-y-4 rounded-3xl border border-linen-border bg-linen-surface p-6 shadow-2xl"
       >
         <div className="flex items-center justify-between gap-3">
-          <h3 className="font-serif text-lg font-medium text-linen-primary">Your dates</h3>
+          <h3 className="font-serif text-lg font-medium text-linen-primary">{tr('Your dates')}</h3>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tr('Close')}
             className="rounded-lg p-1.5 text-linen-secondary hover:text-linen-primary"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
         <p className="text-xs leading-relaxed text-linen-secondary">
-          Both your phones show the same dates, and either of you can change them later.
+          {tr('Both your phones show the same dates, and either of you can change them later.')}
         </p>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-linen-primary">The day your story began</span>
+          <span className="mb-1 block text-xs font-medium text-linen-primary">{tr('The day your story began')}</span>
           <input
             type="date"
             value={since}
@@ -240,9 +259,9 @@ const OurDatesEditor: React.FC<OurDatesEditorProps> = ({ dates, today, onClose, 
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-linen-primary">Your anniversary</span>
+          <span className="mb-1 block text-xs font-medium text-linen-primary">{tr('Your anniversary')}</span>
           <span className="mb-1.5 block text-[11px] leading-relaxed text-linen-secondary">
-            A wedding day, or any day you celebrate. Leave it empty to celebrate the day your story began.
+            {tr('A wedding day, or any day you celebrate. Leave it empty to celebrate the day your story began.')}
           </span>
           <input
             type="date"
@@ -271,7 +290,7 @@ const OurDatesEditor: React.FC<OurDatesEditorProps> = ({ dates, today, onClose, 
               }}
               className="px-1 py-1.5 text-xs text-linen-secondary hover:text-linen-primary"
             >
-              Clear both
+              {tr('Clear both')}
             </button>
           ) : (
             <span />
@@ -282,14 +301,14 @@ const OurDatesEditor: React.FC<OurDatesEditorProps> = ({ dates, today, onClose, 
               onClick={onClose}
               className="px-3.5 py-1.5 text-xs text-linen-secondary hover:text-linen-primary"
             >
-              Cancel
+              {tr('Cancel')}
             </button>
             <button
               type="submit"
               disabled={!changed}
               className="rounded-xl bg-linen-primary px-4 py-1.5 text-xs font-medium text-linen-surface hover:opacity-90 disabled:opacity-40"
             >
-              Save
+              {tr('Save')}
             </button>
           </div>
         </div>

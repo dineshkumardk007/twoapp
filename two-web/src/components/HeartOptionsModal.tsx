@@ -4,6 +4,7 @@ import { triggerGlobalPulse, previewGlobalPulse } from './SensoryPulseOverlay';
 import { useBackLayer } from '../core/backStack';
 import { HEART_KINDS, PLAIN_HEART, type HeartKindId } from '../core/hearts';
 import { wsRelay } from '../core/ws';
+import { useT } from '../core/i18n';
 
 interface HeartOptionsModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
   onClose,
   partnerName = 'Partner',
 }) => {
+  const tr = useT();
   const [customNote, setCustomNote] = useState('');
   // The heart just sent: its words, and whether the relay has it yet. It
   // used to say "Delivered Live" at once, whether or not anything had gone.
@@ -59,10 +61,12 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSend = (note: string, kind: HeartKindId) => {
+  // `shown` is the words on this screen; `note` is what travels, which for a
+  // heart's own words stays in English (the other phone compares it).
+  const handleSend = (note: string, kind: HeartKindId, shown: string = note) => {
     // Its own line below says when it has gone, so no "Sent to" toast too.
     const id = triggerGlobalPulse(note, kind, { quiet: true });
-    setLastSent({ text: note, id, acked: false });
+    setLastSent({ text: shown, id, acked: false });
   };
 
   return (
@@ -82,19 +86,19 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="font-serif text-lg font-medium text-linen-primary">
-                  Heart Touches
+                  {tr('Heart Touches')}
                 </h3>
               </div>
               <p className="text-xs text-linen-secondary mt-0.5">
-                Each one feels different on {partnerName}'s phone
+                {tr("Each one feels different on {name}'s phone", { name: partnerName })}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-xl hover:bg-rose-100/60 text-linen-secondary hover:text-linen-primary transition-colors cursor-pointer"
-            title="Close"
-            aria-label="Close"
+            title={tr('Close')}
+            aria-label={tr('Close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -108,18 +112,18 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
             </div>
             <div className="min-w-0 flex-1">
               <h4 className="text-xs font-semibold text-white truncate">
-                A heart in one tap
+                {tr('A heart in one tap')}
               </h4>
               <p className="text-[11px] leading-snug text-rose-100">
-                {PLAIN_HEART.feels}
+                {tr(PLAIN_HEART.feels)}
               </p>
             </div>
           </div>
           <button
-            onClick={() => handleSend('Thinking of you', PLAIN_HEART.id)}
+            onClick={() => handleSend('Thinking of you', PLAIN_HEART.id, tr('Thinking of you'))}
             className="px-3.5 py-1.5 rounded-xl bg-white text-rose-600 text-xs font-semibold hover:bg-rose-50 active:scale-95 transition-all shadow-xs cursor-pointer shrink-0 ml-3"
           >
-            Send Touch
+            {tr('Send Touch')}
           </button>
         </div>
 
@@ -142,7 +146,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
               <span className="truncate font-medium">"{lastSent.text}"</span>
             </div>
             <span className="text-[11px] font-semibold ml-2 shrink-0">
-              {lastSent.acked ? 'Sent' : online ? 'Sending…' : 'Waiting for a connection'}
+              {lastSent.acked ? tr('Sent') : online ? tr('Sending…') : tr('Waiting for a connection')}
             </span>
           </div>
         )}
@@ -157,7 +161,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
             }`}
           >
-            Heart Touches ({HEART_KINDS.length})
+            {tr('Heart Touches ({n})', { n: HEART_KINDS.length })}
           </button>
           <button
             onClick={() => setActiveTab('custom')}
@@ -167,7 +171,7 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
                 : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
             }`}
           >
-            Custom Note
+            {tr('Custom Note')}
           </button>
         </div>
 
@@ -185,11 +189,11 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <h4 className="text-xs sm:text-sm font-semibold text-linen-primary truncate">
-                      {kind.title}
+                      {tr(kind.title)}
                     </h4>
                     {/* In full, on two lines if need be: it is what tells them apart. */}
                     <p className="text-[11px] leading-snug text-linen-secondary mt-0.5">
-                      {kind.feels}
+                      {tr(kind.feels)}
                     </p>
                   </div>
                 </div>
@@ -199,20 +203,20 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => previewGlobalPulse(kind.id)}
-                    aria-label={`Feel "${kind.title}" here`}
-                    title="Feel it here - nothing is sent"
+                    aria-label={tr('Feel "{title}" here', { title: tr(kind.title) })}
+                    title={tr('Feel it here - nothing is sent')}
                     className="h-[30px] w-[30px] rounded-xl flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
                   >
                     <Smartphone className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleSend(kind.note, kind.id)}
-                    aria-label={`Send "${kind.title}"`}
+                    onClick={() => handleSend(kind.note, kind.id, tr(kind.note))}
+                    aria-label={tr('Send "{title}"', { title: tr(kind.title) })}
                     className="px-3 py-1.5 rounded-xl bg-linen-accent text-linen-surface hover:opacity-90 text-xs font-medium transition-all shadow-2xs cursor-pointer flex items-center space-x-1 active:scale-95"
                   >
                     <Heart className="w-3 h-3 fill-current" />
-                    <span>Send</span>
+                    <span>{tr('Send')}</span>
                   </button>
                 </div>
               </div>
@@ -221,13 +225,13 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
             <div className="space-y-3.5">
               <div>
                 <label className="text-xs font-medium text-linen-primary block mb-1.5">
-                  Write a Personal Heart Note:
+                  {tr('Write a Personal Heart Note:')}
                 </label>
                 <div className="relative">
                   <textarea
                     value={customNote}
                     onChange={(e) => setCustomNote(e.target.value)}
-                    placeholder={`e.g. Thinking of you while sitting in the park...`}
+                    placeholder={tr('e.g. Thinking of you while sitting in the park...')}
                     rows={3}
                     className="w-full text-xs rounded-2xl border border-linen-border bg-linen-variant/30 p-3 text-linen-primary placeholder:text-linen-secondary/60 focus:outline-none focus:ring-1 focus:ring-rose-400 focus:border-rose-400 resize-none"
                   />
@@ -237,16 +241,17 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
               {/* Preset Chips */}
               <div>
                 <span className="text-[11px] font-medium text-linen-secondary block mb-1.5">
-                  Quick Loving Suggestions:
+                  {tr('Quick Loving Suggestions:')}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
+                  {/* Words the note sends: in the sender's own language. */}
                   {PRESET_CHIPS.map((chip, idx) => (
                     <button
                       key={idx}
-                      onClick={() => setCustomNote(chip)}
+                      onClick={() => setCustomNote(tr(chip))}
                       className="text-[11px] px-2.5 py-1 rounded-lg border border-rose-200/70 bg-rose-50/50 hover:bg-rose-100/70 text-rose-800 transition-colors cursor-pointer text-left"
                     >
-                      {chip}
+                      {tr(chip)}
                     </button>
                   ))}
                 </div>
@@ -254,14 +259,14 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
 
               <button
                 onClick={() => {
-                  const text = customNote.trim() || 'Thinking of you ❤️';
+                  const text = customNote.trim() || tr('Thinking of you ❤️');
                   handleSend(text, PLAIN_HEART.id);
                   setCustomNote('');
                 }}
                 className="w-full py-2.5 rounded-2xl bg-linen-accent text-linen-surface hover:opacity-90 text-xs font-semibold transition-all shadow-xs flex items-center justify-center space-x-2 cursor-pointer active:scale-98 mt-2"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Send Heart Note to {partnerName}</span>
+                <span>{tr('Send Heart Note to {name}', { name: partnerName })}</span>
               </button>
             </div>
           )}
@@ -271,13 +276,13 @@ export const HeartOptionsModal: React.FC<HeartOptionsModalProps> = ({
         <div className="p-3 sm:p-4 border-t border-linen-border/60 bg-linen-variant/20 flex items-center justify-between text-xs text-linen-secondary shrink-0">
           <span className="text-[11px] truncate flex items-center space-x-1">
             <Sparkles className="w-3 h-3 text-rose-500 inline mr-1 shrink-0" />
-            <span className="truncate">Private to you two</span>
+            <span className="truncate">{tr('Private to you two')}</span>
           </span>
           <button
             onClick={onClose}
             className="px-3.5 py-1.5 rounded-xl bg-linen-variant hover:bg-linen-border text-linen-primary font-medium transition-colors cursor-pointer text-xs shadow-2xs"
           >
-            Done
+            {tr('Done')}
           </button>
         </div>
       </div>

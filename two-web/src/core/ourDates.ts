@@ -9,6 +9,7 @@
 // about the hour can move them.
 
 import type { OurDates } from '../types';
+import { dateLocale } from './i18n';
 
 const FULL_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MONTH_DAY = /^(\d{2})-(\d{2})$/;
@@ -192,7 +193,7 @@ export function ordinal(n: number): string {
 /** "18 April 2022", or "14 October" without the year. */
 export function formatDay(key: string, withYear = true): string {
   const [y, m, d] = parts(key);
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+  return new Date(y, m - 1, d).toLocaleDateString(dateLocale(), {
     day: 'numeric',
     month: 'long',
     year: withYear ? 'numeric' : undefined

@@ -3,6 +3,7 @@ import { ChevronUp, X, Search, Pencil } from 'lucide-react';
 import { getDestinations, allDestinations, FAMILY_STYLE } from '../data/destinations';
 import { useBackLayer } from '../core/backStack';
 import { haptic } from '../core/haptics';
+import { useT } from '../core/i18n';
 
 interface AppDockProps {
   currentTab: string;
@@ -50,6 +51,7 @@ export const AppDock: React.FC<AppDockProps> = ({
   dotted,
   isTablet = false
 }) => {
+  const tr = useT();
   const [expanded, setExpanded] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -169,11 +171,15 @@ export const AppDock: React.FC<AppDockProps> = ({
       .map(g => ({
         ...g,
         items: g.items.filter(
-          i => i.name.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q)
+          i =>
+            i.name.toLowerCase().includes(q) ||
+            i.desc.toLowerCase().includes(q) ||
+            tr(i.name).toLowerCase().includes(q) ||
+            tr(i.desc).toLowerCase().includes(q)
         )
       }))
       .filter(g => g.items.length > 0);
-  }, [groups, search]);
+  }, [groups, search, tr]);
 
   return (
     <>
@@ -205,13 +211,13 @@ export const AppDock: React.FC<AppDockProps> = ({
                     onChange={e => setSearch(e.target.value)}
                     inputMode="search"
                     enterKeyHint="search"
-                    placeholder="Find anywhere in our sanctuary…"
+                    placeholder={tr('Find anywhere in our sanctuary…')}
                     className="w-full rounded-2xl border border-linen-border/70 bg-linen-variant/50 py-2.5 pl-9 pr-3 text-sm text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary/40"
                   />
                 </div>
                 <button
                   onClick={() => setExpanded(false)}
-                  aria-label="Close"
+                  aria-label={tr('Close')}
                   className="rounded-2xl border border-linen-border/70 bg-linen-surface/70 p-2.5 text-linen-secondary active:scale-95 transition-transform"
                 >
                   <X className="h-4 w-4" />
@@ -221,14 +227,14 @@ export const AppDock: React.FC<AppDockProps> = ({
 
             <div className="min-h-0 flex-1 overflow-y-auto scroll-contain px-4 pb-4">
               {filtered.length === 0 && (
-                <p className="py-10 text-center text-sm text-linen-secondary">Nothing by that name.</p>
+                <p className="py-10 text-center text-sm text-linen-secondary">{tr('Nothing by that name.')}</p>
               )}
 
               {filtered.map(group => (
                 <div key={group.title} className="mb-5">
                   <p className={`mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider ${FAMILY_STYLE[group.family].text}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${FAMILY_STYLE[group.family].dot}`} />
-                    {group.title}
+                    {tr(group.title)}
                   </p>
 
                   <div className={`grid gap-2 ${isTablet ? 'grid-cols-3' : 'grid-cols-2'}`}>
@@ -250,16 +256,17 @@ export const AppDock: React.FC<AppDockProps> = ({
                             <Icon className={`h-4 w-4 ${family.text}`} />
                           </span>
                           <span className="min-w-0">
-                            <span className="block truncate text-xs font-semibold text-linen-primary">
-                              {item.name}
+                            {/* Two lines rather than an ellipsis: a name is what you tap by. */}
+                            <span className="line-clamp-2 break-words text-xs font-semibold text-linen-primary">
+                              {tr(item.name)}
                             </span>
                             <span className="mt-0.5 text-[10px] leading-tight text-linen-secondary line-clamp-2">
-                              {item.desc}
+                              {tr(item.desc)}
                             </span>
                           </span>
                           {item.badge ? (
                             <span className="ml-auto shrink-0 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                              {item.badge}
+                              {item.id === 'chat' ? tr('{n} new', { n: unreadChatCount }) : item.badge}
                             </span>
                           ) : dotted?.has(item.id) ? (
                             <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-rose-500" />
@@ -296,9 +303,9 @@ export const AppDock: React.FC<AppDockProps> = ({
                   onClick={() => go(item.id)}
                   aria-label={
                     item.id === 'chat' && unreadChatCount > 0
-                      ? `${item.name}, ${unreadChatCount} new`
+                      ? tr('{name}, {n} new', { name: tr(item.name), n: unreadChatCount })
                       : item.id === 'chat' && draftInChat
-                      ? `${item.name}, a message you started`
+                      ? tr('{name}, a message you started', { name: tr(item.name) })
                       : undefined
                   }
                   className={`dock-tab relative flex shrink-0 snap-start flex-col items-center gap-1 rounded-2xl py-1.5 transition-all active:scale-90 ${
@@ -328,7 +335,7 @@ export const AppDock: React.FC<AppDockProps> = ({
                       active ? 'font-semibold' : 'font-medium'
                     }`}
                   >
-                    {item.name}
+                    {tr(item.name)}
                   </span>
                   {/* The chat says how many, not just that there are some;
                       and with none, a pencil for a message you started. */}
@@ -353,11 +360,11 @@ export const AppDock: React.FC<AppDockProps> = ({
           <div className="dock-all-edge flex shrink-0 items-stretch py-1.5 pl-1 pr-2">
             <button
               onClick={() => setExpanded(true)}
-              aria-label="All destinations"
+              aria-label={tr('All destinations')}
               className="relative flex w-[54px] flex-col items-center justify-center gap-0.5 rounded-2xl text-linen-secondary transition-all active:scale-90"
             >
               <ChevronUp className="h-5 w-5" />
-              <span className="text-[9px] font-medium">All</span>
+              <span className="text-[9px] font-medium">{tr('All')}</span>
             </button>
           </div>
         </div>

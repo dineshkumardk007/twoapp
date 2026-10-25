@@ -16,6 +16,7 @@
 
 import { ChatMessage } from '../types';
 import type { ActivityEvent } from './activity';
+import { tr } from './i18n';
 
 type Seat = 'user' | 'partner';
 
@@ -170,23 +171,22 @@ export function laterChoices(now: Date = new Date()): LaterChoice[] {
   const t = now.getTime();
   const choices: LaterChoice[] = [
     // To the minute, so it reads as a time rather than a timestamp.
-    { key: 'hour', label: 'In an hour', at: Math.ceil((t + HOUR) / MINUTE) * MINUTE }
+    { key: 'hour', label: tr('In an hour'), at: Math.ceil((t + HOUR) / MINUTE) * MINUTE }
   ];
   const tonight = at(now, 0, 22);
-  if (tonight - t >= 90 * MINUTE) choices.push({ key: 'tonight', label: 'Tonight at 10 pm', at: tonight });
+  if (tonight - t >= 90 * MINUTE) choices.push({ key: 'tonight', label: tr('Tonight at 10 pm'), at: tonight });
   const smallHours = now.getHours() < 5;
   const morning = smallHours ? 0 : 1;
-  const word = smallHours ? 'This morning' : 'Tomorrow';
-  choices.push({ key: 'seven', label: `${word} at 7 am`, at: at(now, morning, 7) });
-  choices.push({ key: 'nine', label: `${word} at 9 am`, at: at(now, morning, 9) });
+  choices.push({ key: 'seven', label: smallHours ? tr('This morning at 7 am') : tr('Tomorrow at 7 am'), at: at(now, morning, 7) });
+  choices.push({ key: 'nine', label: smallHours ? tr('This morning at 9 am') : tr('Tomorrow at 9 am'), at: at(now, morning, 9) });
   return choices;
 }
 
 /** What is wrong with a time picked by hand, or null when it will do. */
 export function pickedTimeProblem(atTime: number, now: number = Date.now()): string | null {
-  if (!Number.isFinite(atTime)) return 'Pick a day and a time';
-  if (atTime - now < MIN_AHEAD_MS) return 'Pick a time that is still to come';
-  if (atTime - now > MAX_AHEAD_MS) return 'Up to 30 days ahead';
+  if (!Number.isFinite(atTime)) return tr('Pick a day and a time');
+  if (atTime - now < MIN_AHEAD_MS) return tr('Pick a time that is still to come');
+  if (atTime - now > MAX_AHEAD_MS) return tr('Up to 30 days ahead');
   return null;
 }
 

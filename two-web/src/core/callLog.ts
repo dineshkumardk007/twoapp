@@ -17,6 +17,7 @@
 
 import { ChatMessage } from '../types';
 import type { CallState, EndReason } from './call';
+import { tr } from './i18n';
 
 type Seat = 'user' | 'partner';
 
@@ -148,6 +149,17 @@ export function durationWords(seconds: number): string {
   return m ? `${h} hr ${m} min` : `${h} hr`;
 }
 
+/** durationWords, in this phone's language - for showing; durationWords is what is kept. */
+function durationShown(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds));
+  if (s < 60) return tr('{n} sec', { n: s });
+  const minutes = Math.round(s / 60);
+  if (minutes < 60) return tr('{n} min', { n: minutes });
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? tr('{h} hr {m} min', { h, m }) : tr('{h} hr', { h });
+}
+
 /** The conversation line for a call. */
 export function callLine(info: ChatCallInfo): ChatMessage {
   return {
@@ -200,14 +212,16 @@ export function callWords(info: ChatCallInfo, me: Seat, partnerName: string): { 
   const mine = info.caller === me;
   switch (info.outcome) {
     case 'talked':
-      return { title: 'Voice call', detail: durationWords(info.seconds) };
+      return { title: tr('Voice call'), detail: durationShown(info.seconds) };
     case 'declined':
-      return { title: mine ? `${partnerName} declined` : 'You declined' };
+      return { title: mine ? tr('{name} declined', { name: partnerName }) : tr('You declined') };
     case 'busy':
-      return mine ? { title: 'No answer', detail: `${partnerName} was on another call` } : { title: 'Missed call' };
+      return mine
+        ? { title: tr('No answer'), detail: tr('{name} was on another call', { name: partnerName }) }
+        : { title: tr('Missed call') };
     case 'failed':
-      return { title: "Call didn't connect" };
+      return { title: tr("Call didn't connect") };
     default:
-      return { title: mine ? 'No answer' : 'Missed call' };
+      return { title: mine ? tr('No answer') : tr('Missed call') };
   }
 }

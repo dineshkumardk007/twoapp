@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Send, Check } from 'lucide-react';
 import { getKural, kuralNumberFor, Kural, KURAL_COUNT } from '../data/thirukkural';
 import { localDateKey } from '../core/ourDates';
+import { useT } from '../core/i18n';
 
 interface ThirukkuralCardProps {
   /** Puts the kural in the chat, as an ordinary message. */
@@ -17,6 +18,7 @@ interface ThirukkuralCardProps {
  * transliteration, for whoever reads Tamil more easily in Latin letters.
  */
 export const ThirukkuralCard: React.FC<ThirukkuralCardProps> = ({ onShare }) => {
+  const tr = useT();
   const number = kuralNumberFor(localDateKey());
   const [kural, setKural] = useState<Kural | null>(null);
   const [latin, setLatin] = useState(false);
@@ -71,7 +73,7 @@ export const ThirukkuralCard: React.FC<ThirukkuralCardProps> = ({ onShare }) => 
   const share = () => {
     if (!onShare) return;
     onShare(
-      `Today's kural (${kural.number}):\n${kural.line1}\n${kural.line2}\n\n${kural.pope}`
+      `${tr("Today's kural ({n}):", { n: kural.number })}\n${kural.line1}\n${kural.line2}\n\n${kural.pope}`
     );
     setShared(true);
     window.setTimeout(() => setShared(false), 2500);
@@ -79,18 +81,18 @@ export const ThirukkuralCard: React.FC<ThirukkuralCardProps> = ({ onShare }) => 
 
   return (
     <section
-      aria-label="Thirukkural of the day"
+      aria-label={tr('Thirukkural of the day')}
       className="rounded-3xl border border-linen-border bg-linen-surface p-5 shadow-xs"
     >
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-aurora-gold">
-          Thirukkural · Kural of the day
+          {tr('Thirukkural · Kural of the day')}
         </p>
         <button
           type="button"
           onClick={() => setLatin(v => !v)}
           aria-pressed={latin}
-          aria-label={latin ? 'Show in Tamil script' : 'Show in English letters'}
+          aria-label={latin ? tr('Show in Tamil script') : tr('Show in English letters')}
           className="tap-target-icon grid h-7 min-w-[28px] place-items-center rounded-lg border border-linen-border bg-linen-variant/50 px-1.5 text-xs font-semibold text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
         >
           {latin ? 'அ' : 'A'}
@@ -112,17 +114,19 @@ export const ThirukkuralCard: React.FC<ThirukkuralCardProps> = ({ onShare }) => 
           </p>
         </div>
         <figcaption className="mt-3 px-2 text-[11px] leading-relaxed text-linen-secondary">
-          Kural {kural.number} of {KURAL_COUNT.toLocaleString('en-IN')} · {kural.chapter.tamil} ·{' '}
-          {kural.chapter.english}
+          {tr('Kural {n} of {total}', { n: kural.number, total: KURAL_COUNT.toLocaleString('en-IN') })} ·{' '}
+          {kural.chapter.tamil} · <span lang="en">{kural.chapter.english}</span>
         </figcaption>
       </figure>
 
-      <p className="mt-3 select-text font-serif text-[15px] italic leading-relaxed text-linen-primary">
+      {/* Pope's verse and Drew & Lazarus's meaning are English in any language:
+          the Tamil commentaries are still under copyright (data/thirukkural). */}
+      <p lang="en" className="mt-3 select-text font-serif text-[15px] italic leading-relaxed text-linen-primary">
         {kural.pope}
       </p>
       <p className="mt-2 select-text text-xs leading-relaxed text-linen-secondary">
-        <span className="font-semibold text-linen-primary">Meaning: </span>
-        {kural.meaning}
+        <span className="font-semibold text-linen-primary">{tr('Meaning:')} </span>
+        <span lang="en">{kural.meaning}</span>
       </p>
 
       <div className="mt-4 flex items-center justify-end gap-3">
@@ -134,7 +138,7 @@ export const ThirukkuralCard: React.FC<ThirukkuralCardProps> = ({ onShare }) => 
             className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-linen-border bg-linen-variant/50 px-3 py-1.5 text-xs font-medium text-linen-primary hover:bg-linen-variant disabled:opacity-80 transition-colors cursor-pointer"
           >
             {shared ? <Check className="h-3.5 w-3.5 text-aurora-teal" /> : <Send className="h-3.5 w-3.5 text-linen-accent" />}
-            {shared ? 'Sent' : 'Send to chat'}
+            {shared ? tr('Sent') : tr('Send to chat')}
           </button>
         )}
       </div>
