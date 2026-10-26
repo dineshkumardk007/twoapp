@@ -80,11 +80,12 @@ function load(name: string): Promise<Loaded | null> {
 
 /**
  * Loads the sounds most likely to be needed first, ahead of time - so the
- * first message of the day chimes on time instead of after a fetch and a
- * decode. Everything else loads the first time it plays.
+ * first call or letter of the day sounds on time instead of after a fetch
+ * and a decode. Everything else loads the first time it plays. (A message
+ * makes no sound: only a buzz.)
  */
 export function preloadSounds() {
-  for (const name of ['message', 'letter', 'heartbeat', 'ringtone'] as const) void load(name);
+  for (const name of ['letter', 'heartbeat', 'ringtone'] as const) void load(name);
 }
 
 export interface PlayOptions {

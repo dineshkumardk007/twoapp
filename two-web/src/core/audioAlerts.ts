@@ -32,11 +32,6 @@ export function getAudioContext(): AudioContext | null {
   }
 }
 
-/** A new message from your partner: two glass-bell notes, a fourth apart. */
-export function playMessageChime() {
-  playSound('message');
-}
-
 /** A love letter or whisper memo: a kalimba arpeggio with a glockenspiel sparkle. */
 export function playLetterChime() {
   playSound('letter');

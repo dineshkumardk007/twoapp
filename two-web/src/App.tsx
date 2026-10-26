@@ -127,7 +127,7 @@ import {
 import { Navigation } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
 import { SensoryPulseOverlay, triggerGlobalPulse } from './components/SensoryPulseOverlay';
-import { playMessageChime, playLetterChime, triggerHaptic } from './core/audioAlerts';
+import { playLetterChime, triggerHaptic } from './core/audioAlerts';
 import { InAppNotificationToast, InAppNotification } from './components/InAppNotificationToast';
 import { Locale, LocaleContext, activeLocale, chooseLocale, tr } from './core/i18n';
 import { Lock, Fingerprint } from 'lucide-react';
@@ -864,13 +864,12 @@ export const App: React.FC = () => {
   );
 
   /**
-   * A message of the partner's has just come in front of this phone: the
-   * chime, a buzz, a toast unless the chat is open, and the tab's title while
-   * Two is in the background. Both for one arriving now and for one set to
-   * show later whose time has come while Two is open.
+   * A message of the partner's has just come in front of this phone: a
+   * buzz, a toast unless the chat is open, and the tab's title while Two is
+   * in the background. Both for one arriving now and for one set to show
+   * later whose time has come while Two is open. No sound: only a call rings.
    */
   const announceMessage = (text: string | undefined) => {
-    playMessageChime();
     triggerHaptic([35, 45, 35]);
     if (currentTabRef.current !== 'chat') {
       setInAppNotification({
