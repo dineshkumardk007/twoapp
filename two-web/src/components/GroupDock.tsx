@@ -52,10 +52,17 @@ export const GroupDock: React.FC<GroupDockProps> = ({
     };
   }, []);
 
+  // A group is only ever its chat, so this bar always gives way to the
+  // keyboard (index.css, html.dock-yields), as the sanctuary's does in its chat.
+  useLayoutEffect(() => {
+    document.documentElement.classList.add('dock-yields');
+    return () => document.documentElement.classList.remove('dock-yields');
+  }, []);
+
   return (
     <div
       ref={barRef}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/20 bg-linen-surface/70 backdrop-blur-xl"
+      className="dock-bar fixed inset-x-0 bottom-0 z-40 border-t border-white/20 bg-linen-surface/70 backdrop-blur-xl"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="mx-auto flex items-stretch">

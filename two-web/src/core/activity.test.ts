@@ -54,6 +54,22 @@ describe('While you were away', () => {
     const log = [event('chat', 'CHAT', 10), event('lists', 'LIST_ITEM_SET', 20)];
     expect([...dottedTabs(log, {})]).toEqual(['chat']);
   });
+
+  it("the chat's message line goes by the chat's count, not by when the tab was tapped", () => {
+    const log = [event('chat', 'CHAT', 10)];
+    // Read as it landed with the chat open, or on your other device: gone,
+    // though the tab was last tapped before it came.
+    expect(unseen(log, { chat: 0 }, 0)).toEqual([]);
+    expect([...dottedTabs(log, {}, 0)]).toEqual([]);
+    // Waiting unread: it stands, whatever her clock said.
+    expect(unseen(log, { chat: 999 }, 2).map(e => e.type)).toEqual(['CHAT']);
+  });
+
+  it("a missed call's line is still judged by when the chat was last looked at", () => {
+    const log = [event('chat', 'CALL_MISSED', 10)];
+    expect([...dottedTabs(log, { chat: 5 }, 0)]).toEqual(['chat']);
+    expect(unseen(log, { chat: 10 }, 0)).toEqual([]);
+  });
 });
 
 describe('Message order', () => {

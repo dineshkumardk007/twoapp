@@ -588,6 +588,7 @@ export const TA: Readonly<Record<string, string>> = {
   edited: 'திருத்தப்பட்டது',
   'Still sending': 'இன்னும் அனுப்பப்படுகிறது',
   Sending: 'அனுப்பப்படுகிறது',
+  Delivered: 'சேர்ந்தது',
   Read: 'படிக்கப்பட்டது',
   'You pinned this': 'நீங்கள் இதைப் பின் செய்தீர்கள்',
   '{name} pinned this': '{name} இதைப் பின் செய்தார்',
@@ -612,18 +613,22 @@ export const TA: Readonly<Record<string, string>> = {
   'Later match': 'அடுத்த முடிவு',
   // The line beside the name in the chat's header: short, or it is cut.
   'typing…': 'எழுதுகிறார்…',
+  // Said aloud by a screen reader as her dots come: the header's own word.
+  '{name} is typing…': '{name} எழுதுகிறார்…',
   online: 'ஆன்லைனில்',
-  'Encrypted Room': 'மறையாக்கப்பட்ட அறை',
   Connecting: 'இணைக்கிறது',
+  // That line while this phone is getting back to the relay: it says only this.
+  'Connecting…': 'இணைக்கிறது…',
   Offline: 'ஆஃப்லைன்',
   'Photos and voice notes': 'புகைப்படங்களும் குரல் குறிப்புகளும்',
   'Call {name}': 'அழை: {name}',
+  // The ⋮ beside the call button, and the menu it opens.
+  'More options': 'மேலும் விருப்பங்கள்',
   'Pause and take a 20-minute de-escalation breather': 'சற்று நிறுத்தி, மனம் அமைதியாக 20 நிமிட இடைவேளை எடுங்கள்',
-  // Short: it sits beside the name in a phone-width header.
   Breather: 'ஓய்வு',
   'Partner notification': 'துணையிடமிருந்து அறிவிப்பு',
   'Ask For What You Need': 'உங்களுக்கு வேண்டியதைக் கேளுங்கள்',
-  Ask: 'கேள்',
+  'Ask for what you need': 'உங்களுக்கு வேண்டியதைக் கேளுங்கள்',
   '{name}: {status}, since {time}': '{name}: {status}, {time} முதல்',
   'since {time}': '{time} முதல்',
   'Pinned message': 'பின் செய்யப்பட்ட செய்தி',

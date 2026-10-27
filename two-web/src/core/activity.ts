@@ -204,23 +204,40 @@ export function withActivity(events: ActivityEvent[], incoming: ActivityEvent): 
   return [...others, incoming].slice(-MAX_ACTIVITY_EVENTS);
 }
 
+/**
+ * Whether the reader has looked at this since it happened.
+ *
+ * The chat's message line goes by the chat's own count instead of by when the
+ * tab was last tapped: it stands while anything there is unread and goes when
+ * nothing is. So a message read as it lands with the chat open, or read on
+ * your other device, takes its line and its dot with it, and neither phone's
+ * clock can keep one up or hide it. A missed call's line is judged like
+ * everything else.
+ */
+function looked(e: ActivityEvent, seen: Record<string, number>, chatUnread?: number): boolean {
+  if (chatUnread !== undefined && e.tabId === 'chat' && e.type === 'CHAT') return chatUnread === 0;
+  return e.at <= (seen[e.tabId] || 0);
+}
+
 /** Events the reader has not looked at yet, newest first. */
 export function unseen(
   events: ActivityEvent[],
-  seen: Record<string, number>
+  seen: Record<string, number>,
+  chatUnread?: number
 ): ActivityEvent[] {
   return events
-    .filter(e => e.at > (seen[e.tabId] || 0))
+    .filter(e => !looked(e, seen, chatUnread))
     .sort((a, b) => b.at - a.at);
 }
 
 /** Tabs that should carry a dot: unseen, and loud enough to deserve one. */
 export function dottedTabs(
   events: ActivityEvent[],
-  seen: Record<string, number>
+  seen: Record<string, number>,
+  chatUnread?: number
 ): Set<string> {
   const tabs = new Set<string>();
-  for (const e of unseen(events, seen)) {
+  for (const e of unseen(events, seen, chatUnread)) {
     if (routeFor(e.type)?.tier === 'for-you') tabs.add(e.tabId);
   }
   return tabs;

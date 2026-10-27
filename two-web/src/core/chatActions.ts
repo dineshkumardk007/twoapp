@@ -2,8 +2,8 @@
 // a change to its words, taking it back - and finding it again.
 //
 // Each change travels as a record of its own that names the message
-// (CHAT_REACTION, CHAT_EDIT, CHAT_UNSEND, CHAT_PIN, CHAT_VIEWED), the way
-// VOICE_HEARD does, rather
+// (CHAT_REACTION, CHAT_EDIT, CHAT_UNSEND, CHAT_PIN, CHAT_VIEWED,
+// CHAT_DELIVERED), the way VOICE_HEARD does, rather
 // than as the message sent again: a phone that does not know them passes them
 // over, and a phone being restored replays them in order, after the messages
 // they change. The functions here decide what each one does to the
@@ -17,6 +17,14 @@ export const CHAT_UNSEND = 'CHAT_UNSEND';
 export const CHAT_REACTION = 'CHAT_REACTION';
 export const CHAT_PIN = 'CHAT_PIN';
 export const CHAT_VIEWED = 'CHAT_VIEWED';
+/**
+ * Messages that have landed on one of the receiver's phones: `{ ids }`. Sent by
+ * that phone whatever its read receipts say - having a message is not reading
+ * it - and turned into two grey ticks on the sender's (applyDelivered).
+ */
+export const CHAT_DELIVERED = 'CHAT_DELIVERED';
+/** At most this many ids in one CHAT_DELIVERED: a page of history goes in one or two. */
+export const MAX_DELIVERED_IDS = 300;
 
 /** At most this many messages stay pinned; pinning another lets the oldest go. */
 export const MAX_PINS = 3;
@@ -326,6 +334,104 @@ export function deliveredCopy(m: ChatMessage, me: Seat): ChatMessage {
   return delivered.viewOnce && delivered.authorId === me && delivered.photoDataUrl
     ? withoutPicture(delivered)
     : delivered;
+}
+
+/** `ids` as the CHAT_DELIVERED payloads that carry them, MAX_DELIVERED_IDS to each. */
+export function deliveredBatches(ids: Iterable<string>): Array<{ ids: string[] }> {
+  const all = [...new Set(ids)].filter(Boolean);
+  const batches: Array<{ ids: string[] }> = [];
+  for (let i = 0; i < all.length; i += MAX_DELIVERED_IDS) batches.push({ ids: all.slice(i, i + MAX_DELIVERED_IDS) });
+  return batches;
+}
+
+/** The ids a CHAT_DELIVERED names, kept only if they could be message ids. */
+export function readDeliveredIds(payload: unknown): string[] {
+  const ids = (payload as { ids?: unknown } | null | undefined)?.ids;
+  if (!Array.isArray(ids)) return [];
+  return ids
+    .filter((id): id is string => typeof id === 'string' && !!id && id.length <= 64)
+    .slice(0, MAX_DELIVERED_IDS);
+}
+
+/**
+ * Your messages one of the partner's phones says it has (CHAT_DELIVERED): two
+ * grey ticks. On her phone means the relay had it too, so this also clears a
+ * clock whose acknowledgement was lost - and your own view-once photo lets go
+ * of its picture, as it does then. Null when nothing changes.
+ */
+export function applyDelivered(messages: ChatMessage[], me: Seat, ids: readonly string[]): ChatMessage[] | null {
+  if (!ids.length) return null;
+  const named = new Set(ids);
+  let changed = false;
+  const next = messages.map(m => {
+    if (!named.has(m.id) || m.authorId !== me || m.reached) return m;
+    changed = true;
+    return { ...deliveredCopy(m, me), reached: true };
+  });
+  return changed ? next : null;
+}
+
+/**
+ * Your messages the partner has read past (`readAt`, her READ_RECEIPT),
+ * marked as having left this phone: she cannot have read what the relay never
+ * had, so a clock whose acknowledgement was lost goes. Not one still waiting
+ * here to go (`pending`): her watermark is your clock, and a message stuck in
+ * the outbox behind one sent from your other phone, or one set for later, can
+ * fall under it without ever having left. One with no `delivered` at all is
+ * from before it was kept, and counts as gone already. Null when nothing
+ * changes.
+ */
+export function settleRead(
+  messages: ChatMessage[],
+  me: Seat,
+  readAt: number,
+  pending: (id: string) => boolean
+): ChatMessage[] | null {
+  if (!(readAt > 0)) return null;
+  let changed = false;
+  const next = messages.map(m => {
+    if (m.authorId !== me || m.delivered !== false || !m.sentAt || m.sentAt > readAt || pending(m.id)) return m;
+    changed = true;
+    return deliveredCopy(m, me);
+  });
+  return changed ? next : null;
+}
+
+/**
+ * Your message as read by her: blue ticks.
+ *
+ * Her watermark (`readAt`) is a time on your clock, and a message can fall
+ * under it without her ever having seen it: one that waited in your other
+ * phone's outbox, or that phone's clock running behind this one. So a
+ * message that keeps when it left or arrived here (`leftAt`) counts as read
+ * only by a receipt heard here after that (`heardAt`, this phone's clock as
+ * well). One from before leftAt was kept is read by the watermark alone.
+ */
+export function readByPartner(m: ChatMessage, readAt: number, heardAt: number): boolean {
+  // Left this phone: the relay said so, or her phone did. One with no
+  // `delivered` at all is from before it was kept, and left long ago.
+  const left = m.delivered !== false || !!m.reached;
+  if (!left || !m.sentAt || readAt < m.sentAt) return false;
+  return m.leftAt === undefined || heardAt >= m.leftAt;
+}
+
+/**
+ * Your message as the relay's acknowledgement leaves it: gone, and when it
+ * went (`leftAt`, this phone's clock, `at`) kept the first time - only her
+ * receipts heard after that turn it blue (readByPartner).
+ *
+ * Not kept for one that had already left by other word: her phone said it
+ * has it (`reached`), or a receipt already heard (`readAt`) reaches it. That
+ * is a message whose first acknowledgement was lost, sent again - kept then,
+ * the receipt heard before this one turned a read message grey. The cost is
+ * one from this phone's outbox under a watermark her other reading set,
+ * blue a little early, as it was before leftAt was kept.
+ */
+export function ackedCopy(m: ChatMessage, me: Seat, at: number, readAt: number): ChatMessage {
+  const copy = deliveredCopy(m, me);
+  if (m.delivered !== false || m.leftAt !== undefined || m.reached) return copy;
+  if (m.sentAt && readAt >= m.sentAt) return copy;
+  return { ...copy, leftAt: at };
 }
 
 /**

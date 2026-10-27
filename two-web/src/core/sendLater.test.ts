@@ -204,7 +204,7 @@ describe("Home's news, once a message it was about is withdrawn", () => {
       msg('b', 'partner', undefined, { sentAt: 4 }),
       msg('c', 'user', undefined, { sentAt: 5 })
     ];
-    expect(newsWithout([dates, line('w')], 'w', messages, 'partner')).toEqual([dates, line('a', 3)]);
+    expect(newsWithout([dates, line('w')], 'w', messages, 'partner')).toEqual([dates, line('a', 4)]);
   });
   it('or goes, when none did', () => {
     expect(newsWithout([dates, line('w')], 'w', [msg('b', 'partner')], 'partner')).toEqual([dates]);

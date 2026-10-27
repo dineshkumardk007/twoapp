@@ -889,7 +889,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span className="mt-1 block text-[11px] leading-relaxed text-linen-secondary">
                     Blue ticks when you have read a message, and &ldquo;typing&hellip;&rdquo; while
                     you write. Turn this off and you send neither &mdash; and you stop seeing
-                    theirs. Messages themselves are unaffected.
+                    theirs. Grey ticks show either way: one when a message has left your phone,
+                    two when it has reached them.
                   </span>
                 </span>
                 <input

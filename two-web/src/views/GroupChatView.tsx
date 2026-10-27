@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Send,
   Smile,
@@ -26,7 +26,8 @@ import {
   MAX_GROUP_MESSAGES,
   membersOnline
 } from '../core/groups';
-import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
+import { formatLastSeen } from '../core/lastSeen';
+import { useTypingSender } from '../core/typing';
 import { EmojiPicker } from '../components/EmojiPicker';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
@@ -58,7 +59,8 @@ interface GroupChatViewProps {
    * group open. The call has the microphone, so no note is recorded meanwhile.
    */
   callInProgress?: boolean;
-  onTyping: () => void;
+  /** Writing started (true) or stopped (false); when each is said is decided in core/typing. */
+  onTyping: (typing: boolean) => void;
   /** Founders only; absent for everyone else, which is what hides the control. */
   onRename?: (name: string) => void;
   /** Retry or abandon a message that never left this device. */
@@ -162,7 +164,9 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState('');
   const logRef = useRef<HTMLDivElement>(null);
-  const lastTypingSentRef = useRef(0);
+  // As in your own chat: on the first key, kept alive, stopped when the keys
+  // stop - and never at Send, which their phones take as the end themselves.
+  const typing = useTypingSender(onTyping);
 
   // Covered again whenever the panel closes, so the code is never left on
   // screen from a previous look.
@@ -193,17 +197,11 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
     if (log) log.scrollTop = log.scrollHeight;
   }, [group.messages.length]);
 
-  const announceTyping = () => {
-    const now = Date.now();
-    if (now - lastTypingSentRef.current < TYPING_REPEAT_MS) return;
-    lastTypingSentRef.current = now;
-    onTyping();
-  };
-
   const send = () => {
     const body = text.trim();
     if (!body) return;
     onSend(body);
+    typing.sent();
     setText('');
     // Gone at once, so a lock straight after cannot bring back sent words.
     if (savedDraftRef.current) {
@@ -221,6 +219,18 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
     if (names.length === 2) return `${names[0]} and ${names[1]} are typing…`;
     return `${names[0]} and ${names.length - 1} others are typing…`;
   })();
+
+  // The dots come into view only if you were already at the end: reading
+  // further up, nothing moves.
+  const typingDotsRef = useRef<HTMLDivElement>(null);
+  const someoneTyping = typingIds.length > 0;
+  useLayoutEffect(() => {
+    const log = logRef.current;
+    const dots = typingDotsRef.current;
+    if (!log || !dots) return;
+    const fromEnd = log.scrollHeight - log.scrollTop - log.clientHeight - dots.offsetHeight;
+    if (fromEnd < 48) log.scrollTop = log.scrollHeight;
+  }, [someoneTyping]);
 
   const others = group.members.filter(m => m.id !== myId);
 
@@ -451,6 +461,10 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
         </div>
       )}
 
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {typingLabel}
+      </p>
+
       {/* Messages */}
       <div ref={logRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto scroll-contain p-4">
         {group.messages.length === 0 && (
@@ -485,9 +499,9 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                   // player (200px at the least) fits a 320px phone.
                   msg.isVoiceMemo ? 'max-w-[90%] px-3' : 'max-w-[80%] select-text px-3.5'
                 } rounded-2xl py-2 text-sm ${
-                  mine
-                    ? 'bg-linen-primary text-linen-surface'
-                    : 'border border-linen-border bg-linen-variant/40 text-linen-primary'
+                  // Plain, as in your own chat (index.css): yours grey, everyone
+                  // else's outlined; their names above keep their colour.
+                  mine ? 'bubble-mine text-linen-primary' : 'bubble-edge border text-linen-primary'
                 }`}
               >
                 {msg.isVoiceMemo ? (
@@ -590,6 +604,23 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
             </div>
           );
         })}
+
+        {/* Who is writing: dots in a bubble of theirs, where the next message
+            will land. The header and the line above say it in words. */}
+        {someoneTyping && (
+          <div ref={typingDotsRef} data-typing aria-hidden="true" className="flex flex-col items-start">
+            <span className="mb-0.5 px-1 text-[10px] font-medium text-linen-accent">
+              {typingIds.map(nameFor).join(', ')}
+            </span>
+            <div className="typing-in rounded-2xl bubble-edge border px-3.5 py-2 text-sm">
+              <span className="typing-dots h-5 text-linen-secondary">
+                <span />
+                <span />
+                <span />
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Who has read it */}
@@ -638,7 +669,10 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
 
       {showEmoji && (
         <EmojiPicker
-          onPick={char => setText(t => t + char)}
+          onPick={char => {
+            setText(t => t + char);
+            typing.keystroke();
+          }}
           onClose={() => setShowEmoji(false)}
         />
       )}
@@ -664,8 +698,12 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
           value={text}
           onChange={e => {
             setText(e.target.value);
-            announceTyping();
+            // An emptied box is not writing.
+            if (e.target.value.trim()) typing.keystroke();
+            else typing.stop();
           }}
+          // Left the box. A moment's grace: a tap on the emoji button is not leaving.
+          onBlur={() => typing.stopSoon()}
           onKeyDown={e => e.key === 'Enter' && send()}
           placeholder={`Message ${group.name}…`}
           className="min-w-0 flex-1 rounded-xl border border-linen-border bg-linen-variant/30 px-4 py-2.5 text-sm text-linen-primary placeholder:text-linen-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-linen-primary"

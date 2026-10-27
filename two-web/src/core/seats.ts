@@ -87,6 +87,8 @@ export const CATCH_UP_TYPES = new Set<string>([
   // opening a view-once photo happens once: both end the same applied again.
   'CHAT_PIN',
   'CHAT_VIEWED',
+  // A message on her phone stays on her phone: marking it again changes nothing.
+  'CHAT_DELIVERED',
   'LOVE_LETTER',
   'GRATITUDE_STAR',
   'INTUITION_ROUND',

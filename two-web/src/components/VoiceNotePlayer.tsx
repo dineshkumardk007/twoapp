@@ -32,7 +32,7 @@ export interface VoiceNotePlayerProps {
   durationSeconds?: number;
   /** 0-100 each. A note recorded before notes kept their shape has none. */
   peaks?: number[];
-  /** mine: on the dark bubble. theirs: the light one. composer: the review strip. */
+  /** mine / theirs: whose note it is, which says whether it shows heard or new. composer: the review strip. */
   tone: 'mine' | 'theirs' | 'composer';
   /** Mine: the other person has played it. Theirs: I have. */
   heard?: boolean;
@@ -48,29 +48,25 @@ export interface VoiceNotePlayerProps {
 
 type Tone = VoiceNotePlayerProps['tone'];
 
-const TONES: Record<
-  Tone,
-  { button: string; played: string; unplayed: string; meta: string; chip: string; ring: string; thumb: string }
-> = {
-  // Your own notes sit on the aurora gradient of your bubbles: white on it.
-  mine: {
-    button: 'bg-white text-aurora-violet hover:bg-white/90',
-    played: 'bg-white',
-    unplayed: 'bg-white/40',
-    meta: 'text-white/80',
-    chip: 'bg-white/15 text-white hover:bg-white/25',
-    ring: 'focus-visible:ring-white/70',
-    thumb: 'bg-white'
-  },
-  theirs: {
-    button: 'bg-linen-primary text-linen-surface hover:bg-linen-primary/90',
-    played: 'bg-aurora-pink',
-    unplayed: 'bg-linen-primary/25',
-    meta: 'text-linen-secondary',
-    chip: 'bg-linen-primary/10 text-linen-primary hover:bg-linen-primary/15',
-    ring: 'focus-visible:ring-linen-primary/50',
-    thumb: 'bg-aurora-pink'
-  },
+type ToneClasses = { button: string; played: string; unplayed: string; meta: string; chip: string; ring: string; thumb: string };
+
+// Bubbles have no colour of their own on either side (index.css), so a note
+// in one is drawn in shades of the ink. The play button's icon is the page
+// colour, not text-linen-surface: with bg-linen-primary that pair is the
+// app's primary button, and index.css would light it with the aurora.
+const IN_BUBBLE: ToneClasses = {
+  button: 'bg-linen-primary text-linen-bg hover:bg-linen-primary/90',
+  played: 'bg-linen-primary',
+  unplayed: 'bg-linen-primary/25',
+  meta: 'text-linen-secondary',
+  chip: 'bg-linen-primary/10 text-linen-primary hover:bg-linen-primary/15',
+  ring: 'focus-visible:ring-linen-primary/50',
+  thumb: 'bg-linen-primary'
+};
+
+const TONES: Record<Tone, ToneClasses> = {
+  mine: IN_BUBBLE,
+  theirs: IN_BUBBLE,
   composer: {
     button: 'bg-linen-variant text-linen-primary hover:bg-linen-border',
     played: 'bg-linen-primary',
@@ -773,14 +769,15 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
             <span className="inline-flex min-w-0 items-center gap-1.5">
               <span className="tabular-nums">{timeText}</span>
               {showHeard && tone === 'mine' && (
+                // Blue once heard and grey till then, as the read ticks are.
                 <>
-                  <Mic className={`h-3 w-3 ${heard ? 'text-sky-200' : 'text-white/50'}`} aria-hidden="true" />
+                  <Mic className={`h-3 w-3 ${heard ? 'text-sky-600' : 'text-linen-secondary'}`} aria-hidden="true" />
                   <span className="sr-only">{heard ? tr('Heard') : tr('Not heard yet')}</span>
                 </>
               )}
               {showHeard && tone === 'theirs' && !heard && (
                 <>
-                  <span className="h-1.5 w-1.5 rounded-full bg-linen-accent" aria-hidden="true" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-linen-primary" aria-hidden="true" />
                   <span className="sr-only">{tr('New')}</span>
                 </>
               )}

@@ -47,6 +47,47 @@ export function firstUnreadId(messages: ChatMessage[], me: Seat, readAt: number 
   return messages.find(m => isUnread(m, me, readAt))?.id;
 }
 
+/** What is on this phone's screen, as far as the couple's chat is concerned. */
+export interface ChatScreen {
+  /** Two on the screen, not in the background or behind the lock of the phone. */
+  visible: boolean;
+  tab: string;
+  groupOpen: boolean;
+  locked: boolean;
+  /** Showing the calculator. */
+  disguised: boolean;
+  /** A call's screen, which covers everything, is up. */
+  inCall: boolean;
+}
+
+/**
+ * Whether the chat is what is in front of you, and so read as it arrives:
+ * Two on the screen, unlocked, not the calculator, on the Chat tab, with no
+ * group open and no call screen over it. Anywhere else, it waits as new.
+ */
+export function chatInFront(s: ChatScreen): boolean {
+  return s.visible && s.tab === 'chat' && !s.groupOpen && !s.locked && !s.disguised && !s.inCall;
+}
+
+/**
+ * The count every surface shows. The chat in front of you is already read,
+ * even before that is written down - so a message landing there never
+ * flashes a "1".
+ */
+export function shownCount(inFront: boolean, unread: number): number {
+  return inFront ? 0 : unread;
+}
+
+/**
+ * When a message arriving now arrived, for the count: now - and never at or
+ * before the last look. A phone's clock put back (a network time correction,
+ * or by hand) leaves a read time in its future, and every message after it
+ * would arrive "before" it and never count until the clock caught up.
+ */
+export function arrivalTime(readAt: number | undefined, now: number = Date.now()): number {
+  return Math.max(now, (readAt ?? 0) + 1);
+}
+
 /** When the newest message to arrive here came, by this phone's clock; 0 when none has. */
 export function newestArrival(messages: ChatMessage[]): number {
   let newest = 0;

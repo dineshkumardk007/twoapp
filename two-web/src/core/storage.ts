@@ -149,6 +149,12 @@ export interface SpaceState {
    * forever.
    */
   partnerReadAt: number;
+  /**
+   * When, by this phone's clock, a receipt last moved partnerReadAt on. A
+   * message that left here after it is not read yet, however far the
+   * watermark reaches (readByPartner, core/chatActions). 0 when never heard.
+   */
+  partnerReadHeardAt?: number;
   /** When the partner's device last said it was awake; 0 when never heard. */
   partnerLastSeen: number;
   /**

@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { ChatMessage } from '../types';
 import {
   EDIT_WINDOW_MS,
+  MAX_DELIVERED_IDS,
   MAX_PINS,
+  applyDelivered,
+  deliveredBatches,
+  readDeliveredIds,
+  settleRead,
+  readByPartner,
+  ackedCopy,
   applyEdit,
   applyPin,
   applyViewed,
@@ -223,5 +230,130 @@ describe('view-once photos', () => {
 
   it('is quoted as a view-once photo', () => {
     expect(snippetOf(photo)).toBe('View-once photo');
+  });
+});
+
+describe('delivered to her phone', () => {
+  const mine = (id: string, over: Partial<ChatMessage> = {}) => msg({ id, delivered: true, ...over });
+
+  it('marks your own messages she names as reached, once', () => {
+    const list = [mine('a'), mine('b'), msg({ id: 'c', authorId: 'partner' })];
+    const out = applyDelivered(list, 'user', ['a', 'c', 'zzz'])!;
+    expect(out[0].reached).toBe(true);
+    expect(out[1].reached).toBeUndefined();
+    // Hers is not yours to have reached anyone.
+    expect(out[2].reached).toBeUndefined();
+    expect(applyDelivered(out, 'user', ['a'])).toBeNull();
+    expect(applyDelivered(list, 'user', [])).toBeNull();
+    expect(applyDelivered(list, 'user', ['zzz'])).toBeNull();
+  });
+
+  it('clears a clock whose acknowledgement was lost, and lets go of your view-once picture', () => {
+    const lost = mine('a', { delivered: false });
+    const once = mine('p', { delivered: false, isPhoto: true, viewOnce: true, photoDataUrl: 'data:image/jpeg;base64,AAAA' });
+    const out = applyDelivered([lost, once], 'user', ['a', 'p'])!;
+    expect(out[0]).toMatchObject({ delivered: true, reached: true });
+    expect(out[1]).toMatchObject({ delivered: true, reached: true, viewOnce: true });
+    expect(out[1].photoDataUrl).toBeUndefined();
+  });
+
+  it('reads only ids from the wire, at most a batch of them', () => {
+    expect(readDeliveredIds({ ids: ['a', 7, '', 'x'.repeat(65), 'b', null] })).toEqual(['a', 'b']);
+    expect(readDeliveredIds({ ids: 'a' })).toEqual([]);
+    expect(readDeliveredIds(null)).toEqual([]);
+    const many = Array.from({ length: MAX_DELIVERED_IDS + 5 }, (_, i) => `m${i}`);
+    expect(readDeliveredIds({ ids: many })).toHaveLength(MAX_DELIVERED_IDS);
+  });
+
+  it('cuts what landed into batches, each one readable on the other side', () => {
+    expect(deliveredBatches([])).toEqual([]);
+    expect(deliveredBatches(['a', 'b', 'a'])).toEqual([{ ids: ['a', 'b'] }]);
+    const many = Array.from({ length: MAX_DELIVERED_IDS * 2 + 1 }, (_, i) => `m${i}`);
+    const batches = deliveredBatches(new Set(many));
+    expect(batches.map(b => b.ids.length)).toEqual([MAX_DELIVERED_IDS, MAX_DELIVERED_IDS, 1]);
+    expect(batches.flatMap(b => readDeliveredIds(b))).toEqual(many);
+  });
+});
+
+describe('read by her', () => {
+  it('is her watermark alone for one from before leftAt was kept', () => {
+    expect(readByPartner(msg({ sentAt: SENT }), SENT, 0)).toBe(true);
+    expect(readByPartner(msg({ sentAt: SENT }), SENT - 1, 0)).toBe(false);
+    expect(readByPartner(msg({ sentAt: undefined }), SENT, 0)).toBe(false);
+  });
+
+  it('is never one still waiting here', () => {
+    expect(readByPartner(msg({ sentAt: SENT, delivered: false }), SENT + 5000, SENT + 5000)).toBe(false);
+    // Her phone has it, though the acknowledgement was lost: it left.
+    expect(readByPartner(msg({ sentAt: SENT, delivered: false, reached: true }), SENT, 0)).toBe(true);
+  });
+
+  it('needs a receipt heard after it left here (another phone outbox, or its clock behind)', () => {
+    // Typed long ago on the other phone, under her watermark, come here just now.
+    const late = msg({ sentAt: SENT, delivered: true, leftAt: SENT + 60_000 });
+    expect(readByPartner(late, SENT + 30_000, SENT + 30_000)).toBe(false);
+    // Her next receipt, heard after it came: read.
+    expect(readByPartner(late, SENT + 90_000, SENT + 90_000)).toBe(true);
+    // Heard the same moment it left counts.
+    expect(readByPartner(late, SENT, SENT + 60_000)).toBe(true);
+    // A receipt heard since still has to reach it.
+    expect(readByPartner(late, SENT - 1, SENT + 90_000)).toBe(false);
+  });
+});
+
+describe('acknowledged by the relay', () => {
+  const waiting = () => msg({ sentAt: SENT, delivered: false });
+
+  it('keeps when it left, the first time', () => {
+    const acked = ackedCopy(waiting(), 'user', SENT + 5_000, 0);
+    expect(acked).toMatchObject({ delivered: true, leftAt: SENT + 5_000 });
+    // A receipt heard before it says nothing of it.
+    expect(readByPartner(acked, SENT + 1_000, SENT + 4_000)).toBe(false);
+    // Acknowledged again: still the first time.
+    expect(ackedCopy(acked, 'user', SENT + 9_000, 0).leftAt).toBe(SENT + 5_000);
+  });
+
+  it('keeps nothing for one already gone - its first acknowledgement lost, her receipt heard first', () => {
+    // Her receipt came back with the history before the one for it sent again.
+    const read = ackedCopy(waiting(), 'user', SENT + 60_000, SENT);
+    expect(read.leftAt).toBeUndefined();
+    expect(readByPartner(read, SENT, SENT + 30_000)).toBe(true);
+    // Her phone had said it has it.
+    const reached = ackedCopy(msg({ sentAt: SENT, delivered: false, reached: true }), 'user', SENT + 60_000, 0);
+    expect(reached.leftAt).toBeUndefined();
+  });
+});
+
+describe('read past', () => {
+  const none = () => false;
+
+  it('marks as left what she has read past, and nothing newer', () => {
+    const list = [
+      msg({ id: 'a', delivered: false, sentAt: SENT }),
+      msg({ id: 'b', delivered: false, sentAt: SENT + 1000 }),
+      msg({ id: 'c', authorId: 'partner', delivered: false, sentAt: SENT })
+    ];
+    const out = settleRead(list, 'user', SENT, none)!;
+    expect(out[0].delivered).toBe(true);
+    expect(out[1].delivered).toBe(false);
+    expect(out[2].delivered).toBe(false);
+    // Read is not reached: that only her phone can say.
+    expect(out[0].reached).toBeUndefined();
+  });
+
+  it('leaves one still waiting in the outbox a clock, whatever her watermark says', () => {
+    const list = [msg({ id: 'a', delivered: false }), msg({ id: 'b', delivered: false })];
+    const out = settleRead(list, 'user', SENT + 5000, id => id === 'a')!;
+    expect(out[0].delivered).toBe(false);
+    expect(out[1].delivered).toBe(true);
+    expect(settleRead([list[0]], 'user', SENT + 5000, () => true)).toBeNull();
+  });
+
+  it('changes nothing with no watermark, or nothing to settle', () => {
+    expect(settleRead([msg({ delivered: false })], 'user', 0, none)).toBeNull();
+    expect(settleRead([msg({ delivered: true })], 'user', SENT, none)).toBeNull();
+    // From before `delivered` was kept: left long ago, nothing to rewrite.
+    expect(settleRead([msg()], 'user', SENT, none)).toBeNull();
+    expect(settleRead([msg({ delivered: false, sentAt: undefined })], 'user', SENT, none)).toBeNull();
   });
 });

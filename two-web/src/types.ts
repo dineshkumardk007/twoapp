@@ -33,8 +33,26 @@ export interface ChatMessage {
   timestamp: string;
   /** Epoch ms, used to compare against the partner's read watermark. */
   sentAt?: number;
-  /** True once the relay has acknowledged the record. */
+  /**
+   * On my own messages: the relay has it - its acknowledgement said so, or
+   * her side did (CHAT_DELIVERED, or a read receipt past it). False while it
+   * waits to go; absent on messages from before this was kept, which left
+   * long ago.
+   */
   delivered?: boolean;
+  /**
+   * On my own messages: one of the partner's devices has it (CHAT_DELIVERED,
+   * core/chatActions) - two grey ticks. Kept on this phone only: never sent
+   * with a message, and never taken from one that arrives.
+   */
+  reached?: boolean;
+  /**
+   * On my own messages: when, by this phone's clock, it left here (the
+   * relay's acknowledgement) or arrived here from my other phone. Only a
+   * read receipt heard after it turns it blue (readByPartner,
+   * core/chatActions). Kept on this phone only, like `reached`.
+   */
+  leftAt?: number;
   isNeedCard?: boolean;
   isVoiceMemo?: boolean;
   audioDataUrl?: string;

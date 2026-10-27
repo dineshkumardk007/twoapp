@@ -4,6 +4,7 @@ import { App } from './App';
 import { DialogHost } from './components/DialogHost';
 import { isAndroidApp } from './core/platform';
 import { applyAppearance, watchPhoneAppearance } from './core/appearance';
+import { watchKeyboard } from './core/keyboard';
 import './index.css';
 import './styles/night.css';
 
@@ -17,6 +18,10 @@ try {
   const touchPhone = window.matchMedia?.('(hover: none) and (pointer: coarse)').matches;
   if (isAndroidApp() || touchPhone) {
     document.documentElement.classList.add('in-app');
+    // The same phones are the ones with a keyboard that comes up from below,
+    // and the chats let the dock give way to it. A computer's window made
+    // shorter while typing is not a keyboard, and moves nothing.
+    watchKeyboard();
   }
 } catch {
   // Without the class the page simply keeps normal selection.

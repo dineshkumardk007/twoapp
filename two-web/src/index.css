@@ -197,6 +197,43 @@ html.dark .bg-linen-surface.surface-solid {
   color: #fff;
 }
 
+/* Message bubbles, in your chat and in groups: no colour of their own, by day
+   or at night. Yours are filled with a soft grey; everyone else's are the
+   panel itself inside a thin grey line; both are written in the ordinary ink.
+   The greys lean a touch cool, as the ink and the sky do - a true grey looks
+   faintly green beside violet, and a warm one beige. They have classes of
+   their own, never the primary pair above, which would light them with the
+   aurora.
+
+   Ink / secondary words: yours 14.6 / 4.9 by day and 11.4 / 5.3 at night;
+   theirs 17.2 / 5.8 on the white panel and 16.1 / 7.5 on the night glass. */
+:root {
+  --c-bubble: 236 236 240;
+  --c-bubble-edge: 214 214 222;
+}
+html.dark {
+  --c-bubble: 50 50 58;
+  --c-bubble-edge: 66 66 76;
+}
+.bubble-mine {
+  background-color: rgb(var(--c-bubble));
+}
+.bubble-edge {
+  border-color: rgb(var(--c-bubble-edge));
+}
+/* A quote is set into its bubble: lighter than your grey by day, since its
+   secondary words drop under 4.5:1 on a darker one, a shade under the white
+   panel in theirs, and darker in both at night. */
+.bubble-quote {
+  background-color: rgb(0 0 0 / 0.04);
+}
+.bubble-mine .bubble-quote {
+  background-color: rgb(255 255 255 / 0.7);
+}
+html.dark .bubble-quote {
+  background-color: rgb(0 0 0 / 0.2);
+}
+
 /* A hero: the big moments - your days together, a reveal.
 
    The light drifts across it on a layer of its own, moved with transform.
@@ -528,8 +565,54 @@ html.dark .aurora-text {
    instead of the page sliding out from underneath. */
 .chat-shell {
   height: calc(100vh - var(--two-header-h, 3.5rem) - var(--two-dock-h, 0px) - 2rem);
-  height: calc(100dvh - var(--two-header-h, 3.5rem) - var(--two-dock-h, 0px) - 2rem);
+  height: calc(100dvh - var(--two-header-h, 3.5rem) - var(--two-dock-shown, var(--two-dock-h, 0px)) - 2rem + var(--two-snug, 0px));
   min-height: 16rem;
+}
+
+/* ---------------------------------------------------------------------------
+   The dock giving way to the keyboard, in the chats
+   ---------------------------------------------------------------------------
+   html.dock-yields is set by the dock on a chat screen (AppDock in Private
+   Chat, GroupDock always). There the dock stays where it is on the glass and
+   the keyboard comes up over it, rather than lifting it up on top of the keys:
+   in the page it slides down out of the bottom edge exactly as far as the
+   keyboard has come, and the chat panel stops keeping room for the part that
+   is covered. The composer does not move until the keyboard reaches it, then
+   rides up with it, closing to about 6px above the keys as messaging apps do
+   (--two-snug, the panel stretched into the 1rem under it). Closing the
+   keyboard, by Back or by tapping away, runs the same thing in reverse.
+
+   The keyboard's height is the full height core/keyboard.ts publishes
+   (--two-full-h) less 100dvh, which follows the WebView as it is resized, so
+   nothing is written per frame. No transition, on purpose: an eased dock
+   would trail the keys and float above them. So there is no slide of its own
+   to turn off for reduced motion either; it only ever moves with the
+   keyboard, and with the phone's animations off the keyboard comes in one
+   step and the dock goes with it.
+
+   Without --two-full-h (a computer), or on any other screen, --two-dock-shown
+   is the dock's whole height and --two-snug is 0, which is the layout as it
+   was. */
+:root {
+  --two-dock-shown: var(--two-dock-h, 0px);
+  --two-snug: 0px;
+}
+html.dock-yields {
+  --two-kb: max(0px, calc(var(--two-full-h, 100dvh) - 100dvh));
+  --two-dock-shown: max(0px, calc(var(--two-dock-h, 0px) - var(--two-kb)));
+  --two-snug: clamp(0px, calc(var(--two-kb) - var(--two-dock-h, 0px)), 10px);
+}
+.dock-bar {
+  transform: translateY(calc(var(--two-dock-h, 0px) - var(--two-dock-shown)));
+}
+/* Wholly covered: out of reach of touch and TalkBack too. */
+html.dock-yields.kb-up .dock-bar {
+  visibility: hidden;
+}
+/* The panel grows into the padding under it, and gives the same back here,
+   so the page stays exactly the height of the screen and never scrolls. */
+html.dock-yields .chat-shell {
+  margin-bottom: calc(-1 * var(--two-snug));
 }
 
 /* ---------------------------------------------------------------------------
@@ -949,5 +1032,49 @@ html.dark .olai {
   .call-orb-initial,
   .call-lens {
     transition-duration: 1ms;
+  }
+}
+
+/* --- Typing dots (core/typing) ------------------------------------------
+   Three dots in a bubble of theirs while they write, each rising in turn.
+   The bubble's height is set where it is drawn, to match a one-line message
+   there. It comes in with a small pop - `backwards`, never `both`, for the
+   same reason as screen-enter - and leaves at once, as her message takes its
+   place. Without motion the dots simply sit there. */
+.typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: top;
+}
+.typing-dots > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.4;
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+.typing-dots > span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots > span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 0.9; }
+}
+.typing-in {
+  transform-origin: bottom left;
+  animation: typing-in 180ms cubic-bezier(0.2, 0.9, 0.3, 1.15) backwards;
+}
+@keyframes typing-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .typing-dots > span,
+  .typing-in {
+    animation: none !important;
+  }
+  .typing-dots > span {
+    opacity: 0.6;
   }
 }

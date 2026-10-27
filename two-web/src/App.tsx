@@ -129,6 +129,7 @@ import { CalculatorDecoy } from './components/CalculatorDecoy';
 import { SensoryPulseOverlay, triggerGlobalPulse } from './components/SensoryPulseOverlay';
 import { playLetterChime, triggerHaptic } from './core/audioAlerts';
 import { InAppNotificationToast, InAppNotification } from './components/InAppNotificationToast';
+import { screenInFront, shownInGroupMode } from './core/notices';
 import { Locale, LocaleContext, activeLocale, chooseLocale, tr } from './core/i18n';
 import { Lock, Fingerprint } from 'lucide-react';
 import { CURATED_DILEMMAS } from './data/dilemmas';
@@ -174,7 +175,9 @@ import {
 } from './core/lockGuard';
 import { readAutoLock, writeAutoLock, watchForAbsence, lockNow, AutoLockSetting, BEFORE_LOCK_EVENT } from './core/autoLock';
 import { applyIngredientTick } from './core/recipes';
-import { countUnread, newestArrival, newestFrom, readAtForReceipt } from './core/unread';
+import {
+  arrivalTime, chatInFront, countUnread, newestArrival, newestFrom, readAtForReceipt, shownCount
+} from './core/unread';
 import { withBox } from './core/comfortBox';
 import { COMING_UP, mergeDays, type ComingUpDay } from './core/comingUp';
 import {
@@ -203,17 +206,23 @@ import {
   CHAT_REACTION,
   CHAT_UNSEND,
   CHAT_VIEWED,
+  CHAT_DELIVERED,
+  applyDelivered,
   applyEdit,
   applyPin,
   applyReaction,
   applyUnsend,
   applyViewed,
+  deliveredBatches,
+  readDeliveredIds,
+  settleRead,
   canEdit,
   canOpenViewOnce,
   canUnsend,
   cleanPhotoFields,
   cleanReplyRef,
   deliveredCopy,
+  ackedCopy,
   type MessageExtras
 } from './core/chatActions';
 import { mergeReport, recordDay } from './core/weatherHistory';
@@ -226,8 +235,16 @@ import {
   readShareReceipts,
   writeShareReceipts,
   TYPING_SIGNAL,
-  TYPING_TTL_MS
+  TYPING_TTL_MS,
+  HERE_SIGNAL,
+  HERE_REPEAT_MS,
+  CAN_SAY_AWAY,
+  LEGACY_HERE_MS,
+  presenceBeat,
+  isLegacyBeat,
+  onScreenUntil
 } from './core/lastSeen';
+import { TYPING_STOP_SIGNAL, typingEndedBy, typingNow, typingTtlFor } from './core/typing';
 
 
 // Screens are fetched the first time they are opened rather than all at once.
@@ -266,10 +283,11 @@ const VOICE_HEARD = 'VOICE_HEARD';
 const APP_VERSION = 'APP_VERSION';
 /**
  * What this phone tells the other, with its version, that an older one
- * cannot do: hold back a message set for later (core/sendLater), and keep a
- * letter for a day closed until then (core/letters).
+ * cannot do: hold back a message set for later (core/sendLater), keep a
+ * letter for a day closed until then (core/letters), and say when Two leaves
+ * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -320,6 +338,11 @@ function chatFromWire(parsed: any): ChatMessage {
     // and when a message arrived is this phone's own record.
     call, receivedAt,
     showAt,
+    // That it has reached a phone is said by CHAT_DELIVERED, and kept by its
+    // sender alone.
+    reached,
+    // When it left or came here is this phone's own clock (readByPartner).
+    leftAt,
     ...rest
   } = parsed;
   const voice = cleanVoiceFields(parsed);
@@ -672,6 +695,15 @@ export const App: React.FC = () => {
   // we last heard anything from them.
   const [partnerOnline, setPartnerOnline] = useState(false);
   const [occupancy, setOccupancy] = useState({ peers: 0, ownDevices: 0, total: 0 });
+  // What makes "online": the last "here" or "away" from each of her devices
+  // (HERE_SIGNAL), and her last presence beat for a phone on the version
+  // before - both by this phone's clock. See partnerShownOnline. Of the
+  // beats, only one heard live since her socket came up says she still
+  // sends them; one from history is all there is until then.
+  const [partnerHere, setPartnerHere] = useState<Record<string, { at: number; here: boolean }>>({});
+  const [legacyBeatAt, setLegacyBeatAt] = useState(0);
+  const [legacyLiveAt, setLegacyLiveAt] = useState(0);
+  const [partnerUpAt, setPartnerUpAt] = useState(0);
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
 
   const [isUnlocking, setIsUnlocking] = useState(false);
@@ -702,6 +734,11 @@ export const App: React.FC = () => {
   const [shareReceipts, setShareReceipts] = useState(() => readShareReceipts());
   /** Epoch ms of the partner's most recent typing signal; 0 when not typing. */
   const [partnerTypingAt, setPartnerTypingAt] = useState(0);
+  /**
+   * What her last TYPING said: when, by her clock (so her message can end it,
+   * core/typing), how long it holds, and from which of her devices.
+   */
+  const partnerTypingSaidRef = useRef({ at: 0, ttl: TYPING_TTL_MS, device: '' });
 
   /** The group being read right now, or null while in the sanctuary. */
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -710,8 +747,11 @@ export const App: React.FC = () => {
   const activeGroupIdRef = useRef<string | null>(null);
   activeGroupIdRef.current = activeGroupId;
   const [groupStatuses, setGroupStatuses] = useState<Record<string, string>>({});
-  /** memberId -> when they were last seen typing, per group. */
-  const [groupTyping, setGroupTyping] = useState<Record<string, Record<string, number>>>({});
+  /**
+   * memberId -> until when they count as typing (this phone's clock) and when
+   * they said it (theirs, 0 from a phone on the version before), per group.
+   */
+  const [groupTyping, setGroupTyping] = useState<Record<string, Record<string, { until: number; saidAt: number }>>>({});
   const [passphraseAttempt, setPassphraseAttempt] = useState('');
 
   // The sounds heard most - a message, a letter, a heartbeat, a call - are
@@ -821,6 +861,17 @@ export const App: React.FC = () => {
       wsRelay.subscribePresence((online, info) => {
         setPartnerOnline(online);
         setOccupancy(info);
+        // When her socket came up (core/lastSeen). A socket of ours closing
+        // says offline with her count from before still standing: that is
+        // not her going, and coming back is not her coming up - taken for it,
+        // the silence since read as last seen off and kept her online.
+        setPartnerUpAt(prev => (online ? prev || Date.now() : info.peers > 0 ? prev : 0));
+        // None of her sockets left, or none of ours: what she said is over -
+        // "typing…" with it.
+        if (!online) {
+          setPartnerHere({});
+          setPartnerTypingAt(0);
+        }
         if (online) setState(prev => (prev.partnerEverSeen ? prev : { ...prev, partnerEverSeen: true }));
       }),
     []
@@ -853,15 +904,33 @@ export const App: React.FC = () => {
         if (msg?.type !== 'RECORD_ACK' || !msg.correlationId) return;
         // Your own view-once photo lets go of its picture here: it is safely
         // on its way, and not to be seen again on this phone (core/chatActions).
+        // When it left is kept the first time, unless it had already gone by
+        // her word: only her receipts heard after that can turn it blue
+        // (ackedCopy, readByPartner).
+        const at = Date.now();
         setState(prev => ({
           ...prev,
           messages: prev.messages.map(m =>
-            m.id === msg.correlationId ? deliveredCopy(m, prev.activeUser) : m
+            m.id !== msg.correlationId ? m : ackedCopy(m, prev.activeUser, at, prev.partnerReadAt || 0)
           )
         }));
       }),
     []
   );
+
+  // What she has read past has left this phone (settleRead): a clock whose
+  // acknowledgement was lost goes, and one still in the outbox stays a clock
+  // rather than turning blue. Also on connecting - the outbox is back by then -
+  // for what she had read before.
+  useEffect(() => {
+    if (relayStatus !== 'connected' || !state.partnerReadAt) return;
+    setState(prev => {
+      const messages = settleRead(prev.messages, prev.activeUser, prev.partnerReadAt || 0, id =>
+        wsRelay.isPending(id)
+      );
+      return messages ? { ...prev, messages } : prev;
+    });
+  }, [relayStatus, state.partnerReadAt]);
 
   /**
    * A message of the partner's has just come in front of this phone: a
@@ -871,7 +940,10 @@ export const App: React.FC = () => {
    */
   const announceMessage = (text: string | undefined) => {
     triggerHaptic([35, 45, 35]);
-    if (currentTabRef.current !== 'chat') {
+    // A group opened from a toast leaves the tab on Chat, but it is the
+    // group in front of you, not your chat: group mode shows the notice,
+    // and its Reply leaves the group for the chat.
+    if (currentTabRef.current !== 'chat' || activeGroupIdRef.current) {
       setInAppNotification({
         id: newId(),
         title: partnerNameRef.current || 'Partner',
@@ -892,9 +964,32 @@ export const App: React.FC = () => {
     }
   };
 
+  /**
+   * The partner's messages that have just landed here, to be told back to her
+   * phone as CHAT_DELIVERED - its two grey ticks. Whatever this phone's read
+   * receipts say: having a message is not reading it. One arriving live is
+   * told at once (no timer, which a page in the background may not run);
+   * history is told once per page of it, on REPLAY_COMPLETE.
+   */
+  const deliveredQueueRef = useRef(new Set<string>());
+  const flushDelivered = () => {
+    const queue = deliveredQueueRef.current;
+    if (!queue.size) return;
+    const batches = deliveredBatches(queue);
+    queue.clear();
+    for (const payload of batches) wsRelay.broadcastUpdate(CHAT_DELIVERED, payload);
+  };
+
   // Listen for remote updates
   useEffect(() => {
     const unsubscribe = wsRelay.subscribe((msg) => {
+      // A page of history has been applied: what of hers it brought is told
+      // back in one go (flushDelivered).
+      if (msg.type === 'REPLAY_COMPLETE') {
+        flushDelivered();
+        return;
+      }
+
       // Signals carry no history and are never stored, so they are handled
       // before the record path rather than inside it.
       if (msg.type === 'RECORD_TOO_LARGE') {
@@ -926,11 +1021,49 @@ export const App: React.FC = () => {
         return;
       }
 
-      if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === TYPING_SIGNAL) {
+      if (
+        msg.type === 'REMOTE_SIGNAL' &&
+        (msg.signal?.type === TYPING_SIGNAL || msg.signal?.type === TYPING_STOP_SIGNAL)
+      ) {
         // Reciprocal: a device that sends nothing sees nothing.
         if (!readShareReceipts()) return;
         if (msg.signal.authorId === state.activeUser) return;
+        if (msg.signal.type === TYPING_STOP_SIGNAL) {
+          setPartnerTypingAt(0);
+          return;
+        }
+        let said: any = null;
+        try {
+          said = JSON.parse(msg.signal.payload);
+        } catch {
+          // Every version has sent {at}; one that cannot be read still says typing.
+        }
+        partnerTypingSaidRef.current = {
+          at: Number(said?.at) || 0,
+          ttl: typingTtlFor(said),
+          device: String(said?.device || '').slice(0, 64)
+        };
         setPartnerTypingAt(Date.now());
+        return;
+      }
+
+      if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === HERE_SIGNAL) {
+        // Ours, from another of our own devices: nothing about her.
+        if (msg.signal.authorId === state.activeUser) return;
+        let said: any;
+        try {
+          said = JSON.parse(msg.signal.payload);
+        } catch {
+          return;
+        }
+        // By device, so a laptop left in the background saying away does not
+        // cancel the phone in her hand saying here. Timed by this phone's
+        // clock, so hers being wrong cannot keep her online or hide her.
+        const device = String(said?.device || 'one').slice(0, 64);
+        const entry = { at: Date.now(), here: said?.here === true };
+        setPartnerHere(prev => ({ ...prev, [device]: entry }));
+        // Away on the device she was writing on: she is not writing now.
+        if (!entry.here && partnerTypingSaidRef.current.device === device) setPartnerTypingAt(0);
         return;
       }
 
@@ -1149,11 +1282,31 @@ export const App: React.FC = () => {
             const wire = chatFromWire(parsed);
             // A reply to one held here waits with it (core/sendLater).
             const theirs = record.authorId !== state.activeUser;
+            // Her message ends her "typing…", in the same update that puts it
+            // on screen, so it takes the dots' place rather than following
+            // them out (core/typing). Held for later too: she has sent it.
+            // One fetched again from before she started writing leaves it.
+            if (theirs && typingEndedBy(partnerTypingSaidRef.current.at, Number(record.clientTs) || 0)) {
+              setPartnerTypingAt(0);
+            }
             const withHeldOne = theirs ? waitsWith(wire, latestRef.current.state.heldMessages) : undefined;
             const incoming = withHeldOne === undefined ? wire : { ...wire, showAt: withHeldOne };
             // Set to show later, and not yet time: kept out of sight - no
             // chime, toast or news - until it is (core/sendLater).
             const held = theirs && (withHeldOne !== undefined || isHeld(incoming, state.activeUser));
+            // Hers, and new here: her phone is told it has landed. One set for
+            // later too - it is on this phone, only out of sight; hers says
+            // when it will show until then. One already here is passed over,
+            // so history fetched again tells her nothing twice.
+            const known = latestRef.current.state;
+            if (
+              theirs &&
+              !known.messages.some(m => m.id === incoming.id) &&
+              !known.heldMessages?.some(m => m.id === incoming.id)
+            ) {
+              deliveredQueueRef.current.add(incoming.id);
+              if (!msg.replay) flushDelivered();
+            }
             setState(prev => {
               // Arriving twice must not mean appearing twice.
               //
@@ -1173,32 +1326,40 @@ export const App: React.FC = () => {
               // device on the same role used to show everything typed on the
               // first one as forever sending.
               // Your own view-once photo, back from the relay, keeps no picture.
-              const copy =
+              const delivered =
                 incoming.delivered === false || incoming.viewOnce ? deliveredCopy(incoming, prev.activeUser) : incoming;
+              // Ours from the other phone: when it came here, so a receipt
+              // heard before it - its sentAt may be long past, from that
+              // phone's outbox or clock - does not turn it blue
+              // (readByPartner). Not for history being restored, which keeps
+              // the watermark's word as it always has.
+              const copy =
+                record.authorId === prev.activeUser && !msg.restoring ? { ...delivered, leftAt: Date.now() } : delivered;
               // When it arrived here, for the unread count (core/unread) - not
               // for a phone being set up again, whose history is not news.
               // A catch-up after a seat change is news: those messages were
               // never on this phone.
+              const arrived = arrivalTime(prev.chatReadAt);
               const applied =
                 record.authorId !== prev.activeUser && !(msg.restoring && !msg.catchUp)
-                  ? { ...copy, receivedAt: Date.now() }
+                  ? { ...copy, receivedAt: arrived }
                   : copy;
-              return {
-                ...prev,
-                messages: insertBySentAt(prev.messages, applied).slice(-MAX_CHAT_MESSAGES)
-              };
-            });
-            if (!held) {
               // News on Home and the chat tab - not for a phone being restored,
               // as for every other kind of record above. Named by the message,
               // so one withdrawn before its time can take its line with it.
-              if (record.authorId !== state.activeUser && !msg.restoring) {
-                const at = Number(record.clientTs) || Date.now();
-                setState(prev => ({
-                  ...prev,
-                  activity: withActivity(prev.activity || [], { id: incoming.id, tabId: 'chat', type: 'CHAT', at })
-                }));
-              }
+              // Timed by when it arrived here, not by her clock, and only for
+              // one new here: one fetched again is not news a second time,
+              // and must not push a missed call's line out of the way.
+              const news = record.authorId !== prev.activeUser && !msg.restoring;
+              return {
+                ...prev,
+                messages: insertBySentAt(prev.messages, applied).slice(-MAX_CHAT_MESSAGES),
+                ...(news
+                  ? { activity: withActivity(prev.activity || [], { id: incoming.id, tabId: 'chat', type: 'CHAT', at: arrived }) }
+                  : {})
+              };
+            });
+            if (!held) {
               if (record.authorId !== state.activeUser && !msg.replay) announceMessage(parsed.text);
             }
           } else if (record.type === COMING_UP) {
@@ -1360,10 +1521,28 @@ export const App: React.FC = () => {
               }
               return;
             }
-            setState(prev => ({
-              ...prev,
-              partnerReadAt: Math.max(prev.partnerReadAt || 0, upTo)
-            }));
+            // When it was heard here goes with it, by this phone's clock: only
+            // what had left here by then can it say she read (readByPartner).
+            // One that moves nothing on - the same receipt fetched again -
+            // was heard long ago, and says nothing new. Unless it is said
+            // again live: her phone does that when one of ours reached her
+            // late, under what she had already read (sendReadReceipt there).
+            setState(prev => {
+              const was = prev.partnerReadAt || 0;
+              if (upTo > was) return { ...prev, partnerReadAt: upTo, partnerReadHeardAt: Date.now() };
+              if (upTo > 0 && upTo === was && !msg.replay) return { ...prev, partnerReadHeardAt: Date.now() };
+              return prev;
+            });
+          } else if (record.type === CHAT_DELIVERED) {
+            // Our messages on one of her devices: two grey ticks. Any of hers
+            // counts; ours, back from our other device, are about her messages.
+            if (record.authorId === state.activeUser) return;
+            const ids = readDeliveredIds(parsed);
+            if (!ids.length) return;
+            setState(prev => {
+              const messages = applyDelivered(prev.messages, prev.activeUser, ids);
+              return messages ? { ...prev, messages } : prev;
+            });
           } else if (record.type === VOICE_HEARD) {
             // The partner has played one of this phone's voice notes. Like a
             // read receipt, only the partner's say so counts - not one of our
@@ -1454,6 +1633,15 @@ export const App: React.FC = () => {
                 ...prev,
                 partnerLastSeen: Math.max(prev.partnerLastSeen || 0, at)
               }));
+              // All a phone on the version before says about being on screen
+              // (core/lastSeen). Heard now, it is now by this clock; from
+              // history, her time, and never later than now. One from this
+              // version is last seen only - it beats as it leaves, too.
+              if (isLegacyBeat(parsed)) {
+                const heard = Date.now();
+                setLegacyBeatAt(prev => Math.max(prev, msg.replay ? Math.min(at, heard) : heard));
+                if (!msg.replay) setLegacyLiveAt(heard);
+              }
             }
           } else if (record.type === 'VAULT_NAME') {
             setState(prev => ({ ...prev, vaultName: String(parsed.name || '') }));
@@ -1962,6 +2150,8 @@ export const App: React.FC = () => {
    * relay with duplicates.
    */
   const lastSentReceiptRef = useRef(0);
+  /** The newest arrival the last receipt covered (newestArrival), by this phone's clock. */
+  const lastReceiptArrivalRef = useRef(0);
   const sendReadReceipt = () => {
     // Read means looked at. A phone locked with the chat as its last screen
     // keeps its connection (the radio holds the app awake), and without this
@@ -1969,12 +2159,19 @@ export const App: React.FC = () => {
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
     // Their real messages only: a call's line can carry this phone's clock.
     const newest = newestFrom(state.messages, state.activeUser === 'user' ? 'partner' : 'user');
-    if (!newest || newest <= lastSentReceiptRef.current) return;
+    // One that came late - out of an outbox, or from a phone whose clock is
+    // behind - lands under what was already said. Said once more, the same
+    // mark tells the sender this one was read too; without it, it stayed
+    // grey on theirs until a newer one was read.
+    const arrived = newestArrival(state.messages);
+    if (!newest || (newest <= lastSentReceiptRef.current && arrived <= lastReceiptArrivalRef.current)) return;
     // Off means nothing leaves this device - the setting is the send, not a
     // request that the other end politely declines to display.
     if (!readShareReceipts()) return;
-    lastSentReceiptRef.current = newest;
-    wsRelay.broadcastUpdate('READ_RECEIPT', { upTo: newest });
+    const upTo = Math.max(newest, lastSentReceiptRef.current);
+    lastSentReceiptRef.current = upTo;
+    lastReceiptArrivalRef.current = arrived;
+    wsRelay.broadcastUpdate('READ_RECEIPT', { upTo });
   };
 
   /**
@@ -2085,22 +2282,47 @@ export const App: React.FC = () => {
 
   // Opening the chat is not the only way to read something: a message arriving
   // while the chat is already open has also been seen - when the chat is what
-  // is really in front of you, and not a group, the lock screen or the
-  // calculator. Coming back to it counts as opening it.
-  const chatOnScreen =
-    pageVisible && currentTab === 'chat' && !activeGroupId && !isLocked && !isCamouflaged;
+  // is really in front of you. That is: Two on the screen, unlocked, not the
+  // calculator, on the Chat tab, with no group open and no call screen over
+  // it. Coming back to it counts as opening it.
+  const chatOnScreen = chatInFront({
+    visible: pageVisible,
+    tab: currentTab,
+    groupOpen: !!activeGroupId,
+    locked: isLocked,
+    disguised: isCamouflaged,
+    inCall: callState.phase !== 'idle'
+  });
+  // What every surface counts - the dock, the header, the directory and the
+  // widget. The chat in front of you is already read: the effect below writes
+  // that down, but only after the screen has been drawn, and until then a
+  // message that has just landed would flash a "1" on the tab you are on and
+  // hand the widget a passing "1 new message".
+  const shownUnread = shownCount(chatOnScreen, unreadChatCount);
   // Watched by when the newest message arrived, not by how many there are:
   // at the 5,000-message cap the count stops changing as new ones arrive.
   const latestArrival = useMemo(() => newestArrival(state.messages), [state.messages]);
   useEffect(() => {
     if (!chatOnScreen) return;
-    // Everything that has arrived has now been in front of you.
-    setState(prev =>
-      countUnread(prev.messages, prev.activeUser, prev.chatReadAt) > 0 ? { ...prev, chatReadAt: Date.now() } : prev
-    );
+    // Everything that has arrived has now been in front of you - a missed
+    // call's line on the chat tab too, not only once the tab is tapped.
+    setState(prev => {
+      const now = Date.now();
+      const unread = countUnread(prev.messages, prev.activeUser, prev.chatReadAt) > 0;
+      const line = (prev.activity || []).find(e => e.tabId === 'chat');
+      const lineNew = !!line && line.at > (prev.activitySeen?.chat || 0);
+      if (!unread && !lineNew) return prev;
+      return {
+        ...prev,
+        // Up to the newest arrival, so one stamped ahead of a clock put back is read too.
+        ...(unread ? { chatReadAt: Math.max(now, newestArrival(prev.messages)) } : {}),
+        // A missed call's time is her clock, which can be ahead of this one.
+        ...(lineNew && line ? { activitySeen: { ...(prev.activitySeen || {}), chat: Math.max(now, line.at) } } : {})
+      };
+    });
     sendReadReceipt();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [latestArrival, state.messages.length, chatOnScreen]);
+  }, [latestArrival, state.messages.length, state.activity, chatOnScreen]);
 
   /**
    * When you had last looked as the chat came in front of you - where its
@@ -2147,8 +2369,10 @@ export const App: React.FC = () => {
             messages = insertBySentAt(messages, m);
             continue;
           }
-          messages = insertBySentAt(messages, { ...m, receivedAt: now });
-          activity = withActivity(activity, { id: m.id, tabId: 'chat', type: 'CHAT', at: m.showAt ?? now });
+          // Arrived now, by this phone's clock; its showAt is her clock.
+          const arrived = arrivalTime(prev.chatReadAt, now);
+          messages = insertBySentAt(messages, { ...m, receivedAt: arrived });
+          activity = withActivity(activity, { id: m.id, tabId: 'chat', type: 'CHAT', at: arrived });
         }
         return { ...prev, messages: messages.slice(-MAX_CHAT_MESSAGES), heldMessages: waiting, activity };
       });
@@ -2325,9 +2549,10 @@ export const App: React.FC = () => {
   /**
    * Tells the other device this one is awake.
    *
-   * Sent on connecting, whenever the app comes back to the foreground, and
-   * every couple of minutes in between - but only while actually visible, so
-   * a phone in a pocket does not report itself as being read.
+   * Sent on connecting, whenever the app comes back to the foreground or
+   * leaves it, and every couple of minutes in between - but only while
+   * actually visible, so a phone in a pocket does not report itself as being
+   * read.
    *
    * Nothing is sent at all when sharing is off. That is the whole of the
    * privacy control: with no beat there is no timestamp, on the relay or on
@@ -2394,28 +2619,125 @@ export const App: React.FC = () => {
 
     const beat = () => {
       if (document.visibilityState !== 'visible') return;
-      wsRelay.broadcastUpdate(PRESENCE_BEAT, { at: Date.now() });
+      wsRelay.broadcastUpdate(PRESENCE_BEAT, presenceBeat(Date.now()));
     };
+    // Coming and going both. The one sent as Two leaves the screen is what
+    // makes "last seen" the minute she left, not the last beat before it -
+    // up to two minutes earlier. It waits in the outbox if the socket is
+    // cut off first, and still carries the time she left.
+    const cameOrWent = () => wsRelay.broadcastUpdate(PRESENCE_BEAT, presenceBeat(Date.now()));
 
     beat();
     const timer = setInterval(beat, BEAT_INTERVAL_MS);
-    document.addEventListener('visibilitychange', beat);
+    document.addEventListener('visibilitychange', cameOrWent);
+    // Locked from the screen (Quick exit) is leaving too. Not the auto-lock
+    // a minute after she went, whose time is not when she left.
+    window.addEventListener(BEFORE_LOCK_EVENT, beat);
     return () => {
       clearInterval(timer);
-      document.removeEventListener('visibilitychange', beat);
+      document.removeEventListener('visibilitychange', cameOrWent);
+      window.removeEventListener(BEFORE_LOCK_EVENT, beat);
     };
   }, [shareLastSeen, relayStatus, isLocked]);
+
+  /**
+   * Tells the partner's phone whether Two is on this screen (HERE_SIGNAL): as
+   * it comes and goes, every half minute while it stays, and away just before
+   * it locks. That, and not the open socket, is "online" over there - a phone
+   * with Two in the background keeps its socket for as long as Android lets
+   * the app live.
+   *
+   * Not behind "share last seen": "online" never was, and this shows less of
+   * her than the socket did.
+   */
+  useEffect(() => {
+    if (isLocked || !session || relayStatus !== 'connected') return;
+    // Whether anyone is there to hear it. A phone that joins is told on
+    // arrival, below, so nothing is spent on an empty room.
+    let partnerThere = false;
+    let locking = false;
+    const say = (here: boolean) => {
+      if (partnerThere) wsRelay.sendSignal(HERE_SIGNAL, { here, device: getDeviceId() });
+    };
+    // The calculator is not Two on screen, whatever the page says.
+    const onScreen = () => !locking && !isCamouflaged && document.visibilityState === 'visible';
+    const sayNow = () => say(onScreen());
+    const gone = () => say(false);
+    const beforeLock = () => {
+      locking = true;
+      gone();
+    };
+
+    const timer = setInterval(() => {
+      if (onScreen()) say(true);
+    }, HERE_REPEAT_MS);
+    document.addEventListener('visibilitychange', sayNow);
+    // Some Android WebViews report a pagehide without a visibilitychange.
+    window.addEventListener('pagehide', gone);
+    window.addEventListener(BEFORE_LOCK_EVENT, beforeLock);
+    // The relay tells everyone each time a phone joins or leaves. Answering
+    // it is how a phone that has just joined learns at once where she is.
+    const unsubscribe = wsRelay.subscribePresence(online => {
+      partnerThere = online;
+      if (online) sayNow();
+    });
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', sayNow);
+      window.removeEventListener('pagehide', gone);
+      window.removeEventListener(BEFORE_LOCK_EVENT, beforeLock);
+      unsubscribe();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocked, !!session, relayStatus, isCamouflaged]);
+
+  /**
+   * Whether she has Two on her screen now - what "online" means wherever it
+   * is shown (core/lastSeen). partnerOnline, her socket on the relay, stays
+   * for calls alone: a phone with Two in the background still rings.
+   */
+  const shownOnlineUntil = onScreenUntil({
+    // The count from before a socket of ours closed says nothing now.
+    relayPeers: partnerOnline ? occupancy.peers : 0,
+    devices: partnerHere,
+    partnerSaysAway: !!state.partnerApp?.can?.includes(CAN_SAY_AWAY),
+    legacyBeatAt: legacyLiveAt,
+    upSince: partnerUpAt,
+    // Kept from days ago, with last seen since turned off there, this alone
+    // would have her never online - so over a day old it gives way to her
+    // socket once she has had time to beat and has not.
+    earlierBeatAt: legacyBeatAt || state.partnerLastSeen || 0
+  });
+  const partnerShownOnline = shownOnlineUntil > 0;
+  // Nothing arrives to say a "here" has run out, so look again when it does.
+  const [, setPresenceTick] = useState(0);
+  useEffect(() => {
+    if (!Number.isFinite(shownOnlineUntil) || shownOnlineUntil <= 0) return;
+    const timer = setTimeout(() => setPresenceTick(t => t + 1), Math.max(0, shownOnlineUntil - Date.now()) + 50);
+    return () => clearTimeout(timer);
+  }, [shownOnlineUntil]);
+  // Nor that a phone on the version before has had time to beat and has not,
+  // which hands her over to her socket when her last beat is a day old
+  // (core/lastSeen).
+  useEffect(() => {
+    const left = partnerUpAt + LEGACY_HERE_MS - Date.now();
+    if (!partnerUpAt || left <= 0) return;
+    const timer = setTimeout(() => setPresenceTick(t => t + 1), left + 50);
+    return () => clearTimeout(timer);
+  }, [partnerUpAt]);
 
   /**
    * Lets "typing…" lapse.
    *
    * The sender repeats every few seconds while they are still writing, so the
-   * absence of a repeat is what means they stopped - there is no "stopped
-   * typing" message to miss, and closing the app cannot fail to send one.
+   * absence of a repeat means they stopped. Her message, a TYPING_STOP, her
+   * socket going or her saying away end it sooner; this is what still ends it
+   * when none of those arrives - a phone on the version before sends no stop,
+   * and closing the app can fail to send one.
    */
   useEffect(() => {
     if (!partnerTypingAt) return;
-    const timer = setTimeout(() => setPartnerTypingAt(0), TYPING_TTL_MS);
+    const timer = setTimeout(() => setPartnerTypingAt(0), partnerTypingSaidRef.current.ttl);
     return () => clearTimeout(timer);
   }, [partnerTypingAt]);
 
@@ -2467,18 +2789,31 @@ export const App: React.FC = () => {
       return;
     }
 
-    if (msg?.type === 'REMOTE_SIGNAL' && msg.signal?.type === TYPING_SIGNAL) {
+    if (
+      msg?.type === 'REMOTE_SIGNAL' &&
+      (msg.signal?.type === TYPING_SIGNAL || msg.signal?.type === TYPING_STOP_SIGNAL)
+    ) {
       if (!readShareReceipts()) return;
-      let who = '';
+      let said: any;
       try {
-        who = String(JSON.parse(msg.signal.payload)?.from || '');
+        said = JSON.parse(msg.signal.payload);
       } catch {
         return;
       }
+      const who = String(said?.from || '');
       if (!who || who === myMemberId()) return;
+      if (msg.signal.type === TYPING_STOP_SIGNAL) {
+        setGroupTyping(prev => {
+          if (!prev[groupId]?.[who]) return prev;
+          const { [who]: _stopped, ...rest } = prev[groupId];
+          return { ...prev, [groupId]: rest };
+        });
+        return;
+      }
+      const entry = { until: Date.now() + typingTtlFor(said), saidAt: Number(said?.at) || 0 };
       setGroupTyping(prev => ({
         ...prev,
-        [groupId]: { ...(prev[groupId] || {}), [who]: Date.now() }
+        [groupId]: { ...(prev[groupId] || {}), [who]: entry }
       }));
       return;
     }
@@ -2497,6 +2832,18 @@ export const App: React.FC = () => {
     // real author travels inside the ciphertext.
     const from = String(parsed.from || '');
     if (!from || from === myMemberId()) return;
+
+    // Their message ends their "typing…" in the same update that shows it,
+    // as in your own chat - unless they said it after this one went.
+    if (record.type === GROUP_CHAT) {
+      const messageAt = Number(record.clientTs) || Number(parsed.at) || 0;
+      setGroupTyping(prev => {
+        const said = prev[groupId]?.[from];
+        if (!said || !typingEndedBy(said.saidAt, messageAt)) return prev;
+        const { [from]: _spoke, ...rest } = prev[groupId];
+        return { ...prev, [groupId]: rest };
+      });
+    }
 
     setState(prev => ({
       ...prev,
@@ -2648,7 +2995,7 @@ export const App: React.FC = () => {
   const [typingTick, setTypingTick] = useState(0);
   useEffect(() => {
     const anyRecent = Object.values(groupTyping).some(members =>
-      Object.values(members).some(at => Date.now() - at < TYPING_TTL_MS)
+      Object.values(members).some(t => t.until > Date.now())
     );
     if (!anyRecent) return;
     const timer = setInterval(() => setTypingTick(n => n + 1), 1000);
@@ -2941,15 +3288,22 @@ export const App: React.FC = () => {
    *
    * Nothing here is kept in state of its own: a dot and a home-screen line are
    * two readings of the same events against the same marks, so they cannot
-   * disagree about what is new.
+   * disagree about what is new. The chat's message line goes by the same
+   * count the tab shows (core/activity), and while the chat is in front of
+   * you nothing on it is news - not even for the frame before the read is
+   * written down.
    */
+  const activityLooked = useMemo(
+    () => (chatOnScreen ? { ...(state.activitySeen || {}), chat: Infinity } : state.activitySeen || {}),
+    [state.activitySeen, chatOnScreen]
+  );
   const partnerDots = useMemo(
-    () => dottedTabs(state.activity || [], state.activitySeen || {}),
-    [state.activity, state.activitySeen]
+    () => dottedTabs(state.activity || [], activityLooked, shownUnread),
+    [state.activity, activityLooked, shownUnread]
   );
   const partnerNews = useMemo(
-    () => unseen(state.activity || [], state.activitySeen || {}),
-    [state.activity, state.activitySeen]
+    () => unseen(state.activity || [], activityLooked, shownUnread),
+    [state.activity, activityLooked, shownUnread]
   );
 
   const handleSelectTab = (tabId: string) => {
@@ -2968,8 +3322,9 @@ export const App: React.FC = () => {
       activitySeen: { ...(prev.activitySeen || {}), [tabId]: Date.now() }
     }));
 
+    // Its read receipt goes once the chat is really in front of you (see
+    // chatOnScreen) - not under a call screen, nor before it has appeared.
     if (tabId === 'chat') {
-      sendReadReceipt();
       if (typeof document !== 'undefined') {
         document.title = 'Two — Private Encrypted Space';
       }
@@ -2991,6 +3346,25 @@ export const App: React.FC = () => {
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [currentTab, activeGroupId]);
+
+  /**
+   * Opening the screen a notice is about answers it - the chat opened from
+   * the dock while its "Reply" floats on top, the group it names - so the
+   * notice slides away (InAppNotificationToast) instead of sitting over the
+   * very thing it points to. Only on a change of screen: one about the screen
+   * you are already on, a voice note too large to send from the chat, still
+   * shows.
+   *
+   * Done while rendering, not in an effect after it: leaving a group for the
+   * chat swaps group mode's toast for the space's, and from an effect the new
+   * one would mount with the chat's notice and slide it in and straight out.
+   */
+  const noticeHere = screenInFront(currentTab, activeGroupId);
+  const [noticeScreen, setNoticeScreen] = useState(noticeHere);
+  if (noticeScreen !== noticeHere) {
+    setNoticeScreen(noticeHere);
+    if (inAppNotification?.tabId === noticeHere) setInAppNotification(null);
+  }
 
   /**
    * The home-screen widget's summary (core/widget.ts): your days together,
@@ -3017,19 +3391,19 @@ export const App: React.FC = () => {
       since: state.ourDates?.togetherSince,
       annivDate: next?.date,
       annivYears: next?.years,
-      unread: unreadChatCount,
-      lastMessageAt: unreadChatCount > 0 ? newestFromThem : undefined,
+      unread: shownUnread,
+      lastMessageAt: shownUnread > 0 ? newestFromThem : undefined,
       weather: theirReport?.weather,
       capacity: theirReport?.capacity,
       myWeather: myReport?.weather,
       myCapacity: myReport?.capacity,
-      online: partnerOnline,
+      online: partnerShownOnline,
       lastSeenAt: shareLastSeen && state.partnerLastSeen ? state.partnerLastSeen : undefined
     });
   }, [
-    isLocked, session, state.isPaired, state.partnerName, state.ourDates, unreadChatCount, newestFromThem,
+    isLocked, session, state.isPaired, state.partnerName, state.ourDates, shownUnread, newestFromThem,
     theirReport?.weather, theirReport?.capacity, myReport?.weather, myReport?.capacity,
-    partnerOnline, shareLastSeen, state.partnerLastSeen
+    partnerShownOnline, shareLastSeen, state.partnerLastSeen
   ]);
 
   /**
@@ -4190,6 +4564,7 @@ export const App: React.FC = () => {
       call={callState}
       myName={state.userName || 'You'}
       partnerName={state.partnerName || 'Partner'}
+      // Her socket, not partnerShownOnline: Two in the background still rings.
       partnerOnline={partnerOnline}
       voiceLevels={callVoiceLevels}
       onAccept={() => void callEngineRef.current?.accept()}
@@ -4707,9 +5082,7 @@ export const App: React.FC = () => {
   if (activeGroup) {
     // Derived, never stored: a timestamp older than the window simply stops
     // counting, so nothing has to remember to delete it.
-    const typingIds = Object.entries(groupTyping[activeGroup.id] || {})
-      .filter(([, at]) => Date.now() - at < TYPING_TTL_MS)
-      .map(([id]) => id);
+    const typingIds = typingNow(groupTyping[activeGroup.id], Date.now());
     return (
       <LocaleContext.Provider value={locale}>
       <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
@@ -4741,9 +5114,14 @@ export const App: React.FC = () => {
               draft={state.chatDrafts?.[activeGroup.id]}
               onSaveDraft={draft => handleSaveDraft(activeGroup.id, draft)}
               callInProgress={callState.phase !== 'idle'}
-              onTyping={() => {
+              onTyping={typing => {
                 if (!readShareReceipts()) return;
-                signalToGroup(activeGroup.id, TYPING_SIGNAL, { from: myMemberId() });
+                // `stops`: this phone says when it stops (core/typing).
+                signalToGroup(activeGroup.id, typing ? TYPING_SIGNAL : TYPING_STOP_SIGNAL, {
+                  from: myMemberId(),
+                  at: Date.now(),
+                  stops: true
+                });
               }}
               onRename={
                 activeGroup.founder
@@ -4763,13 +5141,20 @@ export const App: React.FC = () => {
 
         {/* Notices about groups - a message in another group, a voice note
             too large to send in this one - are shown here too, or they would
-            wait unseen until group mode was left. The couple's own keep
-            waiting for the sanctuary, as they always have. */}
+            wait unseen until group mode was left. So is one about the
+            couple's chat, whose Reply leaves the group for it; the rest of
+            the couple's keep waiting for the sanctuary (shownInGroupMode). */}
         <InAppNotificationToast
-          notification={inAppNotification?.tabId.startsWith('group:') ? inAppNotification : null}
+          notification={inAppNotification && shownInGroupMode(inAppNotification.tabId) ? inAppNotification : null}
+          held={callState.phase !== 'idle'}
           onDismiss={() => setInAppNotification(null)}
           onOpenTab={(tabId) => {
-            if (tabId.startsWith('group:')) setActiveGroupId(tabId.slice('group:'.length));
+            if (tabId.startsWith('group:')) {
+              setActiveGroupId(tabId.slice('group:'.length));
+              return;
+            }
+            setActiveGroupId(null);
+            handleSelectTab(tabId);
           }}
         />
 
@@ -4808,11 +5193,11 @@ export const App: React.FC = () => {
         onTriggerPulse={() => triggerGlobalPulse(heartKind('warm_hug').note, 'warm_hug')}
         locale={locale}
         relayStatus={relayStatus}
-        unreadChatCount={unreadChatCount}
+        unreadChatCount={shownUnread}
         onOpenDirectory={() => setShowDirectoryModal(true)}
         partnerName={state.partnerName}
         vaultName={state.vaultName}
-        partnerOnline={partnerOnline}
+        partnerOnline={partnerShownOnline}
       />
 
 
@@ -4917,6 +5302,7 @@ export const App: React.FC = () => {
             // Until their name arrives, the stand-in in this phone's language (shown, never sent).
             partnerName={state.partnerName && state.partnerName !== 'Partner' ? state.partnerName : tr('Partner')}
             partnerReadAt={state.partnerReadAt}
+            partnerReadHeardAt={state.partnerReadHeardAt ?? 0}
             partnerStatus={state.statuses?.[state.activeUser === 'user' ? 'partner' : 'user']}
             // Only once their phone has said it can hold a message back:
             // an older one would show it straight away (core/sendLater).
@@ -4926,7 +5312,7 @@ export const App: React.FC = () => {
             draft={state.chatDrafts?.couple}
             onSaveDraft={draft => handleSaveDraft('couple', draft)}
             relayStatus={relayStatus}
-            partnerOnline={partnerOnline}
+            partnerOnline={partnerShownOnline}
             // Reciprocal, as every messenger does it: hiding your own last
             // seen hides theirs too, so it cannot become a one-way window.
             partnerLastSeen={shareLastSeen ? state.partnerLastSeen : 0}
@@ -4939,11 +5325,18 @@ export const App: React.FC = () => {
             pins={state.chatPins}
             onPinMessage={handlePinMessage}
             onViewOnceOpened={handleViewOnceOpened}
-            onTyping={() => {
+            onTyping={typing => {
               // Read straight from the setting rather than the render's copy:
               // off must mean nothing leaves this device, immediately.
               if (!readShareReceipts()) return;
-              wsRelay.sendSignal(TYPING_SIGNAL, { at: Date.now() });
+              // `stops`: this phone says when it stops, so hers can hold
+              // "typing…" through a pause (core/typing). The device, so her
+              // saying away on another one does not end it.
+              wsRelay.sendSignal(typing ? TYPING_SIGNAL : TYPING_STOP_SIGNAL, {
+                at: Date.now(),
+                stops: true,
+                device: getDeviceId()
+              });
             }}
           />
         )}
@@ -5128,7 +5521,7 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             userName={state.userName}
             partnerName={state.partnerName}
-            partnerOnline={partnerOnline}
+            partnerOnline={partnerShownOnline}
             onSendToChat={(msg) => handleSendMessage(msg, false)}
           />
         )}
@@ -5269,7 +5662,7 @@ export const App: React.FC = () => {
             vaultName={state.vaultName}
             onRenameVault={handleRenameVault}
             onChangeName={handleChangeName}
-            partnerOnline={partnerOnline}
+            partnerOnline={partnerShownOnline}
             relayStatus={relayStatus}
             lastSyncedAt={lastSyncedAt}
             userName={state.userName}
@@ -5341,9 +5734,11 @@ export const App: React.FC = () => {
 
       {callOverlay}
 
-      {/* In-App Notification Toast for Messages & Letters */}
+      {/* In-App Notification Toast for Messages & Letters. Its time stands
+          still while the call screen covers it, as the update toast waits. */}
       <InAppNotificationToast
         notification={inAppNotification}
+        held={callState.phase !== 'idle'}
         onDismiss={() => setInAppNotification(null)}
         onOpenTab={(tabId) => {
           if (tabId.startsWith('group:')) {
@@ -5362,7 +5757,7 @@ export const App: React.FC = () => {
             onClose={() => setShowDirectoryModal(false)}
             currentTab={currentTab}
             onSelectTab={handleSelectTab}
-            unreadChatCount={unreadChatCount}
+            unreadChatCount={shownUnread}
           />
         </Suspense>
       )}
@@ -5377,7 +5772,7 @@ export const App: React.FC = () => {
         <AppDock
           currentTab={currentTab}
           onSelectTab={handleSelectTab}
-          unreadChatCount={unreadChatCount}
+          unreadChatCount={shownUnread}
           draftInChat={!!state.chatDrafts?.couple}
           dotted={partnerDots}
           isTablet={isTablet}

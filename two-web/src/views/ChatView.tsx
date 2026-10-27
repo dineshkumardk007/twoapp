@@ -27,6 +27,7 @@ import {
   canUnsend,
   highlightParts,
   livePins,
+  readByPartner,
   replyRefFor,
   searchMatches,
   snippetOf,
@@ -36,7 +37,9 @@ import { shrinkPhoto } from '../core/photo';
 import { copyText } from '../core/clipboard';
 import { saveFile } from '../core/saveFile';
 import { useBackLayer } from '../core/backStack';
-import { formatLastSeen, TYPING_REPEAT_MS } from '../core/lastSeen';
+import { formatLastSeen } from '../core/lastSeen';
+import { presenceLine } from '../core/presenceLine';
+import { useTypingSender } from '../core/typing';
 import { MAX_CHAT_MESSAGES } from '../core/storage';
 import { who } from '../core/who';
 import { activeLocale, dateLocale, tr, useT } from '../core/i18n';
@@ -44,7 +47,7 @@ import { haptic } from '../core/haptics';
 import {
   Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
   Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download,
-  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock
+  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock, EllipsisVertical
 } from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
 
@@ -53,6 +56,11 @@ interface ChatViewProps {
   activeUser: 'user' | 'partner';
   /** Newest sentAt the partner has confirmed reading. */
   partnerReadAt?: number;
+  /**
+   * When, by this phone's clock, that was heard here (core/chatActions,
+   * readByPartner). Left out, the watermark alone says what is read.
+   */
+  partnerReadHeardAt?: number;
   /**
    * When you had last looked, as the chat came in front of you (core/unread):
    * where "New messages" goes.
@@ -113,8 +121,8 @@ interface ChatViewProps {
   canSendLater?: boolean;
   /** False when this device has switched read receipts and typing off. */
   shareReceipts?: boolean;
-  /** Called as the composer is typed in; throttled inside. */
-  onTyping?: () => void;
+  /** Writing started (true) or stopped (false); when each is said is decided in core/typing. */
+  onTyping?: (typing: boolean) => void;
   /** Rings the partner. Absent where calling is not offered. */
   onStartCall?: () => void;
   /** True while a call is ringing or live, so a second cannot be started. */
@@ -332,6 +340,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onSendMessage,
   onResolveStuck,
   partnerReadAt = 0,
+  partnerReadHeardAt = Infinity,
   readAt,
   openKey = 0,
   draft,
@@ -463,22 +472,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [stuckOpen, setStuckOpen] = useState<string | null>(null);
 
   /**
-   * Announces typing at most once every few seconds.
-   *
-   * A signal per keystroke would be a burst of traffic all saying the same
-   * thing. The receiver holds the state for longer than this gap, so repeating
-   * on a timer is what keeps it true while the writing continues - and letting
-   * it lapse is what ends it, with no "stopped typing" message that closing
-   * the app could fail to send.
+   * Says "typing…" on the first key, keeps it alive while the keys keep
+   * coming, and says stopped when they do (core/typing). Never at Send: her
+   * phone takes the message itself as the end.
    */
-  const lastTypingSentRef = useRef(0);
-  const announceTyping = () => {
-    if (!onTyping) return;
-    const now = Date.now();
-    if (now - lastTypingSentRef.current < TYPING_REPEAT_MS) return;
-    lastTypingSentRef.current = now;
-    onTyping();
-  };
+  const typing = useTypingSender(onTyping);
 
   // Re-rendered on a timer only because the wording ages: "today at 23:58"
   // has to become "yesterday at 23:58" without the screen being touched.
@@ -749,6 +747,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       setEditing(null);
     } else {
       onSendMessage(text, false, replyTo ? { replyTo } : undefined);
+      typing.sent();
       setReplyTo(null);
     }
     setInputText('');
@@ -766,6 +765,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const text = inputText.trim();
     if (!text || editing) return;
     onSendMessage(text, false, { ...(replyTo ? { replyTo } : {}), showAt });
+    typing.sent();
     setReplyTo(null);
     setInputText('');
     if (savedDraftRef.current !== draftKey(null)) {
@@ -791,6 +791,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   /** Change one of your messages: its words go into the composer to be written over. */
   const startEdit = (m: ChatMessage) => {
+    // The new message being written is put aside: changing an old one is not typing.
+    typing.stop();
     setReplyTo(null);
     setEditing({ id: m.id, original: m.text });
     setInputText(m.text);
@@ -934,6 +936,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [viewerId, setViewerId] = useState<string | null>(null);
   /** The page of every photo and voice note in the chat is open. */
   const [mediaOpen, setMediaOpen] = useState(false);
+  /** The header's ⋮ menu is open: where its button is on screen. */
+  const [moreAt, setMoreAt] = useState<{ top: number; bottom: number; left: number; right: number } | null>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const openMore = () => {
+    const r = moreButtonRef.current?.getBoundingClientRect();
+    if (r) setMoreAt({ top: r.top, bottom: r.bottom, left: r.left, right: r.right });
+  };
+  // Closed without a choice (Back, Escape, a tap elsewhere): the keyboard goes back to ⋮.
+  const closeMore = () => {
+    setMoreAt(null);
+    moreButtonRef.current?.focus({ preventScroll: true });
+  };
+  // A call coming in must not sit under the menu's tap-catcher (z-80 over the call's z-70).
+  useEffect(() => {
+    if (callInProgress) setMoreAt(null);
+  }, [callInProgress]);
   /**
    * A view-once photo being looked at. Its picture is held here, because the
    * conversation lets go of it the moment it is opened.
@@ -1150,6 +1168,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const showToastRef = useRef(showToast);
   showToastRef.current = showToast;
 
+  /** Where her dots go (shown, below the bubbles). */
+  const typingAt = useMemo(() => {
+    let i = drawnRows.length;
+    while (i > 0 && drawnRows[i - 1].msg.authorId === activeUser && isWaiting(drawnRows[i - 1].msg, activeUser)) i--;
+    return i;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawnRows, activeUser, waitClock]);
+  // One of yours set to show later today, the first of today, carries the
+  // "Today" line. With her dots above it the dots draw that line over
+  // themselves, so it is left off this one: two "Today" lines otherwise, and
+  // the chat jumps by one when her message lands and takes the line.
+  const underDots = partnerTyping ? drawnRows[typingAt] : undefined;
+  const dayTakenBy =
+    underDots?.divider && underDots.msg.sentAt && startOfDay(underDots.msg.sentAt) === startOfDay(Date.now())
+      ? underDots.msg.id
+      : undefined;
+
   /**
    * The bubbles themselves.
    *
@@ -1160,12 +1195,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
     () =>
       drawnRows.map((row, i) => {
         const { msg, firstOfRun, lastOfRun } = row;
+        const divider = msg.id === dayTakenBy ? undefined : row.divider;
         const mine = msg.authorId === activeUser;
-        const read = !!msg.sentAt && partnerReadAt >= msg.sentAt;
+        // Left this phone: the relay said so, or her phone did. One with no
+        // `delivered` at all is from before it was kept, and left long ago.
+        const left = msg.delivered !== false || !!msg.reached;
+        // Read only once it has left, and by a receipt heard here since: her
+        // watermark is this phone's clock, and a message still waiting here,
+        // or in your other phone's outbox, can fall under it.
+        const read = readByPartner(msg, partnerReadAt, partnerReadHeardAt);
         // Whether it ever left is not a read receipt, so the clock and its
         // retry stay even with receipts switched off - otherwise a message
         // that never went would sit there looking sent.
-        const stuck = mine && !msg.delivered && !read;
+        const stuck = mine && !left;
         const unsent = !!msg.unsent;
         // Yours, set to show later and not yet shown (core/sendLater).
         const waiting = mine && isWaiting(msg, activeUser);
@@ -1184,14 +1226,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
         const shape = mine
           ? `rounded-br-md ${firstOfRun ? '' : 'rounded-tr-md'}`
           : `rounded-bl-md ${firstOfRun ? '' : 'rounded-tl-md'}`;
-        const spacing = row.divider ? 'mt-1' : !firstOfRun ? 'mt-1' : i === 0 ? '' : 'mt-4';
+        const spacing = divider ? 'mt-1' : !firstOfRun ? 'mt-1' : i === 0 ? '' : 'mt-4';
 
         const before = (
           <>
-            {row.divider && (
+            {divider && (
               <div className="flex justify-center pt-4 pb-1 first:pt-0">
                 <span className="rounded-full bg-linen-variant px-3 py-0.5 text-[11px] font-medium text-linen-secondary">
-                  {row.divider}
+                  {divider}
                 </span>
               </div>
             )}
@@ -1215,7 +1257,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           return (
             <React.Fragment key={msg.id}>
               {before}
-              <div data-mid={msg.id} data-call-line className={`flex justify-center ${row.divider ? 'mt-1' : 'mt-3'}`}>
+              <div data-mid={msg.id} data-call-line className={`flex justify-center ${divider ? 'mt-1' : 'mt-3'}`}>
                 <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 rounded-2xl border border-linen-border bg-linen-surface/80 px-3 py-1.5 text-xs text-linen-secondary">
                   <CallIcon aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${missed ? 'text-rose-500' : 'text-linen-accent'}`} />
                   <span className={`font-medium ${missed ? 'text-rose-500' : 'text-linen-primary'}`}>{words.title}</span>
@@ -1274,14 +1316,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   // thin frame of the bubble's own colour.
                   photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : once ? 'max-w-[85%] py-2 pl-2.5 pr-4' : 'max-w-[85%] px-4 py-2.5'
                 } text-sm leading-relaxed ${shape} ${
+                  // Plain on both sides (index.css): yours grey, theirs outlined.
+                  // A request looks like any other message from its side.
                   unsent || opened
-                    ? 'border border-dashed border-linen-border text-linen-secondary'
-                    : msg.isNeedCard
-                    ? 'bg-amber-50 border border-amber-300/70 text-linen-primary'
+                    ? 'bubble-edge border border-dashed text-linen-secondary'
                     : mine
-                    ? 'bg-linen-primary text-linen-surface'
-                    : 'bg-linen-variant text-linen-primary border border-linen-border'
-                } ${waiting ? 'opacity-60' : ''} ${flashId === msg.id ? 'message-flash' : ''} ${currentMatch === msg.id ? 'ring-2 ring-amber-400' : ''}`}
+                    ? 'bubble-mine text-linen-primary'
+                    : 'bubble-edge border text-linen-primary'
+                } ${
+                  // Dimmed until it shows, but its words still hold 4.5:1 on the grey.
+                  waiting ? 'opacity-65' : ''
+                } ${flashId === msg.id ? 'message-flash' : ''} ${currentMatch === msg.id ? 'ring-2 ring-amber-400' : ''}`}
               >
                 {unsent ? (
                   <p className="flex items-center gap-1.5 italic">
@@ -1291,7 +1336,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 ) : (
                 <>
                 {msg.isNeedCard && (
-                  <div className="text-[11px] font-semibold tracking-wider text-amber-700 uppercase mb-1 flex items-center">
+                  <div className="text-[11px] font-semibold tracking-wider text-linen-secondary uppercase mb-1 flex items-center">
                     <Sparkles className="w-3 h-3 mr-1" />
                     {tr('A request')}
                   </div>
@@ -1304,17 +1349,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     onClick={() => {
                       if (!jumpToRef.current(quote.id, true)) showToastRef.current(tr('That message is no longer on this phone'));
                     }}
-                    className={`mb-1.5 block w-full min-w-0 rounded-xl border-l-[3px] px-2.5 py-1.5 text-left text-xs ${
-                      // On your own aurora bubble the quote is set back into it,
-                      // darker, so its white words stay clear over the orange end.
-                      mine ? 'no-remap border-white/70 bg-black/25' : 'border-linen-accent bg-linen-surface/70'
-                    } ${photo ? 'mx-0' : ''}`}
+                    // Set into the bubble a shade off it (bubble-quote), with a
+                    // bar of the ink: no colour of its own on either side.
+                    className={`bubble-quote mb-1.5 block w-full min-w-0 rounded-xl border-l-[3px] border-linen-primary/40 px-2.5 py-1.5 text-left text-xs ${
+                      photo ? 'mx-0' : ''
+                    }`}
                     style={photo ? { maxWidth: photo.width } : undefined}
                   >
-                    <span className={`block font-semibold ${mine ? 'text-white' : 'text-linen-accent'}`}>
+                    <span className="block font-semibold text-linen-primary">
                       {whoShown(quote.authorId, activeUser, partnerName)}
                     </span>
-                    <span className={`block truncate ${mine ? 'text-white/90' : 'text-linen-secondary'}`}>
+                    <span className="block truncate text-linen-secondary">
                       {byId.get(quote.id)?.unsent ? tr('Message unsent') : snippetShown(quote.snippet)}
                     </span>
                   </button>
@@ -1376,8 +1421,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       ? highlightParts(msg.text, highlight).map((part, k) =>
                           part.match ? (
                             // Dark ink on amber whatever is behind it: light words on
-                            // a pale mark could not be read at night, nor on the
-                            // pink of your own messages.
+                            // a pale mark could not be read at night.
                             <mark key={k} className="no-remap rounded bg-amber-300 px-0.5 text-[#1d1638]">
                               {part.text}
                             </mark>
@@ -1391,11 +1435,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             // browser or dialer; on the website it opens beside
                             // Two rather than in its place. A long press or a
                             // pull to answer swallows the tap (onClickCapture).
+                            // The bubble's own ink, told apart by its underline.
                             <a
                               key={k}
                               href={part.href}
                               {...(inApp ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
-                              className="underline underline-offset-2 decoration-current/60 break-all"
+                              className="underline underline-offset-2 decoration-current break-all"
                             >
                               {part.text}
                             </a>
@@ -1474,10 +1519,21 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           </button>
                           <span className="sr-only">{tr('Sending')}</span>
                         </>
-                      ) : waiting || !shareReceipts ? null : read ? (
+                      ) : waiting ? null : read && shareReceipts ? (
+                        // Blue only while you share read receipts yourself. The
+                        // grey ticks say where it is, not whether it was read,
+                        // so they show either way.
                         <>
                           <CheckCheck className="w-3.5 h-3.5 text-sky-600" />
                           <span className="sr-only">{tr('Read')}</span>
+                        </>
+                      ) : msg.reached ? (
+                        // On one of her devices, as it said (CHAT_DELIVERED).
+                        // Not inferred from her reading it: with receipts off
+                        // that would be a read receipt in grey.
+                        <>
+                          <CheckCheck className="w-3.5 h-3.5 text-linen-secondary/70" />
+                          <span className="sr-only">{tr('Delivered')}</span>
                         </>
                       ) : (
                         <>
@@ -1526,9 +1582,75 @@ export const ChatView: React.FC<ChatViewProps> = ({
       }),
     // The press handlers are left out on purpose: they act only through refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [drawnRows, activeUser, partnerReadAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay,
-      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, callInProgress, newMarkId, waitClock, lang]
+    [drawnRows, activeUser, partnerReadAt, partnerReadHeardAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay,
+      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, callInProgress, newMarkId, waitClock, lang, dayTakenBy]
   );
+
+  /**
+   * Her dots: a bubble of hers, three dots in it, where her next message will
+   * land - after the last one shown, but before yours still waiting to show.
+   * Shaped like a one-line message of hers with its name line, so when it
+   * comes it takes the dots' place without moving anything.
+   */
+  let shown: React.ReactNode[] = conversation;
+  if (partnerTyping) {
+    const before = drawnRows[typingAt - 1]?.msg;
+    const now = Date.now();
+    // Joins her run as her message would (layOut's rule).
+    const joins =
+      !!before &&
+      !before.call &&
+      before.authorId !== activeUser &&
+      !!before.sentAt &&
+      startOfDay(before.sentAt) === startOfDay(now) &&
+      now - before.sentAt < RUN_GAP_MS;
+    // The first of a new day: her message will come under "Today", so the
+    // dots come under it too, or the chat jumps by the line as it lands.
+    // The day it follows is the last one with a day of its own, as layOut
+    // counts it - looked for in all of them, not just the ones drawn.
+    let lastDay: number | null = null;
+    for (let j = drawnFrom + typingAt - 1; j >= 0 && lastDay === null; j--) {
+      const at = rows[j].msg.sentAt;
+      if (at && Number.isFinite(at)) lastDay = startOfDay(at);
+    }
+    const newDay = lastDay !== startOfDay(now);
+    const dots = (
+      <div
+        key="typing"
+        data-typing
+        aria-hidden="true"
+        className={`flex flex-col items-start ${joins || newDay ? 'mt-1' : typingAt === 0 ? '' : 'mt-4'}`}
+      >
+        <div className={`typing-in rounded-2xl rounded-bl-md ${joins ? 'rounded-tl-md' : ''} bubble-edge border px-4 py-2.5 text-sm leading-relaxed`}>
+          <span className="typing-dots h-[1.625em] text-linen-secondary">
+            <span />
+            <span />
+            <span />
+          </span>
+        </div>
+        {/* As tall as her name and time under the message that replaces it.
+            Joining her run there is none: the bubble above gives its own up
+            to the message, so the height comes out the same either way. */}
+        {!joins && <span className="invisible mt-1 px-1 text-[10px]">&nbsp;</span>}
+      </div>
+    );
+    // The same line layOut's rows draw (conversation, above), so the two are the same height.
+    // When the row under the dots had it, that row's is left off (dayTakenBy).
+    const day = newDay && (
+      <div key="typing-day" aria-hidden="true" className="flex justify-center pt-4 pb-1 first:pt-0">
+        <span className="rounded-full bg-linen-variant px-3 py-0.5 text-[11px] font-medium text-linen-secondary">
+          {dayLabel(startOfDay(now), now)}
+        </span>
+      </div>
+    );
+    // One keyed list, so nothing already drawn is drawn again as the dots come and go.
+    shown = [...conversation.slice(0, typingAt), ...(day ? [day] : []), dots, ...conversation.slice(typingAt)];
+  }
+  // At the end when they came: brought into view. Reading further up: left alone.
+  useLayoutEffect(() => {
+    const log = messagesRef.current;
+    if (log && pinnedRef.current) log.scrollTop = log.scrollHeight;
+  }, [partnerTyping]);
 
   /** What can be done with the message whose menu is open. */
   const menuMessage = menu ? byId.get(menu.id) : undefined;
@@ -1601,10 +1723,29 @@ export const ChatView: React.FC<ChatViewProps> = ({
     });
   };
 
+  // The header's ⋮: what used to be four buttons in a row beside her name,
+  // which left her status no room. Choosing closes the menu in the same
+  // update, so its Back is gone before the page it opens adds its own.
+  const chooseMore = (go: () => void) => () => {
+    setMoreAt(null);
+    go();
+  };
+  const moreActions: MessageMenuAction[] = [
+    { key: 'media', label: tr('Photos and voice notes'), icon: ImageIcon, onSelect: chooseMore(() => setMediaOpen(true)) },
+    { key: 'search', label: tr('Search this chat'), icon: Search, onSelect: chooseMore(() => setSearchOpen(true)) },
+    ...(onOpenSoftLanding ? [{ key: 'breather', label: tr('Breather'), icon: Feather, onSelect: chooseMore(onOpenSoftLanding) }] : []),
+    { key: 'need', label: tr('Ask for what you need'), icon: Sparkles, onSelect: chooseMore(() => setShowNeedModal(true)) }
+  ];
+  const presence = presenceLine({ relayStatus, typing: partnerTyping, online: partnerOnline, lastSeen: lastSeenLabel });
+
   return (
     <div className="relative flex flex-col chat-shell bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-linen-border bg-linen-variant/40 flex items-center justify-between gap-2">
+      <div
+        className={`min-h-[56px] py-1.5 border-b border-linen-border bg-linen-variant/40 flex items-center justify-between gap-2 ${
+          searchOpen ? 'px-4' : 'pl-4 pr-1.5'
+        }`}
+      >
         {searchOpen ? (
           // Searching: the words, which match is in view, and the way to the
           // earlier and later ones. Enter goes further back, as the first
@@ -1661,98 +1802,56 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <h3 className="font-serif text-base font-medium text-linen-primary truncate">
               {partnerName}
             </h3>
-            {/* One line, always. Three separate facts used to sit here as
-                separate spans and, once presence was added, a phone-width header
-                wrapped them into a four-line stack that pushed the conversation
-                down the screen. */}
-            <div className="flex items-center gap-1.5 text-xs text-linen-secondary min-w-0 whitespace-nowrap overflow-hidden">
-              {/* Encryption is unconditional, so this dot stays green: it is a
-                  statement about the room, not the connection. The connection
-                  gets its own words, and only when there is something to say. */}
-              <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-500 inline-block" />
-
-              {/* Presence takes the line when there is any, the way a messenger
-                  does it. "Encrypted Room" is what the line says when there is
-                  nothing else to report - the encryption is unconditional, so it
-                  is a statement about the room rather than news. */}
-              <span className="truncate">
-                {partnerTyping ? (
-                  <span className="font-medium text-linen-accent">{tr('typing…')}</span>
-                ) : partnerOnline ? (
-                  <span className="text-emerald-700">{tr('online')}</span>
-                ) : (
-                  lastSeenLabel || tr('Encrypted Room')
-                )}
-              </span>
-
-              {relayStatus !== 'connected' && (
-                <span className="shrink-0 text-amber-700">
-                  &middot;{' '}
-                  {relayStatus === 'connecting' || relayStatus === 'reconnecting'
-                    ? tr('Connecting')
-                    : tr('Offline')}
-                </span>
-              )}
+            {/* Her status, whole and one fact at a time (core/presenceLine).
+                A second line rather than an ellipsis: "last seen yesterday at
+                11:45 pm" in Tamil is wider than a narrow phone leaves beside
+                two buttons. Cut only past two lines. With nothing to say it is
+                empty, and the name sits alone in the middle. No dot: a green
+                one under her name read as "online" next to "last seen". */}
+            <div
+              data-chat-presence={presence.kind}
+              className={`text-xs leading-4 line-clamp-2 ${
+                presence.kind === 'connecting' || presence.kind === 'offline'
+                  ? 'text-amber-700'
+                  : presence.kind === 'typing'
+                    ? 'font-medium text-linen-accent'
+                    : presence.kind === 'online'
+                      ? 'text-emerald-700'
+                      : 'text-linen-secondary'
+              }`}
+            >
+              {presence.text}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
-            <button
-              type="button"
-              onClick={() => setMediaOpen(true)}
-              aria-label={tr('Photos and voice notes')}
-              title={tr('Photos and voice notes')}
-              className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
-            >
-              <ImageIcon className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              aria-label={tr('Search this chat')}
-              title={tr('Search this chat')}
-              className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant transition-colors cursor-pointer"
-            >
-              <Search className="w-4 h-4" />
-            </button>
+          {/* Two buttons, as a messenger has them: the call, and ⋮ for the rest. */}
+          <div className="flex shrink-0 items-center">
             {/* Enabled whether or not they are online. A call to somebody who
                 is away cannot connect, but it still leaves a missed call they
                 will see - which is what calling a phone that is off does too. */}
             {onStartCall && (
               <button
+                type="button"
                 onClick={onStartCall}
                 disabled={callInProgress}
                 aria-label={tr('Call {name}', { name: partnerName })}
                 title={tr('Call {name}', { name: partnerName })}
-                className="rounded-lg border border-linen-border bg-linen-surface p-1.5 text-linen-primary hover:bg-linen-variant disabled:opacity-40 transition-colors cursor-pointer"
+                className="h-11 w-11 rounded-full flex items-center justify-center text-linen-primary hover:bg-linen-variant active:scale-95 disabled:opacity-40 transition cursor-pointer"
               >
-                <Phone className="w-4 h-4" />
-              </button>
-            )}
-            {onOpenSoftLanding && (
-              <button
-                onClick={onOpenSoftLanding}
-                aria-label={tr('Breather')}
-                className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200 flex items-center transition-colors cursor-pointer"
-                title={tr('Pause and take a 20-minute de-escalation breather')}
-              >
-                {/* In Tamil, a phone-width header keeps only the feather: the
-                    words beside the name (ஆன்லைனில், எழுதுகிறார்…) need the room
-                    that "online" and "typing…" do not. */}
-                <Feather className={`w-3.5 h-3.5 ${lang === 'ta' ? 'sm:mr-1' : 'mr-1'}`} />
-                <span className={lang === 'ta' ? 'hidden sm:inline' : undefined}>{tr('Breather')}</span>
+                <Phone className="w-5 h-5" />
               </button>
             )}
             <button
-              onClick={() => setShowNeedModal(true)}
-              className="text-xs font-medium text-linen-accent hover:underline flex items-center"
+              ref={moreButtonRef}
+              type="button"
+              onClick={openMore}
+              aria-label={tr('More options')}
+              title={tr('More options')}
+              aria-haspopup="menu"
+              aria-expanded={!!moreAt}
+              aria-controls={moreAt ? 'chat-more-menu' : undefined}
+              className="h-11 w-11 rounded-full flex items-center justify-center text-linen-primary hover:bg-linen-variant active:scale-95 transition cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 mr-1 shrink-0" />
-              {/* The full phrase wrapped onto three lines in a phone-width
-                  header, which both made it tall and squeezed the presence line
-                  beside it into an ellipsis. Same button, fewer words where
-                  there is no room for them. */}
-              <span className="hidden sm:inline">{tr('Ask For What You Need')}</span>
-              <span className="sm:hidden">{tr('Ask')}</span>
+              <EllipsisVertical className="w-5 h-5" />
             </button>
           </div>
                 </>
@@ -1812,6 +1911,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </button>
       )}
 
+      {/* Said once when she starts writing; the dots themselves are hidden from it. */}
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {partnerTyping ? tr('{name} is typing…', { name: partnerName }) : ''}
+      </p>
+
       {/* Message List */}
       <div
         ref={messagesRef}
@@ -1832,7 +1936,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </p>
           )}
 
-          {conversation}
+          {shown}
           <div ref={messagesEndRef} />
         </div>
         {/* Held at the bottom of the view while you read further up, with no
@@ -1863,7 +1967,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
       {showEmojiPicker && (
         <div className="min-h-0 shrink overflow-y-auto" onMouseDown={e => e.preventDefault()}>
           <EmojiPicker
-            onPick={char => setInputText(t => t + char)}
+            onPick={char => {
+              setInputText(t => t + char);
+              if (!editing) typing.keystroke();
+            }}
             onClose={() => setShowEmojiPicker(false)}
           />
         </div>
@@ -1948,9 +2055,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 rows={1}
                 value={inputText}
                 onChange={(e) => {
-                  setInputText(e.target.value);
-                  announceTyping();
+                  const words = e.target.value;
+                  setInputText(words);
+                  // Changing an old message is not writing to her; an emptied box is not either.
+                  if (editing) return;
+                  if (words.trim()) typing.keystroke();
+                  else typing.stop();
                 }}
+                // Left the box. A moment's grace: a tap on a button beside it is not leaving.
+                onBlur={() => typing.stopSoon()}
                 onKeyDown={handleComposerKey}
                 enterKeyHint={touchFirst ? 'enter' : 'send'}
                 autoCapitalize="sentences"
@@ -2066,6 +2179,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
         />
       )}
 
+      {/* The header's ⋮ menu, under its button. Only while open: a message's
+          menu is found on the page as the one [role=menu]. */}
+      {moreAt && !searchOpen && (
+        <MessageMenu
+          id="chat-more-menu"
+          label={tr('More options')}
+          anchor={moreAt}
+          side="right"
+          below
+          dim={false}
+          autoFocus
+          reaction={null}
+          actions={moreActions}
+          onClose={closeMore}
+        />
+      )}
+
       {laterOpen && (
         <SendLaterSheet
           text={inputText.trim()}
@@ -2168,7 +2298,7 @@ const ViewOnceMark: React.FC<{ mine: boolean; opened: boolean; canOpen: boolean;
     <>
       <span
         className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${
-          opened ? '' : mine ? 'no-remap bg-white/20 text-white' : 'bg-aurora-violet/14 text-aurora-violet'
+          opened ? '' : 'bg-linen-primary/10 text-linen-primary'
         }`}
       >
         <ViewOnceIcon className="h-[22px] w-[22px]" />

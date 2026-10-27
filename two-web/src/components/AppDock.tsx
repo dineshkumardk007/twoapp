@@ -93,6 +93,18 @@ export const AppDock: React.FC<AppDockProps> = ({
   }, []);
 
   /**
+   * In the chat the bar gives way to the keyboard (index.css, html.dock-yields):
+   * it stays where it is and the keyboard comes up over it, and the
+   * conversation takes the room back. Only there: on every other screen the
+   * bar still sits above the keyboard, as it always has.
+   */
+  const yields = currentTab === 'chat';
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle('dock-yields', yields);
+    return () => document.documentElement.classList.remove('dock-yields');
+  }, [yields]);
+
+  /**
    * Every destination, in one order that never changes.
    *
    * The bar used to show four and hide the other twenty-eight behind a sheet,

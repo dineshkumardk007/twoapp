@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ChatMessage } from '../types';
-import { countUnread, firstUnreadId, newestArrival, newestFrom, readAtForReceipt } from './unread';
+import {
+  arrivalTime, chatInFront, countUnread, firstUnreadId, newestArrival, newestFrom, readAtForReceipt, shownCount
+} from './unread';
 
 const msg = (id: string, authorId: 'user' | 'partner', sentAt: number, receivedAt?: number, extra: Partial<ChatMessage> = {}): ChatMessage => ({
   id,
@@ -71,5 +73,42 @@ describe('unread messages', () => {
     expect(readAtForReceipt(chat, 'user', 300, 0)).toBe(3000);
     expect(readAtForReceipt(chat, 'user', 300, 5000)).toBe(5000);
     expect(countUnread(chat, 'user', readAtForReceipt(chat, 'user', 300, 0))).toBe(1);
+  });
+});
+
+describe('when the chat is read as it arrives', () => {
+  const inChat = { visible: true, tab: 'chat', groupOpen: false, locked: false, disguised: false, inCall: false };
+
+  it('the chat in front of you: on screen, unlocked, not the calculator, the Chat tab, no group, no call', () => {
+    expect(chatInFront(inChat)).toBe(true);
+  });
+
+  it('anywhere else it waits as new', () => {
+    expect(chatInFront({ ...inChat, tab: 'home' })).toBe(false);
+    expect(chatInFront({ ...inChat, visible: false })).toBe(false);
+    expect(chatInFront({ ...inChat, locked: true })).toBe(false);
+    expect(chatInFront({ ...inChat, disguised: true })).toBe(false);
+    expect(chatInFront({ ...inChat, groupOpen: true })).toBe(false);
+    expect(chatInFront({ ...inChat, inCall: true })).toBe(false);
+  });
+
+  it('nothing is shown while the chat is in front of you, not even before the read is written down', () => {
+    expect(shownCount(true, 1)).toBe(0);
+    expect(shownCount(false, 3)).toBe(3);
+    expect(shownCount(false, 0)).toBe(0);
+  });
+
+  it('a message arrives now, and never at or before the last look', () => {
+    expect(arrivalTime(undefined, 5)).toBe(5);
+    expect(arrivalTime(3, 5)).toBe(5);
+    expect(arrivalTime(100, 5)).toBe(101);
+  });
+
+  it('a clock put back cannot hide a message: one arriving after a read time in the future still counts', () => {
+    const readAt = 10_000;
+    const late = [msg('p', 'partner', 1, arrivalTime(readAt, 5))];
+    expect(countUnread(late, 'user', readAt)).toBe(1);
+    // Reading it, up to the newest arrival, clears it.
+    expect(countUnread(late, 'user', Math.max(5, newestArrival(late)))).toBe(0);
   });
 });

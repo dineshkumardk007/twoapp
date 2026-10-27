@@ -433,7 +433,10 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
       {toast && (
         <div
           className="fixed inset-x-0 z-[65] pointer-events-none flex justify-center px-4"
-          style={{ bottom: 'calc(max(var(--two-dock-h, 0px), env(safe-area-inset-bottom, 0px)) + 0.75rem)' }}
+          // The part of the dock on the screen: in a chat with the keyboard up
+          // the dock is under the keys, and a dock's height above them would
+          // leave this floating over the conversation (index.css).
+          style={{ bottom: 'calc(max(var(--two-dock-shown, var(--two-dock-h, 0px)), env(safe-area-inset-bottom, 0px)) + 0.75rem)' }}
         >
           <Bloom key={toast.key} leaving={toastLeaving} interactive={false}>
             <div

@@ -145,7 +145,8 @@ export function newsWithout(
   for (let n = messages.length - 1; n >= 0; n--) {
     const m = messages[n];
     if (m.id === messageId || m.authorId !== authorId || m.call || m.receivedAt === undefined) continue;
-    return [...rest, { id: m.id, tabId: 'chat', type: 'CHAT', at: m.sentAt ?? m.receivedAt }];
+    // When it arrived here, as the chat's lines are: not her clock.
+    return [...rest, { id: m.id, tabId: 'chat', type: 'CHAT', at: m.receivedAt }];
   }
   return rest;
 }

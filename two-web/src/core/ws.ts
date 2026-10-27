@@ -7,6 +7,7 @@
 
 import { encryptText, decryptText } from './crypto';
 import { getDeviceId } from './space';
+import { ANSWER_WITHIN_MS, MISSES_BEFORE_DEAD, bytesLeaving, missedHeartbeats, utf8Length } from './heartbeat';
 import type { SpaceCredentials } from './space';
 
 type MessageCallback = (data: any) => void;
@@ -184,6 +185,27 @@ export class WebSocketRelayClient {
 
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+
+  /**
+   * When anything last arrived on the current socket, and when its last PING
+   * went out. A socket can stay OPEN long after the network under it has gone
+   * - a phone asleep while its NAT mapping lapsed - and says nothing until TCP
+   * gives up minutes later, with the partner still shown as she was before.
+   * A PING that nothing follows is how to tell.
+   */
+  private lastInboundAt = 0;
+  private pingSentAt = 0;
+  /** Heartbeats in a row with no answer, and what the socket held at the last (core/heartbeat). */
+  private missedBeats = 0;
+  private bufferedAtBeat = -1;
+  /**
+   * Bytes handed to this socket so far, and the count at the last heartbeat:
+   * what it holds is only judged against what it was given since.
+   */
+  private bytesHanded = 0;
+  private bytesHandedAtBeat = 0;
+  /** Waiting to see whether the PING sent on coming back was answered. */
+  private answerTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts = 0;
   private stopped = false;
 
@@ -202,6 +224,11 @@ export class WebSocketRelayClient {
   // reconnect - a phone asleep, a tunnel, or a sleeping free-tier server must
   // not cost the user a message.
   private outbox: any[] = [];
+  /**
+   * Correlation ids handed to broadcastUpdate whose record is still being
+   * encrypted, so not in the outbox yet - waiting all the same (isPending).
+   */
+  private preparing = new Set<string>();
 
   /**
    * When each waiting record last went out on the current socket, by id.
@@ -313,6 +340,11 @@ export class WebSocketRelayClient {
     this.ws = socket;
     // Nothing has been sent on this socket yet.
     this.sentOnSocket.clear();
+    this.pingSentAt = 0;
+    this.missedBeats = 0;
+    this.bufferedAtBeat = -1;
+    this.bytesHanded = 0;
+    this.bytesHandedAtBeat = 0;
 
     socket.onopen = () => {
       if (this.stopped || !this.creds) return;
@@ -359,6 +391,7 @@ export class WebSocketRelayClient {
     };
 
     socket.onmessage = (event) => {
+      this.lastInboundAt = Date.now();
       const raw = typeof event.data === 'string' ? event.data : '';
       if (!raw) return;
       this.inboundChain = this.inboundChain
@@ -529,7 +562,12 @@ export class WebSocketRelayClient {
    * cannot tell which of its messages was confirmed.
    */
   broadcastUpdate(type: string, data: any, correlationId?: string): void {
-    void this.encryptAndSend(type, data, correlationId);
+    if (!correlationId) {
+      void this.encryptAndSend(type, data);
+      return;
+    }
+    this.preparing.add(correlationId);
+    void this.encryptAndSend(type, data, correlationId).finally(() => this.preparing.delete(correlationId));
   }
 
   /**
@@ -723,6 +761,14 @@ export class WebSocketRelayClient {
     return true;
   }
 
+  /**
+   * Whether a record is still waiting to go - being encrypted, or in the
+   * outbox unacknowledged. Named by its correlation id, as for dropPending.
+   */
+  isPending(correlationId: string): boolean {
+    return this.preparing.has(correlationId) || this.outbox.some(e => e.correlationId === correlationId);
+  }
+
   private outboxKey(spaceId: string) {
     return `two_relay_outbox_${spaceId}`;
   }
@@ -775,7 +821,9 @@ export class WebSocketRelayClient {
   private rawSend(data: any) {
     if (!this.isOpen()) return;
     try {
-      this.ws!.send(JSON.stringify(data));
+      const text = JSON.stringify(data);
+      this.ws!.send(text);
+      this.bytesHanded += utf8Length(text);
     } catch (e) {
       console.error('[Relay] Send failed', e);
     }
@@ -916,9 +964,98 @@ export class WebSocketRelayClient {
     // the rate limit, say, which says so without naming the record - goes out
     // again, instead of waiting for the next thing somebody happens to send.
     this.heartbeatTimer = setInterval(() => {
-      this.rawSend({ type: 'PING' });
+      // PINGs that have each had a whole beat and nothing came: open in name
+      // only. Judged from the PING, not from quiet - a quiet room says nothing
+      // for minutes - and only on screen, where timers are not held back past
+      // an answer that did come. A socket still sending a photo is judged by
+      // its bytes leaving instead (core/heartbeat).
+      const buffered = this.ws?.bufferedAmount ?? 0;
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        this.missedBeats = missedHeartbeats({
+          buffered,
+          bufferedBefore: this.bufferedAtBeat,
+          queuedSince: this.bytesHanded - this.bytesHandedAtBeat,
+          pingSentAt: this.pingSentAt,
+          lastInboundAt: this.lastInboundAt,
+          missed: this.missedBeats,
+          now: Date.now()
+        });
+      } else {
+        this.missedBeats = 0;
+      }
+      this.bufferedAtBeat = buffered > 0 ? buffered : -1;
+      this.bytesHandedAtBeat = this.bytesHanded;
+      if (this.missedBeats >= MISSES_BEFORE_DEAD) {
+        this.replaceSocket();
+        return;
+      }
+      // What waits goes before the PING, not after: flushOutbox holds back a
+      // repeat while anything is still leaving, and the PING just handed over
+      // counted as that - so a record whose acknowledgement was lost on a
+      // socket that stayed up was never sent again.
       this.flushOutbox();
+      this.ping();
     }, HEARTBEAT_MS);
+  }
+
+  private ping() {
+    if (!this.isOpen()) return;
+    // Behind something still going up, its answer waits on all of that, so
+    // the time it went proves nothing. The PING still goes.
+    if ((this.ws?.bufferedAmount ?? 0) === 0) this.pingSentAt = Date.now();
+    this.rawSend({ type: 'PING' });
+  }
+
+  /** Drops a socket that has stopped answering, and opens a new one. */
+  private replaceSocket() {
+    this.teardownSocket();
+    this.open();
+  }
+
+  /**
+   * Sends a PING and replaces the socket if nothing at all arrives after it.
+   * Any message will do: the relay answers a PING at once, so silence means
+   * the socket is gone.
+   *
+   * A check still waiting is started again rather than left to answer: the
+   * answer to a PING sent before the network went proves nothing after.
+   *
+   * Nor is a socket still sending a photo judged: the PING is queued behind
+   * it, so the wait starts over while its bytes are leaving, and once more
+   * after it has gone for the answer. Bytes that have not moved for two waits
+   * in a row are a socket with nothing under it, replaced like a silent one
+   * (core/heartbeat).
+   */
+  private checkAlive() {
+    if (this.answerTimer) clearTimeout(this.answerTimer);
+    const socket = this.ws;
+    const asked = Date.now();
+    this.ping();
+    let wasSending = false;
+    let stuck = 0;
+    let bufferedBefore = socket?.bufferedAmount ?? 0;
+    let handedBefore = this.bytesHanded;
+    const judge = () => {
+      this.answerTimer = null;
+      if (this.stopped || this.ws !== socket || this.lastInboundAt >= asked) return;
+      const buffered = socket?.bufferedAmount ?? 0;
+      if (buffered > 0) {
+        stuck = bytesLeaving(buffered, bufferedBefore, this.bytesHanded - handedBefore) ? 0 : stuck + 1;
+        bufferedBefore = buffered;
+        handedBefore = this.bytesHanded;
+        wasSending = true;
+        if (stuck < MISSES_BEFORE_DEAD) {
+          this.answerTimer = setTimeout(judge, ANSWER_WITHIN_MS);
+          return;
+        }
+      } else if (wasSending) {
+        wasSending = false;
+        this.answerTimer = setTimeout(judge, ANSWER_WITHIN_MS);
+        return;
+      }
+      this.replaceSocket();
+    };
+    this.answerTimer = setTimeout(judge, ANSWER_WITHIN_MS);
   }
 
   private stopHeartbeat() {
@@ -933,6 +1070,10 @@ export class WebSocketRelayClient {
     if (this.retryFlushTimer) {
       clearTimeout(this.retryFlushTimer);
       this.retryFlushTimer = null;
+    }
+    if (this.answerTimer) {
+      clearTimeout(this.answerTimer);
+      this.answerTimer = null;
     }
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -951,6 +1092,9 @@ export class WebSocketRelayClient {
         /* already closing */
       }
     }
+    // The onclose that says so was taken off above, and with no socket there
+    // is nobody to say she is there.
+    this.setPartnerOnline(false);
   }
 
   disconnect() {
@@ -1073,7 +1217,10 @@ export class WebSocketRelayClient {
   reconnectNow() {
     if (this.stopped || !this.creds) return;
     if (this.isOpen()) {
-      this.rawSend({ type: 'PING' });
+      // Open, perhaps only in name: a phone back from sleep can hold a socket
+      // whose network went away under it, still showing the partner as she
+      // was. Trusting it is what kept "online" up for minutes.
+      this.checkAlive();
       return;
     }
     this.reconnectAttempts = 0;
