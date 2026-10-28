@@ -41,3 +41,11 @@
 -dontwarn org.checkerframework.**
 -dontwarn javax.annotation.**
 -dontwarn org.codehaus.mojo.animal_sniffer.**
+
+# OkHttp, for the background listener's relay connection (features/sync).
+# It ships its own rules; these are the optional TLS providers it looks for
+# and Android does not have, which R8 would otherwise stop on.
+-dontwarn okhttp3.internal.platform.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**

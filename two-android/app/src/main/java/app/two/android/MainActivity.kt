@@ -28,6 +28,8 @@ import app.two.android.features.onboarding.*
 import app.two.android.features.repair.RepairKitScreen
 import app.two.android.features.settings.ConsentAuditLogScreen
 import app.two.android.features.settings.SettingsScreen
+import app.two.android.features.sync.NewMessageNotice
+import app.two.android.features.sync.PageHost
 import app.two.android.features.web.SmoothDisplay
 import app.two.android.features.web.SystemChrome
 import app.two.android.features.web.TwoWebView
@@ -118,6 +120,25 @@ class MainActivity : FragmentActivity() {
     override fun onResume() {
         super.onResume()
         SmoothDisplay.apply(this)
+        // Two is on screen: the "New message" notice has done its job.
+        NewMessageNotice.cancel(this)
+    }
+
+    /**
+     * Ended for good - swiped away, or closed by Android - rather than built
+     * again for a new font size: the page has gone with it, and the
+     * background listener answers in its place (features/sync).
+     */
+    override fun onDestroy() {
+        if (!isChangingConfigurations) PageHost.activityGone(this)
+        super.onDestroy()
+    }
+
+    /** The notification permission, asked for by the "New message" switch. */
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == NewMessageNotice.ASK_CODE) NewMessageNotice.asked()
     }
 
     /** Brought forward by the widget while already open: the page asks when it shows. */

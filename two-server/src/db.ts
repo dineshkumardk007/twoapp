@@ -120,6 +120,24 @@ export interface StoredRecord {
    * record is stored rather than when it was written.
    */
   seq?: number;
+  /**
+   * When the reader's phone first said this record had reached it, by this
+   * relay's clock. Kept for the author's two grey ticks and nothing else, and
+   * never sent out with the record itself.
+   */
+  reachedAt?: number;
+}
+
+/** A record of the author's that has just been marked as reached. */
+export interface MarkedReached {
+  id: string;
+  authorId: string;
+}
+
+/** One stored receipt: which record, and when it reached the reader. */
+export interface ReachedEntry {
+  id: string;
+  at: number;
 }
 
 export interface RendezvousToken {
@@ -149,6 +167,16 @@ export interface RelayDb {
    */
   ping(): Promise<boolean>;
   trimCappedTypes(): Promise<number>;
+  /**
+   * Marks the reader's partner's chat messages as having reached the reader.
+   *
+   * Only CHAT, only records someone else wrote, and only ones not marked
+   * before - so a repeat does nothing and nobody can tick their own messages.
+   * Returns the rows marked by this call.
+   */
+  markReached(spaceId: string, ids: string[], readerRole: string, at: number): Promise<MarkedReached[]>;
+  /** The author's receipts newer than `since`, oldest first, at most `limit` of the newest. */
+  getReachedSince(spaceId: string, authorRole: string, since: number, limit: number): Promise<ReachedEntry[]>;
   rendezvousTokens: Map<string, RendezvousToken>;
 }
 
@@ -197,7 +225,11 @@ class InMemoryRelayDb implements RelayDb {
     if (existing >= 0) {
       // Keep the number it was first given; the point of it is not to move.
       record.seq = this.records[existing].seq;
-      this.records[existing] = record;
+      // And whether it has already reached the reader, so a resend cannot
+      // tick it twice. Kept on a copy: the record passed in is about to be
+      // forwarded as it is, and the mark must not go with it.
+      const reachedAt = this.records[existing].reachedAt;
+      this.records[existing] = reachedAt === undefined ? record : { ...record, reachedAt };
     } else {
       record.seq = ++this.seqCounter;
       this.records.push(record);
@@ -222,7 +254,43 @@ class InMemoryRelayDb implements RelayDb {
   async getRecordsForSpace(spaceId: string, sinceLamport = 0, _sinceSeq = 0) {
     return this.records
       .filter(r => r.spaceId === spaceId && r.lamportClock > sinceLamport)
-      .sort((a, b) => a.lamportClock - b.lamportClock);
+      .sort((a, b) => a.lamportClock - b.lamportClock)
+      // The receipt mark stays here. Replay sends these as they are, and the
+      // Postgres store never returns it either.
+      .map(r => {
+        if (r.reachedAt === undefined) return r;
+        const { reachedAt: _reachedAt, ...rest } = r;
+        return rest;
+      });
+  }
+
+  async markReached(spaceId: string, ids: string[], readerRole: string, at: number) {
+    const wanted = new Set(ids);
+    const marked: MarkedReached[] = [];
+    for (const r of this.records) {
+      if (
+        r.spaceId === spaceId &&
+        wanted.has(r.id) &&
+        r.authorId !== readerRole &&
+        r.type === 'CHAT' &&
+        r.reachedAt === undefined
+      ) {
+        r.reachedAt = at;
+        marked.push({ id: r.id, authorId: r.authorId });
+      }
+    }
+    return marked;
+  }
+
+  async getReachedSince(spaceId: string, authorRole: string, since: number, limit: number) {
+    return this.records
+      .filter(
+        r => r.spaceId === spaceId && r.authorId === authorRole && r.reachedAt !== undefined && r.reachedAt > since
+      )
+      .sort((a, b) => (b.reachedAt as number) - (a.reachedAt as number))
+      .slice(0, limit)
+      .reverse()
+      .map(r => ({ id: r.id, at: r.reachedAt as number }));
   }
 
   async trimCappedTypes() {
@@ -365,6 +433,14 @@ class PostgresRelayDb implements RelayDb {
 
       CREATE INDEX IF NOT EXISTS relay_records_space_seq_idx
         ON relay_records (space_id, seq);
+
+      -- When a chat message first reached the reader's phone, for the
+      -- author's grey ticks. Empty for every row that has not, which is most
+      -- of them, so the index holds only the rows that have.
+      ALTER TABLE relay_records ADD COLUMN IF NOT EXISTS reached_at BIGINT;
+
+      CREATE INDEX IF NOT EXISTS relay_records_reached_idx
+        ON relay_records (space_id, author_id, reached_at) WHERE reached_at IS NOT NULL;
     `);
 
     console.log('[Relay DB] PostgreSQL storage ready.');
@@ -463,6 +539,35 @@ class PostgresRelayDb implements RelayDb {
       createdAt: new Date(r.created_at).toISOString(),
       seq: r.seq === undefined || r.seq === null ? undefined : Number(r.seq)
     }));
+  }
+
+  /**
+   * Marks rows as reached, each only once.
+   *
+   * Scoped entirely in the query: the joined space, chat only, never the
+   * reader's own rows, and never a row already marked - so the same call twice
+   * marks nothing the second time and the author is not told twice.
+   */
+  async markReached(spaceId: string, ids: string[], readerRole: string, at: number) {
+    const { rows } = await this.pool.query(
+      `UPDATE relay_records SET reached_at = $4
+        WHERE space_id = $1 AND id = ANY($2::text[]) AND author_id <> $3 AND type = 'CHAT' AND reached_at IS NULL
+       RETURNING id, author_id`,
+      [spaceId, ids, readerRole, String(at)]
+    );
+    return rows.map(r => ({ id: r.id as string, authorId: r.author_id as string }));
+  }
+
+  async getReachedSince(spaceId: string, authorRole: string, since: number, limit: number) {
+    // Newest first so the limit keeps the recent ones, then turned round so
+    // the phone is handed them in the order they happened.
+    const { rows } = await this.pool.query(
+      `SELECT id, reached_at FROM relay_records
+        WHERE space_id = $1 AND author_id = $2 AND reached_at > $3
+        ORDER BY reached_at DESC LIMIT $4`,
+      [spaceId, authorRole, String(since), limit]
+    );
+    return rows.reverse().map(r => ({ id: r.id as string, at: Number(r.reached_at) }));
   }
 
   /**
@@ -807,6 +912,31 @@ class ResilientRelayDb implements RelayDb {
     return fallback();
   }
 
+  /**
+   * Marks in Postgres, and in the copy held here as well.
+   *
+   * The copy is what serves while Postgres is away, and without the mark it
+   * would let a row already announced be announced again. A mark made only
+   * here, while degraded, is not carried into Postgres; the author then gets
+   * that tick the ordinary way, when the partner next opens Two.
+   */
+  async markReached(spaceId: string, ids: string[], readerRole: string, at: number) {
+    return this.viaPostgres(
+      async pg => {
+        const marked = await pg.markReached(spaceId, ids, readerRole, at);
+        await this.memory.markReached(spaceId, ids, readerRole, at);
+        return marked;
+      },
+      () => this.memory.markReached(spaceId, ids, readerRole, at)
+    );
+  }
+
+  async getReachedSince(spaceId: string, authorRole: string, since: number, limit: number) {
+    return this.viaPostgres(
+      pg => pg.getReachedSince(spaceId, authorRole, since, limit),
+      () => this.memory.getReachedSince(spaceId, authorRole, since, limit)
+    );
+  }
 }
 
 export const db = new ResilientRelayDb();

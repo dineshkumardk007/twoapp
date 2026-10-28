@@ -7,9 +7,18 @@
 
 import { encryptText, decryptText } from './crypto';
 import { getDeviceId } from './space';
-import { ANSWER_WITHIN_MS, MISSES_BEFORE_DEAD, bytesLeaving, missedHeartbeats, utf8Length } from './heartbeat';
+import {
+  ANSWER_WITHIN_MS,
+  HEARTBEAT_MS,
+  MISSES_BEFORE_DEAD,
+  bytesLeaving,
+  isLateBeat,
+  missedHeartbeats,
+  utf8Length
+} from './heartbeat';
 import type { SpaceCredentials } from './space';
 import { isShown, onShownChange } from './shown';
+import { holdAwake } from './background';
 
 type MessageCallback = (data: any) => void;
 
@@ -55,7 +64,58 @@ export function recordSizeOf(data: unknown): number {
   return Math.ceil((plain + 16) / 3) * 4 + RECORD_ENVELOPE_BYTES;
 }
 const MAX_APPLIED_IDS = 4_000;
-const HEARTBEAT_MS = 25_000;
+
+/**
+ * How many of this phone's own chat messages it remembers the record id of
+ * (sentKey). The relay names a message that has reached her phone by its
+ * record id alone - it cannot see the message id inside - so this is how
+ * that turns back into a message on screen.
+ */
+export const MAX_SENT_IDS = 2_000;
+
+/** The most entries one REACHED may carry; the relay sends them in chunks of this. */
+export const MAX_REACHED_ENTRIES = 300;
+
+/** Ids are uuids; anything much longer than one is not an id. */
+const MAX_ID_CHARS = 64;
+
+/** One message of yours the relay says has reached her phone, and when. */
+export interface ReachedEntry {
+  id: string;
+  at: number;
+}
+
+/**
+ * The entries of a REACHED that can be trusted as far as their shape goes:
+ * an id short enough to be one, and a time that is a number. Anything that
+ * is not a list, or longer than the relay ever sends, is taken as nothing.
+ */
+export function readReached(reached: unknown): ReachedEntry[] {
+  if (!Array.isArray(reached) || reached.length > MAX_REACHED_ENTRIES) return [];
+  const out: ReachedEntry[] = [];
+  for (const entry of reached) {
+    const id = entry?.id;
+    const at = Number(entry?.at);
+    if (typeof id !== 'string' || !id || id.length > MAX_ID_CHARS || !Number.isFinite(at)) continue;
+    out.push({ id, at });
+  }
+  return out;
+}
+
+/**
+ * The message ids of a REACHED, by the time each reached her phone - the
+ * shape applyDelivered takes, one time to a call. Anything malformed is left
+ * out (readReached).
+ */
+export function reachedByTime(reached: unknown): Map<number, string[]> {
+  const byTime = new Map<number, string[]>();
+  for (const { id, at } of readReached(reached)) {
+    const ids = byTime.get(at);
+    if (ids) ids.push(id);
+    else byTime.set(at, [id]);
+  }
+  return byTime;
+}
 
 /**
  * How long a record sent on this connection waits for its acknowledgement
@@ -207,6 +267,13 @@ export class WebSocketRelayClient {
   private bytesHandedAtBeat = 0;
   /** Waiting to see whether the PING sent on coming back was answered. */
   private answerTimer: ReturnType<typeof setTimeout> | null = null;
+  /**
+   * When the last heartbeat ran; 0 before the first on this socket. A gap far
+   * longer than a beat means the phone held the timers back (isLateBeat).
+   */
+  private lastBeatAt = 0;
+  /** When the phone was last asked to stay awake for something arriving. */
+  private heldAwakeAt = 0;
   private reconnectAttempts = 0;
   private stopped = false;
 
@@ -249,6 +316,14 @@ export class WebSocketRelayClient {
   // here rather than in fifty call sites.
   private appliedIds: string[] = [];
   private appliedSet = new Set<string>();
+
+  /**
+   * Record id -> message id for this phone's own chat messages, read from
+   * sentKey once per space and kept here, so a restore that brings back a
+   * thousand of them does not write the whole list a thousand times.
+   */
+  private sent: { spaceId: string; pairs: Array<[string, string]>; byRecord: Map<string, string> } | null = null;
+  private sentSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   connect(creds: SpaceCredentials) {
     const switchingSpace = this.creds?.spaceId !== creds.spaceId;
@@ -299,9 +374,14 @@ export class WebSocketRelayClient {
     try {
       localStorage.removeItem(this.highWaterKey(creds.spaceId));
       localStorage.removeItem(this.seqKey(creds.spaceId));
+      // Messages sent from the old seat: the relay files any "reached" for
+      // them under that seat, never this one.
+      localStorage.removeItem(this.sentKey(creds.spaceId));
+      localStorage.removeItem(this.reachedKey(creds.spaceId));
     } catch {
       /* storage unavailable: nothing to wind back */
     }
+    this.forgetSentCache(creds.spaceId);
     this.catchingUp = true;
   }
 
@@ -379,7 +459,11 @@ export class WebSocketRelayClient {
         // one. Zero means "no such cursor yet", and the relay falls back to
         // the clock above - which is what happens on the first connection
         // after an upgrade, and for as long as a relay does not number at all.
-        sinceSeq: seqCursor
+        sinceSeq: seqCursor,
+        // The newest "reached her phone" this device has heard. A relay that
+        // kept some while this phone was away sends the ones after it; an
+        // older relay ignores it.
+        reachedSince: this.loadReachedCursor(this.creds.spaceId)
       });
 
       // Each connection pages through history from wherever it left off.
@@ -393,6 +477,14 @@ export class WebSocketRelayClient {
 
     socket.onmessage = (event) => {
       this.lastInboundAt = Date.now();
+      // In the background the phone may sleep again before what just arrived
+      // is decrypted and answered - her message never said to have landed.
+      // A moment awake is enough; asked at most every two seconds, so a page
+      // of history does not ask a hundred times.
+      if (!isShown() && this.lastInboundAt - this.heldAwakeAt >= 2_000) {
+        this.heldAwakeAt = this.lastInboundAt;
+        holdAwake(5_000);
+      }
       const raw = typeof event.data === 'string' ? event.data : '';
       if (!raw) return;
       this.inboundChain = this.inboundChain
@@ -478,6 +570,11 @@ export class WebSocketRelayClient {
       this.scheduleRetryFlush();
     }
 
+    if (payload?.type === 'REACHED') {
+      this.handleReached(payload.reached);
+      return;
+    }
+
     if (payload?.type === 'RECORD_ACK' && payload.recordId) {
       // Confirmed by the relay, so stop re-sending it. `persisted: false` means
       // the relay took it but its database is down; it stays deliverable live,
@@ -533,6 +630,11 @@ export class WebSocketRelayClient {
         record.spaceId,
         record.type
       );
+      // My own message, written on my other device: when it reaches her
+      // phone the relay tells both of mine, by record id.
+      if (record.type === 'CHAT' && record.authorId === this.currentSeat()) {
+        this.rememberOwnChat(creds.spaceId, record.id, plaintext);
+      }
       const generation = this.cursorGeneration;
       // Same shape subscribers have always received: payload is a JSON string.
       this.emit({
@@ -664,6 +766,11 @@ export class WebSocketRelayClient {
   }
 
   private enqueue(record: any, correlationId?: string) {
+    // Remembered now, not when the relay acknowledges it: her phone can say
+    // it has the message before the acknowledgement gets back here.
+    if (correlationId && record.type === 'CHAT') {
+      this.rememberSent(record.spaceId, record.id, correlationId, true);
+    }
     this.outbox.push({ record, correlationId });
     if (this.outbox.length > MAX_OUTBOX) this.outbox.shift();
     this.persistOutbox();
@@ -743,9 +850,33 @@ export class WebSocketRelayClient {
       localStorage.removeItem(this.highWaterKey(spaceId));
       localStorage.removeItem(this.seqKey(spaceId));
       localStorage.removeItem(this.restoreKey(spaceId));
+      localStorage.removeItem(this.sentKey(spaceId));
+      localStorage.removeItem(this.reachedKey(spaceId));
     } catch {
       /* storage unavailable; nothing was written to begin with */
     }
+    this.forgetSentCache(spaceId);
+  }
+
+  /**
+   * The room details the phone keeps outside the PIN vault, so it can confirm
+   * delivery while Two is closed or locked (core/background): the room id,
+   * this device, its seat and how far it has read. Null with no room.
+   *
+   * Never the key or the code. Without those nothing the relay hands over can
+   * be opened, and the room id already sits in plain storage, in the names of
+   * the keys below.
+   */
+  roomDetails(): { spaceId: string; deviceId: string; seat: string; since: number; sinceSeq: number } | null {
+    const creds = this.creds;
+    if (!creds) return null;
+    return {
+      spaceId: creds.spaceId,
+      deviceId: getDeviceId(),
+      seat: creds.authorLabel || creds.role,
+      since: this.loadHighWaterMark(creds.spaceId),
+      sinceSeq: this.loadSeqCursor(creds.spaceId)
+    };
   }
 
   /**
@@ -856,6 +987,137 @@ export class WebSocketRelayClient {
     return `two_relay_restoring_${spaceId}`;
   }
 
+  /**
+   * This phone's own chat messages, as [record id, message id] pairs, oldest
+   * first. Ids only: nothing in here says what a message said.
+   */
+  private sentKey(spaceId: string) {
+    return `two_relay_sent_${spaceId}`;
+  }
+
+  /** The newest time in any REACHED heard here, so a reconnect asks only for later ones. */
+  private reachedKey(spaceId: string) {
+    return `two_relay_reached_${spaceId}`;
+  }
+
+  private loadReachedCursor(spaceId: string): number {
+    try {
+      const parsed = Number(localStorage.getItem(this.reachedKey(spaceId)));
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private saveReachedCursor(spaceId: string, at: number) {
+    if (!Number.isFinite(at) || at <= 0) return;
+    try {
+      if (at > this.loadReachedCursor(spaceId)) localStorage.setItem(this.reachedKey(spaceId), String(at));
+    } catch {
+      /* storage unavailable: the relay sends them again next time */
+    }
+  }
+
+  private sentFor(spaceId: string) {
+    if (this.sent?.spaceId === spaceId) return this.sent;
+    let pairs: Array<[string, string]> = [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem(this.sentKey(spaceId)) || '[]');
+      if (Array.isArray(parsed)) {
+        pairs = parsed.filter(
+          (p: unknown): p is [string, string] =>
+            Array.isArray(p) && typeof p[0] === 'string' && typeof p[1] === 'string'
+        );
+      }
+    } catch {
+      pairs = [];
+    }
+    // A write still waiting belongs to the space it was made in.
+    if (this.sentSaveTimer) this.saveSent();
+    this.sent = { spaceId, pairs, byRecord: new Map(pairs) };
+    return this.sent;
+  }
+
+  /**
+   * Remembers which message a record of mine carried. `now` writes it at
+   * once - a message just typed, which a reload must not lose; otherwise the
+   * write waits a moment, for the rest of a page of history to join it.
+   */
+  private rememberSent(spaceId: string, recordId: string, messageId: string, now: boolean) {
+    if (!recordId || !messageId || recordId.length > MAX_ID_CHARS || messageId.length > MAX_ID_CHARS) return;
+    const sent = this.sentFor(spaceId);
+    if (sent.byRecord.has(recordId)) return;
+    sent.pairs.push([recordId, messageId]);
+    sent.byRecord.set(recordId, messageId);
+    while (sent.pairs.length > MAX_SENT_IDS) {
+      const evicted = sent.pairs.shift();
+      if (evicted) sent.byRecord.delete(evicted[0]);
+    }
+    if (now) this.saveSent();
+    else if (!this.sentSaveTimer) {
+      this.sentSaveTimer = setTimeout(() => {
+        this.sentSaveTimer = null;
+        this.saveSent();
+      }, 500);
+    }
+  }
+
+  private rememberOwnChat(spaceId: string, recordId: string, plaintext: string) {
+    try {
+      const messageId = JSON.parse(plaintext)?.id;
+      if (typeof messageId === 'string') this.rememberSent(spaceId, recordId, messageId, false);
+    } catch {
+      /* not a message after all: nothing to remember */
+    }
+  }
+
+  private saveSent() {
+    if (this.sentSaveTimer) {
+      clearTimeout(this.sentSaveTimer);
+      this.sentSaveTimer = null;
+    }
+    const sent = this.sent;
+    if (!sent) return;
+    try {
+      localStorage.setItem(this.sentKey(sent.spaceId), JSON.stringify(sent.pairs));
+    } catch {
+      /* quota: kept for this session, and her opening Two still ticks it */
+    }
+  }
+
+  private forgetSentCache(spaceId: string) {
+    if (this.sent?.spaceId !== spaceId) return;
+    if (this.sentSaveTimer) {
+      clearTimeout(this.sentSaveTimer);
+      this.sentSaveTimer = null;
+    }
+    this.sent = null;
+  }
+
+  /**
+   * The relay saying messages of mine have reached her phone - told by her
+   * phone's listener while Two was closed or locked there. It names them by
+   * record id; those are turned back into message ids here, and the ones this
+   * phone did not send (or no longer remembers) are let go.
+   *
+   * The time is kept whether or not anything maps, so the next connection
+   * does not ask for the same ones again.
+   */
+  private handleReached(reached: unknown) {
+    const creds = this.creds;
+    if (!creds) return;
+    const entries = readReached(reached);
+    if (!entries.length) return;
+    this.saveReachedCursor(creds.spaceId, Math.max(...entries.map(e => e.at)));
+    const sent = this.sentFor(creds.spaceId);
+    const mapped: ReachedEntry[] = [];
+    for (const entry of entries) {
+      const messageId = sent.byRecord.get(entry.id);
+      if (messageId) mapped.push({ id: messageId, at: entry.at });
+    }
+    if (mapped.length) this.emit({ type: 'REACHED', reached: mapped });
+  }
+
   private loadSeqCursor(spaceId: string): number {
     try {
       const parsed = Number(localStorage.getItem(this.seqKey(spaceId)));
@@ -960,30 +1222,44 @@ export class WebSocketRelayClient {
 
   private startHeartbeat() {
     this.stopHeartbeat();
+    this.lastBeatAt = 0;
     // Idle WebSockets get culled by proxies; a periodic ping keeps the pipe warm.
     // It is also when a record that never got its acknowledgement - refused by
     // the rate limit, say, which says so without naming the record - goes out
     // again, instead of waiting for the next thing somebody happens to send.
     this.heartbeatTimer = setInterval(() => {
+      const now = Date.now();
+      const late = isLateBeat(this.lastBeatAt, now);
+      this.lastBeatAt = now;
       // PINGs that have each had a whole beat and nothing came: open in name
       // only. Judged from the PING, not from quiet - a quiet room says nothing
-      // for minutes - and only on screen, where timers are not held back past
-      // an answer that did come. A socket still sending a photo is judged by
-      // its bytes leaving instead (core/heartbeat).
+      // for minutes. A socket still sending a photo is judged by its bytes
+      // leaving instead (core/heartbeat).
+      //
+      // In the background too, as long as the beats come when they should:
+      // Two now stays connected there, and a socket that died while the phone
+      // was in a pocket used to be kept until Two was opened again. Only a
+      // beat that comes late is not trusted to judge - the phone held the
+      // timers back, perhaps past an answer that did come - so it asks once
+      // more instead, and checkAlive replaces the socket if nothing answers.
       const buffered = this.ws?.bufferedAmount ?? 0;
-      if (isShown()) {
-        this.missedBeats = missedHeartbeats({
-          buffered,
-          bufferedBefore: this.bufferedAtBeat,
-          queuedSince: this.bytesHanded - this.bytesHandedAtBeat,
-          pingSentAt: this.pingSentAt,
-          lastInboundAt: this.lastInboundAt,
-          missed: this.missedBeats,
-          now: Date.now()
-        });
-      } else {
+      if (!isShown() && late) {
         this.missedBeats = 0;
+        this.bufferedAtBeat = buffered > 0 ? buffered : -1;
+        this.bytesHandedAtBeat = this.bytesHanded;
+        this.flushOutbox();
+        this.checkAlive();
+        return;
       }
+      this.missedBeats = missedHeartbeats({
+        buffered,
+        bufferedBefore: this.bufferedAtBeat,
+        queuedSince: this.bytesHanded - this.bytesHandedAtBeat,
+        pingSentAt: this.pingSentAt,
+        lastInboundAt: this.lastInboundAt,
+        missed: this.missedBeats,
+        now
+      });
       this.bufferedAtBeat = buffered > 0 ? buffered : -1;
       this.bytesHandedAtBeat = this.bytesHanded;
       if (this.missedBeats >= MISSES_BEFORE_DEAD) {
@@ -1060,6 +1336,7 @@ export class WebSocketRelayClient {
   }
 
   private stopHeartbeat() {
+    this.lastBeatAt = 0;
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
@@ -1099,6 +1376,8 @@ export class WebSocketRelayClient {
   }
 
   disconnect() {
+    // A write of the sent list still waiting goes now, while it has its room.
+    if (this.sentSaveTimer) this.saveSent();
     this.stopped = true;
     this.reconnectAttempts = 0;
     this.teardownSocket();
@@ -1282,6 +1561,6 @@ function wakeAll() {
 onShownChange(shown => {
   if (shown) wakeAll();
 });
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('online', wakeAll);
 }

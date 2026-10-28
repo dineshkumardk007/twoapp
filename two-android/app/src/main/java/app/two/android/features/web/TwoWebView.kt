@@ -41,6 +41,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
@@ -55,13 +56,21 @@ import app.two.android.core.diagnostics.CrashNote
 import app.two.android.core.network.NetworkConfig
 import app.two.android.core.security.FingerprintLock
 import app.two.android.core.update.AppUpdater
+import app.two.android.features.sync.BackgroundRoomStore
+import app.two.android.features.sync.NewMessageNotice
+import app.two.android.features.sync.OemSettings
+import app.two.android.features.sync.PageHost
+import app.two.android.features.sync.SyncService
+import app.two.android.features.sync.WakeLocks
 import app.two.android.features.widget.LaunchAction
 import app.two.android.features.widget.TwoWidget
 import app.two.android.features.widget.WidgetSummary
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.roundToInt
 import app.two.android.features.radio.RadioRemote
@@ -457,6 +466,186 @@ class AndroidWebBridge(
     @JavascriptInterface
     fun setRelayUrl(url: String) {
         NetworkConfig.setServerUrl(context, url)
+    }
+
+    /*
+     * Keeping Two connected while it is closed (features/sync, and the page's
+     * core/background.ts). Each one answers rather than throws: an error
+     * thrown back into the page from here would stop whatever it was doing.
+     */
+
+    /**
+     * The couple room's details - room id, this phone's id, its seat, how far
+     * the page has read, whether the calculator is up, the notice's words -
+     * stored outside the PIN vault for the listener. Never a key or a code:
+     * only the named fields are read. Starts the background service the first
+     * time, while Two is on screen, which is when Android allows it.
+     */
+    @JavascriptInterface
+    fun backgroundRoomSet(json: String?): Boolean = try {
+        SyncService.roomSet(context, json)
+    } catch (_: Exception) {
+        false
+    }
+
+    /** The page's own couple relay connection is on (or off: locked, on the PIN screen). */
+    @JavascriptInterface
+    fun backgroundPageRelay(on: Boolean) {
+        try {
+            PageHost.relay(context.applicationContext, on)
+        } catch (_: Exception) {
+            // Looked at again on the next change.
+        }
+    }
+
+    /** Unpair, Start fresh, the erase: the room details and the background connection go. */
+    @JavascriptInterface
+    fun backgroundRoomClear() {
+        try {
+            SyncService.clear(context)
+        } catch (_: Exception) {
+            // The service may live on, but with nothing stored it joins nothing.
+        }
+    }
+
+    /** What the background connection is doing, and what the phone allows it, as JSON. */
+    @JavascriptInterface
+    fun backgroundState(): String = try {
+        SyncService.state(context)
+    } catch (_: Exception) {
+        "{}"
+    }
+
+    /**
+     * Asks once to leave Two out of battery optimisation (see
+     * OemSettings.askBatteryExemption). True when a screen opened.
+     */
+    @JavascriptInterface
+    fun askBatteryExemption(): Boolean = onMain(false) { OemSettings.askBatteryExemption(screenContext()) }
+
+    /** The phone brand's own Autostart or background screen. True when a screen opened. */
+    @JavascriptInterface
+    fun openOemSettings(): Boolean = onMain(false) { OemSettings.open(screenContext()) }
+
+    /** Two's notification settings, for a notice the phone has turned off. */
+    @JavascriptInterface
+    fun openNotificationSettings(): Boolean = onMain(false) {
+        OemSettings.openNotificationSettings(screenContext())
+    }
+
+    /**
+     * The "New message" switch. On asks for the notification permission on
+     * Android 13 and later, and is on only if it was given. The answer comes
+     * back through window.__twoNotice: {on, granted, canAsk}.
+     */
+    @JavascriptInterface
+    fun backgroundNotice(on: Boolean) {
+        val app = context.applicationContext
+        Handler(Looper.getMainLooper()).post {
+            try {
+                if (!on) {
+                    BackgroundRoomStore.setNotify(app, false)
+                    NewMessageNotice.cancel(app)
+                    answerNotice(false)
+                    return@post
+                }
+                val activity = context.findActivity()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    activity != null &&
+                    !NewMessageNotice.permissionHeld(app)
+                ) {
+                    NewMessageNotice.ask(activity) { answerNotice(true) }
+                } else {
+                    answerNotice(true)
+                }
+            } catch (_: Exception) {
+                replyToPage(
+                    "__twoNotice",
+                    JSONObject().put("on", false).put("granted", false).put("canAsk", false)
+                )
+            }
+        }
+    }
+
+    /**
+     * Main thread. On only when the phone lets it show. canAsk is false once
+     * Android will not show its prompt again, and only the phone's settings
+     * can allow it.
+     */
+    private fun answerNotice(wanted: Boolean) {
+        val app = context.applicationContext
+        val granted = NewMessageNotice.allowed(app)
+        val on = wanted && granted
+        BackgroundRoomStore.setNotify(app, on)
+        val activity = context.findActivity()
+        val canAsk = granted || (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                activity != null &&
+                ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.POST_NOTIFICATIONS)
+            )
+        replyToPage("__twoNotice", JSONObject().put("on", on).put("granted", granted).put("canAsk", canAsk))
+    }
+
+    /**
+     * A message of hers arrived live while Two is out of sight. The notice
+     * shows only if the switch is on, the calculator is not, and Two is still
+     * away (NewMessageNotice).
+     */
+    @JavascriptInterface
+    fun newMessageNotice() {
+        try {
+            NewMessageNotice.fromPage(context)
+        } catch (_: Exception) {
+            // No notice.
+        }
+    }
+
+    /**
+     * Keeps the phone awake for [ms] (1 to 10 seconds) while the page, in the
+     * background, finishes what just arrived: decrypting it, and sending the
+     * "it has reached me" back. Otherwise the phone may sleep again halfway.
+     */
+    @JavascriptInterface
+    fun holdAwake(ms: Int) {
+        WakeLocks.hold(
+            context,
+            SyncService.PAGE_TAG,
+            ms.coerceIn(1_000, 10_000).toLong()
+        )
+    }
+
+    /** The Activity to open a settings screen from, or the app when there is none. */
+    private fun screenContext(): Context = context.findActivity() ?: context.applicationContext
+
+    /**
+     * Runs [block] on the main thread and waits for it, at most a few seconds,
+     * for a bridge call that answers at once. Bridge calls arrive on their own
+     * thread, never the main one, so the wait cannot block the screen.
+     */
+    private fun <T> onMain(fallback: T, block: () -> T): T {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            return try {
+                block()
+            } catch (_: Exception) {
+                fallback
+            }
+        }
+        var result = fallback
+        val done = CountDownLatch(1)
+        Handler(Looper.getMainLooper()).post {
+            try {
+                result = block()
+            } catch (_: Exception) {
+                // The fallback stands.
+            } finally {
+                done.countDown()
+            }
+        }
+        return try {
+            if (done.await(3, TimeUnit.SECONDS)) result else fallback
+        } catch (_: InterruptedException) {
+            fallback
+        }
     }
 
     @JavascriptInterface
@@ -889,6 +1078,8 @@ fun TwoWebView(
         // which evaluateJavascript needs.
         fun tell(away: Boolean) {
             PageShown.away = away
+            // Two is on screen: the "New message" notice has done its job.
+            if (!away) NewMessageNotice.cancel(appContext)
             val page = webViewRef ?: return
             if (Uri.parse(page.url ?: "").host != APP_HOST) return
             val state = if (away) "away" else "here"
@@ -1071,6 +1262,10 @@ fun TwoWebView(
                         super.onPageStarted(view, url, favicon)
                         view?.context?.findActivity()?.let { resetBedside(it) }
                         bridge.earRelease()
+                        // A lock reloads the page, and the page that comes up
+                        // has no relay connection until it says so: the
+                        // background listener may take over meanwhile.
+                        if (Uri.parse(url ?: "").host == APP_HOST) PageHost.relay(context, false)
                     }
 
                     /**
@@ -1095,6 +1290,9 @@ fun TwoWebView(
                         bridge.setCallAudioRoute(false, false, false)
                         bridge.setProximityLock(false)
                         bridge.earRelease()
+                        // Its relay connection died with it; the background
+                        // listener answers until the new page is up.
+                        PageHost.closed(context, view)
                         val activity = view?.context?.findActivity()
                         if (view != null) {
                             (view.parent as? ViewGroup)?.removeView(view)
@@ -1219,16 +1417,35 @@ fun TwoWebView(
 
                 loadUrl("https://$APP_HOST/assets/www/index.html")
                 webViewRef = this
+                PageHost.opened(this)
             }
         },
         update = {
             webViewRef = it
+        },
+        /*
+         * The Activity is gone - Two swiped away, or closed by Android - and
+         * the page goes with it. Without this the old page lingered with no
+         * one to show it, its relay connection still open and everything it
+         * had decrypted still in memory, after the person had closed the app.
+         * Destroyed, it ends; the background listener answers in its place.
+         */
+        onRelease = { view ->
+            PageHost.closed(view.context, view)
+            try {
+                view.destroy()
+            } catch (_: Exception) {
+                // Already destroyed (onRenderProcessGone).
+            }
         }
     )
 }
 
-/** Where the app's own pages are served from (see WebViewAssetLoader). */
-private const val APP_HOST = "appassets.androidplatform.net"
+/**
+ * Where the app's own pages are served from (see WebViewAssetLoader). The
+ * background service wakes only a page from here (features/sync/PageHost).
+ */
+internal const val APP_HOST = "appassets.androidplatform.net"
 
 /** Bedside on or off for this window: screen kept on, bars hidden, brightness set. */
 private fun applyBedside(activity: Activity, on: Boolean, brightness: Double) {

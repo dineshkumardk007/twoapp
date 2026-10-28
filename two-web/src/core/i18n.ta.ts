@@ -782,5 +782,30 @@ export const TA: Readonly<Record<string, string>> = {
   'Not heard yet': 'இன்னும் கேட்கப்படவில்லை',
   New: 'புதியது',
   "Couldn't play": 'இயக்க முடியவில்லை',
-  'Playback speed {rate} times. Change speed': 'இயக்க வேகம் {rate} மடங்கு. வேகத்தை மாற்று'
+  'Playback speed {rate} times. Change speed': 'இயக்க வேகம் {rate} மடங்கு. வேகத்தை மாற்று',
+
+  // ------------------- Two in the background (core/background, BackgroundCards)
+  'New message': 'புதிய செய்தி',
+  'New message notice': 'புதிய செய்தி அறிவிப்பு',
+  'Silent. Shows only "New message", never who or what. Not while the calculator is on.':
+    'ஒலி இல்லை. "புதிய செய்தி" என்று மட்டுமே காட்டும்; யார், என்ன என்று ஒருபோதும் காட்டாது. கால்குலேட்டர் இயக்கத்தில் இருக்கும்போது வராது.',
+  'Your phone also lists a quiet "Syncing" entry with it.':
+    'இதனுடன் உங்கள் ஃபோனில் "Syncing" என்ற அமைதியான ஒரு பதிவும் தெரியும்.',
+  'Notifications are off for Two in phone settings.': 'ஃபோன் அமைப்புகளில் Two-க்கான அறிவிப்புகள் அணைக்கப்பட்டுள்ளன.',
+  'Open settings': 'அமைப்புகளைத் திற',
+  "Let Two stay connected when it's closed?": 'Two மூடியிருக்கும்போதும் இணைப்பில் இருக்கட்டுமா?',
+  'Then your partner sees two ticks as soon as a message reaches you, even when Two is closed or locked.':
+    'அப்போது Two மூடியிருந்தாலும் பூட்டியிருந்தாலும், செய்தி உங்களை வந்தடைந்ததுமே உங்கள் துணைக்கு இரண்டு டிக் தெரியும்.',
+  "Two only learns that something arrived. It can't read anything until you open it.":
+    'ஏதோ வந்திருக்கிறது என்பது மட்டுமே Two-க்குத் தெரியும். நீங்கள் திறக்கும் வரை அதனால் எதையும் படிக்க முடியாது.',
+  'Your phone will ask to let Two run in the background. It uses a little battery and data.':
+    'Two பின்னணியில் இயங்க அனுமதிக்கலாமா என்று உங்கள் ஃபோன் கேட்கும். இதற்குக் கொஞ்சம் பேட்டரியும் டேட்டாவும் செலவாகும்.',
+  Allow: 'அனுமதி',
+  'Not now': 'இப்போது வேண்டாம்',
+  'On Xiaomi, Redmi and POCO phones, turn on Autostart for Two and set its battery saver to "No restrictions", or the phone may close it.':
+    'Xiaomi, Redmi, POCO ஃபோன்களில் Two-க்கு Autostart-ஐ இயக்கி, அதன் பேட்டரி சேமிப்பை "No restrictions" என்று அமையுங்கள்; இல்லையெனில் ஃபோன் அதை மூடிவிடக்கூடும்.',
+  'On vivo and iQOO phones, allow Two to start on its own and to run in the background, or the phone may close it.':
+    'vivo, iQOO ஃபோன்களில் Two தானாகத் தொடங்கவும் பின்னணியில் இயங்கவும் அனுமதியுங்கள்; இல்லையெனில் ஃபோன் அதை மூடிவிடக்கூடும்.',
+  'On OPPO, realme and OnePlus phones, allow Auto launch and Background activity for Two, or the phone may close it.':
+    'OPPO, realme, OnePlus ஃபோன்களில் Two-க்கு Auto launch, Background activity இரண்டையும் அனுமதியுங்கள்; இல்லையெனில் ஃபோன் அதை மூடிவிடக்கூடும்.'
 };

@@ -177,6 +177,10 @@ dependencies {
 
     implementation(libs.zxing.core)
 
+    // The background listener's relay connection while Two is closed
+    // (features/sync/RelayListener): Android has no WebSocket client of its own.
+    implementation(libs.okhttp)
+
     // Coroutines & Serialization
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)

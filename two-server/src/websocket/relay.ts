@@ -17,6 +17,16 @@ interface SpaceClient {
   /** Authorship label ('user' | 'partner'), used to filter a client's own history. */
   authorRole: string;
   spaceId: string;
+  /**
+   * A background listener rather than the app itself.
+   *
+   * The phone keeps one of these open while Two is closed or locked, so the
+   * partner can be told a message reached it. It holds no key, so it is sent
+   * only the metadata of a record - never the ciphertext - and it can write
+   * nothing. It is not a presence either: being "online" means the app is
+   * open, and a listener in a pocket is not that.
+   */
+  passive: boolean;
   /** Token bucket state for rate limiting. */
   tokens: number;
   lastRefill: number;
@@ -74,6 +84,16 @@ const MAX_CLIENTS_PER_SPACE = 24; // ten members, two devices each, spare reconn
  */
 const LIVENESS_INTERVAL_MS = 30_000;
 
+// Delivery receipts from a background listener. One RECEIVED names at most
+// this many records, and a REACHED is sent in pieces no bigger, so neither
+// side ever handles an unbounded message.
+const MAX_RECEIVED_IDS = 300;
+const REACHED_CHUNK = 300;
+// How many stored receipts one JOIN may be told about. A phone that has been
+// off for a long while catches up on the newest; older ticks arrive anyway
+// when the partner next opens Two and confirms delivery the usual way.
+const MAX_REACHED_REPLAY = 2000;
+
 export class WebSocketRelay {
   private wss: WebSocketServer;
   private clients = new Set<SpaceClient>();
@@ -92,6 +112,8 @@ export class WebSocketRelay {
   /** Tells every connected phone when durability comes or goes. */
   private announceDurability = (durable: boolean) => {
     for (const client of this.clients) {
+      // A listener cannot show it to anybody.
+      if (client.passive) continue;
       this.sendJson(client.ws, { type: 'RELAY_STATUS', durable, storage: db.kind });
     }
   };
@@ -160,15 +182,46 @@ export class WebSocketRelay {
 
         try {
           // Protocol:
-          // 1. JOIN: { type, spaceId, userId, since?, sinceSeq? }
+          // 1. JOIN: { type, spaceId, userId, role?, since?, sinceSeq?, passive?, reachedSince? }
           // 2. RECORD: { type, spaceId, record }
           // 3. REPLAY_MORE: { type, since?, sinceSeq? }
           // 4. PING: { type }
+          // 5. RECEIVED: { type, recordIds } - background listeners only
+          // Anything else is ignored, so an older phone and a newer relay
+          // still get on.
 
           if (message.type === 'JOIN') {
             if (!isNonEmptyString(message.spaceId) || !isNonEmptyString(message.userId)) {
               this.sendJson(ws, { type: 'ERROR', error: 'JOIN requires spaceId and userId' });
               return;
+            }
+
+            // Only exactly true. Every phone before this one sends nothing
+            // here and must go on being treated as the app.
+            const passive = message.passive === true;
+
+            // A listener steps aside for the app, never the other way round.
+            // The app's own JOIN below closes a listener of the same device;
+            // if a listener could do the same to the app, a phone that had
+            // both up for a moment would have them evict each other forever.
+            if (passive) {
+              for (const existing of this.clients) {
+                if (
+                  existing.spaceId === message.spaceId &&
+                  existing.userId === message.userId &&
+                  existing.ws !== ws &&
+                  !existing.passive &&
+                  existing.ws.readyState === WebSocket.OPEN
+                ) {
+                  this.sendJson(ws, { type: 'ERROR', error: 'Device is already connected', code: 'ACTIVE_EXISTS' });
+                  try {
+                    ws.close(4001, 'Device is already connected');
+                  } catch {
+                    /* already gone */
+                  }
+                  return;
+                }
+              }
             }
 
             // Re-joining on the same socket replaces the previous membership.
@@ -216,6 +269,7 @@ export class WebSocketRelay {
               // to it keeps them working unchanged.
               authorRole: isNonEmptyString(message.role) ? message.role : message.userId,
               spaceId: message.spaceId,
+              passive,
               tokens: RECORD_BURST,
               lastRefill: Date.now()
             };
@@ -227,8 +281,19 @@ export class WebSocketRelay {
               timestamp: Date.now(),
               // So a phone can say whether what it sends is being kept.
               durable: db.isDurable,
-              storage: db.kind
+              storage: db.kind,
+              // So a phone knows it can leave a listener here, and that a
+              // REACHED may come.
+              receipts: true,
+              passive
             });
+
+            if (passive) {
+              // No call servers and no presence: a listener makes no calls,
+              // and its partner must not see it as being here.
+              await this.replayMissedRecords(currentClient, message.since, message.sinceSeq);
+              return;
+            }
 
             // Handed over now so a call made later does not wait for them.
             // Not awaited: a slow answer from Cloudflare must not hold up the
@@ -236,8 +301,59 @@ export class WebSocketRelay {
             if (turnConfigured) void this.sendIceServers(ws);
 
             await this.replayMissedRecords(currentClient, message.since, message.sinceSeq);
+
+            // Ticks the partner's listener gave while this phone was away.
+            // Absent from every older phone, which then gets nothing new.
+            const reachedSince = message.reachedSince;
+            if (reachedSince !== undefined && reachedSince !== null && Number.isFinite(Number(reachedSince))) {
+              // A whole number in range, because the column is a bigint: a
+              // fraction or 1e300 would fail the query, and a failed query
+              // puts the whole relay into degraded mode.
+              const since = Math.min(Math.max(0, Math.floor(Number(reachedSince))), Number.MAX_SAFE_INTEGER);
+              await this.replayReached(currentClient, since);
+            }
+
             // Tell both sides who is present now.
             this.broadcastPresence(currentClient.spaceId);
+            return;
+          }
+
+          /**
+           * A listener saying "these records are on this phone now".
+           *
+           * It cannot read them, so this says nothing about what they hold,
+           * only that they arrived. The relay notes each one once and tells
+           * the author, whose phone shows two grey ticks. Read, the blue
+           * tick, stays between the two apps and is never decided here.
+           */
+          if (message.type === 'RECEIVED') {
+            if (!currentClient) {
+              this.sendJson(ws, { type: 'ERROR', error: 'JOIN before RECEIVED' });
+              return;
+            }
+            if (!currentClient.passive) {
+              // The app confirms delivery itself, end to end, as it always has.
+              this.sendJson(ws, { type: 'ERROR', error: 'RECEIVED is for passive connections' });
+              return;
+            }
+            if (!consumeToken(currentClient)) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Rate limit exceeded, slow down' });
+              return;
+            }
+
+            const ids = parseReceivedIds(message.recordIds);
+            if (!ids) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Invalid RECEIVED' });
+              return;
+            }
+
+            // Held before the await: the socket can close meanwhile, and the
+            // author should still be told.
+            const reader = currentClient;
+            const at = Date.now();
+            const marked = await db.markReached(reader.spaceId, ids, reader.authorRole, at);
+            this.announceReached(reader.spaceId, marked, at);
+            this.sendJson(ws, { type: 'RECEIVED_ACK', count: marked.length });
             return;
           }
 
@@ -250,6 +366,10 @@ export class WebSocketRelay {
           if (message.type === 'ICE_SERVERS_REQUEST') {
             if (!currentClient) {
               this.sendJson(ws, { type: 'ERROR', error: 'JOIN before asking for call servers' });
+              return;
+            }
+            if (currentClient.passive) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Passive connection is read-only' });
               return;
             }
             if (!consumeToken(currentClient)) {
@@ -295,6 +415,10 @@ export class WebSocketRelay {
               this.sendJson(ws, { type: 'ERROR', error: 'JOIN before sending signals' });
               return;
             }
+            if (currentClient.passive) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Passive connection is read-only' });
+              return;
+            }
 
             if (!consumeToken(currentClient)) {
               this.sendJson(ws, { type: 'ERROR', error: 'Rate limit exceeded, slow down' });
@@ -325,6 +449,12 @@ export class WebSocketRelay {
           if (message.type === 'RECORD') {
             if (!currentClient) {
               this.sendJson(ws, { type: 'ERROR', error: 'JOIN before sending records' });
+              return;
+            }
+            // Nothing a listener sends is stored. It holds no key, so anything
+            // it wrote could only be noise in the couple's history.
+            if (currentClient.passive) {
+              this.sendJson(ws, { type: 'ERROR', error: 'Passive connection is read-only' });
               return;
             }
 
@@ -380,11 +510,12 @@ export class WebSocketRelay {
 
       ws.on('close', () => {
         if (currentClient) {
-          const { spaceId } = currentClient;
+          const { spaceId, passive } = currentClient;
           this.clients.delete(currentClient);
           currentClient = null;
-          // The partner should see them leave, not wait for a timeout.
-          this.broadcastPresence(spaceId);
+          // The partner should see them leave, not wait for a timeout. A
+          // listener was never counted, so its leaving changes nothing.
+          if (!passive) this.broadcastPresence(spaceId);
         }
       });
 
@@ -410,6 +541,14 @@ export class WebSocketRelay {
   private async replayMissedRecords(client: SpaceClient, since: unknown, sinceSeq?: unknown) {
     const sinceLamport = Number.isFinite(Number(since)) ? Number(since) : 0;
     const seqCursor = Number.isFinite(Number(sinceSeq)) ? Math.max(0, Number(sinceSeq)) : 0;
+
+    // A listener with no cursor would be sent the whole space's history as
+    // "from scratch", and would then confirm a year of messages as just
+    // delivered. The phone never sends that, and this makes sure of it.
+    if (client.passive && sinceLamport === 0 && seqCursor === 0) {
+      this.sendJson(client.ws, { type: 'REPLAY_COMPLETE', count: 0, more: false });
+      return;
+    }
 
     let missed: StoredRecord[];
     try {
@@ -440,7 +579,10 @@ export class WebSocketRelay {
 
     for (const record of batch) {
       if (client.ws.readyState !== WebSocket.OPEN) return;
-      this.sendJson(client.ws, { type: 'REMOTE_RECORD', record });
+      this.sendJson(
+        client.ws,
+        client.passive ? { type: 'RECORD_META', record: toRecordMeta(record) } : { type: 'REMOTE_RECORD', record }
+      );
     }
 
     // `more` is the whole point of the cap being survivable.
@@ -458,13 +600,73 @@ export class WebSocketRelay {
     });
   }
 
-  /** Fans a record out to every OTHER connection in the space, whatever role it holds. */
+  /**
+   * Fans a record out to every OTHER connection in the space, whatever role it holds.
+   *
+   * A listener gets a record's metadata in its place - what it is, who wrote
+   * it, where it sits - and never a signal, which is only ever for an open app.
+   */
   private broadcastToSpace(spaceId: string, senderConnectionId: number, payload: any) {
     const raw = JSON.stringify(payload);
+    let metaRaw: string | null = null;
     for (const client of this.clients) {
       if (client.spaceId === spaceId && client.connectionId !== senderConnectionId && client.ws.readyState === WebSocket.OPEN) {
-        client.ws.send(raw);
+        if (!client.passive) {
+          client.ws.send(raw);
+          continue;
+        }
+        if (payload?.type !== 'REMOTE_RECORD' || !payload.record) continue;
+        // Built once, and only if a listener is actually here.
+        if (metaRaw === null) {
+          metaRaw = JSON.stringify({ type: 'RECORD_META', record: toRecordMeta(payload.record) });
+        }
+        client.ws.send(metaRaw);
       }
+    }
+  }
+
+  /**
+   * Tells each author which of their records have just reached the reader.
+   *
+   * Sent to the author's open apps only. One who is away is told when they
+   * next JOIN, from what was stored. It names no device.
+   */
+  private announceReached(spaceId: string, marked: { id: string; authorId: string }[], at: number) {
+    const byAuthor = new Map<string, { id: string; at: number }[]>();
+    for (const row of marked) {
+      const list = byAuthor.get(row.authorId) || [];
+      list.push({ id: row.id, at });
+      byAuthor.set(row.authorId, list);
+    }
+    for (const [authorId, reached] of byAuthor) {
+      const parts = chunk(reached, REACHED_CHUNK);
+      for (const client of this.clients) {
+        if (
+          client.spaceId === spaceId &&
+          client.authorRole === authorId &&
+          !client.passive &&
+          client.ws.readyState === WebSocket.OPEN
+        ) {
+          for (const part of parts) this.sendJson(client.ws, { type: 'REACHED', reached: part });
+        }
+      }
+    }
+  }
+
+  /** The receipts stored for this phone's own records since it last heard any. */
+  private async replayReached(client: SpaceClient, since: number) {
+    let reached: { id: string; at: number }[];
+    try {
+      reached = await db.getReachedSince(client.spaceId, client.authorRole, since, MAX_REACHED_REPLAY);
+    } catch (err) {
+      // Never worth failing a JOIN over: the ticks come anyway when the
+      // partner next opens Two.
+      console.error('[WebSocket Relay] Receipt replay failed', err);
+      return;
+    }
+    for (const part of chunk(reached, REACHED_CHUNK)) {
+      if (client.ws.readyState !== WebSocket.OPEN) return;
+      this.sendJson(client.ws, { type: 'REACHED', reached: part });
     }
   }
 
@@ -476,9 +678,12 @@ export class WebSocketRelay {
    * opened the app. This is the signal that actually answers that question.
    */
   private broadcastPresence(spaceId: string) {
+    // A listener is left out entirely: told nothing, and counted nowhere. It
+    // is not the person being there, and as an extra socket it would trip
+    // the alert about a device nobody recognises.
     const inSpace: SpaceClient[] = [];
     for (const c of this.clients) {
-      if (c.spaceId === spaceId && c.ws.readyState === WebSocket.OPEN) inSpace.push(c);
+      if (c.spaceId === spaceId && !c.passive && c.ws.readyState === WebSocket.OPEN) inSpace.push(c);
     }
 
     for (const client of inSpace) {
@@ -511,6 +716,39 @@ export class WebSocketRelay {
 
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === 'string' && v.length > 0;
+}
+
+/**
+ * The record ids a RECEIVED names, or null when it names none worth taking.
+ *
+ * Anything that is not a short string is dropped and repeats are folded, so
+ * one bad entry does not cost the rest. Too many at once is refused whole
+ * rather than cut, because the phone would have no way to know which part was
+ * left out.
+ */
+export function parseReceivedIds(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  const ids = [...new Set(raw.filter((s): s is string => typeof s === 'string' && s.length >= 1 && s.length <= 64))];
+  if (ids.length === 0 || ids.length > MAX_RECEIVED_IDS) return null;
+  return ids;
+}
+
+/** What a listener may know of a record: never its payload, nonce or the sender's clock. */
+export function toRecordMeta(record: StoredRecord) {
+  return {
+    id: record.id,
+    type: record.type,
+    authorId: record.authorId,
+    lamportClock: record.lamportClock,
+    seq: record.seq
+  };
+}
+
+/** Splits a list into pieces of at most `size`, in order. */
+export function chunk<T>(items: T[], size: number): T[][] {
+  const parts: T[][] = [];
+  for (let i = 0; i < items.length; i += size) parts.push(items.slice(i, i + size));
+  return parts;
 }
 
 function isValidRecord(r: any): r is StoredRecord {

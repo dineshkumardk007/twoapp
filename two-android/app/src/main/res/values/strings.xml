@@ -52,4 +52,12 @@
     <string name="widget_name">Two</string>
     <string name="widget_description">The two of you at a glance: how you each are today, your days together, and a heart to send.</string>
     <string name="widget_heart">Send a heartbeat</string>
+
+    <!-- The background connection's notification (Android 12 and older show
+         it) and the optional "New message" notice: no names, no words of a
+         message. The page sends the notice's words in its own language. -->
+    <string name="sync_channel">Syncing</string>
+    <string name="sync_title">Syncing</string>
+    <string name="notice_channel">Messages</string>
+    <string name="notice_default">New message</string>
 </resources>

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   ANSWER_WITHIN_MS,
+  HEARTBEAT_MS,
   MISSES_BEFORE_DEAD,
   bytesLeaving,
+  isLateBeat,
   missedHeartbeats,
   utf8Length,
   type HeartbeatLook
@@ -87,5 +89,24 @@ describe('utf8Length', () => {
     expect(utf8Length('\ud83d')).toBe(3);
     const mixed = 'aத💌b';
     expect(utf8Length(mixed)).toBe(new TextEncoder().encode(mixed).length);
+  });
+});
+
+describe('isLateBeat', () => {
+  it('is not late on the first beat of a socket, with nothing before it', () => {
+    expect(isLateBeat(0, NOW)).toBe(false);
+  });
+
+  it('is not late when the timers ran as they should, or a little slow', () => {
+    expect(isLateBeat(NOW - HEARTBEAT_MS, NOW)).toBe(false);
+    // A phone in the background running its timers once a minute.
+    expect(isLateBeat(NOW - 60_000, NOW)).toBe(false);
+    expect(isLateBeat(NOW - 3 * HEARTBEAT_MS, NOW)).toBe(false);
+  });
+
+  it('is late once more than three beats went by without one', () => {
+    expect(isLateBeat(NOW - 3 * HEARTBEAT_MS - 1, NOW)).toBe(true);
+    // Screen off for half an hour, then the alarm lets the page run.
+    expect(isLateBeat(NOW - 30 * 60_000, NOW)).toBe(true);
   });
 });

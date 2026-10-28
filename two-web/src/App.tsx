@@ -49,7 +49,7 @@ import { isAndroidApp, formFactor } from './core/platform';
 import { withoutSampleAdventures } from './core/sampleData';
 import { setBackFallback } from './core/backStack';
 import { haptic } from './core/haptics';
-import { wsRelay, RelayStatus, recordSizeOf, MAX_RECORD_BYTES } from './core/ws';
+import { wsRelay, RelayStatus, recordSizeOf, MAX_RECORD_BYTES, reachedByTime } from './core/ws';
 import {
   cleanVoiceFields,
   isVoiceRecorderAskingForMic,
@@ -90,6 +90,7 @@ import { crashNoteToTell } from './core/crashNote';
 import { CallOverlay } from './components/CallOverlay';
 import { RelayStorageWarning } from './components/RelayStorageWarning';
 import { RoleClashDialog } from './components/RoleClashDialog';
+import { BackgroundCards } from './components/BackgroundCards';
 import { preloadSounds } from './core/sounds';
 import { mergeIncomingRadio } from './core/radioSync';
 import { liveRadioHold } from './core/liveRadio';
@@ -273,6 +274,7 @@ import {
 import { TYPING_STOP_SIGNAL, typingEndedBy, typingNow, typingTtlFor } from './core/typing';
 import { chatChrome } from './core/chatChrome';
 import { isShown, onShownChange } from './core/shown';
+import { backgroundAvailable, newMessageNotice, pageRelay, roomClear, roomSet } from './core/background';
 
 
 // Screens are fetched the first time they are opened rather than all at once.
@@ -884,11 +886,18 @@ export const App: React.FC = () => {
   // never broadcast in the clear.
   useEffect(() => {
     if (isLocked || !session) {
+      // Said before the socket goes, so the phone's listener can take over
+      // while Two is locked (core/background). Unpaired, the room details
+      // were wiped first, and there is nothing for it to take over.
+      pageRelay(false);
       wsRelay.disconnect();
       return;
     }
 
     let cancelled = false;
+    // And this page has the relay again: the listener stands down, and the
+    // relay hands this device over from it when the page joins.
+    pageRelay(true);
     deriveSpaceCredentials(session.code, session.role, session.joinPhrase)
       .then(creds => {
         if (!cancelled) wsRelay.connect(creds);
@@ -899,6 +908,50 @@ export const App: React.FC = () => {
       cancelled = true;
     };
   }, [session, spaceVersion, isLocked]);
+
+  /**
+   * Whether Two is disguised: the calculator up now, or set to open at launch.
+   * Goes to the phone with the room details, so nothing it shows while Two is
+   * closed - not even a wordless notice - gives the disguise away.
+   */
+  const disguised = decoyOnLaunch || isCamouflaged;
+  /** Set as this phone is erased and reloaded, so nothing hands the room back to it. */
+  const erasingRef = useRef(false);
+
+  /**
+   * The room details for Two in the background (core/background): handed to
+   * the phone whenever they may have moved on - connected, a page of history
+   * applied, Two leaving the screen, just before it locks, and the disguise
+   * going up or down. The phone keeps them outside the PIN vault, which is
+   * what lets it confirm delivery while Two is locked. Never the key or the
+   * code (wsRelay.roomDetails).
+   */
+  useEffect(() => {
+    if (!isAndroidApp() || !session || isLocked || !backgroundAvailable()) return;
+    const push = () => {
+      if (erasingRef.current) return;
+      const room = wsRelay.roomDetails();
+      if (!room) return;
+      roomSet({ ...room, disguised, noticeText: tr('New message') });
+    };
+    push();
+    const offStatus = wsRelay.subscribeStatus(status => {
+      if (status === 'connected') push();
+    });
+    const offMessages = wsRelay.subscribe((msg: any) => {
+      if (msg?.type === 'REPLAY_COMPLETE' && !msg.more) push();
+    });
+    const offShown = onShownChange(shown => {
+      if (!shown) push();
+    });
+    window.addEventListener(BEFORE_LOCK_EVENT, push);
+    return () => {
+      offStatus();
+      offMessages();
+      offShown();
+      window.removeEventListener(BEFORE_LOCK_EVENT, push);
+    };
+  }, [session, isLocked, disguised, locale]);
 
   useEffect(
     () =>
@@ -958,6 +1011,32 @@ export const App: React.FC = () => {
             m.id !== msg.correlationId ? m : ackedCopy(m, prev.activeUser, at, prev.partnerReadAt || 0)
           )
         }));
+      }),
+    []
+  );
+
+  // Our messages on her phone, said by its listener while Two was closed or
+  // locked there (core/background), through the relay. Two grey ticks, the
+  // same as her CHAT_DELIVERED gives - never blue: only her opening the chat
+  // says she has read them. When, for their Info, is the relay's.
+  useEffect(
+    () =>
+      wsRelay.subscribe((msg: any) => {
+        if (msg?.type !== 'REACHED') return;
+        const byTime = reachedByTime(msg.reached);
+        if (!byTime.size) return;
+        setState(prev => {
+          let messages = prev.messages;
+          let changed = false;
+          byTime.forEach((ids, at) => {
+            const next = applyDelivered(messages, prev.activeUser, ids, at);
+            if (next) {
+              messages = next;
+              changed = true;
+            }
+          });
+          return changed ? { ...prev, messages } : prev;
+        });
       }),
     []
   );
@@ -1360,6 +1439,11 @@ export const App: React.FC = () => {
             ) {
               deliveredQueueRef.current.add(incoming.id);
               if (!msg.replay) flushDelivered();
+              // Arrived now with Two off the screen: the phone may put up its
+              // wordless "New message" - only if it was switched on in
+              // Settings, and never behind the calculator. One held for
+              // later is not news yet.
+              if (!msg.replay && !held && !isShown() && !isCamouflagedRef.current) newMessageNotice();
             }
             setState(prev => {
               // Arriving twice must not mean appearing twice.
@@ -4828,6 +4912,10 @@ export const App: React.FC = () => {
    * sit behind the Tools card "Quick Exit", one tap and no question.
    */
   const handleEmergencyExit = () => {
+    // The room details the phone kept for Two in the background go first, and
+    // nothing hands them back while the page reloads (core/background).
+    erasingRef.current = true;
+    roomClear();
     // Wipe the encrypted vault too, or the panic button leaves everything behind.
     updateWidget(null);
     clearState();
@@ -5005,6 +5093,9 @@ export const App: React.FC = () => {
       danger: true
     });
     if (sure) {
+      // Before the relay goes: once the room details are gone, the phone has
+      // nothing to listen with when this page says its relay is off.
+      roomClear();
       updateWidget(null);
       // Kept for "Rejoin": coming back is what this message promises. With a
       // PIN it is kept inside the vault, with everything else - never in plain
@@ -5111,6 +5202,9 @@ export const App: React.FC = () => {
         danger: true
       });
       if (!sure) return;
+      // The phone's room details too, kept outside the vault (core/background).
+      erasingRef.current = true;
+      roomClear();
       updateWidget(null);
       destroyVault();
       disableFingerprint();
@@ -6048,6 +6142,12 @@ export const App: React.FC = () => {
       {updateOffer && !isLocked && !isCamouflaged && callState.phase === 'idle' && (
         <UpdatePrompt update={updateOffer} onClose={() => setUpdateOffer(null)} />
       )}
+
+      {/* Asked once each, on the phone: battery, then this brand's own
+          Autostart screen. Never over the disguise, a call or another question. */}
+      <BackgroundCards
+        active={!!session && !isLocked && pageVisible && !disguised && callState.phase === 'idle' && !updateOffer && !roleClash}
+      />
 
       {callOverlay}
 

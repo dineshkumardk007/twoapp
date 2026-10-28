@@ -68,6 +68,10 @@ app.get('/health', async (req, res) => {
     pending_writes: db.pendingCount,
     // Whether calls can fall back to a relay when a direct route is blocked.
     turn: turnConfigured ? 'configured' : 'off',
+    // Whether a phone may leave a background listener here, one that tells
+    // the partner a message arrived. A phone that does not see this keeps no
+    // listener at all, so an older relay costs it nothing.
+    receipts: true,
     // Pairing codes are typed by the couple and never reach this server, so the
     // keys are derived somewhere the operator cannot see. Records arrive and
     // are stored as ciphertext.

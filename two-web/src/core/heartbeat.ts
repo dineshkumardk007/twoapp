@@ -24,6 +24,25 @@ export const ANSWER_WITHIN_MS = 6_000;
 /** Heartbeats in a row with no answer before the socket is replaced. */
 export const MISSES_BEFORE_DEAD = 2;
 
+/** How often an open socket sends its PING. */
+export const HEARTBEAT_MS = 25_000;
+
+/**
+ * Whether this heartbeat comes far later than it should have: the phone held
+ * the page's timers back (Two in the background, the screen off) and has only
+ * now let them run.
+ *
+ * A late heartbeat cannot judge the PING before it. That PING may have been
+ * answered while the page was held, with the answer still waiting to be
+ * handed over, so counting it as missed would drop a socket that works. It
+ * asks again instead (checkAlive in core/ws), and a socket that does not
+ * answer that is replaced - which is what keeps Two connected in the
+ * background without a timer of its own.
+ */
+export function isLateBeat(last: number, now: number): boolean {
+  return last > 0 && now - last > 3 * HEARTBEAT_MS;
+}
+
 export interface HeartbeatLook {
   /** Bytes the socket holds that have not gone yet (WebSocket.bufferedAmount). */
   buffered: number;

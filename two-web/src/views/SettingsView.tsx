@@ -4,7 +4,7 @@ import { AUTO_LOCK_CHOICES, AutoLockSetting } from '../core/autoLock';
 import { generatePairingCode, isPlausiblePairingCode, extractPairingCode, findTwoCode, generateJoinPhrase, checkJoinPhrase, getDeviceId } from '../core/space';
 import { SpaceState } from '../core/storage';
 import { ThemeMode } from '../types';
-import { Locale, OFFERED_LOCALES, getTranslation } from '../core/i18n';
+import { Locale, OFFERED_LOCALES, getTranslation, tr } from '../core/i18n';
 import { VaultBackupModal } from '../components/VaultBackupModal';
 import { Shield, Download, Trash2, Lock, KeyRound, Globe, Calculator, ExternalLink, Link2, LogOut, Copy, Check, Share2, RefreshCw, Moon, Sun, Smartphone, Fingerprint, Heart } from 'lucide-react';
 import { APPEARANCE_CHOICES, Appearance, readAppearance, writeAppearance } from '../core/appearance';
@@ -20,6 +20,13 @@ import { CrashNoteCard } from '../components/CrashNoteCard';
 import { askConfirm, showNotice } from '../core/dialog';
 import { resolveRelayUrl } from '../core/ws';
 import { takeBackupRequest } from '../core/backupReminder';
+import {
+  backgroundAvailable,
+  openNotificationSettings,
+  readBackgroundState,
+  setNotice as setBackgroundNotice
+} from '../core/background';
+import { onShownChange } from '../core/shown';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -423,6 +430,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const t = getTranslation(currentLocale);
+
+  /**
+   * The silent "New message" notice while Two is closed (core/background).
+   * Only in an app that can keep Two connected in the background. Off until
+   * it is turned on here - never on by itself - and turning it on is the one
+   * thing that asks Android to allow notifications.
+   */
+  const [noticeOffered] = useState(backgroundAvailable);
+  const [notice, setNoticeShown] = useState(() => {
+    const s = readBackgroundState();
+    return { on: !!s?.notify, sdk: s?.sdk ?? 0, blocked: false };
+  });
+  const [noticeBusy, setNoticeBusy] = useState(false);
+  // Back from the phone's settings: read again what it now allows.
+  useEffect(() => {
+    if (!noticeOffered) return;
+    return onShownChange(shown => {
+      if (!shown) return;
+      const s = readBackgroundState();
+      if (!s) return;
+      setNoticeShown(prev => ({ on: s.notify, sdk: s.sdk, blocked: prev.blocked && !s.noticeAllowed }));
+    });
+  }, [noticeOffered]);
+  const toggleNotice = async (on: boolean) => {
+    if (noticeBusy) return;
+    setNoticeBusy(true);
+    try {
+      const answer = await setBackgroundNotice(on);
+      // Refused for good: Android no longer asks, only its settings can allow it.
+      setNoticeShown(prev => ({ ...prev, on: answer.on, blocked: on && !answer.granted && !answer.canAsk }));
+    } finally {
+      setNoticeBusy(false);
+    }
+  };
 
   const handleExportData = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -900,6 +941,52 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   className="mt-1 h-4 w-4 shrink-0 accent-linen-accent cursor-pointer"
                 />
               </label>
+            </div>
+          )}
+
+          {/* "New message" while Two is closed.
+              No name, no words of the message, no sound, and nothing at all
+              while the calculator is up or set to open: the phone decides
+              that, since the page may be long gone when one arrives. Many
+              messages are one notice. */}
+          {noticeOffered && (
+            <div className="pt-4 mt-4 border-t border-linen-border/60 space-y-2">
+              <label className="flex items-start justify-between gap-3 cursor-pointer">
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-linen-primary">
+                    {tr('New message notice')}
+                  </span>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-linen-secondary">
+                    {tr('Silent. Shows only "New message", never who or what. Not while the calculator is on.')}
+                  </span>
+                  {notice.on && notice.sdk >= 33 && (
+                    <span className="mt-1 block text-[11px] leading-relaxed text-linen-secondary">
+                      {tr('Your phone also lists a quiet "Syncing" entry with it.')}
+                    </span>
+                  )}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={notice.on}
+                  disabled={noticeBusy}
+                  onChange={e => void toggleNotice(e.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-linen-accent cursor-pointer"
+                />
+              </label>
+              {notice.blocked && !notice.on && (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] leading-relaxed text-linen-secondary">
+                    {tr('Notifications are off for Two in phone settings.')}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => openNotificationSettings()}
+                    className="shrink-0 rounded-full border border-linen-border px-3 py-1.5 text-[11px] font-medium text-linen-primary transition-colors hover:bg-linen-variant cursor-pointer"
+                  >
+                    {tr('Open settings')}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
