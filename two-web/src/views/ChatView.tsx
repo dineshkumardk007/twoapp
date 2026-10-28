@@ -2010,7 +2010,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 onClick={handleSendText}
                 disabled={!inputText.trim()}
                 aria-label={tr('Send')}
-                className="h-[42px] w-[42px] shrink-0 flex items-center justify-center rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 disabled:opacity-40 transition-all"
+                className="h-[42px] w-[42px] shrink-0 flex items-center justify-center rounded-xl bg-linen-primary text-linen-surface hover:opacity-90 disabled:opacity-40 transition-opacity"
               >
                 <Send className="w-4 h-4" />
               </button>

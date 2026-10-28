@@ -62,7 +62,7 @@ export const GroupDock: React.FC<GroupDockProps> = ({
   return (
     <div
       ref={barRef}
-      className="dock-bar fixed inset-x-0 bottom-0 z-40 border-t border-white/20 bg-linen-surface/70 backdrop-blur-xl"
+      className="dock-bar fixed inset-x-0 bottom-0 z-40 border-t border-white/20 bar-panel-70"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="mx-auto flex items-stretch">

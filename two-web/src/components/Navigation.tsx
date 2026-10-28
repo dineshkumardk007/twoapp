@@ -225,7 +225,9 @@ export const Navigation: React.FC<NavigationProps> = ({
 
     return (
       <>
-        <header className="app-topbar sticky top-0 z-40 border-b border-linen-border/60 bg-linen-bg/75 backdrop-blur-xl">
+        {/* Solid, with the sky's light drawn in, not frosted glass (index.css,
+            Glass on a phone): the blur was redone on every frame of a scroll. */}
+        <header className="app-topbar sticky top-0 z-40 border-b border-linen-border/60 sky-bar">
           <div className="flex h-11 items-center justify-between gap-2 px-3">
             {/* Left: the product name, then the link's state - two things, the
                 way the website has always had them. They were briefly merged
@@ -295,7 +297,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   return (
     <>
-      <header className="border-b border-linen-border bg-linen-surface/80 backdrop-blur-md sticky top-0 z-40">
+      <header className="border-b border-linen-border bar-panel-80 sticky top-0 z-40">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Brand & Privacy Status */}
@@ -400,7 +402,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           {onOpenDirectory && (
             <button
               onClick={onOpenDirectory}
-              className="flex items-center px-2.5 py-2 text-xs font-semibold rounded-lg whitespace-nowrap bg-linen-variant/90 hover:bg-linen-variant text-linen-primary border border-linen-border/80 transition-all shrink-0 cursor-pointer shadow-2xs"
+              className="flex items-center px-2.5 py-2 text-xs font-semibold rounded-lg whitespace-nowrap bg-linen-variant/90 hover:bg-linen-variant text-linen-primary border border-linen-border/80 transition-colors shrink-0 cursor-pointer shadow-2xs"
               title={tr('Open Sanctuary Explorer')}
             >
               <LayoutGrid className="w-3.5 h-3.5 mr-1 text-linen-accent" />
@@ -416,7 +418,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               <button
                 key={tab.id}
                 onClick={() => onSelectTab(tab.id)}
-                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-all relative ${
+                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-[color,background-color,box-shadow] relative ${
                   isActive
                     ? 'bg-linen-primary text-linen-surface shadow-sm'
                     : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'

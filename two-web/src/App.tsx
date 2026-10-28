@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, lazy, Suspense, startTransition, useMemo, useSyncExternalStore } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, forStorage, upgradeState, SpaceState, MAX_CHAT_MESSAGES } from './core/storage';
-import { AppDock } from './components/AppDock';
-import { GroupDock } from './components/GroupDock';
+import { AppDock as AppDockBar } from './components/AppDock';
+import { GroupDock as GroupDockBar } from './components/GroupDock';
+import { sameOr, useStableHandlers } from './core/stableHandlers';
 import {
   GROUP_CHAT,
   GROUP_CHAT_EDIT,
@@ -54,8 +55,10 @@ import {
   isVoiceRecorderAskingForMic,
   voiceFieldsOf,
   voiceNoteLabel,
-  type VoiceFields
+  type VoiceFields,
+  type VoiceNote
 } from './core/voice';
+import type { GroupSendExtras } from './views/GroupChatView';
 import {
   hasEncryptedVault,
   unlockVault,
@@ -143,7 +146,7 @@ import {
   RepairStatus,
   KintsugiVesselItem
 } from './types';
-import { Navigation } from './components/Navigation';
+import { Navigation as NavigationBar } from './components/Navigation';
 import { CalculatorDecoy } from './components/CalculatorDecoy';
 import { SensoryPulseOverlay, triggerGlobalPulse } from './components/SensoryPulseOverlay';
 import { playLetterChime, triggerHaptic } from './core/audioAlerts';
@@ -388,7 +391,12 @@ function chatFromWire(parsed: any): ChatMessage {
 const AdventuresView = lazy(() => import('./views/AdventuresView').then(m => ({ default: m.AdventuresView })));
 const CanvasOfUsView = lazy(() => import('./views/CanvasOfUsView').then(m => ({ default: m.CanvasOfUsView })));
 const CareCompassView = lazy(() => import('./views/CareCompassView').then(m => ({ default: m.CareCompassView })));
-const ChatView = lazy(() => import('./views/ChatView').then(m => ({ default: m.ChatView })));
+// The screens you sit on while things keep arriving - the chats, Home, and
+// the bars around them - are drawn again only when what they are handed
+// changes (React.memo), not each time App is: a "here" from her phone, her
+// typing, a toast. Their handlers come from useStableHandlers, or a new
+// function each render would count as a change.
+const ChatView = lazy(() => import('./views/ChatView').then(m => ({ default: React.memo(m.ChatView) })));
 const ChoreSplitView = lazy(() => import('./views/ChoreSplitView').then(m => ({ default: m.ChoreSplitView })));
 const CoPresenceView = lazy(() => import('./views/CoPresenceView').then(m => ({ default: m.CoPresenceView })));
 const ConstellationView = lazy(() => import('./views/ConstellationView').then(m => ({ default: m.ConstellationView })));
@@ -397,7 +405,7 @@ const CoordinatesMapView = lazy(() => import('./views/CoordinatesMapView').then(
 const CycleView = lazy(() => import('./views/CycleView').then(m => ({ default: m.CycleView })));
 const DecksView = lazy(() => import('./views/DecksView').then(m => ({ default: m.DecksView })));
 const HearthGardenView = lazy(() => import('./views/HearthGardenView').then(m => ({ default: m.HearthGardenView })));
-const HomeView = lazy(() => import('./views/HomeView').then(m => ({ default: m.HomeView })));
+const HomeView = lazy(() => import('./views/HomeView').then(m => ({ default: React.memo(m.HomeView) })));
 const IntuitionGameView = lazy(() => import('./views/IntuitionGameView').then(m => ({ default: m.IntuitionGameView })));
 const JournalView = lazy(() => import('./views/JournalView').then(m => ({ default: m.JournalView })));
 const KintsugiMomentsView = lazy(() => import('./views/KintsugiMomentsView').then(m => ({ default: m.KintsugiMomentsView })));
@@ -414,7 +422,7 @@ const SanctuaryDirectoryModal = lazy(() => import('./components/SanctuaryDirecto
 const ScrapbookView = lazy(() => import('./views/ScrapbookView').then(m => ({ default: m.ScrapbookView })));
 const ScratchCardsView = lazy(() => import('./views/ScratchCardsView').then(m => ({ default: m.ScratchCardsView })));
 const GroupsView = lazy(() => import('./views/GroupsView').then(m => ({ default: m.GroupsView })));
-const GroupChatView = lazy(() => import('./views/GroupChatView').then(m => ({ default: m.GroupChatView })));
+const GroupChatView = lazy(() => import('./views/GroupChatView').then(m => ({ default: React.memo(m.GroupChatView) })));
 const SettingsView = lazy(() => import('./views/SettingsView').then(m => ({ default: m.SettingsView })));
 const SoftLandingView = lazy(() => import('./views/SoftLandingView').then(m => ({ default: m.SoftLandingView })));
 const StateOfUnionView = lazy(() => import('./views/StateOfUnionView').then(m => ({ default: m.StateOfUnionView })));
@@ -422,6 +430,9 @@ const StoryTourModal = lazy(() => import('./components/StoryTourModal').then(m =
 const TimeCapsuleView = lazy(() => import('./views/TimeCapsuleView').then(m => ({ default: m.TimeCapsuleView })));
 const TimelineView = lazy(() => import('./views/TimelineView').then(m => ({ default: m.TimelineView })));
 const WhisperMemosView = lazy(() => import('./views/WhisperMemosView').then(m => ({ default: m.WhisperMemosView })));
+const AppDock = React.memo(AppDockBar);
+const GroupDock = React.memo(GroupDockBar);
+const Navigation = React.memo(NavigationBar);
 
 /**
  * Held while a screen's chunk arrives.
@@ -436,6 +447,8 @@ const ScreenFallback: React.FC = () => (
 );
 
 export const App: React.FC = () => {
+  // Handlers for the screens drawn only when what they show changes (above).
+  const stable = useStableHandlers();
   const [state, setState] = useState<SpaceState>(loadState);
   /**
    * False while photos and voice memos are still being read back out of
@@ -778,6 +791,11 @@ export const App: React.FC = () => {
    * they said it (theirs, 0 from a phone on the version before), per group.
    */
   const [groupTyping, setGroupTyping] = useState<Record<string, Record<string, { until: number; saidAt: number }>>>({});
+  // Who is typing and the unread counts, as last handed to the group's screen
+  // and its bar: kept while they say the same, so the once-a-second tick that
+  // lets "typing…" lapse does not draw the whole group again.
+  const groupTypingIdsRef = useRef<string[]>([]);
+  const unreadByGroupRef = useRef<Record<string, number>>({});
   const [passphraseAttempt, setPassphraseAttempt] = useState('');
 
   // The sounds heard most - a message, a letter, a heartbeat, a call - are
@@ -1098,7 +1116,13 @@ export const App: React.FC = () => {
         // History fetched again after a seat switch: only what can safely be
         // applied twice. See CATCH_UP_TYPES.
         if (msg.catchUp && !CATCH_UP_TYPES.has(record.type)) return;
-        setLastSyncedAt(Date.now());
+        // Settings shows it to the second, so a burst of history arriving in
+        // one second is one change, not one more render of everything for
+        // each record.
+        const syncedAt = Date.now();
+        setLastSyncedAt(prev =>
+          prev !== null && Math.floor(prev / 1000) === Math.floor(syncedAt / 1000) ? prev : syncedAt
+        );
         // Anything arriving proves a partner exists on the other end.
         setState(prev => (prev.partnerEverSeen ? prev : { ...prev, partnerEverSeen: true }));
 
@@ -1680,10 +1704,11 @@ export const App: React.FC = () => {
             if (record.authorId === state.activeUser) return;
             const at = Number(parsed.at) || 0;
             if (at > 0) {
-              setState(prev => ({
-                ...prev,
-                partnerLastSeen: Math.max(prev.partnerLastSeen || 0, at)
-              }));
+              // An older beat changes nothing - history on reconnecting is
+              // full of them - and is no new state to save and draw again.
+              setState(prev =>
+                at > (prev.partnerLastSeen || 0) ? { ...prev, partnerLastSeen: at } : prev
+              );
               // All a phone on the version before says about being on screen
               // (core/lastSeen). Heard now, it is now by this clock; from
               // history, her time, and never later than now. One from this
@@ -3513,6 +3538,18 @@ export const App: React.FC = () => {
     () => unseen(state.activity || [], activityLooked, shownUnread),
     [state.activity, activityLooked, shownUnread]
   );
+  // Home's "her phone is on an older version" card. Made once per change,
+  // not as a new object each render, which would draw Home again each time.
+  const partnerUpdate = useMemo(() => {
+    const mine = appVersion();
+    const theirs = state.partnerApp;
+    if (!mine || !theirs || theirs.code >= mine.code) return undefined;
+    if (state.partnerUpdateDismissed === theirs.code) return undefined;
+    return {
+      version: theirs.name,
+      onDismiss: () => setState(prev => ({ ...prev, partnerUpdateDismissed: theirs.code }))
+    };
+  }, [state.partnerApp, state.partnerUpdateDismissed]);
 
   const handleSelectTab = (tabId: string) => {
     // Screens load as separate chunks, so switching tab can suspend. Marked as
@@ -5097,7 +5134,7 @@ export const App: React.FC = () => {
 
     return (
       <div className="min-h-screen app-min-vh app-canvas flex items-center justify-center p-4">
-        <div className="max-w-xs w-full bg-linen-surface/70 backdrop-blur-xl border border-linen-border rounded-[32px] p-8 shadow-xs text-center space-y-6">
+        <div className="max-w-xs w-full bg-linen-surface/70 border border-linen-border rounded-[32px] p-8 shadow-xs text-center space-y-6">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-linen-primary text-linen-surface shadow-glow">
             <Lock className="w-7 h-7" />
           </div>
@@ -5333,7 +5370,18 @@ export const App: React.FC = () => {
   if (activeGroup) {
     // Derived, never stored: a timestamp older than the window simply stops
     // counting, so nothing has to remember to delete it.
-    const typingIds = typingNow(groupTyping[activeGroup.id], Date.now());
+    const typingIds = (groupTypingIdsRef.current = sameOr(
+      groupTypingIdsRef.current,
+      typingNow(groupTyping[activeGroup.id], Date.now())
+    ));
+    // Its handlers by the group as well as by name: a group left behind
+    // puts its half-typed words down as it goes, and they must go to it,
+    // not to the group now open.
+    const inGroup = `group:${activeGroup.id}:`;
+    const unreadByGroup = (unreadByGroupRef.current = sameOr(
+      unreadByGroupRef.current,
+      Object.fromEntries(state.groups.map(g => [g.id, unreadCount(g, myMemberId())]))
+    ));
     return (
       <LocaleContext.Provider value={locale}>
       <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
@@ -5353,22 +5401,24 @@ export const App: React.FC = () => {
               connected={groupStatuses[activeGroup.id] === 'connected'}
               typingIds={typingIds}
               shareReceipts={shareReceipts}
-              onSend={(text, extras) => handleSendGroupMessage(activeGroup.id, text, extras)}
-              onSendVoice={(note, replyTo) =>
+              onSend={stable(inGroup + 'send', (text: string, extras?: GroupSendExtras) =>
+                handleSendGroupMessage(activeGroup.id, text, extras)
+              )}
+              onSendVoice={stable(inGroup + 'sendVoice', (note: VoiceNote, replyTo?: GroupReplyRef) =>
                 handleSendGroupMessage(activeGroup.id, voiceNoteLabel(note.durationSeconds), {
                   voice: voiceFieldsOf(note),
                   ...(replyTo ? { replyTo } : {})
                 })
-              }
-              onReact={(messageId, emoji) => handleGroupReact(activeGroup.id, messageId, emoji)}
-              onEditMessage={(messageId, text) => handleGroupEdit(activeGroup.id, messageId, text)}
-              onUnsendMessage={(messageId) => void handleGroupUnsend(activeGroup.id, messageId)}
-              onDeleteForMe={(messageId) => void handleGroupDeleteForMe(activeGroup.id, messageId)}
-              onVoicePlayed={(messageId) => handleGroupVoicePlayed(activeGroup.id, messageId)}
+              )}
+              onReact={stable(inGroup + 'react', (messageId: string, emoji: string) => handleGroupReact(activeGroup.id, messageId, emoji))}
+              onEditMessage={stable(inGroup + 'edit', (messageId: string, text: string) => handleGroupEdit(activeGroup.id, messageId, text))}
+              onUnsendMessage={stable(inGroup + 'unsend', (messageId: string) => void handleGroupUnsend(activeGroup.id, messageId))}
+              onDeleteForMe={stable(inGroup + 'deleteForMe', (messageId: string) => void handleGroupDeleteForMe(activeGroup.id, messageId))}
+              onVoicePlayed={stable(inGroup + 'voicePlayed', (messageId: string) => handleGroupVoicePlayed(activeGroup.id, messageId))}
               draft={state.chatDrafts?.[activeGroup.id]}
-              onSaveDraft={draft => handleSaveDraft(activeGroup.id, draft)}
+              onSaveDraft={stable(inGroup + 'saveDraft', (draft: ChatDraft | null) => handleSaveDraft(activeGroup.id, draft))}
               callInProgress={callState.phase !== 'idle'}
-              onTyping={typing => {
+              onTyping={stable(inGroup + 'typing', (typing: boolean) => {
                 if (!readShareReceipts()) return;
                 // `stops`: this phone says when it stops (core/typing).
                 signalToGroup(activeGroup.id, typing ? TYPING_SIGNAL : TYPING_STOP_SIGNAL, {
@@ -5376,15 +5426,15 @@ export const App: React.FC = () => {
                   at: Date.now(),
                   stops: true
                 });
-              }}
+              })}
               onRename={
                 activeGroup.founder
-                  ? (name) => handleRenameGroup(activeGroup.id, name)
+                  ? stable(inGroup + 'rename', (name: string) => handleRenameGroup(activeGroup.id, name))
                   : undefined
               }
-              onResolveStuck={(messageId, action) =>
+              onResolveStuck={stable(inGroup + 'resolveStuck', (messageId: string, action: 'retry' | 'delete') =>
                 handleResolveStuck({ groupId: activeGroup.id }, messageId, action)
-              }
+              )}
             />
           </Suspense>
         </main>
@@ -5415,11 +5465,9 @@ export const App: React.FC = () => {
         <GroupDock
           groups={state.groups}
           activeGroupId={activeGroup.id}
-          onSelectGroup={(id) => setActiveGroupId(id)}
-          onLeaveGroupMode={() => setActiveGroupId(null)}
-          unreadByGroup={Object.fromEntries(
-            state.groups.map(g => [g.id, unreadCount(g, myMemberId())])
-          )}
+          onSelectGroup={stable('groupDock:select', (id: string) => setActiveGroupId(id))}
+          onLeaveGroupMode={stable('groupDock:leave', () => setActiveGroupId(null))}
+          unreadByGroup={unreadByGroup}
         />
 
         <SensoryPulseOverlay activeUser={state.activeUser} partnerName={state.partnerName} />
@@ -5441,23 +5489,23 @@ export const App: React.FC = () => {
         openHeartSignal={heartSignal}
         barHidden={chrome.barHidden}
         // The card goes to the chat, and so do you, to see it arrive.
-        onSendNeed={text => {
+        onSendNeed={stable('nav:sendNeed', (text: string) => {
           handleSendMessage(text, true);
           handleSelectTab('chat');
-        }}
+        })}
         currentTab={currentTab}
-        onSelectTab={handleSelectTab}
+        onSelectTab={stable('selectTab', handleSelectTab)}
         activeUser={state.activeUser}
-        onToggleActiveUser={toggleActiveUser}
-        onQuickExit={handleQuickExit}
+        onToggleActiveUser={stable('nav:toggleActiveUser', toggleActiveUser)}
+        onQuickExit={stable('quickExit', handleQuickExit)}
         hasPin={!!vaultKey || hasEncryptedVault()}
-        onToggleCamouflage={() => setIsCamouflaged(true)}
-        onOpenStoryTour={() => setShowStoryTour(true)}
-        onTriggerPulse={() => triggerGlobalPulse(heartKind('warm_hug').note, 'warm_hug')}
+        onToggleCamouflage={stable('nav:camouflage', () => setIsCamouflaged(true))}
+        onOpenStoryTour={stable('nav:openStoryTour', () => setShowStoryTour(true))}
+        onTriggerPulse={stable('nav:pulse', () => triggerGlobalPulse(heartKind('warm_hug').note, 'warm_hug'))}
         locale={locale}
         relayStatus={relayStatus}
         unreadChatCount={shownUnread}
-        onOpenDirectory={() => setShowDirectoryModal(true)}
+        onOpenDirectory={stable('nav:openDirectory', () => setShowDirectoryModal(true))}
         partnerName={state.partnerName}
         vaultName={state.vaultName}
         partnerOnline={partnerShownOnline}
@@ -5510,40 +5558,31 @@ export const App: React.FC = () => {
         {currentTab === 'home' && (
           <HomeView
             state={state}
-            onUpdateReport={handleUpdateReport}
-            onToggleUserFlag={handleToggleUserFlag}
+            onUpdateReport={stable('updateReport', handleUpdateReport)}
+            onToggleUserFlag={stable('toggleUserFlag', handleToggleUserFlag)}
             // handleSelectTab, not setCurrentTab: arriving from the activity
             // card has to mark the destination read, or the line you just
             // followed would still be sitting there when you came back.
-            onNavigate={handleSelectTab}
+            onNavigate={stable('selectTab', handleSelectTab)}
             // An ordinary message, not a need card: it is a question to
             // talk over, and arrived as "I need: Daily Question [DEEP]".
-            onSendQuestion={(text) => handleSendMessage(text, false)}
-            onAnswerQuestion={handleAnswerQuestion}
-            onSetOurDates={handleSetOurDates}
-            onSaveComingUp={handleSaveComingUp}
+            onSendQuestion={stable('sendQuestion', (text: string) => handleSendMessage(text, false))}
+            onAnswerQuestion={stable('answerQuestion', handleAnswerQuestion)}
+            onSetOurDates={stable('setOurDates', handleSetOurDates)}
+            onSaveComingUp={stable('saveComingUp', handleSaveComingUp)}
             onOpenTour={
               showTourCard
-                ? () => {
+                ? stable('openTour', () => {
                     setShowTourCard(false);
                     setShowStoryTour(true);
-                  }
+                  })
                 : undefined
             }
-            onAddMilestone={handleAddMilestone}
-            onSaveComfortBox={handleSaveComfortBox}
-            onSetStatus={handleSetStatus}
+            onAddMilestone={stable('addMilestone', handleAddMilestone)}
+            onSaveComfortBox={stable('saveComfortBox', handleSaveComfortBox)}
+            onSetStatus={stable('setStatus', handleSetStatus)}
             partnerNews={partnerNews}
-            partnerUpdate={(() => {
-              const mine = appVersion();
-              const theirs = state.partnerApp;
-              if (!mine || !theirs || theirs.code >= mine.code) return undefined;
-              if (state.partnerUpdateDismissed === theirs.code) return undefined;
-              return {
-                version: theirs.name,
-                onDismiss: () => setState(prev => ({ ...prev, partnerUpdateDismissed: theirs.code }))
-              };
-            })()}
+            partnerUpdate={partnerUpdate}
           />
         )}
 
@@ -5561,14 +5600,16 @@ export const App: React.FC = () => {
           <ChatView
             messages={state.messages}
             activeUser={state.activeUser}
-            onSendMessage={handleSendMessage}
-            onResolveStuck={(messageId, action) => handleResolveStuck({}, messageId, action)}
-            onStartCall={() => void callEngineRef.current?.start()}
+            onSendMessage={stable('chat:send', handleSendMessage)}
+            onResolveStuck={stable('chat:resolveStuck', (messageId: string, action: 'retry' | 'delete') =>
+              handleResolveStuck({}, messageId, action)
+            )}
+            onStartCall={stable('chat:startCall', () => void callEngineRef.current?.start())}
             callInProgress={callState.phase !== 'idle'}
             // The bar is not above the chat in the app, so its Heart and the
             // Tools' Quick Exit are in the chat's ⋮ instead.
-            onOpenHeart={() => setHeartSignal(n => n + 1)}
-            onQuickExit={handleQuickExit}
+            onOpenHeart={stable('chat:openHeart', () => setHeartSignal(n => n + 1))}
+            onQuickExit={stable('quickExit', handleQuickExit)}
             flush={chrome.flush}
             // Until their name arrives, the stand-in in this phone's language (shown, never sent).
             partnerName={state.partnerName && state.partnerName !== 'Partner' ? state.partnerName : tr('Partner')}
@@ -5581,7 +5622,7 @@ export const App: React.FC = () => {
             readAt={chatEntryRef.current.readAt}
             openKey={chatEntryRef.current.key}
             draft={state.chatDrafts?.couple}
-            onSaveDraft={draft => handleSaveDraft('couple', draft)}
+            onSaveDraft={stable('chat:saveDraft', (draft: ChatDraft | null) => handleSaveDraft('couple', draft))}
             relayStatus={relayStatus}
             partnerOnline={partnerShownOnline}
             // Reciprocal, as every messenger does it: hiding your own last
@@ -5589,19 +5630,19 @@ export const App: React.FC = () => {
             partnerLastSeen={shareLastSeen ? state.partnerLastSeen : 0}
             partnerTyping={partnerTypingAt > 0}
             shareReceipts={shareReceipts}
-            onVoiceHeard={handleVoiceHeard}
-            onReact={handleReactToMessage}
-            onEditMessage={handleEditMessage}
-            onUnsendMessage={messageId => void handleUnsendMessage(messageId)}
-            onDeleteForMe={messageId => void handleDeleteForMe(messageId)}
+            onVoiceHeard={stable('chat:voiceHeard', handleVoiceHeard)}
+            onReact={stable('chat:react', handleReactToMessage)}
+            onEditMessage={stable('chat:edit', handleEditMessage)}
+            onUnsendMessage={stable('chat:unsend', (messageId: string) => void handleUnsendMessage(messageId))}
+            onDeleteForMe={stable('chat:deleteForMe', (messageId: string) => void handleDeleteForMe(messageId))}
             deletedForMe={state.chatDeletedForMe}
             // Said by the same version that says CHAT_DELIVERED: an older
             // phone never says a message reached it, and its Info says why.
             partnerSaysDelivered={!!state.partnerApp?.can?.includes(CAN_SAY_AWAY)}
             pins={state.chatPins}
-            onPinMessage={handlePinMessage}
-            onViewOnceOpened={handleViewOnceOpened}
-            onTyping={typing => {
+            onPinMessage={stable('chat:pin', handlePinMessage)}
+            onViewOnceOpened={stable('chat:viewOnceOpened', handleViewOnceOpened)}
+            onTyping={stable('chat:typing', (typing: boolean) => {
               // Read straight from the setting rather than the render's copy:
               // off must mean nothing leaves this device, immediately.
               if (!readShareReceipts()) return;
@@ -5613,7 +5654,7 @@ export const App: React.FC = () => {
                 stops: true,
                 device: getDeviceId()
               });
-            }}
+            })}
           />
         )}
 
@@ -6047,7 +6088,7 @@ export const App: React.FC = () => {
       {inApp && (
         <AppDock
           currentTab={currentTab}
-          onSelectTab={handleSelectTab}
+          onSelectTab={stable('selectTab', handleSelectTab)}
           unreadChatCount={shownUnread}
           draftInChat={!!state.chatDrafts?.couple}
           dotted={partnerDots}

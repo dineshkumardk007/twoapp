@@ -512,7 +512,7 @@ const HeartCard: React.FC<{
     <div
       role="status"
       onClick={onClose}
-      className="w-72 max-w-full rounded-3xl border border-linen-border bg-linen-surface/95 backdrop-blur-md p-6 shadow-2xl flex flex-col items-center text-center cursor-pointer"
+      className="w-72 max-w-full rounded-3xl border border-linen-border bg-linen-surface/95 p-6 shadow-2xl flex flex-col items-center text-center cursor-pointer"
     >
       <div className="w-14 h-14 rounded-full bg-linen-variant border border-linen-border flex items-center justify-center text-linen-accent">
         {card.emoji ? (

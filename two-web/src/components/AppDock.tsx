@@ -32,8 +32,9 @@ const PINNED = ['home', 'chat', 'groups', 'canvas', 'nightstand'];
 const LEGACY_FAVOURITES_KEY = 'two_dock_favourites_v1';
 
 /**
- * The app's bottom dock: a frosted bar of favourites that pulls up into every
- * destination.
+ * The app's bottom dock: a bar of favourites that pulls up into every
+ * destination. Solid, with the sky's light drawn in (index.css, sky-bar): it
+ * was frosted glass, blurred again on every frame the page scrolled under it.
  *
  * Only rendered inside the Android app. The website has room for a header and a
  * directory modal; a phone held one-handed does not, and reaching a top bar
@@ -297,7 +298,7 @@ export const AppDock: React.FC<AppDockProps> = ({
       {/* Resting bar */}
       <div
         ref={barRef}
-        className="dock-bar fixed inset-x-0 bottom-0 z-40 border-t border-linen-border/70 bg-linen-bg/75 backdrop-blur-xl"
+        className="dock-bar fixed inset-x-0 bottom-0 z-40 border-t border-linen-border/70 sky-bar sky-bar-bottom"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className={`mx-auto flex items-stretch ${isTablet ? 'max-w-3xl' : ''}`}>

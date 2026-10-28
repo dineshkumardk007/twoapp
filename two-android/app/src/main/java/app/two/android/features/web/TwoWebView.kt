@@ -968,6 +968,11 @@ fun TwoWebView(
                 // its own the same way (index.css, under `html.in-app`).
                 isVerticalScrollBarEnabled = false
                 isHorizontalScrollBarEnabled = false
+                // The page's own process stays as important as the app itself,
+                // on screen or not: a call carries on in this page with Two in
+                // the background. This is the WebView's default, written down
+                // so it is never waived when hidden to save memory.
+                setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false)
 
                 // A debug build may talk to a relay on this desk over plain
                 // ws://; the release app never needs anything insecure.
@@ -1241,6 +1246,10 @@ private fun applyBedside(activity: Activity, on: Boolean, brightness: Double) {
         controller.show(WindowInsetsCompat.Type.systemBars())
         attributes.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
     }
+    // The clock sits still all night: no fast refresh rate while it shows,
+    // and the fast one back after (SmoothDisplay).
+    SmoothDisplay.bedside = on
+    attributes.preferredRefreshRate = SmoothDisplay.wanted(activity)
     window.attributes = attributes
 }
 

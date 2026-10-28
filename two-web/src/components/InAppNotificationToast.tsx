@@ -403,7 +403,7 @@ const ToastCard: React.FC<ToastCardProps> = ({ notification, leaving, held, onCl
         e.preventDefault();
       }}
       onClick={() => onOpen(notification.tabId)}
-      className="bg-linen-surface/95 backdrop-blur-md border border-linen-border rounded-2xl p-3.5 shadow-lg flex items-center space-x-3 cursor-pointer hover:border-linen-accent transition-colors group touch-none select-none animate-in fade-in slide-in-from-top-full duration-300"
+      className="bg-linen-surface/95 border border-linen-border rounded-2xl p-3.5 shadow-lg flex items-center space-x-3 cursor-pointer hover:border-linen-accent transition-colors group touch-none select-none animate-in fade-in slide-in-from-top-full duration-300"
     >
       <div
         key={notification.id}

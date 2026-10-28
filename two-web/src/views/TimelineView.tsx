@@ -166,9 +166,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                       className={`w-full h-full object-cover transition-all duration-300 ${locked ? 'blur-xl grayscale scale-110' : ''}`}
                     />
 
-                    {/* Time Capsule Lock Screen */}
+                    {/* Time Capsule Lock Screen. A dim, not frosted glass: the
+                        photo under it is blurred already, and frosting on top
+                        was redone on every frame the list scrolled. */}
                     {locked && (
-                      <div className="no-remap absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-black/40 backdrop-blur-md text-center text-white">
+                      <div className="no-remap absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-black/40 text-center text-white">
                         <div className="p-3 rounded-full bg-white/20 mb-2">
                           <Lock className="w-6 h-6 text-white" />
                         </div>

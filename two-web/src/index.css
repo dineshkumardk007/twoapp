@@ -239,7 +239,11 @@ html.dark .bubble-quote {
    The light drifts across it on a layer of its own, moved with transform.
    It used to animate background-position, which no phone can hand to its
    graphics chip: the whole card was repainted on every frame, for as long as
-   Home was open, and scrolling Home shared the main thread with it. */
+   Home was open, and scrolling Home shared the main thread with it.
+
+   No will-change: the running animation already gives the layer its own
+   plane, and will-change would hold that plane - a card and a half across -
+   even with motion turned off, when nothing moves at all. */
 .aurora-hero {
   position: relative;
   isolation: isolate;
@@ -254,7 +258,6 @@ html.dark .bubble-quote {
   z-index: -1;
   background-image: var(--grad-hero);
   animation: aurora-drift 14s ease-in-out infinite alternate;
-  will-change: transform;
   pointer-events: none;
 }
 @keyframes aurora-drift {
@@ -432,6 +435,17 @@ html.dark .aurora-text {
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* Buttons, links and fields take a tap at once. `manipulation` tells the
+     browser no double tap is coming, so it never holds a tap back to see if
+     one is. The viewport already turns zoom off, but Android's "force enable
+     zoom" setting turns it back on, and with it that wait. Scrolling and
+     pinching are untouched. Inside :where(), with no weight of its own, so a
+     touch-none on a drag handle or a hold-to-record button still wins; a
+     slider is left out, it drags sideways itself. */
+  :where(button, a[href], [role='button'], [role='tab'], [role='switch'], [role='menuitem'], label, summary, select, textarea, input:not([type='range'])) {
+    touch-action: manipulation;
+  }
+
   body {
     margin: 0;
     padding: 0;
@@ -545,6 +559,113 @@ html.dark .aurora-text {
 .scroll-contain {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+/* The same for a list scrolling inside a pop-up or a sheet laid over the
+   screen: reaching its end used to carry the swipe on into the page beneath,
+   which then slid about behind the dim. */
+:where(.fixed.inset-0) :is(.overflow-y-auto, .overflow-auto, .overflow-y-scroll),
+.fixed.inset-0:is(.overflow-y-auto, .overflow-auto, .overflow-y-scroll) {
+  overscroll-behavior: contain;
+}
+
+/* ---------------------------------------------------------------------------
+   Glass, on a phone
+   ---------------------------------------------------------------------------
+   The bars and the pop-ups used to frost whatever lay under them
+   (backdrop-blur). The graphics chip has to blur that part of the screen
+   again on every frame anything beneath it moves - every frame of a scroll
+   under the top bar and the dock, every frame of a list scrolling inside a
+   pop-up - and on an everyday Android phone that is what made scrolling
+   stutter and taps answer late.
+
+   The top bar and the dock are now solid: the page colour with the sky's own
+   light painted in, as much of it as used to show through the glass (a
+   quarter, through 75% page colour). The light is drawn the size of the
+   screen and pinned to the bar's own edge, so it lines up with the sky
+   around it. The page used to show through, softly, as it passed under; now
+   it simply passes under. */
+.sky-bar {
+  background-color: rgb(var(--c-bg));
+  background-image:
+    radial-gradient(70% 45% at 12% -5%, rgb(var(--c-violet) / calc(var(--glow-strength) * 0.25)), transparent 70%),
+    radial-gradient(55% 40% at 105% 18%, rgb(var(--c-pink) / calc(var(--glow-strength) * 0.175)), transparent 70%),
+    radial-gradient(65% 40% at 50% 112%, rgb(var(--c-peach) / calc(var(--glow-strength) * 0.11)), transparent 70%);
+  background-repeat: no-repeat;
+  background-size: 100vw 100vh;
+  background-size: 100vw 100dvh;
+}
+/* A bar on the bottom edge: the light of the screen's foot. */
+.sky-bar.sky-bar-bottom {
+  background-position: left bottom;
+}
+
+/* The group dock (panel colour at 70%) and the website's header (80%), made
+   solid in the colour they showed over the sky. An older WebView without
+   color-mix gets the panel colour, nearly opaque. */
+.bar-panel-70 {
+  background-color: rgb(var(--c-surface) / 0.94);
+  background-color: color-mix(in srgb, rgb(var(--c-surface)) 70%, rgb(var(--c-bg)));
+}
+.bar-panel-80 {
+  background-color: rgb(var(--c-surface) / 0.94);
+  background-color: color-mix(in srgb, rgb(var(--c-surface)) 80%, rgb(var(--c-bg)));
+}
+
+/* Everything else that frosts - the dim behind a pop-up, a sealed photo -
+   keeps its colour and loses the frosting on a phone (html.in-app, see
+   main.tsx). The dim alone already sets a pop-up apart from the page. A
+   computer's browser, with the graphics to spare, keeps it. */
+html.in-app [class*='backdrop-blur'] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Pressing
+   ---------------------------------------------------------------------------
+   A button sinks a little under the finger (active:scale-95 and the like).
+   Most also had transition-all at Tailwind's 150ms, so the sink took longer
+   than a quick tap lasts, and the button was still easing back up after the
+   finger had gone: a press you could watch lag behind you. Every button that
+   sinks now goes down at once and comes back in about a tenth of a second.
+
+   Only what a press changes is named - its size, its colours, its shadow -
+   never `all`, so nothing else that changes on a button is eased through
+   layout frame by frame. Picked out by the class name, so a button written
+   later is covered too; a duration-* on one of them gives way to this. */
+[class*='active:scale-'] {
+  transition-property: transform, opacity, color, background-color, border-color, box-shadow;
+  transition-duration: 110ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+[class*='active:scale-']:active {
+  transition-duration: 40ms;
+}
+
+/* ---------------------------------------------------------------------------
+   Endless motion, while nobody is looking
+   ---------------------------------------------------------------------------
+   The beating heart, the light drifting on a hero, the pulsing dots, a call's
+   rings: all of them move only transform and opacity, which the graphics chip
+   runs by itself, but they still wake it for every frame. html.app-away
+   (main.tsx, from core/shown) is set while Two is not in front of anyone - in
+   the background, the screen off - which a WebView kept connected does not
+   always pause on its own. They hold still where they are and carry on when
+   Two is back. */
+html.app-away :is(.heart-beat, .animate-pulse, .animate-ping, .animate-bounce, .animate-spin, .animate-spin-slow, .call-sky-glow, .call-ripple, .call-dots span, .typing-dots > span),
+html.app-away :is(.aurora-hero, .call-key-answer)::before {
+  animation-play-state: paused;
+}
+
+/* Tailwind's own endless ones, with "reduce motion" on: a ping or a bounce
+   sits still as the dot or the badge it is drawn on. A pulse only fades, and
+   a spinner is how waiting is shown, so those two keep going. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ping,
+  .animate-bounce {
+    animation: none;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -847,8 +968,8 @@ html.dark .olai {
     radial-gradient(48% 30% at 50% 102%, rgb(251 146 60 / 0.24), transparent 70%);
   opacity: 0.75;
   transition: opacity 900ms ease;
+  /* No will-change, as on the hero: the drift itself gives it a plane. */
   animation: call-drift 18s ease-in-out infinite alternate;
-  will-change: transform;
 }
 .call-sky[data-live='true'] .call-sky-glow {
   opacity: 1;
@@ -993,10 +1114,13 @@ html.dark .olai {
     inset 0 0 0 1px rgb(255 255 255 / 0.16),
     inset 0 1px 0 rgb(255 255 255 / 0.12),
     0 10px 26px -12px rgb(0 0 0 / 0.7);
-  transition: transform 140ms ease, background-color 200ms ease, color 200ms ease;
+  /* Down at once and back in a tenth of a second, as every button that sinks
+     (Pressing, above). */
+  transition: transform 110ms cubic-bezier(0.2, 0, 0, 1), background-color 200ms ease, color 200ms ease;
 }
 .call-key:active {
   transform: scale(0.92);
+  transition-duration: 40ms, 200ms, 200ms;
 }
 .call-key[data-on='true'] {
   color: #1d1638;

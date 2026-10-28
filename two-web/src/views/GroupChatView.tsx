@@ -1418,7 +1418,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
             onClick={send}
             disabled={!text.trim()}
             aria-label="Send"
-            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-linen-primary text-linen-surface transition-all hover:opacity-90 disabled:opacity-40"
+            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-linen-primary text-linen-surface transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             <Send className="h-4 w-4" />
           </button>

@@ -232,7 +232,7 @@ export const EmotionalWeatherCard: React.FC<EmotionalWeatherCardProps> = ({
                   <button
                     key={state}
                     onClick={() => onUpdateReport({ weather: state })}
-                    className={`flex flex-col items-center p-2 rounded-xl border text-center transition-all ${
+                    className={`flex flex-col items-center p-2 rounded-xl border text-center transition-[background-color,border-color,box-shadow] ${
                       isSelected
                         ? 'border-linen-primary bg-linen-variant ring-1 ring-linen-primary'
                         : 'border-linen-border hover:bg-linen-variant/60'

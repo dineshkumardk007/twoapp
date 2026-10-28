@@ -60,7 +60,7 @@ export const UpdateReadyToast: React.FC<UpdateReadyToastProps> = ({ suppressed }
       className="fixed inset-x-0 z-[45] flex justify-center px-4 pointer-events-none"
       style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)' }}
     >
-      <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-linen-border bg-linen-surface/95 py-1 pl-1 pr-1 text-linen-primary shadow-lg backdrop-blur-xl">
+      <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-linen-border bg-linen-surface/95 py-1 pl-1 pr-1 text-linen-primary shadow-lg">
         <button
           onClick={() => window.location.reload()}
           className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors hover:bg-linen-border/40"

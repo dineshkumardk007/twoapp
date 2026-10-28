@@ -241,7 +241,7 @@ export const DailyQuestionCard: React.FC<DailyQuestionCardProps> = ({
             setSpicy(!spicy);
           }}
           aria-pressed={spicy}
-          className={`inline-flex shrink-0 items-center gap-1 text-[11px] px-2.5 py-1 rounded-full border transition-all ${
+          className={`inline-flex shrink-0 items-center gap-1 text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
             spicy
               ? 'bg-linen-variant text-linen-primary border-linen-accent/40 font-medium'
               : 'text-linen-secondary border-linen-border hover:bg-linen-variant'

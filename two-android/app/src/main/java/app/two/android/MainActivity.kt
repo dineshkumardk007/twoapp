@@ -28,6 +28,7 @@ import app.two.android.features.onboarding.*
 import app.two.android.features.repair.RepairKitScreen
 import app.two.android.features.settings.ConsentAuditLogScreen
 import app.two.android.features.settings.SettingsScreen
+import app.two.android.features.web.SmoothDisplay
 import app.two.android.features.web.SystemChrome
 import app.two.android.features.web.TwoWebView
 import app.two.android.features.web.WebReady
@@ -108,6 +109,15 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * The screen's fast refresh rate while Two is in front (SmoothDisplay).
+     * On every return, so turning battery saver on or off is followed.
+     */
+    override fun onResume() {
+        super.onResume()
+        SmoothDisplay.apply(this)
     }
 
     /** Brought forward by the widget while already open: the page asks when it shows. */

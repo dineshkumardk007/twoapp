@@ -5,15 +5,17 @@ import { DialogHost } from './components/DialogHost';
 import { isAndroidApp } from './core/platform';
 import { applyAppearance, watchPhoneAppearance } from './core/appearance';
 import { watchKeyboard } from './core/keyboard';
+import { isShown, onShownChange } from './core/shown';
 import './index.css';
 import './styles/night.css';
 
 // Inside the Android app, and on a touch phone, the page should behave like
 // an app rather than a document: no long-press text selection on buttons and
-// labels, and no scroll bars (index.css, under `html.in-app`). Set before the
-// first render so it is never briefly the other way. A computer's browser is
-// left alone, where selecting any text and dragging a scroll bar is what
-// people expect.
+// labels, no scroll bars, and no frosted glass, which a phone's graphics chip
+// redrew on every frame of a scroll (index.css, under `html.in-app`). Set
+// before the first render so it is never briefly the other way. A computer's
+// browser is left alone, where selecting any text and dragging a scroll bar
+// is what people expect.
 try {
   const touchPhone = window.matchMedia?.('(hover: none) and (pointer: coarse)').matches;
   if (isAndroidApp() || touchPhone) {
@@ -31,6 +33,13 @@ try {
 // tells the phone which colour its status bar icons should be.
 applyAppearance();
 watchPhoneAppearance();
+
+// While Two is not in front of anyone - in the background, the screen off -
+// the endless animations hold still (index.css, html.app-away). A WebView
+// kept connected in the background does not always stop drawing by itself.
+const markAway = (shown: boolean) => document.documentElement.classList.toggle('app-away', !shown);
+markAway(isShown());
+onShownChange(markAway);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

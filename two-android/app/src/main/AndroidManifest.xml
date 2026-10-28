@@ -39,8 +39,11 @@
         android:xlargeScreens="true"
         android:anyDensity="true" />
 
+    <!-- Drawn by the graphics chip, as Android does by default: written down
+         so the page never falls back to slow software drawing. -->
     <application
         android:name=".TwoApplication"
+        android:hardwareAccelerated="true"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
