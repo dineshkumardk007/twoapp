@@ -1211,3 +1211,27 @@ html.dark .olai {
     opacity: 0.6;
   }
 }
+
+/* Two taps on a message: a heart rises from the middle of its bubble and
+   fades (core/useMessageGestures heartPop puts it on the message's line). */
+.like-pop {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  font-size: 2.25rem;
+  line-height: 1;
+  transform: translate(-50%, -50%) scale(0.2);
+  opacity: 0;
+  animation: like-pop 700ms cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.25));
+}
+@keyframes like-pop {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+  25% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  45% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+  100% { transform: translate(-50%, -90%) scale(1); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .like-pop { animation-duration: 1ms; }
+}
+

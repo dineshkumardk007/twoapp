@@ -59,7 +59,7 @@ import { MessageInfoSheet } from '../components/MessageInfoSheet';
 import { FloatingDayChip, useFloatingDay } from '../components/FloatingDayChip';
 import type { PhotoFields } from '../core/chatActions';
 import { PHOTOS_AT_ONCE, PHOTO_MAX_CHARS, dataUrlToBlob, photoFileName, photoSize, snippetShown } from '../core/chatShow';
-import { useMessageGestures } from '../core/useMessageGestures';
+import { HEART, useMessageGestures } from '../core/useMessageGestures';
 import { shrinkPhoto } from '../core/photo';
 import { saveFile } from '../core/saveFile';
 import { copyText } from '../core/clipboard';
@@ -123,6 +123,15 @@ export interface GroupSendExtras {
 
 /** This close to the end of the conversation counts as being at the end. */
 const AT_BOTTOM_PX = 48;
+/**
+ * How much of a group's history is drawn, as in the couple's chat: the newest
+ * DRAWN_AT_FIRST when it opens, DRAWN_MORE further back each time you scroll
+ * within LOAD_EARLIER_PX of the top. Every message ever kept was drawn at
+ * once, so a long group stuttered as it scrolled and as each message came.
+ */
+const DRAWN_AT_FIRST = 80;
+const DRAWN_MORE = 80;
+const LOAD_EARLIER_PX = 600;
 
 /**
  * Group chat.
@@ -329,16 +338,58 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
   /** The day at the top while you scroll, as in the couple's chat (components/FloatingDayChip). */
   const floatingDay = useFloatingDay(logRef);
+
+  // Where the drawn part starts, as an index from the oldest message, so new
+  // ones add at the end without moving what you are reading.
+  const [firstDrawn, setFirstDrawn] = useState(() => Math.max(0, group.messages.length - DRAWN_AT_FIRST));
+  const drawnFrom = Math.max(0, Math.min(firstDrawn, group.messages.length - DRAWN_AT_FIRST));
+  const drawnFromRef = useRef(drawnFrom);
+  drawnFromRef.current = drawnFrom;
+  /** Set while earlier messages are being added above, to keep your place. */
+  const growingRef = useRef<{ height: number; top: number } | null>(null);
+  /** A message to go to once the part of the history it is in has been drawn. */
+  const pendingJumpRef = useRef<{ id: string; rid?: string } | null>(null);
+
+  // Read once a frame however many scroll events come in it: the sums below
+  // read the page's layout, which on a phone is the slow part of a scroll.
+  const scrollFrameRef = useRef(0);
   const handleLogScroll = () => {
-    const log = logRef.current;
-    if (!log) return;
-    const fromEnd = log.scrollHeight - log.scrollTop - log.clientHeight;
-    const pinned = fromEnd < AT_BOTTOM_PX;
-    pinnedRef.current = pinned;
-    setAwayFromEnd(fromEnd > log.clientHeight);
-    setAwayMark(mark => (pinned ? null : mark ?? newestIdRef.current));
+    if (scrollFrameRef.current) return;
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = 0;
+      const log = logRef.current;
+      if (!log) return;
+      const fromEnd = log.scrollHeight - log.scrollTop - log.clientHeight;
+      const pinned = fromEnd < AT_BOTTOM_PX;
+      pinnedRef.current = pinned;
+      setAwayFromEnd(fromEnd > log.clientHeight);
+      setAwayMark(mark => (pinned ? null : mark ?? newestIdRef.current));
+      // Near the top with more behind it: draw the next part of the history.
+      if (log.scrollTop < LOAD_EARLIER_PX && drawnFromRef.current > 0 && !growingRef.current) {
+        growingRef.current = { height: log.scrollHeight, top: log.scrollTop };
+        setFirstDrawn(Math.max(0, drawnFromRef.current - DRAWN_MORE));
+      }
+    });
     floatingDay.onScroll();
   };
+  useEffect(() => () => cancelAnimationFrame(scrollFrameRef.current), []);
+
+  // Earlier messages were just drawn above: move down by exactly what they
+  // added, so the message you were reading stays where it was. Or one asked
+  // for further back is there now: go to it.
+  useLayoutEffect(() => {
+    const log = logRef.current;
+    const growing = growingRef.current;
+    if (log && growing) {
+      log.scrollTop = log.scrollHeight - growing.height + growing.top;
+      growingRef.current = null;
+    }
+    const jump = pendingJumpRef.current;
+    if (jump) {
+      pendingJumpRef.current = null;
+      jumpToRef.current(jump.id, jump.rid);
+    }
+  }, [drawnFrom]);
 
   // A new message: yours brings you to the end, as it always has; one of
   // theirs, while you read further up, leaves you where you are - the way
@@ -413,8 +464,16 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
       list.find(x => x.rid === id) ||
       (rid ? list.find(x => x.id === rid || x.rid === rid) : undefined);
     const log = logRef.current;
-    const el = m && log?.querySelector<HTMLElement>(`[data-mid="${CSS.escape(m.id)}"]`);
-    if (!m || !log || !el) return false;
+    if (!m || !log) return false;
+    const el = log.querySelector<HTMLElement>(`[data-mid="${CSS.escape(m.id)}"]`);
+    if (!el) {
+      // Further back than is drawn: draw back to it first, then go.
+      const at = list.indexOf(m);
+      if (at < 0 || at >= drawnFromRef.current) return false;
+      pendingJumpRef.current = { id: m.id };
+      setFirstDrawn(Math.max(0, at - 5));
+      return true;
+    }
     pinnedRef.current = false;
     log.scrollTop += el.getBoundingClientRect().top - log.getBoundingClientRect().top - log.clientHeight / 3;
     setFlashId(m.id);
@@ -581,10 +640,19 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   resolveStuckRef.current = onResolveStuck;
   const canResolveStuck = !!onResolveStuck;
   /** A long press opens a message's menu and a pull to the right answers it, as in the couple's chat. */
+  const reactRef = useRef(onReact);
+  reactRef.current = onReact;
   const gestures = useMessageGestures({
     onLongPress: (id, bubble) => openMenuRef.current(id, bubble),
     onSwipeReply: id => answerRef.current(id),
-    menuOpen: () => !!menuRef.current
+    menuOpen: () => !!menuRef.current,
+    // Two taps: a heart, or taken off again when the heart is already yours.
+    onDoubleTap: id => {
+      const react = reactRef.current;
+      const m = messagesNowRef.current.find(x => x.id === id);
+      if (!react || !m || !canReactGroup(m, myId)) return;
+      react(id, m.reactions?.[myId] === HEART ? '' : HEART);
+    }
   });
 
   const nameFor = (id: string) => group.members.find(m => m.id === id)?.name || 'Someone';
@@ -669,7 +737,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
       }
       return name;
     };
-    return group.messages.map(msg => {
+    return group.messages.slice(drawnFrom).map(msg => {
         const mine = msg.authorId === myId;
         const unsent = !!msg.unsent;
         const breakdown = readBreakdown(group.members, msg);
@@ -685,7 +753,18 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
             key={msg.id}
             data-mid={msg.id}
             data-day={msg.sentAt && Number.isFinite(msg.sentAt) ? dayOf(msg.sentAt) : undefined}
-            className={`relative flex flex-col ${mine ? 'items-end' : 'items-start'}`}
+            // A long press opens the message's menu, a pull to the right -
+            // from anywhere on its line - answers it, and two taps put a
+            // heart on it; up and down stays the conversation's scroll. Its
+            // words are copied from the menu rather than selected, as in the
+            // couple's chat: a long press cannot do both.
+            onPointerDown={unsent ? undefined : e => gestures.pressStart(e, msg.id)}
+            onPointerMove={unsent ? undefined : gestures.pressMove}
+            onPointerUp={unsent ? undefined : gestures.pressEnd}
+            onPointerCancel={unsent ? undefined : gestures.pressEnd}
+            onContextMenu={unsent ? undefined : e => gestures.pressContextMenu(e, msg.id)}
+            onClickCapture={gestures.swallowClick}
+            className={`touch-pan-y relative flex flex-col ${mine ? 'items-end' : 'items-start'}`}
           >
             {/* Comes into view as the message is drawn to the right to answer it. */}
             {!unsent && (
@@ -704,16 +783,6 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
             )}
             <div
               data-bubble
-              // A long press opens the message's menu and a pull to the right
-              // answers it; up and down stays the conversation's scroll. Its
-              // words are copied from the menu rather than selected, as in
-              // the couple's chat: a long press cannot do both.
-              onPointerDown={unsent ? undefined : e => gestures.pressStart(e, msg.id)}
-              onPointerMove={unsent ? undefined : gestures.pressMove}
-              onPointerUp={unsent ? undefined : gestures.pressEnd}
-              onPointerCancel={unsent ? undefined : gestures.pressEnd}
-              onContextMenu={unsent ? undefined : e => gestures.pressContextMenu(e, msg.id)}
-              onClickCapture={gestures.swallowClick}
               className={`touch-pan-y ${
                 // A voice note takes a little more of the width, so its
                 // player (200px at the least) fits a 320px phone. A photo
@@ -783,6 +852,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                     // tapped, it has the whole screen.
                     <button
                       type="button"
+                      data-tap-wait
                       onClick={() => setViewerId(msg.id)}
                       aria-label={tr('Open photo')}
                       className="block overflow-hidden rounded-xl"
@@ -790,6 +860,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                       <img
                         src={msg.photoDataUrl}
                         alt={tr('Photo')}
+                        loading="lazy"
                         width={photo.width}
                         height={photo.height}
                         decoding="async"
@@ -907,7 +978,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
     // The press handlers and the callbacks are read through refs, and the
     // gestures never change, so none of them rebuild the list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [group.messages, group.members, myId, shareReceipts, stuckOpen, autoPlay, flashId, canResolveStuck, byKey, lang, gestures,
+  }, [group.messages, drawnFrom, group.members, myId, shareReceipts, stuckOpen, autoPlay, flashId, canResolveStuck, byKey, lang, gestures,
     group.deletedForMe, today]);
 
   /** What can be done with the message whose menu is open. */

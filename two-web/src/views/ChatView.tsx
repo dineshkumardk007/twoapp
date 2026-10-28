@@ -38,7 +38,7 @@ import {
 } from '../core/chatActions';
 import { shrinkPhoto } from '../core/photo';
 import { PHOTOS_AT_ONCE, PHOTO_MAX_CHARS, dataUrlToBlob, photoFileName, photoSize, snippetShown } from '../core/chatShow';
-import { useMessageGestures } from '../core/useMessageGestures';
+import { HEART, useMessageGestures } from '../core/useMessageGestures';
 import { ReplyQuote } from '../components/ReplyQuote';
 import { ReactionPill } from '../components/ReactionPill';
 import { ComposeBanner } from '../components/ComposeBanner';
@@ -493,19 +493,30 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const pinnedRef = useRef(true);
   /** More than a screen above the newest message: the way back down is offered. */
   const [awayFromEnd, setAwayFromEnd] = useState(false);
+  // Read once a frame however many scroll events come in it: the sums below
+  // read the page's layout, which on a phone is the slow part of a scroll.
+  const scrollFrameRef = useRef(0);
+  const drawnFromRef = useRef(drawnFrom);
+  drawnFromRef.current = drawnFrom;
   const handleLogScroll = () => {
-    const log = messagesRef.current;
-    if (!log) return;
-    const fromEnd = log.scrollHeight - log.scrollTop - log.clientHeight;
-    pinnedRef.current = fromEnd < AT_BOTTOM_PX;
-    setAwayFromEnd(fromEnd > log.clientHeight);
-    // Near the top with more behind it: draw the next part of the history.
-    if (log.scrollTop < LOAD_EARLIER_PX && drawnFrom > 0 && !growingRef.current) {
-      growingRef.current = { height: log.scrollHeight, top: log.scrollTop };
-      setFirstDrawn(Math.max(0, drawnFrom - DRAWN_MORE));
-    }
     floatingDay.onScroll();
+    if (scrollFrameRef.current) return;
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = 0;
+      const log = messagesRef.current;
+      if (!log) return;
+      const fromEnd = log.scrollHeight - log.scrollTop - log.clientHeight;
+      pinnedRef.current = fromEnd < AT_BOTTOM_PX;
+      setAwayFromEnd(fromEnd > log.clientHeight);
+      // Near the top with more behind it: draw the next part of the history.
+      const from = drawnFromRef.current;
+      if (log.scrollTop < LOAD_EARLIER_PX && from > 0 && !growingRef.current) {
+        growingRef.current = { height: log.scrollHeight, top: log.scrollTop };
+        setFirstDrawn(Math.max(0, from - DRAWN_MORE));
+      }
+    });
   };
+  useEffect(() => () => cancelAnimationFrame(scrollFrameRef.current), []);
 
   // Earlier messages were just drawn above: move down by exactly what they
   // added, so the message you were reading stays where it was.
@@ -949,10 +960,20 @@ export const ChatView: React.FC<ChatViewProps> = ({
    * the right, it answers the message (core/useMessageGestures, the same in a
    * group's chat).
    */
+  const reactRef = useRef(onReact);
+  reactRef.current = onReact;
   const gestures = useMessageGestures({
     onLongPress: (id, bubble) => openMenuRef.current(id, bubble),
     onSwipeReply: id => answerRef.current(id),
-    menuOpen: () => !!menuRef.current
+    menuOpen: () => !!menuRef.current,
+    // Two taps: a heart, as the menu's first reaction would - or taken off
+    // again when the heart is already yours. Not on one still waiting to show.
+    onDoubleTap: id => {
+      const react = reactRef.current;
+      const m = latestMessagesRef.current.find(x => x.id === id);
+      if (!react || !m || m.unsent || isWaiting(m, activeUserRef.current)) return;
+      react(id, m.reactions?.[activeUserRef.current] === HEART ? '' : HEART);
+    }
   });
   const { pressStart, pressMove, pressEnd, pressContextMenu } = gestures;
 
@@ -1149,7 +1170,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <div
               data-mid={msg.id}
               data-day={row.day || undefined}
-              className={`relative flex flex-col ${mine ? 'items-end' : 'items-start'} ${spacing}`}
+              // A long press opens the message's menu, a pull to the right -
+              // from anywhere on its line, not only the bubble - answers it,
+              // and two taps put a heart on it; up and down stays the
+              // conversation's scroll.
+              onPointerDown={unsent ? undefined : e => pressStart(e, msg.id)}
+              onPointerMove={unsent ? undefined : pressMove}
+              onPointerUp={unsent ? undefined : pressEnd}
+              onPointerCancel={unsent ? undefined : pressEnd}
+              onContextMenu={unsent ? undefined : e => pressContextMenu(e, msg.id)}
+              onClickCapture={gestures.swallowClick}
+              className={`touch-pan-y relative flex flex-col ${mine ? 'items-end' : 'items-start'} ${spacing}`}
             >
               {/* Comes into view as the message is drawn to the right to answer it. */}
               {!unsent && (
@@ -1163,14 +1194,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
               )}
               <div
                 data-bubble
-                // A long press opens the message's menu and a pull to the right
-                // answers it; up and down stays the conversation's scroll.
-                onPointerDown={unsent ? undefined : e => pressStart(e, msg.id)}
-                onPointerMove={unsent ? undefined : pressMove}
-                onPointerUp={unsent ? undefined : pressEnd}
-                onPointerCancel={unsent ? undefined : pressEnd}
-                onContextMenu={unsent ? undefined : e => pressContextMenu(e, msg.id)}
-                onClickCapture={gestures.swallowClick}
                 className={`touch-pan-y sm:max-w-md rounded-2xl ${
                   // A little tighter around a player, which has its own
                   // breathing room, than around words - and a little more of
@@ -1255,6 +1278,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   // it has the whole screen.
                   <button
                     type="button"
+                    data-tap-wait
                     onClick={() => setViewerId(msg.id)}
                     aria-label={tr('Open photo')}
                     className="block overflow-hidden rounded-xl"
@@ -1262,6 +1286,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     <img
                       src={msg.photoDataUrl}
                       alt={tr('Photo')}
+                      loading="lazy"
                       width={photo.width}
                       height={photo.height}
                       decoding="async"

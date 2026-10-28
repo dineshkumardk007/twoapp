@@ -36,7 +36,14 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imeAnimationTarget
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -879,6 +886,7 @@ class AndroidWebBridge(
  * (Nightstand Soundscape, Midnight Radio, Canvas of Us, Love Letters, Time Capsule, etc.)
  * with secure origin (https://appassets.androidplatform.net) for WebCrypto & Audio APIs.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun TwoWebView(
@@ -1136,9 +1144,18 @@ fun TwoWebView(
         // safeDrawing covers system bars, display cutouts and the IME together,
         // so the WebView shrinks as the keyboard rises and 100dvh inside it is
         // finally the height you can see.
+        //
+        // The keyboard by where it is going, not where it is on the way: the
+        // page resized on every frame of the keyboard's slide, laying the
+        // whole chat out again some twenty times, and the chat stuttered as
+        // the keyboard came up. Now it takes the keyboard's final height once,
+        // as the slide starts (imeAnimationTarget), and the keyboard slides
+        // into the space already made.
         modifier = modifier
             .fillMaxSize()
-            .safeDrawingPadding(),
+            .windowInsetsPadding(
+                WindowInsets.safeDrawing.exclude(WindowInsets.ime).union(WindowInsets.imeAnimationTarget)
+            ),
         factory = { context ->
             val assetLoader = WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(context))
