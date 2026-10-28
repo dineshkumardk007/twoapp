@@ -9,6 +9,7 @@ import { encryptText, decryptText } from './crypto';
 import { getDeviceId } from './space';
 import { ANSWER_WITHIN_MS, MISSES_BEFORE_DEAD, bytesLeaving, missedHeartbeats, utf8Length } from './heartbeat';
 import type { SpaceCredentials } from './space';
+import { isShown, onShownChange } from './shown';
 
 type MessageCallback = (data: any) => void;
 
@@ -970,7 +971,7 @@ export class WebSocketRelayClient {
       // an answer that did come. A socket still sending a photo is judged by
       // its bytes leaving instead (core/heartbeat).
       const buffered = this.ws?.bufferedAmount ?? 0;
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      if (isShown()) {
         this.missedBeats = missedHeartbeats({
           buffered,
           bufferedBefore: this.bufferedAtBeat,
@@ -1275,14 +1276,12 @@ function wakeAll() {
   });
 }
 
-// Immediately wake up and reconnect when returning to the tab on mobile browsers or regaining network
-if (typeof document !== 'undefined') {
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      wakeAll();
-    }
-  });
-}
+// Immediately wake up and reconnect when returning to the tab on mobile browsers or regaining network.
+// Coming back is the page shown again (core/shown.ts): visible, and the
+// Android app no longer saying it is in the background or the screen is off.
+onShownChange(shown => {
+  if (shown) wakeAll();
+});
 if (typeof window !== 'undefined') {
   window.addEventListener('online', wakeAll);
 }

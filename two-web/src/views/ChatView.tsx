@@ -8,9 +8,8 @@ import { isAndroidApp } from '../core/platform';
 import { isWaiting, nextShowAt } from '../core/sendLater';
 import { liveStatus, statusWords, type StatusNote } from '../core/status';
 import { useNowAt } from '../core/useToday';
-import { aheadLabel, clockTime } from '../core/when';
+import { aheadLabel, clockTime, dayLabel, startOfDay } from '../core/when';
 import { SendLaterSheet } from '../components/SendLaterSheet';
-import { NeedMenuModal } from '../components/NeedMenuModal';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
 import { MessageMenu, type MessageMenuAction } from '../components/MessageMenu';
@@ -19,8 +18,12 @@ import { ChatMediaSheet, isGalleryPhoto } from '../components/ChatMediaSheet';
 import { PhotoSendSheet } from '../components/PhotoSendSheet';
 import { ViewOnceIcon } from '../components/ViewOnceIcon';
 import { voiceFieldsOf, voiceNoteLabel } from '../core/voice';
+import { MessageInfoSheet } from '../components/MessageInfoSheet';
+import { FloatingDayChip, useFloatingDay } from '../components/FloatingDayChip';
+import { coupleInfo } from '../core/messageInfo';
 import {
   MAX_PINS,
+  canDeleteForMe,
   canEdit,
   canOpenViewOnce,
   canPin,
@@ -34,6 +37,12 @@ import {
   type MessageExtras
 } from '../core/chatActions';
 import { shrinkPhoto } from '../core/photo';
+import { PHOTOS_AT_ONCE, PHOTO_MAX_CHARS, dataUrlToBlob, photoFileName, photoSize, snippetShown } from '../core/chatShow';
+import { useMessageGestures } from '../core/useMessageGestures';
+import { ReplyQuote } from '../components/ReplyQuote';
+import { ReactionPill } from '../components/ReactionPill';
+import { ComposeBanner } from '../components/ComposeBanner';
+import { JumpToNewestButton } from '../components/JumpToNewestButton';
 import { copyText } from '../core/clipboard';
 import { saveFile } from '../core/saveFile';
 import { useBackLayer } from '../core/backStack';
@@ -42,12 +51,13 @@ import { presenceLine } from '../core/presenceLine';
 import { useTypingSender } from '../core/typing';
 import { MAX_CHAT_MESSAGES } from '../core/storage';
 import { who } from '../core/who';
-import { activeLocale, dateLocale, tr, useT } from '../core/i18n';
+import { activeLocale, tr, useT } from '../core/i18n';
+import { focusForTyping } from '../core/softKeyboard';
 import { haptic } from '../core/haptics';
 import {
-  Send, Sparkles, Feather, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
+  Send, Sparkles, Heart, EyeOff, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
   Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download,
-  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock, EllipsisVertical
+  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock, EllipsisVertical, Info
 } from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
 
@@ -73,9 +83,9 @@ interface ChatViewProps {
   /** Keeps what is half-typed (or, with null, forgets it) - on leaving, never per key press. */
   onSaveDraft?: (draft: ChatDraft | null) => void;
   /**
-   * Connection state, shown here because chat is the one screen with neither
-   * the header nor the dock: without it there would be nothing on screen to say
-   * a message is queued rather than sent.
+   * Connection state, shown here because in the app the chat is the one screen
+   * without the bar, whose pill said it everywhere else: without it there would
+   * be nothing on screen to say a message is queued rather than sent.
    */
   relayStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
   /** Retry or abandon a message that never left this device. */
@@ -91,6 +101,15 @@ interface ChatViewProps {
   onEditMessage?: (messageId: string, text: string) => void;
   /** Takes one of your own messages back from both phones. The caller asks first. */
   onUnsendMessage?: (messageId: string) => void;
+  /** Deletes a message, yours or theirs, from this phone only. The caller asks first. */
+  onDeleteForMe?: (messageId: string) => void;
+  /** Messages deleted on this phone, id to when: a quote of one says so. */
+  deletedForMe?: Record<string, number>;
+  /**
+   * Her phone says when a message reaches it (CHAT_DELIVERED). False for an
+   * older one, whose Info explains why it never says Reached.
+   */
+  partnerSaysDelivered?: boolean;
   /** Messages pinned to the top of the chat, newest last (core/chatActions). */
   pins?: ChatPin[];
   /** Pins a message, or takes its pin down, on both phones. */
@@ -103,7 +122,12 @@ interface ChatViewProps {
    * the read-receipt setting).
    */
   onVoiceHeard?: (messageId: string) => void;
-  onOpenSoftLanding?: () => void;
+  /** Opens the Heart Touch panel. It lives in Navigation; App bumps its signal. */
+  onOpenHeart?: () => void;
+  /** Hides Two at once, exactly as Tools' Quick Exit does - locks it, or shows the calculator. */
+  onQuickExit?: () => void;
+  /** Square to the screen's top and sides: the app on a phone, where no bar sits above. */
+  flush?: boolean;
   /** True while the partner's device is in the space right now. */
   partnerOnline?: boolean;
   /**
@@ -133,25 +157,8 @@ interface ChatViewProps {
 // Built once. Formatting a date makes a formatter each time it is asked, and a
 // conversation of a few thousand messages asked for one per bubble on every
 // keystroke in the composer.
+// The day names (dayLabel) are in core/when, shared with a group's chat.
 const TIME_FORMAT = new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit' });
-const DAY_FORMAT = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-const OLD_DAY_FORMAT = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-/** The same day names in another language (core/i18n), each built the first time it is wanted. */
-const OTHER_DAY_FORMATS = new Map<string, Intl.DateTimeFormat>();
-function dayFormat(old: boolean): Intl.DateTimeFormat {
-  const locale = dateLocale();
-  if (!locale) return old ? OLD_DAY_FORMAT : DAY_FORMAT;
-  const key = `${locale}|${old}`;
-  let format = OTHER_DAY_FORMATS.get(key);
-  if (!format) {
-    format = new Intl.DateTimeFormat(
-      locale,
-      old ? { day: 'numeric', month: 'short', year: 'numeric' } : { weekday: 'short', day: 'numeric', month: 'short' }
-    );
-    OTHER_DAY_FORMATS.set(key, format);
-  }
-  return format;
-}
 /** "9:41 pm" - in Tamil, the way the rest of Two says a time (core/when). */
 function timeOf(at: number): string {
   return activeLocale() === 'ta' ? clockTime(at) : TIME_FORMAT.format(at);
@@ -161,27 +168,6 @@ function timeOf(at: number): string {
 function whoShown(author: string | undefined | null, activeUser: string, partnerName: string): string {
   const name = who(author, activeUser, partnerName);
   return name === 'You' ? tr('You') : name === 'Partner' ? tr('Partner') : name;
-}
-
-/**
- * A reply quote's or the pinned bar's snippet, as shown. The fixed words
- * snippetOf (core/chatActions) puts in travel in English and are said here in
- * this phone's language; a message's own words stay as written.
- */
-function snippetShown(snippet: string | undefined): string {
-  switch (snippet) {
-    case 'Photo':
-      return tr('Photo');
-    case 'Voice note':
-      return tr('Voice note');
-    case 'View-once photo':
-      return tr('View-once photo');
-    case '':
-    case undefined:
-      return tr('Message');
-    default:
-      return snippet;
-  }
 }
 
 /**
@@ -210,70 +196,6 @@ const DRAWN_AT_FIRST = 80;
 const DRAWN_MORE = 80;
 const LOAD_EARLIER_PX = 600;
 
-/** A press held this long without moving opens the message's menu. */
-const LONG_PRESS_MS = 420;
-/** A click this soon after a long press or a drag ended belongs to it, not to what is under the finger. */
-const SWALLOW_MS = 800;
-/** Dragged this far to the right, a message is answered when let go. */
-const SWIPE_REPLY_PX = 56;
-/** A photo is shrunk to fit one record with room to spare (core/photo). */
-const PHOTO_MAX_CHARS = 600_000;
-/** At most this many photos picked at once go. */
-const PHOTOS_AT_ONCE = 10;
-/** The largest a photo is shown in the conversation; tapped, it fills the screen. */
-const PHOTO_MAX_W = 240;
-const PHOTO_MAX_H = 300;
-
-/** A photo's size in the conversation: its own shape, within PHOTO_MAX_W by PHOTO_MAX_H. */
-function photoSize(m: ChatMessage): { width: number; height: number } {
-  const w = m.photoWidth || 4;
-  const h = m.photoHeight || 3;
-  const s = Math.min(PHOTO_MAX_W / w, PHOTO_MAX_H / h);
-  return { width: Math.round(w * s), height: Math.round(h * s) };
-}
-
-/** A data: URL as the bytes it holds, for saving. */
-function dataUrlToBlob(url: string): Blob {
-  const comma = url.indexOf(',');
-  const type = /^data:([^;,]+)/.exec(url)?.[1] || 'application/octet-stream';
-  const bytes = atob(url.slice(comma + 1));
-  const out = new Uint8Array(bytes.length);
-  for (let i = 0; i < bytes.length; i++) out[i] = bytes.charCodeAt(i);
-  return new Blob([out], { type });
-}
-
-/** "two-photo-2026-10-14-2141.jpg" */
-function photoFileName(at?: number): string {
-  const d = new Date(at && Number.isFinite(at) ? at : Date.now());
-  const two = (n: number) => String(n).padStart(2, '0');
-  return `two-photo-${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}-${two(d.getHours())}${two(d.getMinutes())}.jpg`;
-}
-
-function startOfDay(at: number): number {
-  const d = new Date(at);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-}
-
-/**
- * "Today", "Yesterday", "Sat, 3 Oct" - the name of a day, for the line between
- * days.
- *
- * Not whenLabel from core/when.ts, which answers "how long ago" ("4 days ago")
- * where a divider has to name the day itself.
- */
-function dayLabel(day: number, now: number, ahead = false): string {
-  const days = Math.round((startOfDay(now) - day) / 86_400_000);
-  // A day in the future is the other phone's clock running ahead, not news -
-  // unless it is a message set to show later (core/sendLater), which says
-  // the day it is to show.
-  if (days < 0 && ahead) return days === -1 ? tr('Tomorrow') : dayFormat(false).format(day);
-  if (days <= 0) return tr('Today');
-  if (days === 1) return tr('Yesterday');
-  return new Date(day).getFullYear() === new Date(now).getFullYear()
-    ? dayFormat(false).format(day)
-    : dayFormat(true).format(day);
-}
-
 /** Local calendar day, as a key that changes exactly at midnight. */
 function todayKey(): string {
   const d = new Date();
@@ -284,6 +206,8 @@ interface Row {
   msg: ChatMessage;
   /** The name of the day, on the first message of each new one. */
   divider?: string;
+  /** The name of the day it is under, on every message: the date that floats while you scroll. */
+  day: string;
   /** First and last of a run of messages from the same person. */
   firstOfRun: boolean;
   lastOfRun: boolean;
@@ -301,17 +225,21 @@ interface Row {
 function layOut(messages: ChatMessage[], markId?: string): Row[] {
   const now = Date.now();
   const dividers: (string | undefined)[] = [];
+  const days: string[] = [];
   // Messages from before the moment was kept have no day of their own; they
   // stay with whatever came before them rather than starting a new one.
   let day: number | null = null;
+  let dayName = '';
   for (const m of messages) {
     const own = m.sentAt && Number.isFinite(m.sentAt) ? startOfDay(m.sentAt) : null;
     if (own !== null && own !== day) {
-      dividers.push(dayLabel(own, now, typeof m.showAt === 'number'));
+      dayName = dayLabel(own, now, typeof m.showAt === 'number');
+      dividers.push(dayName);
       day = own;
     } else {
       dividers.push(undefined);
     }
+    days.push(dayName);
   }
 
   // A call's line stands on its own: bubbles either side of it do not join through it.
@@ -327,6 +255,7 @@ function layOut(messages: ChatMessage[], markId?: string): Row[] {
   return messages.map((msg, i) => ({
     msg,
     divider: dividers[i],
+    day: days[i],
     firstOfRun: i === 0 || !joins(messages[i - 1], msg, dividers[i]),
     lastOfRun: i === messages.length - 1 || !joins(msg, messages[i + 1], dividers[i + 1]),
     // The stored word ("Just now") stays English; it is said in this phone's language.
@@ -346,7 +275,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   draft,
   onSaveDraft,
   relayStatus = 'connected',
-  onOpenSoftLanding,
+  onOpenHeart,
+  onQuickExit,
+  flush = false,
   partnerOnline = false,
   partnerLastSeen = 0,
   partnerTyping = false,
@@ -361,6 +292,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onReact,
   onEditMessage,
   onUnsendMessage,
+  onDeleteForMe,
+  deletedForMe,
+  partnerSaysDelivered = true,
   pins,
   onPinMessage,
   onViewOnceOpened
@@ -516,8 +450,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
     [messages, today, newMarkId, lang]
   );
 
-  const [showNeedModal, setShowNeedModal] = useState(false);
-
   // Where the drawn part of the conversation starts. Kept as an index from the
   // oldest message, so new messages add to the end without moving what you are
   // reading; never so late that fewer than DRAWN_AT_FIRST would show - and far
@@ -546,6 +478,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const messagesRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  /** The day at the top while you scroll (components/FloatingDayChip), from each row's data-day. */
+  const floatingDay = useFloatingDay(messagesRef);
 
   /**
    * Whether the conversation is scrolled to its newest message.
@@ -570,6 +504,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       growingRef.current = { height: log.scrollHeight, top: log.scrollTop };
       setFirstDrawn(Math.max(0, drawnFrom - DRAWN_MORE));
     }
+    floatingDay.onScroll();
   };
 
   // Earlier messages were just drawn above: move down by exactly what they
@@ -786,7 +721,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       setInputText('');
     }
     setReplyTo(replyRefFor(m));
-    inputRef.current?.focus();
+    focusForTyping(inputRef.current);
   };
 
   /** Change one of your messages: its words go into the composer to be written over. */
@@ -813,6 +748,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
   };
   useBackLayer(!!(replyTo || editing), cancelCompose);
+  // Deleted from this phone meanwhile: not there to answer or change any more.
+  useEffect(() => {
+    if (!deletedForMe) return;
+    if (replyTo && deletedForMe[replyTo.id]) setReplyTo(null);
+    if (editing && deletedForMe[editing.id]) {
+      setEditing(null);
+      setInputText('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deletedForMe]);
 
   /** A word or two for a moment, over the conversation: "Copied", "Saved". */
   const [toast, setToast] = useState<string | null>(null);
@@ -885,8 +830,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const handleComposerKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Mid-word in an input method, Enter picks the word; it is not ours.
     if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
-    // Ctrl/Cmd+Enter sends everywhere, for a tablet with a keyboard attached.
-    const send = e.ctrlKey || e.metaKey || (!touchFirst && !e.shiftKey);
+    // The keyboard's own key sends, as its label says (enterKeyHint): a
+    // second line there was a jump nobody asked for. Shift+Enter on a
+    // keyboard attached still starts one.
+    const send = e.ctrlKey || e.metaKey || !e.shiftKey;
     if (!send) return;
     e.preventDefault();
     handleSendText();
@@ -948,9 +895,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setMoreAt(null);
     moreButtonRef.current?.focus({ preventScroll: true });
   };
-  // A call coming in must not sit under the menu's tap-catcher (z-80 over the call's z-70).
+  /** The message whose Info is open (MessageInfoSheet). */
+  const [infoId, setInfoId] = useState<string | null>(null);
+  // A call coming in must not sit under the menu's tap-catcher (z-80 over the
+  // call's z-70), nor share its layer with a message's Info.
   useEffect(() => {
-    if (callInProgress) setMoreAt(null);
+    if (callInProgress) {
+      setMoreAt(null);
+      setInfoId(null);
+    }
   }, [callInProgress]);
   /**
    * A view-once photo being looked at. Its picture is held here, because the
@@ -993,105 +946,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   /**
    * A finger on a message. Held still, it opens the message's menu; drawn to
-   * the right, it answers the message. Followed in a ref, with the drag written
-   * straight onto the message, so neither goes through a render of the
-   * conversation. A drag that starts on a voice note's waveform is the
-   * player's: that is how it is scrubbed.
+   * the right, it answers the message (core/useMessageGestures, the same in a
+   * group's chat).
    */
-  const pressRef = useRef<{
-    id: string;
-    pointerId: number;
-    x: number;
-    y: number;
-    timer: number;
-    bubble: HTMLElement;
-    row: HTMLElement;
-    swiping: boolean;
-    pull: number;
-    armed: boolean;
-  } | null>(null);
-  /**
-   * When a long press or a drag last ended, so the click that comes straight
-   * after it does not also open a photo or follow a quote. A moment later it
-   * no longer counts: a click from the keyboard is never eaten.
-   */
-  const swallowClickRef = useRef(0);
-
-  const pressStart = (e: React.PointerEvent<HTMLElement>, id: string) => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    if ((e.target as HTMLElement).closest('[role="slider"]')) return;
-    const bubble = e.currentTarget;
-    const row = bubble.parentElement;
-    if (!row) return;
-    swallowClickRef.current = 0;
-    window.clearTimeout(pressRef.current?.timer);
-    const timer = window.setTimeout(() => {
-      const p = pressRef.current;
-      if (!p || p.swiping) return;
-      swallowClickRef.current = Date.now();
-      pressRef.current = null;
-      openMenuRef.current(p.id, p.bubble);
-    }, LONG_PRESS_MS);
-    pressRef.current = {
-      id, pointerId: e.pointerId, x: e.clientX, y: e.clientY, timer, bubble, row, swiping: false, pull: 0, armed: false
-    };
-  };
-
-  const pressMove = (e: React.PointerEvent<HTMLElement>) => {
-    const p = pressRef.current;
-    if (!p || p.pointerId !== e.pointerId) return;
-    const dx = e.clientX - p.x;
-    const dy = e.clientY - p.y;
-    if (!p.swiping) {
-      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-      window.clearTimeout(p.timer);
-      // Up and down is scrolling; only a pull to the right answers.
-      if (dx <= 0 || Math.abs(dx) < Math.abs(dy) * 1.5) {
-        pressRef.current = null;
-        return;
-      }
-      p.swiping = true;
-      try {
-        p.bubble.setPointerCapture(e.pointerId);
-      } catch {
-        /* the finger is already up */
-      }
-    }
-    p.pull = Math.min(80, dx * 0.6);
-    p.row.style.transition = 'none';
-    p.row.style.transform = `translateX(${p.pull}px)`;
-    p.row.style.setProperty('--pull', String(Math.min(1, p.pull / SWIPE_REPLY_PX)));
-    if (p.pull >= SWIPE_REPLY_PX && !p.armed) {
-      p.armed = true;
-      haptic('tick');
-    }
-  };
-
-  const pressEnd = (e: React.PointerEvent<HTMLElement>) => {
-    const p = pressRef.current;
-    if (!p || p.pointerId !== e.pointerId) return;
-    window.clearTimeout(p.timer);
-    pressRef.current = null;
-    if (!p.swiping) return;
-    swallowClickRef.current = Date.now();
-    p.row.style.transition = 'transform 180ms ease-out';
-    p.row.style.transform = '';
-    p.row.style.setProperty('--pull', '0');
-    if (p.pull >= SWIPE_REPLY_PX) answerRef.current(p.id);
-  };
-
-  /** A right click, or a phone's own long press: the same menu. */
-  const pressContextMenu = (e: React.MouseEvent<HTMLElement>, id: string) => {
-    e.preventDefault();
-    if (menuRef.current) return;
-    const p = pressRef.current;
-    if (p) {
-      window.clearTimeout(p.timer);
-      pressRef.current = null;
-    }
-    swallowClickRef.current = Date.now();
-    openMenuRef.current(id, e.currentTarget);
-  };
+  const gestures = useMessageGestures({
+    onLongPress: (id, bubble) => openMenuRef.current(id, bubble),
+    onSwipeReply: id => answerRef.current(id),
+    menuOpen: () => !!menuRef.current
+  });
+  const { pressStart, pressMove, pressEnd, pressContextMenu } = gestures;
 
   /**
    * Brings a message into view - drawing further back first when it is older
@@ -1231,7 +1094,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         const before = (
           <>
             {divider && (
-              <div className="flex justify-center pt-4 pb-1 first:pt-0">
+              <div data-divider className="flex justify-center pt-4 pb-1 first:pt-0">
                 <span className="rounded-full bg-linen-variant px-3 py-0.5 text-[11px] font-medium text-linen-secondary">
                   {divider}
                 </span>
@@ -1257,7 +1120,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           return (
             <React.Fragment key={msg.id}>
               {before}
-              <div data-mid={msg.id} data-call-line className={`flex justify-center ${divider ? 'mt-1' : 'mt-3'}`}>
+              <div data-mid={msg.id} data-day={row.day || undefined} data-call-line className={`flex justify-center ${divider ? 'mt-1' : 'mt-3'}`}>
                 <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 rounded-2xl border border-linen-border bg-linen-surface/80 px-3 py-1.5 text-xs text-linen-secondary">
                   <CallIcon aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 ${missed ? 'text-rose-500' : 'text-linen-accent'}`} />
                   <span className={`font-medium ${missed ? 'text-rose-500' : 'text-linen-primary'}`}>{words.title}</span>
@@ -1283,7 +1146,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
           <React.Fragment key={msg.id}>
             {before}
 
-            <div data-mid={msg.id} className={`relative flex flex-col ${mine ? 'items-end' : 'items-start'} ${spacing}`}>
+            <div
+              data-mid={msg.id}
+              data-day={row.day || undefined}
+              className={`relative flex flex-col ${mine ? 'items-end' : 'items-start'} ${spacing}`}
+            >
               {/* Comes into view as the message is drawn to the right to answer it. */}
               {!unsent && (
                 <span
@@ -1303,12 +1170,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 onPointerUp={unsent ? undefined : pressEnd}
                 onPointerCancel={unsent ? undefined : pressEnd}
                 onContextMenu={unsent ? undefined : e => pressContextMenu(e, msg.id)}
-                onClickCapture={e => {
-                  if (Date.now() - swallowClickRef.current > SWALLOW_MS) return;
-                  swallowClickRef.current = 0;
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
+                onClickCapture={gestures.swallowClick}
                 className={`touch-pan-y sm:max-w-md rounded-2xl ${
                   // A little tighter around a player, which has its own
                   // breathing room, than around words - and a little more of
@@ -1344,25 +1206,21 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
                 {quote && (
                   // What this answers. Tapped, the conversation goes back to it.
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!jumpToRef.current(quote.id, true)) showToastRef.current(tr('That message is no longer on this phone'));
+                  <ReplyQuote
+                    who={whoShown(quote.authorId, activeUser, partnerName)}
+                    text={
+                      byId.get(quote.id)?.unsent
+                        ? tr('Message unsent')
+                        : deletedForMe?.[quote.id]
+                        ? tr('You deleted this message')
+                        : snippetShown(quote.snippet)
+                    }
+                    onJump={() => {
+                      if (deletedForMe?.[quote.id]) showToastRef.current(tr('You deleted this message'));
+                      else if (!jumpToRef.current(quote.id, true)) showToastRef.current(tr('That message is no longer on this phone'));
                     }}
-                    // Set into the bubble a shade off it (bubble-quote), with a
-                    // bar of the ink: no colour of its own on either side.
-                    className={`bubble-quote mb-1.5 block w-full min-w-0 rounded-xl border-l-[3px] border-linen-primary/40 px-2.5 py-1.5 text-left text-xs ${
-                      photo ? 'mx-0' : ''
-                    }`}
-                    style={photo ? { maxWidth: photo.width } : undefined}
-                  >
-                    <span className="block font-semibold text-linen-primary">
-                      {whoShown(quote.authorId, activeUser, partnerName)}
-                    </span>
-                    <span className="block truncate text-linen-secondary">
-                      {byId.get(quote.id)?.unsent ? tr('Message unsent') : snippetShown(quote.snippet)}
-                    </span>
-                  </button>
+                    maxWidth={photo ? photo.width : undefined}
+                  />
                 )}
 
                 {msg.isVoiceMemo ? (
@@ -1457,24 +1315,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
               {reactions.length > 0 && (
                 // One from each of you, on the bubble's lower edge. Tapped, the
                 // reactions come up to be changed.
-                <button
-                  type="button"
+                <ReactionPill
+                  emojis={[...new Set(reactions)]}
+                  // Both of you chose the same one: it shows once, with a 2.
+                  count={reactions.length > 1 && new Set(reactions).size === 1 ? 2 : undefined}
                   onClick={e => {
                     const bubble = e.currentTarget.parentElement?.querySelector<HTMLElement>('[data-bubble]');
                     if (bubble) openMenuRef.current(msg.id, bubble);
                   }}
-                  aria-label={tr('Reactions: {emoji}', { emoji: reactions.join(' ') })}
-                  className={`relative z-[1] -mt-2 inline-flex items-center gap-0.5 rounded-full border border-linen-border bg-linen-surface px-1.5 py-0.5 text-[13px] leading-none shadow-sm ${
-                    mine ? 'mr-3' : 'ml-3'
-                  }`}
-                >
-                  {[...new Set(reactions)].map(r => (
-                    <span key={r}>{r}</span>
-                  ))}
-                  {reactions.length > 1 && new Set(reactions).size === 1 && (
-                    <span className="ml-0.5 text-[10px] font-semibold text-linen-secondary">2</span>
-                  )}
-                </button>
+                  label={tr('Reactions: {emoji}', { emoji: reactions.join(' ') })}
+                  mine={mine}
+                />
               )}
 
               {showMeta && (
@@ -1583,7 +1434,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
     // The press handlers are left out on purpose: they act only through refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawnRows, activeUser, partnerReadAt, partnerReadHeardAt, shareReceipts, stuckOpen, partnerName, canResolveStuck, autoPlay,
-      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, callInProgress, newMarkId, waitClock, lang, dayTakenBy]
+      byId, highlight, matchSet, currentMatch, flashId, pinnedBy, callInProgress, newMarkId, waitClock, lang, dayTakenBy,
+      deletedForMe]
   );
 
   /**
@@ -1637,7 +1489,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     // The same line layOut's rows draw (conversation, above), so the two are the same height.
     // When the row under the dots had it, that row's is left off (dayTakenBy).
     const day = newDay && (
-      <div key="typing-day" aria-hidden="true" className="flex justify-center pt-4 pb-1 first:pt-0">
+      <div key="typing-day" data-divider aria-hidden="true" className="flex justify-center pt-4 pb-1 first:pt-0">
         <span className="rounded-full bg-linen-variant px-3 py-0.5 text-[11px] font-medium text-linen-secondary">
           {dayLabel(startOfDay(now), now)}
         </span>
@@ -1694,6 +1546,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
     if (onEditMessage && canEdit(m, activeUser)) {
       menuActions.push({ key: 'edit', label: tr('Edit'), icon: Pencil, onSelect: () => { close(); startEdit(m); } });
     }
+    // When it went, reached her and was read. Not for one still waiting to
+    // show: it has not gone anywhere yet.
+    if (!menuWaiting) {
+      menuActions.push({ key: 'info', label: tr('Info'), icon: Info, onSelect: () => { close(); setInfoId(m.id); } });
+    }
     if (onUnsendMessage && canUnsend(m, activeUser)) {
       menuActions.push({
         key: 'unsend',
@@ -1703,7 +1560,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
         onSelect: () => { close(); onUnsendMessage(m.id); }
       });
     }
+    // From this phone only, hers or yours: Unsend is the way off both.
+    if (onDeleteForMe && canDeleteForMe(m, activeUser)) {
+      menuActions.push({
+        key: 'delete-me',
+        label: tr('Delete for me'),
+        icon: Trash2,
+        danger: true,
+        onSelect: () => { close(); onDeleteForMe(m.id); }
+      });
+    }
   }
+  /** The message whose Info is open - gone with it, if it is deleted or taken back meanwhile. */
+  const infoMessage = infoId ? byId.get(infoId) : undefined;
   /** The photo filling the screen - gone if it was taken back meanwhile. */
   const viewed = viewerId ? byId.get(viewerId) : undefined;
   const viewerMessage = viewed && viewed.isPhoto && viewed.photoDataUrl && !viewed.unsent && !viewed.viewOnce ? viewed : undefined;
@@ -1733,15 +1602,30 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const moreActions: MessageMenuAction[] = [
     { key: 'media', label: tr('Photos and voice notes'), icon: ImageIcon, onSelect: chooseMore(() => setMediaOpen(true)) },
     { key: 'search', label: tr('Search this chat'), icon: Search, onSelect: chooseMore(() => setSearchOpen(true)) },
-    ...(onOpenSoftLanding ? [{ key: 'breather', label: tr('Breather'), icon: Feather, onSelect: chooseMore(onOpenSoftLanding) }] : []),
-    { key: 'need', label: tr('Ask for what you need'), icon: Sparkles, onSelect: chooseMore(() => setShowNeedModal(true)) }
+    // In the app the bar is not above the chat, so its Heart is here, and
+    // Tools' Quick Exit too: hiding Two cannot be four taps away from the one
+    // screen it is most needed on. Neither marked as danger, as nothing is
+    // deleted. Breather is under the dock's Soft Landing, and Ask for what you
+    // need is in Tools.
+    ...(onOpenHeart ? [{ key: 'heart', label: tr('Heart'), icon: Heart, onSelect: chooseMore(onOpenHeart) }] : []),
+    ...(onQuickExit ? [{ key: 'quick-exit', label: tr('Quick exit'), icon: EyeOff, onSelect: chooseMore(onQuickExit) }] : [])
   ];
   const presence = presenceLine({ relayStatus, typing: partnerTyping, online: partnerOnline, lastSeen: lastSeenLabel });
 
   return (
-    <div className="relative flex flex-col chat-shell bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
+    <div
+      className={`relative flex flex-col chat-shell bg-linen-surface overflow-hidden ${
+        // Flush, the header is the top of the screen and the panel its width,
+        // as a messenger has it; a card everywhere else.
+        flush ? 'chat-flush border-b border-linen-border' : 'rounded-2xl border border-linen-border shadow-sm'
+      }`}
+    >
       {/* Header */}
       <div
+        // In the app the WebView already starts below the status bar, so the
+        // inset is 0 there and this is the py-1.5 below; a browser that
+        // reports one keeps the header clear of it.
+        style={flush ? { paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.375rem)' } : undefined}
         className={`min-h-[56px] py-1.5 border-b border-linen-border bg-linen-variant/40 flex items-center justify-between gap-2 ${
           searchOpen ? 'px-4' : 'pl-4 pr-1.5'
         }`}
@@ -1920,10 +1804,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
       <div
         ref={messagesRef}
         onScroll={handleLogScroll}
+        {...floatingDay.inputHandlers}
         // Sideways hidden: a message drawn to the right to answer it must not
         // make the conversation scroll sideways under the finger.
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-contain p-4 sm:p-6"
       >
+        <FloatingDayChip label={floatingDay.label} shown={floatingDay.shown} />
         <div ref={contentRef}>
           {/* Said once the device is full rather than never. The oldest fall off
               to keep the vault inside what a browser will store, which is a fine
@@ -1941,18 +1827,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </div>
         {/* Held at the bottom of the view while you read further up, with no
             height of its own, so it never moves the conversation. */}
-        {awayFromEnd && (
-          <div className="pointer-events-none sticky bottom-1 flex h-0 justify-end">
-            <button
-              type="button"
-              onClick={goToNewest}
-              aria-label={tr('Go to the newest message')}
-              className="pointer-events-auto -translate-y-full grid h-10 w-10 place-items-center rounded-full border border-linen-border bg-linen-surface text-linen-primary shadow-lg transition-transform active:scale-90"
-            >
-              <ChevronDown className="h-5 w-5" />
-            </button>
-          </div>
-        )}
+        {awayFromEnd && <JumpToNewestButton onClick={goToNewest} />}
       </div>
 
       {/* The picker, open only when asked for. It sits between the messages
@@ -1979,37 +1854,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
       {/* What the next message answers, or which message is being changed -
           with the way out of either. */}
       {(replyTo || editing) && (
-        <div className="mx-4 mt-2 flex items-center gap-2 rounded-xl border border-linen-border bg-linen-variant/50 py-1.5 pl-3 pr-1">
-          <div className="w-[3px] self-stretch rounded-full bg-linen-accent" />
-          {editing ? (
-            <Pencil className="w-4 h-4 shrink-0 text-linen-accent" />
-          ) : (
-            <CornerUpLeft className="w-4 h-4 shrink-0 text-linen-accent" />
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-linen-accent">
-              {editing
-                ? tr('Editing your message')
-                : replyTo!.authorId === activeUser
-                ? tr('Replying to yourself')
-                : tr('Replying to {name}', { name: partnerName })}
-            </p>
-            <p className="truncate text-xs text-linen-secondary">{editing ? editing.original : snippetShown(replyTo!.snippet)}</p>
-          </div>
-          <button
-            type="button"
-            onPointerDown={keepComposerFocus}
-            onMouseDown={keepComposerFocus}
-            onClick={() => {
-              cancelCompose();
-              restoreComposerFocus();
-            }}
-            aria-label={editing ? tr('Stop editing') : tr('Cancel reply')}
-            className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-linen-secondary hover:bg-linen-variant hover:text-linen-primary transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <ComposeBanner
+          mode={editing ? 'edit' : 'reply'}
+          title={
+            editing
+              ? tr('Editing your message')
+              : replyTo!.authorId === activeUser
+              ? tr('Replying to yourself')
+              : tr('Replying to {name}', { name: partnerName })
+          }
+          snippet={editing ? editing.original : snippetShown(replyTo!.snippet)}
+          cancelLabel={editing ? tr('Stop editing') : tr('Cancel reply')}
+          keepFocus={keepComposerFocus}
+          onCancel={() => {
+            cancelCompose();
+            restoreComposerFocus();
+          }}
+        />
       )}
 
       {preparingPhotos > 0 && (
@@ -2065,7 +1926,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 // Left the box. A moment's grace: a tap on a button beside it is not leaving.
                 onBlur={() => typing.stopSoon()}
                 onKeyDown={handleComposerKey}
-                enterKeyHint={touchFirst ? 'enter' : 'send'}
+                enterKeyHint="send"
                 autoCapitalize="sentences"
                 aria-label={editing ? tr('New words for your message') : tr('Message to {name}', { name: partnerName })}
                 // Short enough for one line on a small phone; whose chat this is
@@ -2179,6 +2040,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
         />
       )}
 
+      {/* Drawn from the message as it is now: a receipt arriving while it
+          is open shows straight away. */}
+      {infoMessage && !infoMessage.unsent && (
+        <MessageInfoSheet
+          preview={snippetShown(snippetOf(infoMessage))}
+          {...coupleInfo(infoMessage, {
+            me: activeUser,
+            partnerName,
+            partnerReadAt,
+            partnerReadHeardAt,
+            shareReceipts,
+            partnerSaysDelivered
+          })}
+          onClose={() => setInfoId(null)}
+        />
+      )}
+
       {/* The header's ⋮ menu, under its button. Only while open: a message's
           menu is found on the page as the one [role=menu]. */}
       {moreAt && !searchOpen && (
@@ -2260,17 +2138,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
           onSave={() => void savePhoto(viewerMessage)}
         />
       )}
-
-      <NeedMenuModal
-        isOpen={showNeedModal}
-        onClose={() => setShowNeedModal(false)}
-        onSelectNeed={(need) => {
-          // Sent in the words of whoever sends it.
-          onSendMessage(tr('I need: {title} — {description}', { title: tr(need.title), description: tr(need.description) }), true);
-          haptic('confirm');
-          setShowNeedModal(false);
-        }}
-      />
     </div>
   );
 };

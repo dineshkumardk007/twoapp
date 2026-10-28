@@ -4,11 +4,13 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
@@ -27,6 +29,7 @@ import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.webkit.*
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -44,6 +47,9 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.webkit.WebViewAssetLoader
 import app.two.android.core.diagnostics.CrashNote
 import app.two.android.core.network.NetworkConfig
@@ -354,6 +360,13 @@ class AndroidWebBridge(
     }
 
     /**
+     * "away" while Two is in the background or the screen is off, else "here"
+     * (PageShown) - for a page that has just loaded, which nobody has told yet.
+     */
+    @JavascriptInterface
+    fun lifecycleState(): String = if (PageShown.away) "away" else "here"
+
+    /**
      * Saves a file the page made - a backup, an export.
      *
      * A WebView ignores download links unless the app handles them, and this
@@ -654,6 +667,22 @@ class AndroidWebBridge(
     /** What the widget opened Two to do - "chat" or "heartbeat" - once; "" otherwise. */
     @JavascriptInterface
     fun takeLaunchAction(): String = LaunchAction.take()
+
+    /**
+     * The keyboard up for the box the page has just focused - the composer,
+     * when a message is pulled to the right to answer it. A pull is not a
+     * tap, and the WebView brings no keyboard up for a focus a tap did not
+     * cause; asked for here, Android shows it (the page's core/softKeyboard).
+     */
+    @JavascriptInterface
+    fun showKeyboard() {
+        val view = webView ?: return
+        view.post {
+            view.requestFocus()
+            val keys = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            keys?.showSoftInput(view, 0)
+        }
+    }
 }
 
 /**
@@ -831,6 +860,75 @@ fun TwoWebView(
         }
         page.evaluateJavascript("window.__twoBack ? window.__twoBack() : false") { result ->
             if (result != "true") hostContext.findActivity()?.moveTaskToBack(true)
+        }
+    }
+
+    /*
+     * Tells the page when Two leaves the screen - to the background, or the
+     * screen going off - and when it is back (window.__twoLifecycle, see
+     * core/shown.ts). The page shows "online", sends read receipts and typing
+     * from this as well as its own visibility, which a WebView does not always
+     * change: a phone that only pauses the app when the screen goes off kept
+     * her online in her pocket.
+     *
+     * Away on ON_STOP and on the screen going off. Here on ON_START or
+     * ON_RESUME with the screen on, and on unlocking (USER_PRESENT) while Two
+     * is the app in front - a phone that does not even pause the app when the
+     * screen goes off sends nothing else on the way back. Not ON_PAUSE: the
+     * microphone prompt and the fingerprint prompt pause the app without
+     * anyone leaving it.
+     *
+     * Not WebView.onPause: it would hold back the page that rings a call and
+     * plays voice notes and the radio. The page is only told.
+     */
+    DisposableEffect(Unit) {
+        val appContext = hostContext.applicationContext
+        val power = appContext.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val lifecycle = (hostContext.findActivity() as? LifecycleOwner)?.lifecycle
+        // Lifecycle events and broadcasts both arrive on the main thread,
+        // which evaluateJavascript needs.
+        fun tell(away: Boolean) {
+            PageShown.away = away
+            val page = webViewRef ?: return
+            if (Uri.parse(page.url ?: "").host != APP_HOST) return
+            val state = if (away) "away" else "here"
+            page.evaluateJavascript("window.__twoLifecycle && window.__twoLifecycle('$state')", null)
+        }
+        // Adding it to a lifecycle already started replays ON_START and
+        // ON_RESUME; the page may not be there yet, and reads PageShown when
+        // it loads.
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START || event == Lifecycle.Event.ON_RESUME) {
+                if (power?.isInteractive != false) tell(false)
+            } else if (event == Lifecycle.Event.ON_STOP) {
+                tell(true)
+            }
+        }
+        val screen = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                when (intent?.action) {
+                    Intent.ACTION_SCREEN_OFF -> tell(true)
+                    Intent.ACTION_USER_PRESENT ->
+                        if (lifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) == true) tell(false)
+                }
+            }
+        }
+        lifecycle?.addObserver(observer)
+        val screenEvents = IntentFilter(Intent.ACTION_SCREEN_OFF).apply {
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        // Exported, because both come from the system and only the system
+        // may send them. Not-exported would ask the sender for Two's own
+        // permission on Android 12 and older, which the lock screen that
+        // sends USER_PRESENT does not hold.
+        ContextCompat.registerReceiver(appContext, screen, screenEvents, ContextCompat.RECEIVER_EXPORTED)
+        onDispose {
+            lifecycle?.removeObserver(observer)
+            try {
+                appContext.unregisterReceiver(screen)
+            } catch (_: IllegalArgumentException) {
+                // Already gone.
+            }
         }
     }
 

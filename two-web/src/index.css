@@ -569,6 +569,15 @@ html.dark .aurora-text {
   min-height: 16rem;
 }
 
+/* The app's chat on a phone: no bar above it and no padding over it, so only
+   the 1rem under it is taken off. --two-header-h is 0 there, or the height of
+   a banner (a weak link code, storage full) when one is showing. The keyboard
+   stretch below works on this the same way. */
+.chat-shell.chat-flush {
+  height: calc(100vh - var(--two-header-h, 0px) - var(--two-dock-h, 0px) - 1rem);
+  height: calc(100dvh - var(--two-header-h, 0px) - var(--two-dock-shown, var(--two-dock-h, 0px)) - 1rem + var(--two-snug, 0px));
+}
+
 /* ---------------------------------------------------------------------------
    The dock giving way to the keyboard, in the chats
    ---------------------------------------------------------------------------

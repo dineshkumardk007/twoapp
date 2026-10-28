@@ -62,6 +62,12 @@ export interface SpaceState {
   /** Messages pinned to the top of the chat, newest last (core/chatActions). */
   chatPins?: ChatPin[];
   /**
+   * Messages deleted on this phone only, id to when (core/chatActions,
+   * withDeletedForMe): kept so a replay, a restore or a catch-up cannot bring
+   * one back. Never sent.
+   */
+  chatDeletedForMe?: Record<string, number>;
+  /**
    * When you last had the couple's chat open in front of you, by this phone's
    * clock (core/unread): their messages that arrived after it are unread.
    */

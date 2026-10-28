@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   X, Moon, Wind, Heart, Radio, Calculator, Shield, 
-  Sparkles, Check, Compass, Wifi, EyeOff, Activity, Settings, ChevronRight
+  Sparkles, Check, Compass, Wifi, EyeOff, Activity, Settings, ChevronRight, HandHeart
 } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
 import { useT } from '../core/i18n';
@@ -16,6 +16,8 @@ interface SanctuaryToolsModalProps {
   onToggleCamouflage?: () => void;
   onOpenMesh: () => void;
   onOpenSafetyNumbers: () => void;
+  /** Opens "Ask for what you need", whose card goes to the chat. Absent where it cannot be sent. */
+  onOpenNeed?: () => void;
   /** Hides Two at once - locks it, or shows the calculator - deleting nothing. */
   onQuickExit: () => void;
   /** Whether a PIN is set, so Quick Exit locks rather than disguises. */
@@ -41,6 +43,7 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
   onToggleCamouflage,
   onOpenMesh,
   onOpenSafetyNumbers,
+  onOpenNeed,
   onQuickExit,
   hasPin = false,
   onOpenStoryTour,
@@ -100,6 +103,23 @@ export const SanctuaryToolsModal: React.FC<SanctuaryToolsModalProps> = ({
         }
       }
     },
+    // Moved here from the chat's ⋮, which now holds only what a messenger's
+    // does. Without it a need card could not be sent from anywhere.
+    ...(onOpenNeed
+      ? [{
+          id: 'need',
+          title: tr('Ask for what you need'),
+          subtitle: tr('A clear ask, sent to your chat'),
+          desc: tr('Tell your partner what would help right now. It arrives in your chat as a card.'),
+          icon: HandHeart,
+          iconColor: 'text-amber-600 bg-amber-50 border-amber-200',
+          actionText: tr('Choose what you need'),
+          action: () => {
+            onClose();
+            onOpenNeed();
+          }
+        }]
+      : []),
     {
       id: 'camouflage',
       title: tr('Calculator Disguise'),

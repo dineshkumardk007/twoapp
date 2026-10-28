@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PairingModal } from './PairingModal';
 import { LocalMeshModal } from './LocalMeshModal';
 import { AmbientSoundscapeModal } from './AmbientSoundscapeModal';
 import { CoRegulationModal } from './CoRegulationModal';
 import { SanctuaryToolsModal } from './SanctuaryToolsModal';
 import { HeartOptionsModal } from './HeartOptionsModal';
+import { NeedMenuModal } from './NeedMenuModal';
+import { signalAsks } from '../core/chatChrome';
+import { haptic } from '../core/haptics';
 import { Shield, Users, LogOut, Heart, MessageSquare, BookOpen, Handshake, CheckSquare, Layers, DollarSign, Image, Settings, Sparkles, Moon, Calculator, Flame, Mail, Compass, Radio, Star, MapPin, Utensils, Smile, Wind, Hourglass, Coffee, Gift, BookMarked, Sprout, Feather, Mic, Bed, Map, Palette, LayoutGrid } from 'lucide-react';
 import { Locale, getTranslation, useT } from '../core/i18n';
 
@@ -41,10 +44,21 @@ interface NavigationProps {
    * exit, all of which the dock or the tools hub already reach.
    */
   compact?: boolean;
-  /** Incremented by the dock to open the tools hub from outside. */
+  /** Incremented to open the tools hub from outside. */
   openToolsSignal?: number;
-  /** Likewise for the heart panel, which also lives inside this component. */
+  /** Likewise for the heart panel, which also lives inside this component; the chat's ⋮ bumps it. */
   openHeartSignal?: number;
+  /**
+   * Private Chat is in front in the app: no bar, because the chat's own header
+   * takes the top. The modals stay mounted, so Heart from the chat's ⋮ still
+   * opens. Compact (app) only; the website's header never hides.
+   */
+  barHidden?: boolean;
+  /**
+   * Sends an "Ask for what you need" card to the couple's chat. The sheet
+   * lives here, under Tools, since the chat's ⋮ no longer has it.
+   */
+  onSendNeed?: (text: string) => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -66,7 +80,9 @@ export const Navigation: React.FC<NavigationProps> = ({
   partnerName = 'Partner',
   compact = false,
   openToolsSignal = 0,
-  openHeartSignal = 0
+  openHeartSignal = 0,
+  barHidden = false,
+  onSendNeed
 }) => {
   const [showPairingModal, setShowPairingModal] = useState(false);
   const [showMeshModal, setShowMeshModal] = useState(false);
@@ -74,6 +90,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   const [showCoRegulationModal, setShowCoRegulationModal] = useState(false);
   const [showToolsModal, setShowToolsModal] = useState(false);
   const [showHeartModal, setShowHeartModal] = useState(false);
+  const [showNeedModal, setShowNeedModal] = useState(false);
   const t = getTranslation(locale);
   const tr = useT();
 
@@ -150,6 +167,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         onToggleCamouflage={onToggleCamouflage}
         onOpenMesh={() => setShowMeshModal(true)}
         onOpenSafetyNumbers={() => setShowPairingModal(true)}
+        onOpenNeed={onSendNeed ? () => setShowNeedModal(true) : undefined}
         onQuickExit={onQuickExit}
         hasPin={hasPin}
         relayStatus={relayStatus}
@@ -163,20 +181,45 @@ export const Navigation: React.FC<NavigationProps> = ({
         onClose={() => setShowHeartModal(false)}
         partnerName={partnerName}
       />
+
+      <NeedMenuModal
+        isOpen={showNeedModal}
+        onClose={() => setShowNeedModal(false)}
+        onSelectNeed={(need) => {
+          // Sent in the words of whoever sends it.
+          onSendNeed?.(tr('I need: {title} — {description}', { title: tr(need.title), description: tr(need.description) }));
+          haptic('confirm');
+          setShowNeedModal(false);
+        }}
+      />
     </>
   );
 
-  // The dock asks for the tools hub by bumping a counter; opening on the value
-  // itself would reopen the modal every time the component re-rendered.
+  // Asked for from outside by bumping a counter; opening on the value itself
+  // would reopen the modal every time the component re-rendered. Each counter
+  // remembers the last value it acted on, starting with the one it mounted
+  // with: App drops this component on its early returns (a group, the lock,
+  // the calculator), and coming back holding a bumped counter must not open
+  // Heart or Tools by itself.
+  const toolsSeen = useRef(openToolsSignal);
   useEffect(() => {
-    if (openToolsSignal > 0) setShowToolsModal(true);
+    if (!signalAsks(toolsSeen.current, openToolsSignal)) return;
+    toolsSeen.current = openToolsSignal;
+    setShowToolsModal(true);
   }, [openToolsSignal]);
 
+  const heartSeen = useRef(openHeartSignal);
   useEffect(() => {
-    if (openHeartSignal > 0) setShowHeartModal(true);
+    if (!signalAsks(heartSeen.current, openHeartSignal)) return;
+    heartSeen.current = openHeartSignal;
+    setShowHeartModal(true);
   }, [openHeartSignal]);
 
   if (compact) {
+    // The chat's own header is the top of the screen; Heart moved into its ⋮
+    // and Tools is one tap away on any other tab.
+    if (barHidden) return <>{modals}</>;
+
     const connected = relayStatus === 'connected';
     const connecting = relayStatus === 'connecting' || relayStatus === 'reconnecting';
 

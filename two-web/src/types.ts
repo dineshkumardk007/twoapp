@@ -53,6 +53,18 @@ export interface ChatMessage {
    * core/chatActions). Kept on this phone only, like `reached`.
    */
   leftAt?: number;
+  /**
+   * On my own messages: when, by this phone's clock, her phone said it had
+   * it (CHAT_DELIVERED), for the message's Info. Kept on this phone only:
+   * never sent, never taken from the wire. Absent on one that reached her
+   * before this was kept.
+   */
+  reachedAt?: number;
+  /**
+   * On my own messages: when it turned read (blue) here, for its Info. The
+   * same as `reachedAt`: this phone's own, never sent or taken from the wire.
+   */
+  readByPartnerAt?: number;
   isNeedCard?: boolean;
   isVoiceMemo?: boolean;
   audioDataUrl?: string;

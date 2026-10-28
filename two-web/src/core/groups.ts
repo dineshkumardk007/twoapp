@@ -90,6 +90,55 @@ export interface GroupMessage {
    * it only clears the "new" dot and decides what plays next by itself.
    */
   heard?: boolean;
+  /**
+   * The relay's id for the record it travelled in. Local: learnt from the
+   * record on arrival, and from the relay's acknowledgement for your own. A
+   * phone that got the message on a version before `mid` filed it under this,
+   * so every change names it too (core/groupActions).
+   */
+  rid?: string;
+  /**
+   * Sent by this phone with its id inside (`mid`), so every phone holds it
+   * under the same one and it can be changed or taken back. Local, never
+   * read from the wire: your messages from before have no such id elsewhere.
+   */
+  sharedId?: true;
+  /** The message it answers. */
+  replyTo?: GroupReplyRef;
+  /** Member id to emoji: one from each member, set or taken off by them. */
+  reactions?: Record<string, string>;
+  /** When its author last changed its words, on the author's clock. */
+  editedAt?: number;
+  /** Taken back by its author: a line that says so stays in its place. */
+  unsent?: true;
+  /** A photo: the picture travels inside the message, as in the couple's chat. */
+  isPhoto?: true;
+  photoDataUrl?: string;
+  photoWidth?: number;
+  photoHeight?: number;
+  /**
+   * When it arrived here, by this phone's clock, for its Info. Local: never
+   * sent, and not for history being restored, which is not news.
+   */
+  receivedAt?: number;
+  /**
+   * On your own: when each member's read of it was heard here, member id to
+   * time (stampGroupRead), for its Info. Local, never sent.
+   */
+  readTimes?: Record<string, number>;
+}
+
+/**
+ * A reply's quote in a group. `rid` is the record id of what it answers, for
+ * a phone that filed that message under it; the name is the author's as it
+ * was then, for a member who has since gone quiet.
+ */
+export interface GroupReplyRef {
+  id: string;
+  rid?: string;
+  authorId: string;
+  authorName?: string;
+  snippet: string;
 }
 
 export interface GroupSpace {
@@ -116,6 +165,11 @@ export interface GroupSpace {
   createdAt: number;
   members: GroupMember[];
   messages: GroupMessage[];
+  /**
+   * Messages deleted on this phone only, by id and by record id, to when:
+   * kept so a replay or a reconnect cannot bring one back. Never sent.
+   */
+  deletedForMe?: Record<string, number>;
 }
 
 /**
@@ -129,6 +183,14 @@ export interface GroupSpace {
 export const GROUP_CHAT = 'GROUP_CHAT';
 export const GROUP_HELLO = 'GROUP_HELLO';
 export const GROUP_READ = 'GROUP_READ';
+/**
+ * What can happen to a group message after it is sent, each a record of its
+ * own naming the message (core/groupActions), as in the couple's chat. A
+ * phone on a version without them stores and passes them over.
+ */
+export const GROUP_CHAT_EDIT = 'GROUP_CHAT_EDIT';
+export const GROUP_CHAT_UNSEND = 'GROUP_CHAT_UNSEND';
+export const GROUP_CHAT_REACTION = 'GROUP_CHAT_REACTION';
 
 /**
  * Everyone in a group joins in the same seat.
@@ -200,6 +262,32 @@ export function withMember(
   );
 }
 
+/**
+ * Your messages a member's read position has just moved past (`before` to
+ * `upTo`), with when it was heard (`at`) kept for their Info - never before
+ * the message was sent nor after now. Only on the move, so a message read
+ * before this was kept gets no time. Null when none changes.
+ */
+export function stampGroupRead(
+  messages: GroupMessage[],
+  myId: string,
+  readerId: string,
+  before: number,
+  upTo: number,
+  at: number,
+  now: number = Date.now()
+): GroupMessage[] | null {
+  if (!(upTo > before) || readerId === myId) return null;
+  const t = Number.isFinite(at) && at > 0 ? at : now;
+  let changed = false;
+  const next = messages.map(m => {
+    if (m.authorId !== myId || m.sentAt <= before || m.sentAt > upTo || m.readTimes?.[readerId]) return m;
+    changed = true;
+    return { ...m, readTimes: { ...m.readTimes, [readerId]: Math.min(now, Math.max(t, m.sentAt)) } };
+  });
+  return changed ? next : null;
+}
+
 /** Records that a member has read everything up to a moment. */
 export function withRead(members: GroupMember[], memberId: string, upTo: number): GroupMember[] {
   return members.map(m =>
@@ -243,7 +331,8 @@ export function readBreakdown(
 export function unreadCount(group: GroupSpace, myId: string): number {
   const me = group.members.find(m => m.id === myId);
   const readUpTo = me?.readUpTo || 0;
-  return group.messages.filter(m => m.authorId !== myId && m.sentAt > readUpTo).length;
+  // One taken back is not there to read.
+  return group.messages.filter(m => m.authorId !== myId && m.sentAt > readUpTo && !m.unsent).length;
 }
 
 /** How long since a beat still counts as being here. */

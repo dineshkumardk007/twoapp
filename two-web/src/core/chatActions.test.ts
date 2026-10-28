@@ -5,6 +5,9 @@ import {
   MAX_DELIVERED_IDS,
   MAX_PINS,
   applyDelivered,
+  canDeleteForMe,
+  stampRead,
+  withDeletedForMe,
   deliveredBatches,
   readDeliveredIds,
   settleRead,
@@ -355,5 +358,75 @@ describe('read past', () => {
     // From before `delivered` was kept: left long ago, nothing to rewrite.
     expect(settleRead([msg()], 'user', SENT, none)).toBeNull();
     expect(settleRead([msg({ delivered: false, sentAt: undefined })], 'user', SENT, none)).toBeNull();
+  });
+});
+
+describe('when it reached her and when she read it, for Info', () => {
+  const mine = (id: string, over: Partial<ChatMessage> = {}) => msg({ id, delivered: true, ...over });
+  const NOW = SENT + 60_000;
+
+  it('keeps when her phone said it had it, never before it left nor after now', () => {
+    const out = applyDelivered([mine('a', { leftAt: SENT + 1000 })], 'user', ['a'], SENT + 5000, NOW)!;
+    expect(out[0].reachedAt).toBe(SENT + 5000);
+    // Her clock behind this one: not before it left here.
+    expect(applyDelivered([mine('a', { leftAt: SENT + 1000 })], 'user', ['a'], SENT - 9000, NOW)![0].reachedAt).toBe(SENT + 1000);
+    // Ahead: not after now.
+    expect(applyDelivered([mine('a')], 'user', ['a'], NOW + 9000, NOW)![0].reachedAt).toBe(NOW);
+  });
+
+  it('gives no time to one that had reached her before', () => {
+    const old = mine('a', { reached: true });
+    expect(applyDelivered([old], 'user', ['a'], SENT + 5000, NOW)).toBeNull();
+  });
+
+  it('keeps when a message turned read, only for the ones that turned', () => {
+    const before = { readAt: SENT - 1, heardAt: SENT - 1 };
+    const after = { readAt: SENT + 10, heardAt: NOW };
+    const list = [mine('old', { sentAt: SENT - 100 }), mine('new'), mine('later', { sentAt: SENT + 50 })];
+    const out = stampRead(list, 'user', before, after, SENT + 2000, NOW)!;
+    // Already read under the receipt before: it keeps no time, rather than this one.
+    expect(out[0].readByPartnerAt).toBeUndefined();
+    expect(out[1].readByPartnerAt).toBe(SENT + 2000);
+    // Not reached by this receipt.
+    expect(out[2].readByPartnerAt).toBeUndefined();
+    expect(stampRead(out, 'user', before, after, SENT + 3000, NOW)).toBeNull();
+  });
+
+  it('waits, as the blue ticks do, for a receipt heard after it left here', () => {
+    const late = mine('a', { leftAt: NOW - 10 });
+    const early = { readAt: SENT + 10, heardAt: NOW - 20 };
+    expect(stampRead([late], 'user', { readAt: 0, heardAt: 0 }, early, NOW - 20, NOW)).toBeNull();
+    const out = stampRead([late], 'user', early, { readAt: SENT + 10, heardAt: NOW }, NOW, NOW)!;
+    expect(out[0].readByPartnerAt).toBe(NOW);
+  });
+
+  it('never stamps hers, or one that never left', () => {
+    const after = { readAt: SENT + 10, heardAt: NOW };
+    const list = [msg({ authorId: 'partner' }), mine('stuck', { delivered: false })];
+    expect(stampRead(list, 'user', { readAt: 0, heardAt: 0 }, after, NOW, NOW)).toBeNull();
+  });
+});
+
+describe('deleting for you only', () => {
+  it('is offered for hers and your sent ones', () => {
+    expect(canDeleteForMe(msg({ authorId: 'partner' }), 'user')).toBe(true);
+    expect(canDeleteForMe(msg({ delivered: true }), 'user')).toBe(true);
+    // From before `delivered` was kept: long gone.
+    expect(canDeleteForMe(msg(), 'user')).toBe(true);
+  });
+
+  it('is not offered for a call, one still on this phone, or one waiting to show', () => {
+    expect(canDeleteForMe(msg({ call: { callId: 'c1', caller: 'user', startedAt: SENT, seconds: 5, outcome: 'talked' } }), 'user')).toBe(false);
+    expect(canDeleteForMe(msg({ delivered: false }), 'user')).toBe(false);
+    expect(canDeleteForMe(msg({ delivered: false, reached: true }), 'user')).toBe(true);
+    expect(canDeleteForMe(msg({ showAt: SENT + 60_000, sentAt: SENT + 60_000 }), 'user', SENT)).toBe(false);
+  });
+
+  it('remembers what was deleted, the newest when there are too many', () => {
+    let list = withDeletedForMe(undefined, 'a', 1);
+    list = withDeletedForMe(list, 'b', 3);
+    list = withDeletedForMe(list, 'c', 2, 2);
+    expect(list).toEqual({ b: 3, c: 2 });
+    expect(withDeletedForMe(list, 'b', 9, 2)).toEqual({ b: 9, c: 2 });
   });
 });

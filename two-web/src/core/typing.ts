@@ -16,6 +16,7 @@
 import { useEffect, useRef } from 'react';
 import { BEFORE_LOCK_EVENT } from './autoLock';
 import { TYPING_REPEAT_MS, TYPING_TTL_MS } from './lastSeen';
+import { onShownChange } from './shown';
 
 /** "Stopped writing". A phone on the version before ignores a signal it does not know. */
 export const TYPING_STOP_SIGNAL = 'TYPING_STOP';
@@ -133,7 +134,8 @@ export function createTypingSender(say: (typing: boolean) => void, clock: Typing
 
 /**
  * The sender for one chat screen. Stops by itself when Two goes to the
- * background, the page goes, Two locks, or the screen closes.
+ * background or the phone's screen goes off (core/shown.ts), the page goes,
+ * Two locks, or the screen closes.
  */
 export function useTypingSender(onTyping?: (typing: boolean) => void): TypingSender {
   const callback = useRef(onTyping);
@@ -142,15 +144,14 @@ export function useTypingSender(onTyping?: (typing: boolean) => void): TypingSen
   if (!ref.current) ref.current = createTypingSender(typing => callback.current?.(typing));
   useEffect(() => {
     const sender = ref.current!;
-    const onVisibility = () => {
-      if (document.visibilityState === 'hidden') sender.stop();
-    };
+    const offShown = onShownChange(shown => {
+      if (!shown) sender.stop();
+    });
     const gone = () => sender.stop();
-    document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('pagehide', gone);
     window.addEventListener(BEFORE_LOCK_EVENT, gone);
     return () => {
-      document.removeEventListener('visibilitychange', onVisibility);
+      offShown();
       window.removeEventListener('pagehide', gone);
       window.removeEventListener(BEFORE_LOCK_EVENT, gone);
       sender.stop();

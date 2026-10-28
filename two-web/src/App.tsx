@@ -1,20 +1,39 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, lazy, Suspense, startTransition, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, lazy, Suspense, startTransition, useMemo, useSyncExternalStore } from 'react';
 import { loadState, saveState, clearState, pruneForStorage, forStorage, upgradeState, SpaceState, MAX_CHAT_MESSAGES } from './core/storage';
 import { AppDock } from './components/AppDock';
 import { GroupDock } from './components/GroupDock';
 import {
   GROUP_CHAT,
+  GROUP_CHAT_EDIT,
+  GROUP_CHAT_REACTION,
+  GROUP_CHAT_UNSEND,
   GROUP_HELLO,
   GROUP_READ,
   GroupMessage,
+  GroupReplyRef,
   GroupSpace,
   myMemberId,
   newGroup,
   MAX_GROUP_MESSAGES,
+  stampGroupRead,
   withMember,
   withRead,
   unreadCount
 } from './core/groups';
+import {
+  applyGroupEdit,
+  applyGroupReaction,
+  applyGroupUnsend,
+  canDeleteGroupForMe,
+  canEditGroup,
+  canReactGroup,
+  canUnsendGroup,
+  changeTargetOf,
+  deletedHere,
+  groupMessageFromWire,
+  holdsGroupMessage,
+  withGroupDeletedForMe
+} from './core/groupActions';
 import {
   connectGroup,
   disconnectGroup,
@@ -216,6 +235,9 @@ import {
   deliveredBatches,
   readDeliveredIds,
   settleRead,
+  stampRead,
+  canDeleteForMe,
+  withDeletedForMe,
   canEdit,
   canOpenViewOnce,
   canUnsend,
@@ -223,7 +245,8 @@ import {
   cleanReplyRef,
   deliveredCopy,
   ackedCopy,
-  type MessageExtras
+  type MessageExtras,
+  type PhotoFields
 } from './core/chatActions';
 import { mergeReport, recordDay } from './core/weatherHistory';
 import { localDateKey } from './core/ourDates';
@@ -245,6 +268,8 @@ import {
   onScreenUntil
 } from './core/lastSeen';
 import { TYPING_STOP_SIGNAL, typingEndedBy, typingNow, typingTtlFor } from './core/typing';
+import { chatChrome } from './core/chatChrome';
+import { isShown, onShownChange } from './core/shown';
 
 
 // Screens are fetched the first time they are opened rather than all at once.
@@ -341,8 +366,9 @@ function chatFromWire(parsed: any): ChatMessage {
     // That it has reached a phone is said by CHAT_DELIVERED, and kept by its
     // sender alone.
     reached,
-    // When it left or came here is this phone's own clock (readByPartner).
-    leftAt,
+    // When it left or came here is this phone's own clock (readByPartner),
+    // and so are when it reached her and was read (its Info).
+    leftAt, reachedAt, readByPartnerAt,
     ...rest
   } = parsed;
   const voice = cleanVoiceFields(parsed);
@@ -1291,6 +1317,10 @@ export const App: React.FC = () => {
             }
             const withHeldOne = theirs ? waitsWith(wire, latestRef.current.state.heldMessages) : undefined;
             const incoming = withHeldOne === undefined ? wire : { ...wire, showAt: withHeldOne };
+            // Deleted on this phone (Delete for me): a replay, a restore or a
+            // catch-up brings it again, and it stays gone - no toast, no news,
+            // and her phone is not told a second time that it landed.
+            if (latestRef.current.state.chatDeletedForMe?.[incoming.id]) return;
             // Set to show later, and not yet time: kept out of sight - no
             // chime, toast or news - until it is (core/sendLater).
             const held = theirs && (withHeldOne !== undefined || isHeld(incoming, state.activeUser));
@@ -1317,6 +1347,7 @@ export const App: React.FC = () => {
               // ever moved forward, and is not something to keep resting on.
               if (prev.messages.some(m => m.id === incoming.id)) return prev;
               if (prev.heldMessages?.some(m => m.id === incoming.id)) return prev;
+              if (prev.chatDeletedForMe?.[incoming.id]) return prev;
               if (held) return { ...prev, heldMessages: withHeld(prev.heldMessages, incoming) };
 
               // A copy of our own message that came back through the relay was,
@@ -1527,11 +1558,29 @@ export const App: React.FC = () => {
             // was heard long ago, and says nothing new. Unless it is said
             // again live: her phone does that when one of ours reached her
             // late, under what she had already read (sendReadReceipt there).
+            //
+            // The messages it turns blue keep when, for their Info: now, or
+            // for one fetched again after a gap, when her phone said it
+            // (clientTs, her clock - kept within when it left and now).
             setState(prev => {
               const was = prev.partnerReadAt || 0;
-              if (upTo > was) return { ...prev, partnerReadAt: upTo, partnerReadHeardAt: Date.now() };
-              if (upTo > 0 && upTo === was && !msg.replay) return { ...prev, partnerReadHeardAt: Date.now() };
-              return prev;
+              const now = Date.now();
+              const next =
+                upTo > was
+                  ? { readAt: upTo, heardAt: now }
+                  : upTo > 0 && upTo === was && !msg.replay
+                  ? { readAt: was, heardAt: now }
+                  : null;
+              if (!next) return prev;
+              const at = msg.replay ? Number(record.clientTs) || now : now;
+              const before = { readAt: was, heardAt: prev.partnerReadHeardAt ?? 0 };
+              const messages = stampRead(prev.messages, prev.activeUser, before, next, at, now);
+              return {
+                ...prev,
+                partnerReadAt: next.readAt,
+                partnerReadHeardAt: next.heardAt,
+                ...(messages ? { messages } : {})
+              };
             });
           } else if (record.type === CHAT_DELIVERED) {
             // Our messages on one of her devices: two grey ticks. Any of hers
@@ -1539,8 +1588,10 @@ export const App: React.FC = () => {
             if (record.authorId === state.activeUser) return;
             const ids = readDeliveredIds(parsed);
             if (!ids.length) return;
+            // When, for the messages' Info: now, or when her phone said it.
+            const at = msg.replay ? Number(record.clientTs) || Date.now() : Date.now();
             setState(prev => {
-              const messages = applyDelivered(prev.messages, prev.activeUser, ids);
+              const messages = applyDelivered(prev.messages, prev.activeUser, ids, at);
               return messages ? { ...prev, messages } : prev;
             });
           } else if (record.type === VOICE_HEARD) {
@@ -2156,7 +2207,7 @@ export const App: React.FC = () => {
     // Read means looked at. A phone locked with the chat as its last screen
     // keeps its connection (the radio holds the app awake), and without this
     // every message that landed in the pocket was ticked read on arrival.
-    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+    if (!isShown()) return;
     // Their real messages only: a call's line can carry this phone's clock.
     const newest = newestFrom(state.messages, state.activeUser === 'user' ? 'partner' : 'user');
     // One that came late - out of an outbox, or from a phone whose clock is
@@ -2180,15 +2231,11 @@ export const App: React.FC = () => {
    * Kept as state so read receipts can wait for it: whatever arrived while the
    * phone was locked or the app was behind another is read when it is looked
    * at again, not when it landed.
+   *
+   * Not the document's visibility alone: the Android app also says when Two
+   * goes to the background or the screen goes off (core/shown.ts).
    */
-  const [pageVisible, setPageVisible] = useState(
-    () => typeof document === 'undefined' || document.visibilityState === 'visible'
-  );
-  useEffect(() => {
-    const update = () => setPageVisible(document.visibilityState === 'visible');
-    document.addEventListener('visibilitychange', update);
-    return () => document.removeEventListener('visibilitychange', update);
-  }, []);
+  const pageVisible = useSyncExternalStore(onShownChange, isShown, () => true);
 
   /** The vault is open: everything it held goes into the app. */
   const finishUnlock = (opened: NonNullable<Awaited<ReturnType<typeof unlockVault>>>) => {
@@ -2618,7 +2665,7 @@ export const App: React.FC = () => {
     if (!shareLastSeen || relayStatus !== 'connected' || isLocked) return;
 
     const beat = () => {
-      if (document.visibilityState !== 'visible') return;
+      if (!isShown()) return;
       wsRelay.broadcastUpdate(PRESENCE_BEAT, presenceBeat(Date.now()));
     };
     // Coming and going both. The one sent as Two leaves the screen is what
@@ -2629,13 +2676,13 @@ export const App: React.FC = () => {
 
     beat();
     const timer = setInterval(beat, BEAT_INTERVAL_MS);
-    document.addEventListener('visibilitychange', cameOrWent);
+    const offShown = onShownChange(cameOrWent);
     // Locked from the screen (Quick exit) is leaving too. Not the auto-lock
     // a minute after she went, whose time is not when she left.
     window.addEventListener(BEFORE_LOCK_EVENT, beat);
     return () => {
       clearInterval(timer);
-      document.removeEventListener('visibilitychange', cameOrWent);
+      offShown();
       window.removeEventListener(BEFORE_LOCK_EVENT, beat);
     };
   }, [shareLastSeen, relayStatus, isLocked]);
@@ -2660,7 +2707,7 @@ export const App: React.FC = () => {
       if (partnerThere) wsRelay.sendSignal(HERE_SIGNAL, { here, device: getDeviceId() });
     };
     // The calculator is not Two on screen, whatever the page says.
-    const onScreen = () => !locking && !isCamouflaged && document.visibilityState === 'visible';
+    const onScreen = () => !locking && !isCamouflaged && isShown();
     const sayNow = () => say(onScreen());
     const gone = () => say(false);
     const beforeLock = () => {
@@ -2671,7 +2718,7 @@ export const App: React.FC = () => {
     const timer = setInterval(() => {
       if (onScreen()) say(true);
     }, HERE_REPEAT_MS);
-    document.addEventListener('visibilitychange', sayNow);
+    const offShown = onShownChange(sayNow);
     // Some Android WebViews report a pagehide without a visibilitychange.
     window.addEventListener('pagehide', gone);
     window.addEventListener(BEFORE_LOCK_EVENT, beforeLock);
@@ -2683,7 +2730,7 @@ export const App: React.FC = () => {
     });
     return () => {
       clearInterval(timer);
-      document.removeEventListener('visibilitychange', sayNow);
+      offShown();
       window.removeEventListener('pagehide', gone);
       window.removeEventListener(BEFORE_LOCK_EVENT, beforeLock);
       unsubscribe();
@@ -2749,10 +2796,13 @@ export const App: React.FC = () => {
    */
   const handleGroupMessage = (groupId: string, msg: any) => {
     // The relay confirming a record is what turns a pending message into
-    // "sent", exactly as in the couple's chat. Hellos and read positions are
-    // sent without a correlation id, so their acks fall straight through.
+    // "sent", exactly as in the couple's chat. Hellos, read positions and
+    // changes to a message are sent without a correlation id, so their acks
+    // fall straight through. The record id is kept: a phone that got the
+    // message on a version before `mid` knows it by that alone.
     if (msg?.type === 'RECORD_ACK' && msg.correlationId) {
       const acked = String(msg.correlationId);
+      const rid = msg.recordId ? String(msg.recordId) : '';
       setState(prev => ({
         ...prev,
         groups: prev.groups.map(g =>
@@ -2761,7 +2811,7 @@ export const App: React.FC = () => {
             : {
                 ...g,
                 messages: g.messages.map(m =>
-                  m.id === acked ? { ...m, delivered: true } : m
+                  m.id === acked ? { ...m, delivered: true, ...(rid ? { rid } : {}) } : m
                 )
               }
         )
@@ -2868,11 +2918,28 @@ export const App: React.FC = () => {
         }
 
         if (record.type === GROUP_READ) {
-          return { ...g, members: withRead(g.members, from, Number(parsed.upTo) || 0) };
+          // Your messages it moves past keep when, for their Info: now, or
+          // when their phone said it, for one fetched again after a gap.
+          const upTo = Number(parsed.upTo) || 0;
+          const before = g.members.find(m => m.id === from)?.readUpTo ?? 0;
+          const at = msg.replay ? Number(record.clientTs) || Date.now() : Date.now();
+          const messages = stampGroupRead(g.messages, myMemberId(), from, before, upTo, at);
+          return { ...g, members: withRead(g.members, from, upTo), ...(messages ? { messages } : {}) };
         }
 
         if (record.type === GROUP_CHAT) {
-          if (g.messages.some(m => m.id === record.id)) return g;
+          // Filed under the sender's own id (`mid`) when it says one, so every
+          // phone names it the same; the record id goes beside it. Built field
+          // by field, as ever (core/groupActions): nothing arrives that was not
+          // asked for - `heard`, reactions, an edit or an unsend included. A
+          // voice note's recording is kept only as cleanVoiceFields accepts it
+          // and a photo only as an image; one that fails shows as its text.
+          const wire = groupMessageFromWire(String(record.id), parsed, from, cleanVoiceFields(parsed));
+          if (holdsGroupMessage(g.messages, wire)) return g;
+          // Deleted on this phone (Delete for me): it stays gone, without a word.
+          if (deletedHere(g.deletedForMe, wire)) return g;
+          // When it arrived here, for its Info - not history being restored.
+          const message = msg.restoring && !msg.catchUp ? wire : { ...wire, receivedAt: Date.now() };
 
           // Something arriving in a group you are not looking at used to be
           // silent: the couple's chat raises a toast, groups raised nothing,
@@ -2886,24 +2953,30 @@ export const App: React.FC = () => {
               tabId: `group:${groupId}`
             });
           }
-          // Built field by field, as ever, so nothing arrives that was not
-          // asked for - `heard` included. A voice note's recording is kept
-          // only as cleanVoiceFields accepts it; one that fails shows as its
-          // text, the note's label.
-          const voice = cleanVoiceFields(parsed);
-          const message: GroupMessage = {
-            id: record.id,
-            authorId: from,
-            authorName: String(parsed.name || 'Someone'),
-            text: String(parsed.text || ''),
-            sentAt: Number(parsed.at) || Date.now(),
-            ...(voice || {})
-          };
           return {
             ...g,
             members: withMember(g.members, { id: from, name: message.authorName, at: message.sentAt }),
             messages: insertBySentAt(g.messages, message).slice(-MAX_GROUP_MESSAGES)
           };
+        }
+
+        // A change to a message already here, from its author or (a
+        // reaction) any member - checked in core/groupActions. One naming a
+        // message this phone does not hold, or a second copy of one already
+        // applied, changes nothing.
+        if (
+          record.type === GROUP_CHAT_EDIT ||
+          record.type === GROUP_CHAT_UNSEND ||
+          record.type === GROUP_CHAT_REACTION
+        ) {
+          const apply =
+            record.type === GROUP_CHAT_EDIT
+              ? applyGroupEdit
+              : record.type === GROUP_CHAT_UNSEND
+              ? applyGroupUnsend
+              : applyGroupReaction;
+          const messages = apply(g.messages, from, parsed);
+          return messages ? { ...g, messages } : g;
         }
 
         return g;
@@ -2956,7 +3029,7 @@ export const App: React.FC = () => {
       // otherwise be "Someone" to everybody until they next opened it.
       // The repeats are the presence signal, and those do wait for the
       // foreground, so a pocketed phone does not report itself as present.
-      if (onlyWhenVisible && document.visibilityState !== 'visible') return;
+      if (onlyWhenVisible && !isShown()) return;
       state.groups.forEach(group => {
         if (groupStatuses[group.id] !== 'connected') return;
         sendToGroup(group.id, GROUP_HELLO, {
@@ -2974,11 +3047,11 @@ export const App: React.FC = () => {
 
     const first = setTimeout(announce, 800);
     const timer = setInterval(beat, 60_000);
-    document.addEventListener('visibilitychange', beat);
+    const offShown = onShownChange(beat);
     return () => {
       clearTimeout(first);
       clearInterval(timer);
-      document.removeEventListener('visibilitychange', beat);
+      offShown();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupKeys, groupStatuses, isLocked, state.userName]);
@@ -3127,17 +3200,18 @@ export const App: React.FC = () => {
     // A voice note goes again as a voice note - its recording, length and
     // shape - not as the label that stands in for it as text.
     const voice = stuck?.isVoiceMemo ? cleanVoiceFields(stuck) : null;
-    // A photo likewise, picture and all - and view-once still, if it was.
-    // Only the couple's chat sends photos.
+    // A photo likewise, picture and all - and view-once still, if it was (a
+    // group has no view once). Either goes again as the answer it was.
     const stuckPhoto = groupId ? undefined : (stuck as ChatMessage | undefined);
-    const photo = stuckPhoto?.isPhoto ? cleanPhotoFields(stuckPhoto) : null;
-    if (action === 'retry' && stuckPhoto?.isPhoto && !photo) {
+    const stuckInGroup = groupId ? (stuck as GroupMessage | undefined) : undefined;
+    const photo = stuck?.isPhoto ? cleanPhotoFields(stuck) : null;
+    if (action === 'retry' && stuck?.isPhoto && !photo) {
       setInAppNotification({
         id: newId(),
         title: "Can't send that photo again",
         body: 'The picture is no longer on this phone. Discard it and send the photo again.',
         type: 'general',
-        tabId: 'chat'
+        tabId: groupId ? `group:${groupId}` : 'chat'
       });
       return;
     }
@@ -3174,8 +3248,12 @@ export const App: React.FC = () => {
     }
 
     if (action !== 'retry' || !text) return;
-    if (groupId) handleSendGroupMessage(groupId, text, voice ?? undefined);
-    else {
+    if (groupId) {
+      handleSendGroupMessage(groupId, text, {
+        ...(voice ? { voice } : photo ? { photo } : {}),
+        ...(stuckInGroup?.replyTo ? { replyTo: stuckInGroup.replyTo } : {})
+      });
+    } else {
       // Still an answer to what it answered, and one set to show later still
       // waits for its time - sent again now, it would show at once.
       const kept = {
@@ -3189,18 +3267,39 @@ export const App: React.FC = () => {
     }
   };
 
-  /** `voice` makes it a voice note; `text` is then the note's label. */
-  const handleSendGroupMessage = (groupId: string, text: string, voice?: VoiceFields) => {
+  /**
+   * `voice` makes it a voice note and `photo` a photo; `text` is then its
+   * label. `replyTo` is the message it answers.
+   */
+  const handleSendGroupMessage = (
+    groupId: string,
+    text: string,
+    extras: { voice?: VoiceFields; photo?: PhotoFields; replyTo?: GroupReplyRef } = {}
+  ) => {
+    const { voice, photo, replyTo } = extras;
     const at = Date.now();
     const id = newId('gmsg');
     const name = state.userName || 'Someone';
-    const payload = { from: myMemberId(), name, text, at, ...voice };
+    // `mid`: its id here, so every phone files it under the same one and a
+    // change to it names it the same everywhere (core/groupActions). A phone
+    // on the version before files it under the record id, and passes over
+    // the photo and the quote: it shows the words, "Photo" for a photo.
+    const payload = {
+      from: myMemberId(),
+      name,
+      text,
+      at,
+      mid: id,
+      ...voice,
+      ...(voice ? {} : photo),
+      ...(replyTo ? { replyTo } : {})
+    };
 
-    // A voice note is measured against the relay's limit before it is shown.
-    // The group's client refuses an oversized record too, but only once it
-    // holds the group's key, so until then a bubble would sit there for a
-    // note that can never go. Refused here, where somebody can be told.
-    if (voice) {
+    // A voice note or a photo is measured against the relay's limit before it
+    // is shown. The group's client refuses an oversized record too, but only
+    // once it holds the group's key, so until then a bubble would sit there
+    // for a message that can never go. Refused here, where somebody can be told.
+    if (voice || photo) {
       const bytes = recordSizeOf(payload);
       if (bytes > MAX_RECORD_BYTES) {
         setInAppNotification(tooLargeNotice(bytes, true, `group:${groupId}`));
@@ -3221,7 +3320,10 @@ export const App: React.FC = () => {
                 text,
                 sentAt: at,
                 delivered: false,
-                ...voice
+                sharedId: true,
+                ...voice,
+                ...(voice ? {} : photo),
+                ...(replyTo ? { replyTo } : {})
               }).slice(-MAX_GROUP_MESSAGES)
             }
           : g
@@ -3252,6 +3354,112 @@ export const App: React.FC = () => {
       });
       return changed ? { ...prev, groups } : prev;
     });
+  };
+
+  /** One group's messages as `change` makes them - left exactly as they were when it returns null. */
+  const changeGroupMessages = (groupId: string, change: (messages: GroupMessage[]) => GroupMessage[] | null) => {
+    setState(prev => {
+      let changed = false;
+      const groups = prev.groups.map(g => {
+        if (g.id !== groupId) return g;
+        const messages = change(g.messages);
+        if (!messages) return g;
+        changed = true;
+        return { ...g, messages };
+      });
+      return changed ? { ...prev, groups } : prev;
+    });
+  };
+
+  /**
+   * New words for one of your group messages, here and on every phone in the
+   * group, as in the couple's chat: applied here at once, then sent as a
+   * record that names the message (core/groupActions). No correlation id:
+   * its ack falls through, as a hello's does.
+   */
+  const handleGroupEdit = (groupId: string, messageId: string, text: string) => {
+    const me = myMemberId();
+    const target = state.groups.find(g => g.id === groupId)?.messages.find(m => m.id === messageId);
+    const words = text.trim();
+    if (!target || !words || words === target.text || !canEditGroup(target, me)) return;
+    const payload = { from: me, ...changeTargetOf(target), text: words, editedAt: Date.now() };
+    changeGroupMessages(groupId, messages => applyGroupEdit(messages, me, payload));
+    sendToGroup(groupId, GROUP_CHAT_EDIT, payload);
+  };
+
+  /**
+   * Takes one of your group messages back, once you have said so. What it
+   * said goes; a line saying it was unsent stays in its place. The dialog
+   * says it plainly: a phone still on a version before this keeps it.
+   */
+  const handleGroupUnsend = async (groupId: string, messageId: string) => {
+    const me = myMemberId();
+    const group = state.groups.find(g => g.id === groupId);
+    const target = group?.messages.find(m => m.id === messageId);
+    if (!group || !target || !canUnsendGroup(target, me)) return;
+    const ok = await askConfirm({
+      title: tr('Unsend this message?'),
+      body:
+        tr('It will be taken off the phones of everyone in {group}. A line saying you unsent a message stays in its place.', {
+          group: group.name
+        }) +
+        ' ' +
+        tr('Phones still on an older version of Two keep showing it.'),
+      confirm: tr('Unsend'),
+      cancel: tr('Keep it'),
+      danger: true
+    });
+    if (!ok) return;
+    // Not yet off this phone: it does not go at all. Whether the relay has it
+    // already this phone cannot tell, so the unsend still goes.
+    if (target.delivered === false) dropPendingInGroup(groupId, messageId);
+    const payload = { from: me, ...changeTargetOf(target) };
+    changeGroupMessages(groupId, messages => applyGroupUnsend(messages, me, payload));
+    sendToGroup(groupId, GROUP_CHAT_UNSEND, payload);
+  };
+
+  /**
+   * Deletes a group message, anybody's, from this phone only, once you have
+   * said so. Nothing is sent. Both its ids are kept (deletedForMe), so a
+   * replay or a reconnect cannot bring it back.
+   */
+  const handleGroupDeleteForMe = async (groupId: string, messageId: string) => {
+    const target = state.groups.find(g => g.id === groupId)?.messages.find(m => m.id === messageId);
+    if (!target || !canDeleteGroupForMe(target, myMemberId())) return;
+    const ok = await askConfirm({
+      title: tr('Delete this message for you?'),
+      body: tr('It goes from this phone only. Everyone else in the group still has it.'),
+      confirm: tr('Delete for me'),
+      cancel: tr('Keep it'),
+      danger: true
+    });
+    if (!ok) return;
+    setState(prev => {
+      let changed = false;
+      const groups = prev.groups.map(g => {
+        if (g.id !== groupId) return g;
+        const messages = g.messages.filter(m => m.id !== messageId);
+        if (messages.length === g.messages.length) return g;
+        changed = true;
+        return { ...g, messages, deletedForMe: withGroupDeletedForMe(g.deletedForMe, target) };
+      });
+      if (!changed) return prev;
+      // Answering it, half-typed: the words stay, the answer goes.
+      const draft = prev.chatDrafts?.[groupId];
+      const chatDrafts =
+        draft?.replyTo?.id === messageId ? { ...prev.chatDrafts, [groupId]: { ...draft, replyTo: undefined } } : prev.chatDrafts;
+      return { ...prev, groups, chatDrafts };
+    });
+  };
+
+  /** Your reaction to a group message: set, changed, or taken off with ''. One per member. */
+  const handleGroupReact = (groupId: string, messageId: string, emoji: string) => {
+    const me = myMemberId();
+    const target = state.groups.find(g => g.id === groupId)?.messages.find(m => m.id === messageId);
+    if (!target || !canReactGroup(target, me) || (target.reactions?.[me] || '') === emoji) return;
+    const payload = { from: me, ...changeTargetOf(target), emoji, at: Date.now() };
+    changeGroupMessages(groupId, messages => applyGroupReaction(messages, me, payload));
+    sendToGroup(groupId, GROUP_CHAT_REACTION, payload);
   };
 
   /**
@@ -3530,12 +3738,13 @@ export const App: React.FC = () => {
   }, [autoCamouflageOnBlur]);
 
   /**
-   * Bumped by the dock to open the tools hub.
+   * Bumped to open the tools hub or the heart panel from outside Navigation.
+   * The chat's ⋮ bumps heartSignal; nothing bumps toolsSignal today, as Tools
+   * opens from the bar.
    *
-   * The hub and its five sibling modals live inside Navigation. In the app that
-   * component renders no bar, but it still has to be mounted, because Tools is
-   * the only route to soundscapes, co-regulation, the mesh, safety numbers,
-   * camouflage and the quick exit.
+   * The hub and its sibling modals live inside Navigation. On the app's chat
+   * that component renders no bar, but it still has to be mounted, so Heart
+   * from the ⋮ has a panel to open.
    */
   const [toolsSignal, setToolsSignal] = useState(0);
   const [heartSignal, setHeartSignal] = useState(0);
@@ -3704,6 +3913,48 @@ export const App: React.FC = () => {
       return messages ? { ...prev, messages } : prev;
     });
     wsRelay.broadcastUpdate(CHAT_UNSEND, { messageId });
+  };
+
+  /**
+   * Deletes a message, yours or hers, from this phone only, once you have
+   * said so. Nothing is sent: her phone and your other one keep it. Its id is
+   * kept (chatDeletedForMe), so a replay, a restore or a catch-up cannot
+   * bring it back.
+   */
+  const handleDeleteForMe = async (messageId: string) => {
+    const target = state.messages.find(m => m.id === messageId);
+    if (!target || !canDeleteForMe(target, state.activeUser)) return;
+    const partner = state.partnerName && state.partnerName !== 'Partner' ? state.partnerName : tr('Partner');
+    const mine = target.authorId === state.activeUser;
+    const ok = await askConfirm({
+      title: tr('Delete this message for you?'),
+      body:
+        tr('It goes from this phone only. {name} still has it.', { name: partner }) +
+        (mine ? ' ' + tr("To take it off {name}'s phone too, use Unsend.", { name: partner }) : ''),
+      confirm: tr('Delete for me'),
+      cancel: tr('Keep it'),
+      danger: true
+    });
+    if (!ok) return;
+    // Hers, deleted unread: said read first, while it is still here to be
+    // counted, so it does not stay grey on her phone.
+    if (!mine) sendReadReceipt();
+    setState(prev => {
+      const messages = prev.messages.filter(m => m.id !== messageId);
+      if (messages.length === prev.messages.length) return prev;
+      // Its line on Home goes too, back to her message before it.
+      const activity = mine ? null : newsWithout(prev.activity || [], messageId, messages, target.authorId);
+      const draft = prev.chatDrafts?.couple;
+      const chatDrafts =
+        draft?.replyTo?.id === messageId ? { ...prev.chatDrafts, couple: { ...draft, replyTo: undefined } } : prev.chatDrafts;
+      return {
+        ...prev,
+        messages,
+        chatDeletedForMe: withDeletedForMe(prev.chatDeletedForMe, messageId),
+        chatDrafts,
+        ...(activity ? { activity } : {})
+      };
+    });
   };
 
   /**
@@ -5102,14 +5353,17 @@ export const App: React.FC = () => {
               connected={groupStatuses[activeGroup.id] === 'connected'}
               typingIds={typingIds}
               shareReceipts={shareReceipts}
-              onSend={(text) => handleSendGroupMessage(activeGroup.id, text)}
-              onSendVoice={(note) =>
-                handleSendGroupMessage(
-                  activeGroup.id,
-                  voiceNoteLabel(note.durationSeconds),
-                  voiceFieldsOf(note)
-                )
+              onSend={(text, extras) => handleSendGroupMessage(activeGroup.id, text, extras)}
+              onSendVoice={(note, replyTo) =>
+                handleSendGroupMessage(activeGroup.id, voiceNoteLabel(note.durationSeconds), {
+                  voice: voiceFieldsOf(note),
+                  ...(replyTo ? { replyTo } : {})
+                })
               }
+              onReact={(messageId, emoji) => handleGroupReact(activeGroup.id, messageId, emoji)}
+              onEditMessage={(messageId, text) => handleGroupEdit(activeGroup.id, messageId, text)}
+              onUnsendMessage={(messageId) => void handleGroupUnsend(activeGroup.id, messageId)}
+              onDeleteForMe={(messageId) => void handleGroupDeleteForMe(activeGroup.id, messageId)}
               onVoicePlayed={(messageId) => handleGroupVoicePlayed(activeGroup.id, messageId)}
               draft={state.chatDrafts?.[activeGroup.id]}
               onSaveDraft={draft => handleSaveDraft(activeGroup.id, draft)}
@@ -5174,6 +5428,9 @@ export const App: React.FC = () => {
     );
   }
 
+  // In the app the chat has no bar above it, and on a phone runs to the edges.
+  const chrome = chatChrome({ inApp, tablet: isTablet, tab: currentTab });
+
   return (
     <LocaleContext.Provider value={locale}>
     <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
@@ -5182,6 +5439,12 @@ export const App: React.FC = () => {
         compact={inApp}
         openToolsSignal={toolsSignal}
         openHeartSignal={heartSignal}
+        barHidden={chrome.barHidden}
+        // The card goes to the chat, and so do you, to see it arrive.
+        onSendNeed={text => {
+          handleSendMessage(text, true);
+          handleSelectTab('chat');
+        }}
         currentTab={currentTab}
         onSelectTab={handleSelectTab}
         activeUser={state.activeUser}
@@ -5229,10 +5492,14 @@ export const App: React.FC = () => {
       </div>
 
       <main
-        className={`mx-auto px-4 sm:px-6 ${
+        className={`mx-auto ${
           currentTab === 'chat'
-            ? 'py-4'
-            : `py-6 ${inApp ? 'pb-32' : 'pb-20'}`
+            ? chrome.flush
+              // Square to the top and sides. The 1rem under it stays: the
+              // keyboard's snug stretch (--two-snug) grows the panel into it.
+              ? 'pb-4'
+              : 'px-4 sm:px-6 py-4'
+            : `px-4 sm:px-6 py-6 ${inApp ? 'pb-32' : 'pb-20'}`
         } ${isTablet ? 'max-w-5xl' : 'max-w-3xl'}`}
       >
         {/* The screens below arrive as separate chunks. Only this region
@@ -5298,7 +5565,11 @@ export const App: React.FC = () => {
             onResolveStuck={(messageId, action) => handleResolveStuck({}, messageId, action)}
             onStartCall={() => void callEngineRef.current?.start()}
             callInProgress={callState.phase !== 'idle'}
-            onOpenSoftLanding={() => setCurrentTab('softlanding')}
+            // The bar is not above the chat in the app, so its Heart and the
+            // Tools' Quick Exit are in the chat's ⋮ instead.
+            onOpenHeart={() => setHeartSignal(n => n + 1)}
+            onQuickExit={handleQuickExit}
+            flush={chrome.flush}
             // Until their name arrives, the stand-in in this phone's language (shown, never sent).
             partnerName={state.partnerName && state.partnerName !== 'Partner' ? state.partnerName : tr('Partner')}
             partnerReadAt={state.partnerReadAt}
@@ -5322,6 +5593,11 @@ export const App: React.FC = () => {
             onReact={handleReactToMessage}
             onEditMessage={handleEditMessage}
             onUnsendMessage={messageId => void handleUnsendMessage(messageId)}
+            onDeleteForMe={messageId => void handleDeleteForMe(messageId)}
+            deletedForMe={state.chatDeletedForMe}
+            // Said by the same version that says CHAT_DELIVERED: an older
+            // phone never says a message reached it, and its Info says why.
+            partnerSaysDelivered={!!state.partnerApp?.can?.includes(CAN_SAY_AWAY)}
             pins={state.chatPins}
             onPinMessage={handlePinMessage}
             onViewOnceOpened={handleViewOnceOpened}

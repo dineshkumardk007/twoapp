@@ -11,6 +11,7 @@
 
 import type { ChatMessage, ChatPin, ChatReplyRef } from '../types';
 import type { VoiceFields } from './voice';
+import { isWaiting } from './sendLater';
 
 export const CHAT_EDIT = 'CHAT_EDIT';
 export const CHAT_UNSEND = 'CHAT_UNSEND';
@@ -32,7 +33,7 @@ export const MAX_PINS = 3;
 /** How long after sending your words can still be changed. */
 export const EDIT_WINDOW_MS = 15 * 60 * 1000;
 /** Two phones' clocks are a little apart: an edit is judged with this much grace. */
-const EDIT_GRACE_MS = 60 * 1000;
+export const EDIT_GRACE_MS = 60 * 1000;
 
 /** The reactions on offer, in the order the menu shows them. */
 export const REACTIONS = ['❤️', '😂', '😮', '😢', '🙏'] as const;
@@ -81,9 +82,9 @@ export function reactionRow(current: string): string[] {
 }
 
 /** A reply's quote: this many characters of what it answers. */
-const SNIPPET_CHARS = 80;
+export const SNIPPET_CHARS = 80;
 /** Past this, words arriving as an edit are not words anybody typed. */
-const MAX_TEXT_CHARS = 10_000;
+export const MAX_TEXT_CHARS = 10_000;
 
 /** A photo from the wire is refused past this size (the relay carries 1 MB at most)... */
 export const MAX_INCOMING_PHOTO_CHARS = 1_000_000;
@@ -358,17 +359,98 @@ export function readDeliveredIds(payload: unknown): string[] {
  * grey ticks. On her phone means the relay had it too, so this also clears a
  * clock whose acknowledgement was lost - and your own view-once photo lets go
  * of its picture, as it does then. Null when nothing changes.
+ *
+ * When (`at`) goes with it, for its Info - only on the change, so a message
+ * that reached her before this was kept stays without a time rather than
+ * taking this one.
  */
-export function applyDelivered(messages: ChatMessage[], me: Seat, ids: readonly string[]): ChatMessage[] | null {
+export function applyDelivered(
+  messages: ChatMessage[],
+  me: Seat,
+  ids: readonly string[],
+  at: number = Date.now(),
+  now: number = Date.now()
+): ChatMessage[] | null {
   if (!ids.length) return null;
   const named = new Set(ids);
   let changed = false;
   const next = messages.map(m => {
     if (!named.has(m.id) || m.authorId !== me || m.reached) return m;
     changed = true;
-    return { ...deliveredCopy(m, me), reached: true };
+    return { ...deliveredCopy(m, me), reached: true, reachedAt: heardTime(at, m, now) };
   });
   return changed ? next : null;
+}
+
+/**
+ * A time her phone gave, as one of your messages keeps it. Her clock is not
+ * this phone's: never before the message left here, never after now.
+ */
+function heardTime(at: number, m: ChatMessage, now: number): number {
+  const floor = m.leftAt ?? m.sentAt ?? 0;
+  const t = Number.isFinite(at) && at > 0 ? at : now;
+  return Math.min(now, Math.max(t, floor));
+}
+
+/**
+ * Your messages that a receipt has just turned read (readByPartner, from
+ * `before` to `after`), with when (`at`) kept for their Info. Only those that
+ * change: the first receipt after this was kept must not give every message
+ * read long ago this one's time. Null when none changes.
+ */
+export function stampRead(
+  messages: ChatMessage[],
+  me: Seat,
+  before: { readAt: number; heardAt: number },
+  after: { readAt: number; heardAt: number },
+  at: number,
+  now: number = Date.now()
+): ChatMessage[] | null {
+  let changed = false;
+  const next = messages.map(m => {
+    if (
+      m.authorId !== me ||
+      m.readByPartnerAt ||
+      readByPartner(m, before.readAt, before.heardAt) ||
+      !readByPartner(m, after.readAt, after.heardAt)
+    ) {
+      return m;
+    }
+    changed = true;
+    return { ...m, readByPartnerAt: heardTime(at, m, now) };
+  });
+  return changed ? next : null;
+}
+
+/** At most this many messages deleted for you are remembered, newest kept. */
+export const MAX_DELETED_FOR_ME = 5000;
+
+/**
+ * Whether a message can be deleted from this phone only. Not a call's line,
+ * one of yours waiting to show (that has Don't send), or one of yours that
+ * never left (that has Discard).
+ */
+export function canDeleteForMe(m: ChatMessage, me: Seat, now: number = Date.now()): boolean {
+  if (m.call || isWaiting(m, me, now)) return false;
+  return !(m.authorId === me && m.delivered === false && !m.reached);
+}
+
+/**
+ * The messages deleted on this phone, id to when, with one more. Kept so a
+ * replay, a restore or a catch-up cannot bring it back. Past `max`, the
+ * oldest deletions are let go.
+ */
+export function withDeletedForMe(
+  list: Record<string, number> | undefined,
+  id: string,
+  at: number = Date.now(),
+  max: number = MAX_DELETED_FOR_ME
+): Record<string, number> {
+  const next = { ...(list || {}), [id]: at };
+  const ids = Object.keys(next);
+  if (ids.length <= max) return next;
+  const kept = ids.sort((a, b) => next[b] - next[a]).slice(0, max);
+  return Object.fromEntries(kept.map(k => [k, next[k]]));
 }
 
 /**

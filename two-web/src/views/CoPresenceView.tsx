@@ -7,6 +7,7 @@ import {
   CoPresenceTimerEvent
 } from '../types';
 import { wsRelay } from '../core/ws';
+import { onShownChange } from '../core/shown';
 import { localMesh } from '../core/localMesh';
 import { soundscapeEngine, SOUNDSCAPES } from '../core/soundscapes';
 import { 
@@ -255,13 +256,13 @@ export const CoPresenceView: React.FC<CoPresenceViewProps> = ({
       const last = statusRef.current;
       if (last && last.isJoined) sendStatus({ ...last, isJoined: false, hello: false });
     };
-    const onVisibility = () => {
-      if (document.visibilityState === 'hidden') sayGoodbye();
+    // Out of sight includes the Android app saying the screen went off (core/shown.ts).
+    const offShown = onShownChange(shown => {
+      if (!shown) sayGoodbye();
       else if (statusRef.current) sendStatus({ ...statusRef.current, isJoined: true, hello: true });
-    };
-    document.addEventListener('visibilitychange', onVisibility);
+    });
     return () => {
-      document.removeEventListener('visibilitychange', onVisibility);
+      offShown();
       sayGoodbye();
     };
     // Once, for this visit: changes are sent as they are made.

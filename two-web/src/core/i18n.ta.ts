@@ -216,6 +216,9 @@ export const TA: Readonly<Record<string, string>> = {
   'Hugs, kisses and little notes': 'அணைப்புகள், முத்தங்கள், சிறு குறிப்புகள்',
   'Send a touch without words. Your partner feels it as a soft buzz and a glow.': 'வார்த்தைகள் இல்லாமல் ஒரு தொடுதலை அனுப்புங்கள். உங்கள் துணை அதை மென்மையான அதிர்வாகவும் ஒளியாகவும் உணர்வார்.',
   'Heart Options': 'இதய வகைகள்',
+  'A clear ask, sent to your chat': 'தெளிவான ஒரு வேண்டுகோள், உங்கள் அரட்டைக்கு',
+  'Tell your partner what would help right now. It arrives in your chat as a card.': 'இப்போது எது உதவும் என்று உங்கள் துணையிடம் சொல்லுங்கள். அது உங்கள் அரட்டையில் ஒரு அட்டையாக வரும்.',
+  'Choose what you need': 'வேண்டியதைத் தேர்ந்தெடுங்கள்',
   'Two looks like a calculator': 'Two ஒரு கால்குலேட்டர் போலத் தோன்றும்',
   'Turns Two into a working calculator until you type your secret code.': 'உங்கள் ரகசியக் குறியீட்டைத் தட்டச்சு செய்யும் வரை, Two ஒரு உண்மையான கால்குலேட்டராக இயங்கும்.',
   'Engage Calculator': 'கால்குலேட்டரை இயக்கு',
@@ -629,6 +632,8 @@ export const TA: Readonly<Record<string, string>> = {
   'Partner notification': 'துணையிடமிருந்து அறிவிப்பு',
   'Ask For What You Need': 'உங்களுக்கு வேண்டியதைக் கேளுங்கள்',
   'Ask for what you need': 'உங்களுக்கு வேண்டியதைக் கேளுங்கள்',
+  // The ⋮'s last item: Tools' Quick Exit, in the menu's sentence case.
+  'Quick exit': 'விரைவாக வெளியேறு',
   '{name}: {status}, since {time}': '{name}: {status}, {time} முதல்',
   'since {time}': '{time} முதல்',
   'Pinned message': 'பின் செய்யப்பட்ட செய்தி',
@@ -656,6 +661,42 @@ export const TA: Readonly<Record<string, string>> = {
   'Not opened yet': 'இன்னும் திறக்கப்படவில்லை',
   'Tap to view once': 'ஒருமுறை பார்க்கத் தட்டுங்கள்',
   'Open the view-once photo': 'ஒருமுறை பார்க்கும் புகைப்படத்தைத் திற',
+  // A group's chat: taking a message back, the reactions panel, the way down.
+  'Unsend this message?': 'இந்தச் செய்தியைத் திரும்பப் பெறவா?',
+  'It will be taken off the phones of everyone in {group}. A line saying you unsent a message stays in its place.':
+    '{group} குழுவில் உள்ள அனைவரின் ஃபோன்களிலிருந்தும் இது நீக்கப்படும். நீங்கள் ஒரு செய்தியைத் திரும்பப் பெற்றதாக ஒரு வரி அதன் இடத்தில் இருக்கும்.',
+  'Phones still on an older version of Two keep showing it.': 'Two-வின் பழைய பதிப்பில் உள்ள ஃபோன்களில் இது தொடர்ந்து தெரியும்.',
+  'Keep it': 'இருக்கட்டும்',
+  Reactions: 'உணர்வுகள்',
+  'Tap yours to take it off': 'உங்களுடையதை நீக்க அதைத் தட்டவும்',
+  'Who has read this': 'யார் யார் படித்தார்கள்',
+  '{n} new messages': '{n} புதிய செய்திகள்',
+  '1 new message': '1 புதிய செய்தி',
+  // A message's Info (core/messageInfo), and Delete for me.
+  Info: 'விவரம்',
+  'Message info': 'செய்தி விவரம்',
+  "Reached {name}'s phone": '{name} ஃபோனுக்குச் சேர்ந்தது',
+  'Not yet': 'இன்னும் இல்லை',
+  'Time not kept': 'நேரம் சேமிக்கப்படவில்லை',
+  'Still on this phone': 'இன்னும் இந்த ஃபோனிலேயே உள்ளது',
+  Arrived: 'வந்தது',
+  'Read receipts are off': '"படித்தது" அறிவிப்புகள் அணைக்கப்பட்டுள்ளன',
+  'If {name} has read receipts off, Read stays at Not yet.':
+    '{name} "படித்தது" அறிவிப்புகளை அணைத்திருந்தால், "படிக்கப்பட்டது" என்பது "இன்னும் இல்லை" என்றே இருக்கும்.',
+  "{name}'s Two is an older version, which doesn't say when a message reaches it.":
+    '{name} பயன்படுத்தும் Two பழைய பதிப்பு; செய்தி எப்போது சேர்ந்தது என்பதை அது சொல்லாது.',
+  'Read by': 'படித்தவர்கள்',
+  'Not read yet': 'இன்னும் படிக்காதவர்கள்',
+  'Nobody else has joined yet.': 'இன்னும் வேறு யாரும் சேரவில்லை.',
+  'Someone who has switched read receipts off looks the same here as someone who has not read it.':
+    '"படித்தது" அறிவிப்புகளை அணைத்தவரும் படிக்காதவரும் இங்கே ஒரே மாதிரித் தெரிவார்கள்.',
+  'Delete for me': 'எனக்கு மட்டும் நீக்கு',
+  'Delete this message for you?': 'இந்தச் செய்தியை உங்களுக்கு மட்டும் நீக்கவா?',
+  'It goes from this phone only. {name} still has it.': 'இது இந்த ஃபோனிலிருந்து மட்டுமே நீங்கும். {name} அவர்களிடம் அது இருக்கும்.',
+  "To take it off {name}'s phone too, use Unsend.": '{name} ஃபோனிலிருந்தும் அகற்ற, "திரும்பப் பெறு" என்பதைப் பயன்படுத்துங்கள்.',
+  'It goes from this phone only. Everyone else in the group still has it.':
+    'இது இந்த ஃபோனிலிருந்து மட்டுமே நீங்கும். குழுவில் உள்ள மற்ற அனைவரிடமும் அது இருக்கும்.',
+  'You deleted this message': 'இந்தச் செய்தியை நீக்கிவிட்டீர்கள்',
 
   // ------------------------------------------- the chat's menus and sheets
   'Take off {emoji}': '{emoji} உணர்வை நீக்கு',

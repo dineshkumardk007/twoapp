@@ -11,6 +11,11 @@ interface PhotoSendSheetProps {
   /** Send them; `viewOnce` only ever for a single photo. */
   onSend: (viewOnce: boolean) => void;
   onClose: () => void;
+  /**
+   * False where there is no view once: a group, where "one time, then gone
+   * from both phones" has no one meaning. `partnerName` is then the group's.
+   */
+  allowViewOnce?: boolean;
 }
 
 /**
@@ -20,7 +25,7 @@ interface PhotoSendSheetProps {
  *
  * Back or the cross puts them down without sending anything.
  */
-export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerName, onSend, onClose }) => {
+export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerName, onSend, onClose, allowViewOnce = true }) => {
   const tr = useT();
   useBackLayer(true, onClose);
   const urls = useMemo(() => files.map(f => URL.createObjectURL(f)), [files]);
@@ -28,6 +33,7 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
   const [shown, setShown] = useState(0);
   const [viewOnce, setViewOnce] = useState(false);
   const single = files.length === 1;
+  const canViewOnce = single && allowViewOnce;
 
   return (
     <div
@@ -80,13 +86,13 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
       )}
 
       <div className="px-4 pt-3.5 pb-[max(env(safe-area-inset-bottom),22px)]">
-        {single && viewOnce && (
+        {canViewOnce && viewOnce && (
           <p className="mb-3 text-center text-xs leading-relaxed text-white/75" aria-live="polite">
             {tr("View once is on. {name} can open it one time, then it's gone from both phones.", { name: partnerName })}
           </p>
         )}
         <div className="flex items-center gap-3">
-          {single ? (
+          {canViewOnce ? (
             <button
               type="button"
               role="switch"
@@ -111,12 +117,14 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
                 />
               </span>
             </button>
-          ) : (
+          ) : allowViewOnce ? (
             <p className="min-w-0 flex-1 text-xs leading-relaxed text-white/70">{tr('View once is for one photo at a time.')}</p>
+          ) : (
+            <span className="flex-1" />
           )}
           <button
             type="button"
-            onClick={() => onSend(single && viewOnce)}
+            onClick={() => onSend(canViewOnce && viewOnce)}
             aria-label={single ? tr('Send photo') : tr('Send {n} photos', { n: files.length })}
             className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-gradient-to-br from-aurora-violet via-aurora-pink to-[rgb(var(--c-button-end))] shadow-glow active:scale-95 transition-transform"
           >

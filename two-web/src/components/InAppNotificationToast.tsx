@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { MessageSquare, Mail, X, ArrowRight, Heart } from 'lucide-react';
 import { useT } from '../core/i18n';
 import { haptic } from '../core/haptics';
+import { isShown, onShownChange } from '../core/shown';
 import {
   SPEED_WINDOW_MS,
   liftSpeed,
@@ -214,7 +215,7 @@ const ToastCard: React.FC<ToastCardProps> = ({ notification, leaving, held, onCl
     timerRef.current = 0;
     const hold = holdRef.current;
     if (leavingRef.current || heldRef.current || hold.finger || hold.hover || hold.focus) return;
-    if (document.visibilityState === 'hidden') return;
+    if (!isShown()) return;
     timerRef.current = window.setTimeout(() => closeRef.current('up'), showForRef.current);
   }, []);
 
@@ -227,9 +228,9 @@ const ToastCard: React.FC<ToastCardProps> = ({ notification, leaving, held, onCl
   // In the background they do not run. Back in front, they start again, so a
   // message that came while Two was away is still there when you look.
   useEffect(() => {
-    document.addEventListener('visibilitychange', count);
+    const offShown = onShownChange(() => count());
     return () => {
-      document.removeEventListener('visibilitychange', count);
+      offShown();
       window.clearTimeout(timerRef.current);
     };
   }, [count]);

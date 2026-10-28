@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { wsRelay } from '../core/ws';
+import { isShown, onShownChange } from '../core/shown';
 import { playSound } from '../core/sounds';
 import { triggerHaptic } from '../core/audioAlerts';
 import { haptic } from '../core/haptics';
@@ -116,8 +117,9 @@ function sentWhen(at: number): { time: string; yesterday: boolean } {
  */
 const JUST_NOW_MS = 2 * 60 * 1000;
 
+/** Two in front of her: visible, and not in the background or with the screen off (core/shown.ts). */
 function pageVisible(): boolean {
-  return typeof document === 'undefined' || document.visibilityState === 'visible';
+  return isShown();
 }
 
 /**
@@ -379,8 +381,7 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
       if (pageVisible()) tellMissed();
     };
     onVisible();
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
+    return onShownChange(onVisible);
   }, [tellMissed]);
 
   // The way every heart button in the app sends: Home, the header, the

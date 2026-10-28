@@ -101,3 +101,57 @@ export function aheadLabel(at: number, now: number = Date.now()): string {
       : `${DAY_NAMES[then.getDay()]} ${then.getDate()} ${MONTH_NAMES[then.getMonth()]}`;
   return tr('on {date} at {time}', { date, time });
 }
+
+/** The start of the local calendar day `at` falls on. */
+export function startOfDay(at: number): number {
+  const d = new Date(at);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+// Built once. Formatting a date makes a formatter each time it is asked, and a
+// conversation of a few thousand messages asked for one per day on every
+// keystroke in the composer.
+const DAY_FORMAT = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+const OLD_DAY_FORMAT = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+/** The same day names in another language (core/i18n), each built the first time it is wanted. */
+const OTHER_DAY_FORMATS = new Map<string, Intl.DateTimeFormat>();
+function dayFormat(old: boolean): Intl.DateTimeFormat {
+  const locale = dateLocale();
+  if (!locale) return old ? OLD_DAY_FORMAT : DAY_FORMAT;
+  const key = `${locale}|${old}`;
+  let format = OTHER_DAY_FORMATS.get(key);
+  if (!format) {
+    format = new Intl.DateTimeFormat(
+      locale,
+      old ? { day: 'numeric', month: 'short', year: 'numeric' } : { weekday: 'short', day: 'numeric', month: 'short' }
+    );
+    OTHER_DAY_FORMATS.set(key, format);
+  }
+  return format;
+}
+
+/**
+ * "Today", "Yesterday", "Sat, 3 Oct" - the name of a day (`day`, a
+ * startOfDay), for the line between days in a chat and the date that floats
+ * over it while you scroll.
+ *
+ * Not whenLabel above, which answers "how long ago" ("4 days ago") where a
+ * divider has to name the day itself.
+ */
+export function dayLabel(day: number, now: number, ahead = false): string {
+  const days = Math.round((startOfDay(now) - day) / 86_400_000);
+  // A day in the future is the other phone's clock running ahead, not news -
+  // unless it is a message set to show later (core/sendLater), which says
+  // the day it is to show.
+  if (days < 0 && ahead) return days === -1 ? tr('Tomorrow') : dayFormat(false).format(day);
+  if (days <= 0) return tr('Today');
+  if (days === 1) return tr('Yesterday');
+  return new Date(day).getFullYear() === new Date(now).getFullYear()
+    ? dayFormat(false).format(day)
+    : dayFormat(true).format(day);
+}
+
+/** "Today, 9:41 pm", "Sat, 3 Oct, 7:02 am" - a moment, its day named the way a chat names it. */
+export function dayAndTime(at: number, now: number = Date.now()): string {
+  return `${dayLabel(startOfDay(at), now)}, ${clockTime(at)}`;
+}
