@@ -4949,6 +4949,7 @@ export const App: React.FC = () => {
       onHangup={() => callEngineRef.current?.hangup()}
       onToggleMute={() => callEngineRef.current?.toggleMute()}
       onToggleSpeaker={() => callEngineRef.current?.toggleSpeaker()}
+      onToggleNoise={() => callEngineRef.current?.toggleNoiseReduction()}
     />
   );
 

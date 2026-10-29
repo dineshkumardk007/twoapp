@@ -19,6 +19,7 @@
 //   carry the audio when that happens.
 
 import { playSound, type Playing } from './sounds';
+import { nextBitrate, noiseReductionOn, playoutTargetMs, redFirst } from './callNet';
 
 /** The signal type every call message travels under. */
 export const CALL_SIGNAL = 'CALL';
@@ -85,6 +86,8 @@ export interface CallState {
   link: LinkQuality | null;
   /** Connected before, lost the network, and trying to get it back. */
   reconnecting: boolean;
+  /** The room's noise taken out of your voice (core/callNet noiseReductionOn). */
+  noiseReduction: boolean;
 }
 
 export const IDLE_CALL: CallState = {
@@ -102,7 +105,8 @@ export const IDLE_CALL: CallState = {
   kbps: 0,
   measuredKbps: 0,
   link: null,
-  reconnecting: false
+  reconnecting: false,
+  noiseReduction: false
 };
 
 export interface CallSignal {
@@ -129,9 +133,9 @@ const CONNECT_TIMEOUT_MS = 20_000;
  * notice the Wi-Fi is gone, the relay has to reconnect to carry the new
  * route, and the two phones then have to find each other again.
  */
-const RECOVER_MS = 20_000;
+const RECOVER_MS = 30_000;
 /** How often a reconnection is tried again while the connection is down. */
-const RESTART_EVERY_MS = 4_000;
+const RESTART_EVERY_MS = 2_500;
 const ENDED_LINGER_MS = 2_500;
 
 /**
@@ -249,14 +253,37 @@ function keepAlive(on: boolean) {
   }
 }
 
-/** Gives received audio room to arrive unevenly without breaking up. */
-function steadyPlayout(receiver: RTCRtpReceiver) {
+/**
+ * Gives received audio room to arrive unevenly without breaking up: the
+ * floor at first, then what the network asks for (core/callNet
+ * playoutTargetMs).
+ */
+function steadyPlayout(receiver: RTCRtpReceiver, ms: number = JITTER_BUFFER_MS) {
   const r = receiver as any;
   try {
-    if ('jitterBufferTarget' in r) r.jitterBufferTarget = JITTER_BUFFER_MS;
-    else if ('playoutDelayHint' in r) r.playoutDelayHint = JITTER_BUFFER_MS / 1000;
+    if ('jitterBufferTarget' in r) r.jitterBufferTarget = ms;
+    else if ('playoutDelayHint' in r) r.playoutDelayHint = ms / 1000;
   } catch {
     /* an older engine without either knob manages its own buffer */
+  }
+}
+
+/**
+ * Asks for the voice packed with its last packet again alongside (RED), so
+ * a burst of lost packets on mobile data does not take words with it. A
+ * phone that cannot - or the other side, if it cannot - still gets Opus.
+ */
+function preferRed(pc: RTCPeerConnection) {
+  try {
+    const codecs = (RTCRtpSender as any).getCapabilities?.('audio')?.codecs;
+    if (!codecs) return;
+    for (const t of pc.getTransceivers()) {
+      if (t.receiver.track?.kind === 'audio' && typeof t.setCodecPreferences === 'function') {
+        t.setCodecPreferences(redFirst(codecs));
+      }
+    }
+  } catch {
+    /* plain Opus, as before */
   }
 }
 
@@ -382,6 +409,18 @@ export class CallEngine {
   private ringing: { stop: () => void } | null = null;
   /** Whether the live microphone track was opened with echo cancellation. */
   private echoCancelling = true;
+  /** Whether the open microphone takes out the room's noise. */
+  private noiseCancelling = false;
+  /** The button's choice for this call; null leaves it to the speaker. */
+  private noiseChoice: boolean | null = null;
+  /** Calm looks in a row, for the voice's rate to climb back (core/callNet). */
+  private goodStreak = 0;
+  /** The rate the voice is sent at now, under the ceiling. */
+  private adaptiveKbps = 0;
+  /** The playout hold last asked of the other voice, in ms. */
+  private playoutMs = JITTER_BUFFER_MS;
+  /** Listening for the phone's network changing, while a call is up. */
+  private netWatch: (() => void) | null = null;
 
   constructor(private readonly opts: CallEngineOptions) {
     // A fresh page has no call. A notification left over from one the page
@@ -477,6 +516,7 @@ export class CallEngine {
     try {
       const pc = this.createPeer(callId, servers);
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      preferRed(pc);
       const offer = await pc.createOffer();
       const sdp = tuneOpus(offer.sdp || '', this.receiveKbps());
       await pc.setLocalDescription({ type: 'offer', sdp });
@@ -530,6 +570,7 @@ export class CallEngine {
       const pc = this.createPeer(callId, servers);
       await pc.setRemoteDescription({ type: 'offer', sdp: offer.sdp });
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      preferRed(pc);
       await this.flushIce();
       const answer = await pc.createAnswer();
       const sdp = tuneOpus(answer.sdp || '', this.receiveKbps());
@@ -590,8 +631,15 @@ export class CallEngine {
 
   toggleSpeaker() {
     const speaker = !this.state.speaker;
-    this.set({ speaker });
+    this.set({ speaker, noiseReduction: noiseReductionOn(this.noiseChoice, speaker) });
     routeAudio(this.busy, speaker, this.state.headset);
+    void this.reconcileEcho();
+  }
+
+  /** The noise button: this call keeps what was chosen, speaker or not. */
+  toggleNoiseReduction() {
+    this.noiseChoice = !this.state.noiseReduction;
+    this.set({ noiseReduction: this.noiseChoice });
     void this.reconcileEcho();
   }
 
@@ -920,6 +968,39 @@ export class CallEngine {
     routeAudio(true, this.state.speaker, this.state.headset);
     this.startHeadsetPoll();
     this.startStatsPoll();
+    this.watchNetwork();
+  }
+
+  /**
+   * A new network under a call - Wi-Fi to mobile data, out of a lift - is
+   * acted on the moment the phone says so, not when the old route has been
+   * silent long enough to be called lost. The old route will never carry the
+   * call again, so a new one is looked for straight away; done while the call
+   * still sounds fine, she hears at most a moment's gap.
+   */
+  private watchNetwork() {
+    this.netWatch?.();
+    const pc = this.pc;
+    const onChange = () => {
+      if (this.pc !== pc || !pc || this.state.phase !== 'active') return;
+      this.opts.nudgeRelay?.();
+      if (pc.connectionState === 'connected') {
+        const callId = this.state.callId;
+        if (!callId) return;
+        if (this.state.direction === 'out') void this.restartIce(pc, callId);
+        else this.opts.send({ kind: 'restart', callId });
+      } else {
+        this.recover(pc);
+      }
+    };
+    const connection = (navigator as any).connection;
+    window.addEventListener('online', onChange);
+    connection?.addEventListener?.('change', onChange);
+    this.netWatch = () => {
+      window.removeEventListener('online', onChange);
+      connection?.removeEventListener?.('change', onChange);
+      this.netWatch = null;
+    };
   }
 
   /**
@@ -930,7 +1011,18 @@ export class CallEngine {
    * download running in the next room does not get to shove a voice aside.
    */
   private applySendParameters() {
-    const kbps = readCallQuality() === 'high' && this.remoteQuality === 'high' ? KBPS_HIGH : KBPS_SAVER;
+    const ceiling = this.ceilingKbps();
+    // Under the ceiling, wherever the network has put it (sampleStats).
+    this.adaptiveKbps = this.adaptiveKbps > 0 ? Math.min(this.adaptiveKbps, ceiling) : ceiling;
+    this.sendAt(this.adaptiveKbps);
+  }
+
+  /** The most the voice may be sent with: the saver if either phone asked for it. */
+  private ceilingKbps(): number {
+    return readCallQuality() === 'high' && this.remoteQuality === 'high' ? KBPS_HIGH : KBPS_SAVER;
+  }
+
+  private sendAt(kbps: number) {
     const sender = this.pc?.getSenders().find(s => s.track?.kind === 'audio');
     if (sender) {
       const params = sender.getParameters();
@@ -962,12 +1054,15 @@ export class CallEngine {
   private async openMic(): Promise<OpenedMic> {
     const headset = headsetConnected();
     const echoCancellation = this.state.speaker || !headset;
+    const noiseSuppression = noiseReductionOn(this.noiseChoice, this.state.speaker);
+    this.noiseCancelling = noiseSuppression;
+    if (noiseSuppression !== this.state.noiseReduction) this.set({ noiseReduction: noiseSuppression });
     this.micRequests++;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation,
-          noiseSuppression: false,
+          noiseSuppression,
           autoGainControl: false,
           channelCount: 1,
           sampleRate: 48000
@@ -1013,13 +1108,14 @@ export class CallEngine {
    */
   private async reconcileEcho() {
     const want = this.state.speaker || !this.state.headset;
+    const quiet = noiseReductionOn(this.noiseChoice, this.state.speaker);
     const pc = this.pc;
-    if (!pc || want === this.echoCancelling) return;
+    if (!pc || (want === this.echoCancelling && quiet === this.noiseCancelling)) return;
     try {
       const fresh = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: want,
-          noiseSuppression: false,
+          noiseSuppression: quiet,
           autoGainControl: false,
           channelCount: 1,
           sampleRate: 48000
@@ -1032,6 +1128,7 @@ export class CallEngine {
       this.local?.getTracks().forEach(t => t.stop());
       this.local = fresh;
       this.echoCancelling = want;
+      this.noiseCancelling = quiet;
       // Say the route again. Opening a microphone can make Android's WebView
       // put the phone back into call mode on its own, which with earphones
       // would undo the full-quality media path chosen a moment ago.
@@ -1116,6 +1213,30 @@ export class CallEngine {
         : lossPct < 5 && jitterMs < 60 && rttMs < 500
           ? 'good'
           : 'poor';
+
+    // The voice's rate and the hold on hers follow what was just measured
+    // (core/callNet): fewer bits that all arrive, rather than a full voice
+    // with holes in it.
+    const ceiling = this.ceilingKbps();
+    const next = nextBitrate({
+      current: this.adaptiveKbps || ceiling,
+      ceiling,
+      lossPct,
+      rttMs,
+      goodStreak: this.goodStreak
+    });
+    this.goodStreak = next.goodStreak;
+    if (next.kbps !== this.adaptiveKbps) {
+      this.adaptiveKbps = next.kbps;
+      this.sendAt(next.kbps);
+    }
+    const hold = playoutTargetMs(lossPct, jitterMs);
+    if (hold !== this.playoutMs) {
+      this.playoutMs = hold;
+      pc.getReceivers().forEach(r => {
+        if (r.track?.kind === 'audio') steadyPlayout(r, hold);
+      });
+    }
 
     this.set({ measuredKbps, link });
   }
@@ -1210,6 +1331,11 @@ export class CallEngine {
     if (this.statsPoll) clearInterval(this.statsPoll);
     this.statsPoll = null;
     this.lastStats = null;
+    this.netWatch?.();
+    this.goodStreak = 0;
+    this.adaptiveKbps = 0;
+    this.playoutMs = JITTER_BUFFER_MS;
+    this.noiseChoice = null;
     this.stopRinging();
 
     try {

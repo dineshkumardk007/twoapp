@@ -653,7 +653,7 @@ html.in-app [class*='backdrop-blur'] {
    the background, the screen off - which a WebView kept connected does not
    always pause on its own. They hold still where they are and carry on when
    Two is back. */
-html.app-away :is(.heart-beat, .animate-pulse, .animate-ping, .animate-bounce, .animate-spin, .animate-spin-slow, .call-sky-glow, .call-ripple, .call-dots span, .typing-dots > span),
+html.app-away :is(.heart-beat, .animate-pulse, .animate-ping, .animate-bounce, .animate-spin, .animate-spin-slow, .call-sky-glow, .call-ripple, .call-dots span, .typing-dots > span, .call-shimmer),
 html.app-away :is(.aurora-hero, .call-key-answer)::before {
   animation-play-state: paused;
 }
@@ -1235,3 +1235,113 @@ html.dark .olai {
   .like-pop { animation-duration: 1ms; }
 }
 
+/* The call screen's newer parts (components/CallOverlay). */
+
+/* Rings round her circle that open out as she speaks: their size and
+   brightness follow --voice, set on the circle's slot several times a second. */
+.call-voice-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid rgb(var(--c-teal, 94 234 212) / 0.55);
+  transform: scale(calc(1.05 + var(--voice, 0) * 0.35));
+  opacity: calc(var(--voice, 0) * 0.9);
+  transition: transform 140ms ease-out, opacity 220ms ease-out;
+  pointer-events: none;
+}
+.call-voice-ring-far {
+  transform: scale(calc(1.12 + var(--voice, 0) * 0.65));
+  opacity: calc(var(--voice, 0) * 0.45);
+  transition: transform 220ms ease-out, opacity 320ms ease-out;
+}
+
+/* Four bars, as a phone's signal. */
+.call-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 13px;
+}
+.call-bars > span {
+  width: 3px;
+  border-radius: 1px;
+  background: rgb(255 255 255 / 0.22);
+  transition: background-color 300ms ease;
+}
+.call-bars[data-link='excellent'] > span[data-on='true'] { background: rgb(52 211 153); }
+.call-bars[data-link='good'] > span[data-on='true'] { background: rgb(252 211 77); }
+.call-bars[data-link='poor'] > span[data-on='true'] { background: rgb(251 113 133); }
+
+/* A light passing over "Reconnecting...", so it reads as working on it. */
+.call-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.call-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.22) 50%, transparent 80%);
+  transform: translateX(-100%);
+  animation: call-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes call-shimmer {
+  to { transform: translateX(100%); }
+}
+
+/* The way down to the pill, top left of the call screen. */
+.call-shrink {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  color: rgb(255 255 255 / 0.8);
+  background: rgb(255 255 255 / 0.08);
+  transition: transform 110ms ease-out, background-color 150ms ease;
+}
+.call-shrink:active { transform: scale(0.92); background: rgb(255 255 255 / 0.16); }
+
+/* The call made small: a pill over the top of the app. */
+.call-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, rgb(16 122 96), rgb(10 92 74));
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.28), inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  transition: transform 110ms ease-out;
+}
+.call-pill:active { transform: scale(0.96); }
+.call-pill[data-reconnecting='true'] { background: linear-gradient(135deg, rgb(180 120 20), rgb(140 90 10)); }
+.call-pill-initial {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgb(255 255 255 / 0.2);
+}
+.call-pill-dot {
+  width: 7px;
+  height: 7px;
+  margin-left: 4px;
+  border-radius: 9999px;
+  background: rgb(167 243 208);
+  animation: call-pill-beat 1.6s ease-in-out infinite;
+}
+@keyframes call-pill-beat {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .call-shimmer::after, .call-pill-dot { animation: none; }
+  .call-voice-ring, .call-voice-ring-far { transition: none; }
+}
