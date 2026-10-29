@@ -1439,11 +1439,12 @@ export const App: React.FC = () => {
             ) {
               deliveredQueueRef.current.add(incoming.id);
               if (!msg.replay) flushDelivered();
-              // Arrived now with Two off the screen: the phone may put up its
-              // wordless "New message" - only if it was switched on in
-              // Settings, and never behind the calculator. One held for
-              // later is not news yet.
-              if (!msg.replay && !held && !isShown() && !isCamouflagedRef.current) newMessageNotice();
+              // Arrived now with Two off the screen: the moon widget's star
+              // comes out, and the phone may put up its one plain word if
+              // that was switched on in Settings - behind the calculator too,
+              // since the word gives nothing away. One held for later is not
+              // news yet.
+              if (!msg.replay && !held && !isShown()) newMessageNotice();
             }
             setState(prev => {
               // Arriving twice must not mean appearing twice.

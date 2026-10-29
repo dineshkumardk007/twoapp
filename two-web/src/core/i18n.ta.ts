@@ -787,8 +787,8 @@ export const TA: Readonly<Record<string, string>> = {
   // ------------------- Two in the background (core/background, BackgroundCards)
   'New message': 'புதிய செய்தி',
   'New message notice': 'புதிய செய்தி அறிவிப்பு',
-  'Silent. Shows only "New message", never who or what. Not while the calculator is on.':
-    'ஒலி இல்லை. "புதிய செய்தி" என்று மட்டுமே காட்டும்; யார், என்ன என்று ஒருபோதும் காட்டாது. கால்குலேட்டர் இயக்கத்தில் இருக்கும்போது வராது.',
+  'Silent. Shows one ordinary word, like "Synced" - never who or what, even with the calculator on.':
+    'ஒலி இல்லை. "Synced" போன்ற ஒரு சாதாரண சொல் மட்டும் காட்டும்; யார், என்ன என்று ஒருபோதும் காட்டாது - கால்குலேட்டர் இயக்கத்தில் இருந்தாலும்.',
   'Your phone also lists a quiet "Syncing" entry with it.':
     'இதனுடன் உங்கள் ஃபோனில் "Syncing" என்ற அமைதியான ஒரு பதிவும் தெரியும்.',
   'Notifications are off for Two in phone settings.': 'ஃபோன் அமைப்புகளில் Two-க்கான அறிவிப்புகள் அணைக்கப்பட்டுள்ளன.',

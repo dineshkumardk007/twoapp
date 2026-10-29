@@ -71,6 +71,7 @@ import app.two.android.features.sync.SyncService
 import app.two.android.features.sync.WakeLocks
 import app.two.android.features.widget.LaunchAction
 import app.two.android.features.widget.TwoWidget
+import app.two.android.features.widget.SkyNews
 import app.two.android.features.widget.WidgetSummary
 import org.json.JSONArray
 import org.json.JSONObject
@@ -857,6 +858,13 @@ class AndroidWebBridge(
         val text = json?.takeIf { it.length <= 4_000 } ?: return
         val app = context.applicationContext
         WidgetSummary.save(app, text)
+        // Nothing unread any more: the moon widget's star goes (SkyNews), and
+        // the redraw below shows it gone.
+        try {
+            if (WidgetSummary.read(app).unread <= 0) SkyNews.clearQuietly(app)
+        } catch (_: Exception) {
+            // An odd summary: the star stays until the next one.
+        }
         TwoWidget.refresh(app)
     }
 

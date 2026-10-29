@@ -5,4 +5,4 @@
     android:layout_height="match_parent"
     android:contentDescription="@string/widget_description"
     android:scaleType="fitCenter"
-    android:src="@drawable/widget_preview" />
+    android:src="@drawable/widget_sky_preview" />

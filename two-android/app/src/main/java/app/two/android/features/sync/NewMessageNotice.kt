@@ -16,15 +16,21 @@ import androidx.core.content.ContextCompat
 import app.two.android.MainActivity
 import app.two.android.R
 import app.two.android.features.web.PageShown
+import app.two.android.features.widget.SkyNews
 
 /**
- * The optional "New message" notice while Two is closed: off until the person
- * turns it on in Settings.
+ * The optional notice that a message has come while Two is closed: off until
+ * the person turns it on in Settings.
  *
- * It says only the words the page gave it ("New message", in her language) -
- * never who, never what, no number and no sound. Every message shares the
- * one notice, so ten messages are still one line. Never while the calculator
- * disguise is on, and gone the moment Two is opened.
+ * It says one ordinary word, picked at random each time from [WORDS] -
+ * "Synced", "Saved" - the kind of line any app leaves, so nobody glancing at
+ * the phone has a reason to wonder. Never who, never what, no number and no
+ * sound. Every message shares the one notice, so ten messages are still one
+ * line. It comes with the calculator disguise on as well (the word gives
+ * nothing away), and is gone the moment Two is opened.
+ *
+ * Every message that comes while Two is out of sight also puts the star out
+ * on the moon widget ([SkyNews]), switch or no switch.
  *
  * Turning it on is the only thing in Two that asks for the notification
  * permission on Android 13 and later; without it the background connection
@@ -37,6 +43,12 @@ object NewMessageNotice {
     const val ASK_CODE = 4105
 
     private const val CHANNEL_ID = "two_notice"
+
+    /** What the notice says: one plain word, a different one each time. */
+    private val WORDS = listOf(
+        "Synced", "Updated", "Saved", "Done", "Ready", "Refreshed",
+        "Complete", "Checked", "Sorted", "Restored", "Finished", "Uploaded"
+    )
 
     /** Main thread only: who is waiting for the permission prompt's answer. */
     private var waiting: (() -> Unit)? = null
@@ -71,7 +83,9 @@ object NewMessageNotice {
 
     /** The page heard a message of hers while Two is out of sight. */
     fun fromPage(context: Context) {
-        if (PageShown.away) post(context)
+        if (!PageShown.away) return
+        SkyNews.mark(context)
+        post(context)
     }
 
     /**
@@ -79,14 +93,15 @@ object NewMessageNotice {
      * PIN screen is still Two in front of her.
      */
     fun fromListener(context: Context) {
-        if (PageShown.away || !PageHost.alive) post(context)
+        if (!PageShown.away && PageHost.alive) return
+        SkyNews.mark(context)
+        post(context)
     }
 
     private fun post(context: Context) {
         val app = context.applicationContext
         if (!BackgroundRoomStore.notify(app)) return
-        val room = BackgroundRoomStore.room(app) ?: return
-        if (room.disguised) return
+        if (BackgroundRoomStore.room(app) == null) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(app, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
@@ -103,10 +118,10 @@ object NewMessageNotice {
                     enableVibration(false)
                 }
             )
-            val title = room.noticeText.ifBlank { app.getString(R.string.notice_default) }
+            val title = WORDS.random()
             // The lock-screen copy is the same notice: there is nothing in it
             // to hide, and Android would otherwise show "Contents hidden",
-            // which says more than "New message" does.
+            // which says more than one word does.
             val notice = builder(app, title).setPublicVersion(builder(app, title).build()).build()
             manager.notify(NOTIFICATION_ID, notice)
         } catch (_: Exception) {

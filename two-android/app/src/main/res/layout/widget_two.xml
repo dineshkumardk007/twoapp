@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The home-screen widget: one picture (WidgetArt draws the two of you, the
-  lens and the days together at the widget's real size) and the heart, the
-  one real button, laid over it. Until the first picture is drawn, the
-  still preview stands in.
+  The moon widget: one picture (SkyArt draws tonight's moon, the stars and
+  the date at the widget's real size). The whole of it opens Two. Until the
+  first picture is drawn, the still preview stands in.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -16,17 +15,5 @@
         android:layout_height="match_parent"
         android:contentDescription="@string/widget_description"
         android:scaleType="fitXY"
-        android:src="@drawable/widget_preview" />
-
-    <!-- Size and inset kept in step with WidgetArt (HEART_DP, HEART_INSET_DP). -->
-    <ImageView
-        android:id="@+id/widget_heart"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_gravity="end|center_vertical"
-        android:layout_marginEnd="12dp"
-        android:background="@drawable/widget_heart_background"
-        android:contentDescription="@string/widget_heart"
-        android:padding="12dp"
-        android:src="@drawable/ic_widget_heart" />
+        android:src="@drawable/widget_sky_preview" />
 </FrameLayout>

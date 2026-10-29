@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Four cells by two, resizable down to a two-by-two square (WidgetArt draws a
-  smaller picture for that). Refreshed by the app whenever it has news, and
-  every 30 minutes by the launcher so the day count moves on at midnight even
-  when Two has not been opened.
+  The moon widget: four cells by two, resizable down to a two-by-two square
+  (SkyArt draws a stacked picture for that). Redrawn whenever a message comes
+  or is read, and every 30 minutes by the launcher, so the moon and the date
+  move on even when Two has not been opened.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_description"
@@ -12,7 +12,7 @@
     android:minHeight="110dp"
     android:minResizeWidth="110dp"
     android:minResizeHeight="110dp"
-    android:previewImage="@drawable/widget_preview"
+    android:previewImage="@drawable/widget_sky_preview"
     android:previewLayout="@layout/widget_two_preview"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="4"

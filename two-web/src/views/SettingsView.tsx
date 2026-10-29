@@ -957,7 +957,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     {tr('New message notice')}
                   </span>
                   <span className="mt-1 block text-[11px] leading-relaxed text-linen-secondary">
-                    {tr('Silent. Shows only "New message", never who or what. Not while the calculator is on.')}
+                    {tr('Silent. Shows one ordinary word, like "Synced" - never who or what, even with the calculator on.')}
                   </span>
                   {notice.on && notice.sdk >= 33 && (
                     <span className="mt-1 block text-[11px] leading-relaxed text-linen-secondary">
