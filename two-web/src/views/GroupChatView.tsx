@@ -20,6 +20,7 @@ import {
   Undo2,
   Download,
   Camera,
+  Phone,
   Image as ImageIcon
 } from 'lucide-react';
 import {
@@ -94,6 +95,14 @@ interface GroupChatViewProps {
   onSendVoice: (note: VoiceNote, replyTo?: GroupReplyRef) => void;
   /** Sets, changes, or (with '') takes off your reaction to a message. */
   onReact?: (messageId: string, emoji: string) => void;
+  /** Rings everyone in the group (core/groupCall); absent where calls cannot be made. */
+  onStartCall?: () => void;
+  /** A call going on in this group that this phone is not in: how many are in it. */
+  groupCallCount?: number;
+  /** Joins that call. */
+  onJoinCall?: () => void;
+  /** This phone is on a call already, here or anywhere: no second one. */
+  onACall?: boolean;
   /** New words for one of your own messages; offered for fifteen minutes after sending. */
   onEditMessage?: (messageId: string, text: string) => void;
   /** Takes one of your own messages back from everyone's phone. The caller asks first. */
@@ -144,6 +153,10 @@ const LOAD_EARLIER_PX = 600;
  */
 export const GroupChatView: React.FC<GroupChatViewProps> = ({
   group,
+  onStartCall,
+  groupCallCount = 0,
+  onJoinCall,
+  onACall = false,
   myId,
   connected,
   typingIds,
@@ -1075,7 +1088,32 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
           <Users className="h-3.5 w-3.5" />
           {group.members.length || 1}
         </button>
+        {onStartCall && (
+          <button
+            type="button"
+            onClick={onStartCall}
+            disabled={onACall || groupCallCount > 0 || !connected}
+            aria-label={tr('Call the group')}
+            className="tap-target grid h-9 w-9 shrink-0 place-items-center rounded-full text-linen-primary transition-colors hover:bg-linen-variant active:scale-95 disabled:opacity-40"
+          >
+            <Phone className="h-[18px] w-[18px]" />
+          </button>
+        )}
       </div>
+
+      {/* A call going on here that you are not in: one tap to join it. */}
+      {groupCallCount > 0 && onJoinCall && !onACall && (
+        <div className="border-b border-linen-border px-3 py-2">
+          <button type="button" onClick={onJoinCall} className="gcall-join animate-in fade-in slide-in-from-top-1 duration-300">
+            <span className="call-pill-dot" aria-hidden="true" />
+            <Phone className="h-4 w-4" aria-hidden="true" />
+            <span className="flex-1 text-left text-sm font-medium">
+              {tr('Join call')} · {tr('{n} in call', { n: groupCallCount })}
+            </span>
+            <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold">{tr('Join')}</span>
+          </button>
+        </div>
+      )}
 
       {/* A group past its size is said out loud rather than half-recorded.
           Everyone holding the code can walk in, so this is the only honest

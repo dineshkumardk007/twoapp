@@ -1345,3 +1345,77 @@ html.dark .olai {
   .call-shimmer::after, .call-pill-dot { animation: none; }
   .call-voice-ring, .call-voice-ring-far { transition: none; }
 }
+
+/* The group call's circles (components/GroupCallOverlay): two to a row, three
+   once there are five or more; each glows in its own tint and its rings open
+   out as that person speaks (--voice). One whose voice has not reached this
+   phone yet is dimmed and breathes. */
+.gcall-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 28px;
+  width: 100%;
+  max-width: 300px;
+}
+.gcall-grid[data-count='1'] { grid-template-columns: 1fr; max-width: 140px; }
+.gcall-grid[data-count='3'] > :last-child { grid-column: 1 / -1; justify-self: center; }
+.gcall-grid[data-count='5'],
+.gcall-grid[data-count='6'] { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 330px; gap: 20px 18px; }
+.gcall-grid[data-count='5'] > :nth-child(4) { grid-column-start: 1; }
+.gcall-person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 300ms ease;
+}
+.gcall-person[data-waiting='true'] { opacity: 0.45; animation: gcall-wait 2.4s ease-in-out infinite; }
+@keyframes gcall-wait {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.6; }
+}
+.gcall-circle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--tint) 85%, white), color-mix(in srgb, var(--tint) 55%, #0b1030));
+  box-shadow: 0 0 calc(10px + var(--voice, 0) * 30px) color-mix(in srgb, var(--tint) 60%, transparent);
+  transition: box-shadow 160ms ease-out;
+}
+.gcall-grid[data-count='5'] .gcall-circle,
+.gcall-grid[data-count='6'] .gcall-circle { width: 66px; height: 66px; }
+.gcall-circle .call-voice-ring { border-color: color-mix(in srgb, var(--tint) 70%, transparent); }
+.gcall-initial {
+  font-size: 26px;
+  font-weight: 600;
+  color: rgb(10 14 40 / 0.85);
+}
+.gcall-name {
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: rgb(255 255 255 / 0.85);
+}
+
+/* The Join bar at the top of a group's chat while a call goes on there. */
+.gcall-join {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, rgb(16 122 96), rgb(10 92 74));
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.18);
+  transition: transform 110ms ease-out;
+}
+.gcall-join:active { transform: scale(0.98); }
+@media (prefers-reduced-motion: reduce) {
+  .gcall-person[data-waiting='true'] { animation: none; }
+}

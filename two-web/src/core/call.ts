@@ -199,7 +199,7 @@ const ICE_SERVERS: RTCIceServer[] = [
  * cancellation on: the worse-sounding choice, and the one that never lets
  * somebody hear their own voice come back at them.
  */
-function headsetConnected(): boolean {
+export function headsetConnected(): boolean {
   try {
     const bridge = (window as any).AndroidBridge;
     if (typeof bridge?.isHeadsetConnected === 'function') return !!bridge.isHeadsetConnected();
@@ -217,7 +217,7 @@ function headsetConnected(): boolean {
  * sound this is trying to get away from. That path is only needed for the
  * earpiece, and for the phone's own echo cancellation on speaker.
  */
-function routeAudio(active: boolean, speaker: boolean, headset: boolean) {
+export function routeAudio(active: boolean, speaker: boolean, headset: boolean) {
   try {
     const bridge = (window as any).AndroidBridge;
     if (typeof bridge?.setCallAudioRoute === 'function') {
@@ -245,7 +245,7 @@ function routeAudio(active: boolean, speaker: boolean, headset: boolean) {
  * service for the length of the call to prevent that, which Android shows as
  * an ongoing notification.
  */
-function keepAlive(on: boolean) {
+export function keepAlive(on: boolean) {
   try {
     (window as any).AndroidBridge?.setCallKeepAlive?.(on);
   } catch {
@@ -258,7 +258,7 @@ function keepAlive(on: boolean) {
  * floor at first, then what the network asks for (core/callNet
  * playoutTargetMs).
  */
-function steadyPlayout(receiver: RTCRtpReceiver, ms: number = JITTER_BUFFER_MS) {
+export function steadyPlayout(receiver: RTCRtpReceiver, ms: number = JITTER_BUFFER_MS) {
   const r = receiver as any;
   try {
     if ('jitterBufferTarget' in r) r.jitterBufferTarget = ms;
@@ -273,7 +273,7 @@ function steadyPlayout(receiver: RTCRtpReceiver, ms: number = JITTER_BUFFER_MS) 
  * a burst of lost packets on mobile data does not take words with it. A
  * phone that cannot - or the other side, if it cannot - still gets Opus.
  */
-function preferRed(pc: RTCPeerConnection) {
+export function preferRed(pc: RTCPeerConnection) {
   try {
     const codecs = (RTCRtpSender as any).getCapabilities?.('audio')?.codecs;
     if (!codecs) return;
@@ -373,6 +373,8 @@ interface CallEngineOptions {
    * plus a little: see ICE_WAIT_MS.
    */
   iceServers?: () => Promise<RTCIceServer[] | null>;
+  /** On a call somewhere else - a group's (core/groupCall) - so a new one is told busy. */
+  busyElsewhere?: () => boolean;
 }
 
 /**
@@ -740,6 +742,12 @@ export class CallEngine {
       }
       if (this.state.phase === 'outgoing') return; // theirs yields to ours
 
+      this.opts.send({ kind: 'decline', callId: signal.callId, busy: true });
+      return;
+    }
+
+    // On a group call: the same "already on a call" as a call of ours.
+    if (this.opts.busyElsewhere?.()) {
       this.opts.send({ kind: 'decline', callId: signal.callId, busy: true });
       return;
     }

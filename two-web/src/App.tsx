@@ -88,6 +88,15 @@ import { CallEngine, CallState, IDLE_CALL, CALL_SIGNAL, CALL_MISSED } from './co
 import { CALL_LOG, applyCallLog, callLogFrom, readCallLog, type ChatCallInfo } from './core/callLog';
 import { crashNoteToTell } from './core/crashNote';
 import { CallOverlay } from './components/CallOverlay';
+import { GroupCallOverlay } from './components/GroupCallOverlay';
+import {
+  GroupCallEngine,
+  GROUP_CALL_SIGNAL,
+  IDLE_GROUP_CALL,
+  inCallNow,
+  type GroupCallSeen,
+  type GroupCallState
+} from './core/groupCall';
 import { RelayStorageWarning } from './components/RelayStorageWarning';
 import { RoleClashDialog } from './components/RoleClashDialog';
 import { BackgroundCards } from './components/BackgroundCards';
@@ -516,7 +525,8 @@ export const App: React.FC = () => {
       onMissed: callId => wsRelay.broadcastUpdate(CALL_MISSED, { callId, at: Date.now() }),
       canRing: () => !isCamouflagedRef.current,
       nudgeRelay: () => wsRelay.reconnectNow(),
-      iceServers: () => wsRelay.getIceServers()
+      iceServers: () => wsRelay.getIceServers(),
+      busyElsewhere: () => !!groupCallEngineRef.current?.busy
     });
     callEngineRef.current = engine;
     return () => {
@@ -524,6 +534,35 @@ export const App: React.FC = () => {
       callEngineRef.current = null;
     };
   }, []);
+
+  /**
+   * A voice call with everyone in a group (core/groupCall): one at a time,
+   * and never alongside a call between the two of you - each tells the other
+   * it is busy. Its setting up rides each group's own channel; the calls seen
+   * going on in groups this phone is not in give their chats a Join bar.
+   */
+  const [groupCallState, setGroupCallState] = useState<GroupCallState>(IDLE_GROUP_CALL);
+  const [groupCallsSeen, setGroupCallsSeen] = useState<Record<string, GroupCallSeen>>({});
+  const groupCallEngineRef = useRef<GroupCallEngine | null>(null);
+  useEffect(() => {
+    if (groupCallState.phase !== 'idle') leaveBedside();
+  }, [groupCallState.phase]);
+  useEffect(() => {
+    const engine = new GroupCallEngine({
+      me: () => ({ id: myMemberId(), name: latestRef.current.state.userName || 'Someone' }),
+      send: (groupId, signal) => signalToGroup(groupId, GROUP_CALL_SIGNAL, signal),
+      onChange: setGroupCallState,
+      onSeen: setGroupCallsSeen,
+      canRing: () => !isCamouflagedRef.current && !callEngineRef.current?.busy,
+      iceServers: () => wsRelay.getIceServers()
+    });
+    groupCallEngineRef.current = engine;
+    return () => {
+      engine.destroy();
+      groupCallEngineRef.current = null;
+    };
+  }, []);
+  const groupCallLevels = useCallback(() => groupCallEngineRef.current?.voiceLevels() ?? {}, []);
   /**
    * Each call leaves its line in the chat (core/callLog). This phone writes
    * what it saw as the call ends, and sends it; the other phone's account of
@@ -2905,6 +2944,16 @@ export const App: React.FC = () => {
    * reach state.messages, and nothing there can reach a group.
    */
   const handleGroupMessage = (groupId: string, msg: any) => {
+    // A group call's setting up (core/groupCall): never stored, so never replayed.
+    if (msg?.type === 'REMOTE_SIGNAL' && msg.signal?.type === GROUP_CALL_SIGNAL) {
+      try {
+        groupCallEngineRef.current?.handleSignal(groupId, JSON.parse(msg.signal.payload));
+      } catch {
+        /* not a call message we can read */
+      }
+      return;
+    }
+
     // The relay confirming a record is what turns a pending message into
     // "sent", exactly as in the couple's chat. Hellos, read positions and
     // changes to a message are sent without a correlation id, so their acks
@@ -4953,6 +5002,25 @@ export const App: React.FC = () => {
     />
   );
 
+  const groupCallOverlay =
+    groupCallState.phase === 'idle' ? null : (
+      <GroupCallOverlay
+        call={groupCallState}
+        groupName={state.groups.find(g => g.id === groupCallState.groupId)?.name || 'Group'}
+        myName={state.userName || 'You'}
+        voiceLevels={groupCallLevels}
+        onJoin={() => {
+          const g = groupCallState.groupId;
+          if (g) void groupCallEngineRef.current?.join(g, groupCallState.callId || undefined);
+        }}
+        onDecline={() => groupCallEngineRef.current?.decline()}
+        onLeave={() => groupCallEngineRef.current?.leave()}
+        onToggleMute={() => groupCallEngineRef.current?.toggleMute()}
+        onToggleSpeaker={() => groupCallEngineRef.current?.toggleSpeaker()}
+        onToggleNoise={() => groupCallEngineRef.current?.toggleNoiseReduction()}
+      />
+    );
+
   if (isCamouflaged) {
     return (
       <CalculatorDecoy
@@ -5514,6 +5582,14 @@ export const App: React.FC = () => {
               draft={state.chatDrafts?.[activeGroup.id]}
               onSaveDraft={stable(inGroup + 'saveDraft', (draft: ChatDraft | null) => handleSaveDraft(activeGroup.id, draft))}
               callInProgress={callState.phase !== 'idle'}
+              onStartCall={stable(inGroup + 'startCall', () => void groupCallEngineRef.current?.start(activeGroup.id))}
+              groupCallCount={
+                groupCallsSeen[activeGroup.id] && groupCallState.groupId !== activeGroup.id
+                  ? inCallNow(groupCallsSeen[activeGroup.id].members, Date.now()).length
+                  : 0
+              }
+              onJoinCall={stable(inGroup + 'joinCall', () => void groupCallEngineRef.current?.join(activeGroup.id))}
+              onACall={callState.phase !== 'idle' || groupCallState.phase !== 'idle'}
               onTyping={stable(inGroup + 'typing', (typing: boolean) => {
                 if (!readShareReceipts()) return;
                 // `stops`: this phone says when it stops (core/typing).
@@ -5536,8 +5612,9 @@ export const App: React.FC = () => {
         </main>
 
         {/* A couple call can ring while a group is open, so group mode
-            carries the call screen too. */}
+            carries the call screen too - and the group call's. */}
         {callOverlay}
+        {groupCallOverlay}
 
         {/* Notices about groups - a message in another group, a voice note
             too large to send in this one - are shown here too, or they would
@@ -6152,6 +6229,7 @@ export const App: React.FC = () => {
       />
 
       {callOverlay}
+      {groupCallOverlay}
 
       {/* In-App Notification Toast for Messages & Letters. Its time stands
           still while the call screen covers it, as the update toast waits. */}

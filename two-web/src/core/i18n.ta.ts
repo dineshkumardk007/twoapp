@@ -807,5 +807,11 @@ export const TA: Readonly<Record<string, string>> = {
   'On vivo and iQOO phones, allow Two to start on its own and to run in the background, or the phone may close it.':
     'vivo, iQOO ஃபோன்களில் Two தானாகத் தொடங்கவும் பின்னணியில் இயங்கவும் அனுமதியுங்கள்; இல்லையெனில் ஃபோன் அதை மூடிவிடக்கூடும்.',
   'On OPPO, realme and OnePlus phones, allow Auto launch and Background activity for Two, or the phone may close it.':
-    'OPPO, realme, OnePlus ஃபோன்களில் Two-க்கு Auto launch, Background activity இரண்டையும் அனுமதியுங்கள்; இல்லையெனில் ஃபோன் அதை மூடிவிடக்கூடும்.'
+    'OPPO, realme, OnePlus ஃபோன்களில் Two-க்கு Auto launch, Background activity இரண்டையும் அனுமதியுங்கள்; இல்லையெனில் ஃபோன் அதை மூடிவிடக்கூடும்.',
+
+  // Group calls (views/GroupChatView).
+  'Call the group': 'குழுவை அழை',
+  'Join call': 'அழைப்பில் சேர்',
+  '{n} in call': 'அழைப்பில் {n} பேர்',
+  Join: 'சேர்',
 };
