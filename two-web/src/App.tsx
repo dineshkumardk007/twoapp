@@ -261,6 +261,7 @@ import {
   type MessageExtras,
   type PhotoFields
 } from './core/chatActions';
+import { cleanStickerId } from './core/stickers';
 import { mergeReport, recordDay } from './core/weatherHistory';
 import { localDateKey } from './core/ourDates';
 import {
@@ -371,7 +372,7 @@ function chatFromWire(parsed: any): ChatMessage {
   // Taken off whatever they say, so only the checked copies below go back on.
   const {
     isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard,
-    isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo,
+    isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo, sticker,
     editedAt, unsent, reactions, viewOnce, viewedAt,
     // Never a message's to claim: a call's line is made here from a CALL_LOG,
     // and when a message arrived is this phone's own record.
@@ -387,6 +388,8 @@ function chatFromWire(parsed: any): ChatMessage {
   } = parsed;
   const voice = cleanVoiceFields(parsed);
   const photo = voice ? null : cleanPhotoFields(parsed);
+  // A sticker is a name and nothing more (core/stickers).
+  const stickerId = voice || photo ? undefined : cleanStickerId(sticker);
   const reply = cleanReplyRef(replyTo);
   // Set to show later: in its place at that time (core/sendLater).
   const later = cleanShowAt(showAt);
@@ -394,6 +397,7 @@ function chatFromWire(parsed: any): ChatMessage {
     ...rest,
     ...(voice || photo || {}),
     ...(photo && viewOnce === true ? { viewOnce: true } : {}),
+    ...(stickerId ? { sticker: stickerId } : {}),
     ...(reply ? { replyTo: reply } : {}),
     ...(later ? { showAt: later, sentAt: later } : {})
   };
@@ -3389,6 +3393,8 @@ export const App: React.FC = () => {
       return;
     }
     const text = stuck?.text || (voice ? voiceNoteLabel(voice.audioDurationSeconds) : '');
+    // A sticker goes again as the sticker.
+    const sticker = voice || photo ? undefined : cleanStickerId(stuck?.sticker);
 
     if (groupId) {
       dropPendingInGroup(groupId, messageId);
@@ -3409,7 +3415,7 @@ export const App: React.FC = () => {
     if (action !== 'retry' || !text) return;
     if (groupId) {
       handleSendGroupMessage(groupId, text, {
-        ...(voice ? { voice } : photo ? { photo } : {}),
+        ...(voice ? { voice } : photo ? { photo } : sticker ? { sticker } : {}),
         ...(stuckInGroup?.replyTo ? { replyTo: stuckInGroup.replyTo } : {})
       });
     } else {
@@ -3421,7 +3427,7 @@ export const App: React.FC = () => {
       };
       handleSendMessage(text, false, {
         ...kept,
-        ...(voice ?? (photo ? { ...photo, ...(stuckPhoto?.viewOnce ? { viewOnce: true as const } : {}) } : {}))
+        ...(voice ?? (photo ? { ...photo, ...(stuckPhoto?.viewOnce ? { viewOnce: true as const } : {}) } : sticker ? { sticker } : {}))
       });
     }
   };
@@ -3433,9 +3439,10 @@ export const App: React.FC = () => {
   const handleSendGroupMessage = (
     groupId: string,
     text: string,
-    extras: { voice?: VoiceFields; photo?: PhotoFields; replyTo?: GroupReplyRef } = {}
+    extras: { voice?: VoiceFields; photo?: PhotoFields; sticker?: string; replyTo?: GroupReplyRef } = {}
   ) => {
     const { voice, photo, replyTo } = extras;
+    const sticker = voice || photo ? undefined : extras.sticker;
     const at = Date.now();
     const id = newId('gmsg');
     const name = state.userName || 'Someone';
@@ -3451,6 +3458,7 @@ export const App: React.FC = () => {
       mid: id,
       ...voice,
       ...(voice ? {} : photo),
+      ...(sticker ? { sticker } : {}),
       ...(replyTo ? { replyTo } : {})
     };
 
@@ -3482,6 +3490,7 @@ export const App: React.FC = () => {
                 sharedId: true,
                 ...voice,
                 ...(voice ? {} : photo),
+                ...(sticker ? { sticker } : {}),
                 ...(replyTo ? { replyTo } : {})
               }).slice(-MAX_GROUP_MESSAGES)
             }

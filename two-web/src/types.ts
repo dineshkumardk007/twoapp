@@ -91,6 +91,11 @@ export interface ChatMessage {
   photoDataUrl?: string;
   photoWidth?: number;
   photoHeight?: number;
+  /**
+   * A sticker: one of Two's own (core/stickers), by name - the drawing is in
+   * the app, so nothing else travels. `text` holds "Sticker".
+   */
+  sticker?: string;
   /** The message this one answers (core/chatActions). */
   replyTo?: ChatReplyRef;
   /** When its author last changed the words (CHAT_EDIT); `text` holds the new ones. */

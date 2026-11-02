@@ -814,4 +814,13 @@ export const TA: Readonly<Record<string, string>> = {
   'Join call': 'அழைப்பில் சேர்',
   '{n} in call': 'அழைப்பில் {n} பேர்',
   Join: 'சேர்',
+
+  // Stickers (components/EmojiPicker, StickerArt).
+  Sticker: 'ஸ்டிக்கர்',
+  Stickers: 'ஸ்டிக்கர்கள்',
+  Recent: 'சமீபத்தியவை',
+  'Us two': 'நாம் இருவர்',
+  'Funny faces': 'வேடிக்கை முகங்கள்',
+  'Send the sticker "{name}"': '"{name}" ஸ்டிக்கரை அனுப்பு',
+  'Sticker: {name}': 'ஸ்டிக்கர்: {name}',
 };

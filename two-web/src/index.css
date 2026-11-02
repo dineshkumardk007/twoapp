@@ -1419,3 +1419,126 @@ html.dark .olai {
 @media (prefers-reduced-motion: reduce) {
   .gcall-person[data-waiting='true'] { animation: none; }
 }
+
+/* Stickers (components/StickerArt). The whole drawing moves (data-m) and so
+   do some of its parts (.stk-part), a few times as it comes into view or is
+   tapped, then it rests. Only transform and opacity, so nothing is laid out
+   again while it plays. */
+.stk-body,
+.stk-part {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.stk-part { transform-origin: 50% 50%; }
+.stk[data-play='true'] .stk-body[data-m='bounce'] { animation: stk-bounce 0.9s ease-in-out 3; }
+.stk[data-play='true'] .stk-body[data-m='hop'] { animation: stk-hop 0.8s cubic-bezier(0.3, 0.7, 0.4, 1) 3; }
+.stk[data-play='true'] .stk-body[data-m='pulse'] { animation: stk-pulse 0.8s ease-in-out 3; }
+.stk[data-play='true'] .stk-body[data-m='squeeze'] { animation: stk-squeeze 1s ease-in-out 3; }
+.stk[data-play='true'] .stk-body[data-m='shake'] { animation: stk-shake 0.5s ease-in-out 4; }
+.stk[data-play='true'] .stk-body[data-m='sway'] { animation: stk-sway 1.4s ease-in-out 2; }
+.stk[data-play='true'] .stk-body[data-m='wiggle'] { animation: stk-wiggle 0.6s ease-in-out 4; }
+.stk[data-play='true'] .stk-body[data-m='pop'] { animation: stk-pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3) 2; }
+.stk[data-play='true'] .stk-body[data-m='tilt'] { animation: stk-tilt 1.2s ease-in-out 2; }
+.stk[data-play='true'] .stk-body[data-m='float'] { animation: stk-float 1.8s ease-in-out 2; }
+.stk[data-play='true'] .stk-body[data-m='melt'] { animation: stk-melt 1.2s ease-in-out 2; }
+.stk[data-play='true'] .stk-body[data-m='run'] { animation: stk-run 0.35s linear 8; }
+.stk[data-play='true'] .stk-body[data-m='stretch'] { animation: stk-stretch 1.2s ease-in-out 2; }
+.stk[data-play='true'] .stk-rise { animation: stk-rise 1.5s ease-out 3 backwards; }
+.stk[data-play='true'] .stk-beat { animation: stk-beat 0.8s ease-in-out 3; }
+.stk[data-play='true'] .stk-drip { animation: stk-drip 1.1s ease-in 3 backwards; }
+.stk[data-play='true'] .stk-blink { animation: stk-blink 0.9s ease-in-out 3; }
+.stk[data-play='true'] .stk-spin { animation: stk-spin 1.6s ease-in-out 2; }
+.stk[data-play='true'] .stk-peek { animation: stk-peek 1.4s cubic-bezier(0.3, 0.7, 0.4, 1) 1 both; }
+@keyframes stk-bounce {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  30% { transform: translateY(-7px) scale(0.97, 1.03); }
+  60% { transform: translateY(0) scale(1.04, 0.96); }
+}
+@keyframes stk-hop {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  15% { transform: translateY(0) scale(1.06, 0.92); }
+  45% { transform: translateY(-14px) scale(0.96, 1.05); }
+  75% { transform: translateY(0) scale(1.04, 0.95); }
+}
+@keyframes stk-pulse {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.07); }
+}
+@keyframes stk-squeeze {
+  0%, 100% { transform: scale(1, 1); }
+  40% { transform: scale(1.05, 0.95); }
+  70% { transform: scale(0.98, 1.02); }
+}
+@keyframes stk-shake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+@keyframes stk-sway {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-4deg); }
+  70% { transform: rotate(4deg); }
+}
+@keyframes stk-wiggle {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  25% { transform: rotate(-3deg) translateY(-2px); }
+  75% { transform: rotate(3deg) translateY(-2px); }
+}
+@keyframes stk-pop {
+  0% { transform: scale(0.86); }
+  45% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+@keyframes stk-tilt {
+  0%, 100% { transform: rotate(0); }
+  45% { transform: rotate(-7deg); }
+}
+@keyframes stk-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes stk-melt {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.07, 0.9); }
+}
+@keyframes stk-run {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(2px, -3px); }
+  75% { transform: translate(-2px, 0); }
+}
+@keyframes stk-stretch {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(0.97, 1.06); }
+}
+@keyframes stk-rise {
+  0% { transform: translateY(6px) scale(0.6); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: translateY(-14px) scale(1); opacity: 0; }
+}
+@keyframes stk-beat {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.18); }
+  40% { transform: scale(0.98); }
+  60% { transform: scale(1.1); }
+}
+@keyframes stk-drip {
+  0% { transform: translateY(-4px); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(14px); opacity: 0; }
+}
+@keyframes stk-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+@keyframes stk-spin {
+  0%, 100% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(25deg) scale(1.12); }
+}
+@keyframes stk-peek {
+  0% { transform: translateY(26px); }
+  60% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stk * { animation: none !important; }
+}

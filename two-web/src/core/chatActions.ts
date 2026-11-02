@@ -93,11 +93,11 @@ const MAX_PHOTO_SIDE = 8192;
 
 export type Seat = 'user' | 'partner';
 
-/** Something there to read: not a recording, a photo, or what was taken back. */
+/** Something there to read: not a recording, a photo, a sticker, or what was taken back. */
 function hasWords(m: ChatMessage): boolean {
   // A call's line (core/callLog) has words for older phones, not for this one
   // to edit, quote, pin or search.
-  return !m.isVoiceMemo && !m.isPhoto && !m.unsent && !m.call;
+  return !m.isVoiceMemo && !m.isPhoto && !m.sticker && !m.unsent && !m.call;
 }
 
 /**
@@ -120,6 +120,7 @@ export function canUnsend(m: ChatMessage, me: Seat): boolean {
 export function snippetOf(m: ChatMessage): string {
   if (m.isVoiceMemo) return 'Voice note';
   if (m.isPhoto) return m.viewOnce ? 'View-once photo' : 'Photo';
+  if (m.sticker) return 'Sticker';
   const text = (m.text || '').replace(/\s+/g, ' ').trim();
   return text.length > SNIPPET_CHARS ? text.slice(0, SNIPPET_CHARS - 1).trimEnd() + '…' : text;
 }
@@ -143,7 +144,7 @@ export function cleanReplyRef(raw: unknown): ChatReplyRef | undefined {
  * be view-once), the message it answers, or when it is to show (core/sendLater).
  */
 export type MessageExtras = Partial<VoiceFields> &
-  Partial<PhotoFields> & { replyTo?: ChatReplyRef; viewOnce?: true; showAt?: number };
+  Partial<PhotoFields> & { replyTo?: ChatReplyRef; viewOnce?: true; showAt?: number; sticker?: string };
 
 export interface PhotoFields {
   isPhoto: true;

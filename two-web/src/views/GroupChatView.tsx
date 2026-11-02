@@ -36,6 +36,8 @@ import {
 import { formatLastSeen } from '../core/lastSeen';
 import { useTypingSender } from '../core/typing';
 import { EmojiPicker } from '../components/EmojiPicker';
+import { StickerArt, hasStickerArt } from '../components/StickerArt';
+import { STICKER_TEXT, stickerInfo } from '../core/stickers';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
 import { VoiceMicButton, VoiceRecordingStrip, useVoiceRecorder } from '../components/VoiceRecorder';
 import type { VoiceNote } from '../core/voice';
@@ -127,8 +129,13 @@ interface GroupChatViewProps {
 /** What a group message can carry besides its words. */
 export interface GroupSendExtras {
   photo?: PhotoFields;
+  /** One of Two's stickers, by name (core/stickers). */
+  sticker?: string;
   replyTo?: GroupReplyRef;
 }
+
+/** How big a sticker is drawn in the conversation. */
+const STICKER_SIZE = 140;
 
 /** This close to the end of the conversation counts as being at the end. */
 const AT_BOTTOM_PX = 48;
@@ -605,6 +612,15 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
     }
   };
 
+  /** A sticker from the picker, sent at once - as the answer, if one is being written. */
+  const sendSticker = (id: string) => {
+    const reply = replyToRef.current;
+    setReplyTo(null);
+    forgetUsedDraft();
+    onSend(STICKER_TEXT, { sticker: id, ...(reply ? { replyTo: reply } : {}) });
+    haptic('confirm');
+  };
+
   /** A photo, out of the group and into the phone's own storage, where the person chooses. */
   const savePhoto = async (m: GroupMessage) => {
     if (!m.photoDataUrl) return;
@@ -759,6 +775,8 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
         const quote = unsent ? undefined : msg.replyTo;
         const quoted = quote ? byKey.get(quote.id) || (quote.rid ? byKey.get(quote.rid) : undefined) : undefined;
         const photo = !unsent && msg.isPhoto && msg.photoDataUrl ? photoSize(msg) : null;
+        // On its own, with no bubble; one from a newer pack shows as its words.
+        const sticker = !unsent && hasStickerArt(msg.sticker) ? msg.sticker : null;
         const reactions = unsent ? [] : reactionSummary(msg.reactions, myId);
         const reacted = reactions.reduce((n, r) => n + r.count, 0);
         return (
@@ -800,12 +818,14 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                 // A voice note takes a little more of the width, so its
                 // player (200px at the least) fits a 320px phone. A photo
                 // gets a thin frame of the bubble's own colour.
-                photo ? 'p-1' : msg.isVoiceMemo && !unsent ? 'max-w-[90%] px-3 py-2' : 'max-w-[80%] px-3.5 py-2'
+                sticker ? '' : photo ? 'p-1' : msg.isVoiceMemo && !unsent ? 'max-w-[90%] px-3 py-2' : 'max-w-[80%] px-3.5 py-2'
               } rounded-2xl text-sm ${
                 // Plain, as in your own chat (index.css): yours grey, everyone
                 // else's outlined; their names above keep their colour.
                 unsent
                   ? 'bubble-edge border border-dashed text-linen-secondary'
+                  : sticker
+                  ? 'text-linen-primary'
                   : mine
                   ? 'bubble-mine text-linen-primary'
                   : 'bubble-edge border text-linen-primary'
@@ -820,6 +840,8 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                 <>
                   {quote && (
                     // What this answers. Tapped, the conversation goes back to it.
+                    // Over a sticker, in a small bubble of its own.
+                    <div className={sticker ? `mb-1 rounded-2xl px-2.5 py-2 ${mine ? 'bubble-mine' : 'bubble-edge border'}` : 'contents'}>
                     <ReplyQuote
                       who={
                         quote.authorId === myId
@@ -840,10 +862,18 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                           showToastRef.current(tr('That message is no longer on this phone'));
                         }
                       }}
-                      maxWidth={photo ? photo.width : undefined}
+                      maxWidth={photo ? photo.width : sticker ? STICKER_SIZE : undefined}
                     />
+                    </div>
                   )}
-                  {msg.isVoiceMemo ? (
+                  {sticker ? (
+                    // Tapped, it plays again.
+                    <StickerArt
+                      id={sticker}
+                      size={STICKER_SIZE}
+                      onTapLabel={tr('Sticker: {name}', { name: tr(stickerInfo(sticker)?.label || STICKER_TEXT) })}
+                    />
+                  ) : msg.isVoiceMemo ? (
                     // The player stands for the note; its label is for the
                     // notification and older phones. A group keeps no receipts
                     // per note, so your own carry no heard mark - only the
@@ -1397,6 +1427,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
             if (!editing) typing.keystroke();
           }}
           onClose={() => setShowEmoji(false)}
+          onSticker={editing ? undefined : sendSticker}
         />
       )}
 

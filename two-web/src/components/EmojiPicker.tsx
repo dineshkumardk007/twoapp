@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { useT } from '../core/i18n';
+import { STICKERS, recentStickers, rememberSticker, stickerInfo, type StickerSet } from '../core/stickers';
+import { StickerArt } from './StickerArt';
 
 /**
  * One list, used by both conversations.
@@ -67,21 +69,70 @@ interface EmojiPickerProps {
    * language can put the emoji where it goes.
    */
   pickWord?: string;
+  /**
+   * Given, the picker has a Stickers tab too, and a sticker tapped there is
+   * sent at once.
+   */
+  onSticker?: (id: string) => void;
 }
+
+/** The tab last used, so the picker opens where you left it. */
+let lastTab: 'emoji' | 'stickers' = 'emoji';
+
+const SETS: { set: StickerSet; title: string }[] = [
+  { set: 'us', title: 'Us two' },
+  { set: 'faces', title: 'Funny faces' }
+];
 
 /**
  * Sits between the conversation and the composer, so the draft being added to
  * stays in view, and is capped in height so the conversation never disappears
  * behind it.
  */
-export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only, title, pickWord = 'Add' }) => {
+export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only, title, pickWord = 'Add', onSticker }) => {
   const tr = useT();
+  const [tab, setTab] = useState<'emoji' | 'stickers'>(onSticker ? lastTab : 'emoji');
+  const [recent, setRecent] = useState(recentStickers);
+  const choose = (next: 'emoji' | 'stickers') => {
+    lastTab = next;
+    setTab(next);
+  };
+  const tabClass = (on: boolean) =>
+    `rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+      on ? 'bg-linen-variant text-linen-primary' : 'text-linen-secondary hover:text-linen-primary'
+    }`;
+  const sendSticker = (id: string) => {
+    onSticker?.(id);
+    setRecent(rememberSticker(id));
+  };
+  const tile = (id: string) => (
+    <button
+      key={id}
+      type="button"
+      onClick={() => sendSticker(id)}
+      aria-label={tr('Send the sticker "{name}"', { name: tr(stickerInfo(id)?.label || 'Sticker') })}
+      className="flex aspect-square items-center justify-center rounded-2xl hover:bg-linen-variant active:scale-90 transition-transform cursor-pointer"
+    >
+      <StickerArt id={id} size={68} still />
+    </button>
+  );
   return (
   <div className="border-t border-linen-border bg-linen-surface">
     <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
-        {title ?? tr('Emoji')}
-      </span>
+      {onSticker ? (
+        <div role="tablist" className="-ml-3 flex items-center gap-1">
+          <button type="button" role="tab" aria-selected={tab === 'emoji'} onClick={() => choose('emoji')} className={tabClass(tab === 'emoji')}>
+            {tr('Emoji')}
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'stickers'} onClick={() => choose('stickers')} className={tabClass(tab === 'stickers')}>
+            {tr('Stickers')}
+          </button>
+        </div>
+      ) : (
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
+          {title ?? tr('Emoji')}
+        </span>
+      )}
       <button
         type="button"
         onClick={onClose}
@@ -92,6 +143,23 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
       </button>
     </div>
 
+    {tab === 'stickers' ? (
+      // Taller than the emoji: a sticker needs room to be seen.
+      <div className="max-h-60 overflow-y-auto scroll-contain px-3 pb-2">
+        {recent.length > 0 && (
+          <div className="mb-1.5">
+            <p className="px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-linen-secondary/70">{tr('Recent')}</p>
+            <div className="grid grid-cols-4 gap-1">{recent.map(tile)}</div>
+          </div>
+        )}
+        {SETS.map(({ set, title: heading }) => (
+          <div key={set} className="mb-1.5">
+            <p className="px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-linen-secondary/70">{tr(heading)}</p>
+            <div className="grid grid-cols-4 gap-1">{STICKERS.filter(s => s.set === set).map(s => tile(s.id))}</div>
+          </div>
+        ))}
+      </div>
+    ) : (
     <div className="max-h-44 overflow-y-auto scroll-contain px-3 pb-2">
       {EMOJI_GROUPS.map(group => (
         <div key={group.title} className="mb-1.5">
@@ -114,6 +182,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
         </div>
       ))}
     </div>
+    )}
   </div>
   );
 };

@@ -23,6 +23,7 @@ import {
   withDeletedForMe
 } from './chatActions';
 import type { VoiceFields } from './voice';
+import { cleanStickerId } from './stickers';
 import { MAX_GROUP_MESSAGES, type GroupMessage, type GroupReplyRef } from './groups';
 
 /** A message id from the wire: short, and only letters, digits, - and _. */
@@ -50,9 +51,9 @@ export function findTarget(messages: GroupMessage[], payload: unknown): number {
   return messages.findIndex(m => keys.includes(m.id) || (!!m.rid && keys.includes(m.rid)));
 }
 
-/** Something there to read: not a recording, a photo, or what was taken back. */
+/** Something there to read: not a recording, a photo, a sticker, or what was taken back. */
 export function groupHasWords(m: GroupMessage): boolean {
-  return !m.isVoiceMemo && !m.isPhoto && !m.unsent;
+  return !m.isVoiceMemo && !m.isPhoto && !m.sticker && !m.unsent;
 }
 
 /**
@@ -108,6 +109,7 @@ export function withGroupDeletedForMe(
 export function groupSnippetOf(m: GroupMessage): string {
   if (m.isVoiceMemo) return 'Voice note';
   if (m.isPhoto) return 'Photo';
+  if (m.sticker) return 'Sticker';
   const text = (m.text || '').replace(/\s+/g, ' ').trim();
   return text.length > SNIPPET_CHARS ? text.slice(0, SNIPPET_CHARS - 1).trimEnd() + '…' : text;
 }
@@ -147,11 +149,13 @@ export function cleanGroupReplyRef(raw: unknown): GroupReplyRef | undefined {
  * `sharedId`, which are this phone's own or come as records of their own. A
  * recording is kept only as `voice`, what cleanVoiceFields made of it (passed
  * in: core/voice brings the radio with it), and a picture only as
- * cleanPhotoFields accepts it; one that fails shows as its words, its label.
+ * cleanPhotoFields accepts it, and a sticker only as a name (core/stickers);
+ * one that fails shows as its words, its label.
  */
 export function groupMessageFromWire(recordId: string, parsed: any, from: string, voice: VoiceFields | null): GroupMessage {
   const photo = voice ? null : cleanPhotoFields(parsed);
   const reply = cleanGroupReplyRef(parsed?.replyTo);
+  const sticker = voice || photo ? undefined : cleanStickerId(parsed?.sticker);
   return {
     // Filed under the sender's own id, so every phone names it the same.
     id: cleanMessageId(parsed?.mid) || recordId,
@@ -161,6 +165,7 @@ export function groupMessageFromWire(recordId: string, parsed: any, from: string
     text: String(parsed?.text || ''),
     sentAt: Number(parsed?.at) || Date.now(),
     ...(voice || photo || {}),
+    ...(sticker ? { sticker } : {}),
     ...(reply ? { replyTo: reply } : {})
   };
 }

@@ -49,6 +49,8 @@ export function snippetShown(snippet: string | undefined): string {
       return tr('Voice note');
     case 'View-once photo':
       return tr('View-once photo');
+    case 'Sticker':
+      return tr('Sticker');
     case '':
     case undefined:
       return tr('Message');

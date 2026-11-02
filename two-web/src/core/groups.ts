@@ -116,6 +116,8 @@ export interface GroupMessage {
   photoDataUrl?: string;
   photoWidth?: number;
   photoHeight?: number;
+  /** A sticker, by name (core/stickers), as in the couple's chat. */
+  sticker?: string;
   /**
    * When it arrived here, by this phone's clock, for its Info. Local: never
    * sent, and not for history being restored, which is not news.

@@ -60,6 +60,11 @@ import {
   Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock, EllipsisVertical, Info
 } from 'lucide-react';
 import { EmojiPicker } from '../components/EmojiPicker';
+import { StickerArt, hasStickerArt } from '../components/StickerArt';
+import { STICKER_TEXT, stickerInfo } from '../core/stickers';
+
+/** How big a sticker is drawn in the conversation. */
+const STICKER_SIZE = 140;
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -827,6 +832,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
   };
 
+  /** A sticker from the picker, sent at once - as the answer, if one is being written. */
+  const sendSticker = (id: string) => {
+    const reply = replyToRef.current;
+    setReplyTo(null);
+    forgetUsedDraft();
+    onSendMessage(STICKER_TEXT, false, { sticker: id, ...(reply ? { replyTo: reply } : {}) });
+    haptic('confirm');
+  };
+
   /** A photo, out of the chat and into the phone's own storage, where the person chooses. */
   const savePhoto = async (m: ChatMessage) => {
     if (!m.photoDataUrl) return;
@@ -1104,6 +1118,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
         const once = !unsent && !!msg.viewOnce;
         const opened = once && !!msg.viewedAt;
         const photo = !unsent && !once && msg.isPhoto && msg.photoDataUrl ? photoSize(msg) : null;
+        // A sticker stands on its own, with no bubble round it. One from a
+        // newer pack than this phone has shows as its words, "Sticker".
+        const sticker = !unsent && hasStickerArt(msg.sticker) ? msg.sticker : null;
 
         // One rounded shape per run: the corners on the sender's side tuck in
         // where bubbles meet, and the last one keeps a small tail.
@@ -1199,12 +1216,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   // breathing room, than around words - and a little more of
                   // the width, so its 200px fits a 320px phone. A photo gets a
                   // thin frame of the bubble's own colour.
-                  photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : once ? 'max-w-[85%] py-2 pl-2.5 pr-4' : 'max-w-[85%] px-4 py-2.5'
+                  sticker ? '' : photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : once ? 'max-w-[85%] py-2 pl-2.5 pr-4' : 'max-w-[85%] px-4 py-2.5'
                 } text-sm leading-relaxed ${shape} ${
                   // Plain on both sides (index.css): yours grey, theirs outlined.
                   // A request looks like any other message from its side.
                   unsent || opened
                     ? 'bubble-edge border border-dashed text-linen-secondary'
+                    : sticker
+                    ? 'text-linen-primary'
                     : mine
                     ? 'bubble-mine text-linen-primary'
                     : 'bubble-edge border text-linen-primary'
@@ -1229,6 +1248,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
                 {quote && (
                   // What this answers. Tapped, the conversation goes back to it.
+                  // Over a sticker, in a small bubble of its own.
+                  <div className={sticker ? `mb-1 rounded-2xl px-2.5 py-2 ${mine ? 'bubble-mine' : 'bubble-edge border'}` : 'contents'}>
                   <ReplyQuote
                     who={whoShown(quote.authorId, activeUser, partnerName)}
                     text={
@@ -1242,11 +1263,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       if (deletedForMe?.[quote.id]) showToastRef.current(tr('You deleted this message'));
                       else if (!jumpToRef.current(quote.id, true)) showToastRef.current(tr('That message is no longer on this phone'));
                     }}
-                    maxWidth={photo ? photo.width : undefined}
+                    maxWidth={photo ? photo.width : sticker ? STICKER_SIZE : undefined}
                   />
+                  </div>
                 )}
 
-                {msg.isVoiceMemo ? (
+                {sticker ? (
+                  // Tapped, it plays again.
+                  <StickerArt
+                    id={sticker}
+                    size={STICKER_SIZE}
+                    onTapLabel={tr('Sticker: {name}', { name: tr(stickerInfo(sticker)?.label || STICKER_TEXT) })}
+                  />
+                ) : msg.isVoiceMemo ? (
                   // The player stands for the note; its label ("Voice note ·
                   // 0:12") is for notifications and older phones, not here.
                   // Heard marks on your own notes follow read receipts, as the
@@ -1540,7 +1569,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     if (!menuWaiting) {
       menuActions.push({ key: 'reply', label: tr('Reply'), icon: CornerUpLeft, onSelect: () => { close(); answer(m.id); } });
     }
-    if (!m.isVoiceMemo && !m.isPhoto && m.text) {
+    if (!m.isVoiceMemo && !m.isPhoto && !m.sticker && m.text) {
       menuActions.push({
         key: 'copy',
         label: tr('Copy'),
@@ -1872,6 +1901,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
               if (!editing) typing.keystroke();
             }}
             onClose={() => setShowEmojiPicker(false)}
+            // Not while one of your messages is being changed: that is words only.
+            onSticker={editing ? undefined : sendSticker}
           />
         </div>
       )}
