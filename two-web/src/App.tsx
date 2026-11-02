@@ -5008,6 +5008,7 @@ export const App: React.FC = () => {
       onToggleMute={() => callEngineRef.current?.toggleMute()}
       onToggleSpeaker={() => callEngineRef.current?.toggleSpeaker()}
       onToggleNoise={() => callEngineRef.current?.toggleNoiseReduction()}
+      onSendHeart={() => handleSendMessage('❤️')}
     />
   );
 

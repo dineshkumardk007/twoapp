@@ -57,9 +57,10 @@ import { haptic } from '../core/haptics';
 import {
   Send, Sparkles, Heart, EyeOff, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
   Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download,
-  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock, EllipsisVertical, Info
+  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock, EllipsisVertical, Info, Keyboard
 } from 'lucide-react';
-import { EmojiPicker } from '../components/EmojiPicker';
+import { EmojiPicker, KeyboardPanel } from '../components/EmojiPicker';
+import { whenKeyboardUp } from '../core/keyboard';
 import { StickerArt, hasStickerArt } from '../components/StickerArt';
 import { STICKER_TEXT, stickerInfo } from '../core/stickers';
 
@@ -683,6 +684,31 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
     composerHadFocusRef.current = false;
   };
+
+  /**
+   * Emoji and stickers where the keyboard was: the keyboard goes as the panel
+   * comes (KeyboardPanel), so the composer stays where it is.
+   */
+  const handOverRef = useRef<(() => void) | null>(null);
+  const openEmojiPanel = () => {
+    handOverRef.current?.();
+    setShowEmojiPicker(true);
+    inputRef.current?.blur();
+    haptic('tick');
+  };
+  /** The keyboard coming back: the panel stays under it until it is up, then goes. */
+  const handOverToKeyboard = () => {
+    if (handOverRef.current) return;
+    handOverRef.current = whenKeyboardUp(() => {
+      handOverRef.current = null;
+      setShowEmojiPicker(false);
+    });
+  };
+  const backToKeyboard = () => {
+    focusForTyping(inputRef.current);
+    handOverToKeyboard();
+  };
+  useBackLayer(showEmojiPicker, () => setShowEmojiPicker(false));
 
   const handleSendText = () => {
     const text = inputText.trim();
@@ -1884,29 +1910,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
         {awayFromEnd && <JumpToNewestButton onClick={goToNewest} />}
       </div>
 
-      {/* The picker, open only when asked for. It sits between the messages
-          and the composer so the draft you are adding to stays in view, and it
-          is capped at a third of the panel so the conversation never vanishes
-          behind it. Tapping appends rather than sends, so several can be
-          combined, or wrapped in words, before it goes.
-
-          Picking keeps the keyboard up, the same as the buttons below. With the
-          keyboard up there may not be room for all of it, so it is the part
-          that gives way, never the composer. */}
-      {showEmojiPicker && (
-        <div className="min-h-0 shrink overflow-y-auto" onMouseDown={e => e.preventDefault()}>
-          <EmojiPicker
-            onPick={char => {
-              setInputText(t => t + char);
-              if (!editing) typing.keystroke();
-            }}
-            onClose={() => setShowEmojiPicker(false)}
-            // Not while one of your messages is being changed: that is words only.
-            onSticker={editing ? undefined : sendSticker}
-          />
-        </div>
-      )}
-
       {/* What the next message answers, or which message is being changed -
           with the way out of either. */}
       {(replyTo || editing) && (
@@ -1945,23 +1948,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
             {/* Deliberately the leftmost control, which is exactly where the
                 first emoji of the old row sat - the character you reached for
                 is still under the same thumb, it just opens the rest now. */}
+            {/* Emoji and stickers in the keyboard's place - and, while they
+                are open, the way back to the keyboard. */}
             <button
               type="button"
-              onPointerDown={keepComposerFocus}
-              onMouseDown={keepComposerFocus}
-              onClick={() => {
-                setShowEmojiPicker(v => !v);
-                restoreComposerFocus();
-              }}
+              onPointerDown={e => e.preventDefault()}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => (showEmojiPicker ? backToKeyboard() : openEmojiPanel())}
               aria-expanded={showEmojiPicker}
-              className={`h-[42px] w-[42px] shrink-0 flex items-center justify-center rounded-xl transition-colors ${
-                showEmojiPicker
-                  ? 'bg-linen-variant text-linen-primary'
-                  : 'text-linen-secondary hover:text-linen-primary hover:bg-linen-variant'
-              }`}
-              title={tr('Emoji')}
+              aria-label={showEmojiPicker ? tr('Keyboard') : tr('Emoji and stickers')}
+              className="h-[42px] w-[42px] shrink-0 flex items-center justify-center rounded-xl text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors active:scale-90"
+              title={showEmojiPicker ? tr('Keyboard') : tr('Emoji and stickers')}
             >
-              <Smile className="w-5 h-5" />
+              {showEmojiPicker ? <Keyboard className="w-5 h-5" /> : <Smile className="w-5 h-5" />}
             </button>
 
             {/* The photo button sits inside the text box while it is empty, so
@@ -1981,6 +1980,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 }}
                 // Left the box. A moment's grace: a tap on a button beside it is not leaving.
                 onBlur={() => typing.stopSoon()}
+                // Tapped while emoji are open: the keyboard comes back in their place.
+                onFocus={() => {
+                  if (showEmojiPicker) handOverToKeyboard();
+                }}
                 onKeyDown={handleComposerKey}
                 enterKeyHint="send"
                 autoCapitalize="sentences"
@@ -2072,6 +2075,24 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </button>
             )}
       </div>
+
+      {/* Emoji and stickers, where the keyboard is (KeyboardPanel). Tapping
+          an emoji adds it to the words, so several can go together; a sticker
+          goes at once. */}
+      {showEmojiPicker && (
+        <KeyboardPanel>
+          <EmojiPicker
+            fill
+            onPick={char => {
+              setInputText(t => t + char);
+              if (!editing) typing.keystroke();
+            }}
+            onClose={() => setShowEmojiPicker(false)}
+            // Not while one of your messages is being changed: that is words only.
+            onSticker={editing ? undefined : sendSticker}
+          />
+        </KeyboardPanel>
+      )}
 
       {toast && (
         <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-4" aria-live="polite">

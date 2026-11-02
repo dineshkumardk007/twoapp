@@ -823,4 +823,6 @@ export const TA: Readonly<Record<string, string>> = {
   'Funny faces': 'வேடிக்கை முகங்கள்',
   'Send the sticker "{name}"': '"{name}" ஸ்டிக்கரை அனுப்பு',
   'Sticker: {name}': 'ஸ்டிக்கர்: {name}',
+  Keyboard: 'விசைப்பலகை',
+  'Emoji and stickers': 'எமோஜி, ஸ்டிக்கர்கள்',
 };

@@ -21,6 +21,7 @@ import {
   Download,
   Camera,
   Phone,
+  Keyboard,
   Image as ImageIcon
 } from 'lucide-react';
 import {
@@ -35,7 +36,8 @@ import {
 } from '../core/groups';
 import { formatLastSeen } from '../core/lastSeen';
 import { useTypingSender } from '../core/typing';
-import { EmojiPicker } from '../components/EmojiPicker';
+import { EmojiPicker, KeyboardPanel } from '../components/EmojiPicker';
+import { whenKeyboardUp } from '../core/keyboard';
 import { StickerArt, hasStickerArt } from '../components/StickerArt';
 import { STICKER_TEXT, stickerInfo } from '../core/stickers';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
@@ -529,6 +531,30 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   };
 
   /** Put down an answer or an edit without sending it. */
+  /**
+   * Emoji and stickers where the keyboard was, as in the couple's chat: the
+   * keyboard goes as the panel comes (KeyboardPanel), and back again.
+   */
+  const handOverRef = useRef<(() => void) | null>(null);
+  const openEmojiPanel = () => {
+    handOverRef.current?.();
+    setShowEmoji(true);
+    inputRef.current?.blur();
+    haptic('tick');
+  };
+  const handOverToKeyboard = () => {
+    if (handOverRef.current) return;
+    handOverRef.current = whenKeyboardUp(() => {
+      handOverRef.current = null;
+      setShowEmoji(false);
+    });
+  };
+  const backToKeyboard = () => {
+    focusForTyping(inputRef.current);
+    handOverToKeyboard();
+  };
+  useBackLayer(showEmoji, () => setShowEmoji(false));
+
   const cancelCompose = () => {
     setReplyTo(null);
     if (editing) {
@@ -1420,17 +1446,6 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
         </div>
       )}
 
-      {showEmoji && (
-        <EmojiPicker
-          onPick={char => {
-            setText(t => t + char);
-            if (!editing) typing.keystroke();
-          }}
-          onClose={() => setShowEmoji(false)}
-          onSticker={editing ? undefined : sendSticker}
-        />
-      )}
-
       {/* What the next message answers, or which message is being changed -
           with the way out of either. */}
       {(replyTo || editing) && (
@@ -1464,17 +1479,19 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
           the mic - the last control - stays where the thumb is. */}
       <div className="relative flex items-center gap-2 border-t border-linen-border bg-linen-surface px-3 pb-1.5 pt-2">
         <VoiceRecordingStrip rec={rec} className="pl-3 pt-2 pb-1.5" />
+        {/* Emoji and stickers in the keyboard's place - and, while they
+            are open, the way back to the keyboard. */}
         <button
-          onClick={() => setShowEmoji(v => !v)}
+          type="button"
+          onPointerDown={e => e.preventDefault()}
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => (showEmoji ? backToKeyboard() : openEmojiPanel())}
           aria-expanded={showEmoji}
-          title="Emoji"
-          className={`rounded-xl p-2.5 transition-colors ${
-            showEmoji
-              ? 'bg-linen-variant text-linen-primary'
-              : 'text-linen-secondary hover:bg-linen-variant hover:text-linen-primary'
-          }`}
+          aria-label={showEmoji ? tr('Keyboard') : tr('Emoji and stickers')}
+          title={showEmoji ? tr('Keyboard') : tr('Emoji and stickers')}
+          className="rounded-xl p-2.5 text-linen-secondary hover:bg-linen-variant hover:text-linen-primary transition-colors active:scale-90"
         >
-          <Smile className="h-5 w-5" />
+          {showEmoji ? <Keyboard className="h-5 w-5" /> : <Smile className="h-5 w-5" />}
         </button>
         {/* The photo buttons sit inside the text box while it is empty, as in
             the couple's chat, so they take none of the width words need. */}
@@ -1491,6 +1508,10 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
             }}
             // Left the box. A moment's grace: a tap on the emoji button is not leaving.
             onBlur={() => typing.stopSoon()}
+            // Tapped while emoji are open: the keyboard comes back in their place.
+            onFocus={() => {
+              if (showEmoji) handOverToKeyboard();
+            }}
             // Mid-word in an input method, Enter picks the word; it is not ours.
             onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && send()}
             enterKeyHint="send"
@@ -1564,6 +1585,21 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
           </button>
         )}
       </div>
+
+      {/* Emoji and stickers, where the keyboard is (KeyboardPanel). */}
+      {showEmoji && (
+        <KeyboardPanel>
+          <EmojiPicker
+            fill
+            onPick={char => {
+              setText(t => t + char);
+              if (!editing) typing.keystroke();
+            }}
+            onClose={() => setShowEmoji(false)}
+            onSticker={editing ? undefined : sendSticker}
+          />
+        </KeyboardPanel>
+      )}
 
       {toast && (
         <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-4" aria-live="polite">

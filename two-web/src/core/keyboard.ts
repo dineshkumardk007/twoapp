@@ -83,10 +83,63 @@ function typing(): boolean {
   return el instanceof HTMLElement && el.matches(TYPED_INTO) && !(el as HTMLInputElement).readOnly;
 }
 
+// How tall the keyboard was last time, for the emoji and sticker panel to
+// open at exactly its height and in its place (components/EmojiPicker,
+// KeyboardPanel). Kept for the screen's width, as a turned phone has a
+// shorter keyboard; and in this phone's own storage, so the panel is the
+// right height even before the keyboard has been up today.
+const KEYBOARD_HEIGHT_KEY = 'two.keyboardHeight';
+
+function savedKeyboardHeight(width: number): number {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEYBOARD_HEIGHT_KEY) || 'null') as { w?: number; h?: number } | null;
+    return saved && saved.w === width && typeof saved.h === 'number' ? saved.h : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveKeyboardHeight(width: number, height: number): void {
+  try {
+    localStorage.setItem(KEYBOARD_HEIGHT_KEY, JSON.stringify({ w: width, h: height }));
+  } catch {
+    /* it is measured again next time the keyboard comes up */
+  }
+}
+
+/** A keyboard's height once it has stopped moving, not one caught half way up. */
+const KEYBOARD_STILL_MS = 250;
+
 /**
- * Publishes --two-full-h (the height with no keyboard) and html.kb-up (the
- * keyboard covers the whole dock). Runs for the life of the page; the cleanup
- * is for tests.
+ * Calls `done` once the keyboard has come up - the page this much shorter
+ * than when asked - or after `waitMs` whatever happens (a keyboard that never
+ * comes: a computer, a keyboard plugged in). The returned function calls it
+ * at once.
+ */
+export function whenKeyboardUp(done: () => void, waitMs = 700): () => void {
+  const start = window.innerHeight;
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    window.removeEventListener('resize', check);
+    window.visualViewport?.removeEventListener('resize', check);
+    done();
+  };
+  const check = () => {
+    if (start - window.innerHeight >= KEYBOARD_MIN_PX) finish();
+  };
+  const timer = setTimeout(finish, waitMs);
+  window.addEventListener('resize', check);
+  window.visualViewport?.addEventListener('resize', check);
+  return finish;
+}
+
+/**
+ * Publishes --two-full-h (the height with no keyboard), --two-kb-h (the
+ * keyboard's height when last up) and html.kb-up (the keyboard covers the
+ * whole dock). Runs for the life of the page; the cleanup is for tests.
  */
 export function watchKeyboard(): () => void {
   const root = document.documentElement;
@@ -94,6 +147,20 @@ export function watchKeyboard(): () => void {
   let written = '';
   let up = false;
   let settle: ReturnType<typeof setTimeout> | undefined;
+  let measured = savedKeyboardHeight(window.innerWidth);
+  if (measured) root.style.setProperty('--two-kb-h', `${measured}px`);
+  let still: ReturnType<typeof setTimeout> | undefined;
+  const measureSoon = () => {
+    clearTimeout(still);
+    still = setTimeout(() => {
+      if (!frame || !typing()) return;
+      const height = frame.full - frame.last;
+      if (height < KEYBOARD_MIN_PX || Math.abs(height - measured) < 2) return;
+      measured = height;
+      root.style.setProperty('--two-kb-h', `${height}px`);
+      saveKeyboardHeight(frame.width, height);
+    }, KEYBOARD_STILL_MS);
+  };
 
   const look = (settled = false) => {
     frame = nextFrame(frame, window.innerWidth, window.innerHeight, typing());
@@ -105,6 +172,7 @@ export function watchKeyboard(): () => void {
       written = full;
       root.style.setProperty('--two-full-h', full);
     }
+    if (frame.full - frame.last >= KEYBOARD_MIN_PX) measureSoon();
     const dock = parseFloat(root.style.getPropertyValue('--two-dock-h')) || 0;
     const nowUp = coversDock(frame, dock);
     if (nowUp !== up) {
@@ -155,11 +223,13 @@ export function watchKeyboard(): () => void {
   document.addEventListener('focusout', focusOut);
   return () => {
     clearTimeout(settle);
+    clearTimeout(still);
     window.removeEventListener('resize', resized);
     window.visualViewport?.removeEventListener('resize', resized);
     document.removeEventListener('focusin', focusIn);
     document.removeEventListener('focusout', focusOut);
     root.style.removeProperty('--two-full-h');
+    root.style.removeProperty('--two-kb-h');
     root.classList.remove('kb-up');
   };
 }

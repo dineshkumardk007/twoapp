@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Phone, PhoneOff, Mic, MicOff, Volume2, Headphones, Ear, Lock, ChevronDown, AudioLines } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Volume2, Headphones, Ear, Lock, ChevronDown, ChevronUp, AudioLines, Heart, Sparkles } from 'lucide-react';
 import { CallState, EndReason, LinkQuality } from '../core/call';
 import { haptic } from '../core/haptics';
 import { useBackLayer } from '../core/backStack';
@@ -19,6 +19,8 @@ interface CallOverlayProps {
   onToggleSpeaker: () => void;
   /** The noise button: the room taken out of your voice, or left in. */
   onToggleNoise?: () => void;
+  /** From the end of a call that was talked on: a heart into the chat. */
+  onSendHeart?: () => void;
 }
 
 function clock(ms: number): string {
@@ -126,24 +128,6 @@ function useReconnectTone(on: boolean) {
   }, [on]);
 }
 
-/**
- * Where the two circles stand, in px either side of the middle: apart while
- * a call rings, nearer while it connects, overlapping once you are talking -
- * Two's own mark - and apart again when it ends.
- */
-function placing(call: CallState): { gap: number; together: boolean } {
-  switch (call.phase) {
-    case 'connecting':
-      return { gap: 54, together: false };
-    case 'active':
-      return call.reconnecting ? { gap: 50, together: false } : { gap: 38, together: true };
-    case 'ended':
-      return { gap: 84, together: false };
-    default:
-      return { gap: 78, together: false };
-  }
-}
-
 const initialOf = (name: string) => (name || '?').trim().charAt(0).toUpperCase() || '?';
 
 const Dots: React.FC = () => (
@@ -154,18 +138,178 @@ const Dots: React.FC = () => (
   </span>
 );
 
+/** How far the answer knob travels up its track, in px; most of the way answers. */
+const SWIPE_TRAVEL = 112;
+const SWIPE_ANSWERS_AT = 0.7;
+
 /**
- * The call screen: the night sky of Two's mark, with a circle for each of
- * you. While it rings, rings go out from whoever is calling; when it
- * connects the circles meet and overlap, and each glows while that one of
- * you speaks.
+ * Answering by sliding the green knob up, as a phone's own call screen does,
+ * so a call is not picked up by a pocket or a cheek. The knob follows the
+ * finger exactly; let go most of the way up and the call is answered, short
+ * of it and the knob springs back. A tap alone only nudges it, to show which
+ * way it goes. A keyboard's Enter, or TalkBack's double tap, answers at once
+ * (a click that no finger made: `detail` 0).
+ */
+const SwipeToAnswer: React.FC<{ onAnswer: () => void }> = ({ onAnswer }) => {
+  const knob = useRef<HTMLButtonElement>(null);
+  const drag = useRef<{ id: number; y0: number; dy: number } | null>(null);
+  const [answered, setAnswered] = useState(false);
+
+  const place = (dy: number, eased: boolean) => {
+    const el = knob.current;
+    if (!el) return;
+    el.style.transition = eased ? 'transform 380ms cubic-bezier(0.2, 1.3, 0.4, 1)' : 'none';
+    el.style.transform = `translate3d(0, ${dy}px, 0)`;
+    el.parentElement?.style.setProperty('--pull', String(Math.min(1, -dy / SWIPE_TRAVEL)));
+  };
+  const answer = () => {
+    if (answered) return;
+    setAnswered(true);
+    place(-SWIPE_TRAVEL, true);
+    haptic('confirm');
+    onAnswer();
+  };
+
+  return (
+    <div className="call-swipe" data-answered={answered}>
+      <span className="call-swipe-hint" aria-hidden="true">
+        <ChevronUp className="h-4 w-4" />
+        <ChevronUp className="h-4 w-4" />
+        <ChevronUp className="h-4 w-4" />
+      </span>
+      <button
+        ref={knob}
+        type="button"
+        aria-label="Accept"
+        className="call-key call-key-answer call-swipe-knob h-[68px] w-[68px]"
+        onPointerDown={e => {
+          if (answered) return;
+          drag.current = { id: e.pointerId, y0: e.clientY, dy: 0 };
+          e.currentTarget.setPointerCapture(e.pointerId);
+          haptic('tick');
+        }}
+        onPointerMove={e => {
+          const d = drag.current;
+          if (!d || d.id !== e.pointerId) return;
+          d.dy = Math.max(-SWIPE_TRAVEL, Math.min(0, e.clientY - d.y0));
+          place(d.dy, false);
+        }}
+        onPointerUp={e => {
+          const d = drag.current;
+          drag.current = null;
+          if (!d || d.id !== e.pointerId) return;
+          if (-d.dy >= SWIPE_TRAVEL * SWIPE_ANSWERS_AT) {
+            answer();
+          } else if (Math.abs(d.dy) < 6) {
+            // A tap: a little hop up, the way it wants to go.
+            place(-28, true);
+            setTimeout(() => place(0, true), 200);
+          } else {
+            place(0, true);
+          }
+        }}
+        onPointerCancel={() => {
+          drag.current = null;
+          place(0, true);
+        }}
+        onClick={e => {
+          if (e.detail === 0) answer();
+        }}
+      >
+        <Phone className="h-7 w-7" />
+      </button>
+      <span className="call-swipe-label">Swipe up to answer</span>
+    </div>
+  );
+};
+
+/**
+ * A round key in the call's glass dock. A toggle acts the moment a finger
+ * lands - mute is wanted now, not when the finger lifts - with a tick; End
+ * waits for the lift, so a brushing cheek cannot end a call.
+ */
+const DockKey: React.FC<{
+  label: string;
+  caption: string;
+  on?: boolean;
+  danger?: boolean;
+  onPress: () => void;
+  keyRef?: React.Ref<HTMLSpanElement>;
+  children: React.ReactNode;
+}> = ({ label, caption, on, danger, onPress, keyRef, children }) => (
+  <button
+    type="button"
+    aria-label={label}
+    aria-pressed={danger ? undefined : !!on}
+    onPointerDown={
+      danger
+        ? undefined
+        : e => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            haptic('tick');
+            onPress();
+          }
+    }
+    onClick={e => {
+      if (danger) {
+        haptic('confirm');
+        onPress();
+      } else if (e.detail === 0) {
+        onPress();
+      }
+    }}
+    className="call-dock-key"
+  >
+    <span ref={keyRef} className={`call-key h-[58px] w-[58px] ${danger ? 'call-key-end' : ''}`} data-on={on || undefined}>
+      {children}
+    </span>
+    <span className="call-dock-caption">{caption}</span>
+  </button>
+);
+
+/** The line under the timer: how clear the call is, in a word. */
+const QualityChip: React.FC<{ call: CallState }> = ({ call }) => {
+  if (call.reconnecting) {
+    return (
+      <span className="call-chip call-chip-warn call-shimmer" role="status">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300" />
+        Reconnecting…
+      </span>
+    );
+  }
+  if (!call.link) return null;
+  if (call.link === 'excellent') {
+    return (
+      <span className="call-chip call-chip-hd">
+        <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+        HD voice
+      </span>
+    );
+  }
+  return (
+    <span className={`call-chip ${call.link === 'poor' ? 'call-chip-warn' : ''}`}>
+      <SignalBars link={call.link} />
+      {call.link === 'poor' ? 'Weak network' : 'Good connection'}
+    </span>
+  );
+};
+
+/**
+ * The call screen: an aurora over the night sky, and in the middle a big
+ * circle for the one you are talking to, ringed with slowly turning light
+ * that swells and glows as they speak. The keys sit in a floating glass dock;
+ * your own voice lights the Mute key. A call coming in is answered by
+ * sliding up. When it ends, a moment to see how long it was - and to send a
+ * heart.
+ *
+ * It comes up at once - a few frames of fade, nothing to wait through. Only
+ * transform and opacity move, so a phone's graphics chip draws all of it.
  *
  * Rendered only inside the sanctuary, never above the calculator - so a call
  * arriving while the disguise is up has nowhere to appear, which is the point.
  */
 export const CallOverlay: React.FC<CallOverlayProps> = ({
   call,
-  myName,
   partnerName,
   partnerOnline,
   voiceLevels,
@@ -174,7 +318,8 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
   onHangup,
   onToggleMute,
   onToggleSpeaker,
-  onToggleNoise
+  onToggleNoise,
+  onSendHeart
 }) => {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -205,10 +350,17 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
     lastPhase.current = call.phase;
   }, [call.phase]);
 
-  // Each circle swells with its voice. Set straight on the circles' slots
-  // rather than through React: several times a second, for as long as you talk.
-  const youOrb = useRef<HTMLDivElement>(null);
+  // The heart sent from the end of a call: once.
+  const [heartSent, setHeartSent] = useState(false);
+  useEffect(() => {
+    if (call.phase !== 'ended') setHeartSent(false);
+  }, [call.phase]);
+
+  // Their circle swells with their voice, and your Mute key glows with
+  // yours. Set straight on the elements rather than through React: several
+  // times a second, for as long as you talk.
   const themOrb = useRef<HTMLDivElement>(null);
+  const youKey = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (call.phase !== 'active' || !voiceLevels) return;
     let alive = true;
@@ -224,15 +376,15 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
           mine = Math.max(level.mine, mine * 0.8);
           theirs = Math.max(level.theirs, theirs * 0.8);
           if (!alive) return;
-          youOrb.current?.style.setProperty('--voice', mine.toFixed(3));
+          youKey.current?.style.setProperty('--voice', mine.toFixed(3));
           themOrb.current?.style.setProperty('--voice', theirs.toFixed(3));
         })
         .catch(() => undefined)
         .finally(() => {
           busy = false;
         });
-    }, 140);
-    const you = youOrb.current;
+    }, 120);
+    const you = youKey.current;
     const them = themOrb.current;
     return () => {
       alive = false;
@@ -240,7 +392,7 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
       you?.style.setProperty('--voice', '0');
       them?.style.setProperty('--voice', '0');
     };
-    // Again when the screen comes back from the pill: its circles are new.
+    // Again when the screen comes back from the pill: its parts are new.
   }, [call.phase, voiceLevels, small]);
 
   if (call.phase === 'idle') return null;
@@ -267,7 +419,7 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
             setSmall(false);
           }}
           aria-label={`Back to the call with ${partnerName}`}
-          className="call-pill pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300"
+          className="call-pill pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-200"
           data-reconnecting={call.phase === 'active' && call.reconnecting}
         >
           <span className="call-pill-dot" aria-hidden="true" />
@@ -279,15 +431,13 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
     );
   }
 
-  const { gap, together } = placing(call);
   const ended = call.phase === 'ended' ? endLine(call.endReason, call.direction) : null;
+  const talked = call.phase === 'ended' && call.connectedAt > 0;
   const ringing = call.phase === 'incoming' || call.phase === 'outgoing';
   const away = call.phase === 'outgoing' && !partnerOnline;
   // Speaker first: pressing it with earphones in really does move the sound
   // to the loudspeaker, so the label has to say so.
   const route = call.speaker ? 'Speaker' : call.headset ? 'Earphones' : 'Earpiece';
-  // What is actually arriving once measured; the ceiling until then.
-  const shownKbps = call.measuredKbps > 0 ? call.measuredKbps : call.kbps;
 
   let status: React.ReactNode = null;
   if (call.phase === 'outgoing') {
@@ -303,7 +453,7 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
       </>
     );
   } else if (call.phase === 'incoming') {
-    status = 'is calling you';
+    status = 'Two voice call';
   } else if (call.phase === 'connecting') {
     status = (
       <>
@@ -312,7 +462,7 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
       </>
     );
   } else if (call.phase === 'active') {
-    status = <span className="text-[22px] font-medium tracking-wide text-white tabular-nums">{clock(now - call.connectedAt)}</span>;
+    status = <span className="text-[20px] font-medium tracking-wide text-white tabular-nums">{clock(now - call.connectedAt)}</span>;
   }
 
   return (
@@ -321,16 +471,19 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
       aria-modal="true"
       aria-label={`Call with ${partnerName}`}
       data-live={call.phase === 'active'}
-      className={`no-remap call-sky fixed inset-0 z-[70] flex flex-col items-center overflow-hidden px-6 text-white animate-in fade-in duration-300 ${
-        // A call coming in rises into view; the others fade.
-        call.phase === 'incoming' ? 'slide-in-from-bottom-6 duration-500' : ''
-      }`}
+      data-phase={call.phase}
+      className="no-remap call-sky call-enter fixed inset-0 z-[70] flex flex-col items-center overflow-hidden px-6 text-white"
       style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2.5rem)'
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)'
       }}
     >
-      <div className="call-sky-glow" aria-hidden="true" />
+      <div className="call-aurora" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="call-stars" aria-hidden="true" />
 
       <div className="relative flex w-full items-center justify-center">
         {canShrink && (
@@ -353,80 +506,65 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
       </div>
 
       <div className="relative flex w-full flex-1 flex-col items-center justify-center">
-        <div className="call-stage" data-together={together} data-ended={call.phase === 'ended'} aria-hidden="true">
-          <div ref={youOrb} className="call-orb-slot call-tint-you" style={{ '--x': `${-gap}px` } as React.CSSProperties}>
-            {call.phase === 'outgoing' && (
-              <div className="absolute inset-0">
-                <span className="call-ripple" />
-                <span className="call-ripple" />
-                <span className="call-ripple" />
-              </div>
-            )}
-            <div className="call-orb-glow" />
-            <div className="call-orb call-orb-you">
-              <span className="call-orb-initial" style={{ '--lean': together ? '-6px' : '0px' } as React.CSSProperties}>
-                {initialOf(myName)}
-              </span>
-            </div>
-          </div>
-          <div
-            ref={themOrb}
-            className="call-orb-slot call-tint-them"
-            data-away={away}
-            style={{ '--x': `${gap}px` } as React.CSSProperties}
-          >
-            {call.phase === 'incoming' && (
-              <div className="absolute inset-0">
-                <span className="call-ripple" />
-                <span className="call-ripple" />
-                <span className="call-ripple" />
-              </div>
-            )}
-            {call.phase === 'active' && !call.reconnecting && (
-              <div className="absolute inset-0" aria-hidden="true">
-                <span className="call-voice-ring" />
-                <span className="call-voice-ring call-voice-ring-far" />
-              </div>
-            )}
-            <div className="call-orb-glow" />
-            <div className="call-orb call-orb-them">
-              <span className="call-orb-initial" style={{ '--lean': together ? '6px' : '0px' } as React.CSSProperties}>
-                {initialOf(partnerName)}
-              </span>
-            </div>
-          </div>
-          {/* The bright space where they overlap, over both. */}
-          <div className="call-lens" />
+        <div
+          ref={themOrb}
+          className="call-hero"
+          data-ringing={ringing}
+          data-away={away}
+          data-ended={call.phase === 'ended'}
+          data-talking={call.phase === 'active' && !call.reconnecting}
+          aria-hidden="true"
+        >
+          {ringing && (
+            <>
+              <span className="call-ripple" />
+              <span className="call-ripple" />
+              <span className="call-ripple" />
+            </>
+          )}
+          <span className="call-hero-glow" />
+          <span className="call-halo" />
+          <span className="call-halo call-halo-soft" />
+          <span className="call-hero-orb">
+            <span className="call-hero-initial">{initialOf(partnerName)}</span>
+          </span>
         </div>
 
-        <h2 className="mt-7 flex items-center gap-2.5 font-serif text-[32px] font-medium leading-tight tracking-tight">
+        <h2 className="mt-9 flex items-center gap-2.5 font-serif text-[34px] font-medium leading-tight tracking-tight">
           {partnerName}
           {ringing && partnerOnline && (
             <>
-              <span
-                className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"
-                aria-hidden="true"
-              />
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" aria-hidden="true" />
               <span className="sr-only">online</span>
             </>
           )}
         </h2>
 
-        <div className="mt-2 min-h-[3.25rem] text-center" aria-live="polite">
+        <div className="mt-1.5 min-h-[3.25rem] text-center" aria-live="polite">
           {ended ? (
-            <>
-              <p className="text-[15px] text-white/85">
-                {ended.title}
-                {call.connectedAt > 0 && (
-                  <span className="tabular-nums"> &middot; {clock(call.endedAt - call.connectedAt)}</span>
-                )}
-              </p>
-              {ended.detail && (
-                <p className="mx-auto mt-1.5 max-w-[17rem] text-[13px] leading-relaxed text-white/60">{ended.detail}</p>
+            <div className="call-summary">
+              <p className="text-[15px] text-white/85">{ended.title}</p>
+              {talked && <p className="mt-0.5 font-serif text-[30px] leading-none tabular-nums">{clock(call.endedAt - call.connectedAt)}</p>}
+              {ended.detail && <p className="mx-auto mt-1.5 max-w-[17rem] text-[13px] leading-relaxed text-white/60">{ended.detail}</p>}
+              {talked && onSendHeart && (
+                <button
+                  type="button"
+                  disabled={heartSent}
+                  onClick={() => {
+                    haptic('confirm');
+                    setHeartSent(true);
+                    onSendHeart();
+                  }}
+                  className="call-heart"
+                  data-sent={heartSent}
+                >
+                  <Heart className="h-4 w-4" fill={heartSent ? 'currentColor' : 'none'} aria-hidden="true" />
+                  {heartSent ? 'Heart sent' : 'Send a heart'}
+                </button>
               )}
-            </>
+            </div>
           ) : (
-            <p key={`${call.phase}-${call.reconnecting}`} className="text-[15px] text-white/80 animate-in fade-in slide-in-from-bottom-1 duration-300">
+            <p key={`${call.phase}-${call.reconnecting}`} className="call-status text-[15px] text-white/80">
               {status}
             </p>
           )}
@@ -434,24 +572,7 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
 
         {call.phase === 'active' && (
           <div className="mt-3 flex flex-col items-center gap-2">
-            <div className="flex flex-wrap items-center justify-center gap-2 text-[12px] text-white/75">
-              {call.reconnecting ? (
-                <span className="call-shimmer flex items-center gap-1.5 rounded-full bg-amber-300/15 px-3 py-1 text-amber-100 ring-1 ring-amber-200/25" role="status">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300" />
-                  Reconnecting…
-                </span>
-              ) : (
-                call.link && (
-                  <span className="flex items-center gap-2 rounded-full bg-white/[0.08] px-3 py-1 ring-1 ring-white/[0.12]">
-                    <SignalBars link={call.link} />
-                    {LINK[call.link].label}
-                  </span>
-                )
-              )}
-              <span className="rounded-full bg-white/[0.08] px-3 py-1 tabular-nums ring-1 ring-white/[0.12]">
-                {route} &middot; {shownKbps} kbps
-              </span>
-            </div>
+            <QualityChip call={call} />
             {call.link === 'poor' && !call.reconnecting && (
               <p className="max-w-[17rem] text-center text-[11px] leading-relaxed text-white/55">
                 The sound is being adjusted to keep it steady.
@@ -461,9 +582,9 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
         )}
       </div>
 
-      <div className="relative flex min-h-[7.5rem] w-full max-w-sm items-end justify-around">
+      <div className="relative flex min-h-[9.5rem] w-full max-w-sm items-end justify-center">
         {call.phase === 'incoming' && (
-          <>
+          <div className="flex w-full items-end justify-around">
             <button
               type="button"
               onClick={() => {
@@ -471,121 +592,58 @@ export const CallOverlay: React.FC<CallOverlayProps> = ({
                 onDecline();
               }}
               aria-label="Decline"
-              className="flex flex-col items-center gap-2.5 text-[13px] text-white/85"
+              className="call-dock-key mb-7"
             >
-              <span className="call-key call-key-end h-[68px] w-[68px]">
-                <PhoneOff className="h-7 w-7" />
+              <span className="call-key call-key-end h-[62px] w-[62px]">
+                <PhoneOff className="h-6 w-6" />
               </span>
-              Decline
+              <span className="call-dock-caption">Decline</span>
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                haptic('confirm');
-                onAccept();
-              }}
-              aria-label="Accept"
-              className="flex flex-col items-center gap-2.5 text-[13px] text-white/85"
-            >
-              <span className="call-key call-key-answer h-[68px] w-[68px]">
-                <Phone className="h-7 w-7" />
-              </span>
-              Accept
-            </button>
-          </>
+            <SwipeToAnswer onAnswer={onAccept} />
+          </div>
         )}
 
         {(call.phase === 'outgoing' || call.phase === 'connecting') && (
-          <button
-            type="button"
-            onClick={() => {
-              haptic('tick');
-              onHangup();
-            }}
-            aria-label={call.phase === 'outgoing' ? 'Cancel call' : 'End call'}
-            className="flex flex-col items-center gap-2.5 text-[13px] text-white/85"
-          >
-            <span className="call-key call-key-end h-[68px] w-[68px]">
-              <PhoneOff className="h-7 w-7" />
-            </span>
-            {call.phase === 'outgoing' ? 'Cancel' : 'End'}
-          </button>
+          <div className="call-dock">
+            <DockKey label={call.muted ? 'Unmute' : 'Mute'} caption={call.muted ? 'Muted' : 'Mute'} on={call.muted} onPress={onToggleMute}>
+              {call.muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+            </DockKey>
+            <DockKey label={call.speaker ? 'Use earpiece' : 'Use speaker'} caption={route} on={call.speaker} onPress={onToggleSpeaker}>
+              {call.speaker ? <Volume2 className="h-6 w-6" /> : call.headset ? <Headphones className="h-6 w-6" /> : <Ear className="h-6 w-6" />}
+            </DockKey>
+            <DockKey label={call.phase === 'outgoing' ? 'Cancel call' : 'End call'} caption={call.phase === 'outgoing' ? 'Cancel' : 'End'} danger onPress={onHangup}>
+              <PhoneOff className="h-6 w-6" />
+            </DockKey>
+          </div>
         )}
 
         {call.phase === 'active' && (
-          <div className="flex w-full flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-3 duration-500">
-            <div className="flex w-full items-start justify-around">
-              <button
-                type="button"
-                onClick={() => {
-                  haptic('tick');
-                  onToggleMute();
-                }}
-                aria-label={call.muted ? 'Unmute' : 'Mute'}
-                aria-pressed={call.muted}
-                className="flex flex-col items-center gap-2 text-[12px] text-white/85"
-              >
-                <span className="call-key h-14 w-14" data-on={call.muted}>
-                  {call.muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-                </span>
-                {call.muted ? 'Muted' : 'Mute'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  haptic('tick');
-                  onToggleSpeaker();
-                }}
-                aria-label={call.speaker ? 'Use earpiece' : 'Use speaker'}
-                aria-pressed={call.speaker}
-                className="flex flex-col items-center gap-2 text-[12px] text-white/85"
-              >
-                <span className="call-key h-14 w-14" data-on={call.speaker}>
-                  {call.speaker ? (
-                    <Volume2 className="h-6 w-6" />
-                  ) : call.headset ? (
-                    <Headphones className="h-6 w-6" />
-                  ) : (
-                    <Ear className="h-6 w-6" />
-                  )}
-                </span>
-                Speaker
-              </button>
-
-              {onToggleNoise && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    haptic('tick');
-                    onToggleNoise();
-                  }}
-                  aria-label={call.noiseReduction ? 'Let the room back in' : 'Take out background noise'}
-                  aria-pressed={call.noiseReduction}
-                  className="flex flex-col items-center gap-2 text-[12px] text-white/85"
-                >
-                  <span className="call-key h-14 w-14" data-on={call.noiseReduction}>
-                    <AudioLines className="h-6 w-6" />
-                  </span>
-                  {call.noiseReduction ? 'Quiet on' : 'Quiet'}
-                </button>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                haptic('tick');
-                onHangup();
-              }}
-              aria-label="End call"
-              className="flex flex-col items-center gap-2 text-[13px] text-white/85"
+          <div className="call-dock">
+            <DockKey
+              label={call.muted ? 'Unmute' : 'Mute'}
+              caption={call.muted ? 'Muted' : 'Mute'}
+              on={call.muted}
+              onPress={onToggleMute}
+              keyRef={youKey}
             >
-              <span className="call-key call-key-end h-[68px] w-[68px]">
-                <PhoneOff className="h-7 w-7" />
-              </span>
-              End
-            </button>
+              {call.muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+            </DockKey>
+            <DockKey label={call.speaker ? 'Use earpiece' : 'Use speaker'} caption={route} on={call.speaker} onPress={onToggleSpeaker}>
+              {call.speaker ? <Volume2 className="h-6 w-6" /> : call.headset ? <Headphones className="h-6 w-6" /> : <Ear className="h-6 w-6" />}
+            </DockKey>
+            {onToggleNoise && (
+              <DockKey
+                label={call.noiseReduction ? 'Let the room back in' : 'Take out background noise'}
+                caption={call.noiseReduction ? 'Quiet on' : 'Quiet'}
+                on={call.noiseReduction}
+                onPress={onToggleNoise}
+              >
+                <AudioLines className="h-6 w-6" />
+              </DockKey>
+            )}
+            <DockKey label="End call" caption="End" danger onPress={onHangup}>
+              <PhoneOff className="h-6 w-6" />
+            </DockKey>
           </div>
         )}
       </div>

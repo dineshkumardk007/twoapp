@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { haptic } from '../core/haptics';
 
 interface CalculatorDecoyProps {
   onUnlock: () => void;
@@ -113,6 +114,9 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
     }
   };
 
+  // The operation waiting for its second number shows lit, as on a phone's own calculator.
+  const opChosen = (op: string) => operation === op && clearOnNextDigit;
+
   const handleToggleSign = () => {
     setDisplay(String(parseFloat(display) * -1));
   };
@@ -200,129 +204,36 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
           </div>
         )}
 
-        {/* Keypad Grid */}
+        {/* Keypad. Each key acts the moment a finger lands on it, as the
+            phone's own calculator does, with a press you can see and feel -
+            not when the finger lifts. */}
         <div
           className="grid shrink-0 grid-cols-4 grid-rows-5 gap-2 px-3 pb-3 font-medium"
           style={{ height: 'min(62vh, 30rem)' }}
         >
-          <button
-            onClick={handleClear}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xl transition-colors"
-          >
-            AC
-          </button>
-          <button
-            onClick={handleToggleSign}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xl transition-colors"
-          >
-            ±
-          </button>
-          <button
-            onClick={handlePercent}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xl transition-colors"
-          >
-            %
-          </button>
-          <button
-            onClick={() => handleOperation('÷')}
-            className="flex items-center justify-center rounded-2xl bg-amber-600 hover:bg-amber-500 text-white text-2xl font-semibold transition-colors"
-          >
-            ÷
-          </button>
+          <CalcKey tone="fn" onPress={handleClear}>AC</CalcKey>
+          <CalcKey tone="fn" onPress={handleToggleSign}>±</CalcKey>
+          <CalcKey tone="fn" onPress={handlePercent}>%</CalcKey>
+          <CalcKey tone="op" chosen={opChosen('÷')} onPress={() => handleOperation('÷')}>÷</CalcKey>
 
-          <button
-            onClick={() => handleDigit('7')}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            7
-          </button>
-          <button
-            onClick={() => handleDigit('8')}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            8
-          </button>
-          <button
-            onClick={() => handleDigit('9')}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            9
-          </button>
-          <button
-            onClick={() => handleOperation('×')}
-            className="flex items-center justify-center rounded-2xl bg-amber-600 hover:bg-amber-500 text-white text-2xl font-semibold transition-colors"
-          >
-            ×
-          </button>
+          <CalcKey onPress={() => handleDigit('7')}>7</CalcKey>
+          <CalcKey onPress={() => handleDigit('8')}>8</CalcKey>
+          <CalcKey onPress={() => handleDigit('9')}>9</CalcKey>
+          <CalcKey tone="op" chosen={opChosen('×')} onPress={() => handleOperation('×')}>×</CalcKey>
 
-          <button
-            onClick={() => handleDigit('4')}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            4
-          </button>
-          <button
-            onClick={() => handleDigit('5')}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            5
-          </button>
-          <button
-            onClick={() => handleDigit('6')}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            6
-          </button>
-          <button
-            onClick={() => handleOperation('-')}
-            className="flex items-center justify-center rounded-2xl bg-amber-600 hover:bg-amber-500 text-white text-2xl font-semibold transition-colors"
-          >
-            -
-          </button>
+          <CalcKey onPress={() => handleDigit('4')}>4</CalcKey>
+          <CalcKey onPress={() => handleDigit('5')}>5</CalcKey>
+          <CalcKey onPress={() => handleDigit('6')}>6</CalcKey>
+          <CalcKey tone="op" chosen={opChosen('-')} onPress={() => handleOperation('-')}>-</CalcKey>
 
-          <button
-            onClick={() => handleDigit('1')}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            1
-          </button>
-          <button
-            onClick={() => handleDigit('2')}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            2
-          </button>
-          <button
-            onClick={() => handleDigit('3')}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            3
-          </button>
-          <button
-            onClick={() => handleOperation('+')}
-            className="flex items-center justify-center rounded-2xl bg-amber-600 hover:bg-amber-500 text-white text-2xl font-semibold transition-colors"
-          >
-            +
-          </button>
+          <CalcKey onPress={() => handleDigit('1')}>1</CalcKey>
+          <CalcKey onPress={() => handleDigit('2')}>2</CalcKey>
+          <CalcKey onPress={() => handleDigit('3')}>3</CalcKey>
+          <CalcKey tone="op" chosen={opChosen('+')} onPress={() => handleOperation('+')}>+</CalcKey>
 
-          <button
-            onClick={() => handleDigit('0')}
-            className="col-span-2 flex items-center justify-start rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors text-left pl-6"
-          >
-            0
-          </button>
-          <button
-            onClick={handleDecimal}
-            className="flex items-center justify-center rounded-2xl bg-neutral-800/80 hover:bg-neutral-700 text-white text-2xl transition-colors"
-          >
-            .
-          </button>
-          <button
-            onClick={handleEquals}
-            className="flex items-center justify-center rounded-2xl bg-amber-600 hover:bg-amber-500 text-white text-2xl font-semibold transition-colors"
-          >
-            =
-          </button>
+          <CalcKey wide onPress={() => handleDigit('0')}>0</CalcKey>
+          <CalcKey onPress={handleDecimal}>.</CalcKey>
+          <CalcKey tone="op" onPress={handleEquals}>=</CalcKey>
         </div>
 
         {/* No footer, no version string, no marker of any kind. A line reading
@@ -331,5 +242,54 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
             code. Both are gone; the way in is the code itself, and the way out
             for whoever forgot it is the five-second hold on the display. */}
     </div>
+  );
+};
+
+interface CalcKeyProps {
+  onPress: () => void;
+  /** Digits plain; the top row's functions lighter; the operations amber. */
+  tone?: 'digit' | 'fn' | 'op';
+  /** An operation waiting for its second number. */
+  chosen?: boolean;
+  /** The 0, two keys wide. */
+  wide?: boolean;
+  children: React.ReactNode;
+}
+
+/**
+ * One key. It acts on the finger landing (pointerdown) - a click comes only
+ * when the finger lifts, which made fast typing feel late and sticky - with a
+ * tick from the phone and a press drawn at once (index.css, .calc-key). A
+ * keyboard's Enter or Space still works through the click, which a pointer's
+ * press never reaches twice: that click has a `detail` of 1 or more.
+ */
+const CalcKey: React.FC<CalcKeyProps> = ({ onPress, tone = 'digit', chosen, wide, children }) => {
+  const up = (e: React.PointerEvent<HTMLButtonElement>) => {
+    delete e.currentTarget.dataset.down;
+  };
+  return (
+    <button
+      type="button"
+      data-tone={tone}
+      data-chosen={chosen || undefined}
+      onPointerDown={e => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        e.currentTarget.dataset.down = '';
+        haptic('key');
+        onPress();
+      }}
+      onPointerUp={up}
+      onPointerCancel={up}
+      onPointerLeave={up}
+      onClick={e => {
+        if (e.detail === 0) onPress();
+      }}
+      onContextMenu={e => e.preventDefault()}
+      className={`calc-key flex items-center rounded-2xl ${
+        wide ? 'col-span-2 justify-start pl-6' : 'justify-center'
+      } ${tone === 'fn' ? 'text-xl' : tone === 'op' ? 'text-2xl font-semibold' : 'text-2xl'}`}
+    >
+      {children}
+    </button>
   );
 };

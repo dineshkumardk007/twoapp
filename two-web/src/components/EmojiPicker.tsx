@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useT } from '../core/i18n';
 import { STICKERS, recentStickers, rememberSticker, stickerInfo, type StickerSet } from '../core/stickers';
@@ -74,6 +74,8 @@ interface EmojiPickerProps {
    * sent at once.
    */
   onSticker?: (id: string) => void;
+  /** Fills the height it is given (KeyboardPanel) rather than keeping to its own. */
+  fill?: boolean;
 }
 
 /** The tab last used, so the picker opens where you left it. */
@@ -89,7 +91,7 @@ const SETS: { set: StickerSet; title: string }[] = [
  * stays in view, and is capped in height so the conversation never disappears
  * behind it.
  */
-export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only, title, pickWord = 'Add', onSticker }) => {
+export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only, title, pickWord = 'Add', onSticker, fill }) => {
   const tr = useT();
   const [tab, setTab] = useState<'emoji' | 'stickers'>(onSticker ? lastTab : 'emoji');
   const [recent, setRecent] = useState(recentStickers);
@@ -117,8 +119,8 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
     </button>
   );
   return (
-  <div className="border-t border-linen-border bg-linen-surface">
-    <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
+  <div className={`border-t border-linen-border bg-linen-surface ${fill ? 'flex h-full flex-col' : ''}`}>
+    <div className="flex shrink-0 items-center justify-between px-4 pt-2.5 pb-1">
       {onSticker ? (
         <div role="tablist" className="-ml-3 flex items-center gap-1">
           <button type="button" role="tab" aria-selected={tab === 'emoji'} onClick={() => choose('emoji')} className={tabClass(tab === 'emoji')}>
@@ -145,7 +147,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
 
     {tab === 'stickers' ? (
       // Taller than the emoji: a sticker needs room to be seen.
-      <div className="max-h-60 overflow-y-auto scroll-contain px-3 pb-2">
+      <div className={`${fill ? 'min-h-0 flex-1' : 'max-h-60'} overflow-y-auto scroll-contain px-3 pb-2`}>
         {recent.length > 0 && (
           <div className="mb-1.5">
             <p className="px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-linen-secondary/70">{tr('Recent')}</p>
@@ -160,7 +162,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
         ))}
       </div>
     ) : (
-    <div className="max-h-44 overflow-y-auto scroll-contain px-3 pb-2">
+    <div className={`${fill ? 'min-h-0 flex-1' : 'max-h-44'} overflow-y-auto scroll-contain px-3 pb-2`}>
       {EMOJI_GROUPS.map(group => (
         <div key={group.title} className="mb-1.5">
           <p className="px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-linen-secondary/70">
@@ -184,5 +186,29 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
     </div>
     )}
   </div>
+  );
+};
+
+/**
+ * The emoji and sticker panel where the keyboard is, as messaging apps have
+ * it: under the composer, as tall as the keyboard was (--two-kb-h, measured
+ * by core/keyboard), with the keyboard put away. While it is open the page
+ * counts it as the keyboard (html.panel-up, index.css): the dock under a
+ * chat stays out of the way and the panel reaches the bottom of the screen.
+ *
+ * Its height is the keyboard's less whatever of the keyboard is still up, so
+ * as one goes the other takes its place and the composer does not move.
+ */
+export const KeyboardPanel: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('panel-up');
+    return () => root.classList.remove('panel-up');
+  }, []);
+  return (
+    // A press here never takes focus from anything.
+    <div className="kb-panel shrink-0 overflow-hidden" onMouseDown={e => e.preventDefault()}>
+      {children}
+    </div>
   );
 };

@@ -382,6 +382,8 @@ interface CallEngineOptions {
  * this it goes ahead on STUN alone, which is how every call worked before.
  */
 const ICE_WAIT_MS = 2_500;
+/** Routes gathered ahead while a call rings here, one per kind of network to try. */
+const WARM_POOL = 2;
 
 /**
  * One call at a time, from ring to hang-up.
@@ -548,7 +550,17 @@ export class CallEngine {
 
     this.stopRinging();
     this.set({ phase: 'connecting' });
-    const iceServers = this.fetchIceServers();
+    // Fetched while it rang (warmUp), so nothing waits on it now.
+    const iceServers = this.warmIce?.callId === callId ? this.warmIce.servers : this.fetchIceServers();
+    // A connection made while it rang takes her offer now, while the
+    // microphone opens, rather than after.
+    const early = this.pc;
+    const earlyReady = early
+      ? early.setRemoteDescription({ type: 'offer', sdp: offer.sdp }).then(
+          () => true,
+          () => false
+        )
+      : null;
 
     let mic: OpenedMic;
     try {
@@ -569,9 +581,14 @@ export class CallEngine {
     const stream = this.adoptMic(mic);
 
     try {
-      const pc = this.createPeer(callId, servers);
-      await pc.setRemoteDescription({ type: 'offer', sdp: offer.sdp });
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      let pc = early && this.pc === early && (await earlyReady) ? early : null;
+      if (!pc) {
+        if (early && this.pc === early) early.close();
+        pc = this.createPeer(callId, servers);
+        await pc.setRemoteDescription({ type: 'offer', sdp: offer.sdp });
+      }
+      const peer = pc;
+      stream.getTracks().forEach(track => peer.addTrack(track, stream));
       preferRed(pc);
       await this.flushIce();
       const answer = await pc.createAnswer();
@@ -760,6 +777,7 @@ export class CallEngine {
     this.remoteQuality = signal.quality === 'saver' ? 'saver' : 'high';
     this.set({ ...IDLE_CALL, phase: 'incoming', callId: signal.callId, direction: 'in', startedAt: Date.now() });
     this.startRinging();
+    this.warmUp(signal.callId);
 
     // A caller who vanished without cancelling - a dead battery, a tunnel -
     // must not leave this side ringing forever.
@@ -859,6 +877,27 @@ export class CallEngine {
     }
   }
 
+  /**
+   * While a call rings here: the relay's TURN servers fetched, and a
+   * connection made that starts finding its routes (an ICE candidate pool),
+   * so answering has only the microphone to wait for. Nothing is sent to the
+   * caller until it is answered - no route, no word - and a call declined or
+   * rung out takes it all down (teardown).
+   */
+  private warmIce: { callId: string; servers: Promise<RTCIceServer[]> } | null = null;
+  private warmUp(callId: string) {
+    const servers = this.fetchIceServers();
+    this.warmIce = { callId, servers };
+    void servers.then(list => {
+      if (this.state.phase !== 'incoming' || this.state.callId !== callId || this.pc) return;
+      try {
+        this.createPeer(callId, list, WARM_POOL);
+      } catch {
+        /* made on answering instead */
+      }
+    });
+  }
+
   /** STUN, plus TURN when the relay has some to give. Never rejects. */
   private async fetchIceServers(): Promise<RTCIceServer[]> {
     if (!this.opts.iceServers) return ICE_SERVERS;
@@ -873,8 +912,8 @@ export class CallEngine {
     }
   }
 
-  private createPeer(callId: string, iceServers: RTCIceServer[] = ICE_SERVERS): RTCPeerConnection {
-    const pc = new RTCPeerConnection({ iceServers, bundlePolicy: 'max-bundle' });
+  private createPeer(callId: string, iceServers: RTCIceServer[] = ICE_SERVERS, pool = 0): RTCPeerConnection {
+    const pc = new RTCPeerConnection({ iceServers, bundlePolicy: 'max-bundle', ...(pool ? { iceCandidatePoolSize: pool } : {}) });
     this.pc = pc;
 
     pc.onicecandidate = event => {
@@ -1364,6 +1403,7 @@ export class CallEngine {
 
     this.pendingOffer = null;
     this.pendingIce = [];
+    this.warmIce = null;
     routeAudio(false, false, false);
     keepAlive(false);
   }
