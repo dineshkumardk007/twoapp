@@ -690,13 +690,19 @@ html.app-away :is(.aurora-hero, .call-key-answer)::before {
   min-height: 16rem;
 }
 
-/* The app's chat on a phone: no bar above it and no padding over it, so only
-   the 1rem under it is taken off. --two-header-h is 0 there, or the height of
-   a banner (a weak link code, storage full) when one is showing. The keyboard
-   stretch below works on this the same way. */
+/* The app's chats on a phone, private and group: no bar above and no padding
+   round them, so the panel stands straight on the dock - no strip of sky and
+   no second line between the message box and the dock - and, with the dock
+   gone, straight on the keyboard or the emoji panel. The composer keeps the
+   same small gap above whichever it is. --two-header-h is 0 there, or the
+   height of a banner (a weak link code, storage full) when one is showing. */
 .chat-shell.chat-flush {
-  height: calc(100vh - var(--two-header-h, 0px) - var(--two-dock-h, 0px) - 1rem);
-  height: calc(100dvh - var(--two-header-h, 0px) - var(--two-dock-shown, var(--two-dock-h, 0px)) - 1rem + var(--two-snug, 0px));
+  height: calc(100vh - var(--two-header-h, 0px) - var(--two-dock-h, 0px));
+  height: calc(100dvh - var(--two-header-h, 0px) - var(--two-dock-shown, var(--two-dock-h, 0px)));
+}
+html.dock-yields .chat-shell.chat-flush,
+html.panel-up .chat-shell.chat-flush {
+  margin-bottom: 0;
 }
 
 /* ---------------------------------------------------------------------------
@@ -1800,3 +1806,17 @@ html.panel-up .dock-bar {
 html.panel-up .chat-shell {
   margin-bottom: calc(-1 * var(--two-snug));
 }
+
+/* The message delivery check (components/DeliveryCheck): a dot per row -
+   green fine, amber on its way, red needs you, ring where only you can look. */
+.delivery-mark {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgb(34 197 94 / 0.18);
+}
+.delivery-mark[data-mark='warn'] { background: #f59e0b; box-shadow: 0 0 0 3px rgb(245 158 11 / 0.18); }
+.delivery-mark[data-mark='bad'] { background: #f43f5e; box-shadow: 0 0 0 3px rgb(244 63 94 / 0.18); }
+.delivery-mark[data-mark='check'] { background: transparent; box-shadow: inset 0 0 0 2px rgb(var(--c-accent, 139 92 246) / 0.8); }

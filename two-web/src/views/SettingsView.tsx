@@ -27,6 +27,7 @@ import {
   setNotice as setBackgroundNotice
 } from '../core/background';
 import { onShownChange } from '../core/shown';
+import { DeliveryCheck } from '../components/DeliveryCheck';
 
 interface SettingsViewProps {
   state: SpaceState;
@@ -989,6 +990,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               )}
             </div>
           )}
+
+          {/* What lets messages and ticks reach this phone while Two is closed. */}
+          {noticeOffered && <DeliveryCheck />}
 
           {/* Call data.
               Per device, because the data belongs to whoever holds the phone.

@@ -8,7 +8,7 @@ import android.content.Intent
 import android.os.SystemClock
 
 /**
- * A quarter-hour tick while the phone sleeps, for SyncService to check that
+ * A five-minute tick while the phone sleeps, for SyncService to check that
  * the connection - the page's or the listener's - is still really there.
  *
  * Inexact on purpose (setAndAllowWhileIdle): Android groups it with other
@@ -22,7 +22,11 @@ class SyncAlarm : BroadcastReceiver() {
     }
 
     companion object {
-        private const val EVERY_MS = 15 * 60 * 1000L
+        // Five minutes: a connection that died with the screen off - a
+        // network that changed, a mobile operator dropping a quiet line - is
+        // found and made again within this, rather than a quarter of an hour.
+        // Android may space it further apart while the phone sleeps deeply.
+        private const val EVERY_MS = 5 * 60 * 1000L
 
         /** Sets the next tick; a tick already set is replaced. */
         fun arm(context: Context) {

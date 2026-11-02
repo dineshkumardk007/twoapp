@@ -825,4 +825,37 @@ export const TA: Readonly<Record<string, string>> = {
   'Sticker: {name}': 'ஸ்டிக்கர்: {name}',
   Keyboard: 'விசைப்பலகை',
   'Emoji and stickers': 'எமோஜி, ஸ்டிக்கர்கள்',
+
+  // Message delivery check (components/DeliveryCheck).
+  'Message delivery': 'செய்தி வந்து சேர்வது',
+  'What lets messages, notices and ticks reach this phone while Two is closed. Check it on both phones.':
+    'Two மூடியிருக்கும்போது செய்திகள், அறிவிப்புகள், டிக்குகள் இந்த ஃபோனுக்கு வர உதவுபவை. இரண்டு ஃபோன்களிலும் பாருங்கள்.',
+  'Background connection': 'பின்னணி இணைப்பு',
+  'Stopped. It starts again when you open Two.': 'நின்றுள்ளது. Two-ஐத் திறந்ததும் மீண்டும் தொடங்கும்.',
+  'Connected. Messages and ticks reach this phone while Two is closed.':
+    'இணைந்துள்ளது. Two மூடியிருந்தாலும் செய்திகளும் டிக்குகளும் இந்த ஃபோனுக்கு வரும்.',
+  'Connecting… (no internet, or the relay is waking up).': 'இணைக்கிறது… (இணையம் இல்லை, அல்லது சர்வர் எழுகிறது).',
+  Battery: 'பேட்டரி',
+  'Background use is restricted for Two, so the phone stops it.':
+    'Two-க்கு பின்னணிப் பயன்பாடு கட்டுப்படுத்தப்பட்டுள்ளது, அதனால் ஃபோன் அதை நிறுத்துகிறது.',
+  'Unrestricted.': 'கட்டுப்பாடு இல்லை.',
+  'Battery saving can pause Two in the background.': 'பேட்டரி சேமிப்பு பின்னணியில் Two-ஐ நிறுத்தக்கூடும்.',
+  Fix: 'சரிசெய்',
+  Open: 'திற',
+  '{brand} settings': '{brand} அமைப்புகள்',
+  'Off. Turn it on above to see a quiet word when a message comes.':
+    'அணைக்கப்பட்டுள்ளது. செய்தி வரும்போது ஒரு அமைதியான சொல் தெரிய, மேலே இயக்குங்கள்.',
+  'On.': 'இயக்கத்தில்.',
+  'This phone closed Two in the background {n} times this week. Until it is allowed to run, messages and ticks wait until Two is opened.':
+    'இந்த வாரம் இந்த ஃபோன் பின்னணியில் Two-ஐ {n} முறை மூடியது. அனுமதி தரும் வரை, Two திறக்கும்வரை செய்திகளும் டிக்குகளும் காத்திருக்கும்.',
+  'Recent activity on this phone': 'இந்த ஃபோனில் சமீபத்திய நிகழ்வுகள்',
+  'Background connection started': 'பின்னணி இணைப்பு தொடங்கியது',
+  'Connected while Two was closed': 'Two மூடியிருந்தபோது இணைந்தது',
+  'Connection dropped - connecting again': 'இணைப்பு துண்டிக்கப்பட்டது - மீண்டும் இணைக்கிறது',
+  'Connection dropped in the background - connecting again': 'பின்னணியில் இணைப்பு துண்டிக்கப்பட்டது - மீண்டும் இணைக்கிறது',
+  'Connected again': 'மீண்டும் இணைந்தது',
+  'A message reached this phone': 'ஒரு செய்தி இந்த ஃபோனுக்கு வந்தது',
+  'Notice shown': 'அறிவிப்பு காட்டப்பட்டது',
+  'The phone closed Two for {time}': 'ஃபோன் Two-ஐ {time} மூடியிருந்தது',
+  'Phone restarted': 'ஃபோன் மறுதொடக்கம் ஆனது',
 };

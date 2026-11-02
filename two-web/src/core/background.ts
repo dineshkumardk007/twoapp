@@ -32,6 +32,8 @@ export interface BackgroundState {
   /** Whether the phone lets Two show notifications at all. */
   noticeAllowed: boolean;
   sdk: number;
+  /** Reachable on the relay right now, by the page or the listener. */
+  connected: boolean;
 }
 
 /** The room details handed to the phone. Nothing in here opens a message. */
@@ -58,6 +60,8 @@ export interface NoticeAnswer {
 interface BackgroundBridge {
   backgroundRoomSet?: (json: string) => boolean;
   backgroundPageRelay?: (on: boolean) => void;
+  backgroundPageLink?: (up: boolean) => void;
+  backgroundLog?: () => string;
   backgroundRoomClear?: () => void;
   backgroundState?: () => string;
   askBatteryExemption?: () => boolean;
@@ -120,6 +124,52 @@ export function pageRelay(on: boolean): void {
   call('backgroundPageRelay', b => b.backgroundPageRelay(on), undefined);
 }
 
+/**
+ * Tells the phone whether this page's relay connection is actually up. A drop
+ * while Two is in the background has the phone nudge the page to connect
+ * again, and keep itself awake for it - the page's own timers hardly run there.
+ */
+export function pageLink(up: boolean): void {
+  call('backgroundPageLink', b => b.backgroundPageLink(up), undefined);
+}
+
+/** One line of the phone's delivery diary (DeliveryLog): when, what kind, and how many. */
+export interface DeliveryEvent {
+  at: number;
+  kind: 'started' | 'joined' | 'dropped' | 'page-up' | 'page-down' | 'message' | 'notice' | 'closed' | 'rebooted';
+  /** Times it happened in a row (the diary counts repeats on one line). */
+  count: number;
+  /** For 'closed': how many minutes Two was gone. */
+  minutes?: number;
+}
+
+const DELIVERY_KINDS: ReadonlyArray<DeliveryEvent['kind']> = [
+  'started', 'joined', 'dropped', 'page-up', 'page-down', 'message', 'notice', 'closed', 'rebooted'
+];
+
+/** The phone's delivery diary, newest first; empty on the website or an older app. */
+export function readDeliveryLog(): DeliveryEvent[] {
+  const raw = call('backgroundLog', b => b.backgroundLog(), '[]');
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(typeof raw === 'string' ? raw : '[]');
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  const out: DeliveryEvent[] = [];
+  for (const e of parsed) {
+    if (!e || typeof e !== 'object') continue;
+    const at = Number((e as any).t);
+    const kind = (e as any).e;
+    if (!Number.isFinite(at) || !DELIVERY_KINDS.includes(kind)) continue;
+    const count = Math.max(1, Math.floor(Number((e as any).n) || 1));
+    const minutes = kind === 'closed' ? Math.max(0, Math.floor(Number((e as any).d) || 0)) : undefined;
+    out.push({ at, kind, count, ...(minutes !== undefined ? { minutes } : {}) });
+  }
+  return out.reverse();
+}
+
 /** Wipes the room details off the phone and stops the background connection. */
 export function roomClear(): void {
   call('backgroundRoomClear', b => b.backgroundRoomClear(), undefined);
@@ -161,7 +211,8 @@ export function readBackgroundState(): BackgroundState | null {
     oem: OEMS.includes(parsed.oem) ? parsed.oem : '',
     notify: parsed.notify === true,
     noticeAllowed: parsed.noticeAllowed === true,
-    sdk: Number.isFinite(Number(parsed.sdk)) ? Number(parsed.sdk) : 0
+    sdk: Number.isFinite(Number(parsed.sdk)) ? Number(parsed.sdk) : 0,
+    connected: parsed.connected === true
   };
 }
 

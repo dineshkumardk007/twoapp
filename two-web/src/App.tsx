@@ -284,7 +284,7 @@ import {
 import { TYPING_STOP_SIGNAL, typingEndedBy, typingNow, typingTtlFor } from './core/typing';
 import { chatChrome } from './core/chatChrome';
 import { isShown, onShownChange } from './core/shown';
-import { backgroundAvailable, newMessageNotice, pageRelay, roomClear, roomSet } from './core/background';
+import { backgroundAvailable, newMessageNotice, pageLink, pageRelay, roomClear, roomSet } from './core/background';
 
 
 // Screens are fetched the first time they are opened rather than all at once.
@@ -861,10 +861,14 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Track live WebSocket relay status
+  // Track live WebSocket relay status - and tell the phone whether the
+  // connection is really up, so a drop while Two is in the background is
+  // made good in seconds rather than at the phone's next wake-up
+  // (core/background, pageLink).
   useEffect(() => {
     return wsRelay.subscribeStatus((status) => {
       setRelayStatus(status);
+      pageLink(status === 'connected');
     });
   }, []);
 
@@ -5559,9 +5563,11 @@ export const App: React.FC = () => {
     return (
       <LocaleContext.Provider value={locale}>
       <div className={`min-h-screen app-min-vh transition-colors duration-200 ${themeClass}`}>
-        <main className={`mx-auto px-4 py-4 sm:px-6 ${isTablet ? 'max-w-5xl' : 'max-w-3xl'}`}>
+        {/* On a phone in the app, edge to edge like the couple's chat. */}
+        <main className={`mx-auto ${inApp && !isTablet ? '' : 'px-4 py-4 sm:px-6'} ${isTablet ? 'max-w-5xl' : 'max-w-3xl'}`}>
           <Suspense fallback={<ScreenFallback />}>
             <GroupChatView
+              flush={inApp && !isTablet}
               // One screen per group, not one screen re-pointed at another.
               // Switching groups then leaves the old one behind entirely: a
               // voice note being recorded or listened back is discarded and
@@ -5726,9 +5732,9 @@ export const App: React.FC = () => {
         className={`mx-auto ${
           currentTab === 'chat'
             ? chrome.flush
-              // Square to the top and sides. The 1rem under it stays: the
-              // keyboard's snug stretch (--two-snug) grows the panel into it.
-              ? 'pb-4'
+              // Square to every edge: the panel stands on the dock (index.css,
+              // .chat-flush).
+              ? ''
               : 'px-4 sm:px-6 py-4'
             : `px-4 sm:px-6 py-6 ${inApp ? 'pb-32' : 'pb-20'}`
         } ${isTablet ? 'max-w-5xl' : 'max-w-3xl'}`}

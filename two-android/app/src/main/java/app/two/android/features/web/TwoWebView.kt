@@ -64,6 +64,7 @@ import app.two.android.core.network.NetworkConfig
 import app.two.android.core.security.FingerprintLock
 import app.two.android.core.update.AppUpdater
 import app.two.android.features.sync.BackgroundRoomStore
+import app.two.android.features.sync.DeliveryLog
 import app.two.android.features.sync.NewMessageNotice
 import app.two.android.features.sync.OemSettings
 import app.two.android.features.sync.PageHost
@@ -504,6 +505,28 @@ class AndroidWebBridge(
         } catch (_: Exception) {
             // Looked at again on the next change.
         }
+    }
+
+    /**
+     * Whether the page's couple relay connection is actually up right now. A
+     * drop while Two is in the background has the service nudge the page back
+     * (SyncService.onPageLink).
+     */
+    @JavascriptInterface
+    fun backgroundPageLink(up: Boolean) {
+        try {
+            SyncService.pageLink(context.applicationContext, up)
+        } catch (_: Exception) {
+            // Looked at again on the next change.
+        }
+    }
+
+    /** The delivery diary (DeliveryLog), oldest first, as JSON: times and kinds, nothing else. */
+    @JavascriptInterface
+    fun backgroundLog(): String = try {
+        DeliveryLog.json(context)
+    } catch (_: Exception) {
+        "[]"
     }
 
     /** Unpair, Start fresh, the erase: the room details and the background connection go. */

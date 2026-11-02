@@ -1697,7 +1697,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       className={`relative flex flex-col chat-shell bg-linen-surface overflow-hidden ${
         // Flush, the header is the top of the screen and the panel its width,
         // as a messenger has it; a card everywhere else.
-        flush ? 'chat-flush border-b border-linen-border' : 'rounded-2xl border border-linen-border shadow-sm'
+        flush ? 'chat-flush' : 'rounded-2xl border border-linen-border shadow-sm'
       }`}
     >
       {/* Header */}
@@ -1942,7 +1942,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           emoji button and the text box (which stay mounted underneath, the
           text box focused if it was, so the keyboard does not drop) while the
           mic - the last control - stays where the thumb is. */}
-      <div className="relative p-4 pt-2 border-t-0 bg-linen-surface flex items-end gap-2">
+      <div className={`relative px-4 pt-2 border-t-0 bg-linen-surface flex items-end gap-2 ${flush ? 'pb-2' : 'pb-4'}`}>
             <VoiceRecordingStrip rec={rec} className="pl-4 pt-2 pb-4" />
 
             {/* Deliberately the leftmost control, which is exactly where the

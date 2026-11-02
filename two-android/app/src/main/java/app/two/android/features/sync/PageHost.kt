@@ -32,6 +32,15 @@ object PageHost {
     @Volatile
     var relayOn = false
 
+    /**
+     * The page's relay connection is actually up, as the page last said
+     * (AndroidWebBridge.backgroundPageLink) - [relayOn] only says it is
+     * meant to be. Up until said otherwise, as a page from before it could
+     * say never will.
+     */
+    @Volatile
+    var linkUp = true
+
     /** Weak: this must never be what keeps a closed page in memory. */
     @Volatile
     private var page: WeakReference<WebView>? = null
@@ -55,6 +64,7 @@ object PageHost {
         page = null
         alive = false
         relayOn = false
+        linkUp = true
         SyncService.evaluate(context)
     }
 
@@ -72,7 +82,7 @@ object PageHost {
 
     /**
      * Nudges the page to check its connection now: a network that came back,
-     * the phone out of deep sleep, the quarter-hour alarm. The page's own
+     * the phone out of deep sleep, the five-minute alarm. The page's own
      * timers stop while the phone sleeps, so a connection that died then is
      * otherwise not noticed until Two is opened. The page already listens for
      * 'online' (core/ws.ts), which checks and reconnects every connection.

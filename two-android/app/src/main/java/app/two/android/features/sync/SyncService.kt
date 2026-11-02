@@ -41,7 +41,7 @@ import kotlin.math.min
  * BackgroundRoomStore), in one of these modes:
  * - page: the page is alive with its own relay connection on. The service
  *   only keeps the app alive, and wakes the page when the network comes back,
- *   the phone leaves deep sleep, or the quarter-hour alarm ticks - the page's
+ *   the phone leaves deep sleep, or the five-minute alarm ticks - the page's
  *   own timers stop while the phone sleeps.
  * - listener: the page is gone or its relay is off. The native listener
  *   (RelayListener) answers for it, without being able to read anything.
@@ -88,6 +88,13 @@ class SyncService : Service(), RelayListener.Owner {
     private var retry: ScheduledFuture<*>? = null
     private var attempt = 0
 
+    /** The page's own connection dropped while Two is away: nudges to bring it back (onPageLink). */
+    private var pageNudge: ScheduledFuture<*>? = null
+    private var nudges = 0
+
+    // Main thread: this instance has written its start in the delivery diary.
+    private var diaryStarted = false
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -128,6 +135,10 @@ class SyncService : Service(), RelayListener.Owner {
             stopNow()
             return START_NOT_STICKY
         }
+        if (!diaryStarted) {
+            diaryStarted = true
+            DeliveryLog.starting(this)
+        }
         registerTriggers()
         SyncAlarm.arm(this)
         evaluate()
@@ -165,6 +176,17 @@ class SyncService : Service(), RelayListener.Owner {
         WakeLocks.release(SYNC_TAG)
         WakeLocks.release(LISTEN_TAG)
         super.onDestroy()
+    }
+
+    /**
+     * Whether this phone is reachable on the relay right now, by the page or
+     * the listener - for the page's delivery check, so read loosely from any
+     * thread.
+     */
+    private fun connectedNow(): Boolean = when (currentMode) {
+        SyncMode.PAGE -> PageHost.linkUp
+        SyncMode.LISTENER -> listener.connected
+        else -> false
     }
 
     /** Looks again at what should be connected. Any thread. */
@@ -248,10 +270,12 @@ class SyncService : Service(), RelayListener.Owner {
 
     override fun onJoined() {
         attempt = 0
+        DeliveryLog.add(this, DeliveryLog.Event.JOINED)
     }
 
     override fun onEnded(code: Int) {
         if (ended || mode != SyncMode.LISTENER) return
+        DeliveryLog.add(this, DeliveryLog.Event.DROPPED, code.toLong())
         // 4000: the page joined and replaced it. 4001: the relay still has
         // the page's connection - a page that has just gone, whose socket
         // the relay drops within a minute. Either way, slowly.
@@ -267,6 +291,11 @@ class SyncService : Service(), RelayListener.Owner {
         retry?.cancel(false)
         val delay = if (handOver) ListenerBackoff.handOverMs(attempt) else ListenerBackoff.failureMs(attempt)
         attempt++
+        // Awake until the try is made: a phone asleep runs no timer, and a
+        // connection lost with the screen off used to wait for the next
+        // alarm - many minutes - to be made again. Longer waits are left to
+        // the alarm, rather than holding the phone awake for them.
+        if (delay <= AWAKE_FOR_RETRY_MS) WakeLocks.hold(this, SYNC_TAG, delay + 15_000L)
         retry = work.schedule(Runnable {
             retry = null
             // Never again while the page has its own connection.
@@ -285,6 +314,7 @@ class SyncService : Service(), RelayListener.Owner {
     }
 
     private fun stopNow() {
+        DeliveryLog.stoppedCleanly(this)
         foreground = false
         try {
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
@@ -301,8 +331,8 @@ class SyncService : Service(), RelayListener.Owner {
 
     /*
      * What wakes it: the network coming back or changing, the phone leaving
-     * deep sleep, and the quarter-hour alarm (SyncAlarm). Each holds the phone
-     * awake for ten seconds, long enough to check a connection or make one.
+     * deep sleep, and the five-minute alarm (SyncAlarm). Each holds the phone
+     * awake for fifteen seconds, long enough to check a connection or make one.
      */
 
     private fun registerTriggers() {
@@ -365,8 +395,51 @@ class SyncService : Service(), RelayListener.Owner {
     }
 
     private fun trigger(kind: Trigger) {
-        WakeLocks.hold(this, SYNC_TAG, 10_000L)
+        // Long enough for a ping to go and its ten-second wait to end
+        // (RelayListener.checkAlive), and for the page to do the same.
+        WakeLocks.hold(this, SYNC_TAG, 15_000L)
+        DeliveryLog.beat(this)
         post { onTrigger(kind) }
+    }
+
+    /**
+     * The page says whether its own connection is up. Down while Two is in
+     * the background and the page is the one connected: the page's timers
+     * hardly run there, and none at all while the phone sleeps, so it is
+     * nudged to connect again - at once, then less often - and the phone is
+     * kept awake for each try. Up: the nudging stops. Any thread.
+     */
+    fun onPageLink(up: Boolean) {
+        post { pageLinkChanged(up) }
+    }
+
+    /** The work thread. */
+    private fun pageLinkChanged(up: Boolean) {
+        if (ended) return
+        if (up) {
+            pageNudge?.cancel(false)
+            pageNudge = null
+            if (nudges > 0 && PageShown.away) DeliveryLog.add(this, DeliveryLog.Event.PAGE_UP)
+            nudges = 0
+            return
+        }
+        if (mode != SyncMode.PAGE || !PageShown.away || pageNudge != null) return
+        DeliveryLog.add(this, DeliveryLog.Event.PAGE_DOWN)
+        nudges = 0
+        nudgePageSoon()
+    }
+
+    private fun nudgePageSoon() {
+        val delay = PAGE_NUDGE_MS.getOrElse(nudges) { PAGE_NUDGE_CAP_MS }
+        nudges++
+        if (delay <= AWAKE_FOR_RETRY_MS) WakeLocks.hold(this, SYNC_TAG, delay + 15_000L)
+        pageNudge = work.schedule(Runnable {
+            pageNudge = null
+            if (ended || mode != SyncMode.PAGE || PageHost.linkUp || !PageShown.away) return@Runnable
+            WakeLocks.hold(this, SYNC_TAG, 15_000L)
+            PageHost.wake()
+            nudgePageSoon()
+        }, delay, TimeUnit.MILLISECONDS)
     }
 
     /** The work thread. */
@@ -438,6 +511,13 @@ class SyncService : Service(), RelayListener.Owner {
         private const val EXTRA_PROMISED = "promised"
         private const val HAND_OVER_MS = 3_000L
 
+        /** A retry this soon is waited for awake; a later one is left to the alarm. */
+        private const val AWAKE_FOR_RETRY_MS = 90_000L
+
+        /** Nudging a page whose connection dropped while away: soon, then less often. */
+        private val PAGE_NUDGE_MS = longArrayOf(2_000L, 8_000L, 20_000L, 45_000L, 90_000L)
+        private const val PAGE_NUDGE_CAP_MS = 4 * 60 * 1000L
+
         /** Wake-lock tags: the service's triggers, the listener's answers, the page's own work. */
         const val SYNC_TAG = "two:sync"
         const val LISTEN_TAG = "two:listen"
@@ -486,7 +566,7 @@ class SyncService : Service(), RelayListener.Owner {
             }
         }
 
-        /** The quarter-hour tick (SyncAlarm). */
+        /** The five-minute tick (SyncAlarm). */
         fun alarm(context: Context) {
             val app = context.applicationContext
             val service = instance
@@ -521,6 +601,7 @@ class SyncService : Service(), RelayListener.Owner {
         fun clear(context: Context) {
             val app = context.applicationContext
             BackgroundRoomStore.clear(app)
+            DeliveryLog.clear(app)
             NewMessageNotice.cancel(app)
             SyncAlarm.cancel(app)
             // With no room, the service's own look closes the listener (1000)
@@ -531,6 +612,13 @@ class SyncService : Service(), RelayListener.Owner {
             } catch (_: Exception) {
                 // Not running.
             }
+        }
+
+        /** The page's own connection is up or down (AndroidWebBridge.backgroundPageLink). */
+        @Suppress("UNUSED_PARAMETER")
+        fun pageLink(context: Context, up: Boolean) {
+            PageHost.linkUp = up
+            instance?.onPageLink(up)
         }
 
         /** For the page's Settings and one-time cards (AndroidWebBridge.backgroundState). */
@@ -546,6 +634,7 @@ class SyncService : Service(), RelayListener.Owner {
                 .put("notify", BackgroundRoomStore.notify(app))
                 .put("noticeAllowed", NewMessageNotice.allowed(app))
                 .put("sdk", Build.VERSION.SDK_INT)
+                .put("connected", instance?.connectedNow() == true)
                 .toString()
         }
     }

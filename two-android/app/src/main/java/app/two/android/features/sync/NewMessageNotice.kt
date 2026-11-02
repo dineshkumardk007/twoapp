@@ -84,6 +84,7 @@ object NewMessageNotice {
     /** The page heard a message of hers while Two is out of sight. */
     fun fromPage(context: Context) {
         if (!PageShown.away) return
+        DeliveryLog.add(context, DeliveryLog.Event.MESSAGE)
         SkyNews.mark(context)
         post(context)
     }
@@ -94,6 +95,7 @@ object NewMessageNotice {
      */
     fun fromListener(context: Context) {
         if (!PageShown.away && PageHost.alive) return
+        DeliveryLog.add(context, DeliveryLog.Event.MESSAGE)
         SkyNews.mark(context)
         post(context)
     }
@@ -124,6 +126,7 @@ object NewMessageNotice {
             // which says more than one word does.
             val notice = builder(app, title).setPublicVersion(builder(app, title).build()).build()
             manager.notify(NOTIFICATION_ID, notice)
+            DeliveryLog.add(app, DeliveryLog.Event.NOTICE)
         } catch (_: Exception) {
             // A phone that will not take it: no notice, which is the default anyway.
         }

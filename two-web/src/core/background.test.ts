@@ -8,8 +8,10 @@ import {
   newMessageNotice,
   openNotificationSettings,
   openOemSettings,
+  pageLink,
   pageRelay,
   readBackgroundState,
+  readDeliveryLog,
   roomClear,
   roomSet,
   setNotice,
@@ -28,7 +30,8 @@ const STATE: BackgroundState = {
   oem: 'xiaomi',
   notify: false,
   noticeAllowed: false,
-  sdk: 34
+  sdk: 34,
+  connected: true
 };
 
 /** A phone with the background connection, answering the notice switch with the next of `answers`. */
@@ -220,5 +223,30 @@ describe('the one-time cards', () => {
 
   it('shows nothing without an answer from the phone', () => {
     expect(backgroundCardToShow(null, false, false, false)).toBeNull();
+  });
+});
+
+describe("the phone's delivery diary", () => {
+  it('reads newest first, keeping only what it knows', () => {
+    const bridge = phoneWith() as ReturnType<typeof phoneWith> & { backgroundLog?: () => string };
+    bridge.backgroundLog = () =>
+      JSON.stringify([
+        { t: 1000, e: 'started' },
+        { t: 2000, e: 'closed', d: 185 },
+        { t: 3000, e: 'message', n: 3 },
+        { t: 4000, e: 'launched-rocket' },
+        { e: 'joined' }
+      ]);
+    expect(readDeliveryLog()).toEqual([
+      { at: 3000, kind: 'message', count: 3 },
+      { at: 2000, kind: 'closed', count: 1, minutes: 185 },
+      { at: 1000, kind: 'started', count: 1 }
+    ]);
+  });
+
+  it('is empty, and the link a no-op, on an app without them', () => {
+    phoneWith();
+    expect(readDeliveryLog()).toEqual([]);
+    expect(() => pageLink(false)).not.toThrow();
   });
 });

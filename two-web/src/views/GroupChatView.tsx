@@ -126,6 +126,8 @@ interface GroupChatViewProps {
   onRename?: (name: string) => void;
   /** Retry or abandon a message that never left this device. */
   onResolveStuck?: (messageId: string, action: 'retry' | 'delete') => void;
+  /** Edge to edge, standing on the dock: a phone in the app. */
+  flush?: boolean;
 }
 
 /** What a group message can carry besides its words. */
@@ -182,7 +184,8 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   callInProgress = false,
   onTyping,
   onRename,
-  onResolveStuck
+  onResolveStuck,
+  flush = false
 }) => {
   const tr = useT();
   // Back in the box: whatever was half-typed when this group was last left.
@@ -1112,7 +1115,13 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   const viewerMessage = viewed && viewed.isPhoto && viewed.photoDataUrl && !viewed.unsent ? viewed : undefined;
 
   return (
-    <div className="relative flex flex-col chat-shell bg-linen-surface rounded-2xl border border-linen-border overflow-hidden shadow-sm">
+    <div
+      className={`relative flex flex-col chat-shell bg-linen-surface overflow-hidden ${
+        // On a phone in the app it fills the screen above the dock, as the
+        // couple's chat does; a card everywhere else.
+        flush ? 'chat-flush' : 'rounded-2xl border border-linen-border shadow-sm'
+      }`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between gap-2 border-b border-linen-border bg-linen-variant/40 px-4 py-3">
         <div className="min-w-0 flex-1">
