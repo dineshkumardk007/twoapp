@@ -90,6 +90,49 @@ describe('the funny numbers', () => {
     expect(n.stickers).toBe(2);
     expect(n.longestCallSeconds).toBe(1800);
   });
+  it('says who does what more: saptiya, good morning first, the last word, I love you', () => {
+    const n = funnyNumbers([
+      msg('user', at(1, 8), 'good morning, saptiya?'),
+      msg('partner', at(1, 8, 5), 'not yet. saapteengala?'),
+      msg('user', at(1, 22), 'I love you chellam'),
+      msg('partner', at(1, 23), 'love u too kanna, good night'),
+      msg('partner', at(2, 7), 'gm'),
+      msg('user', at(2, 21), 'gn'),
+      msg('partner', at(2, 9), 'Sticker', { sticker: 'love-you' })
+    ]);
+    expect(n.saptiyaBy).toEqual({ user: 1, partner: 1 });
+    expect(n.firstHello).toEqual({ user: 1, partner: 1 });
+    // Night one: the partner's good night at 11pm; night two: the user's gn.
+    expect(n.lastWord).toEqual({ user: 1, partner: 1 });
+    expect(n.loveYou).toEqual({ user: 1, partner: 2 });
+    expect(n.chellam).toBe(1);
+    expect(n.kanna).toBe(1);
+    expect(n.goodNight).toBe(2);
+  });
+
+  it('times the replies, finds the longest run of days, the busiest hour and day, and the first message', () => {
+    const n = funnyNumbers([
+      msg('user', at(1, 10), 'hi'),
+      msg('partner', at(1, 10, 2), 'hey'),
+      msg('user', at(1, 10, 3), 'how was work'),
+      msg('partner', at(1, 10, 13), 'long'),
+      msg('user', at(2, 10), 'morning'),
+      msg('user', at(3, 22), 'night'),
+      msg('partner', at(5, 10), 'back')
+    ]);
+    // The partner answered in 2 and 10 minutes; the user in 1 minute.
+    expect(n.replyMs.user).toBe(60_000);
+    expect(n.replyMs.partner).toBe(600_000);
+    expect(n.longestStreak).toBe(3);
+    expect(n.topHour).toBe(10);
+    expect(n.busiestDay).toEqual({ day: '2026-11-01', count: 4 });
+    expect(n.first).toMatchObject({ who: 'user', kind: 'text', text: 'hi' });
+  });
+
+  it('does not take a reply from the next day as answering', () => {
+    const n = funnyNumbers([msg('user', at(1, 8), 'hi'), msg('partner', at(1, 21), 'sorry, busy day')]);
+    expect(n.replyMs.partner).toBeNull();
+  });
 });
 
 describe('the boop battle', () => {

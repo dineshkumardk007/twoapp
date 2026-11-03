@@ -90,6 +90,27 @@ export interface FunnyNumbers {
   topEmoji: { emoji: string; count: number } | null;
   /** The first message on this phone: what the numbers count from. */
   since: number;
+  /** "Saptiya?" by who asked it. */
+  saptiyaBy: Record<Seat, number>;
+  /** Days each of you sent the day's first message - said good morning first. */
+  firstHello: Record<Seat, number>;
+  /** Nights (8pm to four) each of you sent the last message. */
+  lastWord: Record<Seat, number>;
+  /** "I love you", by who said it. */
+  loveYou: Record<Seat, number>;
+  chellam: number;
+  kanna: number;
+  goodNight: number;
+  /** How long each of you usually takes to answer the other (the middle reply), in ms. */
+  replyMs: Record<Seat, number | null>;
+  /** The most days in a row with a message. */
+  longestStreak: number;
+  /** The hour of the day you two write the most, 0-23. */
+  topHour: number | null;
+  /** The day with the most messages. */
+  busiestDay: { day: string; count: number } | null;
+  /** The very first message on this phone. */
+  first: { who: Seat; at: number; text: string; kind: 'text' | 'photo' | 'voice' | 'sticker' } | null;
 }
 
 const HEART_RE = /❤️|❤|♥️|💕|💖|💗|💓|💞|💘|💝|😍|🥰|😘/gu;
@@ -99,6 +120,23 @@ const SAPTIYA_RE = /\b(saa?p(p?|t)i?ya|saa?pd?ita|saptiya|sapteengala|saapteenga
 const MISS_YOU_RE = /\bmiss(ing)?\s*(you|u|ya)\b/giu;
 const SORRY_RE = /\b(sorry|sry|sowwy|soory)\b/giu;
 const LOVE_STICKERS = new Set(['love-you', 'mwah', 'hug', 'chellam', 'so-cute']);
+const LOVE_YOU_RE = /\b(i\s*)?(love|luv|lub)\s*(you|u|ya)\b|\bily\b/giu;
+const CHELLAM_RE = /\bchell?amm?(e|ey|a)?\b/giu;
+const KANNA_RE = /\b(kanna|kannamma|kanne|kannu)\b/giu;
+const GOOD_NIGHT_RE = /\b(good\s*night|gud\s*ni(ght|te|yt)|good\s*nyt|gn8?|gnite)\b/giu;
+/** Longer than this between the two of you is a new conversation, not a reply. */
+const REPLY_WITHIN_MS = 12 * HOUR;
+/** The middle one: what is usual, which one slow evening does not move. */
+function middle(values: number[]): number | null {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+/** Days since 1970, for "the next day" over month ends. */
+const dayNumber = (day: string) => {
+  const [y, m, d] = day.split('-').map(Number);
+  return Math.round(Date.UTC(y, m - 1, d) / (24 * HOUR));
+};
 
 const count = (text: string, re: RegExp) => (text.match(re) || []).length;
 
@@ -117,9 +155,27 @@ export function funnyNumbers(messages: ChatMessage[]): FunnyNumbers {
     longestCallSeconds: 0,
     callSeconds: 0,
     topEmoji: null,
-    since: 0
+    since: 0,
+    saptiyaBy: { user: 0, partner: 0 },
+    firstHello: { user: 0, partner: 0 },
+    lastWord: { user: 0, partner: 0 },
+    loveYou: { user: 0, partner: 0 },
+    chellam: 0,
+    kanna: 0,
+    goodNight: 0,
+    replyMs: { user: null, partner: null },
+    longestStreak: 0,
+    topHour: null,
+    busiestDay: null,
+    first: null
   };
   const emojis = new Map<string, number>();
+  const firstOfDay = new Map<string, Seat>();
+  const lastOfNight = new Map<string, Seat>();
+  const perDay = new Map<string, number>();
+  const perHour = new Array<number>(24).fill(0);
+  const replies: Record<Seat, number[]> = { user: [], partner: [] };
+  let previous: { who: Seat; at: number } | null = null;
   for (const m of messages) {
     if (m.call) {
       out.callSeconds += m.call.seconds || 0;
@@ -128,31 +184,70 @@ export function funnyNumbers(messages: ChatMessage[]): FunnyNumbers {
     }
     if (!said(m)) continue;
     const who = m.authorId as Seat;
-    if (!out.since) out.since = m.sentAt as number;
+    const sentAt = m.sentAt as number;
+    if (!out.since) out.since = sentAt;
+    if (!out.first) {
+      const kind = m.isPhoto ? 'photo' : m.isVoiceMemo ? 'voice' : m.sticker ? 'sticker' : 'text';
+      out.first = { who, at: sentAt, kind, text: kind === 'text' ? (m.text || '').slice(0, 80) : '' };
+    }
     out.messages[who]++;
-    const hour = new Date(m.sentAt as number).getHours();
+    const hour = new Date(sentAt).getHours();
     if (hour < DAY_STARTS_AT_H) out.nightOwl++;
+    perHour[hour]++;
+    const day = chatDay(sentAt);
+    perDay.set(day, (perDay.get(day) || 0) + 1);
+    if (!firstOfDay.has(day)) firstOfDay.set(day, who);
+    if (hour >= 20 || hour < DAY_STARTS_AT_H) lastOfNight.set(day, who);
+    if (previous && previous.who !== who && sentAt - previous.at > 0 && sentAt - previous.at <= REPLY_WITHIN_MS) {
+      replies[who].push(sentAt - previous.at);
+    }
+    previous = { who, at: sentAt };
     for (const r of Object.values(m.reactions || {})) if (r && count(r, HEART_RE)) out.hearts++;
     if (m.isPhoto) out.photos++;
     if (m.isVoiceMemo) out.voiceMinutes += (m.audioDurationSeconds || 0) / 60;
     if (m.sticker) {
       out.stickers++;
       if (LOVE_STICKERS.has(m.sticker)) out.hearts++;
-      if (m.sticker === 'saptiya') out.saptiya++;
+      if (m.sticker === 'saptiya') {
+        out.saptiya++;
+        out.saptiyaBy[who]++;
+      }
       if (m.sticker === 'miss-you') out.missYou[who]++;
       if (m.sticker === 'sorry') out.sorry[who]++;
+      if (m.sticker === 'love-you') out.loveYou[who]++;
+      if (m.sticker === 'chellam') out.chellam++;
+      if (m.sticker === 'good-night') out.goodNight++;
       continue;
     }
     if (m.isPhoto || m.isVoiceMemo) continue;
     const text = m.text || '';
     out.hearts += count(text, HEART_RE);
-    out.saptiya += count(text, SAPTIYA_RE);
+    const saptiya = count(text, SAPTIYA_RE);
+    out.saptiya += saptiya;
+    out.saptiyaBy[who] += saptiya;
+    out.loveYou[who] += count(text, LOVE_YOU_RE);
+    out.chellam += count(text, CHELLAM_RE);
+    out.kanna += count(text, KANNA_RE);
+    out.goodNight += count(text, GOOD_NIGHT_RE);
     out.missYou[who] += count(text, MISS_YOU_RE);
     out.sorry[who] += count(text, SORRY_RE);
     for (const e of text.match(EMOJI_RE) || []) emojis.set(e, (emojis.get(e) || 0) + 1);
   }
   out.voiceMinutes = Math.round(out.voiceMinutes);
   for (const [emoji, n] of emojis) if (!out.topEmoji || n > out.topEmoji.count) out.topEmoji = { emoji, count: n };
+  for (const who of firstOfDay.values()) out.firstHello[who]++;
+  for (const who of lastOfNight.values()) out.lastWord[who]++;
+  out.replyMs = { user: middle(replies.user), partner: middle(replies.partner) };
+  for (const [day, n] of perDay) if (!out.busiestDay || n > out.busiestDay.count) out.busiestDay = { day, count: n };
+  const top = Math.max(...perHour);
+  out.topHour = top > 0 ? perHour.indexOf(top) : null;
+  // Days in a row: each day one after the last.
+  const days = [...perDay.keys()].map(dayNumber).sort((a, b) => a - b);
+  let run = 0;
+  days.forEach((d, i) => {
+    run = i > 0 && d === days[i - 1] + 1 ? run + 1 : 1;
+    out.longestStreak = Math.max(out.longestStreak, run);
+  });
   return out;
 }
 
