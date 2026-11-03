@@ -91,33 +91,66 @@ function partOfDay(at: number): Part {
   return h >= 21 || h < 6 ? 'night' : h >= 18 ? 'evening' : 'day';
 }
 
-/** A small rain cloud, for a heavy weather day. */
-const RainCloud: React.FC<{ x: number; y: number }> = ({ x, y }) => (
-  <g>
-    <g transform={`translate(${x} ${y})`} fill="#cbd5e1" stroke={INK} strokeWidth={2.2}>
-      <circle cx={-9} cy={2} r={8} />
-      <circle cx={7} cy={3} r={7} />
-      <circle cx={0} cy={-4} r={9} />
-    </g>
-    <Drop x={x - 7} y={y + 16} s={0.55} cls="stk-drip" />
-    <Drop x={x + 6} y={y + 18} s={0.55} cls="stk-drip" delay={0.4} />
-  </g>
+/** The scene's own size, in the units everything in it is placed by. */
+const W = 320;
+const H = 170;
+const pct = (v: number, of: number) => `${(v / of) * 100}%`;
+
+/**
+ * A piece of the scene in a layer of its own: a box of the scene, drawn
+ * once. What moves is the layer - a transform or a fade the phone's
+ * graphics chip does by itself - so nothing is drawn again while it moves,
+ * and the page's own work is never held up by it. (Moving a part inside one
+ * picture made the phone draw the whole picture again on every frame.)
+ */
+const Sprite: React.FC<{
+  box: [number, number, number, number];
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}> = ({ box: [x, y, w, h], className, style, children }) => (
+  <div
+    className={`us-sprite${className ? ` ${className}` : ''}`}
+    style={{ left: pct(x, W), top: pct(y, H), width: pct(w, W), height: pct(h, H), ...style }}
+  >
+    <svg viewBox={`${x} ${y} ${w} ${h}`} width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false">
+      {children}
+    </svg>
+  </div>
 );
 
-/** A speech bubble over a character, pointing down at it. */
-const Bubble: React.FC<{ x: number; y: number; text: string; wide?: number }> = ({ x, y, text, wide }) => {
-  const w = wide ?? Math.max(40, text.length * 7.2 + 16);
-  // Kept inside the picture at either edge.
-  const cx = Math.min(320 - w / 2 - 4, Math.max(w / 2 + 4, x));
+/** A small rain cloud, for a heavy weather day, its drops each a layer. */
+const RainCloud: React.FC<{ x: number; y: number }> = ({ x, y }) => (
+  <>
+    <Sprite box={[x - 20, y - 14, 40, 26]} className="us-bob">
+      <g transform={`translate(${x} ${y})`} fill="#cbd5e1" stroke={INK} strokeWidth={2.2}>
+        <circle cx={-9} cy={2} r={8} />
+        <circle cx={7} cy={3} r={7} />
+        <circle cx={0} cy={-4} r={9} />
+      </g>
+    </Sprite>
+    {[
+      [x - 7, 0],
+      [x + 6, 0.4]
+    ].map(([dx, delay]) => (
+      <Sprite key={dx} box={[dx - 4, y + 12, 8, 10]} className="us-drip" style={{ animationDelay: `${delay}s` }}>
+        <Drop x={dx} y={y + 17} s={0.55} />
+      </Sprite>
+    ))}
+  </>
+);
+
+/** A speech bubble over a character, pointing down at it, kept inside the scene. */
+const Bubble: React.FC<{ x: number; y: number; text: string }> = ({ x, y, text }) => {
+  const w = Math.max(30, text.length * 6.6 + 18);
+  const cx = Math.min(W - w / 2 - 4, Math.max(w / 2 + 4, x));
   return (
-    <g className="us-pop" transform={`translate(${cx} ${y})`}>
-      <rect x={-w / 2} y={-14} width={w} height={22} rx={11} fill="#fff" stroke={INK} strokeWidth={2} />
-      <path d={`M${x - cx - 4},8 L${x - cx},14 L${x - cx + 4},8 Z`} fill="#fff" stroke={INK} strokeWidth={2} strokeLinejoin="round" />
-      <path d={`M${x - cx - 5},8 L${x - cx + 5},8`} stroke="#fff" strokeWidth={3} />
-      <text x={0} y={2} textAnchor="middle" fontFamily="Manrope, system-ui, sans-serif" fontWeight={800} fontSize={12} fill={INK}>
+    <div className="us-bubble-at" style={{ left: pct(cx, W), top: pct(y, H) }}>
+      <div className="us-bubble us-pop">
         {text}
-      </text>
-    </g>
+        <span className="us-bubble-tail" style={{ left: `calc(50% + ${((x - cx) / w) * 100}%)` }} />
+      </div>
+    </div>
   );
 };
 
@@ -162,6 +195,18 @@ export const UsScene: React.FC<UsSceneProps> = ({
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
+  }, []);
+
+  // Its moves run only while it is on screen: scrolled away, or with Two
+  // in the background (index.css), every layer holds still.
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(true);
+  useEffect(() => {
+    const el = sceneRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const watch = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.05 });
+    watch.observe(el);
+    return () => watch.disconnect();
   }, []);
 
   const part = partOfDay(now);
@@ -264,19 +309,33 @@ export const UsScene: React.FC<UsSceneProps> = ({
     }
   };
 
-  const character = (who: 'me' | 'them') => {
+  /** Each character's box in the scene: room for ears, a hop and its name. */
+  const CHAR_BOX: [number, number, number, number] = [112, 24, 96, 146];
+
+  const character = (who: 'me' | 'them', tap: React.ReactNode) => {
     const head = headOf(who);
     const motion = motionOf(who);
     const Char = isBear(who) ? Bear : Bunny;
     const arms = hugging ? 'up' : who === 'them' && partnerTyping ? 'hold' : 'down';
+    const [x, y, w, h] = CHAR_BOX;
     return (
-      <g className="us-move" style={{ transform: `translateX(${xOf(who) - 160}px)` }}>
-        <g key={motion ? `${who}${play?.n}` : who} className={motion ? `us-part ${motion}` : 'us-part'}>
-          <g className={asleep && who === 'them' ? 'us-part' : 'us-part us-breathe'}>
-            <Char x={160} y={head.y} s={head.s} mood={moodOf(who)} arms={arms} />
-          </g>
-        </g>
-      </g>
+      // Moved by its layer: nearer or further as you come and go.
+      <div
+        className="us-sprite us-move"
+        style={{ left: pct(x, W), top: pct(y, H), width: pct(w, W), height: pct(h, H), transform: `translateX(${pct(xOf(who) - 160, w)})` }}
+      >
+        <div key={motion ? `${who}${play?.n}` : who} className={`us-fill ${motion}`}>
+          <div className={asleep && who === 'them' ? 'us-fill' : 'us-fill us-breathe'}>
+            <svg viewBox={`${x} ${y} ${w} ${h - 18}`} width="100%" height={pct(h - 18, h)} overflow="visible" aria-hidden="true" focusable="false">
+              <Char x={160} y={head.y} s={head.s} mood={moodOf(who)} arms={arms} />
+            </svg>
+          </div>
+        </div>
+        <span className="us-name" data-night={part === 'night' || undefined}>
+          {who === 'me' ? tr('You') : partnerName.length > 12 ? partnerName.slice(0, 11) + '…' : partnerName}
+        </span>
+        {tap}
+      </div>
     );
   };
 
@@ -289,55 +348,58 @@ export const UsScene: React.FC<UsSceneProps> = ({
     const head = headOf(target);
     const fur = isBear(actor) ? BEAR_FUR : BUNNY_FUR;
     const paw = (cx: number, cy: number) => <ellipse cx={cx} cy={cy} rx={7} ry={6} fill={fur} stroke={INK} strokeWidth={2} />;
+    const key = `p${play.n}`;
     switch (play.kind) {
       case 'pinch':
         return (
-          <g key={`p${play.n}`} className="us-part us-pinch">
+          <Sprite key={key} box={[x - 40, head.y - 8, 80, 28]} className="us-pinch">
             {paw(x - 21 * head.s - 6, head.y + 6 * head.s)}
             {paw(x + 21 * head.s + 6, head.y + 6 * head.s)}
             <g fill="#ff7d9a" opacity={0.85}>
               <ellipse cx={x - 19 * head.s} cy={head.y + 6 * head.s} rx={6} ry={4} />
               <ellipse cx={x + 19 * head.s} cy={head.y + 6 * head.s} rx={6} ry={4} />
             </g>
-          </g>
+          </Sprite>
         );
       case 'pat':
         return (
-          <g key={`p${play.n}`} className="us-part us-pat">
+          <Sprite key={key} box={[x - 10, head.y - 34 * head.s - 9, 20, 18]} className="us-pat">
             {paw(x, head.y - 34 * head.s)}
-          </g>
+          </Sprite>
         );
       case 'tickle':
         return (
-          <g key={`p${play.n}`} className="us-part us-tickle">
+          <Sprite key={key} box={[x - 36, head.y + 34 * head.s - 9, 72, 18]} className="us-tickle">
             {paw(x - 26, head.y + 34 * head.s)}
             {paw(x + 26, head.y + 34 * head.s)}
-          </g>
+          </Sprite>
         );
-      case 'pillow':
+      case 'pillow': {
+        // Thrown from the one doing it: how far that is on this screen.
+        const perUnit = (sceneRef.current?.clientWidth || W) / W;
         return (
-          <g key={`p${play.n}`}>
-            <g className="us-part us-throw" style={{ '--dx': `${xOf(actor) - x}px` } as React.CSSProperties}>
+          <React.Fragment key={key}>
+            <Sprite
+              box={[x - 16, head.y - 14, 32, 28]}
+              className="us-throw"
+              style={{ '--dx': `${(xOf(actor) - x) * perUnit}px` } as React.CSSProperties}
+            >
               <rect x={x - 13} y={head.y - 8} width={26} height={16} rx={6} fill="#fff" stroke={INK} strokeWidth={2} />
               <path d={`M${x - 9},${head.y - 8} L${x - 13},${head.y - 12} M${x + 9},${head.y + 8} L${x + 13},${head.y + 12}`} stroke={INK} strokeWidth={2} />
-            </g>
+            </Sprite>
             {[-14, 0, 13].map((dx, i) => (
-              <ellipse
+              <Sprite
                 key={i}
-                cx={x + dx}
-                cy={head.y - 18}
-                rx={2.5}
-                ry={6}
-                transform={`rotate(${dx * 2} ${x + dx} ${head.y - 18})`}
-                fill="#fff"
-                stroke={INK}
-                strokeWidth={1.2}
-                className="us-part us-feather"
+                box={[x + dx - 4, head.y - 26, 8, 16]}
+                className="us-feather"
                 style={{ animationDelay: `${0.42 + i * 0.08}s` }}
-              />
+              >
+                <ellipse cx={x + dx} cy={head.y - 18} rx={2.5} ry={6} fill="#fff" stroke={INK} strokeWidth={1.2} />
+              </Sprite>
             ))}
-          </g>
+          </React.Fragment>
         );
+      }
     }
   };
 
@@ -402,8 +464,16 @@ export const UsScene: React.FC<UsSceneProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="us-scene relative overflow-hidden rounded-2xl" data-part={part}>
-        <svg viewBox="0 0 320 170" className="block h-auto w-full" role="img" aria-label={tr('You and {name}', { name: partnerName })}>
+      <div
+        ref={sceneRef}
+        className="us-scene relative overflow-hidden rounded-2xl"
+        data-part={part}
+        data-live={inView || undefined}
+        role="img"
+        aria-label={tr('You and {name}', { name: partnerName })}
+      >
+        {/* What never moves, drawn once: the sky, the sun or moon, the hill. */}
+        <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" aria-hidden="true" focusable="false">
           <defs>
             <linearGradient id="us-sky" x1="0" y1="0" x2="0" y2="1">
               {part === 'night' ? (
@@ -424,96 +494,109 @@ export const UsScene: React.FC<UsSceneProps> = ({
               )}
             </linearGradient>
           </defs>
-          <rect x={0} y={0} width={320} height={170} fill="url(#us-sky)" />
+          <rect x={0} y={0} width={W} height={H} fill="url(#us-sky)" />
           {part === 'night' ? (
-            <g>
-              {[
-                [24, 22], [60, 46], [96, 18], [230, 20], [262, 52], [300, 28], [140, 40]
-              ].map(([cx, cy], i) => (
-                <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" className="us-twinkle" style={{ animationDelay: `${i * 0.4}s` }} />
-              ))}
-              <path d="M286,18 A16,16 0 1 0 300,40 A12,12 0 1 1 286,18 Z" fill="#ffe58a" stroke={INK} strokeWidth={2} />
-            </g>
+            <path d="M286,18 A16,16 0 1 0 300,40 A12,12 0 1 1 286,18 Z" fill="#ffe58a" stroke={INK} strokeWidth={2} />
           ) : (
-            <g>
-              <circle cx={284} cy={30} r={part === 'evening' ? 15 : 13} fill={part === 'evening' ? '#ff8a5c' : '#ffd23f'} stroke={INK} strokeWidth={2} />
-              <g className="us-cloud" fill="#fff" opacity={0.92}>
-                <ellipse cx={60} cy={30} rx={20} ry={8} />
-                <ellipse cx={72} cy={24} rx={12} ry={8} />
-              </g>
-            </g>
+            <circle cx={284} cy={30} r={part === 'evening' ? 15 : 13} fill={part === 'evening' ? '#ff8a5c' : '#ffd23f'} stroke={INK} strokeWidth={2} />
           )}
-          {/* The hill they sit on. */}
           <path
             d="M-10,170 L-10,140 C40,120 110,126 160,128 C220,130 280,118 330,136 L330,170 Z"
             fill={part === 'night' ? '#2c4a3a' : part === 'evening' ? '#9bc47a' : '#8fd47e'}
           />
+        </svg>
 
-          {/* Between them while you are both here: a little heart. */}
-          {(partnerOnline || hugging) && (
-            <g className="stk" data-play="true">
-              <Heart x={160} y={hugging ? 44 : 60} s={hugging ? 0.9 : 0.55} cls="stk-beat" />
-              {hugging && (
-                <>
-                  <Heart x={128} y={40} s={0.5} cls="stk-rise" />
-                  <Heart x={192} y={36} s={0.45} cls="stk-rise" delay={0.5} />
-                </>
-              )}
+        {/* Everything that moves, each in its own layer. */}
+        {part === 'night' ? (
+          <>
+            <Sprite box={[0, 0, W, 60]} className="us-twinkle">
+              {[[24, 22], [96, 18], [230, 20], [300, 28]].map(([cx, cy], i) => (
+                <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" />
+              ))}
+            </Sprite>
+            <Sprite box={[0, 0, W, 60]} className="us-twinkle" style={{ animationDelay: '1.3s' }}>
+              {[[60, 46], [262, 52], [140, 40]].map(([cx, cy], i) => (
+                <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" />
+              ))}
+            </Sprite>
+          </>
+        ) : (
+          <Sprite box={[38, 14, 50, 26]} className="us-cloud">
+            <g fill="#fff" opacity={0.92}>
+              <ellipse cx={60} cy={30} rx={20} ry={8} />
+              <ellipse cx={72} cy={24} rx={12} ry={8} />
             </g>
-          )}
+          </Sprite>
+        )}
 
-          <g className="stk" data-play="true">
-            {/* Heavy weather over whoever has it; sun-sparkles for a sunny one. */}
-            {(myWeather === 'RAINY' || myWeather === 'STORMY') && <RainCloud x={meX} y={24} />}
-            {(theirWeather === 'RAINY' || theirWeather === 'STORMY') && <RainCloud x={themX} y={24} />}
-            {myWeather === 'SUNNY' && <Sparkle x={meX + 28} y={40} s={0.6} cls="stk-spin" />}
-            {theirWeather === 'SUNNY' && <Sparkle x={themX + 28} y={40} s={0.6} cls="stk-spin" />}
-            {asleep && <Zzz x={themX + 14} y={42} cls="stk-rise" />}
-          </g>
+        {/* Between them while you are both here: a little heart; in a hug, more. */}
+        {(partnerOnline || hugging) && (
+          <Sprite box={hugging ? [146, 30, 28, 26] : [151, 51, 18, 17]} className="us-beat">
+            <Heart x={160} y={hugging ? 44 : 60} s={hugging ? 0.9 : 0.55} />
+          </Sprite>
+        )}
+        {hugging && (
+          <>
+            <Sprite box={[120, 30, 16, 16]} className="us-rise">
+              <Heart x={128} y={40} s={0.5} />
+            </Sprite>
+            <Sprite box={[185, 26, 14, 14]} className="us-rise" style={{ animationDelay: '0.5s' }}>
+              <Heart x={192} y={36} s={0.45} />
+            </Sprite>
+          </>
+        )}
 
-          <g
-            role="button"
-            tabIndex={0}
-            aria-label={tr('Boop {name}', { name: partnerName })}
+        {/* Heavy weather over whoever has it; sun-sparkles for a sunny one. */}
+        {(myWeather === 'RAINY' || myWeather === 'STORMY') && <RainCloud x={meX} y={24} />}
+        {(theirWeather === 'RAINY' || theirWeather === 'STORMY') && <RainCloud x={themX} y={24} />}
+        {myWeather === 'SUNNY' && (
+          <Sprite box={[meX + 19, 31, 18, 18]} className="us-spin">
+            <Sparkle x={meX + 28} y={40} s={0.6} />
+          </Sprite>
+        )}
+        {theirWeather === 'SUNNY' && (
+          <Sprite box={[themX + 19, 31, 18, 18]} className="us-spin">
+            <Sparkle x={themX + 28} y={40} s={0.6} />
+          </Sprite>
+        )}
+        {asleep && (
+          <Sprite box={[themX + 12, 18, 36, 26]} className="us-rise us-forever">
+            <Zzz x={themX + 14} y={42} />
+          </Sprite>
+        )}
+
+        {character(
+          'them',
+          <button
+            type="button"
             className="us-tap"
+            aria-label={tr('Boop {name}', { name: partnerName })}
             onPointerDown={pressStart}
             onPointerUp={() => pressEnd(true)}
             onPointerLeave={() => pressEnd(false)}
             onPointerCancel={() => pressEnd(false)}
             onContextMenu={e => e.preventDefault()}
             onKeyDown={onKey(() => doPlay('boop'))}
-          >
-            {character('them')}
-            <rect x={themX - 34} y={30} width={68} height={120} fill="transparent" />
-          </g>
-          <g role="button" tabIndex={0} aria-label={tr('Giggle')} className="us-tap" onClick={giggle} onKeyDown={onKey(giggle)}>
-            {character('me')}
-            <rect x={meX - 34} y={30} width={68} height={120} fill="transparent" />
-          </g>
-          {props()}
+          />
+        )}
+        {character('me', <button type="button" className="us-tap" aria-label={tr('Giggle')} onClick={giggle} />)}
+        {props()}
 
-          {/* Last week's champion holds the trophy. */}
-          {trophy &&
-            (() => {
-              // On the grass beside the champion, on the outer side.
-              const x = trophy === activeUser ? meX : themX;
-              const side = x < 160 ? -1 : 1;
-              return (
-                <text x={x + side * 40} y={146} fontSize={18} textAnchor="middle" className="us-part us-trophy" aria-hidden="true">
-                  🏆
-                </text>
-              );
-            })()}
+        {/* Last week's champion holds the trophy, on the grass beside them. */}
+        {trophy &&
+          (() => {
+            const x = trophy === activeUser ? meX : themX;
+            const side = x < 160 ? -1 : 1;
+            return (
+              <span className="us-trophy" style={{ left: pct(x + side * 40, W), top: pct(146, H) }} aria-hidden="true">
+                🏆
+              </span>
+            );
+          })()}
 
-          {play && <Bubble key={`b${play.n}`} x={xOf(play.target)} y={34} text={bubbleFor(play)} />}
-          {!play && partnerTyping && !hugging && <Bubble x={themX} y={30} text="• • •" wide={40} />}
-          {!play && !partnerOnline && !asleep && !partnerTyping && <Bubble x={themX} y={30} text="…" wide={30} />}
-
-          <g fontFamily="Manrope, system-ui, sans-serif" fontWeight={700} fontSize={11} textAnchor="middle" fill={part === 'night' ? '#fff' : INK}>
-            <text x={meX} y={164}>{tr('You')}</text>
-            <text x={themX} y={164}>{partnerName.length > 12 ? partnerName.slice(0, 11) + '…' : partnerName}</text>
-          </g>
-        </svg>
+        {play && <Bubble key={`b${play.n}`} x={xOf(play.target)} y={34} text={bubbleFor(play)} />}
+        {!play && partnerTyping && !hugging && <Bubble x={themX} y={30} text="• • •" />}
+        {!play && !partnerOnline && !asleep && !partnerTyping && <Bubble x={themX} y={30} text="…" />}
 
         {/* The rest of the boop battle, from a long press or the button below. */}
         {menuOpen && (

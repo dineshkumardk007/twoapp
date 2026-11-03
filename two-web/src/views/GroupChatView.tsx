@@ -39,6 +39,7 @@ import { useTypingSender } from '../core/typing';
 import { EmojiPicker, KeyboardPanel } from '../components/EmojiPicker';
 import { whenKeyboardUp } from '../core/keyboard';
 import { rideKeyboard } from '../core/keyboardRide';
+import { markScrolling } from '../core/scrollStill';
 import { StickerArt, hasStickerArt } from '../components/StickerArt';
 import { STICKER_TEXT, stickerInfo } from '../core/stickers';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
@@ -388,6 +389,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   // read the page's layout, which on a phone is the slow part of a scroll.
   const scrollFrameRef = useRef(0);
   const handleLogScroll = () => {
+    markScrolling(logRef.current);
     if (scrollFrameRef.current) return;
     scrollFrameRef.current = requestAnimationFrame(() => {
       scrollFrameRef.current = 0;

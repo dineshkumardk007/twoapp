@@ -598,7 +598,7 @@ const Caption: React.FC<{ text: string; fill: string; x?: number; y?: number; si
 
 // ---------------------------------------------------------------- the pack
 
-/** How the whole drawing moves (index.css, ".stk-body[data-m]"). */
+/** How the whole sticker moves (index.css, ".stk-mover[data-m]"). */
 type Motion =
   | 'bounce' | 'hop' | 'pulse' | 'squeeze' | 'shake' | 'sway' | 'wiggle' | 'pop' | 'tilt'
   | 'float' | 'melt' | 'run' | 'stretch' | 'none';
@@ -1046,21 +1046,16 @@ export const StickerArt: React.FC<StickerArtProps> = ({ id, size, still, onTapLa
 
   const label = stickerInfo(id)?.label || 'Sticker';
   const svg = (
-    <svg
-      // A fresh drawing each round, so its moves start from the beginning.
-      key={round}
-      viewBox="0 0 160 160"
-      width={size}
-      height={size}
-      aria-hidden="true"
-      focusable="false"
-      className="block overflow-visible"
-    >
-      <g className="stk-body" data-m={drawing.motion}>
-        {drawing.art}
-      </g>
-      {drawing.caption}
-    </svg>
+    // A fresh drawing each round, so its moves start from the beginning. The
+    // whole sticker moves as a layer of its own (stk-mover, index.css) - a
+    // move the phone's graphics chip makes by itself, so a chat full of
+    // stickers scrolls as smoothly as one of words.
+    <span key={round} className="stk-mover" data-m={drawing.motion}>
+      <svg viewBox="0 0 160 160" width={size} height={size} aria-hidden="true" focusable="false" className="block overflow-visible">
+        <g className="stk-body">{drawing.art}</g>
+        {drawing.caption}
+      </svg>
+    </span>
   );
   const props = {
     className: 'stk block',

@@ -1071,7 +1071,8 @@ html.dark .olai {
   height: 46%;
   left: -20%;
   border-radius: 50%;
-  mix-blend-mode: screen;
+  /* No blend mode: blending makes the graphics chip mix the layers again on
+     every frame; soft colour fading to nothing reads the same. */
   opacity: 0.55;
   animation: call-aurora 16s ease-in-out infinite alternate;
 }
@@ -1622,25 +1623,28 @@ html.dark .olai {
    do some of its parts (.stk-part), a few times as it comes into view or is
    tapped, then it rests. Only transform and opacity, so nothing is laid out
    again while it plays. */
-.stk-body,
 .stk-part {
   transform-box: fill-box;
   transform-origin: 50% 100%;
 }
+.stk-mover {
+  display: block;
+  transform-origin: 50% 100%;
+}
 .stk-part { transform-origin: 50% 50%; }
-.stk[data-play='true'] .stk-body[data-m='bounce'] { animation: stk-bounce 0.9s ease-in-out 3; }
-.stk[data-play='true'] .stk-body[data-m='hop'] { animation: stk-hop 0.8s cubic-bezier(0.3, 0.7, 0.4, 1) 3; }
-.stk[data-play='true'] .stk-body[data-m='pulse'] { animation: stk-pulse 0.8s ease-in-out 3; }
-.stk[data-play='true'] .stk-body[data-m='squeeze'] { animation: stk-squeeze 1s ease-in-out 3; }
-.stk[data-play='true'] .stk-body[data-m='shake'] { animation: stk-shake 0.5s ease-in-out 4; }
-.stk[data-play='true'] .stk-body[data-m='sway'] { animation: stk-sway 1.4s ease-in-out 2; }
-.stk[data-play='true'] .stk-body[data-m='wiggle'] { animation: stk-wiggle 0.6s ease-in-out 4; }
-.stk[data-play='true'] .stk-body[data-m='pop'] { animation: stk-pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3) 2; }
-.stk[data-play='true'] .stk-body[data-m='tilt'] { animation: stk-tilt 1.2s ease-in-out 2; }
-.stk[data-play='true'] .stk-body[data-m='float'] { animation: stk-float 1.8s ease-in-out 2; }
-.stk[data-play='true'] .stk-body[data-m='melt'] { animation: stk-melt 1.2s ease-in-out 2; }
-.stk[data-play='true'] .stk-body[data-m='run'] { animation: stk-run 0.35s linear 8; }
-.stk[data-play='true'] .stk-body[data-m='stretch'] { animation: stk-stretch 1.2s ease-in-out 2; }
+.stk[data-play='true'] .stk-mover[data-m='bounce'] { animation: stk-bounce 0.9s ease-in-out 3; }
+.stk[data-play='true'] .stk-mover[data-m='hop'] { animation: stk-hop 0.8s cubic-bezier(0.3, 0.7, 0.4, 1) 3; }
+.stk[data-play='true'] .stk-mover[data-m='pulse'] { animation: stk-pulse 0.8s ease-in-out 3; }
+.stk[data-play='true'] .stk-mover[data-m='squeeze'] { animation: stk-squeeze 1s ease-in-out 3; }
+.stk[data-play='true'] .stk-mover[data-m='shake'] { animation: stk-shake 0.5s ease-in-out 4; }
+.stk[data-play='true'] .stk-mover[data-m='sway'] { animation: stk-sway 1.4s ease-in-out 2; }
+.stk[data-play='true'] .stk-mover[data-m='wiggle'] { animation: stk-wiggle 0.6s ease-in-out 4; }
+.stk[data-play='true'] .stk-mover[data-m='pop'] { animation: stk-pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3) 2; }
+.stk[data-play='true'] .stk-mover[data-m='tilt'] { animation: stk-tilt 1.2s ease-in-out 2; }
+.stk[data-play='true'] .stk-mover[data-m='float'] { animation: stk-float 1.8s ease-in-out 2; }
+.stk[data-play='true'] .stk-mover[data-m='melt'] { animation: stk-melt 1.2s ease-in-out 2; }
+.stk[data-play='true'] .stk-mover[data-m='run'] { animation: stk-run 0.35s linear 8; }
+.stk[data-play='true'] .stk-mover[data-m='stretch'] { animation: stk-stretch 1.2s ease-in-out 2; }
 .stk[data-play='true'] .stk-rise { animation: stk-rise 1.5s ease-out 3 backwards; }
 .stk[data-play='true'] .stk-beat { animation: stk-beat 0.8s ease-in-out 3; }
 .stk[data-play='true'] .stk-drip { animation: stk-drip 1.1s ease-in 3 backwards; }
@@ -1994,3 +1998,103 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
   .us-hop-big, .us-wiggle, .us-squish, .us-nod, .us-bonk, .us-pinch, .us-pat, .us-tickle, .us-trophy, .us-menu { animation: none !important; }
   .us-throw, .us-feather { animation-duration: 1ms !important; }
 }
+
+/* "Us two", in layers (components/UsScene, Sprite): the still picture is
+   drawn once, and each moving piece is a layer of its own that only ever
+   moves or fades - work a phone's graphics chip does by itself, so the
+   scene costs the page nothing per frame, even while Home scrolls. Nothing
+   moves while it is off screen (data-live) or Two is in the background. */
+.us-scene {
+  contain: layout paint;
+  isolation: isolate;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.us-scene:not([data-live]) * { animation-play-state: paused !important; }
+.us-sprite {
+  position: absolute;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+}
+.us-sprite > svg { display: block; }
+/* A character: its feet are where it squashes and hops from. */
+.us-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 84%;
+}
+.us-move .us-tap { pointer-events: auto; }
+.us-tap {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 4%;
+  bottom: 12%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.us-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  text-align: center;
+  font: 700 11px/1.2 Manrope, system-ui, sans-serif;
+  color: #3b2723;
+}
+.us-name[data-night] { color: #fff; }
+.us-bubble-at {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  z-index: 2;
+}
+.us-bubble {
+  position: relative;
+  padding: 2px 9px 3px;
+  border: 2px solid #3b2723;
+  border-radius: 11px;
+  background: #fff;
+  font: 800 12px/1.3 Manrope, system-ui, sans-serif;
+  color: #3b2723;
+  white-space: nowrap;
+}
+.us-bubble-tail {
+  position: absolute;
+  bottom: -6px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  background: #fff;
+  border-right: 2px solid #3b2723;
+  border-bottom: 2px solid #3b2723;
+  transform: rotate(45deg);
+}
+.us-trophy {
+  position: absolute;
+  margin: -1.1em 0 0 -0.55em;
+  font-size: 18px;
+  line-height: 1;
+  pointer-events: none;
+}
+.us-beat { animation: stk-beat 1.1s ease-in-out infinite; }
+.us-rise { animation: stk-rise 1.6s ease-out infinite backwards; }
+.us-drip { animation: stk-drip 1.2s ease-in infinite backwards; }
+.us-spin { animation: stk-spin 2s ease-in-out infinite alternate; }
+.us-bob { animation: us-bob 2.6s ease-in-out infinite alternate; }
+@keyframes us-bob {
+  to { transform: translateY(2px); }
+}
+.us-sprite.us-pinch,
+.us-sprite.us-pat,
+.us-sprite.us-tickle,
+.us-sprite.us-feather { transform-origin: 50% 50%; }
+@media (prefers-reduced-motion: reduce) {
+  .us-beat, .us-rise, .us-drip, .us-spin, .us-bob { animation: none !important; }
+}
+
+/* Stickers wait while their chat is scrolled (core/scrollStill). */
+[data-scrolling] .stk * { animation-play-state: paused !important; }

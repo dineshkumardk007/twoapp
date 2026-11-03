@@ -65,6 +65,7 @@ import {
 import { EmojiPicker, KeyboardPanel } from '../components/EmojiPicker';
 import { whenKeyboardUp } from '../core/keyboard';
 import { rideKeyboard } from '../core/keyboardRide';
+import { markScrolling } from '../core/scrollStill';
 import { StickerArt, hasStickerArt } from '../components/StickerArt';
 import { STICKER_TEXT, stickerInfo } from '../core/stickers';
 
@@ -513,6 +514,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   drawnFromRef.current = drawnFrom;
   const handleLogScroll = () => {
     floatingDay.onScroll();
+    markScrolling(messagesRef.current);
     if (scrollFrameRef.current) return;
     scrollFrameRef.current = requestAnimationFrame(() => {
       scrollFrameRef.current = 0;
