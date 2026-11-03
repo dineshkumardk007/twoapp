@@ -46,7 +46,7 @@ const MAX_OUTBOX = 500;
  * it. Lost with the app, an HD copy leaves the ordinary photo, which has
  * already gone.
  */
-const SESSION_ONLY_TYPES = new Set(['CHAT_PHOTO_PART', 'GROUP_PHOTO_PART']);
+const SESSION_ONLY_TYPES = new Set(['CHAT_PHOTO_PART', 'GROUP_PHOTO_PART', 'SURPRISE_PART']);
 
 /**
  * The largest record the relay accepts, matched here so an oversized one is

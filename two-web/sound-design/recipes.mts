@@ -147,6 +147,40 @@ function boing(b: Stereo, start: number, base: number, gain: number) {
   });
 }
 
+/**
+ * Happy Birthday (a folk tune, free to play), in D, on a music-box kalimba
+ * over soft felt chords. Each note: [name, beats]; a beat is `beat` seconds.
+ * The whole song, or only its first line.
+ */
+function birthdayTune(b: Stereo, beat: number, lines: number) {
+  const tune: [string, number][][] = [
+    [['A4', 0.75], ['A4', 0.25], ['B4', 1], ['A4', 1], ['D5', 1], ['C#5', 2]],
+    [['A4', 0.75], ['A4', 0.25], ['B4', 1], ['A4', 1], ['E5', 1], ['D5', 2]],
+    [['A4', 0.75], ['A4', 0.25], ['A5', 1], ['F#5', 1], ['D5', 1], ['C#5', 1], ['B4', 2]],
+    [['G5', 0.75], ['G5', 0.25], ['F#5', 1], ['D5', 1], ['E5', 1], ['D5', 3]]
+  ];
+  // The chord under each bar, from the first downbeat (after "Hap-py"), three beats a bar.
+  const chords: [string, string][] = [
+    ['D4', 'F#4'], ['A3', 'E4'], ['A3', 'G4'], ['D4', 'F#4'], ['D4', 'A4'], ['G3', 'B3'], ['A3', 'C#4'], ['D4', 'F#4']
+  ];
+  let t = 0;
+  let seed = 400;
+  tune.slice(0, lines).forEach(line => {
+    line.forEach(([note, beats], i) => {
+      // The pickup notes lighter, the long ones leaned on a little.
+      const gain = beats < 1 ? 0.5 : beats >= 2 ? 0.8 : 0.68;
+      strike(b, { note: hz(note), instrument: I.kalimba, start: t, gain, pan: (i % 2 ? 0.08 : -0.08), seed: seed++, decayScale: beats >= 2 ? 1.6 : 1.1, mallet: 0.12 });
+      if (beats >= 2) strike(b, { note: hz(note) * 2, instrument: I.glock, start: t, gain: 0.06, mallet: 0, seed: seed++ });
+      t += beats * beat;
+    });
+  });
+  const bars = lines === 4 ? chords.length : 2;
+  for (let i = 0; i < bars; i++) {
+    const at = beat + i * 3 * beat;
+    chords[i].forEach((note, j) => strike(b, { note: hz(note), instrument: I.felt, start: at + j * 0.02, gain: 0.16, mallet: 0, seed: 470 + i * 2 + j, decayScale: 1.2 }));
+  }
+}
+
 export const RECIPES: Record<string, Recipe> = {
   message: {
     use: 'a new message from your partner',
@@ -658,5 +692,46 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 0.3, wet: 0.05 },
     master: { loudness: MICRO, highpass: 800 }
+  },
+
+  // A birthday surprise (components/SurpriseReveal) and the party in Us two.
+
+  'birthday-song': {
+    use: 'A birthday surprise: Happy Birthday as the cake comes in',
+    dry: () => {
+      const b = silence(14.5);
+      birthdayTune(b, 0.5, 4);
+      return b;
+    },
+    room: { rt60: 1.4, wet: 0.2 },
+    master: { loudness: MOMENT, maxSeconds: 14.5, tailFade: 1.2 }
+  },
+
+  'birthday-jingle': {
+    use: 'Us two on a birthday: the cake tapped - its first line',
+    dry: () => {
+      const b = silence(4.5);
+      birthdayTune(b, 0.42, 1);
+      return b;
+    },
+    room: { rt60: 1.2, wet: 0.18 },
+    master: { loudness: SOFT, maxSeconds: 4.2, tailFade: 0.8 }
+  },
+
+  'party-pop': {
+    use: 'A birthday surprise: candles out - a party popper and a sparkle',
+    dry: () => {
+      const b = silence(1.6);
+      // The pop: a quick crack of air with a little body.
+      noise(b, { dur: 0.05, gain: 1, filter: { type: 'bandpass', f: 1800, q: 0.7 }, attack: 0.0008, decay: 0.012, seed: 481 });
+      mode(b, { freq: 330, amp: 0.4, decay: 0.04, glide: 0.6, glideTime: 0.01 });
+      // Paper streamers fluttering down.
+      noise(b, { start: 0.04, dur: 0.6, gain: 0.12, filter: { type: 'bandpass', f: 5200, q: 0.8 }, grain: 0.9, attack: 0.02, decay: 0.25, seed: 482 });
+      // And a sparkle up the scale.
+      run(b, ['D6', 'F#6', 'A6', 'D7'], 0.06, { instrument: I.glock, gain: [0.22, 0.24, 0.26, 0.3], start: 0.08, seed: 483, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 1, wet: 0.16 },
+    master: { loudness: MOMENT, highpass: 150 }
   }
 };

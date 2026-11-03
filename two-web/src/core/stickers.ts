@@ -5,7 +5,7 @@
 //
 // A message's `text` holds "Sticker", for notifications and older phones.
 
-export type StickerSet = 'us' | 'faces';
+export type StickerSet = 'us' | 'faces' | 'birthday';
 
 export interface StickerInfo {
   id: string;
@@ -47,7 +47,12 @@ export const STICKERS: readonly StickerInfo[] = [
   { id: 'hmm', label: 'Hmm…', set: 'faces' },
   { id: 'party', label: 'Party!', set: 'faces' },
   { id: 'nope', label: 'Nope', set: 'faces' },
-  { id: 'pls', label: 'Pls', set: 'faces' }
+  { id: 'pls', label: 'Pls', set: 'faces' },
+  // Out in the tray on a birthday (core/surprise, isPartyToday); they show in
+  // a chat on any day.
+  { id: 'happy-birthday', label: 'Happy birthday!', set: 'birthday' },
+  { id: 'party-bear', label: 'Yaaay!', set: 'birthday' },
+  { id: 'my-day', label: "It's my day!", set: 'birthday' }
 ];
 
 const BY_ID = new Map(STICKERS.map(s => [s.id, s]));

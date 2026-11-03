@@ -273,6 +273,27 @@ import {
 } from './core/chatActions';
 import { cleanStickerId } from './core/stickers';
 import { addBoop, boopsFor, chatDay, cleanPlayKind, withBoopCount, type PlayKind } from './core/usTwo';
+import {
+  SURPRISE,
+  SURPRISE_PART,
+  SURPRISE_READY,
+  SURPRISE_SEEN,
+  bookOf,
+  cleanMedia,
+  cleanPlan,
+  dueSurprise,
+  isComplete,
+  localDay as dayKeyOf,
+  nextCheck,
+  partyFor,
+  setPartyToday,
+  withMedia,
+  withPlan,
+  type SurpriseMedia,
+  type SurprisePlan
+} from './core/surprise';
+import { liveDays, nextYearly } from './core/comingUp';
+import { loadSounds } from './core/sounds';
 import { BOOPED_EVENT } from './components/UsScene';
 import {
   CHAT_PHOTO_PART,
@@ -449,6 +470,8 @@ const CycleView = lazy(() => import('./views/CycleView').then(m => ({ default: m
 const DecksView = lazy(() => import('./views/DecksView').then(m => ({ default: m.DecksView })));
 const HearthGardenView = lazy(() => import('./views/HearthGardenView').then(m => ({ default: m.HearthGardenView })));
 const UsTwoView = lazy(() => import('./views/UsTwoView').then(m => ({ default: m.UsTwoView })));
+const SurprisePlanner = lazy(() => import('./components/SurprisePlanner').then(m => ({ default: m.SurprisePlanner })));
+const SurpriseReveal = lazy(() => import('./components/SurpriseReveal').then(m => ({ default: m.SurpriseReveal })));
 const HomeView = lazy(() => import('./views/HomeView').then(m => ({ default: React.memo(m.HomeView) })));
 const IntuitionGameView = lazy(() => import('./views/IntuitionGameView').then(m => ({ default: m.IntuitionGameView })));
 const JournalView = lazy(() => import('./views/JournalView').then(m => ({ default: m.JournalView })));
@@ -922,6 +945,30 @@ export const App: React.FC = () => {
   // record without keeping it, and would never see it again after updating.
   // The repeat keeps its original stamp, so the newest setting still wins on
   // both phones, and a phone that already holds it changes nothing.
+  // Surprises (core/surprise): mine sent again on connecting until their phone
+  // says it has every piece; theirs answered once each version is all here.
+  const surpriseBook = bookOf(state.surprises);
+  useEffect(() => {
+    if (relayStatus !== 'connected' || isLocked || wsRelay.currentSeat() !== state.activeUser) return;
+    const book = bookOf(state.surprises);
+    const mine = book.plans.find(p => p.author === state.activeUser);
+    if (mine && book.ready[mine.id] !== mine.updatedAt && surpriseSentRef.current !== mine.updatedAt) {
+      const parts = mine.cancelled
+        ? []
+        : [...mine.photoIds, ...(mine.voiceId ? [mine.voiceId] : [])].map(id => book.media[id]).filter((m): m is SurpriseMedia => !!m);
+      sendSurprise(mine, parts);
+    }
+    for (const p of book.plans) {
+      if (p.author === state.activeUser || p.cancelled || !isComplete(p, book.media) || book.saidReady[p.id] === p.updatedAt) continue;
+      wsRelay.broadcastUpdate(SURPRISE_READY, { id: p.id, updatedAt: p.updatedAt });
+      setState(prev => {
+        const b = bookOf(prev.surprises);
+        return { ...prev, surprises: { ...b, saidReady: { ...b.saidReady, [p.id]: p.updatedAt } } };
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relayStatus, isLocked, state.surprises, state.activeUser]);
+
   useEffect(() => {
     if (wsRelay.currentSeat() !== state.activeUser) return;
     if (relayStatus === 'connected' && state.ourDates) {
@@ -1790,6 +1837,30 @@ export const App: React.FC = () => {
           } else if (record.type === CHAT_PHOTO_PART) {
             // A piece of a photo's HD copy (core/hdPhoto); the last one makes it whole.
             takeHdPart('chat', parsed);
+          } else if (record.type === SURPRISE) {
+            // A surprise one of you planned (core/surprise). Theirs is kept
+            // sealed until its moment: nothing shown, nothing said.
+            const author = record.authorId === 'user' || record.authorId === 'partner' ? record.authorId : null;
+            const plan = author ? cleanPlan(parsed, author) : null;
+            if (!plan) return;
+            setState(prev => ({ ...prev, surprises: withPlan(bookOf(prev.surprises), plan) }));
+          } else if (record.type === SURPRISE_PART) {
+            const part = cleanMedia(parsed);
+            if (!part) return;
+            setState(prev => ({ ...prev, surprises: withMedia(bookOf(prev.surprises), part) }));
+          } else if (record.type === SURPRISE_READY || record.type === SURPRISE_SEEN) {
+            // The other phone's word about a surprise of mine: every piece is
+            // there, or it has been opened.
+            if (record.authorId === latestRef.current.state.activeUser) return;
+            const id = typeof parsed?.id === 'string' ? parsed.id : '';
+            if (!id) return;
+            const ready = record.type === SURPRISE_READY;
+            setState(prev => {
+              const book = bookOf(prev.surprises);
+              return ready
+                ? { ...prev, surprises: { ...book, ready: { ...book.ready, [id]: Number(parsed?.updatedAt) || 0 } } }
+                : { ...prev, surprises: { ...book, seen: { ...book.seen, [id]: Number(parsed?.at) || Date.now() } } };
+            });
           } else if (record.type === BOOP) {
             // How many boops a phone has sent today (UsScene): only ever up.
             const seat = record.authorId === 'user' || record.authorId === 'partner' ? record.authorId : null;
@@ -3603,6 +3674,37 @@ export const App: React.FC = () => {
       ...(p.quiet ? { quiet: true } : {})
     });
   };
+  /**
+   * A surprise for them (components/SurprisePlanner): kept here, and sent -
+   * the plan as one record, each photo and the voice note as one each
+   * (core/surprise). Their phone says when it has every piece, and is sent
+   * it all again on connecting until it has.
+   */
+  const surpriseSentRef = useRef(0);
+  const sendSurprise = (plan: SurprisePlan, parts: SurpriseMedia[]) => {
+    wsRelay.broadcastUpdate(SURPRISE, plan);
+    for (const part of parts) wsRelay.broadcastUpdate(SURPRISE_PART, part);
+    surpriseSentRef.current = plan.updatedAt;
+  };
+  const handleSaveSurprise = (plan: SurprisePlan, newMedia: SurpriseMedia[]) => {
+    setState(prev => ({ ...prev, surprises: newMedia.reduce(withMedia, withPlan(bookOf(prev.surprises), plan)) }));
+    sendSurprise(plan, newMedia);
+  };
+  const handleCancelSurprise = (plan: SurprisePlan) => {
+    const off: SurprisePlan = { ...plan, cancelled: true, photoIds: [], voiceId: undefined, letter: '', updatedAt: Date.now() };
+    setState(prev => ({ ...prev, surprises: withPlan(bookOf(prev.surprises), off) }));
+    sendSurprise(off, []);
+  };
+  /** Opened here: kept so it does not open by itself again, and said to the one who planned it. */
+  const markSurpriseOpened = (plan: SurprisePlan) => {
+    if (bookOf(latestRef.current.state.surprises).opened.includes(plan.id)) return;
+    setState(prev => {
+      const book = bookOf(prev.surprises);
+      return book.opened.includes(plan.id) ? prev : { ...prev, surprises: { ...book, opened: [...book.opened, plan.id] } };
+    });
+    wsRelay.broadcastUpdate(SURPRISE_SEEN, { id: plan.id, at: Date.now() });
+  };
+
   const handlePlay = (kind: PlayKind, quiet: boolean) => {
     const today = chatDay(Date.now());
     setState(prev => ({ ...prev, boops: addBoop(prev.boops, prev.activeUser, today) }));
@@ -5189,6 +5291,100 @@ export const App: React.FC = () => {
     terracotta: 'bg-terracotta-bg text-terracotta-primary'
   }[theme];
 
+  // A surprise of theirs, opening (core/surprise): at its moment, or when
+  // Two is next opened after it - over whatever is on screen, but never over
+  // the lock, the calculator or a call (none of which draw this). The clock
+  // wakes for the next one, and at midnight, when a party day begins or ends.
+  const [surpriseClock, setSurpriseClock] = useState(() => Date.now());
+  const [revealing, setRevealing] = useState<{ plan: SurprisePlan; media: Record<string, SurpriseMedia>; preview: boolean } | null>(null);
+  const [surpriseLater, setSurpriseLater] = useState<string[]>([]);
+  const [planningSurprise, setPlanningSurprise] = useState(false);
+  useEffect(() => {
+    const now = Date.now();
+    const next = nextCheck(surpriseBook, state.activeUser, now);
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const at = Math.min(next ?? Infinity, midnight.getTime());
+    const t = setTimeout(() => setSurpriseClock(Date.now()), Math.min(Math.max(0, at - now) + 50, 2_147_000_000));
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.surprises, state.activeUser, surpriseClock]);
+  // A phone asleep lets timers sleep too: coming back, the clock is read again.
+  useEffect(() => {
+    if (pageVisible) setSurpriseClock(Date.now());
+  }, [pageVisible]);
+  const partySeat = partyFor(surpriseBook, surpriseClock);
+  useEffect(() => setPartyToday(partySeat), [partySeat]);
+  // Theirs on its way: the sounds loaded ahead, so the song starts on cue.
+  const surpriseWaiting = surpriseBook.plans.some(
+    p => p.author !== state.activeUser && !p.cancelled && !surpriseBook.opened.includes(p.id)
+  );
+  useEffect(() => {
+    if (surpriseWaiting) loadSounds(['birthday-song', 'party-pop', 'unseal', 'us-shh']);
+  }, [surpriseWaiting]);
+  const dueOne = dueSurprise(surpriseBook, state.activeUser, surpriseClock);
+  const showingSurprise =
+    revealing ??
+    (dueOne && !surpriseLater.includes(dueOne.id) && callState.phase === 'idle'
+      ? { plan: dueOne, media: surpriseBook.media, preview: false }
+      : null);
+  const partnerCalled = state.partnerName && state.partnerName !== 'Partner' ? state.partnerName : tr('Partner');
+  // Their birthday, if it is in Coming up: where a new surprise starts, and how old they will be.
+  const theirBirthday = liveDays(state.comingUp).find(d => d.kind === 'birthday' && !!d.who && d.who !== state.activeUser);
+  const suggestedDay = theirBirthday ? nextYearly(theirBirthday.date, dayKeyOf(Date.now())) : undefined;
+  const bornIn = theirBirthday ? Number(theirBirthday.date.slice(0, 4)) : 0;
+  const turning = suggestedDay && bornIn > 1900 ? Number(suggestedDay.slice(0, 4)) - bornIn : 0;
+  const surpriseOverlay = (
+    <>
+      {planningSurprise && (
+        <Suspense fallback={null}>
+          <SurprisePlanner
+            me={state.activeUser}
+            partnerName={partnerCalled}
+            book={surpriseBook}
+            suggestedDay={suggestedDay}
+            suggestedAge={turning > 0 && turning < 130 ? turning : undefined}
+            onSave={handleSaveSurprise}
+            onCancelPlan={handleCancelSurprise}
+            onPreview={(plan, media) => setRevealing({ plan, media, preview: true })}
+            onClose={() => setPlanningSurprise(false)}
+          />
+        </Suspense>
+      )}
+      {showingSurprise && (
+        <Suspense fallback={null}>
+          <SurpriseReveal
+            key={`${showingSurprise.plan.id}${showingSurprise.preview ? '-preview' : ''}`}
+            plan={showingSurprise.plan}
+            media={showingSurprise.media}
+            fromName={
+              showingSurprise.preview
+                ? state.userName && state.userName !== 'You'
+                  ? state.userName
+                  : tr('You')
+                : partnerCalled
+            }
+            preview={showingSurprise.preview}
+            onOpened={() => {
+              // Held on screen from here: marked opened, it is no longer due,
+              // and the card must not vanish as it arrives.
+              setRevealing(current => current ?? showingSurprise);
+              markSurpriseOpened(showingSurprise.plan);
+            }}
+            onClose={() => {
+              const id = showingSurprise.plan.id;
+              // Closed before the card: it waits, to be opened from Us two.
+              if (!showingSurprise.preview && !bookOf(latestRef.current.state.surprises).opened.includes(id)) {
+                setSurpriseLater(list => (list.includes(id) ? list : [...list, id]));
+              }
+              setRevealing(null);
+            }}
+          />
+        </Suspense>
+      )}
+    </>
+  );
+
   const callOverlay = (
     <CallOverlay
       call={callState}
@@ -5830,6 +6026,7 @@ export const App: React.FC = () => {
             carries the call screen too - and the group call's. */}
         {callOverlay}
         {groupCallOverlay}
+        {surpriseOverlay}
 
         {/* Notices about groups - a message in another group, a voice note
             too large to send in this one - are shown here too, or they would
@@ -5972,6 +6169,7 @@ export const App: React.FC = () => {
             partnerOnline={partnerShownOnline}
             partnerTyping={partnerTypingAt > 0}
             onPlay={stable('play', handlePlay)}
+            party={partySeat}
             partnerNews={partnerNews}
             partnerUpdate={partnerUpdate}
           />
@@ -5983,6 +6181,13 @@ export const App: React.FC = () => {
             partnerOnline={partnerShownOnline}
             partnerTyping={partnerTypingAt > 0}
             onPlay={stable('play', handlePlay)}
+            party={partySeat}
+            surpriseWaitingId={dueOne && surpriseLater.includes(dueOne.id) ? dueOne.id : null}
+            onPlanSurprise={stable('planSurprise', () => setPlanningSurprise(true))}
+            onOpenSurprise={stable('openSurprise', (id: string) => {
+              const plan = bookOf(latestRef.current.state.surprises).plans.find(p => p.id === id);
+              if (plan) setRevealing({ plan, media: bookOf(latestRef.current.state.surprises).media, preview: false });
+            })}
           />
         )}
 
@@ -6458,6 +6663,7 @@ export const App: React.FC = () => {
 
       {callOverlay}
       {groupCallOverlay}
+      {surpriseOverlay}
 
       {/* In-App Notification Toast for Messages & Letters. Its time stands
           still while the call screen covers it, as the update toast waits. */}

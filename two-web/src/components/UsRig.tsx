@@ -1,5 +1,5 @@
 import React from 'react';
-import { Face, type Mood } from './StickerArt';
+import { Face, PartyHat, type Mood } from './StickerArt';
 
 const INK = '#3b2723';
 export const FUR = { bear: '#c4895a', bunny: '#fffaf3' } as const;
@@ -144,6 +144,8 @@ interface RigProps {
   phase?: number;
   /** Filled with its moving layers, for its plays (usMoves). */
   layers: React.MutableRefObject<RigLayers>;
+  /** A party hat, on a birthday. */
+  hat?: boolean;
   /** Drawn in front of it and moving with it: an arm reaching out, a pillow held up. */
   children?: React.ReactNode;
 }
@@ -155,7 +157,7 @@ interface RigProps {
  * breathes, sways, blinks and twitches an ear by itself; everything else is
  * done to it by a play.
  */
-export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, layers, children }) => {
+export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, layers, hat, children }) => {
   const j = JOINTS[kind];
   const fur = FUR[kind];
   const set = (name: RigLayer) => (el: HTMLDivElement | null) => {
@@ -194,6 +196,12 @@ export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, l
                     <Art>
                       {skull(kind)}
                       <Face mood={mood} ex={ex} ey={ey} my={j.mouth} blush={{ x: j.cheek[0], y: j.cheek[1] }} />
+                      {hat &&
+                        (kind === 'bear' ? (
+                          <PartyHat x={6} y={-26} rot={14} s={0.85} />
+                        ) : (
+                          <PartyHat x={-1} y={-24} rot={-6} s={0.74} />
+                        ))}
                     </Art>
                     <Layer ref={set('blush')} className="rig-blush">
                       <Art>

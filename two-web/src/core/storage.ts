@@ -1,6 +1,7 @@
 import type { ComingUpDay } from './comingUp';
 import type { Statuses } from './status';
 import type { Boops } from './usTwo';
+import type { SurpriseBook } from './surprise';
 import {
   EmotionalReport,
   ChatMessage,
@@ -166,6 +167,8 @@ export interface SpaceState {
   partnerLastSeen: number;
   /** Today's boops on Home (components/UsScene): how many each of you sent. */
   boops?: Boops;
+  /** Surprises one of you has planned for the other (core/surprise), theirs kept sealed. */
+  surprises?: SurpriseBook;
   /**
    * Group spaces this device belongs to.
    *

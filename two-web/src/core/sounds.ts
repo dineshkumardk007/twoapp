@@ -27,7 +27,8 @@ export type SoundName =
   | 'match' | 'no-match' | 'reconcile' | 'reconnect' | 'singing-bowl' | 'unseal'
   | 'kiss' | 'breath-rest'
   | 'us-boop' | 'us-tickle' | 'us-hehe' | 'us-pinch' | 'us-pat'
-  | 'us-whoosh' | 'us-bonk' | 'us-dizzy' | 'us-hop' | 'us-shh';
+  | 'us-whoosh' | 'us-bonk' | 'us-dizzy' | 'us-hop' | 'us-shh'
+  | 'birthday-song' | 'birthday-jingle' | 'party-pop';
 
 interface Loaded {
   buffer: AudioBuffer;

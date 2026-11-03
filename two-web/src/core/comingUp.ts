@@ -105,7 +105,7 @@ function dayNumber(key: string): number {
 }
 
 /** The next time a yearly day comes, today included; 29 February falls on the 28th in other years. */
-function nextYearly(date: string, today: string): string {
+export function nextYearly(date: string, today: string): string {
   const [, m, d] = date.split('-').map(Number);
   const ty = Number(today.slice(0, 4));
   const on = (year: number) => {

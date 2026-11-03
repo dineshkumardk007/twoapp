@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useT } from '../core/i18n';
 import { STICKERS, recentStickers, rememberSticker, stickerInfo, type StickerSet } from '../core/stickers';
 import { StickerArt } from './StickerArt';
+import { isPartyToday } from '../core/surprise';
 
 /**
  * One list, used by both conversations.
@@ -82,6 +83,7 @@ interface EmojiPickerProps {
 let lastTab: 'emoji' | 'stickers' = 'emoji';
 
 const SETS: { set: StickerSet; title: string }[] = [
+  { set: 'birthday', title: 'Birthday' },
   { set: 'us', title: 'Us two' },
   { set: 'faces', title: 'Funny faces' }
 ];
@@ -154,7 +156,8 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
             <div className="grid grid-cols-4 gap-1">{recent.map(tile)}</div>
           </div>
         )}
-        {SETS.map(({ set, title: heading }) => (
+        {/* The birthday ones lead the tray on a birthday, and are put away again after. */}
+        {SETS.filter(({ set }) => set !== 'birthday' || isPartyToday()).map(({ set, title: heading }) => (
           <div key={set} className="mb-1.5">
             <p className="px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-linen-secondary/70">{tr(heading)}</p>
             <div className="grid grid-cols-4 gap-1">{STICKERS.filter(s => s.set === set).map(s => tile(s.id))}</div>

@@ -27,7 +27,7 @@ import { HomeCardId, HomeLayout, readHomeLayout, writeHomeLayout } from '../core
 import { useT } from '../core/i18n';
 import { UsScene } from '../components/UsScene';
 import { FunnyNumbersCard } from '../components/FunnyNumbersCard';
-import type { PlayKind } from '../core/usTwo';
+import type { PlayKind, Seat } from '../core/usTwo';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -56,6 +56,8 @@ interface HomeViewProps {
   partnerTyping?: boolean;
   /** A boop, tickle, pinch, pat or pillow for them (UsScene), counted on both phones. */
   onPlay?: (kind: PlayKind, quiet: boolean) => void;
+  /** Whose birthday it is today, if anyone's: a party in Us two. */
+  party?: Seat | null;
 }
 
 /**
@@ -114,7 +116,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   partnerUpdate,
   partnerOnline = false,
   partnerTyping = false,
-  onPlay
+  onPlay,
+  party = null
 }) => {
   const tr = useT();
   const [showComfortBox, setShowComfortBox] = useState(false);
@@ -183,6 +186,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               messages={state.messages}
               boops={state.boops}
               onPlay={(kind, quiet) => onPlay?.(kind, quiet)}
+              party={party}
               onSendHeart={() => triggerGlobalPulse('Thinking of you')}
             />
           </div>

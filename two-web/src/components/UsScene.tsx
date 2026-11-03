@@ -67,6 +67,8 @@ interface UsSceneProps {
   onSendHeart: () => void;
   /** The small one on Home opens the tab. */
   onOpen?: () => void;
+  /** Whose birthday it is today, if it is someone's (core/surprise): a party all day. */
+  party?: Seat | null;
 }
 
 const MISS_WORDS = ['All good 😌', 'A little 🙂', 'Missing you 🥺', 'A lot 😭', 'Dangerously high 🚨'];
@@ -296,7 +298,8 @@ export const UsScene: React.FC<UsSceneProps> = ({
   boops,
   onPlay,
   onSendHeart,
-  onOpen
+  onOpen,
+  party = null
 }) => {
   const tr = useT();
   const [now, setNow] = useState(Date.now());
@@ -342,6 +345,19 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const homeX = (who: Who) => (who === 'me' ? meX : themX);
   const geo = useRef({ me: meX, them: themX });
   geo.current = { me: meX, them: themX };
+  // A birthday: party hats, bunting, balloons and a cake beside the one it is for.
+  const partyWho: Who | null = party ? (party === activeUser ? 'me' : 'them') : null;
+  const [cheerUntil, setCheerUntil] = useState(0);
+  const [cakeTaps, setCakeTaps] = useState(0);
+  useEffect(() => {
+    if (!partyWho) return;
+    setCheerUntil(Date.now() + 4_500);
+  }, [partyWho]);
+  useEffect(() => {
+    if (!cheerUntil) return;
+    const t = setTimeout(() => setCheerUntil(0), Math.max(0, cheerUntil - Date.now()));
+    return () => clearTimeout(t);
+  }, [cheerUntil]);
   /** 1 when the one a play is done to stands to the right. */
   const dirTo = (target: Who) => ((target === 'them') === bearIsMe ? 1 : -1);
 
@@ -446,6 +462,22 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const hear = (name: SoundName, ms: number, rate?: number) => {
     if (!soundOnRef.current || !liveRef.current || !isShown()) return;
     playSound(name, { delay: Math.max(0, ms) / 1000, rate });
+  };
+  // The cake tapped: the first line of Happy Birthday, confetti, and both of them hop.
+  const tapCake = () => {
+    haptic('confirm');
+    hear('birthday-jingle', 0);
+    setCakeTaps(n => n + 1);
+    setCheerUntil(Date.now() + 4_200);
+    if (liveRef.current && motionOk()) {
+      for (const who of ['me', 'them'] as const) {
+        scoots.current[who].forEach(a => a.cancel());
+        scoots.current[who] = perform(
+          scootMoves(0).map(m => ({ ...m, who: 'target' as const })),
+          { target: rigOf(who).current }
+        );
+      }
+    }
   };
   const switchSound = () => {
     const next = !soundOn;
@@ -940,6 +972,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
           asleep={who === 'them' && asleep}
           phase={who === 'me' ? 0 : 2.3}
           layers={rigOf(who)}
+          hat={!!partyWho}
         >
           {doing && play && reachFor(play)}
           {throws
@@ -1038,6 +1071,85 @@ export const UsScene: React.FC<UsSceneProps> = ({
           </>
         )}
 
+        {partyWho &&
+          (() => {
+            // Bunting along the top, balloons tied to a cake on the grass
+            // beside the one whose day it is.
+            const top = size === 'tab' ? -24 : 6;
+            const flags = Array.from({ length: 11 }, (_, i) => {
+              const t = (i + 0.5) / 11;
+              const x = 20 + 280 * t;
+              const y = top + 2 * t * (1 - t) * 16;
+              return { x, y, c: ['#ff6b8b', '#ffd23f', '#6cc6ff', '#8ee0a1', '#b69cff'][i % 5] };
+            });
+            const hx = homeX(partyWho);
+            const side = hx < 160 ? -1 : 1;
+            // Beside them on the outside, but never past the edge of what is in view.
+            const cx = Math.min(view[1] - 24, Math.max(view[0] + 24, hx + side * 46));
+            return (
+              <>
+                <Sprite box={[14, top - 4, 292, 30]}>
+                  <path d={`M20,${top} Q160,${top + 16} 300,${top}`} fill="none" stroke={INK} strokeWidth={1.4} />
+                  {flags.map((f, i) => (
+                    <path key={i} d={`M${f.x - 6},${f.y} L${f.x + 6},${f.y} L${f.x},${f.y + 10} Z`} fill={f.c} stroke={INK} strokeWidth={1.2} strokeLinejoin="round" />
+                  ))}
+                </Sprite>
+                {[
+                  [cx - 10, 62, '#ff6b8b', 0],
+                  [cx + 10, 54, '#6cc6ff', -1.1],
+                  [cx, 44, '#ffd23f', -2.2]
+                ].map(([bx, by, c, delay], i) => (
+                  <Sprite key={i} box={[(bx as number) - 9, (by as number) - 12, 18, 66 - ((by as number) - 44)]} className="us-balloon" style={{ animationDelay: `${delay}s` }}>
+                    <path d={`M${bx},${(by as number) + 11} Q${(bx as number) + 4},${(by as number) + 30} ${cx},${118}`} fill="none" stroke={INK} strokeWidth={1} />
+                    <ellipse cx={bx as number} cy={by as number} rx={8} ry={10} fill={c as string} stroke={INK} strokeWidth={1.8} />
+                    <ellipse cx={(bx as number) - 3} cy={(by as number) - 4} rx={2} ry={3} fill="#fff" opacity={0.6} />
+                  </Sprite>
+                ))}
+                <Sprite box={[cx - 20, 112, 40, 40]}>
+                  <ellipse cx={cx} cy={149} rx={19} ry={3.2} fill="#eef2ff" stroke={INK} strokeWidth={1.6} />
+                  <rect x={cx - 15} y={131} width={30} height={18} rx={4} fill="#ffb3c7" stroke={INK} strokeWidth={1.8} />
+                  <path d={`M${cx - 15},${136} Q${cx - 11},${140} ${cx - 7},${136} Q${cx - 3},${141} ${cx + 1},${136} Q${cx + 5},${140} ${cx + 9},${136} Q${cx + 12},${140} ${cx + 15},${136} V${134} Q${cx + 15},${131} ${cx + 12},${131} H${cx - 12} Q${cx - 15},${131} ${cx - 15},${134} Z`} fill="#fff" stroke={INK} strokeWidth={1.2} />
+                  <rect x={cx - 10} y={120} width={20} height={12} rx={3} fill="#fff1d6" stroke={INK} strokeWidth={1.8} />
+                  {[-5, 0, 5].map(dx => (
+                    <rect key={dx} x={cx + dx - 1.2} y={113} width={2.4} height={7} rx={1} fill="#fff" stroke={INK} strokeWidth={1} />
+                  ))}
+                </Sprite>
+                {[-5, 0, 5].map((dx, i) => (
+                  <Sprite key={`f${dx}`} box={[cx + dx - 2, 106, 4, 7]} className="us-flame" style={{ animationDelay: `${-i * 0.15}s` }}>
+                    <path d={`M${cx + dx},${106.5} C${cx + dx + 2.2},${109.5} ${cx + dx + 1.8},${112.5} ${cx + dx},${112.8} C${cx + dx - 1.8},${112.5} ${cx + dx - 2.2},${109.5} ${cx + dx},${106.5} Z`} fill="#ffd23f" stroke="#ff8a3d" strokeWidth={0.8} />
+                  </Sprite>
+                ))}
+                {cakeTaps > 0 &&
+                  Array.from({ length: 14 }, (_, i) => (
+                    <span
+                      key={`c${cakeTaps}-${i}`}
+                      className="us-confetti"
+                      style={
+                        {
+                          left: pct(cx, W),
+                          top: pct(110, H),
+                          background: ['#ff6b8b', '#ffd23f', '#6cc6ff', '#8ee0a1', '#b69cff'][i % 5],
+                          animationDelay: `${(i % 4) * 40}ms`,
+                          '--dx': `${Math.round((i / 13 - 0.5) * 120)}px`,
+                          '--up': `${40 + (i % 3) * 18}px`,
+                          '--spin': `${(i % 2 ? 1 : -1) * (200 + i * 30)}deg`
+                        } as React.CSSProperties
+                      }
+                    />
+                  ))}
+                {size === 'tab' && (
+                  <button
+                    type="button"
+                    className="us-cake-tap"
+                    style={{ left: pct(cx - 20, W), top: pct(104, H), width: pct(40, W), height: pct(48, H) }}
+                    onClick={tapCake}
+                    aria-label={tr('Happy Birthday!')}
+                  />
+                )}
+              </>
+            );
+          })()}
+
         {/* Between them while you are both here: a little heart; in a hug, more. */}
         {(partnerOnline || hugging) && !play && (
           <Sprite box={hugging ? [146, 30, 28, 26] : [151, 51, 18, 17]} className="us-beat">
@@ -1081,6 +1193,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
 
         {/* Last week's champion holds the trophy, on the grass beside them. */}
         {trophy &&
+          !partyWho &&
           (() => {
             const x = trophy === activeUser ? meX : themX;
             const side = x < 160 ? -1 : 1;
@@ -1101,8 +1214,11 @@ export const UsScene: React.FC<UsSceneProps> = ({
             delay={play.hush ? 0 : hitAt(play)}
           />
         )}
-        {!play && partnerTyping && !hugging && <Bubble x={themX} y={30} text="• • •" view={view} />}
-        {!play && !partnerOnline && !asleep && !partnerTyping && <Bubble x={themX} y={30} text="…" view={view} />}
+        {!play && partyWho && cheerUntil > Date.now() && (
+          <Bubble key={`cheer${cakeTaps}`} x={homeX(partyWho)} y={30} text={tr('Happy birthday! 🎂')} view={view} />
+        )}
+        {!play && !(partyWho && cheerUntil > Date.now()) && partnerTyping && !hugging && <Bubble x={themX} y={30} text="• • •" view={view} />}
+        {!play && !(partyWho && cheerUntil > Date.now()) && !partnerOnline && !asleep && !partnerTyping && <Bubble x={themX} y={30} text="…" view={view} />}
       </div>
       {size === 'tab' && (
         <button

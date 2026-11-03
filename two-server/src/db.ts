@@ -57,7 +57,13 @@ export const LATEST_ONLY_TYPES = new Set([
   // one box, so the newest copy from each of you is all a restore needs.
   'COMFORT_BOX',
   // Today's boop count from each of you, on Home: the newest says it all.
-  'BOOP'
+  'BOOP',
+  // A surprise one of you has planned for the other: the whole plan each
+  // time it is saved, one at a time each - and the other phone's word that
+  // it has all of it, and has opened it.
+  'SURPRISE',
+  'SURPRISE_READY',
+  'SURPRISE_SEEN'
 ]);
 
 /**
@@ -85,7 +91,10 @@ export const CAPPED_TYPES = new Map<string, number>([
   // seven to ten photos) per couple or group. A phone set up again gets the
   // ordinary photo of anything older.
   ['CHAT_PHOTO_PART', 40],
-  ['GROUP_PHOTO_PART', 40]
+  ['GROUP_PHOTO_PART', 40],
+  // A surprise's photos and voice note, each its own record: six photos and
+  // a voice note, and a few more for one saved again with new ones.
+  ['SURPRISE_PART', 24]
 ]);
 
 /**

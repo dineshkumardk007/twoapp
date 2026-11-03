@@ -553,7 +553,7 @@ const Shades: React.FC<At> = p => (
   </g>
 );
 
-const PartyHat: React.FC<At> = p => (
+export const PartyHat: React.FC<At> = p => (
   <g transform={at(p)}>
     <path d="M-15,0 L0,-34 L15,0 Z" {...shape('#7c6cff')} />
     <path d="M-10,-11 L9,-6 M-5,-23 L5,-20" stroke="#ffd23f" strokeWidth={3.2} strokeLinecap="round" />
@@ -608,6 +608,26 @@ interface Drawing {
   art: React.ReactNode;
   caption?: React.ReactNode;
 }
+
+/** A birthday cake with its candles lit, for the birthday stickers. */
+const BirthdayCake: React.FC<At> = p => (
+  <g transform={at(p)}>
+    <ellipse cx={0} cy={36} rx={50} ry={7} {...shape('#eef2ff', 2.6)} />
+    <rect x={-46} y={2} width={92} height={34} rx={8} {...shape('#ffb3c7')} />
+    <path d="M-46,14 V8 Q-46,2 -38,2 H38 Q46,2 46,8 V14 Q40,22 34,14 Q27,24 20,14 Q12,22 4,14 Q-4,24 -12,14 Q-20,22 -28,14 Q-36,24 -46,14 Z" {...shape('#fff', 2.4)} />
+    <rect x={-30} y={-24} width={60} height={28} rx={7} {...shape('#fff1d6')} />
+    <path d="M-30,-14 V-18 Q-30,-24 -24,-24 H24 Q30,-24 30,-18 V-14 Q24,-7 18,-14 Q12,-6 6,-14 Q0,-7 -6,-14 Q-12,-6 -18,-14 Q-24,-7 -30,-14 Z" {...shape('#ff8fb1', 2.4)} />
+    {[-16, 0, 16].map((x, i) => (
+      <g key={x}>
+        <rect x={x - 3} y={-44} width={6} height={20} rx={2} {...shape('#fff', 2.2)} />
+        <path d={`M${x - 3},-36 L${x + 3},-40 M${x - 3},-29 L${x + 3},-33`} stroke={CONFETTI[i]} strokeWidth={2.4} />
+        <Part cls="stk-beat" delay={i * 0.2}>
+          <path d={`M${x},-58 C${x + 6},-50 ${x + 5},-46 ${x},-45 C${x - 5},-46 ${x - 6},-50 ${x},-58 Z`} {...shape('#ffd23f', 2)} />
+        </Part>
+      </g>
+    ))}
+  </g>
+);
 
 const ART: Record<string, Drawing> = {
   // ------------------------------------------------ the bear and the bunny
@@ -969,6 +989,58 @@ const ART: Record<string, Drawing> = {
       </>
     ),
     caption: <Caption text="party!" fill="#ff3d8b" />
+  },
+  // ------------------------------------------------ on a birthday
+  'happy-birthday': {
+    motion: 'bounce',
+    art: (
+      <>
+        <Confetti
+          cls="stk-blink"
+          bits={[
+            [24, 30, 25],
+            [136, 26, -30],
+            [18, 84, -20],
+            [142, 80, 35]
+          ]}
+        />
+        <BirthdayCake x={80} y={86} />
+      </>
+    ),
+    caption: <Caption text="happy birthday!" fill="#ff3d8b" />
+  },
+  'party-bear': {
+    motion: 'hop',
+    art: (
+      <>
+        <Confetti
+          cls="stk-blink"
+          bits={[
+            [22, 34, 25],
+            [138, 30, -30],
+            [26, 96, -40],
+            [136, 100, 30]
+          ]}
+        />
+        <Bear x={80} y={62} mood="laugh" arms="up">
+          <PartyHat x={6} y={-26} rot={14} s={0.85} />
+        </Bear>
+      </>
+    ),
+    caption: <Caption text="yaaay!" fill="#7c6cff" />
+  },
+  'my-day': {
+    motion: 'pulse',
+    art: (
+      <>
+        <Bunny x={80} y={66} mood="love" arms="hold">
+          <PartyHat x={-2} y={-25} rot={-8} s={0.78} />
+        </Bunny>
+        <Heart x={130} y={34} s={0.6} cls="stk-rise" />
+        <Heart x={28} y={44} s={0.5} cls="stk-rise" delay={0.5} />
+      </>
+    ),
+    caption: <Caption text="it's my day!" fill="#ff6b8b" />
   },
   nope: {
     motion: 'shake',
