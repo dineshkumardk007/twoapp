@@ -1,4 +1,5 @@
 import type { ChatCallInfo } from './core/callLog';
+import type { HdInfo } from './core/hdPhoto';
 
 export type ThemeMode = 'linen' | 'slate' | 'forest' | 'terracotta';
 
@@ -91,6 +92,16 @@ export interface ChatMessage {
   photoDataUrl?: string;
   photoWidth?: number;
   photoHeight?: number;
+  /**
+   * The photo's HD copy, sent in pieces beside it (core/hdPhoto): its id,
+   * size and how many pieces. The photo above is still what the bubble shows.
+   */
+  photoHd?: HdInfo;
+  /**
+   * Where this phone keeps that HD copy (core/media, storeHd), once it has
+   * all of it. This phone's own: never sent, never taken from the wire.
+   */
+  photoHdRef?: string;
   /**
    * A sticker: one of Two's own (core/stickers), by name - the drawing is in
    * the app, so nothing else travels. `text` holds "Sticker".

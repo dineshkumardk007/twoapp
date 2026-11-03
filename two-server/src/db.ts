@@ -76,7 +76,14 @@ export const CAPPED_TYPES = new Map<string, number>([
   ['CANVAS_STROKE', 2000],
   // One record each, and each can carry a voice recording. A year of them is
   // worth keeping; an unbounded pile of them on a free database is not.
-  ['WHISPER_MEMO', 500]
+  ['WHISPER_MEMO', 500],
+  // The pieces of HD photos, each as big as a photo can be. The phones keep
+  // every HD photo they have put together; the relay's copy only has to
+  // last until the other phone has fetched it, so the newest forty (about
+  // seven to ten photos) per couple or group. A phone set up again gets the
+  // ordinary photo of anything older.
+  ['CHAT_PHOTO_PART', 40],
+  ['GROUP_PHOTO_PART', 40]
 ]);
 
 /**

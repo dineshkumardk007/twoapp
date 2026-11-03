@@ -19,11 +19,18 @@ const STEPS: Array<[number, number]> = [
 ];
 
 /**
+ * The HD copy (core/hdPhoto): up to 2560 pixels, at a quality that keeps
+ * detail when zoomed in or printed, travelling in pieces. Never smaller than
+ * 1920, where it would add little to the ordinary photo.
+ */
+const HD_STEPS: Array<[number, number]> = [[2560, 0.88], [2560, 0.8], [2240, 0.8], [1920, 0.8]];
+
+/**
  * `file` as a JPEG data: URL of at most `maxChars` characters (or as small as
  * the last step makes it). Turned the right way up: the browser applies the
  * camera's orientation when it reads the photo, and the canvas keeps it.
  */
-export function shrinkPhoto(file: Blob, maxChars: number): Promise<ShrunkPhoto> {
+export function shrinkPhoto(file: Blob, maxChars: number, steps: Array<[number, number]> = STEPS): Promise<ShrunkPhoto> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -33,7 +40,7 @@ export function shrinkPhoto(file: Blob, maxChars: number): Promise<ShrunkPhoto> 
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error('no canvas'));
       let dataUrl = '';
-      for (const [edge, quality] of STEPS) {
+      for (const [edge, quality] of steps) {
         const scale = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
         canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
         canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
@@ -49,4 +56,9 @@ export function shrinkPhoto(file: Blob, maxChars: number): Promise<ShrunkPhoto> 
     };
     img.src = url;
   });
+}
+
+/** The HD copy of `file`, at most `maxChars` (or as small as the last HD step makes it). */
+export function shrinkPhotoHd(file: Blob, maxChars: number): Promise<ShrunkPhoto> {
+  return shrinkPhoto(file, maxChars, HD_STEPS);
 }

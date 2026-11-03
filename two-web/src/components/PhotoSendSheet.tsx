@@ -3,19 +3,22 @@ import { Send, X } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
 import { useT } from '../core/i18n';
 import { ViewOnceIcon } from './ViewOnceIcon';
+import { readHdChoice, saveHdChoice } from '../core/hdPhoto';
 
 interface PhotoSendSheetProps {
   /** What was picked or taken, in order. */
   files: File[];
   partnerName: string;
-  /** Send them; `viewOnce` only ever for a single photo. */
-  onSend: (viewOnce: boolean) => void;
+  /** Send them; `viewOnce` only ever for a single photo, and never with `hd`. */
+  onSend: (viewOnce: boolean, hd: boolean) => void;
   onClose: () => void;
   /**
    * False where there is no view once: a group, where "one time, then gone
    * from both phones" has no one meaning. `partnerName` is then the group's.
    */
   allowViewOnce?: boolean;
+  /** False on an app that cannot send an HD copy: no HD button. */
+  allowHd?: boolean;
 }
 
 /**
@@ -25,15 +28,26 @@ interface PhotoSendSheetProps {
  *
  * Back or the cross puts them down without sending anything.
  */
-export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerName, onSend, onClose, allowViewOnce = true }) => {
+export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({
+  files,
+  partnerName,
+  onSend,
+  onClose,
+  allowViewOnce = true,
+  allowHd = true
+}) => {
   const tr = useT();
   useBackLayer(true, onClose);
   const urls = useMemo(() => files.map(f => URL.createObjectURL(f)), [files]);
   useEffect(() => () => urls.forEach(u => URL.revokeObjectURL(u)), [urls]);
   const [shown, setShown] = useState(0);
   const [viewOnce, setViewOnce] = useState(false);
+  // HD (core/hdPhoto): as last chosen on this phone. Not with view once,
+  // which keeps no copy to be sharp in.
+  const [hd, setHd] = useState(readHdChoice);
   const single = files.length === 1;
   const canViewOnce = single && allowViewOnce;
+  const hdOn = allowHd && hd && !(canViewOnce && viewOnce);
 
   return (
     <div
@@ -53,9 +67,28 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
         >
           <X className="h-5 w-5" />
         </button>
-        <span className="min-w-0 truncate text-[15px] font-semibold">
+        <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
           {single ? tr('Photo for {name}', { name: partnerName }) : tr('{n} photos for {name}', { n: files.length, name: partnerName })}
         </span>
+        {allowHd && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={hdOn}
+          disabled={canViewOnce && viewOnce}
+          onClick={() => {
+            const next = !hd;
+            setHd(next);
+            saveHdChoice(next);
+          }}
+          aria-label={tr('HD quality')}
+          className={`shrink-0 rounded-lg px-2.5 py-1 text-[13px] font-extrabold tracking-wide transition-colors disabled:opacity-35 ${
+            hdOn ? 'bg-white text-[#1d1638]' : 'text-white ring-[1.5px] ring-inset ring-white/70'
+          }`}
+        >
+          HD
+        </button>
+        )}
       </div>
 
       <div className="grid min-h-0 flex-1 place-items-center px-4">
@@ -86,6 +119,11 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
       )}
 
       <div className="px-4 pt-3.5 pb-[max(env(safe-area-inset-bottom),22px)]">
+        {hdOn && (
+          <p className="mb-3 text-center text-xs leading-relaxed text-white/75" aria-live="polite">
+            {tr('HD is on: sharper and bigger. Takes a little longer on mobile data.')}
+          </p>
+        )}
         {canViewOnce && viewOnce && (
           <p className="mb-3 text-center text-xs leading-relaxed text-white/75" aria-live="polite">
             {tr("View once is on. {name} can open it one time, then it's gone from both phones.", { name: partnerName })}
@@ -124,7 +162,7 @@ export const PhotoSendSheet: React.FC<PhotoSendSheetProps> = ({ files, partnerNa
           )}
           <button
             type="button"
-            onClick={() => onSend(canViewOnce && viewOnce)}
+            onClick={() => onSend(canViewOnce && viewOnce, hdOn)}
             aria-label={single ? tr('Send photo') : tr('Send {n} photos', { n: files.length })}
             className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-gradient-to-br from-aurora-violet via-aurora-pink to-[rgb(var(--c-button-end))] shadow-glow active:scale-95 transition-transform"
           >

@@ -1806,3 +1806,23 @@ html.panel-up .chat-shell {
 .delivery-mark[data-mark='warn'] { background: #f59e0b; box-shadow: 0 0 0 3px rgb(245 158 11 / 0.18); }
 .delivery-mark[data-mark='bad'] { background: #f43f5e; box-shadow: 0 0 0 3px rgb(244 63 94 / 0.18); }
 .delivery-mark[data-mark='check'] { background: transparent; box-shadow: inset 0 0 0 2px rgb(var(--c-accent, 139 92 246) / 0.8); }
+
+/* "HD" on a photo sent in HD (core/hdPhoto): dim while its HD copy is still
+   on the way to this phone, bright once it is here. */
+.photo-hd-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  border-radius: 6px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  color: #fff;
+  background: rgb(0 0 0 / 0.45);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.5);
+  pointer-events: none;
+}
+.photo-hd-badge[data-ready='false'] { opacity: 0.55; }

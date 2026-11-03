@@ -37,6 +37,9 @@ import {
   type MessageExtras
 } from '../core/chatActions';
 import { shrinkPhoto } from '../core/photo';
+import { hdCopyOf } from '../core/hdSend';
+import { readHd } from '../core/media';
+import type { HdInfo } from '../core/hdPhoto';
 import { PHOTOS_AT_ONCE, PHOTO_MAX_CHARS, dataUrlToBlob, photoFileName, photoSize, snippetShown } from '../core/chatShow';
 import { HEART, useMessageGestures } from '../core/useMessageGestures';
 import { ReplyQuote } from '../components/ReplyQuote';
@@ -102,6 +105,8 @@ interface ChatViewProps {
    * answer to another message.
    */
   onSendMessage: (text: string, isNeed?: boolean, extra?: MessageExtras) => void;
+  /** A photo's HD copy, sent in pieces after it (core/hdPhoto). */
+  onSendHd?: (info: HdInfo, dataUrl: string) => void;
   /** Sets, changes, or (with '') takes off your reaction to a message. */
   onReact?: (messageId: string, emoji: string) => void;
   /** New words for one of your own messages; offered for fifteen minutes after sending. */
@@ -274,6 +279,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   messages,
   activeUser,
   onSendMessage,
+  onSendHd,
   onResolveStuck,
   partnerReadAt = 0,
   partnerReadHeardAt = Infinity,
@@ -836,7 +842,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
    * there is one.
    */
   const [preparingPhotos, setPreparingPhotos] = useState(0);
-  const sendPhotos = async (list: File[], viewOnce: boolean) => {
+  const sendPhotos = async (list: File[], viewOnce: boolean, hd = false) => {
     let reply = replyToRef.current;
     setReplyTo(null);
     forgetUsedDraft();
@@ -844,14 +850,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
     for (const file of list) {
       try {
         const photo = await shrinkPhoto(file, PHOTO_MAX_CHARS);
+        // HD: the same photo, much larger, sent in pieces after it.
+        const hdCopy = hd && !viewOnce && onSendHd ? await hdCopyOf(file, photo) : null;
         onSendMessage('Photo', false, {
           isPhoto: true,
           photoDataUrl: photo.dataUrl,
           photoWidth: photo.width,
           photoHeight: photo.height,
           ...(viewOnce ? { viewOnce: true as const } : {}),
+          ...(hdCopy ? { photoHd: hdCopy.info } : {}),
           ...(reply ? { replyTo: reply } : {})
         });
+        if (hdCopy) onSendHd?.(hdCopy.info, hdCopy.dataUrl);
         reply = null;
         haptic('confirm');
       } catch {
@@ -875,7 +885,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const savePhoto = async (m: ChatMessage) => {
     if (!m.photoDataUrl) return;
     try {
-      await saveFile(dataUrlToBlob(m.photoDataUrl), photoFileName(m.sentAt));
+      // The HD copy when this phone has it.
+      const best = (await readHd(m.photoHdRef)) || m.photoDataUrl;
+      await saveFile(dataUrlToBlob(best), photoFileName(m.sentAt));
       showToast(tr('Saved'));
     } catch {
       showToast(tr('Could not save the photo'));
@@ -1340,8 +1352,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     data-tap-wait
                     onClick={() => setViewerId(msg.id)}
                     aria-label={tr('Open photo')}
-                    className="block overflow-hidden rounded-xl"
+                    className="relative block overflow-hidden rounded-xl"
                   >
+                    {msg.photoHd && (
+                      // Sent in HD: dim while its HD copy is still on the way here.
+                      <span className="photo-hd-badge" data-ready={!!msg.photoHdRef} aria-label={tr('HD photo')}>
+                        HD
+                      </span>
+                    )}
                     <img
                       src={msg.photoDataUrl}
                       alt={tr('Photo')}
@@ -2170,11 +2188,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
           files={pickedPhotos}
           partnerName={partnerName}
           onClose={() => setPickedPhotos(null)}
-          onSend={viewOnce => {
+          onSend={(viewOnce, hd) => {
             const list = pickedPhotos;
             setPickedPhotos(null);
-            void sendPhotos(list, viewOnce);
+            void sendPhotos(list, viewOnce, hd);
           }}
+          allowHd={!!onSendHd}
         />
       )}
 
@@ -2213,6 +2232,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           }
           onShowInChat={mediaOpen ? () => showInChat(viewerMessage.id) : undefined}
           src={viewerMessage.photoDataUrl!}
+          hdRef={viewerMessage.photoHdRef}
           caption={`${whoShown(viewerMessage.authorId, activeUser, partnerName)}${
             viewerMessage.sentAt ? ' · ' + timeOf(viewerMessage.sentAt) : ''
           }`}

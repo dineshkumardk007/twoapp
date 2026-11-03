@@ -858,4 +858,10 @@ export const TA: Readonly<Record<string, string>> = {
   'Notice shown': 'அறிவிப்பு காட்டப்பட்டது',
   'The phone closed Two for {time}': 'ஃபோன் Two-ஐ {time} மூடியிருந்தது',
   'Phone restarted': 'ஃபோன் மறுதொடக்கம் ஆனது',
+
+  // HD photos (components/PhotoSendSheet).
+  'HD quality': 'HD தரம்',
+  'HD is on: sharper and bigger. Takes a little longer on mobile data.':
+    'HD இயக்கத்தில்: இன்னும் தெளிவாக, பெரியதாக. மொபைல் டேட்டாவில் சற்று நேரம் ஆகும்.',
+  'HD photo': 'HD புகைப்படம்',
 };

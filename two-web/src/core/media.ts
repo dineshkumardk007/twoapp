@@ -350,12 +350,15 @@ export async function collectMediaGarbage(liveValue: unknown): Promise<number> {
   const live = new Set<string>();
   mapStrings(liveValue, s => {
     if (isMediaRef(s)) live.add(refToId(s));
+    // An HD photo is in use while a message names it, though never in memory.
+    if (isHdRef(s)) live.add(hdRefToId(s));
     return s;
   });
   // And whatever this session has stored or read back is in use, whatever
   // the value handed in says: a save may have written something new since
   // that value was taken, and its bytes must not go out from under it.
   knownMedia.forEach(id => live.add(id));
+  hdThisSession.forEach(id => live.add(id));
 
   try {
     const keys = await tx<IDBValidKey[]>('readonly', store => store.getAllKeys());
@@ -397,5 +400,92 @@ export async function clearMedia(): Promise<void> {
     await tx('readwrite', store => store.clear());
   } catch {
     /* nothing stored, or no IndexedDB - either way there is nothing to clear */
+  }
+}
+
+// HD photos (core/hdPhoto) live here too, but apart from everything above:
+// several MB each, they are never read into memory with the vault. A message
+// holds only `two-hd:<id>`, which loading leaves as it is; the bytes are read
+// when the photo is opened full screen or saved, and let go when it closes.
+// Encrypted under the vault key the same way, and kept while a message names
+// them (collectMediaGarbage).
+
+const HD_PREFIX = 'two-hd:';
+
+/** HD photos stored this session: in use even before the vault names them. */
+const hdThisSession = new Set<string>();
+
+/** The vault key, from App, for HD photos written and read outside a save. */
+let hdKey: CryptoKey | null = null;
+export function setHdKey(key: CryptoKey | null | undefined): void {
+  hdKey = key ?? null;
+}
+
+export function isHdRef(value: unknown): value is string {
+  return typeof value === 'string' && value.startsWith(HD_PREFIX);
+}
+
+function hdRefToId(ref: string): string {
+  return ref.slice(HD_PREFIX.length);
+}
+
+/** Stores an HD photo under its id; its reference, or null when it could not be kept. */
+export async function storeHd(photoId: string, dataUrl: string): Promise<string | null> {
+  const id = `hd-${photoId}`;
+  try {
+    const record: StoredMedia = hdKey ? await encryptEntry(id, dataUrl, hdKey) : { v: 1, data: dataUrl };
+    await tx('readwrite', store => store.put(record, id));
+    hdThisSession.add(id);
+    return HD_PREFIX + id;
+  } catch (e) {
+    console.error('[Media] Could not store an HD photo', e);
+    return null;
+  }
+}
+
+/** The HD photo a reference names, or '' when it is not on this phone or cannot be read. */
+export async function readHd(ref: string | undefined): Promise<string> {
+  if (!isHdRef(ref)) return '';
+  const id = ref.slice(HD_PREFIX.length);
+  try {
+    const stored = await tx<StoredMedia | string | undefined>('readonly', store => store.get(id));
+    if (stored === undefined || stored === null) return '';
+    return typeof stored === 'string' ? stored : await decryptEntry(id, stored, hdKey);
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Every HD photo, read out under the key now in use - for a PIN being set,
+ * changed or removed, which clears the store and writes it all again under
+ * the new key (putAllHd). The rest of the store is written from memory; HD
+ * photos are not in memory, so they are carried across this way.
+ */
+export async function takeAllHd(): Promise<Array<{ id: string; dataUrl: string }>> {
+  const out: Array<{ id: string; dataUrl: string }> = [];
+  try {
+    const keys = await tx<IDBValidKey[]>('readonly', store => store.getAllKeys());
+    for (const key of keys) {
+      if (typeof key !== 'string' || !key.startsWith('hd-')) continue;
+      const dataUrl = await readHd(HD_PREFIX + key);
+      if (dataUrl) out.push({ id: key, dataUrl });
+    }
+  } catch {
+    /* those that could not be read stay ordinary photos */
+  }
+  return out;
+}
+
+/** Writes back what takeAllHd read, under the key now set (setHdKey). */
+export async function putAllHd(list: Array<{ id: string; dataUrl: string }>): Promise<void> {
+  for (const { id, dataUrl } of list) {
+    try {
+      const record: StoredMedia = hdKey ? await encryptEntry(id, dataUrl, hdKey) : { v: 1, data: dataUrl };
+      await tx('readwrite', store => store.put(record, id));
+      hdThisSession.add(id);
+    } catch {
+      /* that one is an ordinary photo from now on */
+    }
   }
 }

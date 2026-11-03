@@ -13,6 +13,7 @@
 
 import { deriveSpaceCredentials, getDeviceId, SpaceCredentials } from './space';
 import { newId } from './ids';
+import type { HdInfo } from './hdPhoto';
 
 /** Ten people, which is what the dock and the read list are shaped for. */
 export const MAX_GROUP_MEMBERS = 10;
@@ -116,6 +117,10 @@ export interface GroupMessage {
   photoDataUrl?: string;
   photoWidth?: number;
   photoHeight?: number;
+  /** Its HD copy, sent in pieces beside it (core/hdPhoto). */
+  photoHd?: HdInfo;
+  /** Where this phone keeps that HD copy, once it has all of it. Local, never sent. */
+  photoHdRef?: string;
   /** A sticker, by name (core/stickers), as in the couple's chat. */
   sticker?: string;
   /**

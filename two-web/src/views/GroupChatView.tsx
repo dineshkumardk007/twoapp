@@ -67,6 +67,9 @@ import type { PhotoFields } from '../core/chatActions';
 import { PHOTOS_AT_ONCE, PHOTO_MAX_CHARS, dataUrlToBlob, photoFileName, photoSize, snippetShown } from '../core/chatShow';
 import { HEART, useMessageGestures } from '../core/useMessageGestures';
 import { shrinkPhoto } from '../core/photo';
+import { hdCopyOf } from '../core/hdSend';
+import { readHd } from '../core/media';
+import type { HdInfo } from '../core/hdPhoto';
 import { saveFile } from '../core/saveFile';
 import { copyText } from '../core/clipboard';
 import { useBackLayer } from '../core/backStack';
@@ -92,6 +95,8 @@ interface GroupChatViewProps {
   shareReceipts: boolean;
   /** `extras` makes it a photo (`text` is then "Photo"), or an answer to another message. */
   onSend: (text: string, extras?: GroupSendExtras) => void;
+  /** A photo's HD copy, sent in pieces after it (core/hdPhoto). */
+  onSendHd?: (info: HdInfo, dataUrl: string) => void;
   /** A half-typed message to start with, if one was left in this group. */
   draft?: ChatDraft;
   /** Keeps what is half-typed (or, with null, forgets it) - on leaving, never per key press. */
@@ -134,6 +139,8 @@ interface GroupChatViewProps {
 /** What a group message can carry besides its words. */
 export interface GroupSendExtras {
   photo?: PhotoFields;
+  /** The photo's HD copy, named on the message; its pieces go after it. */
+  photoHd?: HdInfo;
   /** One of Two's stickers, by name (core/stickers). */
   sticker?: string;
   replyTo?: GroupReplyRef;
@@ -174,6 +181,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   typingIds,
   shareReceipts,
   onSend,
+  onSendHd,
   draft,
   onSaveDraft,
   onSendVoice,
@@ -622,7 +630,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
     setPickedPhotos(picked.slice(0, PHOTOS_AT_ONCE));
   };
   const [preparingPhotos, setPreparingPhotos] = useState(0);
-  const sendPhotos = async (list: File[]) => {
+  const sendPhotos = async (list: File[], hd = false) => {
     let reply = replyToRef.current;
     setReplyTo(null);
     forgetUsedDraft();
@@ -630,10 +638,14 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
     for (const file of list) {
       try {
         const shrunk = await shrinkPhoto(file, PHOTO_MAX_CHARS);
+        // HD: the same photo, much larger, sent in pieces after it.
+        const hdCopy = hd && onSendHd ? await hdCopyOf(file, shrunk) : null;
         onSend('Photo', {
           photo: { isPhoto: true, photoDataUrl: shrunk.dataUrl, photoWidth: shrunk.width, photoHeight: shrunk.height },
+          ...(hdCopy ? { photoHd: hdCopy.info } : {}),
           ...(reply ? { replyTo: reply } : {})
         });
+        if (hdCopy) onSendHd?.(hdCopy.info, hdCopy.dataUrl);
         reply = null;
         haptic('confirm');
       } catch {
@@ -657,7 +669,9 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
   const savePhoto = async (m: GroupMessage) => {
     if (!m.photoDataUrl) return;
     try {
-      await saveFile(dataUrlToBlob(m.photoDataUrl), photoFileName(m.sentAt));
+      // The HD copy when this phone has it.
+      const best = (await readHd(m.photoHdRef)) || m.photoDataUrl;
+      await saveFile(dataUrlToBlob(best), photoFileName(m.sentAt));
       showToast(tr('Saved'));
     } catch {
       showToast(tr('Could not save the photo'));
@@ -930,8 +944,14 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
                       data-tap-wait
                       onClick={() => setViewerId(msg.id)}
                       aria-label={tr('Open photo')}
-                      className="block overflow-hidden rounded-xl"
+                      className="relative block overflow-hidden rounded-xl"
                     >
+                      {msg.photoHd && (
+                      // Sent in HD: dim while its HD copy is still on the way here.
+                      <span className="photo-hd-badge" data-ready={!!msg.photoHdRef} aria-label={tr('HD photo')}>
+                        HD
+                      </span>
+                    )}
                       <img
                         src={msg.photoDataUrl}
                         alt={tr('Photo')}
@@ -1644,11 +1664,12 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
           partnerName={group.name}
           allowViewOnce={false}
           onClose={() => setPickedPhotos(null)}
-          onSend={() => {
+          onSend={(_viewOnce, hd) => {
             const list = pickedPhotos;
             setPickedPhotos(null);
-            void sendPhotos(list);
+            void sendPhotos(list, hd);
           }}
+          allowHd={!!onSendHd}
         />
       )}
 
@@ -1656,6 +1677,7 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
         <PhotoViewer
           key={viewerMessage.id}
           src={viewerMessage.photoDataUrl!}
+          hdRef={viewerMessage.photoHdRef}
           caption={`${
             viewerMessage.authorId === myId ? tr('You') : viewerMessage.authorName || nameFor(viewerMessage.authorId)
           } · ${new Date(viewerMessage.sentAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`}

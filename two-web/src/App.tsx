@@ -198,7 +198,17 @@ import { localDay, isDoneOn, withRitualDay } from './core/rituals';
 import { OUR_DATES, DAILY_ANSWER } from './core/sharedRecords';
 import { cleanOurDates, newerOurDates, nextAnniversary } from './core/ourDates';
 import { updateWidget, takeLaunchAction } from './core/widget';
-import { resolveMediaRefs, withResolvedMedia, containsMediaRefs, collectMediaGarbage, clearMedia } from './core/media';
+import {
+  resolveMediaRefs,
+  withResolvedMedia,
+  containsMediaRefs,
+  collectMediaGarbage,
+  clearMedia,
+  putAllHd,
+  setHdKey,
+  storeHd,
+  takeAllHd
+} from './core/media';
 import {
   lockoutRemaining,
   registerFailure,
@@ -262,6 +272,15 @@ import {
   type PhotoFields
 } from './core/chatActions';
 import { cleanStickerId } from './core/stickers';
+import {
+  CHAT_PHOTO_PART,
+  GROUP_PHOTO_PART,
+  HdAssembler,
+  cleanHdInfo,
+  cleanHdPart,
+  splitHd,
+  type HdInfo
+} from './core/hdPhoto';
 import { mergeReport, recordDay } from './core/weatherHistory';
 import { localDateKey } from './core/ourDates';
 import {
@@ -372,7 +391,7 @@ function chatFromWire(parsed: any): ChatMessage {
   // Taken off whatever they say, so only the checked copies below go back on.
   const {
     isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard,
-    isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo, sticker,
+    isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo, sticker, photoHd, photoHdRef,
     editedAt, unsent, reactions, viewOnce, viewedAt,
     // Never a message's to claim: a call's line is made here from a CALL_LOG,
     // and when a message arrived is this phone's own record.
@@ -390,6 +409,9 @@ function chatFromWire(parsed: any): ChatMessage {
   const photo = voice ? null : cleanPhotoFields(parsed);
   // A sticker is a name and nothing more (core/stickers).
   const stickerId = voice || photo ? undefined : cleanStickerId(sticker);
+  // An HD copy only of a photo, and not of a view-once one (core/hdPhoto).
+  // Where this phone keeps it is its own business, never the sender's.
+  const hd = photo && viewOnce !== true ? cleanHdInfo(photoHd) : undefined;
   const reply = cleanReplyRef(replyTo);
   // Set to show later: in its place at that time (core/sendLater).
   const later = cleanShowAt(showAt);
@@ -398,6 +420,7 @@ function chatFromWire(parsed: any): ChatMessage {
     ...(voice || photo || {}),
     ...(photo && viewOnce === true ? { viewOnce: true } : {}),
     ...(stickerId ? { sticker: stickerId } : {}),
+    ...(hd ? { photoHd: hd } : {}),
     ...(reply ? { replyTo: reply } : {}),
     ...(later ? { showAt: later, sentAt: later } : {})
   };
@@ -725,6 +748,8 @@ export const App: React.FC = () => {
   // opened. `vaultKey` is held only in memory and drives every later write.
   const [isLocked, setIsLocked] = useState<boolean>(() => hasEncryptedVault());
   const [vaultKey, setVaultKey] = useState<CryptoKey | null>(null);
+  // HD photos are written and read outside a save, under the same key (core/media).
+  useEffect(() => setHdKey(vaultKey), [vaultKey]);
 
   /**
    * Reads photos and voice memos back out of IndexedDB into the shape every
@@ -1466,7 +1491,10 @@ export const App: React.FC = () => {
               setPartnerTypingAt(0);
             }
             const withHeldOne = theirs ? waitsWith(wire, latestRef.current.state.heldMessages) : undefined;
-            const incoming = withHeldOne === undefined ? wire : { ...wire, showAt: withHeldOne };
+            const arriving = withHeldOne === undefined ? wire : { ...wire, showAt: withHeldOne };
+            // Its HD copy may have come whole before it did.
+            const hdKept = arriving.photoHd ? hdReadyRef.current.get(`chat:${arriving.photoHd.id}`) : undefined;
+            const incoming = hdKept ? { ...arriving, photoHdRef: hdKept } : arriving;
             // Deleted on this phone (Delete for me): a replay, a restore or a
             // catch-up brings it again, and it stays gone - no toast, no news,
             // and her phone is not told a second time that it landed.
@@ -1750,6 +1778,9 @@ export const App: React.FC = () => {
               const messages = applyDelivered(prev.messages, prev.activeUser, ids, at);
               return messages ? { ...prev, messages } : prev;
             });
+          } else if (record.type === CHAT_PHOTO_PART) {
+            // A piece of a photo's HD copy (core/hdPhoto); the last one makes it whole.
+            takeHdPart('chat', parsed);
           } else if (record.type === VOICE_HEARD) {
             // The partner has played one of this phone's voice notes. Like a
             // read receipt, only the partner's say so counts - not one of our
@@ -3050,6 +3081,12 @@ export const App: React.FC = () => {
     const from = String(parsed.from || '');
     if (!from || from === myMemberId()) return;
 
+    // A piece of a photo's HD copy (core/hdPhoto).
+    if (record.type === GROUP_PHOTO_PART) {
+      takeHdPart(`group:${groupId}`, parsed);
+      return;
+    }
+
     // Their message ends their "typing…" in the same update that shows it,
     // as in your own chat - unless they said it after this one went.
     if (record.type === GROUP_CHAT) {
@@ -3106,7 +3143,10 @@ export const App: React.FC = () => {
           // Deleted on this phone (Delete for me): it stays gone, without a word.
           if (deletedHere(g.deletedForMe, wire)) return g;
           // When it arrived here, for its Info - not history being restored.
-          const message = msg.restoring && !msg.catchUp ? wire : { ...wire, receivedAt: Date.now() };
+          // Its HD copy may have come whole before it did.
+          const hdKept = wire.photoHd ? hdReadyRef.current.get(`group:${groupId}:${wire.photoHd.id}`) : undefined;
+          const landed = hdKept ? { ...wire, photoHdRef: hdKept } : wire;
+          const message = msg.restoring && !msg.catchUp ? landed : { ...landed, receivedAt: Date.now() };
 
           // Something arriving in a group you are not looking at used to be
           // silent: the couple's chat raises a toast, groups raised nothing,
@@ -3440,13 +3480,69 @@ export const App: React.FC = () => {
    * `voice` makes it a voice note and `photo` a photo; `text` is then its
    * label. `replyTo` is the message it answers.
    */
+  /*
+   * HD photos (core/hdPhoto). The pieces of one coming in are put back
+   * together in memory; whole, the photo goes into this phone's photo store
+   * and its reference onto the message that names it - or, if the message is
+   * not here yet, it waits for it (hdReadyRef). Sending one keeps the same
+   * copy here and sends the pieces after the message.
+   */
+  const hdAssemblerRef = useRef(new HdAssembler());
+  const hdReadyRef = useRef(new Map<string, string>());
+  const keepHd = (scope: string, photoId: string, dataUrl: string) => {
+    void storeHd(photoId, dataUrl).then(ref => {
+      if (!ref) return;
+      hdReadyRef.current.set(`${scope}:${photoId}`, ref);
+      const attach = <M extends { photoHd?: HdInfo; photoHdRef?: string }>(list: M[]): M[] | null => {
+        let changed = false;
+        const out = list.map(m => {
+          if (m.photoHd?.id !== photoId || m.photoHdRef === ref) return m;
+          changed = true;
+          return { ...m, photoHdRef: ref };
+        });
+        return changed ? out : null;
+      };
+      setState(prev => {
+        if (scope === 'chat') {
+          const messages = attach(prev.messages);
+          return messages ? { ...prev, messages } : prev;
+        }
+        const groupId = scope.slice('group:'.length);
+        let changed = false;
+        const groups = prev.groups.map(g => {
+          if (g.id !== groupId) return g;
+          const messages = attach(g.messages);
+          if (!messages) return g;
+          changed = true;
+          return { ...g, messages };
+        });
+        return changed ? { ...prev, groups } : prev;
+      });
+    });
+  };
+  const takeHdPart = (scope: string, raw: unknown) => {
+    const part = cleanHdPart(raw);
+    if (!part) return;
+    const whole = hdAssemblerRef.current.add(scope, part);
+    if (whole) keepHd(scope, part.photoId, whole);
+  };
+  /** The HD copy of a photo just sent: kept here, and sent in pieces after it. */
+  const sendHdCopy = (groupId: string | null, info: HdInfo, dataUrl: string) => {
+    keepHd(groupId ? `group:${groupId}` : 'chat', info.id, dataUrl);
+    for (const part of splitHd(info.id, dataUrl)) {
+      if (groupId) sendToGroup(groupId, GROUP_PHOTO_PART, { from: myMemberId(), ...part });
+      else wsRelay.broadcastUpdate(CHAT_PHOTO_PART, part);
+    }
+  };
+
   const handleSendGroupMessage = (
     groupId: string,
     text: string,
-    extras: { voice?: VoiceFields; photo?: PhotoFields; sticker?: string; replyTo?: GroupReplyRef } = {}
+    extras: { voice?: VoiceFields; photo?: PhotoFields; photoHd?: HdInfo; sticker?: string; replyTo?: GroupReplyRef } = {}
   ) => {
     const { voice, photo, replyTo } = extras;
     const sticker = voice || photo ? undefined : extras.sticker;
+    const photoHd = photo && !voice ? extras.photoHd : undefined;
     const at = Date.now();
     const id = newId('gmsg');
     const name = state.userName || 'Someone';
@@ -3463,6 +3559,7 @@ export const App: React.FC = () => {
       ...voice,
       ...(voice ? {} : photo),
       ...(sticker ? { sticker } : {}),
+      ...(photoHd ? { photoHd } : {}),
       ...(replyTo ? { replyTo } : {})
     };
 
@@ -3495,6 +3592,7 @@ export const App: React.FC = () => {
                 ...voice,
                 ...(voice ? {} : photo),
                 ...(sticker ? { sticker } : {}),
+                ...(photoHd ? { photoHd } : {}),
                 ...(replyTo ? { replyTo } : {})
               }).slice(-MAX_GROUP_MESSAGES)
             }
@@ -5134,6 +5232,8 @@ export const App: React.FC = () => {
       if (nextPin) {
         // The old ciphertext cannot be read under the new key, so drop it
         // first; forStorage below writes every piece back under the new one.
+        // HD photos are not in memory, so they are read out first and put back.
+        const hd = await takeAllHd();
         await clearMedia();
 
         const key = await createVault(nextPin, newKey => ({
@@ -5142,6 +5242,8 @@ export const App: React.FC = () => {
         }));
 
         setVaultKey(key);
+        setHdKey(key);
+        await putAllHd(hd);
         // Remove the plaintext copies this device kept while it had no PIN -
         // including the link code, which is the key to the whole space.
         clearState();
@@ -5155,9 +5257,12 @@ export const App: React.FC = () => {
 
       // Removing the lock: media goes back to being stored unencrypted, so it
       // has to be rewritten just the same.
+      const hd = await takeAllHd();
       await clearMedia();
       destroyVault();
       setVaultKey(null);
+      setHdKey(null);
+      await putAllHd(hd);
       setStorageFull(saveState(forStorage({ ...state, pinEnabled: false })).quotaExceeded);
       if (session) saveSpaceSession(session);
       setState(prev => ({ ...prev, pinEnabled: false }));
@@ -5584,6 +5689,7 @@ export const App: React.FC = () => {
               onSend={stable(inGroup + 'send', (text: string, extras?: GroupSendExtras) =>
                 handleSendGroupMessage(activeGroup.id, text, extras)
               )}
+              onSendHd={stable(inGroup + 'sendHd', (info: HdInfo, dataUrl: string) => sendHdCopy(activeGroup.id, info, dataUrl))}
               onSendVoice={stable(inGroup + 'sendVoice', (note: VoiceNote, replyTo?: GroupReplyRef) =>
                 handleSendGroupMessage(activeGroup.id, voiceNoteLabel(note.durationSeconds), {
                   voice: voiceFieldsOf(note),
@@ -5790,6 +5896,7 @@ export const App: React.FC = () => {
             messages={state.messages}
             activeUser={state.activeUser}
             onSendMessage={stable('chat:send', handleSendMessage)}
+            onSendHd={stable('chat:sendHd', (info: HdInfo, dataUrl: string) => sendHdCopy(null, info, dataUrl))}
             onResolveStuck={stable('chat:resolveStuck', (messageId: string, action: 'retry' | 'delete') =>
               handleResolveStuck({}, messageId, action)
             )}

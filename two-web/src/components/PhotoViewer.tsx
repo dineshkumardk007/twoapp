@@ -1,10 +1,16 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, MessageSquare, X } from 'lucide-react';
 import { useBackLayer } from '../core/backStack';
 import { useT } from '../core/i18n';
+import { readHd } from '../core/media';
 
 interface PhotoViewerProps {
   src: string;
+  /**
+   * The photo's HD copy on this phone (core/hdPhoto), read only while it is
+   * open: the ordinary photo shows at once and the HD one takes its place.
+   */
+  hdRef?: string;
   /** Who sent it and when, along the top. */
   caption: string;
   onClose: () => void;
@@ -39,6 +45,7 @@ const DOUBLE_TAP_MS = 280;
  */
 export const PhotoViewer: React.FC<PhotoViewerProps> = ({
   src,
+  hdRef,
   caption,
   onClose,
   onSave,
@@ -50,6 +57,15 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
 }) => {
   const tr = useT();
   useBackLayer(true, onClose);
+  const [hdSrc, setHdSrc] = useState('');
+  useEffect(() => {
+    let live = true;
+    setHdSrc('');
+    if (hdRef) void readHd(hdRef).then(bytes => live && setHdSrc(bytes));
+    return () => {
+      live = false;
+    };
+  }, [hdRef]);
   const imgRef = useRef<HTMLImageElement>(null);
   const view = useRef({ scale: 1, x: 0, y: 0 });
   const pointers = useRef(new Map<number, { x: number; y: number }>());
@@ -182,7 +198,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
     >
       <img
         ref={imgRef}
-        src={src}
+        src={hdSrc || src}
         alt={caption}
         draggable={false}
         className="max-h-full max-w-full object-contain will-change-transform"
@@ -202,6 +218,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
         <span className="min-w-0 flex-1 truncate text-sm text-white/80">
           {caption}
           {position && <span className="ml-2 tabular-nums text-white/60">{position}</span>}
+          {hdSrc && (
+            <span className="ml-2 rounded px-1 text-[10px] font-extrabold tracking-wide text-[#1d1638] bg-white/90">HD</span>
+          )}
         </span>
         {onShowInChat && (
           <button

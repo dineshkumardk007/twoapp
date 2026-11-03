@@ -40,6 +40,15 @@ const RELAY_DEV_PORT = 4000;
 const MAX_OUTBOX = 500;
 
 /**
+ * Records sent from this session only, never kept in the outbox's storage:
+ * the pieces of an HD photo (core/hdPhoto), several MB together, would fill
+ * the browser's small store and take every other waiting message's place in
+ * it. Lost with the app, an HD copy leaves the ordinary photo, which has
+ * already gone.
+ */
+const SESSION_ONLY_TYPES = new Set(['CHAT_PHOTO_PART', 'GROUP_PHOTO_PART']);
+
+/**
  * The largest record the relay accepts, matched here so an oversized one is
  * refused where somebody can be told about it.
  *
@@ -911,8 +920,9 @@ export class WebSocketRelayClient {
     if (!this.creds) return;
     try {
       const key = this.outboxKey(this.creds.spaceId);
-      if (this.outbox.length === 0) localStorage.removeItem(key);
-      else localStorage.setItem(key, JSON.stringify(this.outbox));
+      const kept = this.outbox.filter(entry => !SESSION_ONLY_TYPES.has(entry?.record?.type));
+      if (kept.length === 0) localStorage.removeItem(key);
+      else localStorage.setItem(key, JSON.stringify(kept));
     } catch {
       /* quota or private mode - delivery falls back to this session only */
     }

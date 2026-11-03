@@ -24,6 +24,7 @@ import {
 } from './chatActions';
 import type { VoiceFields } from './voice';
 import { cleanStickerId } from './stickers';
+import { cleanHdInfo } from './hdPhoto';
 import { MAX_GROUP_MESSAGES, type GroupMessage, type GroupReplyRef } from './groups';
 
 /** A message id from the wire: short, and only letters, digits, - and _. */
@@ -156,6 +157,8 @@ export function groupMessageFromWire(recordId: string, parsed: any, from: string
   const photo = voice ? null : cleanPhotoFields(parsed);
   const reply = cleanGroupReplyRef(parsed?.replyTo);
   const sticker = voice || photo ? undefined : cleanStickerId(parsed?.sticker);
+  // An HD copy only of a photo (core/hdPhoto); where it is kept is never taken from the wire.
+  const hd = photo ? cleanHdInfo(parsed?.photoHd) : undefined;
   return {
     // Filed under the sender's own id, so every phone names it the same.
     id: cleanMessageId(parsed?.mid) || recordId,
@@ -166,6 +169,7 @@ export function groupMessageFromWire(recordId: string, parsed: any, from: string
     sentAt: Number(parsed?.at) || Date.now(),
     ...(voice || photo || {}),
     ...(sticker ? { sticker } : {}),
+    ...(hd ? { photoHd: hd } : {}),
     ...(reply ? { replyTo: reply } : {})
   };
 }
