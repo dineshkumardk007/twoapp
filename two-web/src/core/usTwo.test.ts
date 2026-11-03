@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import type { ChatMessage } from '../types';
-import { boopsFor, chatDay, funnyNumbers, goodMorning, lastWordLastNight, missLevel, withBoopCount } from './usTwo';
+import {
+  addBoop,
+  boopsFor,
+  champion,
+  chatDay,
+  funnyNumbers,
+  goodMorning,
+  lastWordLastNight,
+  missLevel,
+  weekOf,
+  withBoopCount
+} from './usTwo';
 
 const H = 60 * 60 * 1000;
 let n = 0;
@@ -81,13 +92,40 @@ describe('the funny numbers', () => {
   });
 });
 
-describe('boops', () => {
-  it('only ever goes up, and only for today', () => {
+describe('the boop battle', () => {
+  it('only ever goes up, and only for today and this week', () => {
     const today = '2026-11-03';
-    const once = withBoopCount(undefined, 'partner', today, 4, today);
-    expect(once).toEqual({ day: today, user: 0, partner: 4 });
-    expect(withBoopCount(once!, 'partner', today, 3, today)).toBeNull();
-    expect(withBoopCount(once!, 'partner', '2026-11-02', 9, today)).toBeNull();
-    expect(boopsFor(once!, '2026-11-04')).toEqual({ day: '2026-11-04', user: 0, partner: 0 });
+    const once = withBoopCount(undefined, 'partner', { day: today, count: 4, week: '2026-11-02', weekCount: 9 }, today);
+    expect(once).toMatchObject({ day: today, user: 0, partner: 4, week: '2026-11-02', weekPartner: 9 });
+    expect(withBoopCount(once!, 'partner', { day: today, count: 3, week: '2026-11-02', weekCount: 8 }, today)).toBeNull();
+    expect(withBoopCount(once!, 'partner', { day: '2026-11-02', count: 9 }, today)).toBeNull();
+    // A phone from before weeks: today's count alone.
+    expect(withBoopCount(once!, 'partner', { day: today, count: 6 }, today)).toMatchObject({ partner: 6, weekPartner: 9 });
+  });
+
+  it('counts one more today and this week', () => {
+    const next = addBoop(addBoop(undefined, 'user', '2026-11-03'), 'user', '2026-11-03');
+    expect(next).toMatchObject({ user: 2, weekUser: 2, partner: 0 });
+    // A new day starts the day again, not the week.
+    expect(addBoop(next, 'user', '2026-11-04')).toMatchObject({ user: 1, weekUser: 3 });
+  });
+
+  it('turns a finished week into last week, for its trophy', () => {
+    const week = { day: '2026-11-08', user: 1, partner: 5, week: '2026-11-02', weekUser: 20, weekPartner: 31 };
+    const monday = boopsFor(week, '2026-11-09');
+    expect(monday).toMatchObject({ user: 0, partner: 0, week: '2026-11-09', weekUser: 0, weekPartner: 0 });
+    expect(monday.lastWeek).toEqual({ week: '2026-11-02', user: 20, partner: 31 });
+    expect(champion(monday.lastWeek)).toBe('partner');
+    // Kept through that week; the week after, last week is the quiet one.
+    expect(boopsFor(monday, '2026-11-12').lastWeek).toEqual(monday.lastWeek);
+    expect(boopsFor(monday, '2026-11-17').lastWeek).toEqual({ week: '2026-11-09', user: 0, partner: 0 });
+    expect(champion(boopsFor(monday, '2026-11-17').lastWeek)).toBeNull();
+    // Nothing for two weeks: no trophy at all.
+    expect(boopsFor(monday, '2026-11-24').lastWeek).toBeUndefined();
+  });
+
+  it('starts weeks on Monday', () => {
+    expect(weekOf('2026-11-08')).toBe('2026-11-02');
+    expect(weekOf('2026-11-09')).toBe('2026-11-09');
   });
 });

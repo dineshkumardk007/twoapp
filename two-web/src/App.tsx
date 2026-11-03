@@ -272,7 +272,7 @@ import {
   type PhotoFields
 } from './core/chatActions';
 import { cleanStickerId } from './core/stickers';
-import { boopsFor, chatDay, withBoopCount } from './core/usTwo';
+import { addBoop, boopsFor, chatDay, cleanPlayKind, withBoopCount, type PlayKind } from './core/usTwo';
 import { BOOPED_EVENT } from './components/UsScene';
 import {
   CHAT_PHOTO_PART,
@@ -1794,15 +1794,30 @@ export const App: React.FC = () => {
             const seat = record.authorId === 'user' || record.authorId === 'partner' ? record.authorId : null;
             if (!seat) return;
             const today = chatDay(Date.now());
-            const next = withBoopCount(latestRef.current.state.boops, seat, String(parsed?.day || ''), Number(parsed?.count), today);
+            const sent = {
+              day: String(parsed?.day || ''),
+              count: Number(parsed?.count),
+              week: typeof parsed?.week === 'string' ? parsed.week : undefined,
+              weekCount: Number(parsed?.weekCount)
+            };
+            const next = withBoopCount(latestRef.current.state.boops, seat, sent, today);
             if (!next) return;
             setState(prev => {
-              const raised = withBoopCount(prev.boops, seat, String(parsed?.day || ''), Number(parsed?.count), today);
+              const raised = withBoopCount(prev.boops, seat, sent, today);
               return raised ? { ...prev, boops: raised } : prev;
             });
-            // Booped just now by them: your bear or bunny jumps on Home.
+            // Booped (or tickled, patted...) just now by them: your bear or
+            // bunny gets it on Home - felt unless they saw you asleep.
             if (seat !== state.activeUser && !msg.replay && !msg.restoring) {
-              window.dispatchEvent(new CustomEvent(BOOPED_EVENT));
+              window.dispatchEvent(
+                new CustomEvent(BOOPED_EVENT, {
+                  detail: {
+                    kind: cleanPlayKind(parsed?.kind),
+                    combo: Math.min(99, Math.max(1, Math.floor(Number(parsed?.combo) || 1))),
+                    quiet: parsed?.quiet === true
+                  }
+                })
+              );
             }
           } else if (record.type === VOICE_HEARD) {
             // The partner has played one of this phone's voice notes. Like a
@@ -3561,23 +3576,46 @@ export const App: React.FC = () => {
     if (whole) keepHd(scope, part.photoId, whole);
   };
   /**
-   * A boop for them, from Home (UsScene): counted here at once, and the
-   * day's count sent a moment after the tapping stops - one record however
-   * fast the taps, and the relay keeps only the newest from each of you.
+   * A boop (or a tickle, a pinch, a pat, a pillow) for them, from Home
+   * (UsScene): counted here at once, today and this week, and sent with the
+   * counts a moment later. Fast boops go as one combo, once the tapping
+   * stops; the others almost at once. The relay keeps only the newest from
+   * each of you, so a whole battle costs it one record each.
    */
-  const boopTimerRef = useRef<number | undefined>(undefined);
-  const handleBoop = () => {
+  const pendingPlayRef = useRef<{ timer: number; kind: PlayKind; combo: number; quiet: boolean } | null>(null);
+  const sendPlay = () => {
+    const p = pendingPlayRef.current;
+    if (!p) return;
+    pendingPlayRef.current = null;
+    window.clearTimeout(p.timer);
+    const latest = latestRef.current.state;
     const today = chatDay(Date.now());
-    setState(prev => {
-      const now = boopsFor(prev.boops, today);
-      return { ...prev, boops: { ...now, [prev.activeUser]: now[prev.activeUser] + 1 } };
+    const b = boopsFor(latest.boops, today);
+    const seat = latest.activeUser;
+    wsRelay.broadcastUpdate(BOOP, {
+      day: today,
+      count: b[seat],
+      week: b.week,
+      weekCount: seat === 'user' ? b.weekUser : b.weekPartner,
+      kind: p.kind,
+      combo: p.combo,
+      ...(p.quiet ? { quiet: true } : {})
     });
-    window.clearTimeout(boopTimerRef.current);
-    boopTimerRef.current = window.setTimeout(() => {
-      const latest = latestRef.current.state;
-      const count = boopsFor(latest.boops, today)[latest.activeUser];
-      if (count > 0) wsRelay.broadcastUpdate(BOOP, { day: today, count });
-    }, 600);
+  };
+  const handlePlay = (kind: PlayKind, quiet: boolean) => {
+    const today = chatDay(Date.now());
+    setState(prev => ({ ...prev, boops: addBoop(prev.boops, prev.activeUser, today) }));
+    const p = pendingPlayRef.current;
+    if (p && p.kind === 'boop' && kind === 'boop') {
+      p.combo++;
+      p.quiet = quiet;
+      window.clearTimeout(p.timer);
+    } else {
+      if (p) sendPlay();
+      pendingPlayRef.current = { timer: 0, kind, combo: 1, quiet };
+    }
+    // After the count above has been drawn, so it goes with it.
+    pendingPlayRef.current!.timer = window.setTimeout(sendPlay, kind === 'boop' ? 600 : 150);
   };
 
   /** The HD copy of a photo just sent: kept here, and sent in pieces after it. */
@@ -5932,7 +5970,7 @@ export const App: React.FC = () => {
             onSetStatus={stable('setStatus', handleSetStatus)}
             partnerOnline={partnerShownOnline}
             partnerTyping={partnerTypingAt > 0}
-            onBoop={stable('boop', handleBoop)}
+            onPlay={stable('play', handlePlay)}
             partnerNews={partnerNews}
             partnerUpdate={partnerUpdate}
           />

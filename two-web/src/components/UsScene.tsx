@@ -1,15 +1,34 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatMessage, WeatherState } from '../types';
 import { Bear, Bunny, Heart, Sparkle, Zzz, Drop, type Mood } from './StickerArt';
 import { wsRelay } from '../core/ws';
 import { haptic } from '../core/haptics';
 import { useT } from '../core/i18n';
-import { boopsFor, chatDay, goodMorning, lastWordLastNight, missLevel, type Boops, type Seat } from '../core/usTwo';
+import { useBackLayer } from '../core/backStack';
+import { isShown } from '../core/shown';
+import {
+  boopsFor,
+  champion,
+  chatDay,
+  cleanPlayKind,
+  goodMorning,
+  lastWordLastNight,
+  missLevel,
+  type Boops,
+  type PlayKind,
+  type Seat
+} from '../core/usTwo';
 
-/** Fired by App when the other one's boop count goes up live (BOOP). */
+/** Fired by App when the other one boops (or tickles, pats...) live: detail {kind, combo, quiet}. */
 export const BOOPED_EVENT = 'two-booped';
 /** Fired by the heart button when this phone sends a heart. */
 export const HEART_SENT_EVENT = 'two-heart-sent';
+
+export interface PlayDetail {
+  kind: PlayKind;
+  combo: number;
+  quiet: boolean;
+}
 
 interface UsSceneProps {
   activeUser: Seat;
@@ -22,11 +41,49 @@ interface UsSceneProps {
   theirWeather: WeatherState;
   messages: ChatMessage[];
   boops?: Boops;
-  onBoop: () => void;
+  /** A boop, tickle, pinch, pat or pillow for them; `quiet` while they sleep. */
+  onPlay: (kind: PlayKind, quiet: boolean) => void;
   onSendHeart: () => void;
 }
 
 const MISS_WORDS = ['All good 😌', 'A little 🙂', 'Missing you 🥺', 'A lot 😭', 'Dangerously high 🚨'];
+
+const PLAYS: { kind: PlayKind; emoji: string; label: string }[] = [
+  { kind: 'boop', emoji: '👉', label: 'Boop' },
+  { kind: 'tickle', emoji: '🤭', label: 'Tickle' },
+  { kind: 'pinch', emoji: '🥰', label: 'Pinch cheeks' },
+  { kind: 'pat', emoji: '🫶', label: 'Head pat' },
+  { kind: 'pillow', emoji: '🪶', label: 'Pillow fight' }
+];
+
+/** What the one it is done to says. */
+const SAYS: Record<PlayKind | 'giggle', string> = {
+  boop: 'Boop!',
+  tickle: 'hahaha!',
+  pinch: 'squish!',
+  pat: 'aww',
+  pillow: 'bonk!',
+  giggle: 'hehe'
+};
+
+/** How the one it is done to looks. */
+const LOOKS: Record<PlayKind | 'giggle', Mood> = {
+  boop: 'laugh',
+  tickle: 'laugh',
+  pinch: 'happy',
+  pat: 'kiss',
+  pillow: 'shock',
+  giggle: 'laugh'
+};
+
+/** Taps closer together than this are one combo. */
+const COMBO_MS = 700;
+/** Held this long, a press opens the menu instead of booping. */
+const HOLD_MS = 450;
+
+const BEAR_FUR = '#c4895a';
+const BUNNY_FUR = '#fffaf3';
+const INK = '#3b2723';
 
 type Part = 'night' | 'evening' | 'day';
 function partOfDay(at: number): Part {
@@ -37,7 +94,7 @@ function partOfDay(at: number): Part {
 /** A small rain cloud, for a heavy weather day. */
 const RainCloud: React.FC<{ x: number; y: number }> = ({ x, y }) => (
   <g>
-    <g transform={`translate(${x} ${y})`} fill="#cbd5e1" stroke="#3b2723" strokeWidth={2.2}>
+    <g transform={`translate(${x} ${y})`} fill="#cbd5e1" stroke={INK} strokeWidth={2.2}>
       <circle cx={-9} cy={2} r={8} />
       <circle cx={7} cy={3} r={7} />
       <circle cx={0} cy={-4} r={9} />
@@ -48,27 +105,44 @@ const RainCloud: React.FC<{ x: number; y: number }> = ({ x, y }) => (
 );
 
 /** A speech bubble over a character, pointing down at it. */
-const Bubble: React.FC<{ x: number; y: number; text: string; wide?: number }> = ({ x, y, text, wide = 44 }) => (
-  <g className="us-pop" transform={`translate(${x} ${y})`}>
-    <rect x={-wide / 2} y={-14} width={wide} height={22} rx={11} fill="#fff" stroke="#3b2723" strokeWidth={2} />
-    <path d="M-4,8 L0,14 L4,8 Z" fill="#fff" stroke="#3b2723" strokeWidth={2} strokeLinejoin="round" />
-    <path d="M-5,8 L5,8" stroke="#fff" strokeWidth={3} />
-    <text x={0} y={2} textAnchor="middle" fontFamily="Manrope, system-ui, sans-serif" fontWeight={800} fontSize={12} fill="#3b2723">
-      {text}
-    </text>
-  </g>
-);
+const Bubble: React.FC<{ x: number; y: number; text: string; wide?: number }> = ({ x, y, text, wide }) => {
+  const w = wide ?? Math.max(40, text.length * 7.2 + 16);
+  // Kept inside the picture at either edge.
+  const cx = Math.min(320 - w / 2 - 4, Math.max(w / 2 + 4, x));
+  return (
+    <g className="us-pop" transform={`translate(${cx} ${y})`}>
+      <rect x={-w / 2} y={-14} width={w} height={22} rx={11} fill="#fff" stroke={INK} strokeWidth={2} />
+      <path d={`M${x - cx - 4},8 L${x - cx},14 L${x - cx + 4},8 Z`} fill="#fff" stroke={INK} strokeWidth={2} strokeLinejoin="round" />
+      <path d={`M${x - cx - 5},8 L${x - cx + 5},8`} stroke="#fff" strokeWidth={3} />
+      <text x={0} y={2} textAnchor="middle" fontFamily="Manrope, system-ui, sans-serif" fontWeight={800} fontSize={12} fill={INK}>
+        {text}
+      </text>
+    </g>
+  );
+};
+
+/** One play as it happens: what, to whom, and its number so the same again plays again. */
+interface Play {
+  n: number;
+  kind: PlayKind | 'giggle';
+  target: 'me' | 'them';
+  combo: number;
+  /** The words over their head instead: they are asleep. */
+  hush?: boolean;
+}
 
 /**
  * Home's "Us two": a little live scene of the two of you - a bear for the
  * one who started Two, a bunny for the other, the same on both phones -
  * that shows how things are. Together when they are online, typing when
  * they are, asleep under the moon at night, a rain cloud over whoever is
- * having a heavy day, and a hug when a heart goes either way. Tapping them
- * boops them, on their phone too; tapping you makes you giggle.
+ * having a heavy day, and a hug when a heart goes either way.
  *
- * Under it: today's boop score, who said good morning first, and how much
- * you are missing each other.
+ * The boop battle: tap them to boop them - fast taps make a combo - or hold
+ * for the rest: a tickle, a pinch of the cheeks, a head pat, a pillow. It
+ * happens on their phone too, except that someone asleep is let sleep: no
+ * buzz. Today's and this week's scores below, and last week's champion
+ * holds the trophy in the scene.
  */
 export const UsScene: React.FC<UsSceneProps> = ({
   activeUser,
@@ -80,7 +154,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
   theirWeather,
   messages,
   boops,
-  onBoop,
+  onPlay,
   onSendHeart
 }) => {
   const tr = useT();
@@ -90,38 +164,44 @@ export const UsScene: React.FC<UsSceneProps> = ({
     return () => clearInterval(id);
   }, []);
 
-  // Moments: a hug (a heart either way), a boop each way, a giggle. Each
-  // hop has a number, so the same one again plays again, and a word over
-  // the head that goes after a moment.
+  const part = partOfDay(now);
+  const asleep =
+    !partnerOnline && (part === 'night' || (!!partnerLastSeen && now - partnerLastSeen > 10 * 60 * 60 * 1000));
+
+  // A hug: a heart either way.
   const [hugUntil, setHugUntil] = useState(0);
-  const [meHop, setMeHop] = useState({ n: 0, word: '', shown: false });
-  const [themHop, setThemHop] = useState({ n: 0, shown: false });
+  // The play under way, if any, for a moment.
+  const [play, setPlay] = useState<Play | null>(null);
+  const playN = useRef(0);
+  const start = (p: Omit<Play, 'n'>) => setPlay({ ...p, n: ++playN.current });
   useEffect(() => {
-    if (!meHop.shown) return;
-    const t = setTimeout(() => setMeHop(h => ({ ...h, shown: false })), 1_600);
+    if (!play) return;
+    const t = setTimeout(() => setPlay(current => (current && current.n === play.n ? null : current)), 1_900);
     return () => clearTimeout(t);
-  }, [meHop.n, meHop.shown]);
-  useEffect(() => {
-    if (!themHop.shown) return;
-    const t = setTimeout(() => setThemHop(h => ({ ...h, shown: false })), 1_600);
-    return () => clearTimeout(t);
-  }, [themHop.n, themHop.shown]);
+  }, [play]);
+
   useEffect(() => {
     const hug = () => setHugUntil(Date.now() + 4_000);
     const off = wsRelay.subscribe(msg => {
       if (msg.type !== 'REMOTE_RECORD' || msg.record?.type !== 'PULSE' || msg.replay || msg.restoring) return;
       if (msg.record.authorId !== activeUser) hug();
     });
-    const boopedMe = () => {
-      haptic('tick');
-      setMeHop(h => ({ n: h.n + 1, word: 'Boop!', shown: true }));
+    const playedOnMe = (e: Event) => {
+      const d = (e as CustomEvent<Partial<PlayDetail>>).detail || {};
+      const kind = cleanPlayKind(d.kind);
+      // Felt only by someone looking - and never by someone asleep.
+      if (!d.quiet && isShown()) {
+        haptic(kind === 'pillow' ? 'confirm' : 'tick');
+        if (kind === 'tickle') [150, 300, 450].forEach(ms => setTimeout(() => haptic('tick'), ms));
+      }
+      start({ kind, target: 'me', combo: Math.max(1, Number(d.combo) || 1) });
     };
     window.addEventListener(HEART_SENT_EVENT, hug);
-    window.addEventListener(BOOPED_EVENT, boopedMe);
+    window.addEventListener(BOOPED_EVENT, playedOnMe);
     return () => {
       off();
       window.removeEventListener(HEART_SENT_EVENT, hug);
-      window.removeEventListener(BOOPED_EVENT, boopedMe);
+      window.removeEventListener(BOOPED_EVENT, playedOnMe);
     };
   }, [activeUser]);
   useEffect(() => {
@@ -129,71 +209,182 @@ export const UsScene: React.FC<UsSceneProps> = ({
     const t = setTimeout(() => setHugUntil(0), Math.max(0, hugUntil - Date.now()));
     return () => clearTimeout(t);
   }, [hugUntil]);
+  const hugging = hugUntil > Date.now();
 
-  const part = partOfDay(now);
-  const hugging = hugUntil > now || hugUntil > Date.now();
-  const asleep =
-    !partnerOnline && (part === 'night' || (!!partnerLastSeen && now - partnerLastSeen > 10 * 60 * 60 * 1000));
   const miss = useMemo(() => missLevel(messages, partnerOnline, now), [messages, partnerOnline, now]);
   const morning = useMemo(() => goodMorning(messages, now), [messages, now]);
   const lastWord = useMemo(() => lastWordLastNight(messages, now), [messages, now]);
   const score = boopsFor(boops, chatDay(now));
   const theirSeat: Seat = activeUser === 'user' ? 'partner' : 'user';
   const nameOf = (seat: Seat) => (seat === activeUser ? tr('You') : partnerName);
+  const weekly = { user: score.weekUser || 0, partner: score.weekPartner || 0 };
+  const trophy = champion(score.lastWeek);
 
   // The bear is always the one who started Two, the bunny the other.
   const bearIsMe = activeUser === 'user';
-  const myMood: Mood = meHop.shown
-    ? meHop.word === 'hehe'
-      ? 'laugh'
-      : 'shock'
-    : hugging
-    ? 'happy'
-    : miss.level >= 3
-    ? 'puppy'
-    : 'smile';
-  const theirMood: Mood = themHop.shown
-    ? 'laugh'
-    : hugging
-    ? 'happy'
-    : asleep
-    ? 'sleep'
-    : partnerTyping
-    ? 'grin'
-    : partnerOnline
-    ? 'happy'
-    : 'smile';
   // Nearer each other online, nearer still in a hug.
   const gap = hugging ? 24 : partnerOnline ? 50 : 66;
   const meX = bearIsMe ? 160 - gap : 160 + gap;
   const themX = bearIsMe ? 160 + gap : 160 - gap;
+  const xOf = (who: 'me' | 'them') => (who === 'me' ? meX : themX);
+  const isBear = (who: 'me' | 'them') => (who === 'me') === bearIsMe;
+  /** Where a character's head is, and how big it is drawn. */
+  const headOf = (who: 'me' | 'them') => (isBear(who) ? { y: 90, s: 0.8 } : { y: 98, s: 0.74 });
+
+  const moodOf = (who: 'me' | 'them'): Mood => {
+    if (play && !play.hush) {
+      if (play.target === who) return LOOKS[play.kind];
+      if (play.kind !== 'giggle') return 'grin';
+    }
+    if (hugging) return 'happy';
+    if (who === 'them') {
+      if (asleep) return 'sleep';
+      if (partnerTyping) return 'grin';
+      return partnerOnline ? 'happy' : 'smile';
+    }
+    return miss.level >= 3 ? 'puppy' : 'smile';
+  };
+
+  /** How the one it is done to moves (index.css, "Us two"). */
+  const motionOf = (who: 'me' | 'them'): string => {
+    if (!play || play.hush || play.target !== who) return '';
+    switch (play.kind) {
+      case 'boop':
+        return play.combo >= 5 ? 'us-hop-big' : 'us-hop';
+      case 'giggle':
+        return 'us-hop';
+      case 'tickle':
+        return 'us-wiggle';
+      case 'pinch':
+        return 'us-squish';
+      case 'pat':
+        return 'us-nod';
+      case 'pillow':
+        return 'us-bonk';
+    }
+  };
 
   const character = (who: 'me' | 'them') => {
-    const isBear = (who === 'me') === bearIsMe;
-    const x = who === 'me' ? meX : themX;
-    const mood = who === 'me' ? myMood : theirMood;
+    const head = headOf(who);
+    const motion = motionOf(who);
+    const Char = isBear(who) ? Bear : Bunny;
     const arms = hugging ? 'up' : who === 'them' && partnerTyping ? 'hold' : 'down';
-    const hop = who === 'me' ? meHop.n : themHop.n;
-    const Char = isBear ? Bear : Bunny;
     return (
-      <g className="us-move" style={{ transform: `translateX(${x - 160}px)` }}>
-        <g key={hop} className={hop ? 'us-part us-hop' : 'us-part'}>
+      <g className="us-move" style={{ transform: `translateX(${xOf(who) - 160}px)` }}>
+        <g key={motion ? `${who}${play?.n}` : who} className={motion ? `us-part ${motion}` : 'us-part'}>
           <g className={asleep && who === 'them' ? 'us-part' : 'us-part us-breathe'}>
-            <Char x={160} y={isBear ? 90 : 98} s={isBear ? 0.8 : 0.74} mood={mood} arms={arms} />
+            <Char x={160} y={head.y} s={head.s} mood={moodOf(who)} arms={arms} />
           </g>
         </g>
       </g>
     );
   };
 
-  const tapThem = () => {
-    haptic('tick');
-    setThemHop(h => ({ n: h.n + 1, shown: true }));
-    onBoop();
+  /** What a play draws besides the move: hands on cheeks, a patting paw, a flying pillow. */
+  const props = () => {
+    if (!play || play.hush || play.kind === 'boop' || play.kind === 'giggle') return null;
+    const target = play.target;
+    const actor = target === 'me' ? 'them' : 'me';
+    const x = xOf(target);
+    const head = headOf(target);
+    const fur = isBear(actor) ? BEAR_FUR : BUNNY_FUR;
+    const paw = (cx: number, cy: number) => <ellipse cx={cx} cy={cy} rx={7} ry={6} fill={fur} stroke={INK} strokeWidth={2} />;
+    switch (play.kind) {
+      case 'pinch':
+        return (
+          <g key={`p${play.n}`} className="us-part us-pinch">
+            {paw(x - 21 * head.s - 6, head.y + 6 * head.s)}
+            {paw(x + 21 * head.s + 6, head.y + 6 * head.s)}
+            <g fill="#ff7d9a" opacity={0.85}>
+              <ellipse cx={x - 19 * head.s} cy={head.y + 6 * head.s} rx={6} ry={4} />
+              <ellipse cx={x + 19 * head.s} cy={head.y + 6 * head.s} rx={6} ry={4} />
+            </g>
+          </g>
+        );
+      case 'pat':
+        return (
+          <g key={`p${play.n}`} className="us-part us-pat">
+            {paw(x, head.y - 34 * head.s)}
+          </g>
+        );
+      case 'tickle':
+        return (
+          <g key={`p${play.n}`} className="us-part us-tickle">
+            {paw(x - 26, head.y + 34 * head.s)}
+            {paw(x + 26, head.y + 34 * head.s)}
+          </g>
+        );
+      case 'pillow':
+        return (
+          <g key={`p${play.n}`}>
+            <g className="us-part us-throw" style={{ '--dx': `${xOf(actor) - x}px` } as React.CSSProperties}>
+              <rect x={x - 13} y={head.y - 8} width={26} height={16} rx={6} fill="#fff" stroke={INK} strokeWidth={2} />
+              <path d={`M${x - 9},${head.y - 8} L${x - 13},${head.y - 12} M${x + 9},${head.y + 8} L${x + 13},${head.y + 12}`} stroke={INK} strokeWidth={2} />
+            </g>
+            {[-14, 0, 13].map((dx, i) => (
+              <ellipse
+                key={i}
+                cx={x + dx}
+                cy={head.y - 18}
+                rx={2.5}
+                ry={6}
+                transform={`rotate(${dx * 2} ${x + dx} ${head.y - 18})`}
+                fill="#fff"
+                stroke={INK}
+                strokeWidth={1.2}
+                className="us-part us-feather"
+                style={{ animationDelay: `${0.42 + i * 0.08}s` }}
+              />
+            ))}
+          </g>
+        );
+    }
   };
-  const tapMe = () => {
+
+  // Tapping them boops (a combo when fast); holding opens the rest.
+  const [menuOpen, setMenuOpen] = useState(false);
+  useBackLayer(menuOpen, () => setMenuOpen(false));
+  const hold = useRef<{ timer: ReturnType<typeof setTimeout>; opened: boolean } | null>(null);
+  const combo = useRef({ at: 0, n: 0 });
+  const doPlay = (kind: PlayKind) => {
+    haptic(kind === 'pillow' ? 'confirm' : 'tick');
+    if (asleep) {
+      // Let sleepers sleep: counted, but not felt on their phone.
+      start({ kind, target: 'them', combo: 1, hush: true });
+      onPlay(kind, true);
+      return;
+    }
+    let n = 1;
+    if (kind === 'boop') {
+      const t = Date.now();
+      n = t - combo.current.at < COMBO_MS ? combo.current.n + 1 : 1;
+      combo.current = { at: t, n };
+    }
+    start({ kind, target: 'them', combo: n });
+    onPlay(kind, false);
+  };
+  const pressStart = () => {
+    if (hold.current) clearTimeout(hold.current.timer);
+    hold.current = {
+      opened: false,
+      timer: setTimeout(() => {
+        if (!hold.current) return;
+        hold.current.opened = true;
+        haptic('tick');
+        setMenuOpen(true);
+      }, HOLD_MS)
+    };
+  };
+  const pressEnd = (tap: boolean) => {
+    const h = hold.current;
+    hold.current = null;
+    if (!h) return;
+    clearTimeout(h.timer);
+    if (tap && !h.opened) doPlay('boop');
+  };
+  const giggle = () => {
     haptic('tick');
-    setMeHop(h => ({ n: h.n + 1, word: 'hehe', shown: true }));
+    start({ kind: 'giggle', target: 'me', combo: 1 });
   };
   const onKey = (run: () => void) => (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -202,6 +393,11 @@ export const UsScene: React.FC<UsSceneProps> = ({
     }
   };
 
+  const bubbleFor = (p: Play) => {
+    if (p.hush) return tr('Shh… {name} is sleeping 😴', { name: partnerName });
+    if (p.kind === 'boop' && p.combo >= 2) return tr('Boop ×{n}!', { n: p.combo });
+    return p.kind === 'boop' ? tr('Boop!') : SAYS[p.kind];
+  };
   const leader = score.user === score.partner ? null : score.user > score.partner ? 'user' : 'partner';
 
   return (
@@ -236,11 +432,11 @@ export const UsScene: React.FC<UsSceneProps> = ({
               ].map(([cx, cy], i) => (
                 <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" className="us-twinkle" style={{ animationDelay: `${i * 0.4}s` }} />
               ))}
-              <path d="M286,18 A16,16 0 1 0 300,40 A12,12 0 1 1 286,18 Z" fill="#ffe58a" stroke="#3b2723" strokeWidth={2} />
+              <path d="M286,18 A16,16 0 1 0 300,40 A12,12 0 1 1 286,18 Z" fill="#ffe58a" stroke={INK} strokeWidth={2} />
             </g>
           ) : (
             <g>
-              <circle cx={284} cy={30} r={part === 'evening' ? 15 : 13} fill={part === 'evening' ? '#ff8a5c' : '#ffd23f'} stroke="#3b2723" strokeWidth={2} />
+              <circle cx={284} cy={30} r={part === 'evening' ? 15 : 13} fill={part === 'evening' ? '#ff8a5c' : '#ffd23f'} stroke={INK} strokeWidth={2} />
               <g className="us-cloud" fill="#fff" opacity={0.92}>
                 <ellipse cx={60} cy={30} rx={20} ry={8} />
                 <ellipse cx={72} cy={24} rx={12} ry={8} />
@@ -256,7 +452,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
           {/* Between them while you are both here: a little heart. */}
           {(partnerOnline || hugging) && (
             <g className="stk" data-play="true">
-              <Heart x={160} y={hugging ? 44 : 60} s={hugging ? 0.9 : 0.55} cls={hugging ? 'stk-beat' : 'stk-beat'} />
+              <Heart x={160} y={hugging ? 44 : 60} s={hugging ? 0.9 : 0.55} cls="stk-beat" />
               {hugging && (
                 <>
                   <Heart x={128} y={40} s={0.5} cls="stk-rise" />
@@ -275,37 +471,115 @@ export const UsScene: React.FC<UsSceneProps> = ({
             {asleep && <Zzz x={themX + 14} y={42} cls="stk-rise" />}
           </g>
 
-          <g role="button" tabIndex={0} aria-label={tr('Boop {name}', { name: partnerName })} className="us-tap" onClick={tapThem} onKeyDown={onKey(tapThem)}>
+          <g
+            role="button"
+            tabIndex={0}
+            aria-label={tr('Boop {name}', { name: partnerName })}
+            className="us-tap"
+            onPointerDown={pressStart}
+            onPointerUp={() => pressEnd(true)}
+            onPointerLeave={() => pressEnd(false)}
+            onPointerCancel={() => pressEnd(false)}
+            onContextMenu={e => e.preventDefault()}
+            onKeyDown={onKey(() => doPlay('boop'))}
+          >
             {character('them')}
             <rect x={themX - 34} y={30} width={68} height={120} fill="transparent" />
           </g>
-          <g role="button" tabIndex={0} aria-label={tr('Giggle')} className="us-tap" onClick={tapMe} onKeyDown={onKey(tapMe)}>
+          <g role="button" tabIndex={0} aria-label={tr('Giggle')} className="us-tap" onClick={giggle} onKeyDown={onKey(giggle)}>
             {character('me')}
             <rect x={meX - 34} y={30} width={68} height={120} fill="transparent" />
           </g>
+          {props()}
 
-          {themHop.shown && <Bubble key={`t${themHop.n}`} x={themX} y={34} text={tr('Boop!')} />}
-          {meHop.shown && <Bubble key={`m${meHop.n}`} x={meX} y={34} text={meHop.word === 'hehe' ? 'hehe' : tr('Boop!')} />}
-          {!themHop.shown && partnerTyping && !hugging && <Bubble x={themX} y={30} text="• • •" wide={40} />}
-          {!themHop.shown && !partnerOnline && !asleep && !partnerTyping && <Bubble x={themX} y={30} text="…" wide={30} />}
+          {/* Last week's champion holds the trophy. */}
+          {trophy &&
+            (() => {
+              // On the grass beside the champion, on the outer side.
+              const x = trophy === activeUser ? meX : themX;
+              const side = x < 160 ? -1 : 1;
+              return (
+                <text x={x + side * 40} y={146} fontSize={18} textAnchor="middle" className="us-part us-trophy" aria-hidden="true">
+                  🏆
+                </text>
+              );
+            })()}
 
-          <g fontFamily="Manrope, system-ui, sans-serif" fontWeight={700} fontSize={11} textAnchor="middle" fill={part === 'night' ? '#fff' : '#3b2723'}>
+          {play && <Bubble key={`b${play.n}`} x={xOf(play.target)} y={34} text={bubbleFor(play)} />}
+          {!play && partnerTyping && !hugging && <Bubble x={themX} y={30} text="• • •" wide={40} />}
+          {!play && !partnerOnline && !asleep && !partnerTyping && <Bubble x={themX} y={30} text="…" wide={30} />}
+
+          <g fontFamily="Manrope, system-ui, sans-serif" fontWeight={700} fontSize={11} textAnchor="middle" fill={part === 'night' ? '#fff' : INK}>
             <text x={meX} y={164}>{tr('You')}</text>
             <text x={themX} y={164}>{partnerName.length > 12 ? partnerName.slice(0, 11) + '…' : partnerName}</text>
           </g>
         </svg>
+
+        {/* The rest of the boop battle, from a long press or the button below. */}
+        {menuOpen && (
+          <div className="absolute inset-0 flex items-end justify-center bg-black/25 p-2" onClick={() => setMenuOpen(false)}>
+            <div role="menu" aria-label={tr('Play with {name}', { name: partnerName })} className="us-menu" onClick={e => e.stopPropagation()}>
+              {PLAYS.map(p => (
+                <button
+                  key={p.kind}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    doPlay(p.kind);
+                  }}
+                  className="us-menu-item"
+                >
+                  <span className="text-[22px] leading-none" aria-hidden="true">
+                    {p.emoji}
+                  </span>
+                  <span>{tr(p.label)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Today's boops. */}
-      <div className="flex items-center justify-between gap-3 text-[13px]">
-        <span className="text-linen-secondary">{tr('Boops today')}</span>
-        <span className="tabular-nums text-linen-primary">
-          {leader === activeUser && '👑 '}
-          {tr('You')} <b>{score[activeUser]}</b>
-          <span className="mx-1.5 text-linen-secondary">·</span>
-          {leader === theirSeat && '👑 '}
-          {partnerName} <b>{score[theirSeat]}</b>
-        </span>
+      {/* The scores: today, this week, and last week's champion. */}
+      <div className="space-y-1.5 text-[13px]">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-linen-secondary">{tr('Boops today')}</span>
+          <span className="tabular-nums text-linen-primary">
+            {leader === activeUser && '👑 '}
+            {tr('You')} <b>{score[activeUser]}</b>
+            <span className="mx-1.5 text-linen-secondary">·</span>
+            {leader === theirSeat && '👑 '}
+            {partnerName} <b>{score[theirSeat]}</b>
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-linen-secondary">{tr('This week')}</span>
+          <span className="tabular-nums text-linen-primary">
+            {tr('You')} <b>{weekly[activeUser]}</b>
+            <span className="mx-1.5 text-linen-secondary">·</span>
+            {partnerName} <b>{weekly[theirSeat]}</b>
+          </span>
+        </div>
+        {trophy && score.lastWeek && (
+          <p className="text-linen-primary">
+            🏆 {tr("Last week's champion: {name} ({a} to {b})", {
+              name: nameOf(trophy),
+              a: Math.max(score.lastWeek.user, score.lastWeek.partner),
+              b: Math.min(score.lastWeek.user, score.lastWeek.partner)
+            })}
+          </p>
+        )}
+        <div className="flex items-center justify-between gap-3 pt-0.5">
+          <span className="text-[11px] text-linen-secondary">{tr('Tap {name} to boop · hold for more', { name: partnerName })}</span>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            className="shrink-0 rounded-full border border-linen-border px-3 py-1 text-[12px] font-semibold text-linen-primary transition-colors hover:bg-linen-variant active:scale-95"
+          >
+            {tr('More')} 🤭
+          </button>
+        </div>
       </div>
 
       {/* Good morning, and the last word last night. */}

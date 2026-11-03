@@ -901,4 +901,18 @@ export const TA: Readonly<Record<string, string>> = {
   '{n} stickers': '{n} ஸ்டிக்கர்கள்',
   '{n} min of voice notes': '{n} நிமிட குரல் செய்திகள்',
   'Favourite emoji, used {times}': 'பிடித்த எமோஜி, {times}',
+
+  // The boop battle (components/UsScene).
+  Tickle: 'கிச்சுகிச்சு',
+  'Pinch cheeks': 'கன்னம் கிள்ளு',
+  'Head pat': 'தலை தட்டு',
+  'Pillow fight': 'தலையணை சண்டை',
+  Boop: 'பூப்',
+  'Boop ×{n}!': 'பூப் ×{n}!',
+  'Shh… {name} is sleeping 😴': 'ஷ்ஷ்… {name} தூங்குகிறார் 😴',
+  'Play with {name}': '{name}-உடன் விளையாடு',
+  'This week': 'இந்த வாரம்',
+  "Last week's champion: {name} ({a} to {b})": 'கடந்த வார சாம்பியன்: {name} ({a} - {b})',
+  'Tap {name} to boop · hold for more': '{name}-ஐ தொட்டால் பூப் · மேலும் அழுத்திப் பிடிக்கவும்',
+  More: 'மேலும்',
 };
