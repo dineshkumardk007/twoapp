@@ -1514,12 +1514,15 @@ export const App: React.FC = () => {
             ) {
               deliveredQueueRef.current.add(incoming.id);
               if (!msg.replay) flushDelivered();
-              // Arrived now with Two off the screen: the moon widget's star
+              // Arrived with Two off the screen: the moon widget's star
               // comes out, and the phone may put up its one plain word if
               // that was switched on in Settings - behind the calculator too,
               // since the word gives nothing away. One held for later is not
-              // news yet.
-              if (!msg.replay && !held && !isShown()) newMessageNotice();
+              // news yet. Nor is history being restored - but one fetched
+              // after the connection came back is: with Two in the background
+              // that is how a message sent while the phone slept arrives, and
+              // it used to come with no word at all.
+              if (!msg.restoring && !held && !isShown()) newMessageNotice();
             }
             setState(prev => {
               // Arriving twice must not mean appearing twice.
@@ -3085,6 +3088,17 @@ export const App: React.FC = () => {
     if (record.type === GROUP_PHOTO_PART) {
       takeHdPart(`group:${groupId}`, parsed);
       return;
+    }
+
+    // A message from someone in the group, new to this phone, with Two out
+    // of sight: the same one plain word as for your own chat (and the moon
+    // widget's star), if the notice is on. Not history being restored.
+    if (record.type === GROUP_CHAT && !msg.restoring && !isShown()) {
+      const here = latestRef.current.state.groups.find(gr => gr.id === groupId);
+      const rid = String(record.id);
+      const mid = typeof parsed.mid === 'string' ? parsed.mid : '';
+      const known = !!here && here.messages.some(m => m.rid === rid || m.id === rid || (!!mid && m.id === mid));
+      if (here && !known && !deletedHere(here.deletedForMe, { id: mid || rid, rid })) newMessageNotice();
     }
 
     // Their message ends their "typing…" in the same update that shows it,
