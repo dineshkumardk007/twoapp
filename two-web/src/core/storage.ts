@@ -1,5 +1,6 @@
 import type { ComingUpDay } from './comingUp';
 import type { Statuses } from './status';
+import type { Boops } from './usTwo';
 import {
   EmotionalReport,
   ChatMessage,
@@ -163,6 +164,8 @@ export interface SpaceState {
   partnerReadHeardAt?: number;
   /** When the partner's device last said it was awake; 0 when never heard. */
   partnerLastSeen: number;
+  /** Today's boops on Home (components/UsScene): how many each of you sent. */
+  boops?: Boops;
   /**
    * Group spaces this device belongs to.
    *

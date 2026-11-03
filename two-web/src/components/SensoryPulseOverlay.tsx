@@ -270,6 +270,8 @@ export const SensoryPulseOverlay: React.FC<SensoryPulseOverlayProps> = ({
         id
       );
       haptic('confirm');
+      // The two of you hug on Home (UsScene, HEART_SENT_EVENT).
+      window.dispatchEvent(new Event('two-heart-sent'));
 
       const now = Date.now();
       const sameMoment = !reply && moments.receivedAt > 0 && now - moments.receivedAt < SAME_MOMENT_MS;

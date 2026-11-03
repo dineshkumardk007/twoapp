@@ -272,6 +272,8 @@ import {
   type PhotoFields
 } from './core/chatActions';
 import { cleanStickerId } from './core/stickers';
+import { boopsFor, chatDay, withBoopCount } from './core/usTwo';
+import { BOOPED_EVENT } from './components/UsScene';
 import {
   CHAT_PHOTO_PART,
   GROUP_PHOTO_PART,
@@ -425,6 +427,9 @@ function chatFromWire(parsed: any): ChatMessage {
     ...(later ? { showAt: later, sentAt: later } : {})
   };
 }
+
+/** Today's boop count from one of you (components/UsScene). */
+const BOOP = 'BOOP';
 
 const AdventuresView = lazy(() => import('./views/AdventuresView').then(m => ({ default: m.AdventuresView })));
 const CanvasOfUsView = lazy(() => import('./views/CanvasOfUsView').then(m => ({ default: m.CanvasOfUsView })));
@@ -1784,6 +1789,21 @@ export const App: React.FC = () => {
           } else if (record.type === CHAT_PHOTO_PART) {
             // A piece of a photo's HD copy (core/hdPhoto); the last one makes it whole.
             takeHdPart('chat', parsed);
+          } else if (record.type === BOOP) {
+            // How many boops a phone has sent today (UsScene): only ever up.
+            const seat = record.authorId === 'user' || record.authorId === 'partner' ? record.authorId : null;
+            if (!seat) return;
+            const today = chatDay(Date.now());
+            const next = withBoopCount(latestRef.current.state.boops, seat, String(parsed?.day || ''), Number(parsed?.count), today);
+            if (!next) return;
+            setState(prev => {
+              const raised = withBoopCount(prev.boops, seat, String(parsed?.day || ''), Number(parsed?.count), today);
+              return raised ? { ...prev, boops: raised } : prev;
+            });
+            // Booped just now by them: your bear or bunny jumps on Home.
+            if (seat !== state.activeUser && !msg.replay && !msg.restoring) {
+              window.dispatchEvent(new CustomEvent(BOOPED_EVENT));
+            }
           } else if (record.type === VOICE_HEARD) {
             // The partner has played one of this phone's voice notes. Like a
             // read receipt, only the partner's say so counts - not one of our
@@ -3540,6 +3560,26 @@ export const App: React.FC = () => {
     const whole = hdAssemblerRef.current.add(scope, part);
     if (whole) keepHd(scope, part.photoId, whole);
   };
+  /**
+   * A boop for them, from Home (UsScene): counted here at once, and the
+   * day's count sent a moment after the tapping stops - one record however
+   * fast the taps, and the relay keeps only the newest from each of you.
+   */
+  const boopTimerRef = useRef<number | undefined>(undefined);
+  const handleBoop = () => {
+    const today = chatDay(Date.now());
+    setState(prev => {
+      const now = boopsFor(prev.boops, today);
+      return { ...prev, boops: { ...now, [prev.activeUser]: now[prev.activeUser] + 1 } };
+    });
+    window.clearTimeout(boopTimerRef.current);
+    boopTimerRef.current = window.setTimeout(() => {
+      const latest = latestRef.current.state;
+      const count = boopsFor(latest.boops, today)[latest.activeUser];
+      if (count > 0) wsRelay.broadcastUpdate(BOOP, { day: today, count });
+    }, 600);
+  };
+
   /** The HD copy of a photo just sent: kept here, and sent in pieces after it. */
   const sendHdCopy = (groupId: string | null, info: HdInfo, dataUrl: string) => {
     keepHd(groupId ? `group:${groupId}` : 'chat', info.id, dataUrl);
@@ -5890,6 +5930,9 @@ export const App: React.FC = () => {
             onAddMilestone={stable('addMilestone', handleAddMilestone)}
             onSaveComfortBox={stable('saveComfortBox', handleSaveComfortBox)}
             onSetStatus={stable('setStatus', handleSetStatus)}
+            partnerOnline={partnerShownOnline}
+            partnerTyping={partnerTypingAt > 0}
+            onBoop={stable('boop', handleBoop)}
             partnerNews={partnerNews}
             partnerUpdate={partnerUpdate}
           />

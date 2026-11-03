@@ -6,6 +6,7 @@
 // not about you" while it is on - is not a card here, and stays at the top.
 
 export type HomeCardId =
+  | 'us'
   | 'ourDays'
   | 'comingUp'
   | 'kural'
@@ -14,7 +15,8 @@ export type HomeCardId =
   | 'thinking'
   | 'question'
   | 'quote'
-  | 'milestones';
+  | 'milestones'
+  | 'numbers';
 
 export interface HomeCard {
   id: HomeCardId;
@@ -25,6 +27,7 @@ export interface HomeCard {
 
 /** Every card, in the order Home has always had them. */
 export const HOME_CARDS: readonly HomeCard[] = [
+  { id: 'us', label: 'Us two' },
   { id: 'ourDays', label: 'Our days' },
   { id: 'comingUp', label: 'Coming up' },
   { id: 'kural', label: 'Kural of the day' },
@@ -33,7 +36,8 @@ export const HOME_CARDS: readonly HomeCard[] = [
   { id: 'thinking', label: 'Thinking of you' },
   { id: 'question', label: "Today's question" },
   { id: 'quote', label: 'Quote of the day' },
-  { id: 'milestones', label: 'Milestones' }
+  { id: 'milestones', label: 'Milestones' },
+  { id: 'numbers', label: 'Our funny numbers' }
 ];
 
 export interface HomeLayout {

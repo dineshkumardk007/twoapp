@@ -55,7 +55,9 @@ export const LATEST_ONLY_TYPES = new Set([
   'WEATHER',
   // The whole comfort box - note, photos, exercise - on every save. There is
   // one box, so the newest copy from each of you is all a restore needs.
-  'COMFORT_BOX'
+  'COMFORT_BOX',
+  // Today's boop count from each of you, on Home: the newest says it all.
+  'BOOP'
 ]);
 
 /**

@@ -51,7 +51,7 @@ const Part: React.FC<{ cls?: string; delay?: number; children: React.ReactNode }
 
 // ------------------------------------------------------------------ faces
 
-type Mood =
+export type Mood =
   | 'smile' | 'grin' | 'happy' | 'love' | 'cry' | 'sad' | 'angry' | 'sleep' | 'shock' | 'laugh'
   | 'wink' | 'kiss' | 'puppy' | 'smug' | 'roll' | 'drool' | 'yawn' | 'think' | 'tight' | 'dead';
 
@@ -276,7 +276,7 @@ const Face: React.FC<FaceProps> = ({ mood, ex, ey, my, k = 1, blush }) => {
 
 // ------------------------------------------------------------- characters
 
-type Arms = 'down' | 'up' | 'hold' | 'cover' | 'cross' | 'phone' | 'run' | 'none';
+export type Arms = 'down' | 'up' | 'hold' | 'cover' | 'cross' | 'phone' | 'run' | 'none';
 
 interface CharacterProps {
   x: number;
@@ -316,7 +316,7 @@ function paws(arms: Arms, fill: string): React.ReactNode {
   }
 }
 
-const Bear: React.FC<CharacterProps> = ({ x, y, s = 1, rot = 0, mood, arms = 'down', head, children }) => (
+export const Bear: React.FC<CharacterProps> = ({ x, y, s = 1, rot = 0, mood, arms = 'down', head, children }) => (
   <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${s})`}>
     {!head && (
       <>
@@ -339,7 +339,7 @@ const Bear: React.FC<CharacterProps> = ({ x, y, s = 1, rot = 0, mood, arms = 'do
   </g>
 );
 
-const Bunny: React.FC<CharacterProps> = ({ x, y, s = 1, rot = 0, mood, arms = 'down', head, children }) => (
+export const Bunny: React.FC<CharacterProps> = ({ x, y, s = 1, rot = 0, mood, arms = 'down', head, children }) => (
   <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${s})`}>
     {!head && (
       <>
@@ -409,7 +409,7 @@ interface At {
 }
 const at = ({ x, y, s = 1, rot = 0 }: At) => `translate(${x} ${y}) rotate(${rot}) scale(${s})`;
 
-const Heart: React.FC<At & { fill?: string }> = p => (
+export const Heart: React.FC<At & { fill?: string }> = p => (
   <Part cls={p.cls} delay={p.delay}>
     <g transform={at(p)}>
       <path d={HEART_PATH} {...shape(p.fill || RED, 2.4)} />
@@ -418,7 +418,7 @@ const Heart: React.FC<At & { fill?: string }> = p => (
   </Part>
 );
 
-const Drop: React.FC<At & { fill?: string }> = p => (
+export const Drop: React.FC<At & { fill?: string }> = p => (
   <Part cls={p.cls} delay={p.delay}>
     <g transform={at(p)}>
       <path d={DROP_PATH} {...shape(p.fill || WATER, 2.2)} />
@@ -426,7 +426,7 @@ const Drop: React.FC<At & { fill?: string }> = p => (
   </Part>
 );
 
-const Sparkle: React.FC<At & { fill?: string }> = p => (
+export const Sparkle: React.FC<At & { fill?: string }> = p => (
   <Part cls={p.cls} delay={p.delay}>
     <g transform={at(p)}>
       <path d={SPARKLE_PATH} {...shape(p.fill || '#ffe066', 2.2)} />
@@ -444,7 +444,7 @@ const Puff: React.FC<At> = p => (
   </Part>
 );
 
-const Zzz: React.FC<At> = p => (
+export const Zzz: React.FC<At> = p => (
   <Part cls={p.cls} delay={p.delay}>
     <g transform={at(p)} fontFamily="Manrope, system-ui, sans-serif" fontWeight={800} fill="#a99bff" stroke={INK} strokeWidth={1.6} paintOrder="stroke">
       <text x={0} y={0} fontSize={18}>Z</text>

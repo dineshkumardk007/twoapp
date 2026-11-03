@@ -25,6 +25,8 @@ import { ArrangeHomeSheet } from '../components/ArrangeHomeSheet';
 import { StatusStrip } from '../components/StatusStrip';
 import { HomeCardId, HomeLayout, readHomeLayout, writeHomeLayout } from '../core/homeLayout';
 import { useT } from '../core/i18n';
+import { UsScene } from '../components/UsScene';
+import { FunnyNumbersCard } from '../components/FunnyNumbersCard';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -48,6 +50,11 @@ interface HomeViewProps {
   partnerNews?: ActivityEvent[];
   /** Set while the partner's phone runs an older version than this one. */
   partnerUpdate?: { version: string; onDismiss: () => void };
+  /** For the "Us two" scene: whether they are here, and typing. */
+  partnerOnline?: boolean;
+  partnerTyping?: boolean;
+  /** A boop for them (UsScene), counted on both phones. */
+  onBoop?: () => void;
 }
 
 /**
@@ -103,7 +110,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onSaveComfortBox,
   onSetStatus,
   partnerNews = [],
-  partnerUpdate
+  partnerUpdate,
+  partnerOnline = false,
+  partnerTyping = false,
+  onBoop
 }) => {
   const tr = useT();
   const [showComfortBox, setShowComfortBox] = useState(false);
@@ -155,6 +165,29 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const hidden = (id: HomeCardId) => layout.hidden.includes(id);
   const homeCard = (id: HomeCardId): React.ReactNode => {
     switch (id) {
+      case 'us':
+        return hidden('us') ? null : (
+          // The two of you, as you are right now - and a few silly scores.
+          <div className="rounded-3xl border border-linen-border bg-linen-surface p-4 sm:p-5 shadow-xs">
+            <UsScene
+              activeUser={state.activeUser}
+              partnerName={partnerName}
+              partnerOnline={partnerOnline}
+              partnerTyping={partnerTyping}
+              partnerLastSeen={state.partnerLastSeen}
+              myWeather={myReport.weather}
+              theirWeather={theirReport.weather}
+              messages={state.messages}
+              boops={state.boops}
+              onBoop={() => onBoop?.()}
+              onSendHeart={() => triggerGlobalPulse('Thinking of you')}
+            />
+          </div>
+        );
+      case 'numbers':
+        return hidden('numbers') ? null : (
+          <FunnyNumbersCard messages={state.messages} activeUser={state.activeUser} partnerName={partnerName} />
+        );
       case 'ourDays':
         return hidden('ourDays') ? null : (
           <>
