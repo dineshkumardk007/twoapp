@@ -1749,12 +1749,44 @@ html.dark .olai {
    finger lands (data-down, set on pointerdown), let go softly. No hover on a
    touch screen, where it would stick after the finger lifts. */
 .calc-key {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   color: #fff;
   background: rgb(38 38 38 / 0.8);
   transition: transform 160ms cubic-bezier(0.2, 0.8, 0.3, 1), background-color 220ms ease;
+}
+/* A ripple from under the finger, spreading and fading - only a move and a
+   fade, run by the graphics chip. Two names, so each press starts it anew
+   even mid-ripple (components/CalculatorDecoy, CalcKey). */
+.calc-key::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: var(--rx, 50%);
+  top: var(--ry, 50%);
+  width: 180%;
+  aspect-ratio: 1;
+  margin: -90% 0 0 -90%;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.18);
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+.calc-key[data-tone='op']::after { background: rgb(255 255 255 / 0.3); }
+.calc-key[data-ripple='a']::after { animation: calc-ripple-a 460ms cubic-bezier(0.2, 0.7, 0.3, 1); }
+.calc-key[data-ripple='b']::after { animation: calc-ripple-b 460ms cubic-bezier(0.2, 0.7, 0.3, 1); }
+@keyframes calc-ripple-a {
+  from { transform: scale(0.08); opacity: 1; }
+  to { transform: scale(1); opacity: 0; }
+}
+@keyframes calc-ripple-b {
+  from { transform: scale(0.08); opacity: 1; }
+  to { transform: scale(1); opacity: 0; }
 }
 .calc-key[data-tone='fn'] { color: #d4d4d4; background: #262626; }
 .calc-key[data-tone='op'] { background: #d97706; }
@@ -1769,8 +1801,51 @@ html.dark .olai {
   .calc-key:hover { background: #404040; }
   .calc-key[data-tone='op']:hover { background: #f59e0b; }
 }
+/* The calculator's screen: the sum as typed, the answer so far in grey, and
+   on = the answer rising into place with the sum small above it. */
+.calc-main {
+  max-width: 100%;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 300;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  overflow-wrap: anywhere;
+  transform-origin: 100% 100%;
+}
+.calc-main[data-fit='1'] { font-size: 4rem; }
+.calc-main[data-fit='2'] { font-size: 3.1rem; }
+.calc-main[data-fit='3'] { font-size: 2.45rem; }
+.calc-main[data-fit='4'] { font-size: 2rem; }
+.calc-main[data-fit='5'] { font-size: 1.65rem; }
+.calc-main[data-fit='error'] { font-size: 1.9rem; color: #f5f5f5; }
+.calc-preview,
+.calc-asked {
+  max-width: 100%;
+  min-height: 1.25em;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: #8f8f8f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calc-preview { font-size: 1.85rem; }
+.calc-asked { font-size: 1.15rem; }
+.calc-answer-in { animation: calc-answer-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+@keyframes calc-answer-in {
+  from { transform: translateY(70%) scale(0.5); opacity: 0.45; }
+}
+.calc-asked-in { animation: calc-asked-in 320ms ease-out both; }
+@keyframes calc-asked-in {
+  from { transform: translateY(60%); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .calc-key, .calc-key[data-down] { transform: none; }
+  .calc-key::after, .calc-answer-in, .calc-asked-in { animation: none !important; }
 }
 
 /* The emoji and sticker panel in the keyboard's place (components/EmojiPicker,

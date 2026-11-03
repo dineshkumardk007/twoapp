@@ -1,5 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Delete } from 'lucide-react';
 import { haptic } from '../core/haptics';
+import {
+  CALC_START,
+  endsWithCode,
+  pressBack,
+  pressDigit,
+  pressEquals,
+  pressOp,
+  pressPercent,
+  pressPoint,
+  pressSign,
+  preview,
+  showNumber,
+  showSum,
+  type CalcState,
+  type Op
+} from '../core/calc';
 
 interface CalculatorDecoyProps {
   onUnlock: () => void;
@@ -16,6 +33,15 @@ interface CalculatorDecoyProps {
 }
 
 const ESCAPE_HOLD_MS = 5000;
+/** Holding ⌫ keeps deleting: after this long, then every BACK_EVERY_MS. */
+const BACK_HOLD_MS = 420;
+const BACK_EVERY_MS = 70;
+
+/** How big the main line is drawn, stepping down as it grows so it always fits. */
+function fit(text: string): string {
+  const n = text.length;
+  return n <= 8 ? '1' : n <= 11 ? '2' : n <= 15 ? '3' : n <= 21 ? '4' : '5';
+}
 
 export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
   onUnlock,
@@ -24,11 +50,12 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
 }) => {
   const [askingEscape, setAskingEscape] = useState(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [display, setDisplay] = useState('0');
-  const [prevValue, setPrevValue] = useState<number | null>(null);
-  const [operation, setOperation] = useState<string | null>(null);
-  const [clearOnNextDigit, setClearOnNextDigit] = useState(false);
-  const [inputHistory, setInputHistory] = useState<string>('');
+  const [calc, setCalc] = useState<CalcState>(CALC_START);
+  // Kept in step at once, so keys pressed faster than the screen redraws
+  // each build on the one before.
+  const calcRef = useRef(calc);
+  // Each answer arrives with a little rise (index.css, calc-answer-in).
+  const [answers, setAnswers] = useState(0);
 
   // Dynamically disguise page title and favicon
   useEffect(() => {
@@ -50,80 +77,57 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
     };
   }, []);
 
-  const handleDigit = (digit: string) => {
-    setInputHistory(prev => prev + digit);
-    if (display === '0' || clearOnNextDigit) {
-      setDisplay(digit);
-      setClearOnNextDigit(false);
-    } else {
-      setDisplay(display + digit);
-    }
+  const act = (step: (s: CalcState) => CalcState) => {
+    const next = step(calcRef.current);
+    calcRef.current = next;
+    setCalc(next);
   };
 
-  const handleDecimal = () => {
-    setInputHistory(prev => prev + '.');
-    if (clearOnNextDigit) {
-      setDisplay('0.');
-      setClearOnNextDigit(false);
-    } else if (!display.includes('.')) {
-      setDisplay(display + '.');
-    }
-  };
-
-  const handleClear = () => {
-    setDisplay('0');
-    setPrevValue(null);
-    setOperation(null);
-    setInputHistory('');
-  };
-
-  const handleOperation = (op: string) => {
-    setInputHistory(prev => prev + op);
-    setPrevValue(parseFloat(display));
-    setOperation(op);
-    setClearOnNextDigit(true);
-  };
-
-  const handleEquals = () => {
-    // Check if secret unlock sequence was typed
-    const cleanPin = (secretPin || '142.85').replace(/=/g, '').trim();
-    if (
-      display === secretPin ||
-      display === cleanPin ||
-      inputHistory.endsWith(secretPin) ||
-      inputHistory.endsWith(cleanPin)
-    ) {
+  const equals = () => {
+    // The code, typed and then =, opens Two.
+    if (endsWithCode(calcRef.current.keys, secretPin || '142.85')) {
       onUnlock();
       return;
     }
-
-    if (operation && prevValue !== null) {
-      const current = parseFloat(display);
-      let result = 0;
-      switch (operation) {
-        case '+': result = prevValue + current; break;
-        case '-': result = prevValue - current; break;
-        case '×': result = prevValue * current; break;
-        case '÷': result = current !== 0 ? prevValue / current : 0; break;
-      }
-      setDisplay(String(Number(result.toFixed(6))));
-      setPrevValue(null);
-      setOperation(null);
-      setClearOnNextDigit(true);
-      setInputHistory('');
-    }
+    const next = pressEquals(calcRef.current);
+    if (next.answered && next !== calcRef.current) setAnswers(n => n + 1);
+    calcRef.current = next;
+    setCalc(next);
   };
+
+  const digit = (d: string) => act(s => pressDigit(s, d));
+  const operation = (op: Op) => act(s => pressOp(s, op));
+  const back = () => act(pressBack);
+  const clear = () => act(() => CALC_START);
+
+  // A keyboard works too, as it would on any calculator on a computer.
+  const keyRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  keyRef.current = (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    const ops: Record<string, Op> = { '+': '+', '-': '−', '*': '×', x: '×', X: '×', '/': '÷' };
+    if (/^\d$/.test(k)) digit(k);
+    else if (k === '.' || k === ',') act(pressPoint);
+    else if (ops[k]) operation(ops[k]);
+    else if (k === 'Enter' || k === '=') equals();
+    else if (k === 'Backspace') back();
+    else if (k === 'Escape' || k === 'Delete') clear();
+    else if (k === '%') act(pressPercent);
+    else return;
+    e.preventDefault();
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => keyRef.current(e);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // The operation waiting for its second number shows lit, as on a phone's own calculator.
-  const opChosen = (op: string) => operation === op && clearOnNextDigit;
+  const waitingOp = !calc.answered && !calc.error && calc.parts.length > 1 ? calc.parts[calc.parts.length - 1] : null;
+  const opChosen = (op: Op) => waitingOp === op;
 
-  const handleToggleSign = () => {
-    setDisplay(String(parseFloat(display) * -1));
-  };
-
-  const handlePercent = () => {
-    setDisplay(String(parseFloat(display) / 100));
-  };
+  const main = calc.error ?? (calc.answered ? showNumber(Number(calc.parts[0])) : showSum(calc.parts));
+  const soFar = preview(calc);
 
   const beginHold = () => {
     if (!onEscape || holdTimer.current) return;
@@ -159,20 +163,31 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
     >
       <div className="shrink-0 px-6 pt-4 font-mono text-[11px] text-neutral-500">DEG</div>
 
-        {/* Calculator Display Screen.
+        {/* Calculator Display Screen: the sum as it is typed, the answer so
+            far in grey under it, and on = the answer, big, with the sum it
+            answers small above.
             Also the escape hatch: held for five seconds it offers a way out,
             for whoever forgot the code. Nothing about it looks pressable. */}
         <div
-          className="flex min-h-0 flex-1 items-end justify-end overflow-hidden px-6 pb-4 text-right"
+          className="calc-screen flex min-h-0 flex-1 flex-col items-end justify-end overflow-hidden px-6 pb-5 text-right"
           onPointerDown={beginHold}
           onPointerUp={cancelHold}
           onPointerLeave={cancelHold}
           onPointerCancel={cancelHold}
           onContextMenu={e => e.preventDefault()}
+          aria-live="polite"
         >
-          <span className="block w-full truncate font-mono text-5xl font-light tracking-tight text-white sm:text-6xl">
-            {display}
-          </span>
+          <div key={`a${answers}`} className={`calc-asked${calc.answered ? ' calc-asked-in' : ''}`}>
+            {calc.answered ? `${calc.asked} =` : ''}
+          </div>
+          <div
+            key={calc.answered ? `r${answers}` : 'typing'}
+            className={`calc-main${calc.answered ? ' calc-answer-in' : ''}`}
+            data-fit={calc.error ? 'error' : fit(main)}
+          >
+            {main}
+          </div>
+          <div className="calc-preview">{soFar !== null ? showNumber(soFar) : ''}</div>
         </div>
 
         {askingEscape && onEscape && (
@@ -211,29 +226,32 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
           className="grid shrink-0 grid-cols-4 grid-rows-5 gap-2 px-3 pb-3 font-medium"
           style={{ height: 'min(62vh, 30rem)' }}
         >
-          <CalcKey tone="fn" onPress={handleClear}>AC</CalcKey>
-          <CalcKey tone="fn" onPress={handleToggleSign}>±</CalcKey>
-          <CalcKey tone="fn" onPress={handlePercent}>%</CalcKey>
-          <CalcKey tone="op" chosen={opChosen('÷')} onPress={() => handleOperation('÷')}>÷</CalcKey>
+          <CalcKey tone="fn" label="All clear" onPress={clear}>AC</CalcKey>
+          <CalcKey tone="fn" label="Delete" repeat onPress={back}>
+            <Delete className="h-6 w-6" strokeWidth={1.8} aria-hidden="true" />
+          </CalcKey>
+          <CalcKey tone="fn" label="Percent" onPress={() => act(pressPercent)}>%</CalcKey>
+          <CalcKey tone="op" label="Divide" chosen={opChosen('÷')} onPress={() => operation('÷')}>÷</CalcKey>
 
-          <CalcKey onPress={() => handleDigit('7')}>7</CalcKey>
-          <CalcKey onPress={() => handleDigit('8')}>8</CalcKey>
-          <CalcKey onPress={() => handleDigit('9')}>9</CalcKey>
-          <CalcKey tone="op" chosen={opChosen('×')} onPress={() => handleOperation('×')}>×</CalcKey>
+          <CalcKey onPress={() => digit('7')}>7</CalcKey>
+          <CalcKey onPress={() => digit('8')}>8</CalcKey>
+          <CalcKey onPress={() => digit('9')}>9</CalcKey>
+          <CalcKey tone="op" label="Multiply" chosen={opChosen('×')} onPress={() => operation('×')}>×</CalcKey>
 
-          <CalcKey onPress={() => handleDigit('4')}>4</CalcKey>
-          <CalcKey onPress={() => handleDigit('5')}>5</CalcKey>
-          <CalcKey onPress={() => handleDigit('6')}>6</CalcKey>
-          <CalcKey tone="op" chosen={opChosen('-')} onPress={() => handleOperation('-')}>-</CalcKey>
+          <CalcKey onPress={() => digit('4')}>4</CalcKey>
+          <CalcKey onPress={() => digit('5')}>5</CalcKey>
+          <CalcKey onPress={() => digit('6')}>6</CalcKey>
+          <CalcKey tone="op" label="Minus" chosen={opChosen('−')} onPress={() => operation('−')}>−</CalcKey>
 
-          <CalcKey onPress={() => handleDigit('1')}>1</CalcKey>
-          <CalcKey onPress={() => handleDigit('2')}>2</CalcKey>
-          <CalcKey onPress={() => handleDigit('3')}>3</CalcKey>
-          <CalcKey tone="op" chosen={opChosen('+')} onPress={() => handleOperation('+')}>+</CalcKey>
+          <CalcKey onPress={() => digit('1')}>1</CalcKey>
+          <CalcKey onPress={() => digit('2')}>2</CalcKey>
+          <CalcKey onPress={() => digit('3')}>3</CalcKey>
+          <CalcKey tone="op" label="Plus" chosen={opChosen('+')} onPress={() => operation('+')}>+</CalcKey>
 
-          <CalcKey wide onPress={() => handleDigit('0')}>0</CalcKey>
-          <CalcKey onPress={handleDecimal}>.</CalcKey>
-          <CalcKey tone="op" onPress={handleEquals}>=</CalcKey>
+          <CalcKey label="Plus or minus" onPress={() => act(pressSign)}>±</CalcKey>
+          <CalcKey onPress={() => digit('0')}>0</CalcKey>
+          <CalcKey label="Point" onPress={() => act(pressPoint)}>.</CalcKey>
+          <CalcKey tone="op" label="Equals" onPress={equals}>=</CalcKey>
         </div>
 
         {/* No footer, no version string, no marker of any kind. A line reading
@@ -251,32 +269,58 @@ interface CalcKeyProps {
   tone?: 'digit' | 'fn' | 'op';
   /** An operation waiting for its second number. */
   chosen?: boolean;
-  /** The 0, two keys wide. */
-  wide?: boolean;
+  /** Read out instead of what is drawn on it. */
+  label?: string;
+  /** Held down, it keeps going: ⌫. */
+  repeat?: boolean;
   children: React.ReactNode;
 }
 
 /**
  * One key. It acts on the finger landing (pointerdown) - a click comes only
  * when the finger lifts, which made fast typing feel late and sticky - with a
- * tick from the phone and a press drawn at once (index.css, .calc-key). A
- * keyboard's Enter or Space still works through the click, which a pointer's
- * press never reaches twice: that click has a `detail` of 1 or more.
+ * tick from the phone, a press drawn at once and a ripple spreading from
+ * under the finger (index.css, .calc-key). A keyboard's Enter or Space still
+ * works through the click, which a pointer's press never reaches twice: that
+ * click has a `detail` of 1 or more.
  */
-const CalcKey: React.FC<CalcKeyProps> = ({ onPress, tone = 'digit', chosen, wide, children }) => {
+const CalcKey: React.FC<CalcKeyProps> = ({ onPress, tone = 'digit', chosen, label, repeat, children }) => {
+  const again = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stop = () => {
+    if (again.current) clearTimeout(again.current);
+    again.current = null;
+  };
+  useEffect(() => stop, []);
   const up = (e: React.PointerEvent<HTMLButtonElement>) => {
     delete e.currentTarget.dataset.down;
+    stop();
   };
   return (
     <button
       type="button"
       data-tone={tone}
       data-chosen={chosen || undefined}
+      aria-label={label}
       onPointerDown={e => {
         if (e.pointerType === 'mouse' && e.button !== 0) return;
-        e.currentTarget.dataset.down = '';
+        const key = e.currentTarget;
+        const box = key.getBoundingClientRect();
+        // The ripple starts under the finger; a fresh name restarts it on every press.
+        key.style.setProperty('--rx', `${e.clientX - box.left}px`);
+        key.style.setProperty('--ry', `${e.clientY - box.top}px`);
+        key.dataset.ripple = key.dataset.ripple === 'a' ? 'b' : 'a';
+        key.dataset.down = '';
         haptic('key');
         onPress();
+        if (repeat) {
+          stop();
+          const tick = () => {
+            haptic('key');
+            onPress();
+            again.current = setTimeout(tick, BACK_EVERY_MS);
+          };
+          again.current = setTimeout(tick, BACK_HOLD_MS);
+        }
       }}
       onPointerUp={up}
       onPointerCancel={up}
@@ -285,9 +329,9 @@ const CalcKey: React.FC<CalcKeyProps> = ({ onPress, tone = 'digit', chosen, wide
         if (e.detail === 0) onPress();
       }}
       onContextMenu={e => e.preventDefault()}
-      className={`calc-key flex items-center rounded-2xl ${
-        wide ? 'col-span-2 justify-start pl-6' : 'justify-center'
-      } ${tone === 'fn' ? 'text-xl' : tone === 'op' ? 'text-2xl font-semibold' : 'text-2xl'}`}
+      className={`calc-key flex items-center justify-center rounded-2xl ${
+        tone === 'fn' ? 'text-xl' : tone === 'op' ? 'text-3xl font-normal' : 'text-[1.7rem]'
+      }`}
     >
       {children}
     </button>
