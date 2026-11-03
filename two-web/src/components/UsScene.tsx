@@ -627,7 +627,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
       if (partnerTyping) return 'grin';
       return partnerOnline ? 'happy' : 'smile';
     }
-    return miss.level >= 3 ? 'puppy' : 'smile';
+    return 'smile';
   };
   const moodFor = (who: Who): Mood =>
     play && play.kind === 'pillow' && play.combo > 1 && who === play.target && beat === 0 ? 'shock' : moodOf(who);
