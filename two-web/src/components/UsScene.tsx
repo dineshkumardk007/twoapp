@@ -1,10 +1,27 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { ChevronRight, Volume2, VolumeX } from 'lucide-react';
 import type { ChatMessage, WeatherState } from '../types';
-import { Bear, Bunny, Heart, Sparkle, Zzz, Drop, type Mood } from './StickerArt';
+import { Heart, Sparkle, Zzz, Drop, type Mood } from './StickerArt';
+import { BOX, HeldPillow, JOINTS, Pillow, ReachArm, Rig, at, type RigArms, type RigKind, type RigLayers } from './UsRig';
+import {
+  FIRST_RELEASE,
+  FLIGHT_MS,
+  MOODS,
+  NEAR,
+  NEAR_ACTS,
+  PLAY_MS,
+  SAY_AT,
+  WALK_MS,
+  movesFor,
+  perform,
+  pillowMoves,
+  scootMoves,
+  type Act
+} from './usMoves';
+import { loadSounds, playSound, type SoundName } from '../core/sounds';
 import { wsRelay } from '../core/ws';
 import { haptic } from '../core/haptics';
 import { useT } from '../core/i18n';
-import { useBackLayer } from '../core/backStack';
 import { isShown } from '../core/shown';
 import {
   boopsFor,
@@ -30,7 +47,11 @@ export interface PlayDetail {
   quiet: boolean;
 }
 
+/** The whole thing, on its own tab; or a small window onto it, on Home. */
+export type SceneSize = 'tab' | 'preview';
+
 interface UsSceneProps {
+  size: SceneSize;
   activeUser: Seat;
   partnerName: string;
   partnerOnline: boolean;
@@ -44,6 +65,8 @@ interface UsSceneProps {
   /** A boop, tickle, pinch, pat or pillow for them; `quiet` while they sleep. */
   onPlay: (kind: PlayKind, quiet: boolean) => void;
   onSendHeart: () => void;
+  /** The small one on Home opens the tab. */
+  onOpen?: () => void;
 }
 
 const MISS_WORDS = ['All good 😌', 'A little 🙂', 'Missing you 🥺', 'A lot 😭', 'Dangerously high 🚨'];
@@ -57,7 +80,7 @@ const PLAYS: { kind: PlayKind; emoji: string; label: string }[] = [
 ];
 
 /** What the one it is done to says. */
-const SAYS: Record<PlayKind | 'giggle', string> = {
+const SAYS: Record<Act, string> = {
   boop: 'Boop!',
   tickle: 'hahaha!',
   pinch: 'squish!',
@@ -66,23 +89,31 @@ const SAYS: Record<PlayKind | 'giggle', string> = {
   giggle: 'hehe'
 };
 
-/** How the one it is done to looks. */
-const LOOKS: Record<PlayKind | 'giggle', Mood> = {
-  boop: 'laugh',
-  tickle: 'laugh',
-  pinch: 'happy',
-  pat: 'kiss',
-  pillow: 'shock',
-  giggle: 'laugh'
-};
-
 /** Taps closer together than this are one combo. */
 const COMBO_MS = 700;
-/** Held this long, a press opens the menu instead of booping. */
-const HOLD_MS = 450;
 
-const BEAR_FUR = '#c4895a';
-const BUNNY_FUR = '#fffaf3';
+/** A pillow thrown this soon after the last joins its run. */
+const VOLLEY_MS = 1_000;
+/** The soonest a pillow of a run is let go after its tap, and the gap kept between them. */
+const QUICK_RELEASE = 200;
+const THROW_GAP = 150;
+/** What each pillow of a run says as it lands. */
+const BONKS = ['bonk!', 'pow!', 'boff!', 'thwap!', 'wham!'];
+/** A run of boops climbs the scale, in semitones up (the app's D major pentatonic). */
+const BOOP_STEPS = [0, 2, 4, 7, 9, 12];
+
+/** Every sound of the battle (sound-design/recipes.mts), loaded as the scene opens. */
+const US_SOUNDS: SoundName[] = ['us-boop', 'us-tickle', 'us-hehe', 'us-pinch', 'us-pat', 'us-whoosh', 'us-bonk', 'us-dizzy', 'us-hop', 'us-shh'];
+/** This phone's own choice: sounds on, unless switched off. */
+const SOUND_KEY = 'two_us_sound';
+function readSoundOn(): boolean {
+  try {
+    return localStorage.getItem(SOUND_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
 const INK = '#3b2723';
 
 type Part = 'night' | 'evening' | 'day';
@@ -91,33 +122,65 @@ function partOfDay(at: number): Part {
   return h >= 21 || h < 6 ? 'night' : h >= 18 ? 'evening' : 'day';
 }
 
-/** The scene's own size, in the units everything in it is placed by. */
+/**
+ * The stage, in the units everything on it is placed by. The tab shows its
+ * middle bigger (index.css) and a strip of sky above it, at y below 0.
+ */
 const W = 320;
 const H = 170;
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;
+/** How much bigger the tab shows the stage, and so the part of it in view. */
+const ZOOM: Record<SceneSize, number> = { tab: 1.3, preview: 1 };
+const inView = (size: SceneSize): [number, number] => {
+  const z = ZOOM[size];
+  return [(W * (z - 1)) / (2 * z), (W * (z + 1)) / (2 * z)];
+};
+
+/** Where each one's head is on the stage, and how big it is drawn. */
+const HEADS: Record<RigKind, { y: number; s: number }> = { bear: { y: 90, s: 0.8 }, bunny: { y: 98, s: 0.74 } };
+
+const motionOk = () => {
+  try {
+    return !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return true;
+  }
+};
 
 /**
- * A piece of the scene in a layer of its own: a box of the scene, drawn
- * once. What moves is the layer - a transform or a fade the phone's
- * graphics chip does by itself - so nothing is drawn again while it moves,
- * and the page's own work is never held up by it. (Moving a part inside one
- * picture made the phone draw the whole picture again on every frame.)
+ * A piece of the scene in a layer of its own: a box of the stage, drawn
+ * once. What moves is the layer - or the layers it is wrapped in - by a
+ * transform or a fade the phone's graphics chip does by itself, so nothing
+ * is drawn again while it moves.
  */
 const Sprite: React.FC<{
   box: [number, number, number, number];
   className?: string;
   style?: React.CSSProperties;
+  wraps?: { className: string; style?: React.CSSProperties }[];
   children: React.ReactNode;
-}> = ({ box: [x, y, w, h], className, style, children }) => (
-  <div
-    className={`us-sprite${className ? ` ${className}` : ''}`}
-    style={{ left: pct(x, W), top: pct(y, H), width: pct(w, W), height: pct(h, H), ...style }}
-  >
+}> = ({ box: [x, y, w, h], className, style, wraps = [], children }) => {
+  let inner: React.ReactNode = (
     <svg viewBox={`${x} ${y} ${w} ${h}`} width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false">
       {children}
     </svg>
-  </div>
-);
+  );
+  for (let i = wraps.length - 1; i >= 0; i--) {
+    inner = (
+      <div className={`fx-l ${wraps[i].className}`} style={wraps[i].style}>
+        {inner}
+      </div>
+    );
+  }
+  return (
+    <div
+      className={`us-sprite${className ? ` ${className}` : ''}`}
+      style={{ left: pct(x, W), top: pct(y, H), width: pct(w, W), height: pct(h, H), ...style }}
+    >
+      {inner}
+    </div>
+  );
+};
 
 /** A small rain cloud, for a heavy weather day, its drops each a layer. */
 const RainCloud: React.FC<{ x: number; y: number }> = ({ x, y }) => (
@@ -140,13 +203,19 @@ const RainCloud: React.FC<{ x: number; y: number }> = ({ x, y }) => (
   </>
 );
 
-/** A speech bubble over a character, pointing down at it, kept inside the scene. */
-const Bubble: React.FC<{ x: number; y: number; text: string }> = ({ x, y, text }) => {
+/** A speech bubble over a character, pointing down at it, kept inside what is in view. */
+const Bubble: React.FC<{ x: number; y: number; text: string; view: [number, number]; delay?: number }> = ({
+  x,
+  y,
+  text,
+  view: [x0, x1],
+  delay = 0
+}) => {
   const w = Math.max(30, text.length * 6.6 + 18);
-  const cx = Math.min(W - w / 2 - 4, Math.max(w / 2 + 4, x));
+  const cx = Math.min(x1 - w / 2 - 4, Math.max(x0 + w / 2 + 4, x));
   return (
     <div className="us-bubble-at" style={{ left: pct(cx, W), top: pct(y, H) }}>
-      <div className="us-bubble us-pop">
+      <div className="us-bubble us-pop" style={delay ? { animationDelay: `${delay}ms` } : undefined}>
         {text}
         <span className="us-bubble-tail" style={{ left: `calc(50% + ${((x - cx) / w) * 100}%)` }} />
       </div>
@@ -154,30 +223,68 @@ const Bubble: React.FC<{ x: number; y: number; text: string }> = ({ x, y, text }
   );
 };
 
+/** A spiky "bonk", where the pillow lands. */
+function burst(cx: number, cy: number, r: number): string {
+  const points: string[] = [];
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2;
+    const d = i % 2 ? r * 0.5 : r;
+    points.push(`${(cx + Math.cos(a) * d).toFixed(1)},${(cy + Math.sin(a) * d).toFixed(1)}`);
+  }
+  return `M${points.join(' L')} Z`;
+}
+
 /** One play as it happens: what, to whom, and its number so the same again plays again. */
 interface Play {
   n: number;
-  kind: PlayKind | 'giggle';
+  kind: Act;
   target: 'me' | 'them';
   combo: number;
   /** The words over their head instead: they are asleep. */
   hush?: boolean;
+  /** How long the one doing it takes to hop over first. */
+  lead: number;
+  /** Seen, not heard: they saw you asleep. */
+  quiet?: boolean;
+  /** A pillow: when it is let go, and whether it starts a run. */
+  release?: number;
+  first?: boolean;
 }
 
+type Who = 'me' | 'them';
+const other = (who: Who): Who => (who === 'me' ? 'them' : 'me');
+
+/** A pillow in the air. Each of a run flies, lands and is heard on its own. */
+interface Throw {
+  n: number;
+  actor: Who;
+  target: Who;
+  d: 1 | -1;
+  /** When it is let go, from the tap. */
+  release: number;
+  word: string;
+}
+
+/** When a play's hit lands, from its start: what the bubble, the buzz and the sound wait for. */
+const hitAt = (p: Play) => (p.kind === 'pillow' ? (p.release ?? FIRST_RELEASE) + FLIGHT_MS : p.lead + SAY_AT[p.kind]);
+
 /**
- * Home's "Us two": a little live scene of the two of you - a bear for the
- * one who started Two, a bunny for the other, the same on both phones -
- * that shows how things are. Together when they are online, typing when
- * they are, asleep under the moon at night, a rain cloud over whoever is
- * having a heavy day, and a hug when a heart goes either way.
+ * "Us two": a little live cartoon of the two of you - a bear for the one who
+ * started Two, a bunny for the other, the same on both phones - that shows
+ * how things are. Together when they are online, typing when they are,
+ * asleep under the moon at night, a rain cloud over whoever is having a
+ * heavy day, and a hug when a heart goes either way.
  *
- * The boop battle: tap them to boop them - fast taps make a combo - or hold
- * for the rest: a tickle, a pinch of the cheeks, a head pat, a pillow. It
- * happens on their phone too, except that someone asleep is let sleep: no
- * buzz. Today's and this week's scores below, and last week's champion
- * holds the trophy in the scene.
+ * The boop battle: on its own tab, the buttons below - or a tap on them -
+ * send your bear or bunny hopping over to boop them, tickle them, pinch
+ * their cheeks or pat their head, or to throw a pillow from where you
+ * stand. It happens on their phone too, except that someone asleep is let
+ * sleep: no buzz. Today's and this week's scores below, and last week's
+ * champion holds the trophy in the scene. Home shows a small window onto it
+ * that opens the tab.
  */
 export const UsScene: React.FC<UsSceneProps> = ({
+  size,
   activeUser,
   partnerName,
   partnerOnline,
@@ -188,7 +295,8 @@ export const UsScene: React.FC<UsSceneProps> = ({
   messages,
   boops,
   onPlay,
-  onSendHeart
+  onSendHeart,
+  onOpen
 }) => {
   const tr = useT();
   const [now, setNow] = useState(Date.now());
@@ -200,11 +308,18 @@ export const UsScene: React.FC<UsSceneProps> = ({
   // Its moves run only while it is on screen: scrolled away, or with Two
   // in the background (index.css), every layer holds still.
   const sceneRef = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(true);
+  const [live, setLive] = useState(true);
+  const liveRef = useRef(true);
   useEffect(() => {
     const el = sceneRef.current;
     if (!el || typeof IntersectionObserver === 'undefined') return;
-    const watch = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.05 });
+    const watch = new IntersectionObserver(
+      ([entry]) => {
+        liveRef.current = entry.isIntersecting;
+        setLive(entry.isIntersecting);
+      },
+      { threshold: 0.05 }
+    );
     watch.observe(el);
     return () => watch.disconnect();
   }, []);
@@ -215,15 +330,80 @@ export const UsScene: React.FC<UsSceneProps> = ({
 
   // A hug: a heart either way.
   const [hugUntil, setHugUntil] = useState(0);
-  // The play under way, if any, for a moment.
+  const hugging = hugUntil > Date.now();
+
+  // The bear is always the one who started Two, the bunny the other.
+  const bearIsMe = activeUser === 'user';
+  const kindOf = (who: Who): RigKind => ((who === 'me') === bearIsMe ? 'bear' : 'bunny');
+  // Nearer each other online, nearer still in a hug.
+  const gap = hugging ? 24 : partnerOnline ? 50 : 66;
+  const meX = bearIsMe ? 160 - gap : 160 + gap;
+  const themX = bearIsMe ? 160 + gap : 160 - gap;
+  const homeX = (who: Who) => (who === 'me' ? meX : themX);
+  const geo = useRef({ me: meX, them: themX });
+  geo.current = { me: meX, them: themX };
+  /** 1 when the one a play is done to stands to the right. */
+  const dirTo = (target: Who) => ((target === 'them') === bearIsMe ? 1 : -1);
+
+  // The play under way, if any, and how far into it each face has got.
   const [play, setPlay] = useState<Play | null>(null);
+  const [beat, setBeat] = useState(0);
+  const playRef = useRef<Play | null>(null);
   const playN = useRef(0);
-  const start = (p: Omit<Play, 'n'>) => setPlay({ ...p, n: ++playN.current });
-  useEffect(() => {
-    if (!play) return;
-    const t = setTimeout(() => setPlay(current => (current && current.n === play.n ? null : current)), 1_900);
-    return () => clearTimeout(t);
-  }, [play]);
+  const [throws, setThrows] = useState<Throw[]>([]);
+  const lastThrow = useRef<{ at: number; release: number; target: Who; count: number } | null>(null);
+  const start = (p: Omit<Play, 'n' | 'lead'>): Play => {
+    const cur = playRef.current;
+    let lead = 0;
+    if (!p.hush && NEAR_ACTS.has(p.kind) && motionOk()) {
+      // Already there from the last one - a run of boops - or standing close enough.
+      const there = !!cur && !cur.hush && NEAR_ACTS.has(cur.kind) && cur.target === p.target;
+      const apart = Math.abs(geo.current.me - geo.current.them);
+      if (!there && Math.abs(apart - NEAR) > 8) lead = WALK_MS;
+    }
+    const next: Play = { ...p, n: ++playN.current, lead };
+    // Pillows: a tap while the last ones are still flying throws another, a
+    // beat behind the one before, so a run comes out as a steady stream -
+    // one pillow for every tap.
+    if (p.kind === 'pillow' && !p.hush) {
+      const t = performance.now();
+      const prev = lastThrow.current;
+      const inRun = !!prev && prev.target === p.target && t - prev.at < VOLLEY_MS;
+      next.release = inRun ? Math.max(QUICK_RELEASE, prev.at + prev.release + THROW_GAP - t) : FIRST_RELEASE;
+      next.first = !inRun;
+      next.combo = inRun ? prev.count + 1 : 1;
+      lastThrow.current = { at: t, release: next.release, target: p.target, count: next.combo };
+      const flying: Throw = {
+        n: next.n,
+        actor: other(p.target),
+        target: p.target,
+        d: dirTo(p.target),
+        release: next.release,
+        word: BONKS[(next.combo - 1) % BONKS.length]
+      };
+      setThrows(list => [...list, flying]);
+      setTimeout(() => setThrows(list => list.filter(f => f.n !== flying.n)), next.release + FLIGHT_MS + 1_300);
+    }
+    playRef.current = next;
+    setPlay(next);
+    setBeat(0);
+    return next;
+  };
+
+  /** Who is hopping over to the other, and so where each of them stands. */
+  const actorOf = (p: Play): Who => other(p.target);
+  const nearWho = play && !play.hush && NEAR_ACTS.has(play.kind) ? actorOf(play) : null;
+  const xAt = (who: Who) =>
+    who === nearWho && play ? homeX(play.target) - dirTo(play.target) * NEAR : homeX(who);
+  const meAt = xAt('me');
+  const themAt = xAt('them');
+
+  const meRig = useRef<RigLayers>({});
+  const themRig = useRef<RigLayers>({});
+  const rigOf = (who: Who) => (who === 'me' ? meRig : themRig);
+  const running = useRef<Animation[]>([]);
+  const volley = useRef<Animation[]>([]);
+  const scoots = useRef<Record<Who, Animation[]>>({ me: [], them: [] });
 
   useEffect(() => {
     const hug = () => setHugUntil(Date.now() + 4_000);
@@ -234,12 +414,13 @@ export const UsScene: React.FC<UsSceneProps> = ({
     const playedOnMe = (e: Event) => {
       const d = (e as CustomEvent<Partial<PlayDetail>>).detail || {};
       const kind = cleanPlayKind(d.kind);
-      // Felt only by someone looking - and never by someone asleep.
+      const p = start({ kind, target: 'me', combo: Math.max(1, Number(d.combo) || 1), quiet: !!d.quiet });
+      // Felt when it lands, by someone looking - and never by someone asleep.
       if (!d.quiet && isShown()) {
-        haptic(kind === 'pillow' ? 'confirm' : 'tick');
-        if (kind === 'tickle') [150, 300, 450].forEach(ms => setTimeout(() => haptic('tick'), ms));
+        const hit = hitAt(p);
+        setTimeout(() => haptic(kind === 'pillow' ? 'confirm' : 'tick'), hit);
+        if (kind === 'tickle') [150, 300, 450].forEach(ms => setTimeout(() => haptic('tick'), hit + ms));
       }
-      start({ kind, target: 'me', combo: Math.max(1, Number(d.combo) || 1) });
     };
     window.addEventListener(HEART_SENT_EVENT, hug);
     window.addEventListener(BOOPED_EVENT, playedOnMe);
@@ -254,7 +435,140 @@ export const UsScene: React.FC<UsSceneProps> = ({
     const t = setTimeout(() => setHugUntil(0), Math.max(0, hugUntil - Date.now()));
     return () => clearTimeout(t);
   }, [hugUntil]);
-  const hugging = hugUntil > Date.now();
+
+  // Sounds: heard on this phone while it is on screen and switched on.
+  const [soundOn, setSoundOn] = useState(readSoundOn);
+  const soundOnRef = useRef(soundOn);
+  soundOnRef.current = soundOn;
+  useEffect(() => {
+    if (readSoundOn()) loadSounds(US_SOUNDS);
+  }, []);
+  const hear = (name: SoundName, ms: number, rate?: number) => {
+    if (!soundOnRef.current || !liveRef.current || !isShown()) return;
+    playSound(name, { delay: Math.max(0, ms) / 1000, rate });
+  };
+  const switchSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    try {
+      localStorage.setItem(SOUND_KEY, next ? 'on' : 'off');
+    } catch {
+      /* private mode: on for now, as it was */
+    }
+    if (next) {
+      loadSounds(US_SOUNDS);
+      playSound('us-hop');
+    }
+  };
+  /**
+   * Each play's sounds, started on the frame its hit lands (playSound takes
+   * the speaker's own delay off), so a sound and what makes it are one.
+   * The parts inside a sound are spaced to the moves: three pats 300ms
+   * apart, a pinch let go 580ms after the pull begins.
+   */
+  const soundsFor = (p: Play, timers: ReturnType<typeof setTimeout>[]) => {
+    if (p.quiet) return;
+    if (p.hush) return hear('us-shh', 0);
+    const L = p.lead;
+    switch (p.kind) {
+      case 'boop':
+        hear('us-boop', L + 250, 2 ** (BOOP_STEPS[Math.min(p.combo, BOOP_STEPS.length) - 1] / 12));
+        break;
+      case 'tickle':
+        hear('us-tickle', L + 160);
+        break;
+      case 'pinch':
+        hear('us-pinch', L + 190);
+        break;
+      case 'pat':
+        hear('us-pat', L + 405);
+        break;
+      case 'pillow': {
+        const release = p.release ?? FIRST_RELEASE;
+        hear('us-whoosh', release);
+        hear('us-bonk', release + FLIGHT_MS, 1 + Math.min(p.combo - 1, 4) * 0.04);
+        // Tweeting stars after the last of a run: a newer pillow clears this.
+        timers.push(setTimeout(() => hear('us-dizzy', 0), release + FLIGHT_MS + 160));
+        break;
+      }
+      case 'giggle':
+        hear('us-hehe', 120);
+        break;
+    }
+  };
+
+  // A play: its moves, its faces as it goes on, and its end.
+  useLayoutEffect(() => {
+    const p = play;
+    if (!p) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    if (!p.hush) {
+      MOODS[p.kind].forEach((phase, i) => {
+        if (i > 0) timers.push(setTimeout(() => setBeat(i), p.lead + phase.at + (hitAt(p) - p.lead - SAY_AT[p.kind])));
+      });
+    }
+    // A pillow leaves the ones still flying alone: each lands on its own.
+    if (p.kind !== 'pillow') {
+      running.current.forEach(a => a.cancel());
+      running.current = [];
+    }
+    if (!p.hush && liveRef.current && motionOk()) {
+      const d = dirTo(p.target);
+      const target = rigOf(p.target).current;
+      // A cheek is pulled out from the far side of the face.
+      if (p.kind === 'pinch' && target.stretch) target.stretch.style.transformOrigin = at(d * 30, 4);
+      const moves = p.kind === 'pillow' ? pillowMoves(d, p.release ?? FIRST_RELEASE, p.first !== false) : movesFor(p.kind, d, p.lead, p.combo);
+      const started = perform(moves, {
+        actor: p.kind === 'giggle' ? undefined : rigOf(actorOf(p)).current,
+        target
+      });
+      if (p.kind === 'pillow') volley.current = [...volley.current.filter(a => a.playState !== 'finished'), ...started];
+      else running.current = started;
+    }
+    soundsFor(p, timers);
+    timers.push(
+      setTimeout(
+        () => {
+          if (playRef.current?.n === p.n) playRef.current = null;
+          setPlay(cur => (cur && cur.n === p.n ? null : cur));
+        },
+        p.hush ? 1_900 : hitAt(p) - SAY_AT[p.kind] + PLAY_MS[p.kind]
+      )
+    );
+    return () => timers.forEach(clearTimeout);
+    // Each play once, as it starts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [play]);
+
+  // Whoever moves - over to the other, back home, closer for a hug - hops there.
+  const lastAt = useRef<Record<Who, number> | null>(null);
+  useLayoutEffect(() => {
+    const before = lastAt.current;
+    lastAt.current = { me: meAt, them: themAt };
+    if (!before || !liveRef.current || !motionOk()) return;
+    for (const who of ['me', 'them'] as const) {
+      const moved = (who === 'me' ? meAt : themAt) - before[who];
+      if (Math.abs(moved) < 4) continue;
+      scoots.current[who].forEach(a => a.cancel());
+      scoots.current[who] = perform(
+        scootMoves(Math.sign(moved)).map(m => ({ ...m, who: 'target' as const })),
+        { target: rigOf(who).current }
+      );
+      // A pitter-pat as it lands each hop (usMoves, scootMoves).
+      hear('us-hop', WALK_MS * 0.55);
+      hear('us-hop', WALK_MS, 1.12);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meAt, themAt]);
+  useEffect(
+    () => () => {
+      running.current.forEach(a => a.cancel());
+      volley.current.forEach(a => a.cancel());
+      scoots.current.me.forEach(a => a.cancel());
+      scoots.current.them.forEach(a => a.cancel());
+    },
+    []
+  );
 
   const miss = useMemo(() => missLevel(messages, partnerOnline, now), [messages, partnerOnline, now]);
   const morning = useMemo(() => goodMorning(messages, now), [messages, now]);
@@ -264,22 +578,16 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const nameOf = (seat: Seat) => (seat === activeUser ? tr('You') : partnerName);
   const weekly = { user: score.weekUser || 0, partner: score.weekPartner || 0 };
   const trophy = champion(score.lastWeek);
+  const view = inView(size);
 
-  // The bear is always the one who started Two, the bunny the other.
-  const bearIsMe = activeUser === 'user';
-  // Nearer each other online, nearer still in a hug.
-  const gap = hugging ? 24 : partnerOnline ? 50 : 66;
-  const meX = bearIsMe ? 160 - gap : 160 + gap;
-  const themX = bearIsMe ? 160 + gap : 160 - gap;
-  const xOf = (who: 'me' | 'them') => (who === 'me' ? meX : themX);
-  const isBear = (who: 'me' | 'them') => (who === 'me') === bearIsMe;
-  /** Where a character's head is, and how big it is drawn. */
-  const headOf = (who: 'me' | 'them') => (isBear(who) ? { y: 90, s: 0.8 } : { y: 98, s: 0.74 });
-
-  const moodOf = (who: 'me' | 'them'): Mood => {
-    if (play && !play.hush) {
-      if (play.target === who) return LOOKS[play.kind];
-      if (play.kind !== 'giggle') return 'grin';
+  const moodOf = (who: Who): Mood => {
+    if (play && !play.hush && !(play.kind === 'giggle' && who !== play.target)) {
+      const role = who === play.target ? 'target' : 'actor';
+      const phases = MOODS[play.kind];
+      for (let i = Math.min(beat, phases.length - 1); i >= 0; i--) {
+        const m = phases[i][role];
+        if (m) return m;
+      }
     }
     if (hugging) return 'happy';
     if (who === 'them') {
@@ -289,124 +597,282 @@ export const UsScene: React.FC<UsSceneProps> = ({
     }
     return miss.level >= 3 ? 'puppy' : 'smile';
   };
+  const moodFor = (who: Who): Mood =>
+    play && play.kind === 'pillow' && play.combo > 1 && who === play.target && beat === 0 ? 'shock' : moodOf(who);
+  const armsOf = (who: Who): RigArms => (hugging ? 'up' : who === 'them' && partnerTyping ? 'hold' : 'down');
+  const acting = (who: Who) => !!play && !play.hush && play.kind !== 'giggle' && actorOf(play) === who;
 
-  /** How the one it is done to moves (index.css, "Us two"). */
-  const motionOf = (who: 'me' | 'them'): string => {
-    if (!play || play.hush || play.target !== who) return '';
-    switch (play.kind) {
+  /** The arm the one doing it stretches out - or the pillow it holds up. */
+  const reachFor = (p: Play): React.ReactNode => {
+    const actor = actorOf(p);
+    const d = dirTo(p.target);
+    const ak = kindOf(actor);
+    const tk = kindOf(p.target);
+    const ah = HEADS[ak];
+    const th = HEADS[tk];
+    const ja = JOINTS[ak];
+    const jt = JOINTS[tk];
+    const ax = xAt(actor);
+    const tx = homeX(p.target);
+    const local = (sx: number, sy: number): [number, number] => [(sx - ax) / ah.s, (sy - ah.y) / ah.s];
+    const near: [number, number] = [d * ja.shoulder[0], ja.shoulder[1]];
+    const far: [number, number] = [-d * ja.shoulder[0], ja.shoulder[1]];
+    const L = p.lead;
+    const key = `r${p.n}`;
+    switch (p.kind) {
       case 'boop':
-        return play.combo >= 5 ? 'us-hop-big' : 'us-hop';
-      case 'giggle':
-        return 'us-hop';
+        return (
+          <ReachArm key={key} kind={ak} d={d} from={near} to={local(tx - d * 3 * th.s, th.y + jt.nose * th.s)} move="rig-poke" ms={620} delay={L} bow={5} />
+        );
       case 'tickle':
-        return 'us-wiggle';
+        return (
+          <React.Fragment key={key}>
+            <ReachArm
+              kind={ak}
+              d={d}
+              from={near}
+              to={local(tx - d * 12 * th.s, th.y + (jt.tummy - 3) * th.s)}
+              move="rig-hold-out"
+              ms={1500}
+              delay={L}
+              wiggle="rig-wiggle"
+              wiggleDelay={L + 180}
+              bow={4}
+            />
+            <ReachArm
+              kind={ak}
+              d={d}
+              from={far}
+              to={local(tx - d * 4 * th.s, th.y + (jt.tummy + 6) * th.s)}
+              move="rig-hold-out"
+              ms={1500}
+              delay={L}
+              wiggle="rig-wiggle"
+              wiggleDelay={L + 225}
+              bow={-4}
+            />
+          </React.Fragment>
+        );
       case 'pinch':
-        return 'us-squish';
+        return (
+          <ReachArm
+            key={key}
+            kind={ak}
+            d={d}
+            from={near}
+            to={local(tx - d * (jt.cheek[0] + 2) * th.s, th.y + jt.cheek[1] * th.s)}
+            move="rig-pinch-arm"
+            ms={1050}
+            delay={L}
+            bow={7}
+          />
+        );
       case 'pat':
-        return 'us-nod';
-      case 'pillow':
-        return 'us-bonk';
+        return (
+          <ReachArm
+            key={key}
+            kind={ak}
+            d={d}
+            from={near}
+            to={local(tx - d * 4 * th.s, th.y + (jt.top - 3) * th.s)}
+            move="rig-hold-out"
+            ms={1500}
+            delay={L}
+            wiggle="rig-pat"
+            wiggleDelay={L}
+            bow={14}
+          />
+        );
+      default:
+        return null;
     }
   };
 
-  /** Each character's box in the scene: room for ears, a hop and its name. */
-  const CHAR_BOX: [number, number, number, number] = [112, 24, 96, 146];
-
-  const character = (who: 'me' | 'them', tap: React.ReactNode) => {
-    const head = headOf(who);
-    const motion = motionOf(who);
-    const Char = isBear(who) ? Bear : Bunny;
-    const arms = hugging ? 'up' : who === 'them' && partnerTyping ? 'hold' : 'down';
-    const [x, y, w, h] = CHAR_BOX;
-    return (
-      // Moved by its layer: nearer or further as you come and go.
-      <div
-        className="us-sprite us-move"
-        style={{ left: pct(x, W), top: pct(y, H), width: pct(w, W), height: pct(h, H), transform: `translateX(${pct(xOf(who) - 160, w)})` }}
-      >
-        <div key={motion ? `${who}${play?.n}` : who} className={`us-fill ${motion}`}>
-          <div className={asleep && who === 'them' ? 'us-fill' : 'us-fill us-breathe'}>
-            <svg viewBox={`${x} ${y} ${w} ${h - 18}`} width="100%" height={pct(h - 18, h)} overflow="visible" aria-hidden="true" focusable="false">
-              <Char x={160} y={head.y} s={head.s} mood={moodOf(who)} arms={arms} />
-            </svg>
-          </div>
-        </div>
-        <span className="us-name" data-night={part === 'night' || undefined}>
-          {who === 'me' ? tr('You') : partnerName.length > 12 ? partnerName.slice(0, 11) + '…' : partnerName}
-        </span>
-        {tap}
-      </div>
-    );
-  };
-
-  /** What a play draws besides the move: hands on cheeks, a patting paw, a flying pillow. */
-  const props = () => {
-    if (!play || play.hush || play.kind === 'boop' || play.kind === 'giggle') return null;
-    const target = play.target;
-    const actor = target === 'me' ? 'them' : 'me';
-    const x = xOf(target);
-    const head = headOf(target);
-    const fur = isBear(actor) ? BEAR_FUR : BUNNY_FUR;
-    const paw = (cx: number, cy: number) => <ellipse cx={cx} cy={cy} rx={7} ry={6} fill={fur} stroke={INK} strokeWidth={2} />;
-    const key = `p${play.n}`;
-    switch (play.kind) {
-      case 'pinch':
+  /** What a play throws up around them: stars, giggles, hearts, feathers. */
+  const effects = (p: Play): React.ReactNode => {
+    if (p.hush || !motionOk()) return null;
+    const d = dirTo(p.target);
+    const tk = kindOf(p.target);
+    const th = HEADS[tk];
+    const jt = JOINTS[tk];
+    const tx = homeX(p.target);
+    const L = p.lead;
+    const wait = (ms: number): React.CSSProperties => ({ animationDelay: `${L + ms}ms` });
+    const css = (vars: Record<string, string | number>, ms: number): React.CSSProperties =>
+      ({ ...vars, animationDelay: `${L + ms}ms` }) as React.CSSProperties;
+    const ty = (u: number) => th.y + u * th.s;
+    switch (p.kind) {
+      case 'boop': {
+        const nx = tx - d * 6 * th.s;
+        const ny = ty(jt.nose);
         return (
-          <Sprite key={key} box={[x - 40, head.y - 8, 80, 28]} className="us-pinch">
-            {paw(x - 21 * head.s - 6, head.y + 6 * head.s)}
-            {paw(x + 21 * head.s + 6, head.y + 6 * head.s)}
-            <g fill="#ff7d9a" opacity={0.85}>
-              <ellipse cx={x - 19 * head.s} cy={head.y + 6 * head.s} rx={6} ry={4} />
-              <ellipse cx={x + 19 * head.s} cy={head.y + 6 * head.s} rx={6} ry={4} />
-            </g>
-          </Sprite>
-        );
-      case 'pat':
-        return (
-          <Sprite key={key} box={[x - 10, head.y - 34 * head.s - 9, 20, 18]} className="us-pat">
-            {paw(x, head.y - 34 * head.s)}
-          </Sprite>
-        );
-      case 'tickle':
-        return (
-          <Sprite key={key} box={[x - 36, head.y + 34 * head.s - 9, 72, 18]} className="us-tickle">
-            {paw(x - 26, head.y + 34 * head.s)}
-            {paw(x + 26, head.y + 34 * head.s)}
-          </Sprite>
-        );
-      case 'pillow': {
-        // Thrown from the one doing it: how far that is on this screen.
-        const perUnit = (sceneRef.current?.clientWidth || W) / W;
-        return (
-          <React.Fragment key={key}>
-            <Sprite
-              box={[x - 16, head.y - 14, 32, 28]}
-              className="us-throw"
-              style={{ '--dx': `${(xOf(actor) - x) * perUnit}px` } as React.CSSProperties}
-            >
-              <rect x={x - 13} y={head.y - 8} width={26} height={16} rx={6} fill="#fff" stroke={INK} strokeWidth={2} />
-              <path d={`M${x - 9},${head.y - 8} L${x - 13},${head.y - 12} M${x + 9},${head.y + 8} L${x + 13},${head.y + 12}`} stroke={INK} strokeWidth={2} />
+          <React.Fragment key={`fx${p.n}`}>
+            <Sprite box={[nx - 9, ny - 9, 18, 18]} className="fx-pop" style={wait(240)}>
+              <Sparkle x={nx} y={ny} s={0.85} />
             </Sprite>
-            {[-14, 0, 13].map((dx, i) => (
-              <Sprite
-                key={i}
-                box={[x + dx - 4, head.y - 26, 8, 16]}
-                className="us-feather"
-                style={{ animationDelay: `${0.42 + i * 0.08}s` }}
-              >
-                <ellipse cx={x + dx} cy={head.y - 18} rx={2.5} ry={6} fill="#fff" stroke={INK} strokeWidth={1.2} />
+            {p.combo >= 3 && (
+              <Sprite box={[nx - d * 12 - 6, ny - 18, 12, 12]} className="fx-pop" style={wait(300)}>
+                <Sparkle x={nx - d * 12} y={ny - 12} s={0.55} />
               </Sprite>
-            ))}
+            )}
           </React.Fragment>
         );
       }
+      case 'tickle':
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            {['ha', 'ha', 'hi', 'he'].map((t, i) => (
+              <span
+                key={i}
+                className="fx-ha"
+                style={css(
+                  {
+                    left: pct(tx + d * (i % 2 ? 16 : 2) * th.s, W),
+                    top: pct(ty(jt.top - 6), H),
+                    '--hx': `${d * (70 + i * 30)}%`,
+                    '--hy': `${-(170 + (i % 2) * 70)}%`,
+                    '--hr': d * (i % 2 ? 14 : -10)
+                  },
+                  260 + i * 270
+                )}
+              >
+                {t}
+              </span>
+            ))}
+            {([-1, 1] as const).map(side => {
+              const ex = tx + side * (jt.eyes[0] + 5) * th.s;
+              const ey = ty(jt.eyes[1]);
+              return (
+                <Sprite key={side} box={[ex - 4, ey - 5, 8, 10]} className="fx-tear" style={css({ '--tx': `${side * 170}%` }, 420 + (side > 0 ? 160 : 0))}>
+                  <Drop x={ex} y={ey} s={0.5} />
+                </Sprite>
+              );
+            })}
+          </React.Fragment>
+        );
+      case 'pinch':
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            {[0, 1].map(i => {
+              const cx = tx - d * (jt.cheek[0] + 6 - i * 10) * th.s;
+              const cy = ty(jt.cheek[1] - 8 - i * 10);
+              return (
+                <Sprite key={i} box={[cx - 7, cy - 7, 14, 14]} className="fx-rise" style={css({ '--rx': `${-d * (40 + i * 30)}%` }, 860 + i * 140)}>
+                  <Heart x={cx} y={cy} s={0.42} />
+                </Sprite>
+              );
+            })}
+          </React.Fragment>
+        );
+      case 'pat':
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            {[405, 705, 1005].map((ms, i) => {
+              const sx = tx - d * 4 * th.s + (i - 1) * 6;
+              const sy = ty(jt.top - 12);
+              return (
+                <Sprite key={`s${i}`} box={[sx - 6, sy - 6, 12, 12]} className="fx-pop" style={wait(ms)}>
+                  <Sparkle x={sx} y={sy} s={0.5} />
+                </Sprite>
+              );
+            })}
+            {[0, 1, 2].map(i => {
+              const hx = tx + (i - 1) * 12;
+              const hy = ty(jt.top - 4) - (i === 1 ? 6 : 0);
+              return (
+                <Sprite key={`h${i}`} box={[hx - 7, hy - 7, 14, 14]} className="fx-rise" style={css({ '--rx': `${(i - 1) * 40}%` }, 1100 + i * 150)}>
+                  <Heart x={hx} y={hy} s={0.4} />
+                </Sprite>
+              );
+            })}
+          </React.Fragment>
+        );
+      default:
+        return null;
     }
   };
 
-  // Tapping them boops (a combo when fast); holding opens the rest.
-  const [menuOpen, setMenuOpen] = useState(false);
-  useBackLayer(menuOpen, () => setMenuOpen(false));
-  const hold = useRef<{ timer: ReturnType<typeof setTimeout>; opened: boolean } | null>(null);
+  /** A pillow's flight across in an arc, its landing, its feathers - and stars after the last of a run. */
+  const pillowFx = (t: Throw, last: boolean): React.ReactNode => {
+    if (!motionOk()) return null;
+    const d = t.d;
+    const tk = kindOf(t.target);
+    const th = HEADS[tk];
+    const jt = JOINTS[tk];
+    const tx = homeX(t.target);
+    const ah = HEADS[kindOf(t.actor)];
+    const sx = homeX(t.actor);
+    const sy = ah.y - 44 * ah.s;
+    const ex = tx;
+    const ey = th.y - 4 * th.s;
+    const peak = Math.min(sy, ey) - 26;
+    const top = th.y + (jt.top - 6) * th.s;
+    const go = `${t.release}ms`;
+    const hit = t.release + FLIGHT_MS;
+    return (
+      <React.Fragment key={`t${t.n}`}>
+        <Sprite
+          box={[ex - 18, ey - 15, 36, 30]}
+          wraps={[
+            { className: 'fx-fly-x', style: { ['--fx' as string]: `${((sx - ex) / 36) * 100}%`, animationDelay: go } },
+            {
+              className: 'fx-fly-y',
+              style: { ['--fy' as string]: `${((sy - ey) / 30) * 100}%`, ['--fpk' as string]: `${((peak - ey) / 30) * 100}%`, animationDelay: go }
+            },
+            { className: 'fx-spin', style: { ['--d' as string]: d, animationDelay: go } }
+          ]}
+        >
+          <Pillow x={ex} y={ey} s={ah.s} />
+        </Sprite>
+        <Sprite box={[ex - 16, ey - 16, 32, 32]} className="fx-pop" style={{ animationDelay: `${hit}ms` }}>
+          <path d={burst(ex, ey, 15)} fill="#ffe066" stroke={INK} strokeWidth={2} strokeLinejoin="round" />
+        </Sprite>
+        <span
+          className="fx-word"
+          style={{ left: pct(ex - d * 2, W), top: pct(ey - 16, H), animationDelay: `${hit}ms`, ['--hr' as string]: d * 8 } as React.CSSProperties}
+        >
+          {t.word}
+        </span>
+        {[-1.6, -0.8, 0, 0.8, 1.6].map((spread, i) => (
+          <Sprite
+            key={i}
+            box={[ex - 4, ey - 8, 8, 16]}
+            wraps={[
+              {
+                className: 'fx-fall',
+                style: {
+                  ['--fx' as string]: `${(d * 0.7 + spread * 0.55) * 250}%`,
+                  ['--fy' as string]: `${-(110 + Math.abs(spread) * 45)}%`,
+                  animationDelay: `${hit + i * 25}ms`
+                }
+              },
+              { className: 'fx-sway', style: { animationDelay: `${-i * 130}ms` } }
+            ]}
+          >
+            <ellipse cx={ex} cy={ey} rx={2.6} ry={6.5} fill="#fff" stroke={INK} strokeWidth={1.2} />
+            <path d={`M${ex},${ey - 5} L${ex},${ey + 6}`} stroke="#d6cdee" strokeWidth={1} />
+          </Sprite>
+        ))}
+        {/* Seeing stars. */}
+        {last &&
+          [0, 1, 2].map(i => (
+            <Sprite
+              key={`o${i}`}
+              box={[tx - 5, top - 5, 10, 10]}
+              wraps={[
+                { className: 'fx-orbit', style: { animationDelay: `${hit + 160}ms` } },
+                { className: 'fx-ox', style: { animationDelay: `${-i * 200}ms` } },
+                { className: 'fx-oy', style: { animationDelay: `${-i * 200 - 150}ms` } }
+              ]}
+            >
+              <Sparkle x={tx} y={top} s={0.42} />
+            </Sprite>
+          ))}
+      </React.Fragment>
+    );
+  };
+
+  // Tapping them boops (a combo when fast); tapping yourself giggles.
   const combo = useRef({ at: 0, n: 0 });
   const doPlay = (kind: PlayKind) => {
     haptic(kind === 'pillow' ? 'confirm' : 'tick');
@@ -425,25 +891,6 @@ export const UsScene: React.FC<UsSceneProps> = ({
     start({ kind, target: 'them', combo: n });
     onPlay(kind, false);
   };
-  const pressStart = () => {
-    if (hold.current) clearTimeout(hold.current.timer);
-    hold.current = {
-      opened: false,
-      timer: setTimeout(() => {
-        if (!hold.current) return;
-        hold.current.opened = true;
-        haptic('tick');
-        setMenuOpen(true);
-      }, HOLD_MS)
-    };
-  };
-  const pressEnd = (tap: boolean) => {
-    const h = hold.current;
-    hold.current = null;
-    if (!h) return;
-    clearTimeout(h.timer);
-    if (tap && !h.opened) doPlay('boop');
-  };
   const giggle = () => {
     haptic('tick');
     start({ kind: 'giggle', target: 'me', combo: 1 });
@@ -458,79 +905,141 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const bubbleFor = (p: Play) => {
     if (p.hush) return tr('Shh… {name} is sleeping 😴', { name: partnerName });
     if (p.kind === 'boop' && p.combo >= 2) return tr('Boop ×{n}!', { n: p.combo });
+    if (p.kind === 'pillow' && p.combo >= 2) return `${SAYS.pillow} ×${p.combo}`;
     return p.kind === 'boop' ? tr('Boop!') : SAYS[p.kind];
   };
   const leader = score.user === score.partner ? null : score.user > score.partner ? 'user' : 'partner';
 
-  return (
-    <div className="space-y-3">
+  const character = (who: Who) => {
+    const kind = kindOf(who);
+    const head = HEADS[kind];
+    const bx = 160 + BOX.x * head.s;
+    const by = head.y + BOX.y * head.s;
+    const bw = BOX.w * head.s;
+    const bh = BOX.h * head.s;
+    const doing = acting(who);
+    return (
+      // Moved by its layer: over to the other and back, nearer or further
+      // as you come and go.
       <div
-        ref={sceneRef}
-        className="us-scene relative overflow-hidden rounded-2xl"
-        data-part={part}
-        data-live={inView || undefined}
-        role="img"
-        aria-label={tr('You and {name}', { name: partnerName })}
+        key={who}
+        className="us-char"
+        style={{
+          left: pct(bx, W),
+          top: pct(by, H),
+          width: pct(bw, W),
+          height: pct(bh, H),
+          transform: `translateX(${((xAt(who) - 160) / bw) * 100}%)`,
+          zIndex: doing ? 3 : 2
+        }}
       >
-        {/* What never moves, drawn once: the sky, the sun or moon, the hill. */}
-        <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" aria-hidden="true" focusable="false">
-          <defs>
-            <linearGradient id="us-sky" x1="0" y1="0" x2="0" y2="1">
-              {part === 'night' ? (
-                <>
-                  <stop offset="0" stopColor="#1b1546" />
-                  <stop offset="1" stopColor="#3a2d7a" />
-                </>
-              ) : part === 'evening' ? (
-                <>
-                  <stop offset="0" stopColor="#ffb38a" />
-                  <stop offset="1" stopColor="#ffd9c2" />
-                </>
-              ) : (
-                <>
-                  <stop offset="0" stopColor="#9ed8ff" />
-                  <stop offset="1" stopColor="#e3f4ff" />
-                </>
-              )}
-            </linearGradient>
-          </defs>
-          <rect x={0} y={0} width={W} height={H} fill="url(#us-sky)" />
-          {part === 'night' ? (
-            <path d="M286,18 A16,16 0 1 0 300,40 A12,12 0 1 1 286,18 Z" fill="#ffe58a" stroke={INK} strokeWidth={2} />
+        <Rig
+          kind={kind}
+          mood={moodFor(who)}
+          arms={armsOf(who)}
+          asleep={who === 'them' && asleep}
+          phase={who === 'me' ? 0 : 2.3}
+          layers={rigOf(who)}
+        >
+          {doing && play && reachFor(play)}
+          {throws
+            .filter(t => t.actor === who)
+            .map(t => (
+              <HeldPillow key={t.n} d={t.d} ms={t.release / 0.8} />
+            ))}
+        </Rig>
+        <span className="us-name" data-night={part === 'night' || undefined}>
+          {who === 'me' ? tr('You') : partnerName.length > 12 ? partnerName.slice(0, 11) + '…' : partnerName}
+        </span>
+        {size === 'tab' &&
+          (who === 'them' ? (
+            <button
+              type="button"
+              className="us-tap"
+              aria-label={tr('Boop {name}', { name: partnerName })}
+              onClick={() => doPlay('boop')}
+              onContextMenu={e => e.preventDefault()}
+            />
           ) : (
-            <circle cx={284} cy={30} r={part === 'evening' ? 15 : 13} fill={part === 'evening' ? '#ff8a5c' : '#ffd23f'} stroke={INK} strokeWidth={2} />
+            <button type="button" className="us-tap" aria-label={tr('Giggle')} onClick={giggle} />
+          ))}
+      </div>
+    );
+  };
+
+  const scene = (
+    <div
+      ref={sceneRef}
+      className="us-scene rounded-2xl"
+      data-size={size}
+      data-part={part}
+      data-live={live || undefined}
+    >
+      <div className="us-stage" role="img" aria-label={tr('You and {name}', { name: partnerName })}>
+        {/* What never moves, drawn once: the sun or moon, the hill. */}
+        <svg viewBox={`0 0 ${W} ${H}`} className="us-ground" overflow="visible" aria-hidden="true" focusable="false">
+          {part === 'night' ? (
+            <path
+              d={size === 'tab' ? 'M262,-30 A16,16 0 1 0 276,-8 A12,12 0 1 1 262,-30 Z' : 'M286,18 A16,16 0 1 0 300,40 A12,12 0 1 1 286,18 Z'}
+              fill="#ffe58a"
+              stroke={INK}
+              strokeWidth={2}
+            />
+          ) : (
+            <circle
+              cx={size === 'tab' ? 258 : 284}
+              cy={size === 'tab' ? -14 : 30}
+              r={part === 'evening' ? 15 : 13}
+              fill={part === 'evening' ? '#ff8a5c' : '#ffd23f'}
+              stroke={INK}
+              strokeWidth={2}
+            />
           )}
           <path
-            d="M-10,170 L-10,140 C40,120 110,126 160,128 C220,130 280,118 330,136 L330,170 Z"
+            d="M-60,170 L-60,142 C10,118 110,126 160,128 C220,130 300,116 380,138 L380,170 Z"
             fill={part === 'night' ? '#2c4a3a' : part === 'evening' ? '#9bc47a' : '#8fd47e'}
+          />
+          <path
+            d="M-60,170 L-60,160 C40,150 120,156 160,155 C230,154 300,150 380,158 L380,170 Z"
+            fill={part === 'night' ? '#253f31' : part === 'evening' ? '#8db76d' : '#7fc96f'}
           />
         </svg>
 
         {/* Everything that moves, each in its own layer. */}
         {part === 'night' ? (
           <>
-            <Sprite box={[0, 0, W, 60]} className="us-twinkle">
-              {[[24, 22], [96, 18], [230, 20], [300, 28]].map(([cx, cy], i) => (
+            <Sprite box={[0, -36, W, 96]} className="us-twinkle">
+              {[[24, 22], [96, 18], [230, 20], [300, 28], [70, -20], [196, -26]].map(([cx, cy], i) => (
                 <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" />
               ))}
             </Sprite>
-            <Sprite box={[0, 0, W, 60]} className="us-twinkle" style={{ animationDelay: '1.3s' }}>
-              {[[60, 46], [262, 52], [140, 40]].map(([cx, cy], i) => (
+            <Sprite box={[0, -36, W, 96]} className="us-twinkle" style={{ animationDelay: '1.3s' }}>
+              {[[60, 46], [262, 52], [140, 40], [118, -10], [228, -4]].map(([cx, cy], i) => (
                 <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" />
               ))}
             </Sprite>
           </>
         ) : (
-          <Sprite box={[38, 14, 50, 26]} className="us-cloud">
-            <g fill="#fff" opacity={0.92}>
-              <ellipse cx={60} cy={30} rx={20} ry={8} />
-              <ellipse cx={72} cy={24} rx={12} ry={8} />
-            </g>
-          </Sprite>
+          <>
+            <Sprite box={[38, 14, 50, 26]} className="us-cloud">
+              <g fill="#fff" opacity={0.92}>
+                <ellipse cx={60} cy={30} rx={20} ry={8} />
+                <ellipse cx={72} cy={24} rx={12} ry={8} />
+              </g>
+            </Sprite>
+            {size === 'tab' && (
+              <Sprite box={[176, -30, 44, 22]} className="us-cloud" style={{ animationDelay: '-9s' }}>
+                <g fill="#fff" opacity={0.85}>
+                  <ellipse cx={196} cy={-14} rx={18} ry={7} />
+                  <ellipse cx={206} cy={-19} rx={10} ry={7} />
+                </g>
+              </Sprite>
+            )}
+          </>
         )}
 
         {/* Between them while you are both here: a little heart; in a hug, more. */}
-        {(partnerOnline || hugging) && (
+        {(partnerOnline || hugging) && !play && (
           <Sprite box={hugging ? [146, 30, 28, 26] : [151, 51, 18, 17]} className="us-beat">
             <Heart x={160} y={hugging ? 44 : 60} s={hugging ? 0.9 : 0.55} />
           </Sprite>
@@ -565,22 +1074,10 @@ export const UsScene: React.FC<UsSceneProps> = ({
           </Sprite>
         )}
 
-        {character(
-          'them',
-          <button
-            type="button"
-            className="us-tap"
-            aria-label={tr('Boop {name}', { name: partnerName })}
-            onPointerDown={pressStart}
-            onPointerUp={() => pressEnd(true)}
-            onPointerLeave={() => pressEnd(false)}
-            onPointerCancel={() => pressEnd(false)}
-            onContextMenu={e => e.preventDefault()}
-            onKeyDown={onKey(() => doPlay('boop'))}
-          />
-        )}
-        {character('me', <button type="button" className="us-tap" aria-label={tr('Giggle')} onClick={giggle} />)}
-        {props()}
+        {character('them')}
+        {character('me')}
+        {play && effects(play)}
+        {throws.map((t, i) => pillowFx(t, i === throws.length - 1))}
 
         {/* Last week's champion holds the trophy, on the grass beside them. */}
         {trophy &&
@@ -594,58 +1091,113 @@ export const UsScene: React.FC<UsSceneProps> = ({
             );
           })()}
 
-        {play && <Bubble key={`b${play.n}`} x={xOf(play.target)} y={34} text={bubbleFor(play)} />}
-        {!play && partnerTyping && !hugging && <Bubble x={themX} y={30} text="• • •" />}
-        {!play && !partnerOnline && !asleep && !partnerTyping && <Bubble x={themX} y={30} text="…" />}
-
-        {/* The rest of the boop battle, from a long press or the button below. */}
-        {menuOpen && (
-          <div className="absolute inset-0 flex items-end justify-center bg-black/25 p-2" onClick={() => setMenuOpen(false)}>
-            <div role="menu" aria-label={tr('Play with {name}', { name: partnerName })} className="us-menu" onClick={e => e.stopPropagation()}>
-              {PLAYS.map(p => (
-                <button
-                  key={p.kind}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    doPlay(p.kind);
-                  }}
-                  className="us-menu-item"
-                >
-                  <span className="text-[22px] leading-none" aria-hidden="true">
-                    {p.emoji}
-                  </span>
-                  <span>{tr(p.label)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+        {play && (
+          <Bubble
+            key={`b${play.n}`}
+            x={homeX(play.target)}
+            y={34}
+            text={bubbleFor(play)}
+            view={view}
+            delay={play.hush ? 0 : hitAt(play)}
+          />
         )}
+        {!play && partnerTyping && !hugging && <Bubble x={themX} y={30} text="• • •" view={view} />}
+        {!play && !partnerOnline && !asleep && !partnerTyping && <Bubble x={themX} y={30} text="…" view={view} />}
       </div>
+      {size === 'tab' && (
+        <button
+          type="button"
+          className="us-sound"
+          aria-pressed={soundOn}
+          aria-label={soundOn ? tr('Sounds on') : tr('Sounds off')}
+          onClick={switchSound}
+        >
+          {soundOn ? <Volume2 className="h-4 w-4" aria-hidden="true" /> : <VolumeX className="h-4 w-4" aria-hidden="true" />}
+        </button>
+      )}
+    </div>
+  );
 
-      {/* The scores: today, this week, and last week's champion. */}
-      <div className="space-y-1.5 text-[13px]">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-linen-secondary">{tr('Boops today')}</span>
+  // On Home: the window onto it, opening the tab.
+  if (size === 'preview') {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        className="us-preview"
+        aria-label={tr('Play with {name}', { name: partnerName })}
+        onClick={onOpen}
+        onKeyDown={onKey(() => onOpen?.())}
+      >
+        {scene}
+        <div className="mt-3 flex items-center justify-between gap-3 text-[13px]">
           <span className="tabular-nums text-linen-primary">
+            <span className="text-linen-secondary">{tr('Boops today')} · </span>
             {leader === activeUser && '👑 '}
             {tr('You')} <b>{score[activeUser]}</b>
             <span className="mx-1.5 text-linen-secondary">·</span>
             {leader === theirSeat && '👑 '}
             {partnerName} <b>{score[theirSeat]}</b>
           </span>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-linen-secondary">{tr('This week')}</span>
-          <span className="tabular-nums text-linen-primary">
-            {tr('You')} <b>{weekly[activeUser]}</b>
-            <span className="mx-1.5 text-linen-secondary">·</span>
-            {partnerName} <b>{weekly[theirSeat]}</b>
+          <span className="flex shrink-0 items-center gap-0.5 text-[12px] font-semibold text-linen-accent">
+            {tr('Play')}
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           </span>
         </div>
+      </div>
+    );
+  }
+
+  const side = (seat: Seat) => (
+    <div className="us-board-side" data-lead={leader === seat || undefined}>
+      <span className="us-board-who">
+        {seat === 'user' ? '🐻' : '🐰'} {nameOf(seat)}
+        {leader === seat && ' 👑'}
+      </span>
+      <span key={score[seat]} className="us-board-n us-pop">
+        {score[seat]}
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {scene}
+
+      {/* The plays, under your thumb. */}
+      <div>
+        <div className="us-pad" role="group" aria-label={tr('Play with {name}', { name: partnerName })}>
+          {PLAYS.map(p => (
+            <button key={p.kind} type="button" className="us-pad-btn" data-kind={p.kind} onClick={() => doPlay(p.kind)}>
+              <span className="us-pad-ico" aria-hidden="true">
+                {p.emoji}
+              </span>
+              <span>{tr(p.label)}</span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-center text-[11px] text-linen-secondary">
+          {asleep
+            ? tr('Shh… {name} is sleeping 😴', { name: partnerName })
+            : tr('Or tap {name} in the picture', { name: partnerName })}
+        </p>
+      </div>
+
+      {/* The scores: today, this week, and last week's champion. */}
+      <div className="us-board">
+        <p className="us-board-title">{tr('Boops today')}</p>
+        <div className="us-board-row">
+          {side(activeUser)}
+          <span className="us-board-vs">{tr('vs')}</span>
+          {side(theirSeat)}
+        </div>
+        <p className="mt-2.5 text-center text-[12px] tabular-nums text-linen-secondary">
+          {tr('This week')} · {tr('You')} <b className="text-linen-primary">{weekly[activeUser]}</b>
+          <span className="mx-1.5">·</span>
+          {partnerName} <b className="text-linen-primary">{weekly[theirSeat]}</b>
+        </p>
         {trophy && score.lastWeek && (
-          <p className="text-linen-primary">
+          <p className="mt-1.5 text-center text-[12px] text-linen-primary">
             🏆 {tr("Last week's champion: {name} ({a} to {b})", {
               name: nameOf(trophy),
               a: Math.max(score.lastWeek.user, score.lastWeek.partner),
@@ -653,16 +1205,6 @@ export const UsScene: React.FC<UsSceneProps> = ({
             })}
           </p>
         )}
-        <div className="flex items-center justify-between gap-3 pt-0.5">
-          <span className="text-[11px] text-linen-secondary">{tr('Tap {name} to boop · hold for more', { name: partnerName })}</span>
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            className="shrink-0 rounded-full border border-linen-border px-3 py-1 text-[12px] font-semibold text-linen-primary transition-colors hover:bg-linen-variant active:scale-95"
-          >
-            {tr('More')} 🤭
-          </button>
-        </div>
       </div>
 
       {/* Good morning, and the last word last night. */}

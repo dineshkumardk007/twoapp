@@ -10,7 +10,7 @@
 // Phone speakers play almost nothing below ~150 Hz, so weight that matters -
 // a heartbeat, a stamp - is carried by overtones they can reproduce.
 
-import { Stereo, silence, hz, strike, mode, noise, INSTRUMENTS as I, RoomOptions, MasterOptions } from './dsp.mts';
+import { Stereo, silence, hz, strike, mode, noise, INSTRUMENTS as I, RoomOptions, MasterOptions, SR } from './dsp.mts';
 
 const ALERT = -19;
 const MOMENT = -21;
@@ -88,6 +88,63 @@ function sketch(seed: number, center: number): Recipe {
     room: { rt60: 0.3, wet: 0.04 },
     master: { loudness: MICRO - 2, highpass: 800 }
   };
+}
+
+/**
+ * A voice whose pitch follows a curve: a cartoon squeak, a boing, a chirp.
+ * Struck sounds ring at one pitch; these bend, which is most of what makes
+ * a sound read as a cartoon.
+ */
+function voice(
+  b: Stereo,
+  o: { start: number; dur: number; freq: (t: number) => number; amp: (t: number) => number; harmonics?: number[]; pan?: number }
+) {
+  const n0 = Math.floor(o.start * SR);
+  const len = Math.min(b.L.length - n0, Math.ceil(o.dur * SR));
+  if (len <= 0) return;
+  const h = o.harmonics ?? [1];
+  const a = (((o.pan ?? 0) + 1) * Math.PI) / 4;
+  const gl = Math.cos(a);
+  const gr = Math.sin(a);
+  const fadeIn = Math.floor(0.003 * SR);
+  const fadeOut = Math.floor(0.008 * SR);
+  let phase = 0;
+  for (let i = 0; i < len; i++) {
+    const t = i / SR;
+    phase += (2 * Math.PI * o.freq(t)) / SR;
+    let s = 0;
+    for (let k = 0; k < h.length; k++) s += h[k] * Math.sin(phase * (k + 1));
+    let env = o.amp(t);
+    if (i < fadeIn) env *= i / fadeIn;
+    if (i > len - fadeOut) env *= (len - i) / fadeOut;
+    b.L[n0 + i] += env * s * gl;
+    b.R[n0 + i] += env * s * gr;
+  }
+}
+
+/** One squeaky "hee" of a giggle: up a little and back down. */
+function hee(b: Stereo, start: number, note: number, gain: number, pan: number, seed: number) {
+  const dur = 0.075;
+  voice(b, {
+    start,
+    dur,
+    freq: t => note * (1 + 0.16 * Math.sin((Math.PI * t) / dur)),
+    amp: t => gain * Math.sin((Math.PI * t) / dur) ** 0.7,
+    harmonics: [1, 0.35, 0.12],
+    pan
+  });
+  noise(b, { start, dur: 0.05, gain: gain * 0.12, filter: { type: 'bandpass', f: 3200, q: 1 }, attack: 0.01, decay: 0.02, pan, seed });
+}
+
+/** A jaw-harp "boing": a drop in pitch that keeps wobbling as it dies. */
+function boing(b: Stereo, start: number, base: number, gain: number) {
+  voice(b, {
+    start,
+    dur: 0.55,
+    freq: t => base * (1 + 0.6 * Math.exp(-t / 0.04)) * (1 + 0.18 * Math.sin(2 * Math.PI * 14 * t) * Math.exp(-t / 0.3)),
+    amp: t => gain * Math.exp(-t / 0.2),
+    harmonics: [1, 0.3, 0.1]
+  });
 }
 
 export const RECIPES: Record<string, Recipe> = {
@@ -450,5 +507,156 @@ export const RECIPES: Record<string, Recipe> = {
     room: { rt60: 1.2, wet: 0.16 },
     // It has to be heard from the next room, and finish before it starts again.
     master: { loudness: ALERT + 1, maxSeconds: 2.1, tailFade: 0.5 }
+  },
+
+  // The boop battle (components/UsScene). Each starts on the frame its hit
+  // lands, so what happens inside one is spaced to match the moves
+  // (components/usMoves): the pats 0.3 s apart, the pinch let go at 0.58 s.
+
+  'us-boop': {
+    use: 'Us two: a boop on the nose (pitched up for a run of them)',
+    dry: () => {
+      const b = silence(0.4);
+      voice(b, {
+        start: 0,
+        dur: 0.3,
+        freq: t => hz('A5') * (1 + 0.55 * Math.exp(-t / 0.025)),
+        amp: t => 0.9 * Math.exp(-t / 0.07),
+        harmonics: [1, 0.25, 0.08]
+      });
+      mode(b, { freq: hz('A4'), amp: 0.35, decay: 0.06, glide: 0.4, glideTime: 0.02 });
+      noise(b, { dur: 0.012, gain: 0.3, filter: { type: 'bandpass', f: 2500, q: 1 }, attack: 0.0005, decay: 0.003, seed: 301 });
+      return b;
+    },
+    room: { rt60: 0.25, wet: 0.05 },
+    master: { loudness: MOMENT, highpass: 150 }
+  },
+
+  'us-tickle': {
+    use: 'Us two: a tickle - a run of squeaky giggles',
+    dry: () => {
+      const b = silence(1.4);
+      const notes = ['B5', 'D6', 'B5', 'A5', 'D6', 'E6', 'D6', 'B5', 'A5', 'B5', 'D6'];
+      notes.forEach((n, i) => hee(b, i * 0.1 + (i % 3) * 0.008, hz(n), 0.6 * (1 - i * 0.03), i % 2 ? 0.15 : -0.15, 310 + i));
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: SOFT + 1, highpass: 300 }
+  },
+
+  'us-hehe': {
+    use: 'Us two: tapping your own one - a little giggle',
+    dry: () => {
+      const b = silence(0.4);
+      hee(b, 0, hz('D6'), 0.6, -0.1, 331);
+      hee(b, 0.14, hz('B5'), 0.55, 0.1, 332);
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: SOFT, highpass: 300 }
+  },
+
+  'us-pinch': {
+    use: 'Us two: a cheek pulled out with a rubbery stretch, and let go - boing',
+    dry: () => {
+      const b = silence(1.3);
+      // The pull, as the cheek stretches.
+      voice(b, {
+        start: 0,
+        dur: 0.44,
+        freq: t => 230 * 2.2 ** (t / 0.44),
+        amp: t => 0.32 * (0.6 + 0.4 * Math.sin(2 * Math.PI * 28 * t)) * Math.min(1, t / 0.05),
+        harmonics: [1, 0.6, 0.45, 0.3, 0.2]
+      });
+      // Let go, as it snaps back.
+      boing(b, 0.58, hz('A4'), 0.85);
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: MOMENT - 1, highpass: 150 }
+  },
+
+  'us-pat': {
+    use: 'Us two: three soft pats on the head, then an aww',
+    dry: () => {
+      const b = silence(1.6);
+      [0, 0.3, 0.6].forEach((t, i) => {
+        thump(b, t, 0.8 - i * 0.05, 170, 340 + i);
+        noise(b, { start: t, dur: 0.05, gain: 0.3, filter: { type: 'lowpass', f: 900 }, attack: 0.002, decay: 0.02, pink: true, seed: 345 + i });
+      });
+      run(b, ['F#6', 'A6'], 0.08, { instrument: I.glass, gain: [0.35, 0.3], start: 0.7, seed: 350, mallet: 0.1 });
+      return b;
+    },
+    room: { rt60: 0.6, wet: 0.1 },
+    master: { loudness: SOFT, highpass: 140 }
+  },
+
+  'us-whoosh': {
+    use: 'Us two: a pillow flying through the air',
+    dry: () => {
+      const b = silence(0.5);
+      noise(b, { dur: 0.22, gain: 0.8, filter: { type: 'bandpass', f: 450, q: 0.8 }, sweepTo: 2200, attack: 0.15, pink: true, seed: 361 });
+      noise(b, { start: 0.18, dur: 0.2, gain: 0.6, filter: { type: 'bandpass', f: 2200, q: 0.8 }, sweepTo: 900, attack: 0.01, decay: 0.08, pink: true, seed: 362 });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.05 },
+    master: { loudness: SOFT, highpass: 200 }
+  },
+
+  'us-bonk': {
+    use: 'Us two: a pillow landing on a head - fwump, bonk',
+    dry: () => {
+      const b = silence(0.6);
+      thump(b, 0, 1, 110, 371);
+      noise(b, { dur: 0.1, gain: 0.7, filter: { type: 'lowpass', f: 1400 }, attack: 0.002, decay: 0.03, pink: true, seed: 372 });
+      mode(b, { freq: hz('A5'), amp: 0.45, decay: 0.045, glide: 0.35, glideTime: 0.01 });
+      mode(b, { freq: hz('A5') * 1.5, amp: 0.15, decay: 0.03, glide: 0.35, glideTime: 0.01 });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: MOMENT, highpass: 120 }
+  },
+
+  'us-dizzy': {
+    use: 'Us two: stars round a bonked head - tweet tweet',
+    dry: () => {
+      const b = silence(0.9);
+      ['D7', 'F#7', 'E7'].forEach((n, i) => {
+        const f = hz(n);
+        voice(b, {
+          start: i * 0.16,
+          dur: 0.09,
+          freq: t => f * (1 + 0.25 * (t / 0.09)) * (1 + 0.03 * Math.sin(2 * Math.PI * 40 * t)),
+          amp: t => 0.35 * Math.sin((Math.PI * t) / 0.09),
+          pan: (i - 1) * 0.3
+        });
+      });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: SOFT - 1, highpass: 500 }
+  },
+
+  'us-hop': {
+    use: 'Us two: a little hop as one of them moves',
+    dry: () => {
+      const b = silence(0.15);
+      mode(b, { freq: 520, amp: 0.6, decay: 0.025, glide: -0.25, glideTime: 0.02 });
+      noise(b, { dur: 0.02, gain: 0.2, filter: { type: 'bandpass', f: 1500, q: 1 }, attack: 0.001, decay: 0.006, seed: 381 });
+      return b;
+    },
+    room: { rt60: 0.2, wet: 0.04 },
+    master: { loudness: MICRO, highpass: 200 }
+  },
+
+  'us-shh': {
+    use: 'Us two: shh - they are asleep',
+    dry: () => {
+      const b = silence(0.75);
+      noise(b, { dur: 0.6, gain: 0.7, filter: { type: 'bandpass', f: 3600, q: 0.9 }, attack: 0.18, pink: true, seed: 391 });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.05 },
+    master: { loudness: MICRO, highpass: 800 }
   }
 };

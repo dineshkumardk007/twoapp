@@ -66,7 +66,7 @@ interface FaceProps {
   blush?: { x: number; y: number };
 }
 
-const Face: React.FC<FaceProps> = ({ mood, ex, ey, my, k = 1, blush }) => {
+export const Face: React.FC<FaceProps> = ({ mood, ex, ey, my, k = 1, blush }) => {
   const sw = { ...line, strokeWidth: 3 * Math.min(k, 1.2) };
   const dot = (x: number, y = ey) => (
     <g key={`d${x}`}>

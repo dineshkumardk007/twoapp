@@ -171,6 +171,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
           // The two of you, as you are right now - and a few silly scores.
           <div className="rounded-3xl border border-linen-border bg-linen-surface p-4 sm:p-5 shadow-xs">
             <UsScene
+              size="preview"
+              onOpen={() => onNavigate('us')}
               activeUser={state.activeUser}
               partnerName={partnerName}
               partnerOnline={partnerOnline}

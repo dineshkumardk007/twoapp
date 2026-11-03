@@ -448,6 +448,7 @@ const CoordinatesMapView = lazy(() => import('./views/CoordinatesMapView').then(
 const CycleView = lazy(() => import('./views/CycleView').then(m => ({ default: m.CycleView })));
 const DecksView = lazy(() => import('./views/DecksView').then(m => ({ default: m.DecksView })));
 const HearthGardenView = lazy(() => import('./views/HearthGardenView').then(m => ({ default: m.HearthGardenView })));
+const UsTwoView = lazy(() => import('./views/UsTwoView').then(m => ({ default: m.UsTwoView })));
 const HomeView = lazy(() => import('./views/HomeView').then(m => ({ default: React.memo(m.HomeView) })));
 const IntuitionGameView = lazy(() => import('./views/IntuitionGameView').then(m => ({ default: m.IntuitionGameView })));
 const JournalView = lazy(() => import('./views/JournalView').then(m => ({ default: m.JournalView })));
@@ -5973,6 +5974,15 @@ export const App: React.FC = () => {
             onPlay={stable('play', handlePlay)}
             partnerNews={partnerNews}
             partnerUpdate={partnerUpdate}
+          />
+        )}
+
+        {currentTab === 'us' && (
+          <UsTwoView
+            state={state}
+            partnerOnline={partnerShownOnline}
+            partnerTyping={partnerTypingAt > 0}
+            onPlay={stable('play', handlePlay)}
           />
         )}
 

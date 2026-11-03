@@ -25,7 +25,9 @@ export type SoundName =
   | 'gentle-chime' | 'tick' | 'stamp' | 'timer' | 'pin'
   | 'tea' | 'glance' | 'presence'
   | 'match' | 'no-match' | 'reconcile' | 'reconnect' | 'singing-bowl' | 'unseal'
-  | 'kiss' | 'breath-rest';
+  | 'kiss' | 'breath-rest'
+  | 'us-boop' | 'us-tickle' | 'us-hehe' | 'us-pinch' | 'us-pat'
+  | 'us-whoosh' | 'us-bonk' | 'us-dizzy' | 'us-hop' | 'us-shh';
 
 interface Loaded {
   buffer: AudioBuffer;
@@ -88,11 +90,32 @@ export function preloadSounds() {
   for (const name of ['letter', 'heartbeat', 'ringtone'] as const) void load(name);
 }
 
+/** Loads these now, so the first of each plays on its moment. */
+export function loadSounds(names: SoundName[]) {
+  for (const name of names) void load(name);
+}
+
+/**
+ * How long the phone takes to get a sound from the page to the speaker -
+ * tens of milliseconds on most Android phones, more on some. A sound timed
+ * to a moment on screen is started this much early.
+ */
+function speakerDelay(ctx: AudioContext): number {
+  const c = ctx as AudioContext & { outputLatency?: number };
+  return Math.min(0.15, (c.baseLatency || 0) + (c.outputLatency || 0));
+}
+
 export interface PlayOptions {
   /** Playback speed - and with it pitch: 2 is an octave up. */
   rate?: number;
   /** Level against the sound's own (1 = as designed). */
   gain?: number;
+  /**
+   * Seconds from now, to land on a moment on screen: started early by the
+   * speaker's own delay, and if it is still loading when the moment comes,
+   * joined where it would have been.
+   */
+  delay?: number;
 }
 
 export interface Playing {
@@ -106,18 +129,30 @@ export function playSound(name: SoundName, options: PlayOptions = {}): Playing {
   let source: AudioBufferSourceNode | null = null;
   let level: GainNode | null = null;
 
+  // When it is meant to be heard, on the audio clock.
+  const timed = options.delay !== undefined;
+  const ctx0 = timed ? getAudioContext() : null;
+  const due = ctx0 ? ctx0.currentTime + Math.max(0, options.delay! - speakerDelay(ctx0)) : 0;
+
   const start = (sound: Loaded) => {
     const ctx = getAudioContext();
     if (!ctx || stopped) return;
+    const rate = options.rate ?? 1;
+    const late = timed ? ctx.currentTime - due : 0;
+    // Too late to mean anything: the moment it went with is over.
+    if (late > (sound.buffer.duration - sound.lead) / rate / 2) return;
     try {
       source = ctx.createBufferSource();
       source.buffer = sound.buffer;
-      source.playbackRate.value = options.rate ?? 1;
+      source.playbackRate.value = rate;
       level = ctx.createGain();
       level.gain.value = options.gain ?? 1;
       source.connect(level);
       level.connect(ctx.destination);
-      source.start(0, sound.lead);
+      if (!timed) source.start(0, sound.lead);
+      // Loaded late: from where it would be by now, so the rest still lines up.
+      else if (late > 0.03) source.start(0, sound.lead + late * rate);
+      else source.start(Math.max(due, ctx.currentTime), sound.lead);
     } catch {
       /* the context is closing, or audio is not allowed yet */
     }

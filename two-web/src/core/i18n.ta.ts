@@ -915,4 +915,12 @@ export const TA: Readonly<Record<string, string>> = {
   "Last week's champion: {name} ({a} to {b})": 'கடந்த வார சாம்பியன்: {name} ({a} - {b})',
   'Tap {name} to boop · hold for more': '{name}-ஐ தொட்டால் பூப் · மேலும் அழுத்திப் பிடிக்கவும்',
   More: 'மேலும்',
+
+  // The Us two tab (components/UsScene).
+  Play: 'விளையாடு',
+  vs: 'எதிர்',
+  'Or tap {name} in the picture': 'அல்லது படத்தில் {name}-ஐ தொடவும்',
+  'Boop, tickle and pillow-fight each other': 'ஒருவரை ஒருவர் பூப், கிச்சுகிச்சு, தலையணை சண்டை',
+  'Sounds on': 'ஒலி இயக்கத்தில்',
+  'Sounds off': 'ஒலி அணைக்கப்பட்டது',
 };

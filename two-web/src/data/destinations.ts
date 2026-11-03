@@ -8,7 +8,8 @@ import {
   X, Heart, MessageSquare, Feather, Bed, Sprout, Mic, Map, Radio, Shield, Palette, 
   Handshake, Sparkles, Flame, Star, Compass, Mail, Gift, Hourglass, Coffee, BookMarked, 
   MapPin, Utensils, Smile, Moon, BookOpen, CheckSquare, Layers, IndianRupee, Image, Settings, 
-  Wind, Search, Users, CalendarHeart 
+  Wind, Search, Users, CalendarHeart,
+  PawPrint
 } from 'lucide-react';
 
 /**
@@ -78,6 +79,7 @@ export function getDestinations(unreadChatCount = 0): DestinationGroup[] {
       emoji: '🎨',
       family: 'play',
       items: [
+        { id: 'us', name: 'Us two', desc: 'Boop, tickle and pillow-fight each other', icon: PawPrint },
         { id: 'canvas', name: 'Canvas of Us', desc: 'Draw and doodle together, live', icon: Palette },
         { id: 'scrapbook', name: 'Memoir Book', desc: 'Your story as a book you can print', icon: BookMarked },
         { id: 'capsules', name: 'Time Capsule', desc: 'Notes and photos that open on a future date', icon: Hourglass },
