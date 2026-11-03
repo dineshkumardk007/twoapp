@@ -61,6 +61,7 @@ import {
 } from 'lucide-react';
 import { EmojiPicker, KeyboardPanel } from '../components/EmojiPicker';
 import { whenKeyboardUp } from '../core/keyboard';
+import { rideKeyboard } from '../core/keyboardRide';
 import { StickerArt, hasStickerArt } from '../components/StickerArt';
 import { STICKER_TEXT, stickerInfo } from '../core/stickers';
 
@@ -709,6 +710,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
     handOverToKeyboard();
   };
   useBackLayer(showEmojiPicker, () => setShowEmojiPicker(false));
+  // In the app on a phone the message box moves with the keyboard rather
+  // than jumping to where it will end (core/keyboardRide).
+  useEffect(() => (flush ? rideKeyboard() : undefined), [flush]);
 
   const handleSendText = () => {
     const text = inputText.trim();
@@ -1888,9 +1892,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
         // Sideways hidden: a message drawn to the right to answer it must not
         // make the conversation scroll sideways under the finger.
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-contain p-4 sm:p-6"
+        data-kb-list
       >
         <FloatingDayChip label={floatingDay.label} shown={floatingDay.shown} />
-        <div ref={contentRef}>
+        <div ref={contentRef} data-kb-content>
           {/* Said once the device is full rather than never. The oldest fall off
               to keep the vault inside what a browser will store, which is a fine
               thing to do and a poor thing to do silently. */}

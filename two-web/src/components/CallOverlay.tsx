@@ -150,7 +150,7 @@ const SWIPE_ANSWERS_AT = 0.7;
  * way it goes. A keyboard's Enter, or TalkBack's double tap, answers at once
  * (a click that no finger made: `detail` 0).
  */
-const SwipeToAnswer: React.FC<{ onAnswer: () => void }> = ({ onAnswer }) => {
+export const SwipeToAnswer: React.FC<{ onAnswer: () => void }> = ({ onAnswer }) => {
   const knob = useRef<HTMLButtonElement>(null);
   const drag = useRef<{ id: number; y0: number; dy: number } | null>(null);
   const [answered, setAnswered] = useState(false);
@@ -228,7 +228,7 @@ const SwipeToAnswer: React.FC<{ onAnswer: () => void }> = ({ onAnswer }) => {
  * lands - mute is wanted now, not when the finger lifts - with a tick; End
  * waits for the lift, so a brushing cheek cannot end a call.
  */
-const DockKey: React.FC<{
+export const DockKey: React.FC<{
   label: string;
   caption: string;
   on?: boolean;

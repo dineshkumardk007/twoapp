@@ -38,6 +38,7 @@ import { formatLastSeen } from '../core/lastSeen';
 import { useTypingSender } from '../core/typing';
 import { EmojiPicker, KeyboardPanel } from '../components/EmojiPicker';
 import { whenKeyboardUp } from '../core/keyboard';
+import { rideKeyboard } from '../core/keyboardRide';
 import { StickerArt, hasStickerArt } from '../components/StickerArt';
 import { STICKER_TEXT, stickerInfo } from '../core/stickers';
 import { VoiceNotePlayer } from '../components/VoiceNotePlayer';
@@ -557,6 +558,8 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
     handOverToKeyboard();
   };
   useBackLayer(showEmoji, () => setShowEmoji(false));
+  // The message box moves with the keyboard, as in the couple's chat (core/keyboardRide).
+  useEffect(() => (flush ? rideKeyboard() : undefined), [flush]);
 
   const cancelCompose = () => {
     setReplyTo(null);
@@ -1360,9 +1363,10 @@ export const GroupChatView: React.FC<GroupChatViewProps> = ({
         onScroll={handleLogScroll}
         {...floatingDay.inputHandlers}
         className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scroll-contain p-4"
+        data-kb-list
       >
         <FloatingDayChip label={floatingDay.label} shown={floatingDay.shown} />
-        <div ref={contentRef} className="space-y-3">
+        <div ref={contentRef} className="space-y-3" data-kb-content>
           {group.messages.length === 0 && (
             <p className="py-8 text-center text-sm text-linen-secondary">
               Nothing here yet. Say hello.

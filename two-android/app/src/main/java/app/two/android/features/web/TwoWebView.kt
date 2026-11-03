@@ -41,12 +41,14 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imeAnimationTarget
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -82,6 +84,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.distinctUntilChanged
 import app.two.android.features.radio.RadioRemote
 
 /**
@@ -519,6 +522,16 @@ class AndroidWebBridge(
         } catch (_: Exception) {
             // Looked at again on the next change.
         }
+    }
+
+    /**
+     * A chat is open and moves with the keyboard itself (ImeRide): the page
+     * keeps its full height while the keyboard slides over it, and is told
+     * where the keyboard is on every frame. Off: the ordinary resize.
+     */
+    @JavascriptInterface
+    fun keyboardOverlay(on: Boolean) {
+        Handler(Looper.getMainLooper()).post { ImeRide.overlay.value = on }
     }
 
     /** The delivery diary (DeliveryLog), oldest first, as JSON: times and kinds, nothing else. */
@@ -1162,6 +1175,34 @@ fun TwoWebView(
         }
     }
 
+    // The keyboard, frame by frame, for a chat riding it (ImeRide): where it
+    // is and where it is going, in CSS pixels above the navigation bar. Only
+    // while a chat has asked; each frame of the keyboard's slide is one call.
+    val riding by ImeRide.overlay
+    val density = LocalDensity.current
+    val imeNow = WindowInsets.ime
+    val imeTo = WindowInsets.imeAnimationTarget
+    val navBar = WindowInsets.navigationBars
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            if (!ImeRide.overlay.value) {
+                null
+            } else {
+                val nav = navBar.getBottom(density)
+                val scale = density.density
+                Pair(
+                    ((imeNow.getBottom(density) - nav).coerceAtLeast(0) / scale).roundToInt(),
+                    ((imeTo.getBottom(density) - nav).coerceAtLeast(0) / scale).roundToInt()
+                )
+            }
+        }.distinctUntilChanged().collect { keyboard ->
+            if (keyboard == null) return@collect
+            val page = webViewRef ?: return@collect
+            if (Uri.parse(page.url ?: "").host != APP_HOST) return@collect
+            page.evaluateJavascript("window.__twoIme && window.__twoIme(${keyboard.first}, ${keyboard.second})", null)
+        }
+    }
+
     AndroidView(
         // Keeps the WebView inside the area it is actually allowed to draw in:
         // below the status bar, above the gesture bar, and above the keyboard.
@@ -1182,10 +1223,18 @@ fun TwoWebView(
         // the keyboard came up. Now it takes the keyboard's final height once,
         // as the slide starts (imeAnimationTarget), and the keyboard slides
         // into the space already made.
+        //
+        // A chat that rides the keyboard itself (ImeRide) keeps its full
+        // height instead - only the navigation bar is kept clear - and is told
+        // on every frame where the keyboard is (below).
         modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(
-                WindowInsets.safeDrawing.exclude(WindowInsets.ime).union(WindowInsets.imeAnimationTarget)
+                if (riding) {
+                    WindowInsets.safeDrawing.exclude(WindowInsets.ime).union(WindowInsets.navigationBars)
+                } else {
+                    WindowInsets.safeDrawing.exclude(WindowInsets.ime).union(WindowInsets.imeAnimationTarget)
+                }
             ),
         factory = { context ->
             val assetLoader = WebViewAssetLoader.Builder()
@@ -1309,6 +1358,8 @@ fun TwoWebView(
                     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                         super.onPageStarted(view, url, favicon)
                         view?.context?.findActivity()?.let { resetBedside(it) }
+                        // A new page has no chat open yet: the ordinary resize.
+                        ImeRide.overlay.value = false
                         bridge.earRelease()
                         // A lock reloads the page, and the page that comes up
                         // has no relay connection until it says so: the

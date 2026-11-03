@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Phone, PhoneOff, Mic, MicOff, Volume2, Headphones, Ear, Lock, ChevronDown, AudioLines, Users } from 'lucide-react';
+import { PhoneOff, Mic, MicOff, Volume2, Headphones, Ear, Lock, ChevronDown, AudioLines, Users } from 'lucide-react';
 import type { GroupCallEnd, GroupCallState } from '../core/groupCall';
 import { haptic } from '../core/haptics';
 import { useBackLayer } from '../core/backStack';
+import { DockKey, SwipeToAnswer } from './CallOverlay';
 
 interface GroupCallOverlayProps {
   call: GroupCallState;
@@ -53,10 +54,12 @@ function tintFor(id: string): string {
 }
 
 /**
- * The group call screen: the same night sky as a call between the two of
- * you, with a circle for everyone in it. Each circle's rings open out as that
- * person speaks; one still finding its way to this phone is dimmed. Made
- * small, it is a pill at the top of Two, as the couple's call is.
+ * The group call screen, in the same aurora glass as a call between the two
+ * of you (components/CallOverlay): the aurora sky, the group's circle ringed
+ * with turning light while it rings, and once you are in, a circle for
+ * everyone whose halo lights up as they speak; one still finding its way to
+ * this phone is dimmed. The keys float in the glass dock, a ring is
+ * answered by sliding up, and the end says how long you were in. Made small, it is a pill at the top of Two.
  */
 export const GroupCallOverlay: React.FC<GroupCallOverlayProps> = ({
   call,
@@ -92,19 +95,20 @@ export const GroupCallOverlay: React.FC<GroupCallOverlayProps> = ({
     heardOnce.current = anyone;
   }, [anyone]);
 
-  // Each circle swells with its voice, set straight on the circles.
+  // Each circle's halo lights with its voice, set straight on the circles
+  // rather than through React.
   const grid = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (call.phase !== 'active' || small) return;
     const levels: Record<string, number> = {};
     const id = setInterval(() => {
-      const now = voiceLevels();
+      const heard = voiceLevels();
       grid.current?.querySelectorAll<HTMLElement>('[data-person]').forEach(el => {
         const who = el.dataset.person || '';
-        levels[who] = Math.max(now[who] ?? 0, (levels[who] ?? 0) * 0.8);
+        levels[who] = Math.max(heard[who] ?? 0, (levels[who] ?? 0) * 0.8);
         el.style.setProperty('--voice', levels[who].toFixed(3));
       });
-    }, 140);
+    }, 120);
     return () => clearInterval(id);
   }, [call.phase, small, voiceLevels]);
 
@@ -125,7 +129,7 @@ export const GroupCallOverlay: React.FC<GroupCallOverlayProps> = ({
             setSmall(false);
           }}
           aria-label={`Back to the call in ${groupName}`}
-          className="call-pill pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300"
+          className="call-pill pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-200"
         >
           <span className="call-pill-dot" aria-hidden="true" />
           <span className="call-pill-initial" aria-hidden="true">
@@ -141,19 +145,25 @@ export const GroupCallOverlay: React.FC<GroupCallOverlayProps> = ({
   }
 
   const ended = call.phase === 'ended' ? endTitle(call.endReason) : null;
+  const wasIn = call.phase === 'ended' && call.joinedAt > 0;
+  const waitingForOthers = call.phase === 'active' && call.peers.length === 0;
+  // The group's own circle stands in the middle while it rings, while you
+  // wait for the first to join, and at the end; the people, once there are some.
+  const showPeople = call.phase === 'active' && !waitingForOthers;
   const people = [{ id: 'me', name: myName || 'You', connected: true }, ...call.peers];
+  const route = call.speaker ? 'Speaker' : call.headset ? 'Earphones' : 'Earpiece';
 
-  let status: React.ReactNode;
+  let status: React.ReactNode = null;
   if (call.phase === 'incoming') status = `${call.caller} is calling the group`;
-  else if (call.phase === 'active')
-    status =
-      call.peers.length === 0 ? (
-        'Ringing the group…'
-      ) : (
-        <span className="tabular-nums">
-          {clock(now - call.joinedAt)} · {inCall} in call
-        </span>
-      );
+  else if (waitingForOthers) status = 'Ringing the group…';
+  else if (call.phase === 'active') {
+    status = (
+      <span className="tabular-nums">
+        <span className="text-[20px] font-medium tracking-wide text-white">{clock(now - call.joinedAt)}</span>
+        <span className="mt-1 block text-[13px] text-white/70">{inCall} in call</span>
+      </span>
+    );
+  }
 
   return (
     <div
@@ -161,15 +171,19 @@ export const GroupCallOverlay: React.FC<GroupCallOverlayProps> = ({
       aria-modal="true"
       aria-label={`Group call in ${groupName}`}
       data-live={call.phase === 'active'}
-      className={`no-remap call-sky fixed inset-0 z-[70] flex flex-col items-center overflow-hidden px-6 text-white animate-in fade-in duration-300 ${
-        call.phase === 'incoming' ? 'slide-in-from-bottom-6 duration-500' : ''
-      }`}
+      data-phase={call.phase}
+      className="no-remap call-sky call-enter fixed inset-0 z-[70] flex flex-col items-center overflow-hidden px-6 text-white"
       style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2.5rem)'
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)'
       }}
     >
-      <div className="call-sky-glow" aria-hidden="true" />
+      <div className="call-aurora" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="call-stars" aria-hidden="true" />
 
       <div className="relative flex w-full items-center justify-center">
         {call.phase === 'active' && (
@@ -192,36 +206,18 @@ export const GroupCallOverlay: React.FC<GroupCallOverlayProps> = ({
       </div>
 
       <div className="relative flex w-full flex-1 flex-col items-center justify-center">
-        <h2 className="flex items-center gap-2 font-serif text-[28px] font-medium leading-tight tracking-tight">
-          <Users className="h-6 w-6 text-white/70" aria-hidden="true" />
-          {groupName}
-        </h2>
-        <div className="mt-1 min-h-[2.75rem] text-center" aria-live="polite">
-          {ended ? (
-            <>
-              <p className="text-[15px] text-white/85">{ended.title}</p>
-              {ended.detail && <p className="mx-auto mt-1 max-w-[17rem] text-[13px] text-white/60">{ended.detail}</p>}
-            </>
-          ) : (
-            <p key={`${call.phase}-${call.peers.length === 0}`} className="text-[15px] text-white/80 animate-in fade-in slide-in-from-bottom-1 duration-300">
-              {status}
-            </p>
-          )}
-        </div>
-
-        {call.phase === 'active' && (
-          <div ref={grid} className="gcall-grid mt-8" data-count={people.length}>
+        {showPeople ? (
+          <div ref={grid} className="gcall-grid" data-count={people.length}>
             {people.map(p => (
               <div
                 key={p.id}
                 data-person={p.id === 'me' ? undefined : p.id}
                 data-waiting={!p.connected}
-                className="gcall-person animate-in fade-in zoom-in-90 duration-500"
+                className="gcall-person"
                 style={{ '--tint': p.id === 'me' ? '#A7F3D0' : tintFor(p.id) } as React.CSSProperties}
               >
                 <div className="gcall-circle">
-                  <span className="call-voice-ring" aria-hidden="true" />
-                  <span className="call-voice-ring call-voice-ring-far" aria-hidden="true" />
+                  <span className="gcall-halo" aria-hidden="true" />
                   <span className="gcall-initial">{initialOf(p.name)}</span>
                 </div>
                 <span className="gcall-name">
@@ -231,112 +227,94 @@ export const GroupCallOverlay: React.FC<GroupCallOverlayProps> = ({
               </div>
             ))}
           </div>
+        ) : (
+          <div
+            className="call-hero"
+            data-ringing={call.phase === 'incoming' || waitingForOthers}
+            data-ended={call.phase === 'ended'}
+            aria-hidden="true"
+          >
+            {(call.phase === 'incoming' || waitingForOthers) && (
+              <>
+                <span className="call-ripple" />
+                <span className="call-ripple" />
+                <span className="call-ripple" />
+              </>
+            )}
+            <span className="call-hero-glow" />
+            <span className="call-halo" />
+            <span className="call-halo call-halo-soft" />
+            <span className="call-hero-orb">
+              <Users className="h-14 w-14 text-white" strokeWidth={1.5} />
+            </span>
+          </div>
         )}
+
+        <h2 className={`${showPeople ? 'mt-8' : 'mt-9'} flex items-center gap-2 font-serif text-[30px] font-medium leading-tight tracking-tight`}>
+          {groupName}
+        </h2>
+        <div className="mt-1.5 min-h-[3.25rem] text-center" aria-live="polite">
+          {ended ? (
+            <div className="call-summary">
+              <p className="text-[15px] text-white/85">{ended.title}</p>
+              {wasIn && call.endedAt > call.joinedAt && (
+                <p className="mt-0.5 font-serif text-[30px] leading-none tabular-nums">{clock(call.endedAt - call.joinedAt)}</p>
+              )}
+              {ended.detail && <p className="mx-auto mt-1.5 max-w-[17rem] text-[13px] leading-relaxed text-white/60">{ended.detail}</p>}
+            </div>
+          ) : (
+            <div key={`${call.phase}-${waitingForOthers}`} className="call-status text-[15px] text-white/80">
+              {status}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="relative flex min-h-[7.5rem] w-full max-w-sm items-end justify-around">
+      <div className="relative flex min-h-[9.5rem] w-full max-w-sm items-end justify-center">
         {call.phase === 'incoming' && (
-          <>
+          <div className="flex w-full items-end justify-around">
             <button
               type="button"
               onClick={() => {
                 haptic('tick');
                 onDecline();
               }}
-              aria-label="Decline"
-              className="flex flex-col items-center gap-2.5 text-[13px] text-white/85"
+              aria-label="Not now"
+              className="call-dock-key mb-7"
             >
-              <span className="call-key call-key-end h-[68px] w-[68px]">
-                <PhoneOff className="h-7 w-7" />
+              <span className="call-key call-key-end h-[62px] w-[62px]">
+                <PhoneOff className="h-6 w-6" />
               </span>
-              Not now
+              <span className="call-dock-caption">Not now</span>
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                haptic('confirm');
-                onJoin();
-              }}
-              aria-label="Join"
-              className="flex flex-col items-center gap-2.5 text-[13px] text-white/85"
-            >
-              <span className="call-key call-key-answer h-[68px] w-[68px]">
-                <Phone className="h-7 w-7" />
-              </span>
-              Join
-            </button>
-          </>
+            <SwipeToAnswer onAnswer={onJoin} />
+          </div>
         )}
 
         {call.phase === 'active' && (
-          <div className="flex w-full flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-3 duration-500">
-            <div className="flex w-full items-start justify-around">
-              <button
-                type="button"
-                onClick={() => {
-                  haptic('tick');
-                  onToggleMute();
-                }}
-                aria-label={call.muted ? 'Unmute' : 'Mute'}
-                aria-pressed={call.muted}
-                className="flex flex-col items-center gap-2 text-[12px] text-white/85"
-              >
-                <span className="call-key h-14 w-14" data-on={call.muted}>
-                  {call.muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-                </span>
-                {call.muted ? 'Muted' : 'Mute'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  haptic('tick');
-                  onToggleSpeaker();
-                }}
-                aria-label={call.speaker ? 'Use earpiece' : 'Use speaker'}
-                aria-pressed={call.speaker}
-                className="flex flex-col items-center gap-2 text-[12px] text-white/85"
-              >
-                <span className="call-key h-14 w-14" data-on={call.speaker}>
-                  {call.speaker ? (
-                    <Volume2 className="h-6 w-6" />
-                  ) : call.headset ? (
-                    <Headphones className="h-6 w-6" />
-                  ) : (
-                    <Ear className="h-6 w-6" />
-                  )}
-                </span>
-                Speaker
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  haptic('tick');
-                  onToggleNoise();
-                }}
-                aria-label={call.noiseReduction ? 'Let the room back in' : 'Take out background noise'}
-                aria-pressed={call.noiseReduction}
-                className="flex flex-col items-center gap-2 text-[12px] text-white/85"
-              >
-                <span className="call-key h-14 w-14" data-on={call.noiseReduction}>
-                  <AudioLines className="h-6 w-6" />
-                </span>
-                {call.noiseReduction ? 'Quiet on' : 'Quiet'}
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                haptic('tick');
-                onLeave();
-              }}
-              aria-label="Leave call"
-              className="flex flex-col items-center gap-2 text-[13px] text-white/85"
+          <div className="call-dock">
+            <DockKey
+              label={call.muted ? 'Unmute' : 'Mute'}
+              caption={call.muted ? 'Muted' : 'Mute'}
+              on={call.muted}
+              onPress={onToggleMute}
             >
-              <span className="call-key call-key-end h-[68px] w-[68px]">
-                <PhoneOff className="h-7 w-7" />
-              </span>
-              Leave
-            </button>
+              {call.muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+            </DockKey>
+            <DockKey label={call.speaker ? 'Use earpiece' : 'Use speaker'} caption={route} on={call.speaker} onPress={onToggleSpeaker}>
+              {call.speaker ? <Volume2 className="h-6 w-6" /> : call.headset ? <Headphones className="h-6 w-6" /> : <Ear className="h-6 w-6" />}
+            </DockKey>
+            <DockKey
+              label={call.noiseReduction ? 'Let the room back in' : 'Take out background noise'}
+              caption={call.noiseReduction ? 'Quiet on' : 'Quiet'}
+              on={call.noiseReduction}
+              onPress={onToggleNoise}
+            >
+              <AudioLines className="h-6 w-6" />
+            </DockKey>
+            <DockKey label="Leave call" caption="Leave" danger onPress={onLeave}>
+              <PhoneOff className="h-6 w-6" />
+            </DockKey>
           </div>
         )}
       </div>

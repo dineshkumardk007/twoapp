@@ -107,6 +107,26 @@ function saveKeyboardHeight(width: number, height: number): void {
   }
 }
 
+/**
+ * The keyboard's height as a chat riding it was told it (core/keyboardRide):
+ * the emoji panel opens at it, and it is kept for next time.
+ */
+export function noteKeyboardHeight(height: number): void {
+  try {
+    document.documentElement.style.setProperty('--two-kb-h', `${height}px`);
+  } catch {
+    /* no page */
+  }
+  saveKeyboardHeight(window.innerWidth, height);
+}
+
+/**
+ * Fired by a chat riding the keyboard (core/keyboardRide) with the room the
+ * keyboard takes, once it has stopped: there the page keeps its height, so
+ * the keyboard is not seen by the page getting shorter.
+ */
+export const IME_SETTLED_EVENT = 'two-ime-settled';
+
 /** A keyboard's height once it has stopped moving, not one caught half way up. */
 const KEYBOARD_STILL_MS = 250;
 
@@ -125,14 +145,20 @@ export function whenKeyboardUp(done: () => void, waitMs = 700): () => void {
     clearTimeout(timer);
     window.removeEventListener('resize', check);
     window.visualViewport?.removeEventListener('resize', check);
+    window.removeEventListener(IME_SETTLED_EVENT, ridden);
     done();
   };
   const check = () => {
     if (start - window.innerHeight >= KEYBOARD_MIN_PX) finish();
   };
+  // In a chat riding the keyboard the page does not get shorter: it is told.
+  const ridden = (e: Event) => {
+    if (((e as CustomEvent<number>).detail ?? 0) >= KEYBOARD_MIN_PX) finish();
+  };
   const timer = setTimeout(finish, waitMs);
   window.addEventListener('resize', check);
   window.visualViewport?.addEventListener('resize', check);
+  window.addEventListener(IME_SETTLED_EVENT, ridden);
   return finish;
 }
 
