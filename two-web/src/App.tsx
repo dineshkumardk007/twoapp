@@ -6183,7 +6183,6 @@ export const App: React.FC = () => {
             onPlay={stable('play', handlePlay)}
             party={partySeat}
             surpriseWaitingId={dueOne && surpriseLater.includes(dueOne.id) ? dueOne.id : null}
-            onPlanSurprise={stable('planSurprise', () => setPlanningSurprise(true))}
             onOpenSurprise={stable('openSurprise', (id: string) => {
               const plan = bookOf(latestRef.current.state.surprises).plans.find(p => p.id === id);
               if (plan) setRevealing({ plan, media: bookOf(latestRef.current.state.surprises).media, preview: false });
@@ -6617,6 +6616,7 @@ export const App: React.FC = () => {
               if (result.status === 'found') setUpdateOffer(result.update);
               return result.status;
             }}
+            onPlanSurprise={() => setPlanningSurprise(true)}
             notAboutYouOn={(state.activeUser === 'user' ? state.userReport : state.partnerReport).notAboutYouActive}
             onToggleNotAboutYou={handleToggleUserFlag}
             decoyOnLaunch={decoyOnLaunch}

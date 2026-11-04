@@ -88,6 +88,15 @@ export function opensAt(plan: Pick<SurprisePlan, 'day' | 'time'>): number {
   return new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0).getTime();
 }
 
+/** What is left until a moment, for the countdown: whole days, then hh:mm:ss. */
+export function countdown(ms: number): { days: number; clock: string } {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const two = (n: number) => String(n).padStart(2, '0');
+  const h = Math.floor((total % 86_400) / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  return { days: Math.floor(total / 86_400), clock: `${two(h)}:${two(m)}:${two(total % 60)}` };
+}
+
 /** Every photo and the voice note it lists are here. */
 export function isComplete(plan: SurprisePlan, media: Record<string, SurpriseMedia>): boolean {
   return plan.photoIds.every(id => !!media[id]) && (!plan.voiceId || !!media[plan.voiceId]);

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Eye, Gift, ImagePlus, Trash2, X } from 'lucide-react';
 import { useT } from '../core/i18n';
 import { useBackLayer } from '../core/backStack';
@@ -11,6 +11,8 @@ import {
   MAX_LETTER_CHARS,
   MAX_SURPRISE_PHOTOS,
   MAX_TITLE_CHARS,
+  OPEN_FOR_MS,
+  countdown,
   localDay,
   opensAt,
   type SurpriseBook,
@@ -41,8 +43,9 @@ function when(at: number): string {
 /**
  * Planning a surprise for the other one (core/surprise): when it opens, the
  * words on the cake, a letter, photos and a voice message. Saved, it goes to
- * their phone sealed - and this says when it is waiting there, and when it
- * has been opened.
+ * their phone sealed - and this says when it is waiting there, counts down
+ * to its moment, and says when it has been opened. Only on this phone: theirs
+ * never shows a plan of yours.
  */
 export const SurprisePlanner: React.FC<SurprisePlannerProps> = ({
   me,
@@ -138,15 +141,33 @@ export const SurprisePlanner: React.FC<SurprisePlannerProps> = ({
     setTimeout(() => setSaved(false), 2_500);
   };
 
+  // The countdown's clock, while there is one to count: until its moment,
+  // or until it has been opened.
+  const [now, setNow] = useState(Date.now);
+  const openAt = existing ? opensAt(existing) : 0;
+  const counting = !!existing && !book.seen[existing.id] && now < openAt;
+  useEffect(() => {
+    if (!counting) return;
+    // On each second's turn, so no second is skipped or shown twice.
+    const nextTurn = () => 1000 - (Date.now() % 1000) + 5;
+    let timer = window.setTimeout(function tick() {
+      setNow(Date.now());
+      timer = window.setTimeout(tick, nextTurn());
+    }, nextTurn());
+    return () => window.clearTimeout(timer);
+  }, [counting]);
+  const left = countdown(openAt - now);
+
   // How it stands on their phone.
   const status = useMemo(() => {
     if (!existing) return null;
     const seenAt = book.seen[existing.id];
     if (seenAt) return { tone: 'seen', text: tr('{name} opened it · {when}', { name: partnerName, when: when(seenAt) }) };
-    if (book.ready[existing.id] === existing.updatedAt)
-      return { tone: 'ready', text: tr('Ready on {name}’s phone. It opens {when}.', { name: partnerName, when: when(opensAt(existing)) }) };
-    return { tone: 'sending', text: tr('On its way to {name}’s phone…', { name: partnerName }) };
-  }, [existing, book, partnerName, tr]);
+    if (book.ready[existing.id] !== existing.updatedAt) return { tone: 'sending', text: tr('On its way to {name}’s phone…', { name: partnerName }) };
+    if (now < openAt) return { tone: 'ready', text: tr('Ready and sealed on {name}’s phone.', { name: partnerName }) };
+    if (now <= openAt + OPEN_FOR_MS) return { tone: 'ready', text: tr('Its moment has come: it opens as soon as {name} opens Two.', { name: partnerName }) };
+    return { tone: 'sending', text: tr('No word from {name}’s phone that it was opened.', { name: partnerName }) };
+  }, [existing, book, partnerName, tr, now, openAt]);
 
   const field = 'w-full rounded-xl border border-linen-border bg-linen-surface px-3 py-2.5 text-[14px] text-linen-primary focus:outline-hidden focus:ring-2 focus:ring-linen-accent/40';
   const label = 'mb-1.5 block text-[12px] font-semibold text-linen-primary';
@@ -177,6 +198,19 @@ export const SurprisePlanner: React.FC<SurprisePlannerProps> = ({
             {status.tone === 'seen' ? '💝 ' : status.tone === 'ready' ? '✓ ' : '⏳ '}
             {status.text}
           </p>
+        )}
+
+        {counting && (
+          <div role="timer" className="mt-3 rounded-2xl border border-linen-accent/30 bg-linen-accent/10 px-4 py-3.5 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-linen-accent">
+              {tr('Opens on {name}’s phone in', { name: partnerName })}
+            </p>
+            <p className="mt-1 font-serif text-[30px] leading-tight tabular-nums text-linen-primary">
+              {left.days > 0 && <span>{tr('{n} d', { n: left.days })} </span>}
+              {left.clock}
+            </p>
+            <p className="mt-0.5 text-[12px] text-linen-secondary">{when(openAt)}</p>
+          </div>
         )}
 
         <div className="mt-5 space-y-5">

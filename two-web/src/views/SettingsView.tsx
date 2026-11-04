@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { readCallQuality, writeCallQuality } from '../core/call';
 import { AUTO_LOCK_CHOICES, AutoLockSetting } from '../core/autoLock';
 import { generatePairingCode, isPlausiblePairingCode, extractPairingCode, findTwoCode, generateJoinPhrase, checkJoinPhrase, getDeviceId } from '../core/space';
@@ -16,6 +16,7 @@ import { copyTextOrThrow } from '../core/clipboard';
 import { FingerprintStatus, fingerprintStatus, enableFingerprint, disableFingerprint } from '../core/fingerprint';
 import { unlockVault } from '../core/vault';
 import { appVersion } from '../core/appUpdate';
+import { haptic } from '../core/haptics';
 import { CrashNoteCard } from '../components/CrashNoteCard';
 import { askConfirm, showNotice } from '../core/dialog';
 import { resolveRelayUrl } from '../core/ws';
@@ -107,6 +108,11 @@ interface SettingsViewProps {
   onToggleShareReceipts?: (share: boolean) => void;
   /** Asks for a new version now; one found is offered by the app's own popup. */
   onCheckForUpdate?: () => Promise<'found' | 'none' | 'failed' | 'skipped'>;
+  /**
+   * Five quick taps on the version number: planning a surprise for the other
+   * (core/surprise). Nothing on the screen says it is there, on either phone.
+   */
+  onPlanSurprise?: () => void;
   /** Whether you have told your partner "it's not about you". */
   notAboutYouOn?: boolean;
   /** Turns it on or off, on both phones. */
@@ -149,7 +155,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onToggleAutoCamouflage,
   decoyOnLaunch = false,
   onToggleDecoyOnLaunch,
-  onCheckForUpdate
+  onCheckForUpdate,
+  onPlanSurprise
 }) => {
   const [showVaultModal, setShowVaultModal] = useState(false);
   // Home's "Back up now" lands here with the backup already open.
@@ -492,6 +499,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         : "Couldn't check just now. Try again in a while."
     );
   };
+  // Taps on the version number, each within a moment of the last.
+  const versionTaps = useRef({ count: 0, last: 0 });
+  const tapVersion = () => {
+    const now = Date.now();
+    const taps = versionTaps.current;
+    taps.count = now - taps.last < 1_500 ? taps.count + 1 : 1;
+    taps.last = now;
+    if (taps.count < 5 || !onPlanSurprise) return;
+    taps.count = 0;
+    haptic('confirm');
+    onPlanSurprise();
+  };
   const chooseAppearance = (next: Appearance) => {
     setAppearance(next);
     writeAppearance(next);
@@ -630,7 +649,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <Smartphone className="w-4 h-4 text-linen-accent" />
               <span>App version</span>
             </div>
-            <span className="text-xs font-medium text-linen-secondary tabular-nums">{mine.name}</span>
+            <button type="button" onClick={tapVersion} className="text-xs font-medium text-linen-secondary tabular-nums select-none">
+              {mine.name}
+            </button>
           </div>
           {state.partnerApp && (
             <p className="text-[11px] text-linen-secondary leading-relaxed">

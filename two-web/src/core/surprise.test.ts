@@ -5,6 +5,7 @@ import {
   WAIT_FOR_PARTS_MS,
   cleanMedia,
   cleanPlan,
+  countdown,
   dueSurprise,
   isComplete,
   localDay,
@@ -101,6 +102,18 @@ describe('the party in Us two', () => {
   it('counts days on this phone’s clock', () => {
     expect(localDay(midnight)).toBe('2026-11-14');
     expect(localDay(midnight - 1)).toBe('2026-11-13');
+  });
+});
+
+describe('the countdown to its moment', () => {
+  it('counts whole days, then hours, minutes and seconds', () => {
+    expect(countdown(((14 * 24 + 3) * 3600 + 12 * 60 + 45) * 1000)).toEqual({ days: 14, clock: '03:12:45' });
+    expect(countdown(59_000)).toEqual({ days: 0, clock: '00:00:59' });
+  });
+
+  it('rounds part of a second up, and stops at zero', () => {
+    expect(countdown(1)).toEqual({ days: 0, clock: '00:00:01' });
+    expect(countdown(-5_000)).toEqual({ days: 0, clock: '00:00:00' });
   });
 });
 
