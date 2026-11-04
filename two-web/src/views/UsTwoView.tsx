@@ -11,7 +11,7 @@ interface UsTwoViewProps {
   state: SpaceState;
   partnerOnline: boolean;
   partnerTyping: boolean;
-  onPlay: (kind: PlayKind, quiet: boolean) => void;
+  onPlay: (kind: PlayKind, quiet: boolean, variant?: number) => void;
   /** Whose birthday it is today, if anyone's: a party in the scene. */
   party?: Seat | null;
   /** A surprise of theirs, due and closed before its card: waiting here. */

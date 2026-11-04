@@ -55,7 +55,7 @@ interface HomeViewProps {
   partnerOnline?: boolean;
   partnerTyping?: boolean;
   /** A boop, tickle, pinch, pat or pillow for them (UsScene), counted on both phones. */
-  onPlay?: (kind: PlayKind, quiet: boolean) => void;
+  onPlay?: (kind: PlayKind, quiet: boolean, variant?: number) => void;
   /** Whose birthday it is today, if anyone's: a party in Us two. */
   party?: Seat | null;
 }
@@ -185,7 +185,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               theirWeather={theirReport.weather}
               messages={state.messages}
               boops={state.boops}
-              onPlay={(kind, quiet) => onPlay?.(kind, quiet)}
+              onPlay={(kind, quiet, variant) => onPlay?.(kind, quiet, variant)}
               party={party}
               onSendHeart={() => triggerGlobalPulse('Thinking of you')}
             />

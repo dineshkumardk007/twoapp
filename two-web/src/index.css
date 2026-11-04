@@ -2227,6 +2227,15 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
   to { transform: translateY(45%); }
 }
 
+/* The face from the side (UsRig): only while a kiss or a nose rub fades it in. */
+.rig-side { opacity: 0; }
+/* A paw on their back in a hug, rubbing it gently. */
+.rig-rub { animation: rig-rub 520ms ease-in-out infinite alternate both; }
+@keyframes rig-rub {
+  from { transform: rotate(calc(var(--d, 1) * -4deg)); }
+  to { transform: rotate(calc(var(--d, 1) * 5deg)); }
+}
+
 /* The newer plays' arms (UsRig, ReachArm) and what they hold. */
 /* A hug: both arms round them, shorter a moment with each squeeze. */
 .rig-hug-arm { animation: rig-hug-arm 1900ms linear both; }

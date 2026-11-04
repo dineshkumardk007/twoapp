@@ -1886,7 +1886,9 @@ export const App: React.FC = () => {
                   detail: {
                     kind: cleanPlayKind(parsed?.kind),
                     combo: Math.min(99, Math.max(1, Math.floor(Number(parsed?.combo) || 1))),
-                    quiet: parsed?.quiet === true
+                    quiet: parsed?.quiet === true,
+                    // Which dance, so both phones dance the same one.
+                    variant: Math.min(9, Math.max(0, Math.floor(Number(parsed?.variant) || 0)))
                   }
                 })
               );
@@ -3654,7 +3656,7 @@ export const App: React.FC = () => {
    * stops; the others almost at once. The relay keeps only the newest from
    * each of you, so a whole battle costs it one record each.
    */
-  const pendingPlayRef = useRef<{ timer: number; kind: PlayKind; combo: number; quiet: boolean } | null>(null);
+  const pendingPlayRef = useRef<{ timer: number; kind: PlayKind; combo: number; quiet: boolean; variant?: number } | null>(null);
   const sendPlay = () => {
     const p = pendingPlayRef.current;
     if (!p) return;
@@ -3671,7 +3673,8 @@ export const App: React.FC = () => {
       weekCount: seat === 'user' ? b.weekUser : b.weekPartner,
       kind: p.kind,
       combo: p.combo,
-      ...(p.quiet ? { quiet: true } : {})
+      ...(p.quiet ? { quiet: true } : {}),
+      ...(p.variant ? { variant: p.variant } : {})
     });
   };
   /**
@@ -3705,7 +3708,7 @@ export const App: React.FC = () => {
     wsRelay.broadcastUpdate(SURPRISE_SEEN, { id: plan.id, at: Date.now() });
   };
 
-  const handlePlay = (kind: PlayKind, quiet: boolean) => {
+  const handlePlay = (kind: PlayKind, quiet: boolean, variant?: number) => {
     const today = chatDay(Date.now());
     setState(prev => ({ ...prev, boops: addBoop(prev.boops, prev.activeUser, today) }));
     const p = pendingPlayRef.current;
@@ -3715,7 +3718,7 @@ export const App: React.FC = () => {
       window.clearTimeout(p.timer);
     } else {
       if (p) sendPlay();
-      pendingPlayRef.current = { timer: 0, kind, combo: 1, quiet };
+      pendingPlayRef.current = { timer: 0, kind, combo: 1, quiet, variant };
     }
     // After the count above has been drawn, so it goes with it.
     pendingPlayRef.current!.timer = window.setTimeout(sendPlay, kind === 'boop' ? 600 : 150);

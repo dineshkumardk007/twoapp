@@ -148,6 +148,34 @@ function boing(b: Stereo, start: number, base: number, gain: number) {
 }
 
 /**
+ * A little dance tune for Us two, in time with its moves (components/usMoves,
+ * ROUTINES): six beats of 0.36 s. The melody in eighth notes (null a rest)
+ * and a last chord on the seventh beat, over a soft bass on each beat - with
+ * a kick, hi-hats or claps (at these seconds) if it wants them.
+ */
+function danceTune(
+  b: Stereo,
+  o: { melody: (string | null)[]; lead: typeof I.glass; bass: string[]; end: string[]; seed: number; kick?: boolean; hats?: 'off' | 'all'; claps?: number[] }
+) {
+  const beat = 0.36;
+  o.melody.forEach((n, i) => {
+    if (n) strike(b, { note: hz(n), instrument: o.lead, start: (i * beat) / 2, gain: i % 2 ? 0.42 : 0.55, pan: i % 2 ? 0.12 : -0.12, seed: o.seed + i, mallet: 0.2 });
+  });
+  o.end.forEach((n, i) => strike(b, { note: hz(n), instrument: o.lead, start: 6 * beat + i * 0.02, gain: 0.5, seed: o.seed + 20 + i, decayScale: 1.4, mallet: 0.2 }));
+  strike(b, { note: hz(o.end[0]) * 2, instrument: I.glock, start: 6 * beat, gain: 0.12, seed: o.seed + 25, mallet: 0 });
+  o.bass.forEach((n, i) => strike(b, { note: hz(n), instrument: I.felt, start: i * beat, gain: 0.32, mallet: 0, seed: o.seed + 30 + i, decayScale: 0.7 }));
+  if (o.kick) for (let i = 0; i < 7; i++) thump(b, i * beat, 0.45, 110, o.seed + 40 + i);
+  const hat = (t: number, i: number) =>
+    noise(b, { start: t, dur: 0.05, gain: 0.12, filter: { type: 'bandpass', f: 6500, q: 1 }, attack: 0.004, decay: 0.015, seed: o.seed + 50 + i });
+  if (o.hats === 'off') for (let i = 0; i < 6; i++) hat(i * beat + beat / 2, i);
+  if (o.hats === 'all') for (let i = 0; i < 12; i++) hat((i * beat) / 2, i);
+  (o.claps ?? []).forEach((t, i) => {
+    noise(b, { start: t, dur: 0.05, gain: 0.55, filter: { type: 'bandpass', f: 2000, q: 0.8 }, attack: 0.0006, decay: 0.012, seed: o.seed + 70 + i });
+    noise(b, { start: t + 0.012, dur: 0.04, gain: 0.35, filter: { type: 'bandpass', f: 2600, q: 0.9 }, attack: 0.0006, decay: 0.01, seed: o.seed + 75 + i });
+  });
+}
+
+/**
  * Happy Birthday (a folk tune, free to play), in D, on a music-box kalimba
  * over soft felt chords. Each note: [name, beats]; a beat is `beat` seconds.
  * The whole song, or only its first line.
@@ -925,6 +953,100 @@ export const RECIPES: Record<string, Recipe> = {
       ['D4', 'A3', 'D4', 'A3', 'B3', 'A3', 'D4'].forEach((n, i) => {
         strike(b, { note: hz(n), instrument: I.felt, start: i * beat, gain: 0.32, mallet: 0, seed: 610 + i, decayScale: 0.7 });
         if (i < 6) noise(b, { start: i * beat + beat / 2, dur: 0.05, gain: 0.12, filter: { type: 'bandpass', f: 6500, q: 1 }, attack: 0.004, decay: 0.015, seed: 620 + i });
+      });
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.14 },
+    master: { loudness: SOFT + 1, highpass: 120, maxSeconds: 2.8, tailFade: 0.5 }
+  },
+
+  // The other dances, one tune each (us-dance is the bop).
+
+  'us-dance-2': {
+    use: 'Us two: the twist - a rock-and-roll kalimba line, claps on the off beats',
+    dry: () => {
+      const b = silence(2.9);
+      danceTune(b, {
+        melody: ['A4', 'D5', 'F#5', 'A5', 'B5', 'A5', 'F#5', 'D5', 'E5', 'F#5', 'E5', 'D5'],
+        lead: I.kalimba,
+        bass: ['D4', 'A3', 'D4', 'A3', 'D4', 'A3', 'D4'],
+        end: ['D5', 'A5'],
+        claps: [0.36, 1.08, 1.8],
+        hats: 'off',
+        seed: 700
+      });
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.14 },
+    master: { loudness: SOFT + 1, highpass: 120, maxSeconds: 2.8, tailFade: 0.5 }
+  },
+
+  'us-dance-3': {
+    use: 'Us two: the spin - a run up and round on the marimba, twice, and a ta-da',
+    dry: () => {
+      const b = silence(2.9);
+      danceTune(b, {
+        melody: ['D5', 'F#5', 'A5', 'D6', 'A5', 'F#5', 'A5', 'F#5', 'D5', 'F#5', 'A5', 'D6'],
+        lead: I.marimba,
+        bass: ['D4', 'D4', 'A3', 'A3', 'D4', 'D4', 'D4'],
+        end: ['D6', 'F#6'],
+        hats: 'all',
+        seed: 730
+      });
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.14 },
+    master: { loudness: SOFT + 1, highpass: 120, maxSeconds: 2.8, tailFade: 0.5 }
+  },
+
+  'us-dance-4': {
+    use: 'Us two: jump and clap - a bouncy tune, a clap at the top of each jump',
+    dry: () => {
+      const b = silence(2.9);
+      danceTune(b, {
+        melody: ['F#5', 'A5', 'B5', 'A5', 'F#5', 'A5', 'B5', 'D6', 'B5', 'A5', 'F#5', 'A5'],
+        lead: I.marimba,
+        bass: ['D4', 'A3', 'B3', 'A3', 'D4', 'A3', 'D4'],
+        end: ['D6'],
+        claps: [0.36, 1.08, 1.8],
+        seed: 760
+      });
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.14 },
+    master: { loudness: SOFT + 1, highpass: 120, maxSeconds: 2.8, tailFade: 0.5 }
+  },
+
+  'us-dance-5': {
+    use: 'Us two: disco - four on the floor, hi-hats between, a syncopated line',
+    dry: () => {
+      const b = silence(2.9);
+      danceTune(b, {
+        melody: ['D6', null, 'A5', 'B5', null, 'A5', 'F#5', null, 'D6', null, 'B5', 'A5'],
+        lead: I.marimba,
+        bass: ['D4', 'D4', 'B3', 'B3', 'A3', 'A3', 'D4'],
+        end: ['D6', 'A5'],
+        kick: true,
+        hats: 'off',
+        seed: 790
+      });
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.14 },
+    master: { loudness: SOFT + 1, highpass: 110, maxSeconds: 2.8, tailFade: 0.5 }
+  },
+
+  'us-dance-6': {
+    use: 'Us two: the side shuffle - a skipping kalimba tune over a shaker',
+    dry: () => {
+      const b = silence(2.9);
+      danceTune(b, {
+        melody: ['D5', 'D5', 'F#5', 'A5', 'B5', 'B5', 'A5', 'F#5', 'E5', 'E5', 'F#5', 'D5'],
+        lead: I.kalimba,
+        bass: ['D4', 'A3', 'D4', 'A3', 'B3', 'A3', 'D4'],
+        end: ['D5', 'F#5'],
+        hats: 'all',
+        seed: 820
       });
       return b;
     },

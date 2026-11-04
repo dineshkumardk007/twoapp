@@ -53,7 +53,7 @@ const Part: React.FC<{ cls?: string; delay?: number; children: React.ReactNode }
 
 export type Mood =
   | 'smile' | 'grin' | 'happy' | 'love' | 'cry' | 'sad' | 'angry' | 'sleep' | 'shock' | 'laugh'
-  | 'wink' | 'kiss' | 'puppy' | 'smug' | 'roll' | 'drool' | 'yawn' | 'think' | 'tight' | 'dead' | 'tongue';
+  | 'wink' | 'kiss' | 'puppy' | 'smug' | 'roll' | 'drool' | 'yawn' | 'think' | 'tight' | 'dead' | 'tongue' | 'content';
 
 interface FaceProps {
   mood: Mood;
@@ -271,6 +271,11 @@ export const Face: React.FC<FaceProps> = ({ mood, ex, ey, my, k = 1, blush }) =>
     case 'tongue':
       eyes = [chevron(-ex, 1), arcUp(ex)];
       mouth = tongueOut;
+      break;
+    // Eyes closed, a small smile: held close.
+    case 'content':
+      eyes = [arcUp(-ex), arcUp(ex)];
+      mouth = smile;
       break;
   }
 

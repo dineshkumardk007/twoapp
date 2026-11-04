@@ -8,6 +8,7 @@ import {
   HeldBalloon,
   HeldPillow,
   JOINTS,
+  NOSE_TIP,
   Pillow,
   ReachArm,
   RiceBowl,
@@ -22,6 +23,7 @@ import {
 } from './UsRig';
 import {
   DANCE_BEAT,
+  DANCES,
   FIRST_RELEASE,
   FLIGHT_MS,
   MOODS,
@@ -63,6 +65,8 @@ export interface PlayDetail {
   kind: PlayKind;
   combo: number;
   quiet: boolean;
+  /** Which dance, for a dance. */
+  variant?: number;
 }
 
 /** The whole thing, on its own tab; or a small window onto it, on Home. */
@@ -81,7 +85,7 @@ interface UsSceneProps {
   messages: ChatMessage[];
   boops?: Boops;
   /** A boop, tickle, pinch, pat or pillow for them; `quiet` while they sleep. */
-  onPlay: (kind: PlayKind, quiet: boolean) => void;
+  onPlay: (kind: PlayKind, quiet: boolean, variant?: number) => void;
   onSendHeart: () => void;
   /** The small one on Home opens the tab. */
   onOpen?: () => void;
@@ -146,8 +150,11 @@ const BOOP_STEPS = [0, 2, 4, 7, 9, 12];
 /** Every sound of the battle (sound-design/recipes.mts), loaded as the scene opens. */
 const US_SOUNDS: SoundName[] = [
   'us-boop', 'us-tickle', 'us-hehe', 'us-pinch', 'us-pat', 'us-whoosh', 'us-bonk', 'us-dizzy', 'us-hop', 'us-shh',
-  'us-hug', 'us-kiss', 'us-feed', 'us-nuzzle', 'us-flower', 'us-highfive', 'us-splash', 'us-tease', 'us-dance', 'us-tuck'
+  'us-hug', 'us-kiss', 'us-feed', 'us-nuzzle', 'us-flower', 'us-highfive', 'us-splash', 'us-tease', 'us-tuck',
+  'us-dance', 'us-dance-2', 'us-dance-3', 'us-dance-4', 'us-dance-5', 'us-dance-6'
 ];
+/** Each dance's own tune (usMoves, ROUTINES): bop, twist, spin, jump and clap, disco, side shuffle. */
+const DANCE_TUNES: SoundName[] = ['us-dance', 'us-dance-2', 'us-dance-3', 'us-dance-4', 'us-dance-5', 'us-dance-6'];
 /** Felt as a firm buzz when it lands, not a tap. */
 const FIRM: ReadonlySet<Act> = new Set<Act>(['pillow', 'balloon', 'highfive', 'hug']);
 /** This phone's own choice: sounds on, unless switched off. */
@@ -295,6 +302,8 @@ interface Play {
   /** A pillow: when it is let go, and whether it starts a run. */
   release?: number;
   first?: boolean;
+  /** Which dance, for a dance - the same on both phones. */
+  variant?: number;
 }
 
 type Who = 'me' | 'them';
@@ -417,9 +426,10 @@ export const UsScene: React.FC<UsSceneProps> = ({
     let lead = 0;
     if (!p.hush && NEAR_ACTS.has(p.kind) && motionOk()) {
       // Already there from the last one - a run of boops - or standing close enough.
-      const there = !!cur && !cur.hush && NEAR_ACTS.has(cur.kind) && cur.target === p.target && nearOf(cur.kind) === nearOf(p.kind);
+      const tall = kindOf(other(p.target)) === 'bear';
+      const there = !!cur && !cur.hush && NEAR_ACTS.has(cur.kind) && cur.target === p.target && nearOf(cur.kind, tall) === nearOf(p.kind, tall);
       const apart = Math.abs(geo.current.me - geo.current.them);
-      if (!there && Math.abs(apart - nearOf(p.kind)) > 8) lead = WALK_MS;
+      if (!there && Math.abs(apart - nearOf(p.kind, tall)) > 8) lead = WALK_MS;
     }
     const next: Play = { ...p, n: ++playN.current, lead };
     // Pillows: a tap while the last ones are still flying throws another, a
@@ -454,7 +464,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const actorOf = (p: Play): Who => other(p.target);
   const nearWho = play && !play.hush && NEAR_ACTS.has(play.kind) ? actorOf(play) : null;
   const xAt = (who: Who) =>
-    who === nearWho && play ? homeX(play.target) - dirTo(play.target) * nearOf(play.kind) : homeX(who);
+    who === nearWho && play ? homeX(play.target) - dirTo(play.target) * nearOf(play.kind, kindOf(who) === 'bear') : homeX(who);
   const meAt = xAt('me');
   const themAt = xAt('them');
 
@@ -474,7 +484,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
     const playedOnMe = (e: Event) => {
       const d = (e as CustomEvent<Partial<PlayDetail>>).detail || {};
       const kind = cleanPlayKind(d.kind);
-      const p = start({ kind, target: 'me', combo: Math.max(1, Number(d.combo) || 1), quiet: !!d.quiet });
+      const p = start({ kind, target: 'me', combo: Math.max(1, Number(d.combo) || 1), quiet: !!d.quiet, variant: Number(d.variant) || 0 });
       // Felt when it lands, by someone looking - and never by someone asleep.
       if (!d.quiet && isShown()) {
         const hit = hitAt(p);
@@ -599,7 +609,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
         hear('us-tease', 100);
         break;
       case 'dance':
-        hear('us-dance', L);
+        hear(DANCE_TUNES[(p.variant ?? 0) % DANCE_TUNES.length], L);
         break;
       case 'tuck':
         // A yawn, the blanket laid down 0.65 s in, then the lullaby.
@@ -631,7 +641,10 @@ export const UsScene: React.FC<UsSceneProps> = ({
       const target = rigOf(p.target).current;
       // A cheek is pulled out from the far side of the face; cheeks puff (chewing, in a huff) from the middle.
       if (target.stretch) target.stretch.style.transformOrigin = p.kind === 'pinch' ? at(d * 30, 4) : at(0, 8);
-      const moves = p.kind === 'pillow' ? pillowMoves(d, p.release ?? FIRST_RELEASE, p.first !== false) : movesFor(p.kind, d, p.lead, p.combo);
+      const moves =
+        p.kind === 'pillow'
+          ? pillowMoves(d, p.release ?? FIRST_RELEASE, p.first !== false)
+          : movesFor(p.kind, d, p.lead, p.combo, { variant: p.variant, tall: kindOf(actorOf(p)) === 'bear' });
       const started = perform(moves, {
         actor: p.kind === 'giggle' ? undefined : rigOf(actorOf(p)).current,
         target
@@ -732,6 +745,28 @@ export const UsScene: React.FC<UsSceneProps> = ({
     const L = p.lead;
     const key = `t${p.n}`;
     switch (p.kind) {
+      case 'hug': {
+        // Hugging back: an arm round your back - behind you, so only the
+        // paw shows, on your far side.
+        const actor = actorOf(p);
+        const ah = HEADS[kindOf(actor)];
+        const ax = xAt(actor);
+        return (
+          <ReachArm
+            key={key}
+            kind={tk}
+            d={-d as 1 | -1}
+            from={[-d * jt.shoulder[0], jt.shoulder[1]]}
+            to={[(ax - d * 22 * ah.s - tx) / th.s, (ah.y + 42 * ah.s - th.y) / th.s]}
+            move="rig-hug-arm"
+            ms={1900}
+            delay={L + 60}
+            wiggle="rig-rub"
+            wiggleDelay={L + 550}
+            bow={-8}
+          />
+        );
+      }
       case 'highfive': {
         const [mx, my] = palmsAt(p);
         return (
@@ -854,12 +889,21 @@ export const UsScene: React.FC<UsSceneProps> = ({
           />
         );
       case 'hug':
-        // One arm round their chest to the far side, the other round their middle.
+        // An arm round their shoulders, the paw on their back, rubbing it.
         return (
-          <React.Fragment key={key}>
-            <ReachArm kind={ak} d={d} from={near} to={local(tx + d * 15 * th.s, th.y + 38 * th.s)} move="rig-hug-arm" ms={1900} delay={L} bow={9} />
-            <ReachArm kind={ak} d={d} from={far} to={local(tx + d * 6 * th.s, th.y + 50 * th.s)} move="rig-hug-arm" ms={1900} delay={L} bow={-6} />
-          </React.Fragment>
+          <ReachArm
+            key={key}
+            kind={ak}
+            d={d}
+            from={near}
+            to={local(tx + d * 13 * th.s, th.y + 30 * th.s)}
+            move="rig-hug-arm"
+            ms={1900}
+            delay={L}
+            wiggle="rig-rub"
+            wiggleDelay={L + 400}
+            bow={12}
+          />
         );
       case 'feed':
         return (
@@ -1033,9 +1077,9 @@ export const UsScene: React.FC<UsSceneProps> = ({
           </React.Fragment>
         );
       case 'kiss': {
-        // A little heart left on the cheek.
-        const cx = tx - d * (jt.cheek[0] - 3) * th.s;
-        const cy = ty(jt.cheek[1]);
+        // A little heart left on the cheek, where the lips touched (usMoves, kissMoves).
+        const cx = tx - d * 12;
+        const cy = (ah.y + th.y) / 2 + 3.7;
         return (
           <React.Fragment key={`fx${p.n}`}>
             <Sprite box={[cx - 7, cy - 7, 14, 14]} className="fx-mark" style={wait(420)}>
@@ -1081,30 +1125,35 @@ export const UsScene: React.FC<UsSceneProps> = ({
             </Sprite>
           </React.Fragment>
         );
-      case 'nuzzle':
+      case 'nuzzle': {
+        // Where the tips of their noses meet (UsRig, NOSE_TIP; leaning in 3 degrees from the feet).
+        const tipOf = (x: number, kind: RigKind, s: number, facing: number) => x + facing * (NOSE_TIP[kind][0] + 3.5) * s;
+        const nx = (tipOf(ax, ak, ah.s, d) + tipOf(tx, tk, th.s, -d)) / 2;
+        const ny = (ah.y + th.y) / 2 + 2.5;
         return (
           <React.Fragment key={`fx${p.n}`}>
-            {/* A sparkle where their cheeks meet, with each rub. */}
+            {/* A sparkle on each rub, a little above the noses. */}
             {[540, 756, 972, 1188, 1404].map((ms, i) => {
-              const sx = midX + (i % 2 ? 5 : -5);
-              const sy = tops - 18 - (i % 2) * 4;
+              const sx = nx + (i % 2 ? 4 : -4);
+              const sy = ny - 12 - (i % 2) * 3;
               return (
-                <Sprite key={i} box={[sx - 6, sy - 6, 12, 12]} className="fx-pop" style={wait(ms)}>
-                  <Sparkle x={sx} y={sy} s={0.5} />
+                <Sprite key={i} box={[sx - 5, sy - 5, 10, 10]} className="fx-pop" style={wait(ms)}>
+                  <Sparkle x={sx} y={sy} s={0.42} />
                 </Sprite>
               );
             })}
             {[0, 1].map(i => {
-              const hx = midX + (i ? 10 : -10);
+              const hx = midX + (i ? 12 : -12);
               const hy = tops - 30;
               return (
-                <Sprite key={`h${i}`} box={[hx - 7, hy - 7, 14, 14]} className="fx-rise" style={css({ '--rx': `${(i ? 1 : -1) * 40}%` }, 1100 + i * 200)}>
+                <Sprite key={`h${i}`} box={[hx - 7, hy - 7, 14, 14]} className="fx-rise" style={css({ '--rx': `${(i ? 1 : -1) * 40}%` }, 1650 + i * 150)}>
                   <Heart x={hx} y={hy} s={0.42} />
                 </Sprite>
               );
             })}
           </React.Fragment>
         );
+      }
       case 'flower': {
         // Round the bloom as it is held out, then hearts once it is theirs.
         const fx = tx - d * (22 * th.s + 8) + d * 5;
@@ -1261,6 +1310,21 @@ export const UsScene: React.FC<UsSceneProps> = ({
                 </span>
               );
             })}
+            {/* Jump and clap (usMoves, ROUTINES[3]): a sparkle where the hands meet, at the top of each jump. */}
+            {p.variant === 3 &&
+              [1, 3, 5].flatMap(beat =>
+                [
+                  { x: ax, h: ah },
+                  { x: tx, h: th }
+                ].map(({ x, h }, j) => {
+                  const sy = h.y - 52 * h.s;
+                  return (
+                    <Sprite key={`c${beat}${j}`} box={[x - 7, sy - 7, 14, 14]} className="fx-pop" style={wait(beat * DANCE_BEAT)}>
+                      <Sparkle x={x} y={sy} s={0.6} />
+                    </Sprite>
+                  );
+                })
+              )}
           </React.Fragment>
         );
       case 'tuck':
@@ -1374,6 +1438,8 @@ export const UsScene: React.FC<UsSceneProps> = ({
 
   // Tapping them boops (a combo when fast); tapping yourself giggles.
   const combo = useRef({ at: 0, n: 0 });
+  // Each Dance does the next dance, starting from any of them; theirs does the same one.
+  const nextDance = useRef(Math.floor(Math.random() * DANCES));
   const doPlay = (kind: PlayKind) => {
     haptic(FIRM.has(kind) ? 'confirm' : 'tick');
     if (asleep) {
@@ -1388,8 +1454,13 @@ export const UsScene: React.FC<UsSceneProps> = ({
       n = t - combo.current.at < COMBO_MS ? combo.current.n + 1 : 1;
       combo.current = { at: t, n };
     }
-    start({ kind, target: 'them', combo: n });
-    onPlay(kind, false);
+    let variant: number | undefined;
+    if (kind === 'dance') {
+      variant = nextDance.current;
+      nextDance.current = (variant + 1) % DANCES;
+    }
+    start({ kind, target: 'them', combo: n, variant });
+    onPlay(kind, false, variant);
   };
   const giggle = () => {
     haptic('tick');
@@ -1441,6 +1512,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
           phase={who === 'me' ? 0 : 2.3}
           layers={rigOf(who)}
           hat={!!partyWho}
+          facing={who === 'me' ? dirTo('them') : (-dirTo('them') as 1 | -1)}
         >
           {play && partsFor(play, who)}
           {throws

@@ -11,7 +11,12 @@ const BLUSH = '#ff7d9a';
 export type RigKind = 'bear' | 'bunny';
 export type RigArms = 'down' | 'up' | 'hold';
 /** The parts of a character that are moved by its plays (usMoves). */
-export type RigLayer = 'hop' | 'lean' | 'squash' | 'head' | 'stretch' | 'earL' | 'earR' | 'armL' | 'armR' | 'blush' | 'shadow';
+export type RigLayer =
+  | 'hop' | 'lean' | 'squash' | 'head' | 'stretch' | 'earL' | 'earR' | 'armL' | 'armR' | 'blush' | 'shadow'
+  /** The face from the front - turned a little toward the other, or faded for the side view. */
+  | 'face'
+  /** The face from the side, toward the other one: hidden until a kiss or a nose rub fades it in. */
+  | 'side';
 export type RigLayers = Partial<Record<RigLayer, HTMLDivElement | null>>;
 
 /**
@@ -117,11 +122,7 @@ function ear(kind: RigKind, side: 1 | -1): React.ReactNode {
 
 function skull(kind: RigKind): React.ReactNode {
   return kind === 'bear' ? (
-    <>
-      <circle cx={0} cy={0} r={30} {...shape(FUR.bear)} />
-      <ellipse cx={0} cy={9} rx={13} ry={9.5} fill={MUZZLE} />
-      <ellipse cx={0} cy={4.5} rx={4.6} ry={3.3} fill={INK} />
-    </>
+    <circle cx={0} cy={0} r={30} {...shape(FUR.bear)} />
   ) : (
     <>
       <ellipse cx={0} cy={0} rx={30} ry={27} {...shape(FUR.bunny)} />
@@ -130,7 +131,61 @@ function skull(kind: RigKind): React.ReactNode {
         <path d="M0,0 L-9,-6 L-9,6 Z M0,0 L9,-6 L9,6 Z" {...shape('#ff8fb1', 2.5)} />
         <circle cx={0} cy={0} r={2.8} {...shape('#ff8fb1', 2.5)} />
       </g>
-      <path d="M-3,4 L3,4 L0,7 Z" fill="#ff8fa8" stroke="#ff8fa8" strokeWidth={2} strokeLinejoin="round" />
+    </>
+  );
+}
+
+/** The muzzle and nose, from the front. */
+function features(kind: RigKind): React.ReactNode {
+  return kind === 'bear' ? (
+    <>
+      <ellipse cx={0} cy={9} rx={13} ry={9.5} fill={MUZZLE} />
+      <ellipse cx={0} cy={4.5} rx={4.6} ry={3.3} fill={INK} />
+    </>
+  ) : (
+    <path d="M-3,4 L3,4 L0,7 Z" fill="#ff8fa8" stroke="#ff8fa8" strokeWidth={2} strokeLinejoin="round" />
+  );
+}
+
+/**
+ * Where the tip of the nose is, and the puckered lips, in the side view
+ * (facing right): what a nose rub touches nose to, and a kiss lands with.
+ */
+export const NOSE_TIP: Record<RigKind, [number, number]> = { bear: [42, 2.5], bunny: [36.5, 3.5] };
+export const PUCKER: Record<RigKind, [number, number]> = { bear: [43, 10.5], bunny: [37, 9] };
+
+// The snout from the side, poking out past the round of the head: from a
+// point on the head's edge, round the tip, back to the edge.
+const SNOUT: Record<RigKind, string> = {
+  bear: 'M29.5,-5 C36,-6 41.5,-1 41.5,6 C41.5,13 34,17 25.4,16',
+  bunny: 'M29.8,-3 C34.5,-2 37,3 35.5,8 C34.5,11.5 31,12.6 27.4,11'
+};
+
+/**
+ * The face from the side, facing right (the layer it is in turns it round
+ * to face the other one): an eye closed happily, a small smile under the
+ * snout - or lips puckered at its tip for a kiss - and a blush.
+ */
+function profile(kind: RigKind, mood: Mood): React.ReactNode {
+  const bear = kind === 'bear';
+  const line = { fill: 'none', stroke: INK, strokeWidth: 3, strokeLinecap: 'round' as const };
+  const [px, py] = PUCKER[kind];
+  return (
+    <>
+      <path d={`${SNOUT[kind]} Z`} fill={bear ? MUZZLE : FUR.bunny} />
+      <path d={SNOUT[kind]} {...line} />
+      {bear ? (
+        <ellipse cx={39.5} cy={2.5} rx={3.6} ry={3} fill={INK} />
+      ) : (
+        <path d="M34,1 L37.2,3.2 L34,5.6 Z" fill="#ff8fa8" stroke="#ff8fa8" strokeWidth={1.6} strokeLinejoin="round" />
+      )}
+      <path d={bear ? 'M8,-8 Q12.5,-12.5 17,-8' : 'M9,-5 Q13,-9.5 17,-5'} {...line} />
+      {mood === 'kiss' ? (
+        <path d={`M${px - 1.5},${py - 2.5} q3.4,0.6 1,2.6 q3.4,0.8 -0.4,3`} {...line} strokeWidth={2.4} />
+      ) : (
+        <path d={bear ? 'M30,12.5 Q34,15 38,11.5' : 'M28,13.5 Q31,15.5 34,12.5'} {...line} strokeWidth={2.4} />
+      )}
+      <ellipse cx={13} cy={bear ? 6 : 8} rx={6.2} ry={3.8} fill={BLUSH} opacity={0.8} />
     </>
   );
 }
@@ -146,6 +201,8 @@ interface RigProps {
   layers: React.MutableRefObject<RigLayers>;
   /** A party hat, on a birthday. */
   hat?: boolean;
+  /** Which way the other one is - what its face from the side looks toward: 1 right, -1 left. */
+  facing?: 1 | -1;
   /** Drawn in front of it and moving with it: an arm reaching out, a pillow held up. */
   children?: React.ReactNode;
 }
@@ -157,7 +214,7 @@ interface RigProps {
  * breathes, sways, blinks and twitches an ear by itself; everything else is
  * done to it by a play.
  */
-export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, layers, hat, children }) => {
+export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, layers, hat, facing = 1, children }) => {
   const j = JOINTS[kind];
   const fur = FUR[kind];
   const set = (name: RigLayer) => (el: HTMLDivElement | null) => {
@@ -195,7 +252,6 @@ export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, l
                     {ears}
                     <Art>
                       {skull(kind)}
-                      <Face mood={mood} ex={ex} ey={ey} my={j.mouth} blush={{ x: j.cheek[0], y: j.cheek[1] }} />
                       {hat &&
                         (kind === 'bear' ? (
                           <PartyHat x={6} y={-26} rot={14} s={0.85} />
@@ -203,32 +259,41 @@ export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, l
                           <PartyHat x={-1} y={-24} rot={-6} s={0.74} />
                         ))}
                     </Art>
-                    <Layer ref={set('blush')} className="rig-blush">
+                    <Layer ref={set('face')} origin={[0, 0]}>
                       <Art>
-                        <g fill={BLUSH}>
-                          <ellipse cx={-j.cheek[0]} cy={j.cheek[1]} rx={7.5} ry={4.6} />
-                          <ellipse cx={j.cheek[0]} cy={j.cheek[1]} rx={7.5} ry={4.6} />
-                        </g>
+                        {features(kind)}
+                        <Face mood={mood} ex={ex} ey={ey} my={j.mouth} blush={{ x: j.cheek[0], y: j.cheek[1] }} />
                       </Art>
-                    </Layer>
-                    {OPEN_EYES.has(mood) && (
-                      <Layer className="rig-lids" style={after(phase * 1.7)}>
+                      <Layer ref={set('blush')} className="rig-blush">
                         <Art>
-                          {[-ex, ex].map(x => (
-                            <g key={x}>
-                              <circle cx={x} cy={ey} r={lid} fill={fur} />
-                              <path
-                                d={`M${x - 4.5},${ey - 0.5} Q${x},${ey + 3.5} ${x + 4.5},${ey - 0.5}`}
-                                fill="none"
-                                stroke={INK}
-                                strokeWidth={3}
-                                strokeLinecap="round"
-                              />
-                            </g>
-                          ))}
+                          <g fill={BLUSH}>
+                            <ellipse cx={-j.cheek[0]} cy={j.cheek[1]} rx={7.5} ry={4.6} />
+                            <ellipse cx={j.cheek[0]} cy={j.cheek[1]} rx={7.5} ry={4.6} />
+                          </g>
                         </Art>
                       </Layer>
-                    )}
+                      {OPEN_EYES.has(mood) && (
+                        <Layer className="rig-lids" style={after(phase * 1.7)}>
+                          <Art>
+                            {[-ex, ex].map(x => (
+                              <g key={x}>
+                                <circle cx={x} cy={ey} r={lid} fill={fur} />
+                                <path
+                                  d={`M${x - 4.5},${ey - 0.5} Q${x},${ey + 3.5} ${x + 4.5},${ey - 0.5}`}
+                                  fill="none"
+                                  stroke={INK}
+                                  strokeWidth={3}
+                                  strokeLinecap="round"
+                                />
+                              </g>
+                            ))}
+                          </Art>
+                        </Layer>
+                      )}
+                    </Layer>
+                    <Layer ref={set('side')} className="rig-side" origin={[0, 0]} style={{ transform: `scaleX(${facing})` }}>
+                      <Art>{profile(kind, mood)}</Art>
+                    </Layer>
                   </Layer>
                 </Layer>
                 <Layer ref={set('armL')} className="rig-arm rig-arm-l" origin={[-j.shoulder[0], j.shoulder[1]]}>

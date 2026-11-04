@@ -19,17 +19,27 @@ export const WALK_MS = 420;
 export const NEAR = 50;
 /** The plays done up close: the one doing it hops over first. */
 export const NEAR_ACTS: ReadonlySet<Act> = new Set<Act>(['boop', 'tickle', 'pinch', 'pat', 'hug', 'kiss', 'feed', 'nuzzle', 'flower', 'highfive', 'dance', 'tuck']);
-/** Closer than that for some: cheek to cheek, arms round them. */
-const CLOSE: Partial<Record<Act, number>> = { hug: 30, kiss: 38, nuzzle: 36, highfive: 52, tuck: 46 };
-/** How far apart it stands for this play. */
-export const nearOf = (act: Act) => CLOSE[act] ?? NEAR;
+/**
+ * Other distances for some - [the bear doing it, the bunny]: cheek to cheek
+ * in a hug; for a kiss, just so far that only the lips reach their cheek;
+ * for a nose rub, just so far that only the tips of their noses meet.
+ */
+const CLOSE: Partial<Record<Act, number | [number, number]>> = { hug: 38, kiss: [55, 49], nuzzle: 65, highfive: 52, tuck: 46 };
+/** How far apart it stands for this play - `tall` when the bear is doing it. */
+export const nearOf = (act: Act, tall = true) => {
+  const at = CLOSE[act] ?? NEAR;
+  return typeof at === 'number' ? at : at[tall ? 0 : 1];
+};
 
 /** When the first pillow of a run (or a water balloon) is let go, after its wind-up. */
 export const FIRST_RELEASE = 430;
 /** How long a pillow or a balloon is in the air. */
 export const FLIGHT_MS = 360;
-/** The beat of the dance (and of its tune, us-dance). */
+/** The beat of the dances (and of their tunes, us-dance...). */
 export const DANCE_BEAT = 360;
+/** How many dances there are: each press of Dance does the next one. */
+export const DANCES = 6;
+const DANCE_MS = 2500;
 
 /** How long each play lasts, once the one doing it is there. */
 export const PLAY_MS: Record<Act, number> = {
@@ -39,14 +49,14 @@ export const PLAY_MS: Record<Act, number> = {
   pat: 1800,
   pillow: 1950,
   hug: 2100,
-  kiss: 1700,
+  kiss: 2000,
   feed: 1900,
-  nuzzle: 1900,
+  nuzzle: 2000,
   flower: 2400,
   highfive: 1600,
   balloon: 2300,
   tease: 2000,
-  dance: 2400,
+  dance: 2650,
   tuck: 3000,
   giggle: 900
 };
@@ -61,7 +71,7 @@ export const SAY_AT: Record<Act, number> = {
   hug: 380,
   kiss: 420,
   feed: 620,
-  nuzzle: 350,
+  nuzzle: 380,
   flower: 520,
   highfive: 420,
   balloon: FIRST_RELEASE + FLIGHT_MS,
@@ -78,10 +88,10 @@ export const MOODS: Record<Act, { at: number; target?: Mood; actor?: Mood }[]> =
   pinch: [{ at: 0, actor: 'grin' }, { at: 200, target: 'tight' }, { at: 840, target: 'happy', actor: 'love' }],
   pat: [{ at: 0, actor: 'happy' }, { at: 380, target: 'happy' }, { at: 1250, target: 'love' }],
   pillow: [{ at: 0, actor: 'smug' }, { at: 790, target: 'shock', actor: 'laugh' }, { at: 1080, target: 'dead' }],
-  hug: [{ at: 0, actor: 'grin' }, { at: 380, actor: 'happy', target: 'happy' }, { at: 1300, actor: 'love', target: 'love' }],
-  kiss: [{ at: 0, actor: 'kiss' }, { at: 420, target: 'shock' }, { at: 640, target: 'love' }, { at: 950, actor: 'happy' }],
+  hug: [{ at: 0, actor: 'grin' }, { at: 300, actor: 'content', target: 'content' }, { at: 1400, actor: 'love', target: 'love' }],
+  kiss: [{ at: 0, actor: 'kiss' }, { at: 440, target: 'shock' }, { at: 700, target: 'love' }, { at: 1000, actor: 'content' }],
   feed: [{ at: 0, actor: 'grin', target: 'drool' }, { at: 620, target: 'tight' }, { at: 900, target: 'happy' }, { at: 1450, target: 'love', actor: 'happy' }],
-  nuzzle: [{ at: 0, actor: 'happy' }, { at: 350, target: 'happy' }, { at: 950, actor: 'love', target: 'love' }],
+  nuzzle: [{ at: 0, actor: 'content', target: 'content' }, { at: 1650, actor: 'love', target: 'love' }],
   flower: [{ at: 0, actor: 'happy' }, { at: 270, target: 'shock' }, { at: 520, target: 'kiss' }, { at: 1000, target: 'love', actor: 'love' }],
   highfive: [{ at: 0, actor: 'grin', target: 'grin' }, { at: 420, actor: 'laugh', target: 'laugh' }, { at: 1050, actor: 'happy', target: 'happy' }],
   balloon: [{ at: 0, actor: 'smug' }, { at: 790, target: 'shock', actor: 'laugh' }, { at: 1250, target: 'tight' }, { at: 1900, target: 'laugh' }],
@@ -148,6 +158,15 @@ const waggle = (who: Role, delay: number, ms: number, size = 8): Move[] => [
   { who, layer: 'earR', ms, delay, frames: even([0, size, -size * 0.7, size, -size * 0.7, size, -size * 0.7, 0], r) }
 ];
 
+/** The face from the front turned toward one side, by t% of the box: a three-quarter view. */
+const turn = (t: number) => `translateX(${t}%) scaleX(${1 - Math.abs(t) * 0.025})`;
+
+/** Turned to the side view (UsRig, the 'side' layer) from `from` to `to` of `ms`: the front face fades as the side one comes. */
+const sideways = (who: Role, delay: number, ms: number, from: number, to: number): Move[] => [
+  { who, layer: 'face', ms, delay, frames: [o(0, 1), o(from, 1), o(from + 0.05, 0), o(to, 0), o(to + 0.05, 1), o(1, 1)] },
+  { who, layer: 'side', ms, delay, frames: [o(0, 0), o(from, 0), o(from + 0.05, 1), o(to, 1), o(to + 0.05, 0), o(1, 0)] }
+];
+
 /** A pillow or a balloon wound up over the head and swung: let go at FIRST_RELEASE. */
 const throwUp = (d: number): Move[] => [
   { who: 'actor', layer: 'lean', ms: 900, frames: [k(0, r(0)), k(0.37, r(-10 * d)), k(0.5, r(13 * d)), k(0.65, r(9 * d)), k(1, r(0))] },
@@ -182,9 +201,10 @@ export function scootMoves(dir: number): Omit<Move, 'who'>[] {
 /**
  * Every part's move for one play. `d` is 1 when the one it is done to is to
  * the right of the one doing it; `lead` is how long the one doing it takes
- * to get there first.
+ * to get there first. `tall` when the one doing it is the bear (a kiss bends
+ * down to a bunny's cheek, reaches up to a bear's); `variant` is which dance.
  */
-export function movesFor(act: Act, d: number, lead: number, combo = 1): Move[] {
+export function movesFor(act: Act, d: number, lead: number, combo = 1, more: { variant?: number; tall?: boolean } = {}): Move[] {
   const L = lead;
   switch (act) {
     case 'boop': {
@@ -356,11 +376,11 @@ export function movesFor(act: Act, d: number, lead: number, combo = 1): Move[] {
     case 'hug':
       return hugMoves(d, L);
     case 'kiss':
-      return kissMoves(d, L);
+      return kissMoves(d, L, more.tall ?? true);
     case 'feed':
       return feedMoves(d, L);
     case 'nuzzle':
-      return nuzzleMoves(d, L);
+      return nuzzleMoves(d, L, more.tall ?? true);
     case 'flower':
       return flowerMoves(d, L);
     case 'highfive':
@@ -370,7 +390,7 @@ export function movesFor(act: Act, d: number, lead: number, combo = 1): Move[] {
     case 'tease':
       return teaseMoves(d);
     case 'dance':
-      return danceMoves(d, L);
+      return danceMoves(d, L, more.variant ?? 0);
     case 'tuck':
       return tuckMoves(d, L);
 
@@ -397,83 +417,108 @@ export function movesFor(act: Act, d: number, lead: number, combo = 1): Move[] {
 }
 
 /**
- * A hug: in with a lunge, both arms round them (UsScene, rig-hug-arm),
- * squeezing three times as the two of them rock side to side together,
- * their head on your shoulder. The arms close at 0.2 - 380 ms.
+ * A hug, cheek to cheek: faces turned to each other, heads tilted together,
+ * eyes closed. One arm goes round their shoulders and theirs round your
+ * back (UsScene, rig-hug-arm), and the two of you rock gently side to side,
+ * squeezing on each sway. Held close at 0.2 - 380 ms.
  */
 function hugMoves(d: number, L: number): Move[] {
   const ms = 1900;
+  // Ears let down, relaxed, while held.
+  const relax = (side: 1 | -1): Keyframe[] => [k(0, r(0)), k(0.2, r(0)), k(0.3, r(-9 * side)), k(0.86, r(-9 * side)), k(1, r(0))];
   return [
-    { who: 'actor', layer: 'armL', ms, delay: L, frames: away(0.9) },
-    { who: 'actor', layer: 'armR', ms, delay: L, frames: away(0.9) },
+    { who: 'actor', layer: nearArm(d), ms, delay: L, frames: away(0.9) },
+    { who: 'target', layer: nearArm(-d), ms, delay: L, frames: away(0.9) },
+    { who: 'actor', layer: 'face', ms, delay: L, frames: [k(0, turn(0)), k(0.16, turn(6 * d)), k(0.88, turn(6 * d)), k(1, turn(0))] },
+    { who: 'target', layer: 'face', ms, delay: L, frames: [k(0, turn(0)), k(0.18, turn(-6 * d)), k(0.88, turn(-6 * d)), k(1, turn(0))] },
+    { who: 'actor', layer: 'head', ms, delay: L, frames: [k(0, r(0)), k(0.18, r(10 * d)), k(0.88, r(10 * d)), k(1, r(0))] },
+    { who: 'target', layer: 'head', ms, delay: L, frames: [k(0, r(0)), k(0.16, r(0)), k(0.24, r(-10 * d)), k(0.88, r(-10 * d)), k(1, r(0))] },
+    // Rocking together: both lean the same way at once.
     {
       who: 'actor',
       layer: 'lean',
       ms,
       delay: L,
-      frames: [k(0, r(0)), k(0.12, r(-4 * d)), k(0.2, r(10 * d)), k(0.38, r(4 * d)), k(0.52, r(10 * d)), k(0.66, r(4 * d)), k(0.8, r(9 * d)), k(0.9, r(4 * d)), k(1, r(0))]
+      frames: [k(0, r(0)), k(0.12, r(-3 * d)), k(0.2, r(5 * d)), k(0.38, r(2 * d)), k(0.52, r(5 * d)), k(0.66, r(2 * d)), k(0.8, r(5 * d)), k(0.9, r(2 * d)), k(1, r(0))]
+    },
+    {
+      who: 'target',
+      layer: 'lean',
+      ms,
+      delay: L,
+      frames: [k(0, r(0)), k(0.18, r(0)), k(0.24, r(-2 * d)), k(0.38, r(-5 * d)), k(0.52, r(-2 * d)), k(0.66, r(-5 * d)), k(0.8, r(-2 * d)), k(0.9, r(-3 * d)), k(1, r(0))]
     },
     {
       who: 'actor',
       layer: 'squash',
       ms,
       delay: L,
-      frames: [k(0, sc(1)), k(0.12, sc(1.05, 0.95)), k(0.2, sc(0.95, 1.05)), k(0.3, sc(0.94, 1.04)), k(0.4, sc(0.98, 1.01)), k(0.5, sc(0.94, 1.04)), k(0.62, sc(0.98, 1.01)), k(0.74, sc(0.94, 1.04)), k(0.88, sc(1)), k(1, sc(1))]
-    },
-    { who: 'actor', layer: 'head', ms, delay: L, frames: [k(0, r(0)), k(0.2, r(8 * d)), k(0.85, r(8 * d)), k(1, r(0))] },
-    { who: 'actor', layer: 'blush', ms: 2000, delay: L, frames: [o(0, 0), o(0.22, 0), o(0.32, 1), o(0.88, 1), o(1, 0)] },
-    {
-      who: 'target',
-      layer: 'lean',
-      ms,
-      delay: L,
-      frames: [k(0, r(0)), k(0.18, r(0)), k(0.26, r(3 * d)), k(0.38, r(-6 * d)), k(0.52, r(1 * d)), k(0.66, r(-6 * d)), k(0.8, r(1 * d)), k(0.9, r(-2 * d)), k(1, r(0))]
+      frames: [k(0, sc(1)), k(0.12, sc(1.04, 0.96)), k(0.2, sc(0.97, 1.03)), k(0.24, sc(0.95, 1.03)), k(0.34, sc(1)), k(0.46, sc(0.95, 1.03)), k(0.58, sc(1)), k(0.7, sc(0.95, 1.03)), k(0.84, sc(1)), k(1, sc(1))]
     },
     {
       who: 'target',
       layer: 'squash',
       ms,
       delay: L,
-      frames: [k(0, sc(1)), k(0.18, sc(1)), k(0.24, sc(0.9, 1.07)), k(0.34, sc(0.97, 1.01)), k(0.46, sc(0.92, 1.05)), k(0.58, sc(0.98, 1.01)), k(0.7, sc(0.92, 1.05)), k(0.84, sc(1.02, 0.98)), k(1, sc(1))]
+      frames: [k(0, sc(1)), k(0.2, sc(1)), k(0.24, sc(0.94, 1.04)), k(0.34, sc(1)), k(0.46, sc(0.94, 1.04)), k(0.58, sc(1)), k(0.7, sc(0.94, 1.04)), k(0.84, sc(1)), k(1, sc(1))]
     },
-    { who: 'target', layer: 'head', ms, delay: L, frames: [k(0, r(0)), k(0.2, r(0)), k(0.3, r(-10 * d)), k(0.85, r(-10 * d)), k(1, r(0))] },
-    { who: 'target', layer: 'blush', ms: 2000, delay: L, frames: [o(0, 0), o(0.2, 0), o(0.28, 1), o(0.9, 1), o(1, 0)] },
-    ...flop('target', L, 0.2, d, ms)
+    { who: 'actor', layer: 'earL', ms, delay: L, frames: relax(1) },
+    { who: 'actor', layer: 'earR', ms, delay: L, frames: relax(-1) },
+    { who: 'target', layer: 'earL', ms, delay: L, frames: relax(1) },
+    { who: 'target', layer: 'earR', ms, delay: L, frames: relax(-1) },
+    { who: 'actor', layer: 'blush', ms, delay: L, frames: [o(0, 0), o(0.2, 0), o(0.3, 1), o(0.9, 1), o(1, 0)] },
+    { who: 'target', layer: 'blush', ms, delay: L, frames: [o(0, 0), o(0.2, 0), o(0.3, 1), o(0.9, 1), o(1, 0)] }
   ];
 }
 
-/** A kiss on the cheek, up on tiptoe: a happy shiver, then a hop for joy. It lands at 0.28 - 420 ms. */
-function kissMoves(d: number, L: number): Move[] {
-  const ms = 1500;
+/**
+ * A kiss on the cheek: turned to the side, lips puckered, leaning in until
+ * only the lips touch their cheek at 0.22 (420 ms) - a tall one bending
+ * down to it, a short one reaching up on tiptoe - held a moment, and back.
+ * They jump a little, blush, put their paws to their cheeks and wriggle.
+ */
+function kissMoves(d: number, L: number, tall: boolean): Move[] {
+  const ms = 1900;
+  const bend = (tall ? 4 : -5) * d;
+  const tiptoe = tall ? -1.5 : -5;
   return [
-    { who: 'actor', layer: 'lean', ms, delay: L, frames: [k(0, r(0)), k(0.15, r(-3 * d)), k(0.28, r(13 * d)), k(0.42, r(13 * d)), k(0.56, r(3 * d)), k(1, r(0))] },
-    { who: 'actor', layer: 'hop', ms, delay: L, frames: [k(0, up(0)), k(0.18, up(0)), k(0.28, up(-2.5)), k(0.44, up(-2.5)), k(0.56, up(0)), k(1, up(0))] },
-    { who: 'actor', layer: 'head', ms, delay: L, frames: [k(0, r(0)), k(0.28, r(10 * d)), k(0.44, r(10 * d)), k(0.6, r(0)), k(1, r(0))] },
-    { who: 'actor', layer: 'blush', ms: 1700, delay: L, frames: [o(0, 0), o(0.1, 0), o(0.2, 1), o(0.85, 1), o(1, 0)] },
+    ...sideways('actor', L, ms, 0.04, 0.5),
+    {
+      who: 'actor',
+      layer: 'lean',
+      ms,
+      delay: L,
+      frames: [k(0, r(0)), k(0.1, r(-3 * d)), k(0.22, r(9 * d)), k(0.34, r(10 * d)), k(0.46, r(3 * d)), k(0.6, r(0)), k(1, r(0))]
+    },
+    { who: 'actor', layer: 'hop', ms, delay: L, frames: [k(0, up(0)), k(0.12, up(0)), k(0.22, up(tiptoe)), k(0.34, up(tiptoe)), k(0.46, up(0)), k(1, up(0))] },
+    { who: 'actor', layer: 'head', ms, delay: L, frames: [k(0, r(0)), k(0.12, r(0)), k(0.22, r(bend)), k(0.34, r(bend)), k(0.46, r(0)), k(1, r(0))] },
+    { who: 'actor', layer: 'blush', ms, delay: L, frames: [o(0, 0), o(0.52, 0), o(0.58, 1), o(0.9, 1), o(1, 0)] },
     {
       who: 'target',
       layer: 'head',
       ms,
       delay: L,
-      frames: [k(0, tilt(0, 0)), k(0.27, tilt(0, 0)), k(0.32, tilt(6 * d, 1 * d)), k(0.4, tilt(-3 * d, 0)), k(0.5, tilt(2 * d, 0)), k(0.6, tilt(0, 0)), k(1, tilt(0, 0))]
+      frames: [k(0, tilt(0, 0)), k(0.21, tilt(0, 0)), k(0.25, tilt(5 * d, 1 * d)), k(0.32, tilt(-2 * d, 0)), k(0.4, tilt(1 * d, 0)), k(0.46, tilt(0, 0)), k(1, tilt(0, 0))]
     },
-    { who: 'target', layer: 'blush', ms: 1700, delay: L, frames: [o(0, 0), o(0.25, 0), o(0.3, 1), o(0.9, 1), o(1, 0)] },
+    { who: 'target', layer: 'blush', ms, delay: L, frames: [o(0, 0), o(0.21, 0), o(0.27, 1), o(0.92, 1), o(1, 0)] },
+    { who: 'target', layer: 'armL', ms, delay: L, frames: [k(0, r(0)), k(0.34, r(0)), k(0.4, r(118)), k(0.84, r(118)), k(0.92, r(0)), k(1, r(0))] },
+    { who: 'target', layer: 'armR', ms, delay: L, frames: [k(0, r(0)), k(0.34, r(0)), k(0.4, r(-118)), k(0.84, r(-118)), k(0.92, r(0)), k(1, r(0))] },
+    {
+      who: 'target',
+      layer: 'lean',
+      ms,
+      delay: L,
+      frames: [k(0, r(0)), k(0.38, r(0)), k(0.44, r(4)), k(0.5, r(-4)), k(0.56, r(4)), k(0.62, r(-4)), k(0.68, r(3)), k(0.74, r(-3)), k(0.82, r(0)), k(1, r(0))]
+    },
     {
       who: 'target',
       layer: 'hop',
       ms,
       delay: L,
-      frames: [k(0, up(0)), k(0.45, up(0), RISE), k(0.58, up(-6), FALL), k(0.7, up(0), RISE), k(0.78, up(-1.5), FALL), k(0.86, up(0)), k(1, up(0))]
+      frames: [k(0, up(0)), k(0.46, up(0), RISE), k(0.54, up(-4), FALL), k(0.62, up(0), RISE), k(0.68, up(-1), FALL), k(0.74, up(0)), k(1, up(0))]
     },
-    {
-      who: 'target',
-      layer: 'squash',
-      ms,
-      delay: L,
-      frames: [k(0, sc(1)), k(0.27, sc(1)), k(0.31, sc(1.03, 0.97)), k(0.42, sc(1.06, 0.94)), k(0.5, sc(0.95, 1.06)), k(0.7, sc(1.06, 0.94)), k(0.8, sc(0.99, 1.01)), k(1, sc(1))]
-    },
-    { who: 'target', layer: 'shadow', ms, delay: L, frames: [k(0, sc(1)), k(0.45, sc(1)), k(0.58, sc(0.8)), k(0.7, sc(1)), k(1, sc(1))] },
-    ...flop('target', L, 0.3, d, ms, 14)
+    { who: 'target', layer: 'shadow', ms, delay: L, frames: [k(0, sc(1)), k(0.46, sc(1)), k(0.54, sc(0.85)), k(0.62, sc(1)), k(1, sc(1))] },
+    ...flop('target', L, 0.22, d, ms, 12)
   ];
 }
 
@@ -516,29 +561,36 @@ function feedMoves(d: number, L: number): Move[] {
   ];
 }
 
-/** Cheek to cheek at 0.19 (350 ms), rubbing side to side five times, both blushing. */
-function nuzzleMoves(d: number, L: number): Move[] {
-  const ms = 1800;
-  const rub = (base: number, a: number, b: number): Keyframe[] => [
+/**
+ * A nose rub: both turned to the side, leaning in until the tips of their
+ * noses meet at 0.2 (380 ms) - the tall one's tipped down to the short
+ * one's, the short one's up - then rubbing them, one up as the other goes
+ * down, five times (us-nuzzle squeaks on each), eyes closed; and turning
+ * back to look at each other, hearts in their eyes.
+ */
+function nuzzleMoves(d: number, L: number, tall: boolean): Move[] {
+  const ms = 1900;
+  const rubs = [0.284, 0.398, 0.512, 0.625, 0.739];
+  // Tipped down by `bend` - for one facing `facing`, a turn that way.
+  const head = (facing: number, bend: number, first: number): Keyframe[] => [
     k(0, r(0)),
-    k(0.19, r(base)),
-    k(0.3, r(a)),
-    k(0.42, r(b)),
-    k(0.54, r(a)),
-    k(0.66, r(b)),
-    k(0.78, r(a)),
-    k(0.88, r(base)),
+    k(0.2, r(bend * facing)),
+    ...rubs.map((at, i) => k(at, r((bend + (i % 2 ? -first : first)) * facing))),
+    k(0.82, r(bend * facing)),
+    k(0.9, r(0)),
     k(1, r(0))
   ];
   return [
-    { who: 'actor', layer: 'lean', ms, delay: L, frames: [k(0, r(0)), k(0.2, r(9 * d)), k(0.85, r(9 * d)), k(1, r(0))] },
-    { who: 'actor', layer: 'head', ms, delay: L, frames: rub(12 * d, 18 * d, 8 * d) },
-    { who: 'target', layer: 'lean', ms, delay: L, frames: [k(0, r(0)), k(0.17, r(0)), k(0.22, r(-6 * d)), k(0.85, r(-6 * d)), k(1, r(0))] },
-    { who: 'target', layer: 'head', ms, delay: L, frames: rub(-11 * d, -6 * d, -16 * d) },
-    { who: 'actor', layer: 'blush', ms: 1900, delay: L, frames: [o(0, 0), o(0.15, 0), o(0.25, 1), o(0.88, 1), o(1, 0)] },
-    { who: 'target', layer: 'blush', ms: 1900, delay: L, frames: [o(0, 0), o(0.18, 0), o(0.28, 1), o(0.9, 1), o(1, 0)] },
-    ...waggle('actor', L, ms),
-    ...waggle('target', L, ms)
+    ...sideways('actor', L, ms, 0.03, 0.84),
+    ...sideways('target', L, ms, 0.05, 0.84),
+    { who: 'actor', layer: 'lean', ms, delay: L, frames: [k(0, r(0)), k(0.08, r(0)), k(0.2, r(3 * d)), k(0.82, r(3 * d)), k(0.9, r(0)), k(1, r(0))] },
+    { who: 'target', layer: 'lean', ms, delay: L, frames: [k(0, r(0)), k(0.1, r(0)), k(0.2, r(-3 * d)), k(0.82, r(-3 * d)), k(0.9, r(0)), k(1, r(0))] },
+    { who: 'actor', layer: 'head', ms, delay: L, frames: head(d, tall ? 6 : -6, 3) },
+    { who: 'target', layer: 'head', ms, delay: L, frames: head(-d, tall ? -6 : 6, -3) },
+    { who: 'actor', layer: 'blush', ms, delay: L, frames: [o(0, 0), o(0.86, 0), o(0.9, 1), o(0.97, 1), o(1, 0)] },
+    { who: 'target', layer: 'blush', ms, delay: L, frames: [o(0, 0), o(0.86, 0), o(0.9, 1), o(0.97, 1), o(1, 0)] },
+    ...waggle('actor', L, ms, 6),
+    ...waggle('target', L, ms, 6)
   ];
 }
 
@@ -671,47 +723,205 @@ function teaseMoves(d: number): Move[] {
 }
 
 /**
- * Dancing together to its tune (us-dance): six beats of DANCE_BEAT, a
- * bounce landing on each, swaying toward each other and apart, arms up and
- * swinging.
+ * One dance, for one of them: each part's keyframes. `toward` is 1 when the
+ * other one is to the right; `t` turns ms into the dance's offsets; `B` is
+ * the beat. Six beats each, in time with its tune (us-dance...).
  */
-function danceMoves(d: number, L: number): Move[] {
-  const ms = 2200;
-  const beat = DANCE_BEAT / ms;
-  const one = (who: Role, toward: number): Move[] => {
-    const hop: Keyframe[] = [k(0, up(0))];
-    const squash: Keyframe[] = [k(0, sc(1))];
-    const lean: Keyframe[] = [k(0, r(0))];
-    const head: Keyframe[] = [k(0, r(0))];
-    const armL: Keyframe[] = [k(0, r(0)), k(0.06, r(115))];
-    const armR: Keyframe[] = [k(0, r(0)), k(0.06, r(-115))];
+type Routine = (toward: number, t: (ms: number) => number, B: number) => Partial<Record<RigLayer, Keyframe[]>>;
+
+/** Both arms through the same points, mirrored: [offset, degrees of the left arm]. */
+const arms = (points: [number, number][]) => ({
+  armL: points.map(([at, deg]) => k(at, r(deg))),
+  armR: points.map(([at, deg]) => k(at, r(-deg)))
+});
+
+const ROUTINES: Routine[] = [
+  // Bop: a bounce landing on each beat, swaying toward each other and apart, arms up and swinging.
+  (toward, t, B) => {
+    const hop = [k(0, up(0))];
+    const squash = [k(0, sc(1))];
+    const lean = [k(0, r(0))];
+    const head = [k(0, r(0))];
+    const swing: [number, number][] = [[0, 0], [t(130), 115]];
+    const swingR: [number, number][] = [[0, 0], [t(130), 115]];
     for (let i = 0; i < 6; i++) {
-      const mid = (i + 0.5) * beat;
-      const land = (i + 1) * beat;
+      const mid = t((i + 0.5) * B);
       const side = i % 2 ? -1 : 1;
-      hop.push(k(mid, up(-4), FALL), k(land, up(0), RISE));
-      squash.push(k(mid, sc(0.97, 1.03)), k(land, sc(1.05, 0.95)));
+      hop.push(k(mid, up(-4), FALL), k(t((i + 1) * B), up(0), RISE));
+      squash.push(k(mid, sc(0.97, 1.03)), k(t((i + 1) * B), sc(1.05, 0.95)));
       lean.push(k(mid, r(8 * side * toward)));
       head.push(k(mid, r(-5 * side * toward)));
-      armL.push(k(mid, r(i % 2 ? 100 : 135)));
-      armR.push(k(mid, r(i % 2 ? -135 : -100)));
+      swing.push([mid, i % 2 ? 100 : 135]);
+      swingR.push([mid, i % 2 ? 135 : 100]);
     }
-    hop.push(k(1, up(0)));
-    squash.push(k(1, sc(1)));
-    lean.push(k(1, r(0)));
-    head.push(k(1, r(0)));
-    armL.push(k(1, r(0)));
-    armR.push(k(1, r(0)));
-    return [
-      { who, layer: 'hop', ms, delay: L, frames: hop },
-      { who, layer: 'squash', ms, delay: L, frames: squash },
-      { who, layer: 'lean', ms, delay: L, frames: lean },
-      { who, layer: 'head', ms, delay: L, frames: head },
-      { who, layer: 'armL', ms, delay: L, frames: armL },
-      { who, layer: 'armR', ms, delay: L, frames: armR },
-      ...waggle(who, L, ms, 10)
+    swing.push([1, 0]);
+    swingR.push([1, 0]);
+    return {
+      hop: [...hop, k(1, up(0))],
+      squash: [...squash, k(1, sc(1))],
+      lean: [...lean, k(1, r(0))],
+      head: [...head, k(1, r(0))],
+      armL: arms(swing).armL,
+      armR: arms(swingR).armR
+    };
+  },
+
+  // Twist: hips swinging every half beat, sinking low and coming back up, arms swinging across.
+  (toward, t, B) => {
+    const lean = [k(0, r(0))];
+    const head = [k(0, r(0))];
+    const squash = [k(0, sc(1))];
+    const armL = [k(0, r(0))];
+    const armR = [k(0, r(0))];
+    for (let i = 0; i < 12; i++) {
+      const at = t((i + 0.5) * (B / 2));
+      const side = (i % 2 ? -1 : 1) * toward;
+      const low = 0.05 * Math.sin((Math.PI * (i + 1)) / 13);
+      lean.push(k(at, r(10 * side)));
+      head.push(k(at, r(-5 * side)));
+      squash.push(k(at, sc(1 + low, 1 - low * 1.6)));
+      armL.push(k(at, r(side > 0 ? 30 : -40)));
+      armR.push(k(at, r(side > 0 ? 40 : -30)));
+    }
+    return { lean: [...lean, k(1, r(0))], head: [...head, k(1, r(0))], squash: [...squash, k(1, sc(1))], armL: [...armL, k(1, r(0))], armR: [...armR, k(1, r(0))] };
+  },
+
+  // Spin: right round with a hop, two bounces, round again - and ta-da, arms out.
+  (toward, t, B) => {
+    const spin = (s: number): Keyframe[] => [
+      k(t(s), sc(1, 1)),
+      k(t(s + B / 2), sc(0.06, 1.04)),
+      k(t(s + B), sc(-1, 1)),
+      k(t(s + 1.5 * B), sc(-0.06, 1.04)),
+      k(t(s + 2 * B), sc(1, 1))
     ];
-  };
+    return {
+      squash: [
+        ...spin(0),
+        k(t(2.5 * B), sc(0.97, 1.03)),
+        k(t(3 * B), sc(1.05, 0.95)),
+        k(t(3.5 * B), sc(0.97, 1.03)),
+        k(t(3.9 * B), sc(1)),
+        ...spin(4 * B),
+        k(t(6 * B + 70), sc(1.06, 0.94)),
+        k(t(6 * B + 200), sc(1)),
+        k(1, sc(1))
+      ],
+      hop: [
+        k(0, up(0), RISE),
+        k(t(B), up(-5), FALL),
+        k(t(2 * B), up(0), RISE),
+        k(t(2.5 * B), up(-3), FALL),
+        k(t(3 * B), up(0), RISE),
+        k(t(3.5 * B), up(-3), FALL),
+        k(t(4 * B), up(0), RISE),
+        k(t(5 * B), up(-5), FALL),
+        k(t(6 * B), up(0)),
+        k(1, up(0))
+      ],
+      lean: [k(0, r(0)), k(t(2 * B), r(0)), k(t(2.5 * B), r(6 * toward)), k(t(3.5 * B), r(-6 * toward)), k(t(4 * B), r(0)), k(1, r(0))],
+      ...arms([
+        [0, 0],
+        [t(0.4 * B), 130],
+        [t(2 * B), 130],
+        [t(2.5 * B), 100],
+        [t(3 * B), 135],
+        [t(3.5 * B), 100],
+        [t(4 * B), 130],
+        [t(6 * B), 130],
+        [t(6 * B + 70), 75],
+        [t(6 * B + 240), 75],
+        [1, 0]
+      ])
+    };
+  },
+
+  // Jump and clap: three big jumps, hands clapped high over the head at the top of each.
+  (toward, t, B) => {
+    const hop = [k(0, up(0))];
+    const squash = [k(0, sc(1))];
+    const shadow = [k(0, sc(1))];
+    const clap: [number, number][] = [[0, 0]];
+    for (let j = 0; j < 3; j++) {
+      const s = j * 2 * B;
+      hop.push(k(t(s + 0.4 * B), up(0), RISE), k(t(s + B), up(-9), FALL), k(t(s + 1.6 * B), up(0)));
+      squash.push(k(t(s + 0.35 * B), sc(1.08, 0.92)), k(t(s + 0.5 * B), sc(0.94, 1.07)), k(t(s + B), sc(1)), k(t(s + 1.6 * B), sc(1.08, 0.92)), k(t(s + 1.85 * B), sc(1)));
+      shadow.push(k(t(s + 0.4 * B), sc(1)), k(t(s + B), sc(0.6)), k(t(s + 1.6 * B), sc(1)));
+      clap.push([t(s + 0.4 * B), -20], [t(s + 0.85 * B), 150], [t(s + B), 170], [t(s + 1.15 * B), 150], [t(s + 1.6 * B), 30], [t(s + 1.9 * B), 0]);
+    }
+    clap.push([1, 0]);
+    return {
+      hop: [...hop, k(1, up(0))],
+      squash: [...squash, k(1, sc(1))],
+      shadow: [...shadow, k(1, sc(1))],
+      lean: [k(0, r(0)), k(t(B), r(3 * toward)), k(t(2 * B), r(0)), k(t(3 * B), r(-3 * toward)), k(t(4 * B), r(0)), k(t(5 * B), r(3 * toward)), k(1, r(0))],
+      ...arms(clap)
+    };
+  },
+
+  // Disco: one arm pointing up at the sky and the other down, swapping on every beat with a hip pop.
+  (toward, t, B) => {
+    const lean = [k(0, r(0))];
+    const head = [k(0, r(0))];
+    const hop = [k(0, up(0))];
+    const armL = [k(0, r(0))];
+    const armR = [k(0, r(0))];
+    for (let i = 0; i < 6; i++) {
+      const s = (i % 2 ? -1 : 1) * toward;
+      const snap = t(i * B + 0.22 * B);
+      const hold = t((i + 1) * B - 10);
+      const rightUp = s > 0;
+      armL.push(k(snap, r(rightUp ? 20 : 150)), k(hold, r(rightUp ? 20 : 150)));
+      armR.push(k(snap, r(rightUp ? -150 : -20)), k(hold, r(rightUp ? -150 : -20)));
+      lean.push(k(snap, r(-6 * s)), k(hold, r(-6 * s)));
+      head.push(k(snap, r(9 * s)), k(hold, r(9 * s)));
+      hop.push(k(t(i * B + 0.5 * B), up(-2)), k(hold, up(0)));
+    }
+    return { lean: [...lean, k(1, r(0))], head: [...head, k(1, r(0))], hop: [...hop, k(1, up(0))], armL: [...armL, k(1, r(0))], armR: [...armR, k(1, r(0))] };
+  },
+
+  // Side shuffle: stepping in toward each other and back out, a hop on each step, arms swinging.
+  (toward, t, B) => {
+    const xs = [4, 8, 4, 0, -4, 0];
+    const hop = [k(0, shove(0, 0))];
+    const shadow = [k(0, 'translateX(0%)')];
+    const lean = [k(0, r(0))];
+    const squash = [k(0, sc(1))];
+    const armL = [k(0, r(0))];
+    const armR = [k(0, r(0))];
+    let x = 0;
+    xs.forEach((nx, i) => {
+      const mid = t(i * B + B / 2);
+      const land = t((i + 1) * B);
+      hop.push(k(mid, shove(((x + nx) / 2) * toward, -2.5), FALL), k(land, shove(nx * toward, 0), RISE));
+      shadow.push(k(land, `translateX(${nx * toward}%)`));
+      lean.push(k(mid, r(4 * Math.sign(nx - x || 1) * toward)));
+      squash.push(k(mid, sc(0.98, 1.02)), k(land, sc(1.04, 0.96)));
+      // Swinging as they step: one forward as the other goes back.
+      armL.push(k(mid, r(i % 2 ? 30 : -30)));
+      armR.push(k(mid, r(i % 2 ? 30 : -30)));
+      x = nx;
+    });
+    return {
+      hop: [...hop, k(1, shove(0, 0))],
+      shadow: [...shadow, k(1, 'translateX(0%)')],
+      lean: [...lean, k(1, r(0))],
+      squash: [...squash, k(1, sc(1))],
+      armL: [...armL, k(1, r(0))],
+      armR: [...armR, k(1, r(0))]
+    };
+  }
+];
+
+/** Dancing together (`variant` says which dance): the same moves for both, mirrored to face each other. */
+function danceMoves(d: number, L: number, variant: number): Move[] {
+  const ms = DANCE_MS;
+  const t = (at: number) => Math.min(1, at / ms);
+  const routine = ROUTINES[((variant % DANCES) + DANCES) % DANCES];
+  const one = (who: Role, toward: number): Move[] => [
+    ...Object.entries(routine(toward, t, DANCE_BEAT)).map(([layer, frames]) => ({ who, layer: layer as RigLayer, ms, delay: L, frames: frames as Keyframe[] })),
+    ...waggle(who, L, ms, 10)
+  ];
   return [...one('actor', d), ...one('target', -d)];
 }
 
