@@ -266,9 +266,24 @@ export const PLAY_KINDS: readonly PlayKind[] = [
  * What a phone with an older Two does with a play it does not know: a boop.
  * So both phones need the version that has the newer plays.
  */
-
 export function cleanPlayKind(raw: unknown): PlayKind {
   return PLAY_KINDS.includes(raw as PlayKind) ? (raw as PlayKind) : 'boop';
+}
+
+/**
+ * The sky over "Us two": with the time of day by itself (auto), or one the
+ * two of you picked - the same on both phones, whoever picked last.
+ */
+export type SceneTheme = 'auto' | 'sunny' | 'winter' | 'rainy' | 'morning' | 'night';
+export const SCENE_THEMES: readonly SceneTheme[] = ['auto', 'sunny', 'winter', 'rainy', 'morning', 'night'];
+export interface UsTheme {
+  theme: SceneTheme;
+  /** When it was picked: the newer pick wins. */
+  at: number;
+}
+
+export function cleanTheme(raw: unknown): SceneTheme {
+  return SCENE_THEMES.includes(raw as SceneTheme) ? (raw as SceneTheme) : 'auto';
 }
 
 /**

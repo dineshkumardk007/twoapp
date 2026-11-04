@@ -879,9 +879,9 @@ export const RECIPES: Record<string, Recipe> = {
   },
 
   'us-splash': {
-    use: 'Us two: a water balloon bursting on a head - splash, bubbles, and a wet shake 0.49 s later',
+    use: 'Us two: a water balloon bursting on a head - splash and bubbles (pitched up for each of a run)',
     dry: () => {
-      const b = silence(1.5);
+      const b = silence(0.8);
       noise(b, { dur: 0.32, gain: 1, filter: { type: 'lowpass', f: 3200 }, grain: 0.6, attack: 0.002, decay: 0.09, pink: true, seed: 561 });
       noise(b, { start: 0.01, dur: 0.24, gain: 0.45, filter: { type: 'bandpass', f: 5200, q: 0.8 }, grain: 0.85, attack: 0.002, decay: 0.07, seed: 562 });
       thump(b, 0, 0.4, 130, 563);
@@ -890,10 +890,19 @@ export const RECIPES: Record<string, Recipe> = {
         const f0 = 620 + i * 140;
         voice(b, { start: t, dur: 0.06, freq: u => f0 * (1 + 0.9 * (u / 0.06)), amp: u => 0.22 * Math.exp(-u / 0.025), harmonics: [1, 0.15] });
       });
-      // Shaken off: a wet flutter, and drops flicked away.
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: MOMENT - 1, highpass: 120 }
+  },
+
+  'us-shake': {
+    use: 'Us two: shaking off the water after the last balloon of a run - a wet flutter, drops flicked away',
+    dry: () => {
+      const b = silence(0.8);
       for (let i = 0; i < 11; i++) {
         noise(b, {
-          start: 0.49 + i * 0.04,
+          start: i * 0.04,
           dur: 0.035,
           gain: 0.32 * (1 - i * 0.06),
           filter: { type: 'bandpass', f: 1700, q: 0.8 },
@@ -904,11 +913,30 @@ export const RECIPES: Record<string, Recipe> = {
           seed: 565 + i
         });
       }
-      [0.62, 0.7, 0.8].forEach((t, i) => mode(b, { start: t, freq: 2100 + i * 260, amp: 0.16, decay: 0.03, glide: -0.2, glideTime: 0.02, pan: i % 2 ? 0.4 : -0.4 }));
+      [0.13, 0.21, 0.31].forEach((t, i) => mode(b, { start: t, freq: 2100 + i * 260, amp: 0.16, decay: 0.03, glide: -0.2, glideTime: 0.02, pan: i % 2 ? 0.4 : -0.4 }));
       return b;
     },
     room: { rt60: 0.4, wet: 0.08 },
-    master: { loudness: MOMENT - 1, highpass: 120 }
+    master: { loudness: SOFT, highpass: 300 }
+  },
+
+  'us-drip': {
+    use: 'Us two: soaked through - drip... drip... off them',
+    dry: () => {
+      const b = silence(1.6);
+      [
+        { t: 0, f: 1000 },
+        { t: 0.34, f: 820 },
+        { t: 0.7, f: 1150 },
+        { t: 1.02, f: 900 }
+      ].forEach(({ t, f }, i) => {
+        voice(b, { start: t, dur: 0.05, freq: u => f * (1 + 0.7 * (u / 0.05)), amp: u => 0.3 * Math.exp(-u / 0.018), harmonics: [1, 0.12], pan: i % 2 ? 0.25 : -0.25 });
+        noise(b, { start: t + 0.01, dur: 0.04, gain: 0.08, filter: { type: 'bandpass', f: 3800, q: 1 }, attack: 0.002, decay: 0.01, seed: 591 + i });
+      });
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.2 },
+    master: { loudness: MICRO, highpass: 400 }
   },
 
   'us-tease': {
@@ -1055,33 +1083,70 @@ export const RECIPES: Record<string, Recipe> = {
   },
 
   'us-tuck': {
-    use: 'Us two: tucked in - a yawn, the blanket laid down 0.65 s in, a three-note lullaby',
+    use: 'Us two: tucked into bed - poof, a yawn, a boing on the mattress, the sheet swung over and settling, two pats, a lullaby with soft snores, and poof',
     dry: () => {
-      const b = silence(2.8);
+      const b = silence(4.9);
+      // Poof: the bed.
+      const poof = (t: number, seed: number) => {
+        noise(b, { start: t, dur: 0.18, gain: 0.55, filter: { type: 'bandpass', f: 1000, q: 0.7 }, attack: 0.004, decay: 0.05, pink: true, seed });
+        thump(b, t, 0.25, 150, seed + 1);
+        strike(b, { note: hz('A6'), instrument: I.glock, start: t + 0.05, gain: 0.12, mallet: 0, seed: seed + 2 });
+      };
+      poof(0, 641);
+      // A big yawn and a stretch.
       voice(b, {
-        start: 0,
-        dur: 0.6,
-        freq: t => 460 * (1 - 0.42 * (t / 0.6)),
-        amp: t => 0.26 * Math.max(0, Math.sin((Math.PI * t) / 0.6)) ** 0.7,
+        start: 0.15,
+        dur: 0.55,
+        freq: t => 460 * (1 - 0.42 * (t / 0.55)),
+        amp: t => 0.26 * Math.max(0, Math.sin((Math.PI * t) / 0.55)) ** 0.7,
         harmonics: [1, 0.5, 0.25, 0.1]
       });
-      noise(b, { dur: 0.6, gain: 0.12, filter: { type: 'bandpass', f: 1000, q: 0.7 }, attack: 0.12, decay: 0.25, pink: true, seed: 631 });
-      // The blanket: a soft swoosh, settling.
-      noise(b, { start: 0.45, dur: 0.32, gain: 0.45, filter: { type: 'bandpass', f: 700, q: 0.7 }, sweepTo: 260, attack: 0.1, decay: 0.12, pink: true, seed: 632 });
-      thump(b, 0.65, 0.2, 120, 633);
-      // Rock-a-bye: three notes down, and a shimmer.
-      [
-        { n: 'A5', t: 0.9 },
-        { n: 'F#5', t: 1.25 },
-        { n: 'D5', t: 1.6 }
-      ].forEach(({ n, t }, i) =>
-        strike(b, { note: hz(n), instrument: I.kalimba, start: t, gain: 0.5, decayScale: 1.4, mallet: 0.1, pan: (i - 1) * 0.15, seed: 634 + i })
+      noise(b, { start: 0.15, dur: 0.55, gain: 0.12, filter: { type: 'bandpass', f: 1000, q: 0.7 }, attack: 0.12, decay: 0.22, pink: true, seed: 645 });
+      // Up onto the bed - boing on the mattress, its springs creaking.
+      mode(b, { start: 0.68, freq: 520, amp: 0.4, decay: 0.025, glide: -0.25, glideTime: 0.02 });
+      boing(b, 0.95, hz('D4'), 0.45);
+      mode(b, { start: 0.97, freq: 1300, amp: 0.1, decay: 0.08, glide: -0.1, glideTime: 0.05 });
+      // The sheet: flapping as it is swung over, settling with a soft whump.
+      for (let i = 0; i < 6; i++) {
+        noise(b, { start: 1.1 + i * 0.065, dur: 0.05, gain: 0.3 * (1 - i * 0.08), filter: { type: 'bandpass', f: 900 + i * 90, q: 0.8 }, grain: 0.6, attack: 0.004, decay: 0.02, pink: true, seed: 650 + i });
+      }
+      noise(b, { start: 1.1, dur: 0.38, gain: 0.25, filter: { type: 'bandpass', f: 500, q: 0.7 }, sweepTo: 1500, attack: 0.1, decay: 0.15, pink: true, seed: 657 });
+      noise(b, { start: 1.5, dur: 0.3, gain: 0.42, filter: { type: 'lowpass', f: 700 }, attack: 0.01, decay: 0.12, pink: true, seed: 658 });
+      thump(b, 1.5, 0.2, 120, 659);
+      // Two pats, tucking it in.
+      [1.8, 2.05].forEach((t, i) => {
+        thump(b, t, 0.38, 170, 661 + i);
+        noise(b, { start: t, dur: 0.05, gain: 0.22, filter: { type: 'lowpass', f: 900 }, attack: 0.002, decay: 0.02, pink: true, seed: 663 + i });
+      });
+      // Rock-a-bye on a music box, and a shimmer.
+      ['A5', 'F#5', 'D5', 'E5', 'F#5', 'D5'].forEach((n, i) =>
+        strike(b, { note: hz(n), instrument: I.kalimba, start: 2.25 + i * 0.32, gain: 0.45, decayScale: 1.4, mallet: 0.1, pan: (i % 3 - 1) * 0.15, seed: 670 + i })
       );
-      strike(b, { note: hz('D6'), instrument: I.glass, start: 1.6, gain: 0.14, decayScale: 1.6, mallet: 0, seed: 638 });
+      strike(b, { note: hz('D6'), instrument: I.glass, start: 3.85, gain: 0.14, decayScale: 1.6, mallet: 0, seed: 677 });
+      // Soft little snores.
+      [2.9, 3.6].forEach((t, i) => {
+        voice(b, {
+          start: t,
+          dur: 0.5,
+          freq: u => 120 * (1 - 0.15 * (u / 0.5)),
+          amp: u => 0.12 * Math.max(0, Math.sin((Math.PI * u) / 0.5)) ** 0.8,
+          harmonics: [1, 0.8, 0.6, 0.4]
+        });
+        noise(b, { start: t, dur: 0.5, gain: 0.06, filter: { type: 'lowpass', f: 600 }, attack: 0.15, decay: 0.2, pink: true, seed: 680 + i });
+      });
+      // Awake - poof, the bed's gone - and a happy "mmh!" of a stretch.
+      poof(4.25, 690);
+      voice(b, {
+        start: 4.35,
+        dur: 0.35,
+        freq: t => 300 * (1 + 0.6 * Math.min(1, t / 0.25)),
+        amp: t => 0.25 * Math.max(0, Math.sin((Math.PI * t) / 0.35)) ** 0.7,
+        harmonics: [1, 0.5, 0.25, 0.1]
+      });
       return b;
     },
-    room: { rt60: 1.4, wet: 0.22 },
-    master: { loudness: SOFT, highpass: 120, maxSeconds: 2.8, tailFade: 0.7 }
+    room: { rt60: 1.2, wet: 0.2 },
+    master: { loudness: SOFT, highpass: 120, maxSeconds: 4.85, tailFade: 0.4 }
   },
 
   // A birthday surprise (components/SurpriseReveal) and the party in Us two.

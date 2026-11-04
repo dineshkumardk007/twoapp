@@ -1922,8 +1922,46 @@ html.panel-up .chat-shell {
   -webkit-user-select: none;
   user-select: none;
 }
-.us-scene[data-part='evening'] { background: linear-gradient(#ffb38a, #ffd9c2); }
-.us-scene[data-part='night'] { background: linear-gradient(#1b1546, #3a2d7a); }
+/* The sky (UsScene, Sky): the time of day, or the theme the two of you picked. */
+.us-scene[data-look='evening'] { background: linear-gradient(#ffb38a, #ffd9c2); }
+.us-scene[data-look='night'] { background: linear-gradient(#1b1546, #3a2d7a); }
+.us-scene[data-look='sunny'] { background: linear-gradient(#4fc3ff, #bfeaff); }
+.us-scene[data-look='winter'] { background: linear-gradient(#b9d0e6, #eaf2fa); }
+.us-scene[data-look='rainy'] { background: linear-gradient(#7b8da2, #b8c5d3); }
+.us-scene[data-look='morning'] { background: linear-gradient(#a9d6ff, #ffd7c2 70%, #ffe9c9); }
+/* The sun's rays turning; snow and rain falling (a layer's height, round and
+   round); ripples in puddles; birds crossing; fireflies wandering and glowing. */
+.us-rays { animation: us-rays 24s linear infinite; }
+@keyframes us-rays { to { transform: rotate(360deg); } }
+.us-snow { animation: us-snow 10s linear infinite; }
+@keyframes us-snow {
+  from { transform: translate(0, 0); }
+  50% { transform: translate(1.2%, 50%); }
+  to { transform: translate(0, 100%); }
+}
+.us-rain { animation: us-rain 0.9s linear infinite; }
+@keyframes us-rain {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-2%, 100%); }
+}
+.us-ripple { animation: us-ripple 1.5s ease-out infinite; }
+@keyframes us-ripple {
+  from { transform: scale(0.2); opacity: 0.9; }
+  to { transform: scale(1.4); opacity: 0; }
+}
+.us-birds { animation: us-birds 18s linear infinite; }
+@keyframes us-birds {
+  from { transform: translate(-30%, 0); }
+  50% { transform: translate(40%, -8%); }
+  to { transform: translate(110%, 0); }
+}
+.us-firefly { animation: us-firefly 5s ease-in-out infinite; }
+@keyframes us-firefly {
+  0%, 100% { transform: translate(0, 0); opacity: 0.2; }
+  25% { transform: translate(30%, -40%); opacity: 1; }
+  50% { transform: translate(-20%, -70%); opacity: 0.35; }
+  75% { transform: translate(25%, -25%); opacity: 1; }
+}
 /* The tab: the middle of the stage, bigger, with a strip of sky above it. */
 .us-scene[data-size='tab'] { aspect-ratio: 100 / 84; }
 .us-stage {
@@ -2017,7 +2055,7 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
   overflow: visible;
 }
 .rig-shadow { fill: rgb(38 70 30 / 0.2); }
-.us-scene[data-part='night'] .rig-shadow { fill: rgb(0 0 0 / 0.3); }
+.us-scene[data-look='night'] .rig-shadow { fill: rgb(0 0 0 / 0.3); }
 .rig-sway { animation: rig-sway 5.6s ease-in-out infinite alternate; }
 @keyframes rig-sway {
   from { transform: rotate(-1.4deg); }
@@ -2308,18 +2346,52 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
   88% { transform: scale(1); opacity: 1; animation-timing-function: ease-in; }
   100% { transform: scale(0.5); opacity: 0; }
 }
-/* A blanket lifted over them, laid down at 32%, settling - and later gone. */
-.rig-blanket { animation: rig-blanket 2800ms linear both; }
-@keyframes rig-blanket {
-  0%, 14% { transform: translateY(-34%) scale(0.6); opacity: 0; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.3); }
-  20% { transform: translateY(-34%) scale(1, 0.9); opacity: 1; animation-timing-function: ease-in-out; }
-  26% { transform: translateY(-30%) scale(1); animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.5); }
-  32% { transform: translateY(0) scale(1.06, 0.92); animation-timing-function: ease-out; }
-  37% { transform: translateY(0) scale(0.98, 1.03); }
-  42% { transform: translateY(0) scale(1); opacity: 1; }
-  90% { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(0) scale(1); opacity: 0; }
+/* Tucked in (UsScene): the bed popping up from its feet and away again,
+   over the whole 4.8 s of it; the sheet held up, swung over in an arc,
+   landing and fluttering flat, lifted off as they wake; a moon and stars
+   that stay while they sleep. */
+.fx-bed { transform-origin: 50% 100%; animation: fx-bed 4800ms linear both; }
+@keyframes fx-bed {
+  0% { transform: scale(0.3, 0.1); opacity: 0; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.4); }
+  6% { transform: scale(1, 1); opacity: 1; }
+  91% { transform: scale(1, 1); opacity: 1; animation-timing-function: ease-in; }
+  96%, 100% { transform: scale(0.4, 0.1); opacity: 0; }
 }
+.fx-sheet { transform-origin: 50% 100%; animation: fx-sheet 3300ms linear both; }
+@keyframes fx-sheet {
+  0% { transform: translate(var(--sx, 0%), var(--sy, -100%)) scale(0.35, 0.3); opacity: 0; animation-timing-function: ease-out; }
+  2% { opacity: 1; }
+  6% { transform: translate(calc(var(--sx, 0%) * 0.5), calc(var(--sy, -100%) - 60%)) scale(0.75, 0.55) rotate(calc(var(--d, 1) * -8deg)); animation-timing-function: ease-in; }
+  12% { transform: translate(0, 0) scale(1.06, 0.82); animation-timing-function: ease-out; }
+  15% { transform: translate(0, 0) scale(0.97, 1.06) skewX(calc(var(--d, 1) * 3deg)); }
+  19% { transform: translate(0, 0) scale(1.01, 0.98) skewX(calc(var(--d, 1) * -2deg)); }
+  23% { transform: translate(0, 0) scale(1, 1); }
+  94% { transform: translate(0, 0) scale(1, 1); opacity: 1; animation-timing-function: ease-in; }
+  100% { transform: translate(0, -18%) scale(1.02, 0.9); opacity: 0; }
+}
+.fx-linger { animation: fx-linger 2600ms linear both; }
+@keyframes fx-linger {
+  0% { transform: scale(0); opacity: 0; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+  10% { transform: scale(1); opacity: 1; }
+  90% { transform: scale(1); opacity: 1; animation-timing-function: ease-in; }
+  100% { transform: scale(0.6); opacity: 0; }
+}
+/* Soaked by water balloons: a puddle spreading at their feet (as long as
+   they stay wet), and water running down them. */
+.fx-puddle { animation: fx-puddle 2000ms linear both; }
+@keyframes fx-puddle {
+  0% { transform: scale(0.2, 0.5); opacity: 0; animation-timing-function: ease-out; }
+  15% { transform: scale(1, 1); opacity: 1; }
+  85% { transform: scale(1.06, 1); opacity: 1; animation-timing-function: ease-in; }
+  100% { transform: scale(1.1, 1); opacity: 0; }
+}
+.fx-run { animation: fx-run 900ms ease-in infinite backwards; }
+@keyframes fx-run {
+  0% { transform: translateY(0) scaleY(0.6); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(320%) scaleY(1.3); opacity: 0; }
+}
+
 /* A mark that stays a moment: a kiss on the cheek, a cross little vein, a big heart. */
 .fx-mark { animation: fx-mark 1100ms linear both; }
 @keyframes fx-mark {
@@ -2430,6 +2502,42 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
 }
 .us-sound:active { transform: scale(0.88); }
 .us-sound:focus-visible { outline: 2px solid rgb(var(--c-accent) / 0.8); outline-offset: 2px; }
+/* The background button beside it, and the skies to pick from. */
+.us-theme { left: 46px; }
+.us-theme[aria-expanded='true'] { background: #fff; }
+.us-theme-menu {
+  position: absolute;
+  top: 46px;
+  left: 8px;
+  right: 8px;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.94);
+  box-shadow: 0 8px 24px -10px rgb(0 0 0 / 0.4);
+  animation: us-pop 200ms cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards;
+  transform-origin: 20px 0;
+}
+.us-theme-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 11px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3b2723;
+  background: #f3effa;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 140ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.us-theme-chip:active { transform: scale(0.92); }
+.us-theme-chip[data-on] { background: #e4dcff; box-shadow: inset 0 0 0 1.5px #7c6cff; }
+.us-theme-chip:focus-visible { outline: 2px solid #7c6cff; outline-offset: 2px; }
 
 /* The plays, under the scene on its tab. */
 .us-pad {

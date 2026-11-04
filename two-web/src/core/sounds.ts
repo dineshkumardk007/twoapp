@@ -31,6 +31,7 @@ export type SoundName =
   | 'us-hug' | 'us-kiss' | 'us-feed' | 'us-nuzzle' | 'us-flower'
   | 'us-highfive' | 'us-splash' | 'us-tease' | 'us-dance' | 'us-tuck'
   | 'us-dance-2' | 'us-dance-3' | 'us-dance-4' | 'us-dance-5' | 'us-dance-6'
+  | 'us-shake' | 'us-drip'
   | 'birthday-song' | 'birthday-jingle' | 'party-pop';
 
 interface Loaded {

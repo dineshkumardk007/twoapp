@@ -460,18 +460,12 @@ export const Spoon: React.FC<{ ms: number; delay: number }> = ({ ms, delay }) =>
 
 const twinkle = (x: number, y: number) => `M${x},${y - 4} L${x + 1},${y - 1} L${x + 4},${y} L${x + 1},${y + 1} L${x},${y + 4} L${x - 1},${y + 1} L${x - 4},${y} L${x - 1},${y - 1} Z`;
 
-/** A starry blanket, over a character from the chin down, in its own units. */
-export const Blanket: React.FC = () => (
+/** A starry bedsheet, folded, held up over the head (in the character's own units): the one tucking someone in. */
+export const FoldedSheet: React.FC = () => (
   <g>
-    <path d="M-33,33 Q0,25 33,33 L35,66 Q0,73 -35,66 Z" {...shape('#b8a6ff', 2.6)} />
-    <path d="M-33,33 Q0,25 33,33 L33.5,40 Q0,32 -33.5,40 Z" {...shape('#e6defe', 2)} />
-    {[
-      [-20, 52],
-      [2, 58],
-      [20, 49],
-      [-6, 47]
-    ].map(([x, y]) => (
-      <path key={x} d={twinkle(x, y)} fill="#fff6c2" />
-    ))}
+    <rect x={-26} y={-72} width={52} height={20} rx={5} {...shape('#b8a6ff', 2.4)} />
+    <path d="M-23,-62 L23,-62" stroke="#e6defe" strokeWidth={3} strokeLinecap="round" />
+    <path d={twinkle(-12, -67)} fill="#fff6c2" />
+    <path d={twinkle(11, -57)} fill="#fff6c2" />
   </g>
 );

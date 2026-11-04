@@ -272,7 +272,7 @@ import {
   type PhotoFields
 } from './core/chatActions';
 import { cleanStickerId } from './core/stickers';
-import { addBoop, boopsFor, chatDay, cleanPlayKind, withBoopCount, type PlayKind } from './core/usTwo';
+import { addBoop, boopsFor, chatDay, cleanPlayKind, cleanTheme, withBoopCount, type PlayKind, type SceneTheme } from './core/usTwo';
 import {
   SURPRISE,
   SURPRISE_PART,
@@ -451,6 +451,8 @@ function chatFromWire(parsed: any): ChatMessage {
 
 /** Today's boop count from one of you (components/UsScene). */
 const BOOP = 'BOOP';
+/** The sky over "Us two" one of you picked, for both phones (core/usTwo, SceneTheme). */
+const US_THEME = 'US_THEME';
 
 const AdventuresView = lazy(() => import('./views/AdventuresView').then(m => ({ default: m.AdventuresView })));
 const CanvasOfUsView = lazy(() => import('./views/CanvasOfUsView').then(m => ({ default: m.CanvasOfUsView })));
@@ -1861,6 +1863,11 @@ export const App: React.FC = () => {
                 ? { ...prev, surprises: { ...book, ready: { ...book.ready, [id]: Number(parsed?.updatedAt) || 0 } } }
                 : { ...prev, surprises: { ...book, seen: { ...book.seen, [id]: Number(parsed?.at) || Date.now() } } };
             });
+          } else if (record.type === US_THEME) {
+            // The sky over "Us two" one of you picked: the newest pick wins, from either phone.
+            const at = Number(parsed?.at) || 0;
+            const theme = cleanTheme(parsed?.theme);
+            setState(prev => (prev.usTheme && prev.usTheme.at >= at ? prev : { ...prev, usTheme: { theme, at } }));
           } else if (record.type === BOOP) {
             // How many boops a phone has sent today (UsScene): only ever up.
             const seat = record.authorId === 'user' || record.authorId === 'partner' ? record.authorId : null;
@@ -3722,6 +3729,13 @@ export const App: React.FC = () => {
     }
     // After the count above has been drawn, so it goes with it.
     pendingPlayRef.current!.timer = window.setTimeout(sendPlay, kind === 'boop' ? 600 : 150);
+  };
+
+  /** A sky picked for "Us two": here at once, and on their phone too. */
+  const handleUsTheme = (theme: SceneTheme) => {
+    const at = Date.now();
+    setState(prev => ({ ...prev, usTheme: { theme, at } }));
+    wsRelay.broadcastUpdate(US_THEME, { theme, at });
   };
 
   /** The HD copy of a photo just sent: kept here, and sent in pieces after it. */
@@ -6184,6 +6198,7 @@ export const App: React.FC = () => {
             partnerOnline={partnerShownOnline}
             partnerTyping={partnerTypingAt > 0}
             onPlay={stable('play', handlePlay)}
+            onTheme={stable('usTheme', handleUsTheme)}
             party={partySeat}
             surpriseWaitingId={dueOne && surpriseLater.includes(dueOne.id) ? dueOne.id : null}
             onOpenSurprise={stable('openSurprise', (id: string) => {

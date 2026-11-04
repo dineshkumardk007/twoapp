@@ -5,13 +5,15 @@ import { UsScene } from '../components/UsScene';
 import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
 import { useT } from '../core/i18n';
 import { bookOf } from '../core/surprise';
-import type { PlayKind, Seat } from '../core/usTwo';
+import type { PlayKind, SceneTheme, Seat } from '../core/usTwo';
 
 interface UsTwoViewProps {
   state: SpaceState;
   partnerOnline: boolean;
   partnerTyping: boolean;
   onPlay: (kind: PlayKind, quiet: boolean, variant?: number) => void;
+  /** Picks the sky over the scene, for both phones. */
+  onTheme: (theme: SceneTheme) => void;
   /** Whose birthday it is today, if anyone's: a party in the scene. */
   party?: Seat | null;
   /** A surprise of theirs, due and closed before its card: waiting here. */
@@ -30,6 +32,7 @@ export const UsTwoView: React.FC<UsTwoViewProps> = ({
   partnerOnline,
   partnerTyping,
   onPlay,
+  onTheme,
   party = null,
   surpriseWaitingId = null,
   onOpenSurprise
@@ -61,6 +64,8 @@ export const UsTwoView: React.FC<UsTwoViewProps> = ({
         onPlay={onPlay}
         onSendHeart={() => triggerGlobalPulse('Thinking of you')}
         party={party}
+        theme={state.usTheme?.theme}
+        onTheme={onTheme}
       />
 
       {(surpriseWaitingId || opened) && (

@@ -24,7 +24,7 @@ export const NEAR_ACTS: ReadonlySet<Act> = new Set<Act>(['boop', 'tickle', 'pinc
  * in a hug; for a kiss, just so far that only the lips reach their cheek;
  * for a nose rub, just so far that only the tips of their noses meet.
  */
-const CLOSE: Partial<Record<Act, number | [number, number]>> = { hug: 38, kiss: [55, 49], nuzzle: 65, highfive: 52, tuck: 46 };
+const CLOSE: Partial<Record<Act, number | [number, number]>> = { hug: 38, kiss: [55, 49], nuzzle: 65, highfive: 52, tuck: 70 };
 /** How far apart it stands for this play - `tall` when the bear is doing it. */
 export const nearOf = (act: Act, tall = true) => {
   const at = CLOSE[act] ?? NEAR;
@@ -57,7 +57,7 @@ export const PLAY_MS: Record<Act, number> = {
   balloon: 2300,
   tease: 2000,
   dance: 2650,
-  tuck: 3000,
+  tuck: 4800,
   giggle: 900
 };
 
@@ -77,7 +77,7 @@ export const SAY_AT: Record<Act, number> = {
   balloon: FIRST_RELEASE + FLIGHT_MS,
   tease: 700,
   dance: 150,
-  tuck: 900,
+  tuck: 1550,
   giggle: 0
 };
 
@@ -97,7 +97,13 @@ export const MOODS: Record<Act, { at: number; target?: Mood; actor?: Mood }[]> =
   balloon: [{ at: 0, actor: 'smug' }, { at: 790, target: 'shock', actor: 'laugh' }, { at: 1250, target: 'tight' }, { at: 1900, target: 'laugh' }],
   tease: [{ at: 0, actor: 'tongue' }, { at: 700, target: 'angry' }, { at: 1300, actor: 'laugh' }, { at: 1650, target: 'roll' }],
   dance: [{ at: 0, actor: 'happy', target: 'happy' }, { at: 900, actor: 'wink', target: 'laugh' }, { at: 1800, actor: 'laugh', target: 'happy' }],
-  tuck: [{ at: 0, actor: 'happy' }, { at: 250, target: 'yawn' }, { at: 900, target: 'sleep', actor: 'smile' }],
+  tuck: [
+    { at: 0, actor: 'happy' },
+    { at: 150, target: 'yawn' },
+    { at: 950, target: 'content' },
+    { at: 1550, target: 'sleep', actor: 'content' },
+    { at: 4300, target: 'happy', actor: 'happy' }
+  ],
   giggle: [{ at: 0, target: 'laugh' }]
 };
 
@@ -386,7 +392,7 @@ export function movesFor(act: Act, d: number, lead: number, combo = 1, more: { v
     case 'highfive':
       return highFiveMoves(d, L);
     case 'balloon':
-      return balloonMoves(d);
+      return balloonMoves(d, FIRST_RELEASE, true, combo);
     case 'tease':
       return teaseMoves(d);
     case 'dance':
@@ -646,14 +652,19 @@ function highFiveMoves(d: number, L: number): Move[] {
 }
 
 /**
- * A water balloon: wound up and lobbed like a pillow, bursting on their head
- * at 790 ms - squashed, soaked - and shaken off like a wet puppy.
+ * A water balloon, like a pillow: the first of a run wound up and lobbed,
+ * the rest flicked after it (throwFrom), each bursting on their head
+ * FLIGHT_MS after it is let go - squashed, soaked - and shaken off like a
+ * wet puppy, harder the wetter they are (`wet`: how many have landed in
+ * this run). A newer balloon's moves take over from the last one's, so the
+ * shake that is seen is the last one's.
  */
-function balloonMoves(d: number): Move[] {
-  const hit = FIRST_RELEASE + FLIGHT_MS;
+export function balloonMoves(d: number, release: number, first: boolean, wet = 1): Move[] {
+  const hit = release + FLIGHT_MS;
   const ms = 1400;
+  const hard = 1 + 0.15 * (Math.min(wet, 4) - 1);
   const shakeAt = [0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.66, 0.72, 0.8];
-  const shakeBy = [-11, 11, -11, 11, -9, 8, -5, 3, 0];
+  const shakeBy = [-11, 11, -11, 11, -9, 8, -5, 3, 0].map(v => v * hard);
   const shook = (by: number): Keyframe[] => [k(0, r(0)), k(0.3, r(0)), ...shakeAt.map((at, i) => k(at, r(shakeBy[i] * by))), k(1, r(0))];
   const ear = (side: 1 | -1): Keyframe[] => [
     k(0, r(0)),
@@ -664,7 +675,7 @@ function balloonMoves(d: number): Move[] {
     k(1, r(0))
   ];
   return [
-    ...throwUp(d),
+    ...throwFrom(d, release, first),
     {
       who: 'target',
       layer: 'squash',
@@ -925,33 +936,160 @@ function danceMoves(d: number, L: number, variant: number): Move[] {
   return [...one('actor', d), ...one('target', -d)];
 }
 
+/** When the one tucked in is in bed (UsScene, the bed and the sheet), from the start of the play. */
+export const TUCK = { inBed: 950, sheetLands: 1500, wakes: 4250, up: 4600 } as const;
+
 /**
- * Tucking them in: a blanket lifted over (UsScene, rig-blanket) as they
- * yawn, laid down at 0.35 (900 ms), and they nod off, breathing slowly.
+ * Tucking them in, with a bed seen from its foot (UsScene): it pops up round
+ * them; they yawn and stretch, hop in, settle back with their head on the
+ * pillow and close their eyes. You lift a sheet over your head and swing it
+ * over them - it settles up to their chin at 1.5 s - tuck it in with two
+ * pats, and they sleep, breathing slowly, while you sway; until they wake,
+ * sit up and hop out.
  */
 function tuckMoves(d: number, L: number): Move[] {
-  const ms = 2600;
-  const lift = (side: 1 | -1): Keyframe[] => [k(0, r(0)), k(0.12, r(125 * side)), k(0.24, r(125 * side)), k(0.34, r(60 * side)), k(0.42, r(25 * side)), k(0.56, r(0)), k(1, r(0))];
+  const ms = 4800;
+  const t = (at: number) => Math.min(1, at / ms);
+  const { inBed, wakes, up: upAgain } = TUCK;
+  // Settled a little down into the bed.
+  const lying = up(4);
+  // Their arms: up in a big stretch for the yawn, and again on waking.
+  const stretch = (side: 1 | -1): Keyframe[] => [
+    k(0, r(0)),
+    k(t(200), r(0)),
+    k(t(420), r(150 * side)),
+    k(t(560), r(150 * side)),
+    k(t(700), r(0)),
+    k(t(upAgain), r(0)),
+    k(t(4720), r(150 * side)),
+    k(1, r(0))
+  ];
+  // Yours: the sheet held up over your head, swung forward, and down to tuck.
+  const sheet = (side: 1 | -1): Keyframe[] => [
+    k(0, r(0)),
+    k(t(300), r(0)),
+    k(t(460), r(150 * side)),
+    k(t(1050), r(150 * side)),
+    k(t(1250), r(70 * side)),
+    k(t(1500), r(40 * side)),
+    k(t(1700), r(0)),
+    k(1, r(0))
+  ];
   return [
-    { who: 'actor', layer: 'armL', ms, delay: L, frames: lift(1) },
-    { who: 'actor', layer: 'armR', ms, delay: L, frames: lift(-1) },
-    { who: 'actor', layer: 'lean', ms, delay: L, frames: [k(0, r(0)), k(0.2, r(-3 * d)), k(0.34, r(9 * d)), k(0.48, r(6 * d)), k(0.62, r(0)), k(1, r(0))] },
-    { who: 'actor', layer: 'hop', ms, delay: L, frames: [k(0, up(0)), k(0.12, up(-2)), k(0.26, up(-2)), k(0.36, up(0)), k(1, up(0))] },
+    // Into bed: a hop in, settling down into it with a bounce; out again on waking.
     {
       who: 'target',
-      layer: 'squash',
-      ms: 2900,
+      layer: 'hop',
+      ms,
       delay: L,
-      frames: [k(0, sc(1)), k(0.08, sc(1)), k(0.16, sc(0.96, 1.05)), k(0.26, sc(0.97, 1.04)), k(0.31, sc(1.04, 0.96)), k(0.36, sc(1)), k(0.5, sc(1.02, 0.98)), k(0.62, sc(1)), k(0.74, sc(1.02, 0.98)), k(0.86, sc(1)), k(1, sc(1))]
+      frames: [
+        k(0, up(0)),
+        k(t(680), up(0), RISE),
+        k(t(820), up(-6), FALL),
+        k(t(inBed), lying),
+        k(t(wakes), lying, RISE),
+        k(t(4420), up(-6), FALL),
+        k(t(upAgain), up(0)),
+        k(1, up(0))
+      ]
     },
+    // Leaning back on the pillow, head to one side, asleep.
+    { who: 'target', layer: 'lean', ms, delay: L, frames: [k(0, r(0)), k(t(900), r(0)), k(t(1100), r(5 * d)), k(t(wakes), r(5 * d)), k(t(4450), r(0)), k(1, r(0))] },
     {
       who: 'target',
       layer: 'head',
-      ms: 2900,
+      ms,
       delay: L,
-      frames: [k(0, r(0)), k(0.08, r(0)), k(0.16, r(5 * d)), k(0.26, r(4 * d)), k(0.32, r(0)), k(0.42, r(-9 * d)), k(0.9, r(-9 * d)), k(1, r(0))]
+      frames: [
+        k(0, r(0)),
+        k(t(200), r(0)),
+        k(t(420), r(-6 * d)),
+        k(t(600), r(0)),
+        k(t(1000), r(0)),
+        k(t(1600), r(14 * d)),
+        k(t(wakes), r(14 * d)),
+        k(t(4400), r(0)),
+        k(1, r(0))
+      ]
     },
-    ...flop('target', L, 0.31, d, 2900, 8)
+    // The stretch, the bounce into bed, the sheet landing, the pats, slow breaths.
+    {
+      who: 'target',
+      layer: 'squash',
+      ms,
+      delay: L,
+      frames: [
+        k(0, sc(1)),
+        k(t(200), sc(1)),
+        k(t(420), sc(0.96, 1.06)),
+        k(t(560), sc(0.97, 1.05)),
+        k(t(650), sc(1.08, 0.92)),
+        k(t(720), sc(0.94, 1.07)),
+        k(t(inBed), sc(1.07, 0.93)),
+        k(t(1050), sc(0.97, 1.03)),
+        k(t(1150), sc(1.02, 0.99)),
+        k(t(1250), sc(1)),
+        k(t(1520), sc(1.03, 0.97)),
+        k(t(1600), sc(1)),
+        k(t(1800), sc(1.03, 0.97)),
+        k(t(1880), sc(1)),
+        k(t(2050), sc(1.03, 0.97)),
+        k(t(2130), sc(1)),
+        k(t(2600), sc(1.02, 1.02)),
+        k(t(3000), sc(1)),
+        k(t(3400), sc(1.02, 1.02)),
+        k(t(3800), sc(1)),
+        k(t(upAgain), sc(1.06, 0.94)),
+        k(t(4700), sc(1)),
+        k(1, sc(1))
+      ]
+    },
+    { who: 'target', layer: 'armL', ms, delay: L, frames: stretch(1) },
+    { who: 'target', layer: 'armR', ms, delay: L, frames: stretch(-1) },
+    ...flop('target', L, t(inBed), d, ms, 10),
+    // You: the sheet up, swung over, the edge tucked in with two pats, a gentle sway.
+    { who: 'actor', layer: 'armL', ms, delay: L, frames: sheet(1) },
+    { who: 'actor', layer: 'armR', ms, delay: L, frames: sheet(-1) },
+    // The near arm goes to pat the sheet (UsScene, a reaching arm) from 1.55 s.
+    { who: 'actor', layer: nearArm(d), ms, delay: L, frames: [o(0, 1), o(t(1540), 1), o(t(1570), 0), o(t(2400), 0), o(t(2450), 1), o(1, 1)] },
+    {
+      who: 'actor',
+      layer: 'lean',
+      ms,
+      delay: L,
+      frames: [
+        k(0, r(0)),
+        k(t(1000), r(-4 * d)),
+        k(t(1250), r(12 * d)),
+        k(t(1500), r(6 * d)),
+        k(t(1650), r(14 * d)),
+        k(t(2200), r(14 * d)),
+        k(t(2400), r(0)),
+        k(t(2900), r(3 * d)),
+        k(t(3400), r(-2 * d)),
+        k(t(3900), r(3 * d)),
+        k(t(4300), r(0)),
+        k(1, r(0))
+      ]
+    },
+    {
+      who: 'actor',
+      layer: 'squash',
+      ms,
+      delay: L,
+      frames: [
+        k(0, sc(1)),
+        k(t(460), sc(0.97, 1.04)),
+        k(t(1000), sc(1.04, 0.96)),
+        k(t(1250), sc(0.95, 1.06)),
+        k(t(1400), sc(1)),
+        k(t(1800), sc(1.05, 0.95)),
+        k(t(1900), sc(1)),
+        k(t(2050), sc(1.05, 0.95)),
+        k(t(2150), sc(1)),
+        k(1, sc(1))
+      ]
+    }
   ];
 }
 
@@ -959,31 +1097,29 @@ function tuckMoves(d: number, L: number): Move[] {
 const BONK_AT = 0.07 * 1300;
 
 /**
- * One pillow: let go `release` ms in, landing FLIGHT_MS later. The first of
- * a run is wound up over the head and swung; every one after it - another
- * tap while pillows are still flying - is a quick flick timed to its own
- * let-go, so a run of them comes out as one smooth flurry.
+ * Throwing one of a run, let go `release` ms in: the first wound up over the
+ * head and swung (throwUp); every one after it - another tap while the last
+ * is still flying - a quick flick timed to its own let-go, so a run of them
+ * comes out as one smooth flurry.
  */
+function throwFrom(d: number, release: number, first: boolean): Move[] {
+  if (first) return throwUp(d);
+  const flick = 240;
+  // Forward at 55% - the let-go.
+  const delay = release - flick * 0.55;
+  return [
+    { who: 'actor', layer: 'lean', ms: flick, delay, frames: [k(0, r(2 * d)), k(0.3, r(-6 * d)), k(0.55, r(11 * d)), k(1, r(2 * d))] },
+    { who: 'actor', layer: 'squash', ms: flick, delay, frames: [k(0, sc(1)), k(0.3, sc(1.05, 0.95)), k(0.55, sc(0.95, 1.05)), k(1, sc(1))] },
+    { who: 'actor', layer: 'armL', ms: flick, delay, frames: [k(0, r(40)), k(0.3, r(125)), k(0.6, r(45)), k(1, r(40))] },
+    { who: 'actor', layer: 'armR', ms: flick, delay, frames: [k(0, r(-40)), k(0.3, r(-125)), k(0.6, r(-45)), k(1, r(-40))] }
+  ];
+}
+
+/** One pillow: let go `release` ms in (throwFrom), landing FLIGHT_MS later. */
 export function pillowMoves(d: number, release: number, first: boolean): Move[] {
   const hit = release + FLIGHT_MS - BONK_AT;
-  const flick = 240;
-  const throwing: Move[] = first
-    ? throwUp(d)
-    : [
-        // Forward at 55% - the let-go.
-        { who: 'actor', layer: 'lean', ms: flick, delay: release - flick * 0.55, frames: [k(0, r(2 * d)), k(0.3, r(-6 * d)), k(0.55, r(11 * d)), k(1, r(2 * d))] },
-        {
-          who: 'actor',
-          layer: 'squash',
-          ms: flick,
-          delay: release - flick * 0.55,
-          frames: [k(0, sc(1)), k(0.3, sc(1.05, 0.95)), k(0.55, sc(0.95, 1.05)), k(1, sc(1))]
-        },
-        { who: 'actor', layer: 'armL', ms: flick, delay: release - flick * 0.55, frames: [k(0, r(40)), k(0.3, r(125)), k(0.6, r(45)), k(1, r(40))] },
-        { who: 'actor', layer: 'armR', ms: flick, delay: release - flick * 0.55, frames: [k(0, r(-40)), k(0.3, r(-125)), k(0.6, r(-45)), k(1, r(-40))] }
-      ];
   const moves: Move[] = [
-    ...throwing,
+    ...throwFrom(d, release, first),
     // Bonk: knocked back, squashed flat, bouncing up dizzy.
     {
       who: 'target',

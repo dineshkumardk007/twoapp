@@ -187,6 +187,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               boops={state.boops}
               onPlay={(kind, quiet, variant) => onPlay?.(kind, quiet, variant)}
               party={party}
+              theme={state.usTheme?.theme}
               onSendHeart={() => triggerGlobalPulse('Thinking of you')}
             />
           </div>

@@ -1,6 +1,6 @@
 import type { ComingUpDay } from './comingUp';
 import type { Statuses } from './status';
-import type { Boops } from './usTwo';
+import type { Boops, UsTheme } from './usTwo';
 import type { SurpriseBook } from './surprise';
 import {
   EmotionalReport,
@@ -167,6 +167,8 @@ export interface SpaceState {
   partnerLastSeen: number;
   /** Today's boops on Home (components/UsScene): how many each of you sent. */
   boops?: Boops;
+  /** The sky over "Us two" the two of you picked (components/UsScene): the newest pick from either phone. */
+  usTheme?: UsTheme;
   /** Surprises one of you has planned for the other (core/surprise), theirs kept sealed. */
   surprises?: SurpriseBook;
   /**

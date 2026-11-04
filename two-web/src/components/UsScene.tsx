@@ -1,10 +1,11 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, Volume2, VolumeX } from 'lucide-react';
+import { ChevronRight, Palette, Volume2, VolumeX } from 'lucide-react';
 import type { ChatMessage, WeatherState } from '../types';
 import { Heart, Sparkle, Zzz, Drop, Flower, Vein, type Mood } from './StickerArt';
 import {
   BOX,
-  Blanket,
+  FEET,
+  FoldedSheet,
   HeldBalloon,
   HeldPillow,
   JOINTS,
@@ -30,7 +31,9 @@ import {
   NEAR_ACTS,
   PLAY_MS,
   SAY_AT,
+  TUCK,
   WALK_MS,
+  balloonMoves,
   movesFor,
   nearOf,
   perform,
@@ -53,6 +56,7 @@ import {
   missLevel,
   type Boops,
   type PlayKind,
+  type SceneTheme,
   type Seat
 } from '../core/usTwo';
 
@@ -91,6 +95,10 @@ interface UsSceneProps {
   onOpen?: () => void;
   /** Whose birthday it is today, if it is someone's (core/surprise): a party all day. */
   party?: Seat | null;
+  /** The sky the two of you picked; 'auto' follows the time of day. */
+  theme?: SceneTheme;
+  /** Picks one, for both phones - on the tab, by its button. */
+  onTheme?: (theme: SceneTheme) => void;
 }
 
 const MISS_WORDS = ['All good 😌', 'A little 🙂', 'Missing you 🥺', 'A lot 😭', 'Dangerously high 🚨'];
@@ -144,13 +152,15 @@ const QUICK_RELEASE = 200;
 const THROW_GAP = 150;
 /** What each pillow of a run says as it lands. */
 const BONKS = ['bonk!', 'pow!', 'boff!', 'thwap!', 'wham!'];
+/** And each water balloon, wetter and wetter. */
+const SPLASHES = ['splash!', 'sploosh!', 'drenched!', 'soaked!', 'SPLOOSH!'];
 /** A run of boops climbs the scale, in semitones up (the app's D major pentatonic). */
 const BOOP_STEPS = [0, 2, 4, 7, 9, 12];
 
 /** Every sound of the battle (sound-design/recipes.mts), loaded as the scene opens. */
 const US_SOUNDS: SoundName[] = [
   'us-boop', 'us-tickle', 'us-hehe', 'us-pinch', 'us-pat', 'us-whoosh', 'us-bonk', 'us-dizzy', 'us-hop', 'us-shh',
-  'us-hug', 'us-kiss', 'us-feed', 'us-nuzzle', 'us-flower', 'us-highfive', 'us-splash', 'us-tease', 'us-tuck',
+  'us-hug', 'us-kiss', 'us-feed', 'us-nuzzle', 'us-flower', 'us-highfive', 'us-splash', 'us-shake', 'us-drip', 'us-tease', 'us-tuck',
   'us-dance', 'us-dance-2', 'us-dance-3', 'us-dance-4', 'us-dance-5', 'us-dance-6'
 ];
 /** Each dance's own tune (usMoves, ROUTINES): bop, twist, spin, jump and clap, disco, side shuffle. */
@@ -235,6 +245,251 @@ const Sprite: React.FC<{
   );
 };
 
+/** What the sky looks like: by the time of day by itself, or a theme the two of you picked. */
+type Look = 'day' | 'evening' | 'night' | Exclude<SceneTheme, 'auto'>;
+
+/** The two hills, back and front, under each sky. */
+const HILLS: Record<Look, [string, string]> = {
+  day: ['#8fd47e', '#7fc96f'],
+  evening: ['#9bc47a', '#8db76d'],
+  night: ['#2c4a3a', '#253f31'],
+  sunny: ['#86da6c', '#72cb58'],
+  winter: ['#f3f8fd', '#dde9f5'],
+  rainy: ['#6f9d6a', '#5e8b5a'],
+  morning: ['#a3dc8f', '#8bcf79']
+};
+
+/** The background choices, in the order the button shows them. */
+const THEME_CHOICES: { theme: SceneTheme; emoji: string; label: string }[] = [
+  { theme: 'auto', emoji: '🕒', label: 'Auto' },
+  { theme: 'sunny', emoji: '☀️', label: 'Sunny' },
+  { theme: 'winter', emoji: '❄️', label: 'Winter' },
+  { theme: 'rainy', emoji: '🌧️', label: 'Rainy' },
+  { theme: 'morning', emoji: '🌅', label: 'Morning' },
+  { theme: 'night', emoji: '🌙', label: 'Night' }
+];
+
+/**
+ * Snow or rain: a layer of flakes or streaks, the same again a whole layer
+ * above it, sliding down one layer's height and round again - so it never
+ * stops falling, with nothing drawn again.
+ */
+const Falling: React.FC<{ className: string; seed: number; count: number; style?: React.CSSProperties; draw: (x: number, y: number, i: number) => React.ReactNode }> = ({
+  className,
+  seed,
+  count,
+  style,
+  draw
+}) => {
+  const top = -60;
+  const tall = H - top;
+  const spots = Array.from({ length: count }, (_, i) => {
+    const r = Math.sin(seed * 97 + i * 12.9898) * 43758.5453;
+    const f = r - Math.floor(r);
+    return [((i + 0.5) / count) * (W + 40) - 20 + (f - 0.5) * 14, top + f * tall] as [number, number];
+  });
+  return (
+    <Sprite box={[0, top, W, tall]} className={className} style={style}>
+      {spots.map(([x, y], i) => (
+        <React.Fragment key={i}>
+          {draw(x, y, i)}
+          {draw(x, y - tall, i)}
+        </React.Fragment>
+      ))}
+    </Sprite>
+  );
+};
+
+/** A small cloud of puffs. */
+const Cloud: React.FC<{ x: number; y: number; s?: number; fill: string; opacity?: number }> = ({ x, y, s = 1, fill, opacity = 0.92 }) => (
+  <g transform={`translate(${x} ${y}) scale(${s})`} fill={fill} opacity={opacity}>
+    <ellipse cx={0} cy={6} rx={20} ry={8} />
+    <ellipse cx={12} cy={0} rx={12} ry={8} />
+    <ellipse cx={-8} cy={1} rx={9} ry={6} />
+  </g>
+);
+
+/**
+ * The sky and the ground under the two of them: sun or moon, the hills, and
+ * what moves - clouds drifting, the sun's rays turning, snow falling, rain
+ * and its ripples in puddles, birds in the morning, stars and fireflies at
+ * night. Behind everything; each moving piece a layer of its own.
+ */
+const Sky: React.FC<{ look: Look; size: SceneSize }> = ({ look, size }) => {
+  const tab = size === 'tab';
+  // The sky shows higher on the tab (index.css): what is placed up there sits lower on Home.
+  const up = tab ? 0 : 40;
+  const sun = tab ? { x: 258, y: -14 } : { x: 284, y: 30 };
+  const [back, front] = HILLS[look];
+  const snowman = tab ? 54 : 34;
+  return (
+    <>
+      <svg viewBox={`0 0 ${W} ${H}`} className="us-ground" overflow="visible" aria-hidden="true" focusable="false">
+        {look === 'night' && (
+          <path
+            d={tab ? 'M262,-30 A16,16 0 1 0 276,-8 A12,12 0 1 1 262,-30 Z' : 'M286,18 A16,16 0 1 0 300,40 A12,12 0 1 1 286,18 Z'}
+            fill="#ffe58a"
+            stroke={INK}
+            strokeWidth={2}
+          />
+        )}
+        {(look === 'day' || look === 'evening' || look === 'sunny') && (
+          <circle
+            cx={sun.x}
+            cy={sun.y}
+            r={look === 'sunny' ? 16 : look === 'evening' ? 15 : 13}
+            fill={look === 'evening' ? '#ff8a5c' : '#ffd23f'}
+            stroke={INK}
+            strokeWidth={2}
+          />
+        )}
+        {look === 'winter' && <circle cx={sun.x} cy={sun.y} r={12} fill="#fff4c9" stroke="#e3cf8a" strokeWidth={2} />}
+        {/* Morning: the sun just up over the hill, between the two of them. */}
+        {look === 'morning' && (
+          <>
+            <circle cx={160} cy={126} r={36} fill="#fff1b8" opacity={0.55} />
+            <circle cx={160} cy={126} r={22} fill="#ffc35a" stroke={INK} strokeWidth={2} />
+          </>
+        )}
+        <path d="M-60,170 L-60,142 C10,118 110,126 160,128 C220,130 300,116 380,138 L380,170 Z" fill={back} />
+        <path d="M-60,170 L-60,160 C40,150 120,156 160,155 C230,154 300,150 380,158 L380,170 Z" fill={front} />
+        {look === 'sunny' &&
+          [[44, 150], [72, 156], [118, 152], [206, 153], [248, 149], [282, 155]].map(([x, y], i) => (
+            <g key={i} transform={`translate(${x} ${y})`}>
+              {[0, 72, 144, 216, 288].map(a => (
+                <circle key={a} cx={0} cy={-2.4} r={1.7} transform={`rotate(${a})`} fill={i % 2 ? '#fff' : '#ffb3c7'} />
+              ))}
+              <circle cx={0} cy={0} r={1.3} fill="#ffd23f" />
+            </g>
+          ))}
+        {look === 'winter' && (
+          <>
+            <path d="M20,140 Q60,134 100,139 M200,136 Q240,130 290,137" fill="none" stroke="#c8daec" strokeWidth={2} strokeLinecap="round" />
+            {/* A snowman. */}
+            <g stroke={INK} strokeWidth={1.6}>
+              <circle cx={snowman} cy={140} r={9} fill="#fff" />
+              <circle cx={snowman} cy={126} r={6.5} fill="#fff" />
+            </g>
+            <circle cx={snowman - 2.2} cy={124.5} r={0.9} fill={INK} />
+            <circle cx={snowman + 2.2} cy={124.5} r={0.9} fill={INK} />
+            <path d={`M${snowman},${127} L${snowman + 6},${128.2} L${snowman},${129}`} fill="#ff8a3d" stroke="#e06a20" strokeWidth={0.8} strokeLinejoin="round" />
+            <path d={`M${snowman - 6},${131.5} L${snowman + 6},${131.5}`} stroke="#ff6b8b" strokeWidth={2.6} strokeLinecap="round" />
+          </>
+        )}
+        {look === 'rainy' &&
+          [[92, 161, 18], [232, 163, 22]].map(([x, y, rx], i) => <ellipse key={i} cx={x} cy={y} rx={rx} ry={3.2} fill="#a9c1d6" opacity={0.85} />)}
+      </svg>
+
+      {look === 'night' && (
+        <>
+          <Sprite box={[0, -36, W, 96]} className="us-twinkle">
+            {[[24, 22], [96, 18], [230, 20], [300, 28], [70, -20], [196, -26]].map(([cx, cy], i) => (
+              <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" />
+            ))}
+          </Sprite>
+          <Sprite box={[0, -36, W, 96]} className="us-twinkle" style={{ animationDelay: '1.3s' }}>
+            {[[60, 46], [262, 52], [140, 40], [118, -10], [228, -4]].map(([cx, cy], i) => (
+              <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" />
+            ))}
+          </Sprite>
+          {[[52, 118], [120, 104], [214, 112], [276, 100]].map(([x, y], i) => (
+            <Sprite key={`f${i}`} box={[x - 15, y - 15, 30, 30]} className="us-firefly" style={{ animationDelay: `${-i * 1.7}s` }}>
+              <circle cx={x} cy={y} r={3.2} fill="#fff59d" opacity={0.35} />
+              <circle cx={x} cy={y} r={1.4} fill="#fffbd0" />
+            </Sprite>
+          ))}
+        </>
+      )}
+      {(look === 'day' || look === 'evening') && (
+        <>
+          <Sprite box={[38, 14, 50, 26]} className="us-cloud">
+            <g fill="#fff" opacity={0.92}>
+              <ellipse cx={60} cy={30} rx={20} ry={8} />
+              <ellipse cx={72} cy={24} rx={12} ry={8} />
+            </g>
+          </Sprite>
+          {tab && (
+            <Sprite box={[176, -30, 44, 22]} className="us-cloud" style={{ animationDelay: '-9s' }}>
+              <g fill="#fff" opacity={0.85}>
+                <ellipse cx={196} cy={-14} rx={18} ry={7} />
+                <ellipse cx={206} cy={-19} rx={10} ry={7} />
+              </g>
+            </Sprite>
+          )}
+        </>
+      )}
+      {look === 'sunny' && (
+        <>
+          <Sprite box={[sun.x - 28, sun.y - 28, 56, 56]} className="us-rays">
+            {[0, 45, 90, 135, 180, 225, 270, 315].map(a => (
+              <path key={a} d={`M${sun.x},${sun.y - 20} L${sun.x},${sun.y - 26}`} transform={`rotate(${a} ${sun.x} ${sun.y})`} stroke="#ffb000" strokeWidth={3} strokeLinecap="round" />
+            ))}
+          </Sprite>
+          <Sprite box={[30, -18 + up, 60, 30]} className="us-cloud">
+            <Cloud x={60} y={-4 + up} fill="#fff" />
+          </Sprite>
+          {tab && (
+            <Sprite box={[150, -34, 54, 26]} className="us-cloud" style={{ animationDelay: '-11s' }}>
+              <Cloud x={176} y={-22} s={0.8} fill="#fff" opacity={0.85} />
+            </Sprite>
+          )}
+        </>
+      )}
+      {look === 'morning' && (
+        <>
+          <Sprite box={[150, -26 + up, 70, 30]} className="us-cloud">
+            <Cloud x={184} y={-12 + up} fill="#ffe3ef" opacity={0.9} />
+          </Sprite>
+          <Sprite box={[20, -36 + up, 300, 40]} className="us-birds">
+            {[[40, -20], [52, -26], [64, -18]].map(([x, y], i) => (
+              <path
+                key={i}
+                d={`M${x - 4},${y + up} Q${x - 2},${y - 3 + up} ${x},${y + up} Q${x + 2},${y - 3 + up} ${x + 4},${y + up}`}
+                fill="none"
+                stroke={INK}
+                strokeWidth={1.3}
+                strokeLinecap="round"
+              />
+            ))}
+          </Sprite>
+        </>
+      )}
+      {look === 'winter' && (
+        <>
+          <Falling className="us-snow" seed={1} count={30} draw={(x, y, i) => <circle cx={x} cy={y} r={i % 3 ? 1.7 : 2.5} fill="#fff" opacity={0.95} />} />
+          <Falling
+            className="us-snow"
+            seed={2}
+            count={22}
+            style={{ animationDuration: '14s', animationDelay: '-5s' }}
+            draw={(x, y) => <circle cx={x} cy={y} r={1.1} fill="#fff" opacity={0.8} />}
+          />
+        </>
+      )}
+      {look === 'rainy' && (
+        <>
+          {[[40, -26, 1], [150, -32, 1.2], [250, -22, 0.9]].map(([x, y, s], i) => (
+            <Sprite key={i} box={[x - 28 * s, y - 14 * s + up, 60 * s, 30 * s]} className="us-cloud" style={{ animationDelay: `${-i * 6}s` }}>
+              <Cloud x={x} y={y + up} s={s} fill={i % 2 ? '#8a99ab' : '#7d8c9f'} opacity={0.95} />
+            </Sprite>
+          ))}
+          <Falling
+            className="us-rain"
+            seed={3}
+            count={26}
+            draw={(x, y) => <path d={`M${x},${y} L${x - 2},${y + 8}`} stroke="#e4eef8" strokeWidth={1.3} strokeLinecap="round" opacity={0.85} />}
+          />
+          {[[86, 161], [98, 162], [226, 163], [240, 164]].map(([x, y], i) => (
+            <Sprite key={`r${i}`} box={[x - 7, y - 3, 14, 6]} className="us-ripple" style={{ animationDelay: `${i * 0.37}s` }}>
+              <ellipse cx={x} cy={y} rx={6} ry={1.8} fill="none" stroke="#e4eef8" strokeWidth={1} />
+            </Sprite>
+          ))}
+        </>
+      )}
+    </>
+  );
+};
+
 /** A small rain cloud, for a heavy weather day, its drops each a layer. */
 const RainCloud: React.FC<{ x: number; y: number }> = ({ x, y }) => (
   <>
@@ -309,19 +564,27 @@ interface Play {
 type Who = 'me' | 'them';
 const other = (who: Who): Who => (who === 'me' ? 'them' : 'me');
 
-/** A pillow in the air. Each of a run flies, lands and is heard on its own. */
+/** The plays thrown from where they stand, in runs: one more for every tap. */
+const THROWN: ReadonlySet<Act> = new Set<Act>(['pillow', 'balloon']);
+
+/** A pillow or a water balloon in the air. Each of a run flies, lands and is heard on its own. */
 interface Throw {
   n: number;
+  kind: 'pillow' | 'balloon';
   actor: Who;
   target: Who;
   d: 1 | -1;
   /** When it is let go, from the tap. */
   release: number;
   word: string;
+  /** Which of its run it is, from 1: with balloons, how wet they are by now. */
+  count: number;
+  /** How long it is kept, from the tap: longer for the wetter. */
+  life: number;
 }
 
 /** When a play's hit lands, from its start: what the bubble, the buzz and the sound wait for. */
-const hitAt = (p: Play) => (p.kind === 'pillow' ? (p.release ?? FIRST_RELEASE) + FLIGHT_MS : p.lead + SAY_AT[p.kind]);
+const hitAt = (p: Play) => (THROWN.has(p.kind) ? (p.release ?? FIRST_RELEASE) + FLIGHT_MS : p.lead + SAY_AT[p.kind]);
 
 /**
  * "Us two": a little live cartoon of the two of you - a bear for the one who
@@ -352,7 +615,9 @@ export const UsScene: React.FC<UsSceneProps> = ({
   onPlay,
   onSendHeart,
   onOpen,
-  party = null
+  party = null,
+  theme = 'auto',
+  onTheme
 }) => {
   const tr = useT();
   const [now, setNow] = useState(Date.now());
@@ -381,6 +646,10 @@ export const UsScene: React.FC<UsSceneProps> = ({
   }, []);
 
   const part = partOfDay(now);
+  // The sky: the time of day, unless the two of you picked one. Whether they
+  // are asleep goes by the real time of day all the same.
+  const look: Look = theme === 'auto' ? part : theme;
+  const [picking, setPicking] = useState(false);
   const asleep =
     !partnerOnline && (part === 'night' || (!!partnerLastSeen && now - partnerLastSeen > 10 * 60 * 60 * 1000));
 
@@ -420,7 +689,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const playRef = useRef<Play | null>(null);
   const playN = useRef(0);
   const [throws, setThrows] = useState<Throw[]>([]);
-  const lastThrow = useRef<{ at: number; release: number; target: Who; count: number } | null>(null);
+  const lastThrow = useRef<{ at: number; kind: Throw['kind']; release: number; target: Who; count: number } | null>(null);
   const start = (p: Omit<Play, 'n' | 'lead'>): Play => {
     const cur = playRef.current;
     let lead = 0;
@@ -432,27 +701,33 @@ export const UsScene: React.FC<UsSceneProps> = ({
       if (!there && Math.abs(apart - nearOf(p.kind, tall)) > 8) lead = WALK_MS;
     }
     const next: Play = { ...p, n: ++playN.current, lead };
-    // Pillows: a tap while the last ones are still flying throws another, a
-    // beat behind the one before, so a run comes out as a steady stream -
-    // one pillow for every tap.
-    if (p.kind === 'pillow' && !p.hush) {
+    // Pillows and water balloons: a tap while the last ones are still flying
+    // throws another, a beat behind the one before, so a run comes out as a
+    // steady stream - one for every tap. Each balloon of a run leaves them
+    // wetter, and they stay wet a little longer.
+    if (THROWN.has(p.kind) && !p.hush) {
+      const kind = p.kind as Throw['kind'];
       const t = performance.now();
       const prev = lastThrow.current;
-      const inRun = !!prev && prev.target === p.target && t - prev.at < VOLLEY_MS;
+      const inRun = !!prev && prev.kind === kind && prev.target === p.target && t - prev.at < VOLLEY_MS;
       next.release = inRun ? Math.max(QUICK_RELEASE, prev.at + prev.release + THROW_GAP - t) : FIRST_RELEASE;
       next.first = !inRun;
       next.combo = inRun ? prev.count + 1 : 1;
-      lastThrow.current = { at: t, release: next.release, target: p.target, count: next.combo };
+      lastThrow.current = { at: t, kind, release: next.release, target: p.target, count: next.combo };
+      const words = kind === 'balloon' ? SPLASHES : BONKS;
       const flying: Throw = {
         n: next.n,
+        kind,
         actor: other(p.target),
         target: p.target,
         d: dirTo(p.target),
         release: next.release,
-        word: BONKS[(next.combo - 1) % BONKS.length]
+        word: words[(next.combo - 1) % words.length],
+        count: next.combo,
+        life: next.release + FLIGHT_MS + (kind === 'balloon' ? 1_600 + Math.min(next.combo, 4) * 450 : 1_300)
       };
       setThrows(list => [...list, flying]);
-      setTimeout(() => setThrows(list => list.filter(f => f.n !== flying.n)), next.release + FLIGHT_MS + 1_300);
+      setTimeout(() => setThrows(list => list.filter(f => f.n !== flying.n)), flying.life);
     }
     playRef.current = next;
     setPlay(next);
@@ -599,11 +874,18 @@ export const UsScene: React.FC<UsSceneProps> = ({
       case 'highfive':
         hear('us-highfive', L + 420);
         break;
-      case 'balloon':
-        hear('us-whoosh', FIRST_RELEASE);
-        // The splash, and the shake 0.49 s after it.
-        hear('us-splash', FIRST_RELEASE + FLIGHT_MS);
+      case 'balloon': {
+        // Each splash a little higher than the last of its run. After the
+        // last one only (a newer balloon clears these): the shake, as it
+        // starts (usMoves, balloonMoves) - and, soaked, the drips after it.
+        const release = p.release ?? FIRST_RELEASE;
+        const hit = release + FLIGHT_MS;
+        hear('us-whoosh', release);
+        hear('us-splash', hit, 1 + Math.min(p.combo - 1, 4) * 0.05);
+        timers.push(setTimeout(() => hear('us-shake', 0, 1 - Math.min(p.combo - 1, 3) * 0.04), hit + 490));
+        if (p.combo >= 3) timers.push(setTimeout(() => hear('us-drip', 0), hit + 1_250));
         break;
+      }
       case 'tease':
         // The raspberry, and the "hmph" 0.6 s in.
         hear('us-tease', 100);
@@ -612,8 +894,9 @@ export const UsScene: React.FC<UsSceneProps> = ({
         hear(DANCE_TUNES[(p.variant ?? 0) % DANCE_TUNES.length], L);
         break;
       case 'tuck':
-        // A yawn, the blanket laid down 0.65 s in, then the lullaby.
-        hear('us-tuck', L + 250);
+        // From the bed's poof, step by step with the moves (usMoves, TUCK): the yawn, the
+        // boing on the mattress, the sheet's swing and settle, two pats, the lullaby, the poof away.
+        hear('us-tuck', L);
         break;
       case 'giggle':
         hear('us-hehe', 120);
@@ -631,8 +914,8 @@ export const UsScene: React.FC<UsSceneProps> = ({
         if (i > 0) timers.push(setTimeout(() => setBeat(i), p.lead + phase.at + (hitAt(p) - p.lead - SAY_AT[p.kind])));
       });
     }
-    // A pillow leaves the ones still flying alone: each lands on its own.
-    if (p.kind !== 'pillow') {
+    // A pillow or balloon leaves the ones still flying alone: each lands on its own.
+    if (!THROWN.has(p.kind)) {
       running.current.forEach(a => a.cancel());
       running.current = [];
     }
@@ -641,15 +924,18 @@ export const UsScene: React.FC<UsSceneProps> = ({
       const target = rigOf(p.target).current;
       // A cheek is pulled out from the far side of the face; cheeks puff (chewing, in a huff) from the middle.
       if (target.stretch) target.stretch.style.transformOrigin = p.kind === 'pinch' ? at(d * 30, 4) : at(0, 8);
+      const release = p.release ?? FIRST_RELEASE;
       const moves =
         p.kind === 'pillow'
-          ? pillowMoves(d, p.release ?? FIRST_RELEASE, p.first !== false)
-          : movesFor(p.kind, d, p.lead, p.combo, { variant: p.variant, tall: kindOf(actorOf(p)) === 'bear' });
+          ? pillowMoves(d, release, p.first !== false)
+          : p.kind === 'balloon'
+            ? balloonMoves(d, release, p.first !== false, p.combo)
+            : movesFor(p.kind, d, p.lead, p.combo, { variant: p.variant, tall: kindOf(actorOf(p)) === 'bear' });
       const started = perform(moves, {
         actor: p.kind === 'giggle' ? undefined : rigOf(actorOf(p)).current,
         target
       });
-      if (p.kind === 'pillow') volley.current = [...volley.current.filter(a => a.playState !== 'finished'), ...started];
+      if (THROWN.has(p.kind)) volley.current = [...volley.current.filter(a => a.playState !== 'finished'), ...started];
       else running.current = started;
     }
     soundsFor(p, timers);
@@ -725,7 +1011,12 @@ export const UsScene: React.FC<UsSceneProps> = ({
     return 'smile';
   };
   const moodFor = (who: Who): Mood =>
-    play && play.kind === 'pillow' && play.combo > 1 && who === play.target && beat === 0 ? 'shock' : moodOf(who);
+    play && THROWN.has(play.kind) && play.combo > 1 && who === play.target && beat === 0
+      ? 'shock'
+      : // Soaked through by a run of balloons: a sad, wet face at the end.
+        play && play.kind === 'balloon' && play.combo >= 3 && who === play.target && beat >= 3
+        ? 'puppy'
+        : moodOf(who);
   const armsOf = (who: Who): RigArms => (hugging ? 'up' : who === 'them' && partnerTyping ? 'hold' : 'down');
   const acting = (who: Who) => !!play && !play.hush && play.kind !== 'giggle' && actorOf(play) === who;
 
@@ -733,6 +1024,41 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const palmsAt = (p: Play): [number, number] => {
     const actor = actorOf(p);
     return [(xAt(actor) + homeX(p.target)) / 2, Math.min(HEADS[kindOf(actor)].y, HEADS[kindOf(p.target)].y) - 38];
+  };
+
+  /**
+   * The bed for tucking them in, on the stage, seen from its foot: round
+   * where they stand - its headboard and pillow behind their head, the
+   * footboard in front of their feet, the sheet up to their chin.
+   */
+  const bedOf = (p: Play) => {
+    const th = HEADS[kindOf(p.target)];
+    const floor = th.y + FEET * th.s;
+    // Their head, settled down into the bed a little (usMoves, tuckMoves: 4% of the box).
+    const head = th.y + 0.04 * BOX.h * th.s;
+    return { tx: homeX(p.target), d: dirTo(p.target), floor, head, chin: head + 22 };
+  };
+
+  /** What a play puts behind them: the bed's headboard and pillow, popping up and away again. */
+  const backdrop = (p: Play): React.ReactNode => {
+    if (p.hush || p.kind !== 'tuck' || !motionOk()) return null;
+    const { tx, floor, head } = bedOf(p);
+    const top = head - 22;
+    return (
+      <Sprite key={`bed${p.n}`} box={[tx - 46, top - 4, 92, floor - top + 6]} className="fx-bed" style={{ animationDelay: `${p.lead}ms` }}>
+        <path
+          d={`M${tx - 40},${floor} L${tx - 40},${top + 12} Q${tx - 40},${top} ${tx - 26},${top} L${tx + 26},${top} Q${tx + 40},${top} ${tx + 40},${top + 12} L${tx + 40},${floor} Z`}
+          fill="#c98b5b"
+          stroke={INK}
+          strokeWidth={2}
+          strokeLinejoin="round"
+        />
+        <path d={`M${tx - 32},${top + 8} L${tx + 32},${top + 8}`} stroke="#b07548" strokeWidth={2} strokeLinecap="round" />
+        <Heart x={tx} y={top + 5} s={0.3} />
+        <ellipse cx={tx} cy={head + 8} rx={30} ry={12} fill="#fff" stroke={INK} strokeWidth={2} />
+        <path d={`M${tx - 20},${head + 9} Q${tx},${head + 14} ${tx + 20},${head + 9}`} fill="none" stroke="#d6cdee" strokeWidth={1.6} strokeLinecap="round" />
+      </Sprite>
+    );
   };
 
   /** What the one a play is done to holds or wears for it: a palm raised back, a flower taken, a blanket. */
@@ -788,12 +1114,6 @@ export const UsScene: React.FC<UsSceneProps> = ({
         return (
           <RigProp key={key} origin={[-d * 34, 22]} ms={1340} delay={L + 960}>
             <Flower x={-d * 34} y={6} s={0.6} rot={-10 * d} />
-          </RigProp>
-        );
-      case 'tuck':
-        return (
-          <RigProp key={key} className="rig-blanket" origin={[0, 66]} ms={2800} delay={L}>
-            <Blanket />
           </RigProp>
         );
       default:
@@ -947,8 +1267,28 @@ export const UsScene: React.FC<UsSceneProps> = ({
         );
       case 'highfive':
         return <ReachArm key={key} kind={ak} d={d} from={near} to={local(...palmsAt(p))} move="rig-high5" ms={1600} delay={L} bow={6} />;
-      case 'balloon':
-        return <HeldBalloon key={key} d={d} ms={FIRST_RELEASE / 0.8} />;
+      case 'tuck':
+        return (
+          <React.Fragment key={key}>
+            {/* The sheet, folded, held up over your head - until it is swung over them (fx-sheet). */}
+            <RigProp origin={[0, -60]} ms={820} delay={L + 300}>
+              <FoldedSheet />
+            </RigProp>
+            {/* Patting the sheet in at their side. */}
+            <ReachArm
+              kind={ak}
+              d={d}
+              from={near}
+              to={local(tx - d * 30, bedOf(p).chin + 16)}
+              move="rig-hold-out"
+              ms={900}
+              delay={L + 1550}
+              wiggle="rig-pat"
+              wiggleDelay={L + 1550}
+              bow={10}
+            />
+          </React.Fragment>
+        );
       default:
         return null;
     }
@@ -1205,68 +1545,6 @@ export const UsScene: React.FC<UsSceneProps> = ({
           </React.Fragment>
         );
       }
-      case 'balloon': {
-        // Lobbed over in an arc like a pillow, bursting on their head, the
-        // water flying off - and flung off again as they shake.
-        const sx = homeX(actorOf(p));
-        const sy = ah.y - 44 * ah.s;
-        const ey = ty(jt.top + 6);
-        const peak = Math.min(sy, ey) - 34;
-        const go = `${FIRST_RELEASE}ms`;
-        const hit = FIRST_RELEASE + FLIGHT_MS;
-        return (
-          <React.Fragment key={`fx${p.n}`}>
-            <Sprite
-              box={[tx - 14, ey - 16, 28, 32]}
-              wraps={[
-                { className: 'fx-fly-x', style: { ['--fx' as string]: `${((sx - tx) / 28) * 100}%`, animationDelay: go } },
-                {
-                  className: 'fx-fly-y',
-                  style: { ['--fy' as string]: `${((sy - ey) / 32) * 100}%`, ['--fpk' as string]: `${((peak - ey) / 32) * 100}%`, animationDelay: go }
-                },
-                { className: 'fx-spin', style: { ['--d' as string]: d, animationDelay: go } }
-              ]}
-            >
-              <WaterBalloon x={tx} y={ey} s={ah.s * 1.1} />
-            </Sprite>
-            <Sprite box={[tx - 18, ey - 18, 36, 36]} className="fx-pop" style={{ animationDelay: `${hit}ms` }}>
-              <path d={burst(tx, ey, 17)} fill="#9ad8ff" stroke={INK} strokeWidth={2} strokeLinejoin="round" />
-            </Sprite>
-            <span
-              className="fx-word"
-              data-tone="water"
-              style={{ left: pct(tx - d * 2, W), top: pct(ey - 18, H), animationDelay: `${hit}ms`, ['--hr' as string]: d * 8 } as React.CSSProperties}
-            >
-              splash!
-            </span>
-            {[-2, -1, 0, 1, 2, 3].map((spread, i) => (
-              <Sprite
-                key={i}
-                box={[tx - 4, ey - 5, 8, 10]}
-                className="fx-splash"
-                style={css({ '--fx': `${spread * 120 - 60}%`, '--fy': `${-(120 + (i % 3) * 50)}%` }, hit + i * 20)}
-              >
-                <Drop x={tx} y={ey} s={0.5} />
-              </Sprite>
-            ))}
-            {[0, 1, 2, 3].map(i => {
-              const side = i % 2 ? 1 : -1;
-              const dx = tx + side * 18 * th.s;
-              const dy = ty(jt.eyes[1]);
-              return (
-                <Sprite
-                  key={`s${i}`}
-                  box={[dx - 4, dy - 5, 8, 10]}
-                  className="fx-splash"
-                  style={css({ '--fx': `${side * (220 + i * 30)}%`, '--fy': `${-(40 + i * 20)}%` }, hit + 490 + i * 60)}
-                >
-                  <Drop x={dx} y={dy} s={0.4} />
-                </Sprite>
-              );
-            })}
-          </React.Fragment>
-        );
-      }
       case 'tease': {
         // Pbbbt - and a cross little vein on them.
         const mx = ax + d * 4 * ah.s;
@@ -1327,33 +1605,244 @@ export const UsScene: React.FC<UsSceneProps> = ({
               )}
           </React.Fragment>
         );
-      case 'tuck':
+      case 'tuck': {
+        // The headboard and pillow are behind them (backdrop). In front: the
+        // footboard, and the sheet - held up over your head, swung across,
+        // settling up to their chin at TUCK.sheetLands. Then sleep: Zzz from
+        // the pillow, a moon and stars over the bed.
+        const { floor, head, chin } = bedOf(p);
+        const heldY = ah.y - 60 * ah.s;
+        const box: [number, number, number, number] = [tx - 46, chin - 10, 92, floor - chin + 20];
+        const middle = (chin + floor) / 2;
+        const moonX = tx + d * 36;
+        const moonY = head - 52;
+        const puff = (x: number, key: string, ms: number) => (
+          <Sprite key={key} box={[x - 11, floor - 16, 22, 16]} className="fx-pop" style={{ zIndex: 4, ...wait(ms) }}>
+            <g fill="#fff" stroke={INK} strokeWidth={1.4}>
+              <circle cx={x - 5} cy={floor - 6} r={4.5} />
+              <circle cx={x + 5} cy={floor - 6} r={4} />
+              <circle cx={x} cy={floor - 9} r={5} />
+            </g>
+          </Sprite>
+        );
         return (
           <React.Fragment key={`fx${p.n}`}>
-            {[0, 1].map(i => {
-              const sx = tx + (i ? 1 : -1) * 26 * th.s;
-              const sy = ty(jt.tummy - 14);
-              return (
-                <Sprite key={`s${i}`} box={[sx - 5, sy - 5, 10, 10]} className="fx-pop" style={wait(950 + i * 120)}>
-                  <Sparkle x={sx} y={sy} s={0.4} />
-                </Sprite>
-              );
-            })}
-            {[0, 1].map(i => (
+            {[-40, 0, 40].map((dx, i) => puff(tx + dx, `in${i}`, 20 + i * 40))}
+            {[-40, 0, 40].map((dx, i) => puff(tx + dx, `out${i}`, TUCK.wakes + 130 + i * 40))}
+            {/* The foot of the bed, in front of them: two posts and a low board, the sheet over it. */}
+            <Sprite box={[tx - 50, floor - 22, 100, 34]} className="fx-bed" style={{ zIndex: 3, animationDelay: `${L}ms` }}>
+              <g fill="#c98b5b" stroke={INK} strokeWidth={2} strokeLinejoin="round">
+                <rect x={tx - 44} y={floor - 8} width={88} height={18} rx={3} />
+                {[-1, 1].map(side => (
+                  <path
+                    key={side}
+                    d={`M${tx + side * 42},${floor + 10} L${tx + side * 42},${floor - 16} Q${tx + side * 45},${floor - 20} ${tx + side * 48},${floor - 16} L${tx + side * 48},${floor + 10} Z`}
+                  />
+                ))}
+              </g>
+            </Sprite>
+            <Sprite
+              box={box}
+              className="fx-sheet"
+              style={
+                {
+                  zIndex: 3,
+                  animationDelay: `${L + 1100}ms`,
+                  '--sx': `${((ax - tx) / box[2]) * 100}%`,
+                  '--sy': `${((heldY - middle) / box[3]) * 100}%`,
+                  '--d': d
+                } as React.CSSProperties
+              }
+            >
+              {/* Draped from their chin down over the foot of the bed, a wavy hem at the bottom. */}
+              <path
+                d={`M${tx - 42},${chin + 4} Q${tx - 42},${chin - 3} ${tx - 30},${chin - 3} Q${tx},${chin - 7} ${tx + 30},${chin - 3} Q${tx + 42},${chin - 3} ${tx + 42},${chin + 4} L${tx + 41},${floor + 3} Q${tx + 31},${floor + 7} ${tx + 21},${floor + 3} Q${tx + 10},${floor + 7} ${tx},${floor + 3} Q${tx - 10},${floor + 7} ${tx - 21},${floor + 3} Q${tx - 31},${floor + 7} ${tx - 41},${floor + 3} Z`}
+                fill="#b8a6ff"
+                stroke={INK}
+                strokeWidth={2.4}
+                strokeLinejoin="round"
+              />
+              {/* Its edge folded back under their chin. */}
+              <path
+                d={`M${tx - 41},${chin + 5} Q${tx - 41},${chin - 2} ${tx - 30},${chin - 2} Q${tx},${chin - 6} ${tx + 30},${chin - 2} Q${tx + 41},${chin - 2} ${tx + 41},${chin + 5} Q${tx},${chin + 2} ${tx - 41},${chin + 5} Z`}
+                fill="#e6defe"
+                stroke={INK}
+                strokeWidth={1.6}
+                strokeLinejoin="round"
+              />
+              {[
+                [tx - 26, middle - 2],
+                [tx - 6, middle + 6],
+                [tx + 16, middle - 4],
+                [tx + 30, middle + 8],
+                [tx - 32, floor - 4]
+              ].map(([x, y], i) => (
+                <Sparkle key={i} x={x} y={y} s={0.3} fill="#fff6c2" />
+              ))}
+            </Sprite>
+            {[-20, 20].map((dx, i) => (
+              <Sprite key={`l${i}`} box={[tx + dx - 6, chin - 14, 12, 12]} className="fx-pop" style={{ zIndex: 4, ...wait(TUCK.sheetLands + i * 90) }}>
+                <Sparkle x={tx + dx} y={chin - 8} s={0.45} />
+              </Sprite>
+            ))}
+            {[0, 1, 2].map(i => (
               <Sprite
-                key={i}
-                box={[tx + 10, ty(jt.top) - 30, 36, 26]}
+                key={`z${i}`}
+                box={[tx + d * 12 - 2, head - 46, 38, 34]}
                 className="fx-rise"
-                style={css({ '--rx': '30%', animationDuration: '1800ms' }, 1300 + i * 800)}
+                style={css({ zIndex: 4, '--rx': '30%', animationDuration: '1800ms' }, 2_000 + i * 800)}
               >
-                <Zzz x={tx + 12} y={ty(jt.top) - 6} />
+                <Zzz x={tx + d * 12} y={head - 16} />
+              </Sprite>
+            ))}
+            <Sprite box={[moonX - 12, moonY - 12, 24, 24]} className="fx-linger" style={wait(1650)}>
+              <path
+                d={`M${moonX - 2},${moonY - 10} A10,10 0 1 0 ${moonX + 8},${moonY + 4} A8,8 0 1 1 ${moonX - 2},${moonY - 10} Z`}
+                fill="#ffe58a"
+                stroke={INK}
+                strokeWidth={1.6}
+              />
+            </Sprite>
+            {[
+              [moonX - d * 22, moonY - 4],
+              [moonX + d * 16, moonY + 10],
+              [moonX - d * 6, moonY - 18]
+            ].map(([x, y], i) => (
+              <Sprite
+                key={`st${i}`}
+                box={[x - 5, y - 5, 10, 10]}
+                className="fx-linger"
+                style={wait(1750 + i * 120)}
+                wraps={[{ className: 'us-twinkle', style: { animationDelay: `${-i * 0.7}s` } }]}
+              >
+                <Sparkle x={x} y={y} s={0.36} />
               </Sprite>
             ))}
           </React.Fragment>
         );
+      }
       default:
         return null;
     }
+  };
+
+  /** Spots water drips off them (their own units from the middle of the head), wettest last: cheeks, chin, arms. */
+  const DRIP_SPOTS: [number, number][] = [
+    [-24, 6],
+    [24, 8],
+    [0, 30],
+    [-28, 42],
+    [28, 44]
+  ];
+
+  /**
+   * A water balloon's flight across in an arc and its burst on their head -
+   * and, after the last of a run, how wet they are: drips off them, a puddle
+   * at their feet that grows with each balloon, water running down them once
+   * soaked, and the water flung off both sides as they shake.
+   */
+  const balloonFx = (t: Throw, last: boolean): React.ReactNode => {
+    if (!motionOk()) return null;
+    const d = t.d;
+    const tk = kindOf(t.target);
+    const th = HEADS[tk];
+    const jt = JOINTS[tk];
+    const tx = homeX(t.target);
+    const ah = HEADS[kindOf(t.actor)];
+    const ty = (u: number) => th.y + u * th.s;
+    const sx = homeX(t.actor);
+    const sy = ah.y - 44 * ah.s;
+    const ey = ty(jt.top + 6);
+    const peak = Math.min(sy, ey) - 34;
+    const go = `${t.release}ms`;
+    const hit = t.release + FLIGHT_MS;
+    const wet = Math.min(t.count, 4);
+    const floor = th.y + FEET * th.s;
+    const later = (ms: number, more: React.CSSProperties = {}): React.CSSProperties => ({ animationDelay: `${ms}ms`, ...more });
+    const css = (vars: Record<string, string | number>, ms: number): React.CSSProperties =>
+      ({ ...vars, animationDelay: `${ms}ms` }) as React.CSSProperties;
+    return (
+      <React.Fragment key={`t${t.n}`}>
+        <Sprite
+          box={[tx - 14, ey - 16, 28, 32]}
+          wraps={[
+            { className: 'fx-fly-x', style: { ['--fx' as string]: `${((sx - tx) / 28) * 100}%`, animationDelay: go } },
+            {
+              className: 'fx-fly-y',
+              style: { ['--fy' as string]: `${((sy - ey) / 32) * 100}%`, ['--fpk' as string]: `${((peak - ey) / 32) * 100}%`, animationDelay: go }
+            },
+            { className: 'fx-spin', style: { ['--d' as string]: d, animationDelay: go } }
+          ]}
+        >
+          <WaterBalloon x={tx} y={ey} s={ah.s * 1.1} />
+        </Sprite>
+        <Sprite box={[tx - 22, ey - 22, 44, 44]} className="fx-pop" style={later(hit)}>
+          <path d={burst(tx, ey, 15 + wet * 1.5)} fill="#9ad8ff" stroke={INK} strokeWidth={2} strokeLinejoin="round" />
+        </Sprite>
+        <span
+          className="fx-word"
+          data-tone="water"
+          style={{ left: pct(tx - d * 2, W), top: pct(ey - 18, H), animationDelay: `${hit}ms`, ['--hr' as string]: d * 8 } as React.CSSProperties}
+        >
+          {t.word}
+        </span>
+        {Array.from({ length: 6 + wet }, (_, i) => (
+          <Sprite
+            key={`b${i}`}
+            box={[tx - 4, ey - 5, 8, 10]}
+            className="fx-splash"
+            style={css({ '--fx': `${(i - (5 + wet) / 2) * 110}%`, '--fy': `${-(120 + (i % 3) * 50)}%` }, hit + i * 18)}
+          >
+            <Drop x={tx} y={ey} s={0.5} />
+          </Sprite>
+        ))}
+        {last && (
+          <>
+            {DRIP_SPOTS.slice(0, wet + 1).map(([u, v], i) => (
+              <Sprite key={`d${i}`} box={[tx + u * th.s - 4, ty(v) - 3, 8, 10]} className="us-drip" style={later(hit + 250 + i * 170, { zIndex: 4 })}>
+                <Drop x={tx + u * th.s} y={ty(v) + 2} s={0.4} />
+              </Sprite>
+            ))}
+            {wet >= 2 && (
+              <Sprite
+                box={[tx - 46, floor - 8, 92, 14]}
+                className="fx-puddle"
+                style={later(hit + 150, { animationDuration: `${Math.max(600, t.life - hit - 150)}ms` })}
+              >
+                <ellipse cx={tx} cy={floor} rx={10 + 8 * wet} ry={2.5 + wet} fill="#8fd6ff" opacity={0.65} />
+                <ellipse cx={tx - 4} cy={floor - 0.6} rx={5 + 4 * wet} ry={1 + 0.4 * wet} fill="#fff" opacity={0.5} />
+              </Sprite>
+            )}
+            {wet >= 3 &&
+              [-1, 0, 1].map(i => (
+                <Sprite
+                  key={`r${i}`}
+                  box={[tx + i * 12 * th.s - 3, ty(jt.tummy - 18) - 4, 6, 8]}
+                  className="fx-run"
+                  style={later(hit + 300 + (i + 1) * 220, { zIndex: 4 })}
+                >
+                  <Drop x={tx + i * 12 * th.s} y={ty(jt.tummy - 18)} s={0.3} />
+                </Sprite>
+              ))}
+            {Array.from({ length: 4 + 2 * wet }, (_, i) => {
+              const side = i % 2 ? 1 : -1;
+              const dx = tx + side * 18 * th.s;
+              const dy = ty(jt.eyes[1] + (i % 3) * 8);
+              return (
+                <Sprite
+                  key={`s${i}`}
+                  box={[dx - 4, dy - 5, 8, 10]}
+                  className="fx-splash"
+                  style={css({ '--fx': `${side * (220 + i * 25)}%`, '--fy': `${-(40 + (i % 4) * 20)}%` }, hit + 490 + i * 45)}
+                >
+                  <Drop x={dx} y={dy} s={0.4} />
+                </Sprite>
+              );
+            })}
+          </>
+        )}
+      </React.Fragment>
+    );
   };
 
   /** A pillow's flight across in an arc, its landing, its feathers - and stars after the last of a run. */
@@ -1476,7 +1965,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const bubbleFor = (p: Play) => {
     if (p.hush) return tr('Shh… {name} is sleeping 😴', { name: partnerName });
     if (p.kind === 'boop' && p.combo >= 2) return tr('Boop ×{n}!', { n: p.combo });
-    if (p.kind === 'pillow' && p.combo >= 2) return `${SAYS.pillow} ×${p.combo}`;
+    if (THROWN.has(p.kind) && p.combo >= 2) return `${tr(SAYS[p.kind])} ×${p.combo}`;
     return tr(SAYS[p.kind]);
   };
   const leader = score.user === score.partner ? null : score.user > score.partner ? 'user' : 'partner';
@@ -1518,10 +2007,14 @@ export const UsScene: React.FC<UsSceneProps> = ({
           {throws
             .filter(t => t.actor === who)
             .map(t => (
-              <HeldPillow key={t.n} d={t.d} ms={t.release / 0.8} />
+              t.kind === 'balloon' ? (
+                <HeldBalloon key={t.n} d={t.d} ms={t.release / 0.8} />
+              ) : (
+                <HeldPillow key={t.n} d={t.d} ms={t.release / 0.8} />
+              )
             ))}
         </Rig>
-        <span className="us-name" data-night={part === 'night' || undefined}>
+        <span className="us-name" data-night={look === 'night' || undefined}>
           {who === 'me' ? tr('You') : partnerName.length > 12 ? partnerName.slice(0, 11) + '…' : partnerName}
         </span>
         {size === 'tab' &&
@@ -1545,71 +2038,12 @@ export const UsScene: React.FC<UsSceneProps> = ({
       ref={sceneRef}
       className="us-scene rounded-2xl"
       data-size={size}
-      data-part={part}
+      data-look={look}
       data-live={live || undefined}
     >
       <div className="us-stage" role="img" aria-label={tr('You and {name}', { name: partnerName })}>
-        {/* What never moves, drawn once: the sun or moon, the hill. */}
-        <svg viewBox={`0 0 ${W} ${H}`} className="us-ground" overflow="visible" aria-hidden="true" focusable="false">
-          {part === 'night' ? (
-            <path
-              d={size === 'tab' ? 'M262,-30 A16,16 0 1 0 276,-8 A12,12 0 1 1 262,-30 Z' : 'M286,18 A16,16 0 1 0 300,40 A12,12 0 1 1 286,18 Z'}
-              fill="#ffe58a"
-              stroke={INK}
-              strokeWidth={2}
-            />
-          ) : (
-            <circle
-              cx={size === 'tab' ? 258 : 284}
-              cy={size === 'tab' ? -14 : 30}
-              r={part === 'evening' ? 15 : 13}
-              fill={part === 'evening' ? '#ff8a5c' : '#ffd23f'}
-              stroke={INK}
-              strokeWidth={2}
-            />
-          )}
-          <path
-            d="M-60,170 L-60,142 C10,118 110,126 160,128 C220,130 300,116 380,138 L380,170 Z"
-            fill={part === 'night' ? '#2c4a3a' : part === 'evening' ? '#9bc47a' : '#8fd47e'}
-          />
-          <path
-            d="M-60,170 L-60,160 C40,150 120,156 160,155 C230,154 300,150 380,158 L380,170 Z"
-            fill={part === 'night' ? '#253f31' : part === 'evening' ? '#8db76d' : '#7fc96f'}
-          />
-        </svg>
-
-        {/* Everything that moves, each in its own layer. */}
-        {part === 'night' ? (
-          <>
-            <Sprite box={[0, -36, W, 96]} className="us-twinkle">
-              {[[24, 22], [96, 18], [230, 20], [300, 28], [70, -20], [196, -26]].map(([cx, cy], i) => (
-                <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" />
-              ))}
-            </Sprite>
-            <Sprite box={[0, -36, W, 96]} className="us-twinkle" style={{ animationDelay: '1.3s' }}>
-              {[[60, 46], [262, 52], [140, 40], [118, -10], [228, -4]].map(([cx, cy], i) => (
-                <circle key={i} cx={cx} cy={cy} r={1.6} fill="#fff" />
-              ))}
-            </Sprite>
-          </>
-        ) : (
-          <>
-            <Sprite box={[38, 14, 50, 26]} className="us-cloud">
-              <g fill="#fff" opacity={0.92}>
-                <ellipse cx={60} cy={30} rx={20} ry={8} />
-                <ellipse cx={72} cy={24} rx={12} ry={8} />
-              </g>
-            </Sprite>
-            {size === 'tab' && (
-              <Sprite box={[176, -30, 44, 22]} className="us-cloud" style={{ animationDelay: '-9s' }}>
-                <g fill="#fff" opacity={0.85}>
-                  <ellipse cx={196} cy={-14} rx={18} ry={7} />
-                  <ellipse cx={206} cy={-19} rx={10} ry={7} />
-                </g>
-              </Sprite>
-            )}
-          </>
-        )}
+        {/* The sky and the hills: drawn once, with what moves in them on layers of their own. */}
+        <Sky look={look} size={size} />
 
         {partyWho &&
           (() => {
@@ -1726,10 +2160,11 @@ export const UsScene: React.FC<UsSceneProps> = ({
           </Sprite>
         )}
 
+        {play && backdrop(play)}
         {character('them')}
         {character('me')}
         {play && effects(play)}
-        {throws.map((t, i) => pillowFx(t, i === throws.length - 1))}
+        {throws.map((t, i) => (t.kind === 'balloon' ? balloonFx(t, i === throws.length - 1) : pillowFx(t, i === throws.length - 1)))}
 
         {/* Last week's champion holds the trophy, on the grass beside them. */}
         {trophy &&
@@ -1770,6 +2205,45 @@ export const UsScene: React.FC<UsSceneProps> = ({
         >
           {soundOn ? <Volume2 className="h-4 w-4" aria-hidden="true" /> : <VolumeX className="h-4 w-4" aria-hidden="true" />}
         </button>
+      )}
+      {/* The sky: picked here, the same on both phones. */}
+      {size === 'tab' && onTheme && (
+        <>
+          <button
+            type="button"
+            className="us-sound us-theme"
+            aria-expanded={picking}
+            aria-label={tr('Background')}
+            onClick={() => {
+              haptic('tick');
+              setPicking(open => !open);
+            }}
+          >
+            <Palette className="h-4 w-4" aria-hidden="true" />
+          </button>
+          {picking && (
+            <div className="us-theme-menu" role="radiogroup" aria-label={tr('Background')}>
+              {THEME_CHOICES.map(choice => (
+                <button
+                  key={choice.theme}
+                  type="button"
+                  role="radio"
+                  aria-checked={theme === choice.theme}
+                  className="us-theme-chip"
+                  data-on={theme === choice.theme || undefined}
+                  onClick={() => {
+                    haptic('tick');
+                    setPicking(false);
+                    if (choice.theme !== theme) onTheme(choice.theme);
+                  }}
+                >
+                  <span aria-hidden="true">{choice.emoji}</span>
+                  {tr(choice.label)}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import {
   boopsFor,
   champion,
   chatDay,
+  cleanTheme,
   funnyNumbers,
   goodMorning,
   lastWordLastNight,
@@ -170,5 +171,13 @@ describe('the boop battle', () => {
   it('starts weeks on Monday', () => {
     expect(weekOf('2026-11-08')).toBe('2026-11-02');
     expect(weekOf('2026-11-09')).toBe('2026-11-09');
+  });
+});
+
+describe('the sky you picked', () => {
+  it('takes only the themes there are, else follows the time of day', () => {
+    expect(cleanTheme('winter')).toBe('winter');
+    expect(cleanTheme('lava')).toBe('auto');
+    expect(cleanTheme(undefined)).toBe('auto');
   });
 });

@@ -935,6 +935,12 @@ export const TA: Readonly<Record<string, string>> = {
   'Boop, tickle and pillow-fight each other': 'ஒருவரை ஒருவர் பூப், கிச்சுகிச்சு, தலையணை சண்டை',
   'Sounds on': 'ஒலி இயக்கத்தில்',
   'Sounds off': 'ஒலி அணைக்கப்பட்டது',
+  Background: 'பின்னணி',
+  Auto: 'தானியங்கி',
+  Winter: 'குளிர்காலம்',
+  Rainy: 'மழை',
+  Morning: 'காலை',
+  Night: 'இரவு',
 
   // A surprise (components/SurprisePlanner, SurpriseReveal) and a birthday in Us two.
   'A surprise': 'ஒரு ஆச்சரியம்',

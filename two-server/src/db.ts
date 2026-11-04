@@ -63,7 +63,9 @@ export const LATEST_ONLY_TYPES = new Set([
   // it has all of it, and has opened it.
   'SURPRISE',
   'SURPRISE_READY',
-  'SURPRISE_SEEN'
+  'SURPRISE_SEEN',
+  // The sky picked for "Us two": only the newest pick matters.
+  'US_THEME'
 ]);
 
 /**
