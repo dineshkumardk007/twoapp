@@ -12,6 +12,7 @@
 import type { ChatMessage, ChatPin, ChatReplyRef } from '../types';
 import type { VoiceFields } from './voice';
 import type { HdInfo } from './hdPhoto';
+import type { FileInfo } from './files';
 import { isWaiting } from './sendLater';
 
 export const CHAT_EDIT = 'CHAT_EDIT';
@@ -145,7 +146,7 @@ export function cleanReplyRef(raw: unknown): ChatReplyRef | undefined {
  * be view-once), the message it answers, or when it is to show (core/sendLater).
  */
 export type MessageExtras = Partial<VoiceFields> &
-  Partial<PhotoFields> & { replyTo?: ChatReplyRef; viewOnce?: true; showAt?: number; sticker?: string; photoHd?: HdInfo };
+  Partial<PhotoFields> & { replyTo?: ChatReplyRef; viewOnce?: true; showAt?: number; sticker?: string; photoHd?: HdInfo; file?: FileInfo };
 
 export interface PhotoFields {
   isPhoto: true;

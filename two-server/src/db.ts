@@ -10,6 +10,7 @@
 // key material and cannot read any of it.
 
 import { Pool } from 'pg';
+import type { StoredPiece } from './files.js';
 
 /**
  * A record that says only "this device was here just now".
@@ -96,7 +97,10 @@ export const CAPPED_TYPES = new Map<string, number>([
   ['GROUP_PHOTO_PART', 40],
   // A surprise's photos and voice note, each its own record: six photos and
   // a voice note, and a few more for one saved again with new ones.
-  ['SURPRISE_PART', 24]
+  ['SURPRISE_PART', 24],
+  // A file in the chat is in the files bucket (files.ts); this says only
+  // that all of it has been put there. The newest few hundred are plenty.
+  ['CHAT_FILE_READY', 300]
 ]);
 
 /**
@@ -187,6 +191,11 @@ export interface RelayDb {
    */
   ping(): Promise<boolean>;
   trimCappedTypes(): Promise<number>;
+  /**
+   * The pieces in a Supabase Storage bucket (files.ts), from the list
+   * Supabase keeps of them in this same database: none without one.
+   */
+  storedPieces(bucket: string): Promise<StoredPiece[]>;
   /**
    * Marks the reader's partner's chat messages as having reached the reader.
    *
@@ -311,6 +320,10 @@ class InMemoryRelayDb implements RelayDb {
       .slice(0, limit)
       .reverse()
       .map(r => ({ id: r.id, at: r.reachedAt as number }));
+  }
+
+  async storedPieces(): Promise<StoredPiece[]> {
+    return [];
   }
 
   async trimCappedTypes() {
@@ -596,6 +609,16 @@ class PostgresRelayDb implements RelayDb {
    * Ordered by seq, which is this server's own insertion order - the one
    * number here that cannot be late or wrong, unlike a clock a client chose.
    */
+  async storedPieces(bucket: string): Promise<StoredPiece[]> {
+    const { rows } = await this.pool.query(
+      `SELECT name, created_at, COALESCE((metadata->>'size')::bigint, 0) AS size
+         FROM storage.objects
+        WHERE bucket_id = $1`,
+      [bucket]
+    );
+    return rows.map((r: any) => ({ name: String(r.name), createdAt: new Date(r.created_at).getTime(), size: Number(r.size) || 0 }));
+  }
+
   async trimCappedTypes() {
     let removed = 0;
     for (const [type, keep] of CAPPED_TYPES) {
@@ -761,6 +784,11 @@ class ResilientRelayDb implements RelayDb {
    * Postgres yet, and deleting from a database we are not currently able to
    * write to is the wrong move while an outage is in progress.
    */
+  async storedPieces(bucket: string): Promise<StoredPiece[]> {
+    if (!this.postgres || !this.healthy) return [];
+    return this.postgres.storedPieces(bucket);
+  }
+
   async trimCappedTypes() {
     const inMemory = await this.memory.trimCappedTypes();
     if (!this.postgres || !this.healthy) return inMemory;

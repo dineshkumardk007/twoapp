@@ -214,6 +214,8 @@ export class WebSocketRelayClient {
    */
   private iceServers: { servers: RTCIceServer[]; expiresAt: number } | null = null;
   private iceWaiters: Array<() => void> = [];
+  /** Asked for links to a file's pieces (fileLinks), waiting for the relay's answer by its requestId. */
+  private fileWaiters = new Map<string, (reply: { urls?: unknown; error?: unknown }) => void>();
 
   /**
    * True between asking for history and being told there is no more of it.
@@ -536,6 +538,16 @@ export class WebSocketRelayClient {
       const waiters = this.iceWaiters;
       this.iceWaiters = [];
       waiters.forEach(done => done());
+      return;
+    }
+
+    if (payload?.type === 'FILE_SIGNED') {
+      const id = String(payload.requestId || '');
+      const done = this.fileWaiters.get(id);
+      if (done) {
+        this.fileWaiters.delete(id);
+        done(payload);
+      }
       return;
     }
 
@@ -1488,6 +1500,33 @@ export class WebSocketRelayClient {
       this.rawSend({ type: 'ICE_SERVERS_REQUEST' });
     });
     return this.usableIceServers();
+  }
+
+  /**
+   * Links for one file's pieces in the relay's files bucket (core/files,
+   * two-server files.ts): to put each in ('put', with the file's size), to
+   * fetch each ('get' - '' for one the bucket does not have), or to take
+   * them all away ('delete'). Rejects when offline, when the relay cannot
+   * ('files-off', 'too-big'...), or when it has not answered in time.
+   */
+  fileLinks(op: 'put' | 'get' | 'delete', fileId: string, parts: number, size?: number, timeoutMs = 20_000): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      if (!this.isOpen() || !this.creds) {
+        reject(new Error('offline'));
+        return;
+      }
+      const requestId = `f${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+      const timer = setTimeout(() => {
+        this.fileWaiters.delete(requestId);
+        reject(new Error('timeout'));
+      }, timeoutMs);
+      this.fileWaiters.set(requestId, reply => {
+        clearTimeout(timer);
+        if (reply.error || !Array.isArray(reply.urls)) reject(new Error(String(reply.error || 'no-links')));
+        else resolve(reply.urls.map(u => (typeof u === 'string' ? u : '')));
+      });
+      this.rawSend({ type: 'FILE_SIGN', requestId, op, fileId, parts, ...(size ? { size } : {}) });
+    });
   }
 
   /** Whatever is held and not yet expired - old logins still beat none. */

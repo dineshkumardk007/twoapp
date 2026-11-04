@@ -6,6 +6,7 @@ import { WebSocketServer } from 'ws';
 import { WebSocketRelay } from './websocket/relay.js';
 import { db } from './db.js';
 import { turnConfigured } from './turn.js';
+import { ensureBucket, filesConfigured, sweepFiles } from './files.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -68,6 +69,8 @@ app.get('/health', async (req, res) => {
     pending_writes: db.pendingCount,
     // Whether calls can fall back to a relay when a direct route is blocked.
     turn: turnConfigured ? 'configured' : 'off',
+    // Whether files can be shared in the chat: a Supabase bucket, and the key to it (files.ts).
+    files: filesConfigured() ? 'configured' : 'off',
     // Whether a phone may leave a background listener here, one that tells
     // the partner a message arrived. A phone that does not see this keeps no
     // listener at all, so an older relay costs it nothing.
@@ -116,6 +119,10 @@ async function sweepExpiredRecords() {
     if (trimmed > 0) {
       console.log(`[Two Relay Server] Retention sweep trimmed ${trimmed} record(s) past their per-type depth`);
     }
+
+    // Files in the bucket past their days, or past its budget (files.ts).
+    const files = await sweepFiles(bucket => db.storedPieces(bucket));
+    if (files > 0) console.log(`[Two Relay Server] Retention sweep let go of ${files} shared file(s)`);
   } catch (err) {
     // Never fatal - failing to trim history must not take the relay down.
     console.error('[Two Relay Server] Retention sweep error:', err);
@@ -127,6 +134,12 @@ async function start() {
     await db.init();
   } catch (err) {
     console.error('[Two Relay Server] Storage initialisation error:', err);
+  }
+  try {
+    await ensureBucket();
+  } catch (err) {
+    // Files are off until it can be made; everything else carries on.
+    console.error('[Two Relay Server] Files bucket error:', err);
   }
 
   await sweepExpiredRecords();

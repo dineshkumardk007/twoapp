@@ -1,5 +1,6 @@
 import type { ChatCallInfo } from './core/callLog';
 import type { HdInfo } from './core/hdPhoto';
+import type { FileInfo } from './core/files';
 
 export type ThemeMode = 'linen' | 'slate' | 'forest' | 'terracotta';
 
@@ -107,6 +108,13 @@ export interface ChatMessage {
    * the app, so nothing else travels. `text` holds "Sticker".
    */
   sticker?: string;
+  /**
+   * A file (core/files): its name, size, type, key and fingerprint. The file
+   * itself is in the relay's files bucket, sealed, and on each phone that has
+   * fetched it. `text` holds "📎 " and its name, for notifications and older
+   * phones.
+   */
+  file?: FileInfo;
   /** The message this one answers (core/chatActions). */
   replyTo?: ChatReplyRef;
   /** When its author last changed the words (CHAT_EDIT); `text` holds the new ones. */

@@ -304,6 +304,17 @@ import {
   splitHd,
   type HdInfo
 } from './core/hdPhoto';
+import {
+  CHAT_FILE_READY,
+  FileTooBigError,
+  cleanFileInfo,
+  fetchFile,
+  fetchesByItself,
+  forgetRemote,
+  markFileReady,
+  resumeUploads,
+  sendFile
+} from './core/files';
 import { mergeReport, recordDay } from './core/weatherHistory';
 import { localDateKey } from './core/ourDates';
 import {
@@ -414,7 +425,7 @@ function chatFromWire(parsed: any): ChatMessage {
   // Taken off whatever they say, so only the checked copies below go back on.
   const {
     isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard,
-    isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo, sticker, photoHd, photoHdRef,
+    isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo, sticker, photoHd, photoHdRef, file,
     editedAt, unsent, reactions, viewOnce, viewedAt,
     // Never a message's to claim: a call's line is made here from a CALL_LOG,
     // and when a message arrived is this phone's own record.
@@ -435,6 +446,8 @@ function chatFromWire(parsed: any): ChatMessage {
   // An HD copy only of a photo, and not of a view-once one (core/hdPhoto).
   // Where this phone keeps it is its own business, never the sender's.
   const hd = photo && viewOnce !== true ? cleanHdInfo(photoHd) : undefined;
+  // A file is its own kind of message: never also a voice note, photo or sticker (core/files).
+  const sharedFile = voice || photo || stickerId ? undefined : cleanFileInfo(file);
   const reply = cleanReplyRef(replyTo);
   // Set to show later: in its place at that time (core/sendLater).
   const later = cleanShowAt(showAt);
@@ -444,6 +457,7 @@ function chatFromWire(parsed: any): ChatMessage {
     ...(photo && viewOnce === true ? { viewOnce: true } : {}),
     ...(stickerId ? { sticker: stickerId } : {}),
     ...(hd ? { photoHd: hd } : {}),
+    ...(sharedFile ? { file: sharedFile } : {}),
     ...(reply ? { replyTo: reply } : {}),
     ...(later ? { showAt: later, sentAt: later } : {})
   };
@@ -1863,6 +1877,15 @@ export const App: React.FC = () => {
                 ? { ...prev, surprises: { ...book, ready: { ...book.ready, [id]: Number(parsed?.updatedAt) || 0 } } }
                 : { ...prev, surprises: { ...book, seen: { ...book.seen, [id]: Number(parsed?.at) || Date.now() } } };
             });
+          } else if (record.type === CHAT_FILE_READY) {
+            // A file is all in the bucket (core/files): fetched now if it is
+            // theirs and not too big, else when its bubble is tapped.
+            const id = String(parsed?.id || '');
+            markFileReady(id);
+            const message = latestRef.current.state.messages.find(m => m.file?.id === id);
+            if (message?.file && message.authorId !== latestRef.current.state.activeUser && fetchesByItself(message.file, message.sentAt)) {
+              void fetchFile(message.file);
+            }
           } else if (record.type === US_THEME) {
             // The sky over "Us two" one of you picked: the newest pick wins, from either phone.
             const at = Number(parsed?.at) || 0;
@@ -4407,7 +4430,33 @@ export const App: React.FC = () => {
       return messages ? { ...prev, messages } : prev;
     });
     wsRelay.broadcastUpdate(CHAT_UNSEND, { messageId });
+    // A file goes from the relay's bucket too (core/files).
+    if (target.file) void forgetRemote(target.file);
   };
+
+  /**
+   * A file for them (core/files): sealed here, its message sent at once -
+   * the bubble shows it going up - and, once every piece is in the relay's
+   * bucket, a word that it is all there (CHAT_FILE_READY) for their phone
+   * to fetch it by.
+   */
+  const sayFileReady = (id: string) => wsRelay.broadcastUpdate(CHAT_FILE_READY, { id });
+  const handleSendFile = (file: File) => {
+    sendFile(file, info => handleSendMessage(`📎 ${info.name}`, false, { file: info }), sayFileReady).catch(err => {
+      setInAppNotification({
+        id: newId(),
+        title: err instanceof FileTooBigError ? 'That file is too big' : 'That file could not be read',
+        body: err instanceof FileTooBigError ? 'Files can be up to 100 MB.' : 'Try picking it again, or save it to the phone first.',
+        type: 'chat',
+        tabId: 'chat'
+      });
+    });
+  };
+  // Picks up any file of ours left half-way up, each time the relay is back.
+  useEffect(() => {
+    if (relayStatus === 'connected') resumeUploads(sayFileReady);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relayStatus]);
 
   /**
    * Deletes a message, yours or hers, from this phone only, once you have
@@ -6224,6 +6273,8 @@ export const App: React.FC = () => {
             activeUser={state.activeUser}
             onSendMessage={stable('chat:send', handleSendMessage)}
             onSendHd={stable('chat:sendHd', (info: HdInfo, dataUrl: string) => sendHdCopy(null, info, dataUrl))}
+            onSendFile={stable('chat:sendFile', handleSendFile)}
+            onRetryFile={stable('chat:retryFile', (id: string) => resumeUploads(sayFileReady, id))}
             onResolveStuck={stable('chat:resolveStuck', (messageId: string, action: 'retry' | 'delete') =>
               handleResolveStuck({}, messageId, action)
             )}

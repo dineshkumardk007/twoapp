@@ -411,6 +411,132 @@ class AndroidWebBridge(
         return true
     }
 
+    /** Files from the chat being handed over (fileBegin, fileWrite, fileDone), by handle. */
+    private val chatFiles = java.util.concurrent.ConcurrentHashMap<String, Pair<File, String>>()
+
+    /**
+     * A file from the chat, handed over in pieces - a whole one can be a
+     * hundred megabytes, too much for one call - to open in the app it
+     * belongs to, share, or save to Downloads. [fileBegin] names it and
+     * returns a handle ("" if it could not), [fileWrite] adds each piece
+     * (base64), and [fileDone] does what was asked: "open", "share" or "save".
+     *
+     * Kept in the cache's shared folder, which the FileProvider lends to the
+     * app that opens it; anything left there for over an hour goes first.
+     */
+    @JavascriptInterface
+    fun fileBegin(name: String, mimeType: String): String {
+        return try {
+            val dir = File(context.cacheDir, "shared")
+            val hourAgo = System.currentTimeMillis() - 60 * 60 * 1000
+            dir.listFiles()?.forEach { if (it.lastModified() < hourAgo) it.deleteRecursively() }
+            val handle = java.util.UUID.randomUUID().toString()
+            val folder = File(dir, handle)
+            folder.mkdirs()
+            val file = File(folder, safeFileName(name))
+            file.writeBytes(ByteArray(0))
+            chatFiles[handle] = Pair(file, mimeType.ifBlank { "application/octet-stream" })
+            handle
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    @JavascriptInterface
+    fun fileWrite(handle: String, base64: String): Boolean {
+        val entry = chatFiles[handle] ?: return false
+        return try {
+            entry.first.appendBytes(Base64.decode(base64, Base64.DEFAULT))
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    @JavascriptInterface
+    fun fileDone(handle: String, action: String): Boolean {
+        val entry = chatFiles.remove(handle) ?: return false
+        val file = entry.first
+        val mimeType = entry.second
+        if (action == "save") return saveToDownloads(file, mimeType)
+        if (action != "open" && action != "share") return false
+        val uri = try {
+            FileProvider.getUriForFile(context, "${context.packageName}.updates", file)
+        } catch (_: Exception) {
+            return false
+        }
+        val intent = if (action == "open") {
+            Intent(Intent.ACTION_VIEW).setDataAndType(uri, mimeType)
+        } else {
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = mimeType
+                putExtra(Intent.EXTRA_STREAM, uri)
+                clipData = ClipData.newRawUri(file.name, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            Intent.createChooser(send, null)
+        }
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        // Started from the main thread; the answer - whether any app took it - waited for here.
+        val started = CountDownLatch(1)
+        var ok = false
+        ContextCompat.getMainExecutor(context).execute {
+            ok = try {
+                context.startActivity(intent)
+                true
+            } catch (_: ActivityNotFoundException) {
+                false
+            } catch (_: Exception) {
+                false
+            }
+            started.countDown()
+        }
+        started.await(3, java.util.concurrent.TimeUnit.SECONDS)
+        return ok
+    }
+
+    /** Into Downloads/Two, where the Files app finds it, on Android 10 and later; the save screen before that. */
+    private fun saveToDownloads(file: File, mimeType: String): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return saveToDownloadsQ(file, mimeType)
+        val bytes = try {
+            file.readBytes()
+        } catch (_: Exception) {
+            return false
+        }
+        file.delete()
+        ContextCompat.getMainExecutor(context).execute { onSaveFile(file.name, mimeType, bytes) }
+        return true
+    }
+
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.Q)
+    private fun saveToDownloadsQ(file: File, mimeType: String): Boolean {
+        return try {
+            val resolver = context.contentResolver
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, file.name)
+                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mimeType)
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS + "/Two")
+                put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            val target = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return false
+            val out = resolver.openOutputStream(target) ?: return false
+            out.use { sink -> file.inputStream().use { it.copyTo(sink) } }
+            values.clear()
+            values.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+            resolver.update(target, values, null, null)
+            file.delete()
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /** A name a file can be kept under: no folders, no characters a file system refuses. */
+    private fun safeFileName(name: String): String {
+        val clean = name.replace(Regex("[\\\\/:*?\"<>|\\u0000-\\u001f]"), "_").trim().take(120)
+        return if (clean.isEmpty() || clean == "." || clean == "..") "file" else clean
+    }
+
     /**
      * The text on the clipboard, for the page's Paste buttons.
      *

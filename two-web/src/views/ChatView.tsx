@@ -39,6 +39,8 @@ import {
 import { shrinkPhoto } from '../core/photo';
 import { hdCopyOf } from '../core/hdSend';
 import { readHd } from '../core/media';
+import { MAX_FILE_BYTES, formatSize } from '../core/files';
+import { FileBubble } from '../components/FileBubble';
 import type { HdInfo } from '../core/hdPhoto';
 import { PHOTOS_AT_ONCE, PHOTO_MAX_CHARS, dataUrlToBlob, photoFileName, photoSize, snippetShown } from '../core/chatShow';
 import { HEART, useMessageGestures } from '../core/useMessageGestures';
@@ -60,7 +62,7 @@ import { haptic } from '../core/haptics';
 import {
   Send, Sparkles, Heart, EyeOff, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
   Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download,
-  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock, EllipsisVertical, Info, Keyboard
+  Camera, Pin, PinOff, PhoneIncoming, PhoneOutgoing, PhoneMissed, AlarmClock, EllipsisVertical, Info, Keyboard, Paperclip
 } from 'lucide-react';
 import { EmojiPicker, KeyboardPanel } from '../components/EmojiPicker';
 import { whenKeyboardUp } from '../core/keyboard';
@@ -108,6 +110,10 @@ interface ChatViewProps {
   onSendMessage: (text: string, isNeed?: boolean, extra?: MessageExtras) => void;
   /** A photo's HD copy, sent in pieces after it (core/hdPhoto). */
   onSendHd?: (info: HdInfo, dataUrl: string) => void;
+  /** A file for them (core/files): sealed, sent and put in the relay's bucket. */
+  onSendFile?: (file: File) => void;
+  /** Tries again to send a file of yours that did not go up. */
+  onRetryFile?: (id: string) => void;
   /** Sets, changes, or (with '') takes off your reaction to a message. */
   onReact?: (messageId: string, emoji: string) => void;
   /** New words for one of your own messages; offered for fifteen minutes after sending. */
@@ -281,6 +287,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   activeUser,
   onSendMessage,
   onSendHd,
+  onSendFile,
+  onRetryFile,
   onResolveStuck,
   partnerReadAt = 0,
   partnerReadHeardAt = Infinity,
@@ -830,6 +838,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
    */
   const photoInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  // Any file at all, sent as a document - photos too, at their full quality (core/files).
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pickFiles = (files: FileList | null) => {
+    for (const file of files ? Array.from(files) : []) {
+      if (file.size > MAX_FILE_BYTES) {
+        showToast(tr('{name} is {size} - files can be up to {max}', { name: file.name, size: formatSize(file.size), max: formatSize(MAX_FILE_BYTES) }));
+      } else if (file.size > 0) {
+        onSendFile?.(file);
+        haptic('confirm');
+      }
+    }
+  };
   const [pickedPhotos, setPickedPhotos] = useState<File[] | null>(null);
   const pickPhotos = (files: FileList | null) => {
     const picked = files ? Array.from(files).filter(f => !f.type || f.type.startsWith('image/')) : [];
@@ -1162,6 +1182,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
         const once = !unsent && !!msg.viewOnce;
         const opened = once && !!msg.viewedAt;
         const photo = !unsent && !once && msg.isPhoto && msg.photoDataUrl ? photoSize(msg) : null;
+        // A file: its own bubble, with its kind, size and where it stands (core/files).
+        const sharedFile = !unsent && !once && msg.file ? msg.file : null;
         // A sticker stands on its own, with no bubble round it. One from a
         // newer pack than this phone has shows as its words, "Sticker".
         const sticker = !unsent && hasStickerArt(msg.sticker) ? msg.sticker : null;
@@ -1260,7 +1282,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   // breathing room, than around words - and a little more of
                   // the width, so its 200px fits a 320px phone. A photo gets a
                   // thin frame of the bubble's own colour.
-                  sticker ? '' : photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : once ? 'max-w-[85%] py-2 pl-2.5 pr-4' : 'max-w-[85%] px-4 py-2.5'
+                  sticker ? '' : sharedFile ? 'max-w-[90%] p-2' : photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : once ? 'max-w-[85%] py-2 pl-2.5 pr-4' : 'max-w-[85%] px-4 py-2.5'
                 } text-sm leading-relaxed ${shape} ${
                   // Plain on both sides (index.css): yours grey, theirs outlined.
                   // A request looks like any other message from its side.
@@ -1312,7 +1334,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   </div>
                 )}
 
-                {sticker ? (
+                {sharedFile ? (
+                  <FileBubble
+                    info={sharedFile}
+                    mine={mine}
+                    partnerName={partnerName}
+                    sentAt={msg.sentAt}
+                    onRetrySend={id => onRetryFile?.(id)}
+                    onNote={text => showToastRef.current(text)}
+                  />
+                ) : sticker ? (
                   // Tapped, it plays again.
                   <StickerArt
                     id={sticker}
@@ -2017,9 +2048,30 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 // is already in the header right above.
                 placeholder={tr('A quiet thought…')}
                 className={`block w-full resize-none overflow-y-hidden px-4 py-2.5 text-sm leading-5 rounded-xl border border-linen-border bg-linen-variant/30 focus:outline-hidden focus:ring-2 focus:ring-linen-primary text-linen-primary placeholder:text-linen-secondary/60 select-text ${
-                  showPhotoButton ? (touchFirst ? 'pr-20' : 'pr-11') : showLaterButton ? 'pr-11' : ''
+                  showPhotoButton
+                    ? onSendFile
+                      ? touchFirst
+                        ? 'pr-28'
+                        : 'pr-20'
+                      : touchFirst
+                        ? 'pr-20'
+                        : 'pr-11'
+                    : showLaterButton
+                      ? 'pr-11'
+                      : ''
                 }`}
               />
+              {showPhotoButton && onSendFile && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  aria-label={tr('Send a file')}
+                  title={tr('Send a file')}
+                  className={`absolute ${touchFirst ? 'right-[4.75rem]' : 'right-10'} bottom-1 h-[34px] w-[34px] rounded-lg flex items-center justify-center text-linen-secondary hover:text-linen-primary hover:bg-linen-variant transition-colors`}
+                >
+                  <Paperclip className="w-5 h-5" />
+                </button>
+              )}
               {showPhotoButton && touchFirst && (
                 // A phone's camera, straight from the chat. A computer has
                 // none to speak of, and its button would only open files.
@@ -2075,6 +2127,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 hidden
                 onChange={e => {
                   pickPhotos(e.target.files);
+                  e.target.value = '';
+                }}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                hidden
+                onChange={e => {
+                  pickFiles(e.target.files);
                   e.target.value = '';
                 }}
               />

@@ -1,6 +1,7 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { db, StoredRecord } from '../db.js';
 import { getIceServers, turnConfigured } from '../turn.js';
+import { signFile } from '../files.js';
 
 interface SpaceClient {
   ws: WebSocket;
@@ -377,6 +378,33 @@ export class WebSocketRelay {
               return;
             }
             await this.sendIceServers(ws);
+            return;
+          }
+
+          /**
+           * Links for a file's pieces in the files bucket (files.ts): to put
+           * them there, fetch them, or take them away. Only for a phone that
+           * has joined a space, and only within that space's own folder - so
+           * a link names nothing of anybody else's. Answered with the same
+           * requestId, so the phone can match it.
+           */
+          if (message.type === 'FILE_SIGN') {
+            const requestId = typeof message.requestId === 'string' ? message.requestId.slice(0, 64) : '';
+            if (!currentClient || currentClient.passive) {
+              this.sendJson(ws, { type: 'FILE_SIGNED', requestId, error: 'join-first' });
+              return;
+            }
+            if (!consumeToken(currentClient)) {
+              this.sendJson(ws, { type: 'FILE_SIGNED', requestId, error: 'slow-down' });
+              return;
+            }
+            try {
+              const result = await signFile(currentClient.spaceId, message);
+              this.sendJson(ws, { type: 'FILE_SIGNED', requestId, ...result });
+            } catch (err) {
+              console.error('[Relay] File links failed:', err);
+              this.sendJson(ws, { type: 'FILE_SIGNED', requestId, error: 'storage-error' });
+            }
             return;
           }
 
