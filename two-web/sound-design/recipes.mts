@@ -10,7 +10,7 @@
 // Phone speakers play almost nothing below ~150 Hz, so weight that matters -
 // a heartbeat, a stamp - is carried by overtones they can reproduce.
 
-import { Stereo, silence, hz, strike, mode, noise, INSTRUMENTS as I, RoomOptions, MasterOptions, SR } from './dsp.mts';
+import { Stereo, silence, hz, strike, mode, noise, rng, INSTRUMENTS as I, RoomOptions, MasterOptions, SR } from './dsp.mts';
 
 const ALERT = -19;
 const MOMENT = -21;
@@ -207,6 +207,157 @@ function birthdayTune(b: Stereo, beat: number, lines: number) {
     const at = beat + i * 3 * beat;
     chords[i].forEach((note, j) => strike(b, { note: hz(note), instrument: I.felt, start: at + j * 0.02, gain: 0.16, mallet: 0, seed: 470 + i * 2 + j, decayScale: 1.2 }));
   }
+}
+
+// ------------------------------------------- a surprise opening, as a film
+// (components/SurpriseReveal). Each cue is timed from the moment it is
+// started on screen; the times here and the ones there go together.
+
+/**
+ * A soft string pad: a chord held, swelling in and dying away - sines with
+ * their first overtones, each split a little so it breathes like a section
+ * of strings rather than an organ.
+ */
+function pad(b: Stereo, notes: string[], start: number, dur: number, gain: number) {
+  notes.forEach((n, i) => {
+    const f = hz(n);
+    const pan = (i / Math.max(1, notes.length - 1) - 0.5) * 0.6;
+    ([[1, 1], [2, 0.26], [3, 0.07]] as const).forEach(([r, a], k) =>
+      mode(b, { freq: f * r, amp: gain * a, decay: dur * 0.9, start, attack: Math.min(0.55, dur * 0.35), pan, beat: 0.45 + i * 0.13, phase: i + k })
+    );
+  });
+}
+
+/** A music box: a glockenspiel tine with a kalimba's pluck under it. */
+function box(b: Stereo, note: string, start: number, gain: number, seed: number, long = false) {
+  strike(b, { note: hz(note), instrument: I.glock, start, gain, pan: ((seed * 7) % 5) / 20 - 0.1, seed, mallet: 0.06, decayScale: long ? 1.2 : 0.75 });
+  strike(b, { note: hz(note), instrument: I.kalimba, start, gain: gain * 0.45, seed: seed + 500, mallet: 0, decayScale: long ? 1.5 : 1 });
+}
+
+/** A chord on the felt piano, its notes rolled a few milliseconds apart. */
+function roll(b: Stereo, notes: string[], start: number, gain: number, seed: number, decayScale = 1.2) {
+  notes.forEach((n, i) => strike(b, { note: hz(n), instrument: I.felt, start: start + i * 0.022, gain, pan: (i / Math.max(1, notes.length - 1) - 0.5) * 0.4, mallet: 0, seed: seed + i, decayScale }));
+}
+
+/** Little lights: high notes scattered across a stretch of time. */
+function twinkles(b: Stereo, from: number, to: number, count: number, gain: number, seed: number) {
+  const rand = rng(seed);
+  const notes = ['D6', 'E6', 'F#6', 'A6', 'B6', 'D7'];
+  for (let i = 0; i < count; i++) {
+    const t = from + ((to - from) * (i + rand() * 0.8)) / count;
+    strike(b, {
+      note: hz(notes[Math.floor(rand() * notes.length)]),
+      instrument: rand() < 0.5 ? I.glock : I.glass,
+      start: t,
+      gain: gain * (0.55 + rand() * 0.45),
+      pan: rand() * 1.4 - 0.7,
+      seed: seed + i,
+      mallet: 0,
+      decayScale: 0.6
+    });
+  }
+}
+
+/** Paper: a sheet moving against another, or folded open. */
+function paper(b: Stereo, start: number, dur: number, gain: number, from: number, to: number, seed: number, pan = 0) {
+  noise(b, { start, dur, gain, filter: { type: 'bandpass', f: from, q: 0.9 }, sweepTo: to, grain: 0.6, attack: Math.min(0.06, dur / 3), pink: true, pan, seed });
+}
+
+/** The chords the waltz and the serenade stand on. */
+const CHORD: Record<string, { bass: string; notes: string[] }> = {
+  D: { bass: 'D3', notes: ['A3', 'D4', 'F#4'] },
+  Bm: { bass: 'B2', notes: ['F#3', 'B3', 'D4'] },
+  G: { bass: 'G2', notes: ['D3', 'G3', 'B3'] },
+  A: { bass: 'A2', notes: ['E3', 'A3', 'C#4'] },
+  Em: { bass: 'E3', notes: ['G3', 'B3', 'E4'] }
+};
+
+/**
+ * A waltz of our own for the photos - sixteen bars of three, a music box
+ * over a felt piano, the strings coming in for the second half.
+ */
+const WALTZ: [string, number][][] = [
+  [['F#5', 2], ['E5', 1]],
+  [['D5', 2], ['A4', 1]],
+  [['B4', 1], ['D5', 1], ['F#5', 1]],
+  [['E5', 3]],
+  [['G5', 2], ['F#5', 1]],
+  [['E5', 2], ['D5', 1]],
+  [['C#5', 1], ['D5', 1], ['E5', 1]],
+  [['A4', 3]],
+  [['F#5', 2], ['E5', 1]],
+  [['D5', 2], ['A4', 1]],
+  [['B4', 1], ['D5', 1], ['G5', 1]],
+  [['F#5', 2], ['E5', 1]],
+  [['D5', 1], ['E5', 1], ['F#5', 1]],
+  [['B5', 2], ['A5', 1]],
+  [['G5', 1], ['F#5', 1], ['E5', 1]],
+  [['D5', 3]]
+];
+const WALTZ_CHORDS = ['D', 'Bm', 'G', 'A', 'Em', 'G', 'A', 'D', 'D', 'Bm', 'G', 'D', 'Bm', 'G', 'A', 'D'];
+
+function waltz(b: Stereo, start: number, beat: number, bars: number[], seed: number, strings: (bar: number) => number) {
+  bars.forEach((bar, k) => {
+    const t0 = start + k * 3 * beat;
+    const chord = CHORD[WALTZ_CHORDS[bar]];
+    strike(b, { note: hz(chord.bass), instrument: I.felt, start: t0, gain: 0.3, mallet: 0, seed: seed + k * 20, decayScale: 1.5 });
+    roll(b, chord.notes, t0 + beat, 0.1, seed + k * 20 + 2, 0.8);
+    roll(b, chord.notes, t0 + 2 * beat, 0.08, seed + k * 20 + 6, 0.8);
+    const s = strings(bar);
+    if (s > 0) pad(b, [chord.bass.replace(/\d$/, d => String(Number(d) + 1)), ...chord.notes], t0, 3 * beat + 0.2, s);
+    let t = t0;
+    WALTZ[bar].forEach(([note, beats], i) => {
+      box(b, note, t, beats >= 2 ? 0.46 : 0.38, seed + k * 20 + 10 + i, beats >= 2);
+      // The second time through, the piano sings the tune an octave down with it.
+      if (bar >= 8) strike(b, { note: hz(note) / 2, instrument: I.felt, start: t, gain: 0.13, mallet: 0, seed: seed + k * 20 + 14 + i, decayScale: 1.1 });
+      t += beats * beat;
+    });
+  });
+}
+
+/**
+ * Happy Birthday (a folk tune, free to play) as a slow serenade: the felt
+ * piano carrying the tune with a music box an octave above it, strings
+ * under, a held note on "dear...", and slowing into the last line.
+ * [beat, note, beats]; the pickups come before the first chord.
+ */
+const SERENADE: [number, string, number][] = [
+  [0, 'A4', 0.75], [0.75, 'A4', 0.25], [1, 'B4', 1], [2, 'A4', 1], [3, 'D5', 1], [4, 'C#5', 2],
+  [6, 'A4', 0.75], [6.75, 'A4', 0.25], [7, 'B4', 1], [8, 'A4', 1], [9, 'E5', 1], [10, 'D5', 2],
+  [12, 'A4', 0.75], [12.75, 'A4', 0.25], [13, 'A5', 1], [14, 'F#5', 1], [15, 'D5', 1], [16, 'C#5', 1], [17, 'B4', 2.5],
+  [19.5, 'G5', 0.75], [20.25, 'G5', 0.25], [21, 'F#5', 1], [22, 'D5', 1], [23, 'E5', 1], [24, 'D5', 3]
+];
+const SERENADE_CHORDS: [number, string, number][] = [
+  [1, 'D', 3], [4, 'A', 3], [7, 'A', 3], [10, 'D', 3], [13, 'D', 3], [16, 'G', 5], [21, 'D', 2], [23, 'A', 1], [24, 'D', 4]
+];
+/** Seconds into the song at a beat: steady, then easing off for the last line. */
+function serenadeTime(beat: number): number {
+  const a = 0.56, b2 = 0.62, c = 0.68;
+  if (beat <= 16) return 0.05 + beat * a;
+  if (beat <= 24) return 0.05 + 16 * a + (beat - 16) * b2;
+  return 0.05 + 16 * a + 8 * b2 + (beat - 24) * c;
+}
+
+/** A firework: up on a whistle, the burst, and its glitter crackling as it falls. */
+function firework(b: Stereo, launch: number, burst: number, gain: number, seed: number) {
+  const up = burst - launch;
+  voice(b, {
+    start: launch,
+    dur: up,
+    freq: t => 700 + 1900 * (t / up) ** 1.3,
+    amp: t => gain * 0.07 * Math.max(0, Math.sin((Math.PI * t) / up)) ** 0.5,
+    harmonics: [1, 0.15],
+    pan: ((seed % 3) - 1) * 0.3
+  });
+  noise(b, { start: launch, dur: up, gain: gain * 0.08, filter: { type: 'bandpass', f: 2500, q: 0.8 }, sweepTo: 6000, attack: 0.1, seed });
+  thump(b, burst, gain * 0.9, 90, seed + 1);
+  noise(b, { start: burst, dur: 0.07, gain: gain * 0.7, filter: { type: 'bandpass', f: 1500, q: 0.5 }, attack: 0.0006, decay: 0.016, seed: seed + 2 });
+  const rand = rng(seed + 3);
+  for (let i = 0; i < 46; i++) {
+    const t = burst + 0.12 + rand() ** 1.4 * 1.2;
+    noise(b, { start: t, dur: 0.014, gain: gain * (0.06 + rand() * 0.2), filter: { type: 'bandpass', f: 3000 + rand() * 4500, q: 1.2 }, attack: 0.0004, decay: 0.003, pan: rand() * 1.6 - 0.8, seed: seed + 10 + i });
+  }
+  twinkles(b, burst + 0.05, burst + 0.9, 5, gain * 0.16, seed + 70);
 }
 
 export const RECIPES: Record<string, Recipe> = {
@@ -1152,14 +1303,31 @@ export const RECIPES: Record<string, Recipe> = {
   // A birthday surprise (components/SurpriseReveal) and the party in Us two.
 
   'birthday-song': {
-    use: 'A birthday surprise: Happy Birthday as the cake comes in',
+    use: 'A birthday surprise: Happy Birthday, a slow serenade, once the candles are lit',
     dry: () => {
-      const b = silence(14.5);
-      birthdayTune(b, 0.5, 4);
+      const b = silence(19);
+      SERENADE.forEach(([at, note, beats], i) => {
+        const t = serenadeTime(at);
+        const gain = beats < 1 ? 0.42 : beats >= 2 ? 0.66 : 0.56;
+        strike(b, { note: hz(note), instrument: I.felt, start: t, gain, pan: i % 2 ? 0.06 : -0.06, mallet: 0.05, seed: 600 + i, decayScale: beats >= 2 ? 2 : 1.3 });
+        // The music box an octave up, on the notes that land.
+        if (beats >= 1) box(b, note.replace(/\d$/, d => String(Number(d) + 1)), t, 0.09, 640 + i, beats >= 2);
+      });
+      SERENADE_CHORDS.forEach(([at, name, beats], i) => {
+        const t = serenadeTime(at);
+        const len = serenadeTime(at + beats) - t;
+        const chord = CHORD[name];
+        strike(b, { note: hz(chord.bass), instrument: I.felt, start: t, gain: 0.3, mallet: 0, seed: 700 + i * 10, decayScale: 1.6 });
+        // The chord broken across the bar, then held by the strings.
+        for (let k = 1; k < Math.min(3, beats); k++) roll(b, chord.notes, serenadeTime(at + k), 0.085, 702 + i * 10 + k * 3, 0.9);
+        pad(b, [chord.bass.replace(/\d$/, d => String(Number(d) + 1)), ...chord.notes], t, len + 0.3, i >= 5 ? 0.06 : 0.045);
+      });
+      // The last chord, and the music box climbing away above it.
+      run(b, ['D6', 'F#6', 'A6', 'D7'], 0.11, { instrument: I.glock, gain: [0.1, 0.11, 0.12, 0.14], start: serenadeTime(24.6), seed: 780, mallet: 0 });
       return b;
     },
-    room: { rt60: 1.4, wet: 0.2 },
-    master: { loudness: MOMENT, maxSeconds: 14.5, tailFade: 1.2 }
+    room: { rt60: 1.9, wet: 0.26 },
+    master: { loudness: MOMENT, highpass: 80, maxSeconds: 19, tailFade: 2 }
   },
 
   'birthday-jingle': {
@@ -1188,5 +1356,155 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 1, wet: 0.16 },
     master: { loudness: MOMENT, highpass: 150 }
+  },
+
+  'sr-open': {
+    use: 'A surprise: the bow untied, the lid lifted, light pouring out and settling into a heart of stars, the title written',
+    dry: () => {
+      const b = silence(7.4);
+      // The ribbon drawn off - two silky pulls - and the bow letting go.
+      paper(b, 0, 0.42, 0.3, 1800, 5200, 801, -0.2);
+      paper(b, 0.16, 0.4, 0.24, 2200, 6000, 802, 0.2);
+      strike(b, { note: hz('A5'), instrument: I.kalimba, start: 0.04, gain: 0.22, seed: 803, mallet: 0.1 });
+      // The lid lifting off.
+      thump(b, 0.6, 0.2, 190, 804);
+      mode(b, { freq: 420, amp: 0.08, decay: 0.05, start: 0.6 });
+      // Light pouring out of the box and rising.
+      air(b, { start: 0.65, dur: 1.9, gain: 0.22, from: 600, to: 7000, attack: 0.5, seed: 805 });
+      run(b, ['D5', 'F#5', 'A5', 'B5', 'D6', 'E6', 'F#6', 'A6'], 0.09, { instrument: I.glass, gain: [0.16, 0.18, 0.2, 0.22, 0.24, 0.26, 0.28, 0.3], start: 0.7, seed: 806, mallet: 0, decayScale: 1.2 });
+      // The sparks flying up into the sky...
+      twinkles(b, 1.05, 2.6, 18, 0.16, 820);
+      // ...and settling into the heart: a warm chord, blooming.
+      roll(b, ['D3', 'A3', 'D4', 'F#4', 'A4'], 2.7, 0.26, 850, 2);
+      strike(b, { note: hz('D5'), instrument: I.bowl, start: 2.7, gain: 0.14, seed: 856, mallet: 0 });
+      strike(b, { note: hz('A5'), instrument: I.glass, start: 2.72, gain: 0.22, seed: 857, mallet: 0, decayScale: 1.6 });
+      pad(b, ['D4', 'A4', 'D5', 'F#5'], 2.7, 4.2, 0.05);
+      // The title, written one letter at a time: a harp-like run.
+      ['D5', 'E5', 'F#5', 'A5', 'B5', 'D6', 'E6', 'F#6'].forEach((n, i) => {
+        strike(b, { note: hz(n), instrument: I.kalimba, start: 3.3 + i * 0.17, gain: 0.16 + i * 0.012, pan: (i / 7 - 0.5) * 0.6, seed: 860 + i, mallet: 0.05, decayScale: 1.4 });
+        strike(b, { note: hz(n) * 2, instrument: I.glock, start: 3.3 + i * 0.17, gain: 0.03, seed: 870 + i, mallet: 0 });
+      });
+      strike(b, { note: hz('A6'), instrument: I.glass, start: 4.85, gain: 0.16, seed: 880, mallet: 0, decayScale: 1.8 });
+      return b;
+    },
+    room: { rt60: 2, wet: 0.26 },
+    master: { loudness: MOMENT, highpass: 80, maxSeconds: 7.4, tailFade: 1.6 }
+  },
+
+  'sr-memories': {
+    use: 'A surprise: a waltz under the photos',
+    dry: () => {
+      const b = silence(28);
+      waltz(b, 0.05, 0.5, Array.from({ length: 16 }, (_, i) => i), 900, bar => (bar < 4 ? 0 : bar < 8 ? 0.03 : 0.05));
+      // A last shimmer as it closes.
+      run(b, ['A6', 'D7'], 0.12, { instrument: I.glock, gain: [0.08, 0.1], start: 0.05 + 15 * 1.5 + 0.6, seed: 1300, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 1.9, wet: 0.24 },
+    master: { loudness: MOMENT - 1, highpass: 80, maxSeconds: 28, tailFade: 2.5 }
+  },
+
+  'sr-candles': {
+    use: 'A surprise: the candles lit one after another, a match struck for the first',
+    dry: () => {
+      const b = silence(3.4);
+      // The match: a scratch, then its flare.
+      noise(b, { dur: 0.14, gain: 0.5, filter: { type: 'bandpass', f: 2800, q: 0.9 }, grain: 0.85, attack: 0.002, decay: 0.05, seed: 1401 });
+      noise(b, { start: 0.08, dur: 0.5, gain: 0.32, filter: { type: 'lowpass', f: 700, q: 0.7 }, sweepTo: 2600, attack: 0.03, decay: 0.18, pink: true, seed: 1402 });
+      ['D6', 'E6', 'F#6', 'A6', 'B6'].forEach((n, i) => {
+        const t = i * 0.45;
+        // Each wick catching, and a little light ringing out with it.
+        noise(b, { start: t + 0.05, dur: 0.3, gain: 0.16, filter: { type: 'bandpass', f: 1200, q: 0.8 }, sweepTo: 2400, attack: 0.02, decay: 0.1, pink: true, pan: (i - 2) * 0.15, seed: 1410 + i });
+        strike(b, { note: hz(n), instrument: I.glock, start: t + 0.08, gain: 0.13, pan: (i - 2) * 0.15, seed: 1420 + i, mallet: 0 });
+      });
+      strike(b, { note: hz('D6'), instrument: I.glass, start: 2.15, gain: 0.1, seed: 1430, mallet: 0, decayScale: 1.6 });
+      strike(b, { note: hz('A6'), instrument: I.glass, start: 2.17, gain: 0.08, seed: 1431, mallet: 0, decayScale: 1.6 });
+      return b;
+    },
+    room: { rt60: 1.2, wet: 0.2 },
+    master: { loudness: SOFT, maxSeconds: 3.4, tailFade: 0.8 }
+  },
+
+  'sr-puff': {
+    use: 'A surprise: a candle blown out',
+    dry: () => {
+      const b = silence(0.6);
+      noise(b, { dur: 0.3, gain: 0.6, filter: { type: 'lowpass', f: 900, q: 0.7 }, attack: 0.02, decay: 0.09, pink: true, seed: 1501 });
+      noise(b, { start: 0.05, dur: 0.22, gain: 0.05, filter: { type: 'bandpass', f: 4500, q: 1 }, grain: 0.9, attack: 0.01, decay: 0.06, seed: 1502 });
+      return b;
+    },
+    room: { rt60: 0.6, wet: 0.1 },
+    master: { loudness: SOFT - 1, highpass: 200 }
+  },
+
+  'sr-fireworks': {
+    use: 'A surprise: candles out - a hush, then fireworks over the two of them',
+    dry: () => {
+      const b = silence(6.2);
+      firework(b, 1.1, 1.7, 1, 1600);
+      firework(b, 2.1, 2.6, 0.8, 1700);
+      firework(b, 2.6, 3.2, 0.9, 1800);
+      // With the first burst the lights come back up: a warm swell.
+      pad(b, ['D4', 'A4', 'E5', 'F#5'], 1.7, 3.4, 0.05);
+      run(b, ['D6', 'F#6', 'A6', 'D7'], 0.07, { instrument: I.glock, gain: [0.12, 0.14, 0.16, 0.18], start: 1.75, seed: 1900, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 1.6, wet: 0.2 },
+    master: { loudness: MOMENT, highpass: 120, maxSeconds: 6.2, tailFade: 1.4 }
+  },
+
+  'sr-envelope': {
+    use: 'A surprise: a letter drifting down, landing with a chime',
+    dry: () => {
+      const b = silence(2.6);
+      [0.1, 0.36, 0.6, 0.84, 1.05, 1.24].forEach((t, i) =>
+        noise(b, { start: t, dur: 0.13, gain: 0.12 + (i % 2) * 0.05, filter: { type: 'bandpass', f: 1800 + i * 140, q: 0.9 }, grain: 0.6, attack: 0.03, decay: 0.05, pink: true, pan: i % 2 ? 0.25 : -0.25, seed: 2001 + i })
+      );
+      air(b, { start: 0, dur: 1.3, gain: 0.06, from: 1200, to: 3200, attack: 0.3, seed: 2010 });
+      strike(b, { note: hz('D6'), instrument: I.glass, start: 1.5, gain: 0.3, seed: 2011, mallet: 0.1 });
+      strike(b, { note: hz('A6'), instrument: I.glass, start: 1.58, gain: 0.2, seed: 2012, mallet: 0.1 });
+      strike(b, { note: hz('D4'), instrument: I.felt, start: 1.5, gain: 0.12, seed: 2013, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 1.4, wet: 0.2 },
+    master: { loudness: SOFT, maxSeconds: 2.6, tailFade: 0.6 }
+  },
+
+  'sr-seal': {
+    use: 'A surprise: the wax seal broken, the envelope opened, the letter drawn out and unfolded',
+    dry: () => {
+      const b = silence(3);
+      // The wax giving: two small cracks.
+      noise(b, { dur: 0.03, gain: 0.7, filter: { type: 'bandpass', f: 2200, q: 1.2 }, attack: 0.0005, decay: 0.006, seed: 2101 });
+      mode(b, { freq: 1400, amp: 0.22, decay: 0.015 });
+      noise(b, { start: 0.045, dur: 0.025, gain: 0.4, filter: { type: 'bandpass', f: 2700, q: 1.2 }, attack: 0.0005, decay: 0.005, seed: 2102 });
+      // The flap folding back, the letter sliding out, and opened.
+      paper(b, 0.28, 0.35, 0.22, 2400, 1600, 2103, -0.15);
+      paper(b, 0.75, 0.65, 0.2, 1500, 3200, 2104, 0.1);
+      [1.5, 1.72, 1.95].forEach((t, i) =>
+        noise(b, { start: t, dur: 0.09, gain: 0.25 - i * 0.03, filter: { type: 'bandpass', f: 3000 - i * 250, q: 0.9 }, grain: 0.8, attack: 0.004, decay: 0.03, pan: (i - 1) * 0.3, seed: 2110 + i })
+      );
+      strike(b, { note: hz('F#6'), instrument: I.glass, start: 2.15, gain: 0.18, seed: 2120, mallet: 0 });
+      strike(b, { note: hz('D6'), instrument: I.glass, start: 2.2, gain: 0.18, seed: 2121, mallet: 0 });
+      strike(b, { note: hz('D4'), instrument: I.felt, start: 2.15, gain: 0.1, seed: 2122, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 1.2, wet: 0.16 },
+    master: { loudness: SOFT, maxSeconds: 3, tailFade: 0.6 }
+  },
+
+  'sr-finale': {
+    use: 'A surprise: the end - the two of them under the moon, a shooting star, the waltz once more',
+    dry: () => {
+      const b = silence(10.5);
+      waltz(b, 0.3, 0.6, [12, 13, 14, 15], 2200, () => 0.05);
+      // A shooting star across the sky.
+      air(b, { start: 1.8, dur: 0.9, gain: 0.1, from: 3000, to: 9000, attack: 0.2, seed: 2300 });
+      run(b, ['A6', 'B6', 'D7', 'E7', 'F#7'], 0.05, { instrument: I.glass, gain: 0.07, start: 1.9, seed: 2301, mallet: 0 });
+      strike(b, { note: hz('D5'), instrument: I.bell, start: 0.3 + 9 * 0.6, gain: 0.14, seed: 2310, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 2.1, wet: 0.28 },
+    master: { loudness: MOMENT - 1, highpass: 80, maxSeconds: 10.5, tailFade: 2.5 }
   }
 };

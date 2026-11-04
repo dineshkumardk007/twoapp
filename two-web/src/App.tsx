@@ -5381,12 +5381,13 @@ export const App: React.FC = () => {
   }, [pageVisible]);
   const partySeat = partyFor(surpriseBook, surpriseClock);
   useEffect(() => setPartyToday(partySeat), [partySeat]);
-  // Theirs on its way: the sounds loaded ahead, so the song starts on cue.
+  // Theirs on its way: its first sound loaded ahead, so the opening is on
+  // cue. The rest load as it opens (SurpriseReveal), well before they play.
   const surpriseWaiting = surpriseBook.plans.some(
     p => p.author !== state.activeUser && !p.cancelled && !surpriseBook.opened.includes(p.id)
   );
   useEffect(() => {
-    if (surpriseWaiting) loadSounds(['birthday-song', 'party-pop', 'unseal', 'us-shh']);
+    if (surpriseWaiting) loadSounds(['sr-open']);
   }, [surpriseWaiting]);
   const dueOne = dueSurprise(surpriseBook, state.activeUser, surpriseClock);
   const showingSurprise =

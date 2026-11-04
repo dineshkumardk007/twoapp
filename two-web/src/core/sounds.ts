@@ -32,7 +32,8 @@ export type SoundName =
   | 'us-highfive' | 'us-splash' | 'us-tease' | 'us-dance' | 'us-tuck'
   | 'us-dance-2' | 'us-dance-3' | 'us-dance-4' | 'us-dance-5' | 'us-dance-6'
   | 'us-shake' | 'us-drip'
-  | 'birthday-song' | 'birthday-jingle' | 'party-pop';
+  | 'birthday-song' | 'birthday-jingle' | 'party-pop'
+  | 'sr-open' | 'sr-memories' | 'sr-candles' | 'sr-puff' | 'sr-fireworks' | 'sr-envelope' | 'sr-seal' | 'sr-finale';
 
 interface Loaded {
   buffer: AudioBuffer;
@@ -124,8 +125,11 @@ export interface PlayOptions {
 }
 
 export interface Playing {
-  /** Fades the sound out over a few tens of milliseconds and stops it. */
-  stop(): void;
+  /**
+   * Fades the sound out and stops it: over a few tens of milliseconds, or
+   * gently over about five times `fade` seconds - music closing a scene.
+   */
+  stop(fade?: number): void;
 }
 
 /** Plays a sound. Never throws: a sound that cannot play is simply not heard. */
@@ -168,13 +172,13 @@ export function playSound(name: SoundName, options: PlayOptions = {}): Playing {
   else void load(name).then(sound => sound && start(sound));
 
   return {
-    stop() {
+    stop(fade = 0.03) {
       stopped = true;
       const ctx = getAudioContext();
       if (!ctx || !source || !level) return;
       try {
-        level.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
-        source.stop(ctx.currentTime + 0.2);
+        level.gain.setTargetAtTime(0, ctx.currentTime, fade);
+        source.stop(ctx.currentTime + Math.max(0.2, fade * 6));
       } catch {
         /* already stopped */
       }
