@@ -2227,6 +2227,121 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
   to { transform: translateY(45%); }
 }
 
+/* The newer plays' arms (UsRig, ReachArm) and what they hold. */
+/* A hug: both arms round them, shorter a moment with each squeeze. */
+.rig-hug-arm { animation: rig-hug-arm 1900ms linear both; }
+@keyframes rig-hug-arm {
+  0% { transform: scaleX(0.2); opacity: 0; animation-timing-function: ease-out; }
+  10% { transform: scaleX(0.45); opacity: 1; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+  20% { transform: scaleX(1); }
+  30%, 50%, 74% { transform: scaleX(0.95); }
+  40%, 62% { transform: scaleX(1); }
+  88% { transform: scaleX(1); opacity: 1; animation-timing-function: ease-in; }
+  100% { transform: scaleX(0.2); opacity: 0; }
+}
+/* A spoonful: out slowly, hovering - into the mouth at 41% - and back. */
+.rig-feed-arm { animation: rig-feed-arm 1500ms linear both; }
+@keyframes rig-feed-arm {
+  0% { transform: scaleX(0.2); opacity: 0; animation-timing-function: ease-out; }
+  10% { transform: scaleX(0.45); opacity: 1; animation-timing-function: ease-in-out; }
+  28% { transform: scaleX(0.62); animation-timing-function: cubic-bezier(0.5, 0, 0.6, 1.4); }
+  41% { transform: scaleX(1); }
+  52% { transform: scaleX(1); animation-timing-function: ease-in-out; }
+  68% { transform: scaleX(0.45); animation-timing-function: ease-in; }
+  80% { transform: scaleX(0.2); opacity: 1; }
+  84%, 100% { transform: scaleX(0.2); opacity: 0; }
+}
+/* Here comes the aeroplane: the spoon swooping on its way in. */
+.rig-swoop { animation: rig-swoop 1500ms ease-in-out both; }
+@keyframes rig-swoop {
+  0%, 8% { transform: rotate(0deg); }
+  16% { transform: rotate(calc(var(--d, 1) * -14deg)); }
+  25% { transform: rotate(calc(var(--d, 1) * 9deg)); }
+  33% { transform: rotate(calc(var(--d, 1) * -5deg)); }
+  41%, 100% { transform: rotate(0deg); }
+}
+/* The rice on the spoon, gone once it is in the mouth. */
+.rig-eaten { animation: rig-eaten 1500ms linear both; }
+@keyframes rig-eaten {
+  0%, 42% { opacity: 1; }
+  44%, 100% { opacity: 0; }
+}
+/* A flower held out, kept there to be sniffed, let go at 64%. */
+.rig-give { animation: rig-give 1500ms linear both; }
+@keyframes rig-give {
+  0% { transform: scaleX(0.2); opacity: 0; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+  18% { transform: scaleX(1); opacity: 1; }
+  62% { transform: scaleX(1); animation-timing-function: ease-in; }
+  80% { transform: scaleX(0.2); opacity: 1; }
+  84%, 100% { transform: scaleX(0.2); opacity: 0; }
+}
+.rig-handed { animation: rig-handed 1500ms linear both; }
+@keyframes rig-handed {
+  0%, 62% { opacity: 1; }
+  64%, 100% { opacity: 0; }
+}
+/* A palm up for a high five: smacking at 26%, knocked back a little. */
+.rig-high5 { animation: rig-high5 1600ms linear both; }
+@keyframes rig-high5 {
+  0%, 6% { transform: scaleX(0.2); opacity: 0; animation-timing-function: ease-out; }
+  12% { transform: scaleX(0.6); opacity: 1; animation-timing-function: cubic-bezier(0.3, 0, 0.7, 1); }
+  26% { transform: scaleX(1.03); animation-timing-function: ease-out; }
+  30% { transform: scaleX(0.9); animation-timing-function: ease-in-out; }
+  36%, 46% { transform: scaleX(1); animation-timing-function: ease-in; }
+  62% { transform: scaleX(0.2); opacity: 1; }
+  66%, 100% { transform: scaleX(0.2); opacity: 0; }
+}
+/* Something held for a play - a bowl, a flower taken: pops in, stays, goes. */
+.rig-prop { animation: rig-prop 1800ms linear both; }
+@keyframes rig-prop {
+  0% { transform: scale(0.3); opacity: 0; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+  10% { transform: scale(1); opacity: 1; }
+  88% { transform: scale(1); opacity: 1; animation-timing-function: ease-in; }
+  100% { transform: scale(0.5); opacity: 0; }
+}
+/* A blanket lifted over them, laid down at 32%, settling - and later gone. */
+.rig-blanket { animation: rig-blanket 2800ms linear both; }
+@keyframes rig-blanket {
+  0%, 14% { transform: translateY(-34%) scale(0.6); opacity: 0; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+  20% { transform: translateY(-34%) scale(1, 0.9); opacity: 1; animation-timing-function: ease-in-out; }
+  26% { transform: translateY(-30%) scale(1); animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.5); }
+  32% { transform: translateY(0) scale(1.06, 0.92); animation-timing-function: ease-out; }
+  37% { transform: translateY(0) scale(0.98, 1.03); }
+  42% { transform: translateY(0) scale(1); opacity: 1; }
+  90% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 0; }
+}
+/* A mark that stays a moment: a kiss on the cheek, a cross little vein, a big heart. */
+.fx-mark { animation: fx-mark 1100ms linear both; }
+@keyframes fx-mark {
+  0% { transform: scale(0); opacity: 1; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.6); }
+  18% { transform: scale(1.15); }
+  28% { transform: scale(1); }
+  80% { transform: scale(1); opacity: 1; animation-timing-function: ease-in; }
+  100% { transform: scale(0.8); opacity: 0; }
+}
+/* Water out of a burst balloon - and flung off in a shake. */
+.fx-splash { animation: fx-splash 800ms linear both; }
+@keyframes fx-splash {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 0; animation-timing-function: cubic-bezier(0.1, 0.8, 0.3, 1); }
+  8% { opacity: 1; }
+  40% { transform: translate(var(--fx, 0%), var(--fy, -100%)) scale(1); animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6); }
+  85% { opacity: 1; }
+  100% { transform: translate(calc(var(--fx, 0%) * 1.25), calc(var(--fy, -100%) + 300%)) scale(0.9); opacity: 0; }
+}
+/* Music notes for the dance, floating up like the giggles do. */
+.fx-note {
+  position: absolute;
+  font: 800 16px/1 Manrope, system-ui, sans-serif;
+  color: #7c6cff;
+  text-shadow: 0 1px 0 #fff, 0 0 3px #fff;
+  pointer-events: none;
+  animation: fx-ha 1100ms ease-out both;
+}
+.fx-ha[data-tone='food'] { color: #e8743b; }
+.fx-ha[data-tone='tease'] { color: #ff4d7d; font-size: 11px; }
+.fx-word[data-tone='water'] { color: #8fd6ff; }
+
 .us-pop {
   transform-box: fill-box;
   transform-origin: 50% 100%;
@@ -2348,6 +2463,16 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
 .us-pad-btn[data-kind='pinch'] { --pad-tint: rgb(255 125 154 / 0.2); }
 .us-pad-btn[data-kind='pat'] { --pad-tint: rgb(96 165 250 / 0.18); }
 .us-pad-btn[data-kind='pillow'] { --pad-tint: rgb(167 139 250 / 0.2); }
+.us-pad-btn[data-kind='hug'] { --pad-tint: rgb(255 159 67 / 0.2); }
+.us-pad-btn[data-kind='kiss'] { --pad-tint: rgb(255 77 125 / 0.16); }
+.us-pad-btn[data-kind='feed'] { --pad-tint: rgb(255 138 101 / 0.2); }
+.us-pad-btn[data-kind='nuzzle'] { --pad-tint: rgb(244 114 182 / 0.18); }
+.us-pad-btn[data-kind='flower'] { --pad-tint: rgb(52 211 153 / 0.18); }
+.us-pad-btn[data-kind='highfive'] { --pad-tint: rgb(250 204 21 / 0.2); }
+.us-pad-btn[data-kind='balloon'] { --pad-tint: rgb(56 189 248 / 0.18); }
+.us-pad-btn[data-kind='tease'] { --pad-tint: rgb(251 113 133 / 0.18); }
+.us-pad-btn[data-kind='dance'] { --pad-tint: rgb(139 92 246 / 0.18); }
+.us-pad-btn[data-kind='tuck'] { --pad-tint: rgb(99 102 241 / 0.18); }
 
 /* The scoreboard. */
 .us-board {

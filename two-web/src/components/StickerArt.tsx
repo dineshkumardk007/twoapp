@@ -53,7 +53,7 @@ const Part: React.FC<{ cls?: string; delay?: number; children: React.ReactNode }
 
 export type Mood =
   | 'smile' | 'grin' | 'happy' | 'love' | 'cry' | 'sad' | 'angry' | 'sleep' | 'shock' | 'laugh'
-  | 'wink' | 'kiss' | 'puppy' | 'smug' | 'roll' | 'drool' | 'yawn' | 'think' | 'tight' | 'dead';
+  | 'wink' | 'kiss' | 'puppy' | 'smug' | 'roll' | 'drool' | 'yawn' | 'think' | 'tight' | 'dead' | 'tongue';
 
 interface FaceProps {
   mood: Mood;
@@ -163,6 +163,17 @@ export const Face: React.FC<FaceProps> = ({ mood, ex, ey, my, k = 1, blush }) =>
     />
   );
   const yawn = <ellipse cx={0} cy={my + 3 * k} rx={5.5 * k} ry={7.5 * k} {...shape(MOUTH, sw.strokeWidth)} />;
+  // Blowing a raspberry: the tongue right out.
+  const tongueOut = (
+    <g>
+      <path d={`M${-6 * k},${my - 1 * k} Q0,${my + 5 * k} ${6 * k},${my - 1 * k} Z`} {...shape(MOUTH, sw.strokeWidth)} />
+      <path
+        d={`M${-3.8 * k},${my + 1 * k} L${-3.8 * k},${my + 7 * k} Q0,${my + 12 * k} ${3.8 * k},${my + 7 * k} L${3.8 * k},${my + 1 * k} Z`}
+        {...shape(TONGUE, 2.2 * Math.min(k, 1.2))}
+      />
+      <path d={`M0,${my + 3 * k} L0,${my + 7.5 * k}`} stroke={MOUTH} strokeWidth={1.4 * k} strokeLinecap="round" />
+    </g>
+  );
 
   let eyes: React.ReactNode;
   let mouth: React.ReactNode;
@@ -256,6 +267,10 @@ export const Face: React.FC<FaceProps> = ({ mood, ex, ey, my, k = 1, blush }) =>
     case 'dead':
       eyes = [cross(-ex), cross(ex)];
       mouth = wavy;
+      break;
+    case 'tongue':
+      eyes = [chevron(-ex, 1), arcUp(ex)];
+      mouth = tongueOut;
       break;
   }
 
@@ -455,7 +470,7 @@ export const Zzz: React.FC<At> = p => (
 );
 
 /** The little cross of an angry vein. */
-const Vein: React.FC<At> = p => (
+export const Vein: React.FC<At> = p => (
   <Part cls={p.cls} delay={p.delay}>
     <g transform={at(p)} stroke="#ff3b3b" strokeWidth={3.2} strokeLinecap="round" fill="none">
       <path d="M-6,-2 Q-2,-2 -2,-6 M2,-6 Q2,-2 6,-2 M6,2 Q2,2 2,6 M-2,6 Q-2,2 -6,2" />
@@ -500,7 +515,7 @@ const Phone: React.FC<At> = p => (
   </g>
 );
 
-const Flower: React.FC<At> = p => (
+export const Flower: React.FC<At> = p => (
   <g transform={at(p)}>
     <path d="M0,4 C2,14 -2,22 0,30" stroke="#37a85a" strokeWidth={3.4} strokeLinecap="round" fill="none" />
     <path d="M0,20 C6,14 12,16 12,16 C10,22 4,22 0,20 Z" {...shape('#6fd08a', 2)} />

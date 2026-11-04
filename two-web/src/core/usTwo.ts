@@ -252,8 +252,20 @@ export function funnyNumbers(messages: ChatMessage[]): FunnyNumbers {
 }
 
 /** What one of you can do to the other on Home (components/UsScene). */
-export type PlayKind = 'boop' | 'tickle' | 'pinch' | 'pat' | 'pillow';
-export const PLAY_KINDS: readonly PlayKind[] = ['boop', 'tickle', 'pinch', 'pat', 'pillow'];
+export type PlayKind =
+  | 'boop' | 'tickle' | 'pinch' | 'pat' | 'pillow'
+  | 'hug' | 'kiss' | 'feed' | 'nuzzle' | 'flower'
+  | 'highfive' | 'balloon' | 'tease' | 'dance' | 'tuck';
+export const PLAY_KINDS: readonly PlayKind[] = [
+  'boop', 'tickle', 'pinch', 'pat', 'pillow',
+  'hug', 'kiss', 'feed', 'nuzzle', 'flower',
+  'highfive', 'balloon', 'tease', 'dance', 'tuck'
+];
+
+/**
+ * What a phone with an older Two does with a play it does not know: a boop.
+ * So both phones need the version that has the newer plays.
+ */
 
 export function cleanPlayKind(raw: unknown): PlayKind {
   return PLAY_KINDS.includes(raw as PlayKind) ? (raw as PlayKind) : 'boop';

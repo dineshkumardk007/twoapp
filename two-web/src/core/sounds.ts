@@ -28,6 +28,8 @@ export type SoundName =
   | 'kiss' | 'breath-rest'
   | 'us-boop' | 'us-tickle' | 'us-hehe' | 'us-pinch' | 'us-pat'
   | 'us-whoosh' | 'us-bonk' | 'us-dizzy' | 'us-hop' | 'us-shh'
+  | 'us-hug' | 'us-kiss' | 'us-feed' | 'us-nuzzle' | 'us-flower'
+  | 'us-highfive' | 'us-splash' | 'us-tease' | 'us-dance' | 'us-tuck'
   | 'birthday-song' | 'birthday-jingle' | 'party-pop';
 
 interface Loaded {

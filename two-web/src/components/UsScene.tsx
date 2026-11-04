@@ -1,18 +1,36 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, Volume2, VolumeX } from 'lucide-react';
 import type { ChatMessage, WeatherState } from '../types';
-import { Heart, Sparkle, Zzz, Drop, type Mood } from './StickerArt';
-import { BOX, HeldPillow, JOINTS, Pillow, ReachArm, Rig, at, type RigArms, type RigKind, type RigLayers } from './UsRig';
+import { Heart, Sparkle, Zzz, Drop, Flower, Vein, type Mood } from './StickerArt';
 import {
+  BOX,
+  Blanket,
+  HeldBalloon,
+  HeldPillow,
+  JOINTS,
+  Pillow,
+  ReachArm,
+  RiceBowl,
+  Rig,
+  RigProp,
+  Spoon,
+  WaterBalloon,
+  at,
+  type RigArms,
+  type RigKind,
+  type RigLayers
+} from './UsRig';
+import {
+  DANCE_BEAT,
   FIRST_RELEASE,
   FLIGHT_MS,
   MOODS,
-  NEAR,
   NEAR_ACTS,
   PLAY_MS,
   SAY_AT,
   WALK_MS,
   movesFor,
+  nearOf,
   perform,
   pillowMoves,
   scootMoves,
@@ -73,12 +91,23 @@ interface UsSceneProps {
 
 const MISS_WORDS = ['All good 😌', 'A little 🙂', 'Missing you 🥺', 'A lot 😭', 'Dangerously high 🚨'];
 
+/** Three rows of five: the cheeky ones, the sweet ones, the silly ones. */
 const PLAYS: { kind: PlayKind; emoji: string; label: string }[] = [
   { kind: 'boop', emoji: '👉', label: 'Boop' },
   { kind: 'tickle', emoji: '🤭', label: 'Tickle' },
   { kind: 'pinch', emoji: '🥰', label: 'Pinch cheeks' },
   { kind: 'pat', emoji: '🫶', label: 'Head pat' },
-  { kind: 'pillow', emoji: '🪶', label: 'Pillow fight' }
+  { kind: 'pillow', emoji: '🪶', label: 'Pillow fight' },
+  { kind: 'hug', emoji: '🤗', label: 'Hug' },
+  { kind: 'kiss', emoji: '😘', label: 'Kiss' },
+  { kind: 'feed', emoji: '🍛', label: 'Feed' },
+  { kind: 'nuzzle', emoji: '👃', label: 'Nose rub' },
+  { kind: 'flower', emoji: '🌹', label: 'Flower' },
+  { kind: 'highfive', emoji: '🙌', label: 'High five' },
+  { kind: 'balloon', emoji: '💦', label: 'Water balloon' },
+  { kind: 'tease', emoji: '😜', label: 'Tease' },
+  { kind: 'dance', emoji: '💃', label: 'Dance' },
+  { kind: 'tuck', emoji: '🌙', label: 'Tuck in' }
 ];
 
 /** What the one it is done to says. */
@@ -88,6 +117,16 @@ const SAYS: Record<Act, string> = {
   pinch: 'squish!',
   pat: 'aww',
   pillow: 'bonk!',
+  hug: 'squeeze!',
+  kiss: 'mwah!',
+  feed: 'yum!',
+  nuzzle: 'nuzzle nuzzle',
+  flower: 'for me?!',
+  highfive: 'yay!',
+  balloon: 'splash!',
+  tease: 'hmph!',
+  dance: '♪ la la la ♪',
+  tuck: 'good night…',
   giggle: 'hehe'
 };
 
@@ -105,7 +144,12 @@ const BONKS = ['bonk!', 'pow!', 'boff!', 'thwap!', 'wham!'];
 const BOOP_STEPS = [0, 2, 4, 7, 9, 12];
 
 /** Every sound of the battle (sound-design/recipes.mts), loaded as the scene opens. */
-const US_SOUNDS: SoundName[] = ['us-boop', 'us-tickle', 'us-hehe', 'us-pinch', 'us-pat', 'us-whoosh', 'us-bonk', 'us-dizzy', 'us-hop', 'us-shh'];
+const US_SOUNDS: SoundName[] = [
+  'us-boop', 'us-tickle', 'us-hehe', 'us-pinch', 'us-pat', 'us-whoosh', 'us-bonk', 'us-dizzy', 'us-hop', 'us-shh',
+  'us-hug', 'us-kiss', 'us-feed', 'us-nuzzle', 'us-flower', 'us-highfive', 'us-splash', 'us-tease', 'us-dance', 'us-tuck'
+];
+/** Felt as a firm buzz when it lands, not a tap. */
+const FIRM: ReadonlySet<Act> = new Set<Act>(['pillow', 'balloon', 'highfive', 'hug']);
 /** This phone's own choice: sounds on, unless switched off. */
 const SOUND_KEY = 'two_us_sound';
 function readSoundOn(): boolean {
@@ -373,9 +417,9 @@ export const UsScene: React.FC<UsSceneProps> = ({
     let lead = 0;
     if (!p.hush && NEAR_ACTS.has(p.kind) && motionOk()) {
       // Already there from the last one - a run of boops - or standing close enough.
-      const there = !!cur && !cur.hush && NEAR_ACTS.has(cur.kind) && cur.target === p.target;
+      const there = !!cur && !cur.hush && NEAR_ACTS.has(cur.kind) && cur.target === p.target && nearOf(cur.kind) === nearOf(p.kind);
       const apart = Math.abs(geo.current.me - geo.current.them);
-      if (!there && Math.abs(apart - NEAR) > 8) lead = WALK_MS;
+      if (!there && Math.abs(apart - nearOf(p.kind)) > 8) lead = WALK_MS;
     }
     const next: Play = { ...p, n: ++playN.current, lead };
     // Pillows: a tap while the last ones are still flying throws another, a
@@ -410,7 +454,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const actorOf = (p: Play): Who => other(p.target);
   const nearWho = play && !play.hush && NEAR_ACTS.has(play.kind) ? actorOf(play) : null;
   const xAt = (who: Who) =>
-    who === nearWho && play ? homeX(play.target) - dirTo(play.target) * NEAR : homeX(who);
+    who === nearWho && play ? homeX(play.target) - dirTo(play.target) * nearOf(play.kind) : homeX(who);
   const meAt = xAt('me');
   const themAt = xAt('them');
 
@@ -434,7 +478,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
       // Felt when it lands, by someone looking - and never by someone asleep.
       if (!d.quiet && isShown()) {
         const hit = hitAt(p);
-        setTimeout(() => haptic(kind === 'pillow' ? 'confirm' : 'tick'), hit);
+        setTimeout(() => haptic(FIRM.has(kind) ? 'confirm' : 'tick'), hit);
         if (kind === 'tickle') [150, 300, 450].forEach(ms => setTimeout(() => haptic('tick'), hit + ms));
       }
     };
@@ -523,6 +567,44 @@ export const UsScene: React.FC<UsSceneProps> = ({
         timers.push(setTimeout(() => hear('us-dizzy', 0), release + FLIGHT_MS + 160));
         break;
       }
+      // Each new one's hit, inside its sound (sound-design/recipes.mts), on the frame it lands.
+      case 'hug':
+        // The first squeeze 70 ms after the arms close, as they are squashed (usMoves, hugMoves).
+        hear('us-hug', L + 450);
+        break;
+      case 'kiss':
+        hear('us-kiss', L + 420);
+        break;
+      case 'feed':
+        // Spoon on the bowl; the chomp 0.56 s later, on the 620 ms frame, and three chews.
+        hear('us-feed', L + 60);
+        break;
+      case 'nuzzle':
+        // A squeak on each rub, 216 ms apart.
+        hear('us-nuzzle', L + 540);
+        break;
+      case 'flower':
+        hear('us-flower', L + 270);
+        break;
+      case 'highfive':
+        hear('us-highfive', L + 420);
+        break;
+      case 'balloon':
+        hear('us-whoosh', FIRST_RELEASE);
+        // The splash, and the shake 0.49 s after it.
+        hear('us-splash', FIRST_RELEASE + FLIGHT_MS);
+        break;
+      case 'tease':
+        // The raspberry, and the "hmph" 0.6 s in.
+        hear('us-tease', 100);
+        break;
+      case 'dance':
+        hear('us-dance', L);
+        break;
+      case 'tuck':
+        // A yawn, the blanket laid down 0.65 s in, then the lullaby.
+        hear('us-tuck', L + 250);
+        break;
       case 'giggle':
         hear('us-hehe', 120);
         break;
@@ -547,8 +629,8 @@ export const UsScene: React.FC<UsSceneProps> = ({
     if (!p.hush && liveRef.current && motionOk()) {
       const d = dirTo(p.target);
       const target = rigOf(p.target).current;
-      // A cheek is pulled out from the far side of the face.
-      if (p.kind === 'pinch' && target.stretch) target.stretch.style.transformOrigin = at(d * 30, 4);
+      // A cheek is pulled out from the far side of the face; cheeks puff (chewing, in a huff) from the middle.
+      if (target.stretch) target.stretch.style.transformOrigin = p.kind === 'pinch' ? at(d * 30, 4) : at(0, 8);
       const moves = p.kind === 'pillow' ? pillowMoves(d, p.release ?? FIRST_RELEASE, p.first !== false) : movesFor(p.kind, d, p.lead, p.combo);
       const started = perform(moves, {
         actor: p.kind === 'giggle' ? undefined : rigOf(actorOf(p)).current,
@@ -634,8 +716,64 @@ export const UsScene: React.FC<UsSceneProps> = ({
   const armsOf = (who: Who): RigArms => (hugging ? 'up' : who === 'them' && partnerTyping ? 'hold' : 'down');
   const acting = (who: Who) => !!play && !play.hush && play.kind !== 'giggle' && actorOf(play) === who;
 
-  /** The arm the one doing it stretches out - or the pillow it holds up. */
-  const reachFor = (p: Play): React.ReactNode => {
+  /** Where two palms meet in a high five, on the stage: between them, high over their heads, so both arms go up clear of their faces. */
+  const palmsAt = (p: Play): [number, number] => {
+    const actor = actorOf(p);
+    return [(xAt(actor) + homeX(p.target)) / 2, Math.min(HEADS[kindOf(actor)].y, HEADS[kindOf(p.target)].y) - 38];
+  };
+
+  /** What the one a play is done to holds or wears for it: a palm raised back, a flower taken, a blanket. */
+  const theirParts = (p: Play): React.ReactNode => {
+    const d = dirTo(p.target);
+    const tk = kindOf(p.target);
+    const jt = JOINTS[tk];
+    const th = HEADS[tk];
+    const tx = homeX(p.target);
+    const L = p.lead;
+    const key = `t${p.n}`;
+    switch (p.kind) {
+      case 'highfive': {
+        const [mx, my] = palmsAt(p);
+        return (
+          <ReachArm
+            key={key}
+            kind={tk}
+            d={-d as 1 | -1}
+            from={[-d * jt.shoulder[0], jt.shoulder[1]]}
+            to={[(mx - tx) / th.s, (my - th.y) / th.s]}
+            move="rig-high5"
+            ms={1600}
+            delay={L}
+            bow={6}
+          />
+        );
+      }
+      case 'flower':
+        // Handed over at 960 ms (rig-give), and held up beside their face.
+        return (
+          <RigProp key={key} origin={[-d * 34, 22]} ms={1340} delay={L + 960}>
+            <Flower x={-d * 34} y={6} s={0.6} rot={-10 * d} />
+          </RigProp>
+        );
+      case 'tuck':
+        return (
+          <RigProp key={key} className="rig-blanket" origin={[0, 66]} ms={2800} delay={L}>
+            <Blanket />
+          </RigProp>
+        );
+      default:
+        return null;
+    }
+  };
+
+  /**
+   * What each of them holds out or wears for a play, moving with them: the
+   * arm the one doing it stretches out, the pillow or balloon it holds up,
+   * the bowl it feeds them from - and the other's side of it.
+   */
+  const partsFor = (p: Play, who: Who): React.ReactNode => {
+    if (p.hush || p.kind === 'giggle') return null;
+    if (who === p.target) return theirParts(p);
     const actor = actorOf(p);
     const d = dirTo(p.target);
     const ak = kindOf(actor);
@@ -715,6 +853,58 @@ export const UsScene: React.FC<UsSceneProps> = ({
             bow={14}
           />
         );
+      case 'hug':
+        // One arm round their chest to the far side, the other round their middle.
+        return (
+          <React.Fragment key={key}>
+            <ReachArm kind={ak} d={d} from={near} to={local(tx + d * 15 * th.s, th.y + 38 * th.s)} move="rig-hug-arm" ms={1900} delay={L} bow={9} />
+            <ReachArm kind={ak} d={d} from={far} to={local(tx + d * 6 * th.s, th.y + 50 * th.s)} move="rig-hug-arm" ms={1900} delay={L} bow={-6} />
+          </React.Fragment>
+        );
+      case 'feed':
+        return (
+          <React.Fragment key={key}>
+            <RigProp origin={[-d * 8, 44]} ms={1800} delay={L}>
+              <RiceBowl x={-d * 8} y={44} />
+            </RigProp>
+            <ReachArm
+              kind={ak}
+              d={d}
+              from={near}
+              to={local(tx - d * 18, th.y + (jt.mouth + 2) * th.s)}
+              move="rig-feed-arm"
+              ms={1500}
+              delay={L}
+              wiggle="rig-swoop"
+              wiggleDelay={L}
+              bow={4}
+              item={<Spoon ms={1500} delay={L} />}
+            />
+          </React.Fragment>
+        );
+      case 'flower':
+        return (
+          <ReachArm
+            key={key}
+            kind={ak}
+            d={d}
+            from={near}
+            to={local(tx - d * (22 * th.s + 8), th.y + 14 * th.s)}
+            move="rig-give"
+            ms={1500}
+            delay={L}
+            bow={6}
+            item={
+              <g className="rig-handed" style={{ animationDelay: `${L}ms` }}>
+                <Flower x={6} y={-14} s={0.55} rot={18} />
+              </g>
+            }
+          />
+        );
+      case 'highfive':
+        return <ReachArm key={key} kind={ak} d={d} from={near} to={local(...palmsAt(p))} move="rig-high5" ms={1600} delay={L} bow={6} />;
+      case 'balloon':
+        return <HeldBalloon key={key} d={d} ms={FIRST_RELEASE / 0.8} />;
       default:
         return null;
     }
@@ -733,6 +923,12 @@ export const UsScene: React.FC<UsSceneProps> = ({
     const css = (vars: Record<string, string | number>, ms: number): React.CSSProperties =>
       ({ ...vars, animationDelay: `${L + ms}ms` }) as React.CSSProperties;
     const ty = (u: number) => th.y + u * th.s;
+    const ak = kindOf(actorOf(p));
+    const ah = HEADS[ak];
+    const ax = xAt(actorOf(p));
+    // Between them, and just over the taller one's head.
+    const midX = (ax + tx) / 2;
+    const tops = Math.min(ah.y, th.y);
     switch (p.kind) {
       case 'boop': {
         const nx = tx - d * 6 * th.s;
@@ -817,6 +1013,278 @@ export const UsScene: React.FC<UsSceneProps> = ({
                 </Sprite>
               );
             })}
+          </React.Fragment>
+        );
+      case 'hug':
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            <Sprite box={[midX - 12, tops - 50, 24, 24]} className="fx-mark" style={wait(380)}>
+              <Heart x={midX} y={tops - 38} s={0.8} />
+            </Sprite>
+            {[0, 1, 2].map(i => {
+              const hx = midX + (i - 1) * 16;
+              const hy = tops - 28 - (i === 1 ? 6 : 0);
+              return (
+                <Sprite key={i} box={[hx - 7, hy - 7, 14, 14]} className="fx-rise" style={css({ '--rx': `${(i - 1) * 50}%` }, 700 + i * 180)}>
+                  <Heart x={hx} y={hy} s={0.42} />
+                </Sprite>
+              );
+            })}
+          </React.Fragment>
+        );
+      case 'kiss': {
+        // A little heart left on the cheek.
+        const cx = tx - d * (jt.cheek[0] - 3) * th.s;
+        const cy = ty(jt.cheek[1]);
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            <Sprite box={[cx - 7, cy - 7, 14, 14]} className="fx-mark" style={wait(420)}>
+              <Heart x={cx} y={cy} s={0.42} fill="#ff6b8b" />
+            </Sprite>
+            {[0, 1].map(i => {
+              const hx = tx + d * (6 + i * 10) * th.s;
+              const hy = ty(jt.top - 4);
+              return (
+                <Sprite key={i} box={[hx - 7, hy - 7, 14, 14]} className="fx-rise" style={css({ '--rx': `${d * (40 + i * 30)}%` }, 640 + i * 160)}>
+                  <Heart x={hx} y={hy} s={0.45} />
+                </Sprite>
+              );
+            })}
+          </React.Fragment>
+        );
+      }
+      case 'feed':
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            {/* A "nom" with each chew (usMoves, feedMoves). */}
+            {[684, 988, 1292].map((ms, i) => (
+              <span
+                key={i}
+                className="fx-ha"
+                data-tone="food"
+                style={css(
+                  {
+                    left: pct(tx + d * 20 * th.s, W),
+                    top: pct(ty(jt.mouth - 4), H),
+                    '--hx': `${d * (60 + i * 20)}%`,
+                    '--hy': `${-(150 + i * 30)}%`,
+                    '--hr': d * 10
+                  },
+                  ms
+                )}
+              >
+                nom
+              </span>
+            ))}
+            <Sprite box={[tx - 7, ty(jt.top - 4) - 7, 14, 14]} className="fx-rise" style={wait(1450)}>
+              <Heart x={tx} y={ty(jt.top - 4)} s={0.45} />
+            </Sprite>
+          </React.Fragment>
+        );
+      case 'nuzzle':
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            {/* A sparkle where their cheeks meet, with each rub. */}
+            {[540, 756, 972, 1188, 1404].map((ms, i) => {
+              const sx = midX + (i % 2 ? 5 : -5);
+              const sy = tops - 18 - (i % 2) * 4;
+              return (
+                <Sprite key={i} box={[sx - 6, sy - 6, 12, 12]} className="fx-pop" style={wait(ms)}>
+                  <Sparkle x={sx} y={sy} s={0.5} />
+                </Sprite>
+              );
+            })}
+            {[0, 1].map(i => {
+              const hx = midX + (i ? 10 : -10);
+              const hy = tops - 30;
+              return (
+                <Sprite key={`h${i}`} box={[hx - 7, hy - 7, 14, 14]} className="fx-rise" style={css({ '--rx': `${(i ? 1 : -1) * 40}%` }, 1100 + i * 200)}>
+                  <Heart x={hx} y={hy} s={0.42} />
+                </Sprite>
+              );
+            })}
+          </React.Fragment>
+        );
+      case 'flower': {
+        // Round the bloom as it is held out, then hearts once it is theirs.
+        const fx = tx - d * (22 * th.s + 8) + d * 5;
+        const fy = th.y + 14 * th.s - 12;
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            {[0, 1, 2].map(i => {
+              const sx = fx + (i - 1) * 9;
+              const sy = fy - 10 - (i === 1 ? 6 : 0);
+              return (
+                <Sprite key={i} box={[sx - 6, sy - 6, 12, 12]} className="fx-pop" style={wait(300 + i * 110)}>
+                  <Sparkle x={sx} y={sy} s={0.45} />
+                </Sprite>
+              );
+            })}
+            {[0, 1, 2].map(i => {
+              const hx = tx + (i - 1) * 12;
+              const hy = ty(jt.top - 4) - (i === 1 ? 6 : 0);
+              return (
+                <Sprite key={`h${i}`} box={[hx - 7, hy - 7, 14, 14]} className="fx-rise" style={css({ '--rx': `${(i - 1) * 40}%` }, 1000 + i * 150)}>
+                  <Heart x={hx} y={hy} s={0.42} />
+                </Sprite>
+              );
+            })}
+          </React.Fragment>
+        );
+      }
+      case 'highfive': {
+        // Where the palms meet - up with the jump, 7% of the box.
+        const [mx, rest] = palmsAt(p);
+        const my = rest - 0.07 * BOX.h * Math.min(ah.s, th.s);
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            <Sprite box={[mx - 14, my - 14, 28, 28]} className="fx-pop" style={wait(420)}>
+              <path d={burst(mx, my, 13)} fill="#ffe066" stroke={INK} strokeWidth={2} strokeLinejoin="round" />
+            </Sprite>
+            <span
+              className="fx-word"
+              data-tone="clap"
+              style={{ left: pct(mx - d * 18, W), top: pct(my - 14, H), animationDelay: `${L + 420}ms`, ['--hr' as string]: -6 } as React.CSSProperties}
+            >
+              smack!
+            </span>
+            {[-1, 1].map(side => (
+              <Sprite key={side} box={[mx + side * 20 - 6, my - 6, 12, 12]} className="fx-pop" style={wait(470)}>
+                <Sparkle x={mx + side * 20} y={my} s={0.5} />
+              </Sprite>
+            ))}
+          </React.Fragment>
+        );
+      }
+      case 'balloon': {
+        // Lobbed over in an arc like a pillow, bursting on their head, the
+        // water flying off - and flung off again as they shake.
+        const sx = homeX(actorOf(p));
+        const sy = ah.y - 44 * ah.s;
+        const ey = ty(jt.top + 6);
+        const peak = Math.min(sy, ey) - 34;
+        const go = `${FIRST_RELEASE}ms`;
+        const hit = FIRST_RELEASE + FLIGHT_MS;
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            <Sprite
+              box={[tx - 14, ey - 16, 28, 32]}
+              wraps={[
+                { className: 'fx-fly-x', style: { ['--fx' as string]: `${((sx - tx) / 28) * 100}%`, animationDelay: go } },
+                {
+                  className: 'fx-fly-y',
+                  style: { ['--fy' as string]: `${((sy - ey) / 32) * 100}%`, ['--fpk' as string]: `${((peak - ey) / 32) * 100}%`, animationDelay: go }
+                },
+                { className: 'fx-spin', style: { ['--d' as string]: d, animationDelay: go } }
+              ]}
+            >
+              <WaterBalloon x={tx} y={ey} s={ah.s * 1.1} />
+            </Sprite>
+            <Sprite box={[tx - 18, ey - 18, 36, 36]} className="fx-pop" style={{ animationDelay: `${hit}ms` }}>
+              <path d={burst(tx, ey, 17)} fill="#9ad8ff" stroke={INK} strokeWidth={2} strokeLinejoin="round" />
+            </Sprite>
+            <span
+              className="fx-word"
+              data-tone="water"
+              style={{ left: pct(tx - d * 2, W), top: pct(ey - 18, H), animationDelay: `${hit}ms`, ['--hr' as string]: d * 8 } as React.CSSProperties}
+            >
+              splash!
+            </span>
+            {[-2, -1, 0, 1, 2, 3].map((spread, i) => (
+              <Sprite
+                key={i}
+                box={[tx - 4, ey - 5, 8, 10]}
+                className="fx-splash"
+                style={css({ '--fx': `${spread * 120 - 60}%`, '--fy': `${-(120 + (i % 3) * 50)}%` }, hit + i * 20)}
+              >
+                <Drop x={tx} y={ey} s={0.5} />
+              </Sprite>
+            ))}
+            {[0, 1, 2, 3].map(i => {
+              const side = i % 2 ? 1 : -1;
+              const dx = tx + side * 18 * th.s;
+              const dy = ty(jt.eyes[1]);
+              return (
+                <Sprite
+                  key={`s${i}`}
+                  box={[dx - 4, dy - 5, 8, 10]}
+                  className="fx-splash"
+                  style={css({ '--fx': `${side * (220 + i * 30)}%`, '--fy': `${-(40 + i * 20)}%` }, hit + 490 + i * 60)}
+                >
+                  <Drop x={dx} y={dy} s={0.4} />
+                </Sprite>
+              );
+            })}
+          </React.Fragment>
+        );
+      }
+      case 'tease': {
+        // Pbbbt - and a cross little vein on them.
+        const mx = ax + d * 4 * ah.s;
+        const my = ah.y + (JOINTS[ak].mouth + 6) * ah.s;
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            <span
+              className="fx-ha"
+              data-tone="tease"
+              style={css({ left: pct(mx + d * 14, W), top: pct(my - 6, H), '--hx': `${d * 90}%`, '--hy': '-120%', '--hr': d * 8 }, 150)}
+            >
+              pbbbt!
+            </span>
+            {[0, 1, 2].map(i => (
+              <Sprite key={i} box={[mx - 3, my - 3, 6, 7]} className="fx-tear" style={css({ '--tx': `${d * (260 + i * 90)}%` }, 180 + i * 100)}>
+                <Drop x={mx} y={my} s={0.28} />
+              </Sprite>
+            ))}
+            <Sprite box={[tx + d * 16 * th.s - 8, ty(jt.top + 4) - 8, 16, 16]} className="fx-mark" style={wait(700)}>
+              <Vein x={tx + d * 16 * th.s} y={ty(jt.top + 4)} s={0.7} />
+            </Sprite>
+          </React.Fragment>
+        );
+      }
+      case 'dance':
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            {/* A note on every beat, over one of them and then the other. */}
+            {[0, 1, 2, 3, 4, 5].map(i => {
+              const onThem = i % 2 === 1;
+              const h = onThem ? th : ah;
+              const x = onThem ? tx : ax;
+              const side = i % 4 < 2 ? 1 : -1;
+              return (
+                <span
+                  key={i}
+                  className="fx-note"
+                  style={css({ left: pct(x + side * 14, W), top: pct(h.y - 30 * h.s, H), '--hx': `${side * 80}%`, '--hy': '-260%', '--hr': side * 12 }, i * DANCE_BEAT)}
+                >
+                  {i % 3 === 1 ? '♫' : '♪'}
+                </span>
+              );
+            })}
+          </React.Fragment>
+        );
+      case 'tuck':
+        return (
+          <React.Fragment key={`fx${p.n}`}>
+            {[0, 1].map(i => {
+              const sx = tx + (i ? 1 : -1) * 26 * th.s;
+              const sy = ty(jt.tummy - 14);
+              return (
+                <Sprite key={`s${i}`} box={[sx - 5, sy - 5, 10, 10]} className="fx-pop" style={wait(950 + i * 120)}>
+                  <Sparkle x={sx} y={sy} s={0.4} />
+                </Sprite>
+              );
+            })}
+            {[0, 1].map(i => (
+              <Sprite
+                key={i}
+                box={[tx + 10, ty(jt.top) - 30, 36, 26]}
+                className="fx-rise"
+                style={css({ '--rx': '30%', animationDuration: '1800ms' }, 1300 + i * 800)}
+              >
+                <Zzz x={tx + 12} y={ty(jt.top) - 6} />
+              </Sprite>
+            ))}
           </React.Fragment>
         );
       default:
@@ -907,7 +1375,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
   // Tapping them boops (a combo when fast); tapping yourself giggles.
   const combo = useRef({ at: 0, n: 0 });
   const doPlay = (kind: PlayKind) => {
-    haptic(kind === 'pillow' ? 'confirm' : 'tick');
+    haptic(FIRM.has(kind) ? 'confirm' : 'tick');
     if (asleep) {
       // Let sleepers sleep: counted, but not felt on their phone.
       start({ kind, target: 'them', combo: 1, hush: true });
@@ -938,7 +1406,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
     if (p.hush) return tr('Shh… {name} is sleeping 😴', { name: partnerName });
     if (p.kind === 'boop' && p.combo >= 2) return tr('Boop ×{n}!', { n: p.combo });
     if (p.kind === 'pillow' && p.combo >= 2) return `${SAYS.pillow} ×${p.combo}`;
-    return p.kind === 'boop' ? tr('Boop!') : SAYS[p.kind];
+    return tr(SAYS[p.kind]);
   };
   const leader = score.user === score.partner ? null : score.user > score.partner ? 'user' : 'partner';
 
@@ -974,7 +1442,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
           layers={rigOf(who)}
           hat={!!partyWho}
         >
-          {doing && play && reachFor(play)}
+          {play && partsFor(play, who)}
           {throws
             .filter(t => t.actor === who)
             .map(t => (

@@ -266,7 +266,9 @@ export const ReachArm: React.FC<{
   wiggleDelay?: number;
   /** How far the elbow bows out. */
   bow?: number;
-}> = ({ kind, from, to, d, move, ms, delay, wiggle, wiggleDelay = 0, bow = 6 }) => {
+  /** Held in the paw, drawn pointing along the arm from it: a spoon, a flower. */
+  item?: React.ReactNode;
+}> = ({ kind, from, to, d, move, ms, delay, wiggle, wiggleDelay = 0, bow = 6, item }) => {
   const dx = to[0] - from[0];
   const dy = to[1] - from[1];
   const len = Math.max(8, Math.hypot(dx, dy));
@@ -292,6 +294,8 @@ export const ReachArm: React.FC<{
           <svg viewBox={`0 ${-half} ${wide} ${half * 2}`} aria-hidden="true" focusable="false">
             <path d={arm} fill="none" stroke={INK} strokeWidth={12} strokeLinecap="round" />
             <path d={arm} fill="none" stroke={fur} strokeWidth={7.2} strokeLinecap="round" />
+            {/* Turned back up the right way when the arm points left. */}
+            {item && <g transform={`translate(${len} 0) scale(1 ${d})`}>{item}</g>}
             <circle cx={len} cy={0} r={6.8} {...shape(fur, 2.6)} />
           </svg>
         </div>
@@ -325,4 +329,84 @@ export const HeldPillow: React.FC<{ d: 1 | -1; ms?: number }> = ({ d, ms = 540 }
       <Pillow x={0} y={-44} />
     </Art>
   </Layer>
+);
+
+/** A water balloon, drawn at a point of whatever it is in. */
+export const WaterBalloon: React.FC<{ x: number; y: number; s?: number }> = ({ x, y, s = 1 }) => (
+  <g transform={`translate(${x} ${y}) scale(${s})`}>
+    <path d="M0,-12 C7,-12 11,-6 11,0 C11,7 5,11 0,11 C-5,11 -11,7 -11,0 C-11,-6 -7,-12 0,-12 Z" {...shape('#7cc8ff', 2.4)} />
+    <path d="M-2.5,11 L2.5,11 L0,14.5 Z" {...shape('#7cc8ff', 1.6)} />
+    <ellipse cx={-4.5} cy={-5} rx={2.2} ry={3.6} transform="rotate(20 -4.5 -5)" fill="#fff" opacity={0.65} />
+  </g>
+);
+
+/** A water balloon held up over its head and lobbed, like a pillow (rig-held). */
+export const HeldBalloon: React.FC<{ d: 1 | -1; ms?: number }> = ({ d, ms = 540 }) => (
+  <Layer className="rig-held" origin={[0, -44]} style={{ ['--d' as string]: d, animationDuration: `${ms}ms` }}>
+    <Art>
+      <WaterBalloon x={0} y={-44} s={1.1} />
+    </Art>
+  </Layer>
+);
+
+/**
+ * Something held or worn for a play, in the character's own units - a bowl,
+ * a flower taken, a blanket. It comes and goes by its own animation
+ * (index.css): rig-prop pops in, stays and goes.
+ */
+export const RigProp: React.FC<{ className?: string; origin: [number, number]; ms: number; delay: number; children: React.ReactNode }> = ({
+  className = 'rig-prop',
+  origin,
+  ms,
+  delay,
+  children
+}) => (
+  <Layer className={className} origin={origin} style={{ animationDuration: `${ms}ms`, animationDelay: `${delay}ms` }}>
+    <Art>{children}</Art>
+  </Layer>
+);
+
+/** A bowl of rice, at a point. */
+export const RiceBowl: React.FC<{ x: number; y: number }> = ({ x, y }) => (
+  <g transform={`translate(${x} ${y})`}>
+    <path d="M-10,-3 Q-6,-11 0,-10 Q6,-11 10,-3 Z" {...shape('#fff', 1.6)} />
+    <path d="M-13,-3 L13,-3 C13,6 7,11 0,11 C-7,11 -13,6 -13,-3 Z" {...shape('#ff8a65', 2.2)} />
+    <path d="M-7,3 L7,3" stroke="#fff" strokeWidth={1.8} strokeLinecap="round" opacity={0.7} />
+  </g>
+);
+
+/**
+ * A spoonful, held in a paw (ReachArm's item) and pointing on from it. Its
+ * rice is gone once it is eaten (index.css, rig-eaten) - over `ms`, after
+ * `delay`, like the arm that holds it.
+ */
+export const Spoon: React.FC<{ ms: number; delay: number }> = ({ ms, delay }) => (
+  <g>
+    <path d="M-3,0 L13,0" stroke={INK} strokeWidth={5} strokeLinecap="round" />
+    <path d="M-3,0 L13,0" stroke="#d9dee8" strokeWidth={2.6} strokeLinecap="round" />
+    <ellipse cx={17} cy={0} rx={5.5} ry={3.6} {...shape('#e6eaf1', 1.8)} />
+    <g className="rig-eaten" style={{ animationDuration: `${ms}ms`, animationDelay: `${delay}ms` }}>
+      <circle cx={16} cy={-2.6} r={3} {...shape('#fff', 1.2)} />
+      <circle cx={19.5} cy={-2} r={2.4} {...shape('#fff', 1.2)} />
+      <circle cx={13.5} cy={-1.6} r={2} {...shape('#fff', 1.2)} />
+    </g>
+  </g>
+);
+
+const twinkle = (x: number, y: number) => `M${x},${y - 4} L${x + 1},${y - 1} L${x + 4},${y} L${x + 1},${y + 1} L${x},${y + 4} L${x - 1},${y + 1} L${x - 4},${y} L${x - 1},${y - 1} Z`;
+
+/** A starry blanket, over a character from the chin down, in its own units. */
+export const Blanket: React.FC = () => (
+  <g>
+    <path d="M-33,33 Q0,25 33,33 L35,66 Q0,73 -35,66 Z" {...shape('#b8a6ff', 2.6)} />
+    <path d="M-33,33 Q0,25 33,33 L33.5,40 Q0,32 -33.5,40 Z" {...shape('#e6defe', 2)} />
+    {[
+      [-20, 52],
+      [2, 58],
+      [20, 49],
+      [-6, 47]
+    ].map(([x, y]) => (
+      <path key={x} d={twinkle(x, y)} fill="#fff6c2" />
+    ))}
+  </g>
 );
