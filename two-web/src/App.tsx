@@ -273,6 +273,7 @@ import {
 } from './core/chatActions';
 import { cleanStickerId } from './core/stickers';
 import { addBoop, boopsFor, chatDay, cleanPlayKind, cleanTheme, withBoopCount, type PlayKind, type SceneTheme } from './core/usTwo';
+import { GAME_DOTS, GAME_TTT, cleanGame, mergeGame, recordTypeOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
   SURPRISE_PART,
@@ -1891,6 +1892,48 @@ export const App: React.FC = () => {
             const at = Number(parsed?.at) || 0;
             const theme = cleanTheme(parsed?.theme);
             setState(prev => (prev.usTheme && prev.usTheme.at >= at ? prev : { ...prev, usTheme: { theme, at } }));
+          } else if (record.type === GAME_TTT || record.type === GAME_DOTS) {
+            // A paper game on Canvas of Us (core/paperGames): the copy further
+            // on wins, so a move made here is never undone by an older copy.
+            const kind = record.type === GAME_TTT ? 'ttt' : 'dots';
+            const incoming = cleanGame(parsed, kind);
+            if (!incoming) return;
+            const before = latestRef.current.state.paperGames?.[kind];
+            const merged = mergeGame(before, incoming);
+            if (merged === before) return;
+            setState(prev => {
+              const held = prev.paperGames?.[kind];
+              const next = mergeGame(held, incoming);
+              return next === held ? prev : { ...prev, paperGames: { ...prev.paperGames, [kind]: next } };
+            });
+            // Their move, just made, while you are somewhere else in Two: a word,
+            // and Canvas of Us set to open on that game. Not for the replay of
+            // old moves on reconnecting, nor while you are looking at it.
+            const me = latestRef.current.state.activeUser;
+            const moved = !before || before.id !== merged.id || merged.moves.length > before.moves.length;
+            if (
+              moved &&
+              record.authorId !== me &&
+              currentTabRef.current !== 'canvas' &&
+              !isCamouflagedRef.current &&
+              Date.now() - (Number(record.clientTs) || 0) < 2 * 60 * 1000
+            ) {
+              const s = standing(merged);
+              const game = kind === 'ttt' ? tr('Tic-tac-toe') : tr('Dots & Boxes');
+              const body = s.over
+                ? s.winner === me
+                  ? tr('You won at {game}!', { game })
+                  : s.winner
+                    ? tr('{name} won at {game}', { name: partnerNameRef.current || tr('Partner'), game })
+                    : tr('{game}: a tie!', { game })
+                : s.turn === me
+                  ? tr('{game}: your turn', { game })
+                  : '';
+              if (body) {
+                rememberCanvasMode(kind);
+                setInAppNotification({ id: newId(), title: partnerNameRef.current || tr('Partner'), body, type: 'game', tabId: 'canvas' });
+              }
+            }
           } else if (record.type === BOOP) {
             // How many boops a phone has sent today (UsScene): only ever up.
             const seat = record.authorId === 'user' || record.authorId === 'partner' ? record.authorId : null;
@@ -3752,6 +3795,12 @@ export const App: React.FC = () => {
     }
     // After the count above has been drawn, so it goes with it.
     pendingPlayRef.current!.timer = window.setTimeout(sendPlay, kind === 'boop' ? 600 : 150);
+  };
+
+  /** A paper game on Canvas of Us - a move, a new game, a new ink: here at once, and on their phone. */
+  const handlePaperGame = (game: PaperGame) => {
+    setState(prev => ({ ...prev, paperGames: { ...prev.paperGames, [game.kind]: game } }));
+    wsRelay.broadcastUpdate(recordTypeOf(game.kind), game);
   };
 
   /** A sky picked for "Us two": here at once, and on their phone too. */
@@ -6459,6 +6508,8 @@ export const App: React.FC = () => {
             onClearCanvas={handleClearCanvas}
             onUndoStroke={handleUndoCanvasStroke}
             onSaveSketch={handleSaveCanvasSketch}
+            games={state.paperGames}
+            onGame={handlePaperGame}
             onSendDrawing={picture =>
               handleSendMessage('Photo', false, {
                 isPhoto: true,

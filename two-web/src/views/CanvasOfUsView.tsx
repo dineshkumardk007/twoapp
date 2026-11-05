@@ -18,7 +18,9 @@ import {
   Heart,
   Image as ImageIcon,
   Check,
-  Maximize2
+  Maximize2,
+  Hash,
+  Grid3x3
 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
@@ -29,6 +31,8 @@ import { useT } from '../core/i18n';
 import { haptic } from '../core/haptics';
 import { shrinkPhoto, type ShrunkPhoto } from '../core/photo';
 import { PHOTO_MAX_CHARS, dataUrlToBlob } from '../core/chatShow';
+import { PaperGames } from '../components/PaperGames';
+import { CANVAS_MODE_KEY, rememberCanvasMode, standing, type PaperGame, type PaperKind } from '../core/paperGames';
 
 interface CanvasOfUsViewProps {
   canvasState: SharedDrawingCanvasState;
@@ -41,6 +45,22 @@ interface CanvasOfUsViewProps {
   onSaveSketch: (sketch: CanvasSavedSketch) => void;
   /** A drawing into the chat, as a photo message. */
   onSendDrawing?: (picture: ShrunkPhoto) => void;
+  /** The paper games (core/paperGames), as this phone has them. */
+  games?: { ttt?: PaperGame; dots?: PaperGame };
+  /** A move, a new game or a new look: to keep, and to send. */
+  onGame?: (game: PaperGame) => void;
+}
+
+type CanvasMode = 'draw' | PaperKind;
+
+/** The tab last open here, so a game you were playing is where you left it. */
+function savedMode(): CanvasMode {
+  try {
+    const m = localStorage.getItem(CANVAS_MODE_KEY);
+    return m === 'ttt' || m === 'dots' ? m : 'draw';
+  } catch {
+    return 'draw';
+  }
 }
 
 /**
@@ -166,9 +186,22 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   onClearCanvas,
   onUndoStroke,
   onSaveSketch,
-  onSendDrawing
+  onSendDrawing,
+  games,
+  onGame
 }) => {
   const tr = useT();
+  const [mode, setMode] = useState<CanvasMode>(() => (onGame ? savedMode() : 'draw'));
+  const chooseMode = (m: CanvasMode) => {
+    setMode(m);
+    rememberCanvasMode(m);
+  };
+  /** A game waiting on you: a dot on its tab. */
+  const yourTurn = (g?: PaperGame) => {
+    if (!g) return false;
+    const s = standing(g);
+    return !s.over && s.turn === activeUser;
+  };
   const [activeTool, setActiveTool] = useState<CanvasTool>('pen');
   const [activeColor, setActiveColor] = useState<string>('#f43f5e');
   const [brushSize, setBrushSize] = useState<number>(4);
@@ -495,7 +528,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
         </div>
 
         {/* Action buttons: Save / Share / Clear */}
-        <div className="flex items-center space-x-2 self-start sm:self-auto">
+        <div className={`flex items-center space-x-2 self-start sm:self-auto ${mode === 'draw' ? '' : 'hidden'}`}>
           <button
             onClick={handleSaveToVault}
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-linen-primary text-linen-surface text-xs font-medium hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
@@ -517,6 +550,38 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
         </div>
       </div>
 
+      {onGame && (
+        <div className="cv-modes" role="tablist" aria-label={tr('Canvas of Us')}>
+          {(
+            [
+              ['draw', tr('Draw'), Pencil],
+              ['ttt', tr('Tic-tac-toe'), Hash],
+              ['dots', tr('Dots & Boxes'), Grid3x3]
+            ] as const
+          ).map(([m, label, Icon]) => (
+            <button key={m} type="button" role="tab" aria-selected={mode === m} className="cv-mode" data-on={mode === m || undefined} onClick={() => chooseMode(m)}>
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{label}</span>
+              {m !== 'draw' && yourTurn(games?.[m]) && <span className="cv-mode-dot" aria-label={tr('Your turn')} />}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {onGame && mode !== 'draw' && (
+        <PaperGames
+          key={mode}
+          kind={mode}
+          game={games?.[mode]}
+          activeUser={activeUser}
+          partnerName={partnerName && partnerName !== 'Partner' ? partnerName : tr('Partner')}
+          onChange={onGame}
+        />
+      )}
+
+      {/* The drawing stays where it is under a game - only hidden, so its
+          board keeps its size and strokes for when you come back to it. */}
+      <div className={mode === 'draw' ? 'space-y-6' : 'hidden'}>
       {/* Brush & Color Toolbar Ribbon */}
       <div className="rounded-3xl border border-linen-border bg-linen-surface p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3">
         {/* Tool Selectors: Pen, Watercolor, Pencil, Eraser */}
@@ -711,6 +776,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

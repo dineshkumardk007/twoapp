@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { MessageSquare, Mail, X, ArrowRight, Heart } from 'lucide-react';
+import { MessageSquare, Mail, X, ArrowRight, Heart, Gamepad2 } from 'lucide-react';
 import { useT } from '../core/i18n';
 import { haptic } from '../core/haptics';
 import { isShown, onShownChange } from '../core/shown';
@@ -20,7 +20,8 @@ export interface InAppNotification {
   id: string;
   title: string;
   body: string;
-  type: 'chat' | 'letter' | 'touch' | 'general';
+  /** 'game': a move on Canvas of Us (core/paperGames), waiting to be answered with one. */
+  type: 'chat' | 'letter' | 'touch' | 'general' | 'game';
   tabId: string;
 }
 
@@ -366,6 +367,8 @@ const ToastCard: React.FC<ToastCardProps> = ({ notification, leaving, held, onCl
         return <Mail className="w-4 h-4 text-amber-600" />;
       case 'touch':
         return <Heart className="w-4 h-4 text-rose-500 fill-rose-500/20" />;
+      case 'game':
+        return <Gamepad2 className="w-4 h-4 text-violet-500" />;
       default:
         return <MessageSquare className="w-4 h-4 text-rose-500" />;
     }
@@ -421,7 +424,7 @@ const ToastCard: React.FC<ToastCardProps> = ({ notification, leaving, held, onCl
               {notification.title}
             </h5>
             <span className="text-[10px] text-linen-accent font-medium inline-flex items-center group-hover:translate-x-0.5 transition-transform">
-              {tr('Reply')} <ArrowRight className="w-2.5 h-2.5 ml-0.5" />
+              {notification.type === 'game' ? tr('Play') : tr('Reply')} <ArrowRight className="w-2.5 h-2.5 ml-0.5" />
             </span>
           </div>
           <p className="text-xs text-linen-secondary truncate mt-0.5">

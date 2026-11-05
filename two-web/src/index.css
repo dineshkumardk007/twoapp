@@ -3782,3 +3782,272 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
   .sr-root *::before,
   .sr-root *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
 }
+
+/* ---------------------------------------------------------------------------
+   Paper classics on Canvas of Us (components/PaperGames): Tic-tac-toe and
+   Dots and Boxes on a sheet of paper, each of you in your own ink. New
+   marks and lines are drawn in as if by pen; what was there already is
+   simply there.
+   --------------------------------------------------------------------------- */
+.pg {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid rgb(var(--c-border));
+  background: rgb(var(--c-surface));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+.pg-players {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
+}
+.pg-vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font: italic 600 14px/1 Fraunces, Georgia, serif;
+  color: rgb(var(--c-secondary));
+}
+.pg-vs small { margin-top: 4px; font: normal 600 10px/1 Manrope, system-ui, sans-serif; }
+.pg-chip {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 8px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 2px solid transparent;
+  background: rgb(var(--c-variant) / 0.55);
+  transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms cubic-bezier(0.3, 0.7, 0.3, 1.3);
+}
+.pg-chip[data-turn] {
+  border-color: var(--ink);
+  box-shadow: 0 8px 20px -10px var(--ink);
+  transform: translateY(-2px);
+}
+.pg-chip[data-won] { border-color: var(--ink); animation: pg-champ 1.6s ease-in-out infinite; }
+@keyframes pg-champ {
+  50% { transform: translateY(-3px) scale(1.03); }
+}
+.pg-chip-mark { grid-row: span 2; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px; background: #fbf6ec; }
+.pg-chip-name {
+  overflow: hidden;
+  font: 700 13px/1.2 Manrope, system-ui, sans-serif;
+  color: rgb(var(--c-primary));
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pg-chip-score { font: 800 22px/1 Fraunces, Georgia, serif; color: var(--ink); font-variant-numeric: tabular-nums; }
+.pg-chip-boxes {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font: 700 10px/1 Manrope, system-ui, sans-serif;
+  color: rgb(var(--c-secondary));
+}
+.pg-status {
+  display: flex;
+  justify-content: center;
+  min-height: 30px;
+  font: 600 14px/1.4 Manrope, system-ui, sans-serif;
+  color: rgb(var(--c-secondary));
+  text-align: center;
+}
+.pg-status > span { display: inline-flex; align-items: center; gap: 6px; }
+.pg-status-me {
+  padding: 5px 14px;
+  border-radius: 9999px;
+  color: #fff;
+  background: var(--ink);
+  box-shadow: 0 6px 18px -8px var(--ink);
+  animation: pg-nudge 2s ease-in-out infinite;
+}
+@keyframes pg-nudge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+.pg-status-win { padding: 5px 14px; border-radius: 9999px; color: #3b2723; background: linear-gradient(180deg, #fff2c6, #f3cf6f); }
+.pg-dots-wait { display: inline-flex; gap: 3px; margin-left: 2px; }
+.pg-dots-wait i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; animation: pg-wait 1.2s ease-in-out infinite; }
+.pg-dots-wait i:nth-child(2) { animation-delay: 0.15s; }
+.pg-dots-wait i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes pg-wait {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* The sheet: cream paper with faint squares, the same in light and dark. */
+.pg-stage { position: relative; display: flex; justify-content: center; }
+.pg-board,
+.pg-empty {
+  position: relative;
+  width: min(100%, 380px);
+  aspect-ratio: 1;
+  border-radius: 20px;
+  background-color: #fbf6ec;
+  background-image:
+    linear-gradient(rgb(160 140 120 / 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(160 140 120 / 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+  box-shadow: inset 0 0 0 1px rgb(120 90 60 / 0.12), 0 14px 30px -18px rgb(60 30 20 / 0.45);
+}
+.pg-svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; }
+.pg-ink { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.pg-ink[data-fresh],
+.pg-mark[data-fresh] > .pg-ink { stroke-dashoffset: 1; animation: pg-draw 380ms ease-out forwards; }
+@keyframes pg-draw { to { stroke-dashoffset: 0; } }
+.pg-grid { fill: none; stroke: #3b2723; stroke-opacity: 0.75; stroke-width: 5; stroke-linecap: round; }
+.pg-grid[data-fresh] { animation-duration: 520ms; }
+.pg-fill { opacity: 0.22; }
+.pg-mark[data-fresh] > .pg-fill { opacity: 0; animation: pg-fill 400ms ease-out forwards; }
+@keyframes pg-fill { to { opacity: 0.22; } }
+.pg-mark[data-fresh] { transform-box: fill-box; transform-origin: center; animation: pg-pop 420ms cubic-bezier(0.3, 0.7, 0.3, 1.5) both; }
+@keyframes pg-pop { from { transform: scale(0.6); } }
+.pg-mark.pg-won { transform-box: fill-box; transform-origin: center; animation: pg-cheer 900ms ease-in-out 380ms 3; }
+@keyframes pg-cheer {
+  50% { transform: scale(1.14) rotate(-4deg); }
+}
+.pg-winline { opacity: 0.9; filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.18)); }
+.pg-winline[data-fresh] { animation-duration: 520ms; animation-delay: 300ms; }
+
+.pg-cells { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+.pg-cell {
+  position: relative;
+  padding: 18%;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.pg-cell:disabled { cursor: default; }
+.pg-ghost { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 150ms ease; }
+.pg-cell:not(:disabled):hover .pg-ghost { opacity: 0.22; }
+.pg-cell:not(:disabled):active .pg-ghost { opacity: 0.45; }
+.pg-cell:focus-visible { outline: 3px solid var(--ink); outline-offset: -6px; }
+
+.pg-line { fill: none; }
+.pg-latest-line { animation: pg-glow 1.4s ease-in-out 2; }
+.pg-line.pg-latest-line[data-fresh] { animation: pg-draw 380ms ease-out forwards, pg-glow 1.4s ease-in-out 380ms 2; }
+@keyframes pg-glow {
+  50% { stroke-width: 11; }
+}
+.pg-box[data-fresh] > rect { transform-box: fill-box; transform-origin: center; animation: pg-box 520ms cubic-bezier(0.3, 0.7, 0.3, 1.4) both; }
+@keyframes pg-box { from { transform: scale(0.2); opacity: 0; } }
+.pg-slot { cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+.pg-preview { opacity: 0; transition: opacity 120ms ease; }
+.pg-slot:hover .pg-preview { opacity: 0.3; }
+.pg-slot:active .pg-preview,
+.pg-slot:focus-visible .pg-preview { opacity: 0.6; }
+
+.pg-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; }
+.pg-empty-art { width: 56%; opacity: 0.9; }
+.pg-empty-art svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pg-empty-text { max-width: 16rem; font: italic 500 15px/1.45 Fraunces, Georgia, serif; color: #6b5a52; }
+
+/* The end of a game: confetti in the winner's ink, out of the paper. */
+.pg-party { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.pg-party i {
+  position: absolute;
+  top: 45%;
+  width: 8px;
+  height: 11px;
+  opacity: 0;
+  animation: pg-confetti 1.9s cubic-bezier(0.2, 0.6, 0.4, 1) both;
+}
+@keyframes pg-confetti {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  30% { opacity: 1; transform: translate(calc(var(--dx) * 0.6), -150px) rotate(calc(var(--spin) * 0.4)); }
+  100% { opacity: 0; transform: translate(var(--dx), 120px) rotate(var(--spin)); }
+}
+
+.pg-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
+.pg-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--me), var(--them));
+  font: 800 15px/1 Manrope, system-ui, sans-serif;
+  box-shadow: 0 10px 24px -10px var(--me);
+  transition: transform 150ms ease;
+}
+.pg-play:active { transform: scale(0.95); }
+.pg-restart {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--c-border));
+  color: rgb(var(--c-secondary));
+  background: rgb(var(--c-surface));
+  font: 700 12px/1 Manrope, system-ui, sans-serif;
+}
+.pg-sizes { display: inline-flex; gap: 4px; padding: 4px; border-radius: 9999px; background: rgb(var(--c-variant) / 0.7); }
+.pg-sizes button {
+  padding: 7px 12px;
+  border-radius: 9999px;
+  color: rgb(var(--c-secondary));
+  font: 700 12px/1 Manrope, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.pg-sizes button[data-on] { color: rgb(var(--c-primary)); background: rgb(var(--c-surface)); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); }
+.pg-picker { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 18px; background: rgb(var(--c-variant) / 0.5); }
+.pg-picker > p { font: 700 11px/1 Manrope, system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: rgb(var(--c-secondary)); }
+.pg-swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.pg-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.5);
+  transition: transform 150ms ease;
+}
+.pg-swatch[data-on] { box-shadow: 0 0 0 3px rgb(var(--c-surface)), 0 0 0 5px rgb(var(--c-primary)); transform: scale(1.08); }
+.pg-swatch:disabled { opacity: 0.25; }
+.pg-markpick { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: #fbf6ec; }
+.pg-markpick[data-on] { box-shadow: 0 0 0 2px var(--me); }
+.pg-markpick:disabled { opacity: 0.4; }
+
+/* The modes of Canvas of Us: drawing, and the two games. */
+.cv-modes { display: flex; gap: 4px; padding: 4px; border-radius: 9999px; background: rgb(var(--c-variant) / 0.7); }
+.cv-mode {
+  position: relative;
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 9px 6px;
+  border-radius: 9999px;
+  color: rgb(var(--c-secondary));
+  font: 700 12.5px/1 Manrope, system-ui, sans-serif;
+  white-space: nowrap;
+}
+.cv-mode > span { overflow: hidden; text-overflow: ellipsis; }
+.cv-mode[data-on] { color: rgb(var(--c-primary)); background: rgb(var(--c-surface)); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); }
+.cv-mode-dot {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--c-accent));
+  box-shadow: 0 0 0 2px rgb(var(--c-surface));
+  animation: pg-nudge 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pg *,
+  .cv-mode-dot { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+}
