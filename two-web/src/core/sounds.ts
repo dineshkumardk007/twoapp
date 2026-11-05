@@ -33,7 +33,9 @@ export type SoundName =
   | 'us-dance-2' | 'us-dance-3' | 'us-dance-4' | 'us-dance-5' | 'us-dance-6'
   | 'us-shake' | 'us-drip'
   | 'birthday-song' | 'birthday-jingle' | 'party-pop'
-  | 'sr-open' | 'sr-memories' | 'sr-candles' | 'sr-puff' | 'sr-fireworks' | 'sr-envelope' | 'sr-seal' | 'sr-finale';
+  | 'sr-open' | 'sr-memories' | 'sr-candles' | 'sr-puff' | 'sr-fireworks' | 'sr-envelope' | 'sr-seal' | 'sr-finale'
+  | 'g-pen' | 'g-chalk' | 'g-box' | 'g-drop' | 'g-flip' | 'g-match' | 'g-miss' | 'g-pick' | 'g-reveal' | 'g-point'
+  | 'g-dice' | 'g-hop' | 'g-ladder' | 'g-snake' | 'g-win' | 'g-lose' | 'g-tie' | 'g-start' | 'g-turn';
 
 interface Loaded {
   buffer: AudioBuffer;

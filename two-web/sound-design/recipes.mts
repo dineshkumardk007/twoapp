@@ -1506,5 +1506,287 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 2.1, wet: 0.28 },
     master: { loudness: MOMENT - 1, highpass: 80, maxSeconds: 10.5, tailFade: 2.5 }
+  },
+
+  // ------------------------------------------- games on Canvas of Us
+  // (components/PaperGames). Each game has sounds of its own; winning,
+  // losing, a tie and a new game are shared.
+
+  'g-pen': {
+    use: 'Tic-tac-toe: a mark drawn in felt-tip',
+    dry: () => {
+      const b = silence(0.42);
+      // Two quick strokes of a felt pen on paper, the second a touch higher.
+      noise(b, { dur: 0.12, gain: 0.7, filter: { type: 'bandpass', f: 2600, q: 0.9 }, sweepTo: 3300, grain: 0.6, attack: 0.008, decay: 0.05, pan: -0.1, seed: 3001 });
+      noise(b, { start: 0.14, dur: 0.12, gain: 0.6, filter: { type: 'bandpass', f: 3100, q: 0.9 }, sweepTo: 2500, grain: 0.6, attack: 0.008, decay: 0.05, pan: 0.1, seed: 3002 });
+      mode(b, { freq: 520, amp: 0.08, decay: 0.02 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.06 },
+    master: { loudness: SOFT, highpass: 400 }
+  },
+
+  'g-chalk': {
+    use: 'Dots and Boxes: a line drawn between two dots',
+    dry: () => {
+      const b = silence(0.3);
+      noise(b, { dur: 0.17, gain: 0.8, filter: { type: 'bandpass', f: 3800, q: 1 }, sweepTo: 2600, grain: 0.85, attack: 0.006, decay: 0.07, seed: 3011 });
+      mode(b, { freq: 1400, amp: 0.06, decay: 0.012 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.06 },
+    master: { loudness: SOFT - 1, highpass: 500 }
+  },
+
+  'g-box': {
+    use: 'Dots and Boxes: a box claimed - a pop and two notes up',
+    dry: () => {
+      const b = silence(0.9);
+      noise(b, { dur: 0.04, gain: 0.6, filter: { type: 'lowpass', f: 1800, q: 0.7 }, attack: 0.001, decay: 0.012, seed: 3021 });
+      mode(b, { freq: 620, amp: 0.3, decay: 0.05, glide: -0.4, glideTime: 0.03 });
+      run(b, ['A5', 'D6'], 0.08, { instrument: I.glock, gain: [0.32, 0.4], start: 0.04, seed: 3022, mallet: 0.05 });
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.14 },
+    master: { loudness: SOFT + 1 }
+  },
+
+  'g-drop': {
+    use: 'Four in a Row: a disc falling into the frame and landing with a clack',
+    dry: () => {
+      const b = silence(0.45);
+      air(b, { start: 0, dur: 0.1, gain: 0.12, from: 700, to: 2200, attack: 0.03, seed: 3031 });
+      // The landing: plastic on plastic, then a smaller bounce.
+      for (const [t, g] of [[0.1, 1], [0.19, 0.4]] as const) {
+        mode(b, { freq: 1150, amp: 0.5 * g, decay: 0.028, start: t });
+        mode(b, { freq: 2350, amp: 0.25 * g, decay: 0.016, start: t });
+        mode(b, { freq: 420, amp: 0.3 * g, decay: 0.03, start: t });
+        noise(b, { start: t, dur: 0.02, gain: 0.35 * g, filter: { type: 'bandpass', f: 3200, q: 1 }, attack: 0.0005, decay: 0.005, seed: 3032 + Math.round(t * 100) });
+      }
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.08 },
+    master: { loudness: SOFT + 1, highpass: 200 }
+  },
+
+  'g-flip': {
+    use: 'Memory Match: a card turned over',
+    dry: () => {
+      const b = silence(0.25);
+      noise(b, { dur: 0.07, gain: 0.7, filter: { type: 'bandpass', f: 2200, q: 0.8 }, sweepTo: 4200, grain: 0.5, attack: 0.004, decay: 0.025, seed: 3041 });
+      mode(b, { freq: 230, amp: 0.35, decay: 0.03, start: 0.05 });
+      mode(b, { freq: 690, amp: 0.12, decay: 0.02, start: 0.05 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.06 },
+    master: { loudness: SOFT, highpass: 150 }
+  },
+
+  'g-match': {
+    use: 'Memory Match: a pair found - a sparkling chime',
+    dry: () => {
+      const b = silence(1.2);
+      run(b, ['D6', 'F#6', 'A6', 'D7'], 0.055, { instrument: I.glass, gain: [0.3, 0.32, 0.34, 0.38], seed: 3051, mallet: 0.1, decayScale: 1.2 });
+      twinkles(b, 0.2, 0.7, 5, 0.12, 3055);
+      return b;
+    },
+    room: { rt60: 1.2, wet: 0.2 },
+    master: { loudness: MOMENT - 1 }
+  },
+
+  'g-miss': {
+    use: 'Memory Match: not a pair - two soft notes down',
+    dry: () => {
+      const b = silence(0.8);
+      strike(b, { note: hz('A4'), instrument: I.marimba, gain: 0.55, seed: 3061, mallet: 0.2 });
+      strike(b, { note: hz('F#4'), instrument: I.marimba, start: 0.16, gain: 0.5, seed: 3062, mallet: 0.2 });
+      strike(b, { note: hz('F#3'), instrument: I.felt, start: 0.16, gain: 0.18, seed: 3063, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.12 },
+    master: { loudness: SOFT }
+  },
+
+  'g-pick': {
+    use: 'Heart Hug Kiss: your choice locked in',
+    dry: () => {
+      const b = silence(0.45);
+      mode(b, { freq: 1600, amp: 0.3, decay: 0.012 });
+      mode(b, { freq: 800, amp: 0.2, decay: 0.02 });
+      strike(b, { note: hz('D6'), instrument: I.kalimba, start: 0.03, gain: 0.3, seed: 3071, mallet: 0.1 });
+      return b;
+    },
+    room: { rt60: 0.6, wet: 0.1 },
+    master: { loudness: SOFT }
+  },
+
+  'g-reveal': {
+    use: 'Heart Hug Kiss: both have chosen - a quick drum roll, and the reveal',
+    dry: () => {
+      const b = silence(1.3);
+      // A soft roll on a snare, getting a little louder.
+      for (let i = 0; i < 16; i++) {
+        noise(b, { start: i * 0.032, dur: 0.03, gain: 0.18 + i * 0.016, filter: { type: 'bandpass', f: 2400, q: 0.6 }, attack: 0.001, decay: 0.01, pan: i % 2 ? 0.15 : -0.15, seed: 3080 + i });
+      }
+      // ...and the reveal: a strike, and two bright notes.
+      thump(b, 0.55, 0.5, 130, 3099);
+      roll(b, ['D4', 'A4', 'D5', 'F#5'], 0.55, 0.22, 3100, 1.4);
+      run(b, ['A5', 'D6'], 0.07, { instrument: I.glock, gain: [0.22, 0.3], start: 0.58, seed: 3105, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 1, wet: 0.16 },
+    master: { loudness: MOMENT - 1 }
+  },
+
+  'g-point': {
+    use: 'Heart Hug Kiss: a round won - a bright ding',
+    dry: () => {
+      const b = silence(0.9);
+      strike(b, { note: hz('D6'), instrument: I.glock, gain: 0.5, seed: 3111, mallet: 0.1 });
+      strike(b, { note: hz('A6'), instrument: I.glass, start: 0.06, gain: 0.32, seed: 3112, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 1, wet: 0.16 },
+    master: { loudness: SOFT + 1 }
+  },
+
+  'g-dice': {
+    use: 'Snakes & Ladders: the die shaken and rolled across the table',
+    dry: () => {
+      const b = silence(0.75);
+      const rand = rng(3121);
+      // Clicks closer together and quieter as it slows, then the last settle.
+      let t = 0;
+      for (let i = 0; i < 9; i++) {
+        const g = 0.55 - i * 0.04;
+        mode(b, { freq: 1800 + rand() * 2200, amp: g * 0.5, decay: 0.012, start: t, pan: rand() * 0.6 - 0.3 });
+        noise(b, { start: t, dur: 0.018, gain: g * 0.6, filter: { type: 'bandpass', f: 3000 + rand() * 2000, q: 1.2 }, attack: 0.0005, decay: 0.004, seed: 3122 + i });
+        t += 0.085 - i * 0.004;
+      }
+      mode(b, { freq: 950, amp: 0.3, decay: 0.03, start: t + 0.02 });
+      noise(b, { start: t + 0.02, dur: 0.03, gain: 0.3, filter: { type: 'bandpass', f: 1800, q: 0.9 }, attack: 0.001, decay: 0.008, seed: 3140 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.08 },
+    master: { loudness: SOFT + 1, highpass: 300 }
+  },
+
+  'g-hop': {
+    use: 'Snakes & Ladders: the counter hopping one square',
+    dry: () => {
+      const b = silence(0.2);
+      strike(b, { note: hz('A5'), instrument: I.marimba, gain: 0.5, seed: 3151, mallet: 0.35, decayScale: 0.5 });
+      mode(b, { freq: 1800, amp: 0.12, decay: 0.01 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.06 },
+    master: { loudness: SOFT - 2 }
+  },
+
+  'g-ladder': {
+    use: 'Snakes & Ladders: climbing a ladder - up the scale',
+    dry: () => {
+      const b = silence(1.1);
+      run(b, ['D5', 'E5', 'F#5', 'A5', 'B5', 'D6', 'E6'], 0.065, { instrument: I.marimba, gain: [0.4, 0.42, 0.44, 0.46, 0.48, 0.5, 0.52], seed: 3161, mallet: 0.25 });
+      strike(b, { note: hz('A6'), instrument: I.glock, start: 0.46, gain: 0.3, seed: 3170, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.14 },
+    master: { loudness: MOMENT - 1 }
+  },
+
+  'g-snake': {
+    use: 'Snakes & Ladders: down a snake - a slide whistle and a hiss',
+    dry: () => {
+      const b = silence(1.1);
+      voice(b, {
+        start: 0,
+        dur: 0.75,
+        freq: t => (1300 * Math.exp(-t * 2.1) + 260) * (1 + 0.03 * Math.sin(2 * Math.PI * 7 * t)),
+        amp: t => 0.28 * Math.min(1, t / 0.03) * Math.max(0, 1 - t / 0.75) ** 0.5,
+        harmonics: [1, 0.2, 0.06]
+      });
+      noise(b, { start: 0.02, dur: 0.6, gain: 0.08, filter: { type: 'bandpass', f: 5200, q: 1.1 }, attack: 0.05, decay: 0.25, seed: 3181 });
+      thump(b, 0.78, 0.3, 140, 3182);
+      return b;
+    },
+    room: { rt60: 0.7, wet: 0.1 },
+    master: { loudness: MOMENT - 1, highpass: 150 }
+  },
+
+  'g-win': {
+    use: 'Any game: you won - a short fanfare',
+    dry: () => {
+      const b = silence(2.2);
+      run(b, ['D5', 'F#5', 'A5', 'D6'], 0.09, { instrument: I.kalimba, gain: [0.4, 0.44, 0.48, 0.55], seed: 3191, mallet: 0.15, decayScale: 1.3 });
+      run(b, ['D6', 'F#6', 'A6', 'D7'], 0.09, { instrument: I.glock, gain: [0.1, 0.11, 0.12, 0.16], seed: 3195, mallet: 0 });
+      roll(b, ['D4', 'A4', 'D5', 'F#5', 'A5'], 0.38, 0.24, 3200, 1.8);
+      pad(b, ['D4', 'A4', 'F#5'], 0.38, 1.4, 0.05);
+      twinkles(b, 0.5, 1.4, 7, 0.12, 3210);
+      return b;
+    },
+    room: { rt60: 1.4, wet: 0.2 },
+    master: { loudness: MOMENT, maxSeconds: 2.2, tailFade: 0.8 }
+  },
+
+  'g-lose': {
+    use: "Any game: they won - a cute, not-too-sad 'aww'",
+    dry: () => {
+      const b = silence(1.5);
+      // Two little sighs down, like a cartoon "aww".
+      const sigh = (start: number, from: number, to: number, len: number, gain: number) =>
+        voice(b, {
+          start,
+          dur: len,
+          freq: t => (from + (to - from) * Math.min(1, t / (len * 0.8))) * (1 + 0.025 * Math.sin(2 * Math.PI * 6 * t)),
+          amp: t => gain * Math.min(1, t / 0.04) * Math.max(0, 1 - t / len) ** 0.6,
+          harmonics: [1, 0.35, 0.12, 0.05]
+        });
+      sigh(0, hz('A4'), hz('F#4'), 0.42, 0.22);
+      sigh(0.45, hz('F#4'), hz('D4'), 0.7, 0.22);
+      strike(b, { note: hz('D4'), instrument: I.felt, start: 0.45, gain: 0.16, seed: 3221, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.14 },
+    master: { loudness: SOFT + 1, maxSeconds: 1.5, tailFade: 0.4 }
+  },
+
+  'g-tie': {
+    use: 'Any game: a tie - two chimes, side by side',
+    dry: () => {
+      const b = silence(1.2);
+      strike(b, { note: hz('A5'), instrument: I.glass, gain: 0.4, pan: -0.3, seed: 3231, mallet: 0.1 });
+      strike(b, { note: hz('A5'), instrument: I.glass, start: 0.14, gain: 0.4, pan: 0.3, seed: 3232, mallet: 0.1 });
+      strike(b, { note: hz('D5'), instrument: I.felt, start: 0.14, gain: 0.15, seed: 3233, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 1.1, wet: 0.18 },
+    master: { loudness: SOFT + 1 }
+  },
+
+  'g-start': {
+    use: 'Any game: a new game - cards shuffled and a bright ping',
+    dry: () => {
+      const b = silence(0.8);
+      paper(b, 0, 0.28, 0.3, 1800, 4200, 3241, -0.2);
+      paper(b, 0.12, 0.22, 0.24, 2200, 4600, 3242, 0.2);
+      strike(b, { note: hz('A6'), instrument: I.glock, start: 0.3, gain: 0.3, seed: 3243, mallet: 0 });
+      strike(b, { note: hz('D6'), instrument: I.kalimba, start: 0.3, gain: 0.25, seed: 3244, mallet: 0.1 });
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.14 },
+    master: { loudness: SOFT + 1 }
+  },
+
+  'g-turn': {
+    use: 'Any game: they have moved, or chosen - a gentle nudge that it is you now',
+    dry: () => {
+      const b = silence(0.8);
+      strike(b, { note: hz('F#5'), instrument: I.kalimba, gain: 0.4, seed: 3251, mallet: 0.1 });
+      strike(b, { note: hz('B5'), instrument: I.kalimba, start: 0.11, gain: 0.45, seed: 3252, mallet: 0.1 });
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.14 },
+    master: { loudness: SOFT }
   }
 };

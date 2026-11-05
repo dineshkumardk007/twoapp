@@ -1,24 +1,29 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Palette, RotateCcw, Sparkles, Trophy } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, Palette, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import { useT } from '../core/i18n';
 import { haptic } from '../core/haptics';
 import { askConfirm } from '../core/dialog';
 import { getAudioContext } from '../core/audioAlerts';
-import { loadSounds, playOneOf, playSound } from '../core/sounds';
+import { loadSounds, playSound, type SoundName } from '../core/sounds';
 import { newId } from '../core/ids';
 import type { Seat } from '../core/usTwo';
 import {
   DEFAULT_DOTS,
-  DOT_SIZES,
+  DEFAULT_MEMORY,
+  FOUR_COLS,
+  GAME_NAMES,
   INKS,
   MARKS,
   canMove,
-  lineAt,
   lookOf,
   newGame,
   other,
   playDots,
-  playTtt,
+  playFour,
+  playHhk,
+  playMemory,
+  playSnakes,
+  sizesOf,
   standing,
   totals,
   withLook,
@@ -27,6 +32,8 @@ import {
   type PaperGame,
   type PaperKind
 } from '../core/paperGames';
+import { MarkIcon } from './gameArt';
+import { DotsBoard, FourBoard, HhkBoard, MemoryBoard, SnakesBoard, TttBoard, fourFallMs, type BoardProps } from './GameBoards';
 
 interface PaperGamesProps {
   kind: PaperKind;
@@ -35,113 +42,127 @@ interface PaperGamesProps {
   /** The other person's name, as this phone knows it. */
   partnerName: string;
   onChange: (game: PaperGame) => void;
+  /** Back to all the games. */
+  onBack?: () => void;
 }
 
-const INK = '#3b2723';
-
-/** Each mark as strokes around (0, 0), about 56 across: drawn as if by pen. */
-function starPath(): string {
-  let d = '';
-  for (let k = 0; k < 10; k++) {
-    const r = k % 2 ? 12 : 28;
-    const a = ((-90 + k * 36) * Math.PI) / 180;
-    d += `${k ? 'L' : 'M'}${(r * Math.cos(a)).toFixed(1)},${(r * Math.sin(a)).toFixed(1)} `;
-  }
-  return d + 'Z';
-}
-function flowerPath(): string {
-  let d = '';
-  for (let k = 0; k < 5; k++) {
-    const a = ((-90 + k * 72) * Math.PI) / 180;
-    const cx = 15 * Math.cos(a);
-    const cy = 15 * Math.sin(a);
-    d += `M${(cx + 11).toFixed(1)},${cy.toFixed(1)} A11,11 0 1 1 ${(cx - 11).toFixed(1)},${cy.toFixed(1)} A11,11 0 1 1 ${(cx + 11).toFixed(1)},${cy.toFixed(1)} `;
-  }
-  return d + 'M6,0 A6,6 0 1 1 -6,0 A6,6 0 1 1 6,0';
-}
-const MARK_PATHS: Record<Mark, { strokes: string[]; filled: boolean }> = {
-  x: { strokes: ['M-23,-23 L23,23', 'M23,-23 L-23,23'], filled: false },
-  o: { strokes: ['M0,-25 A25,25 0 1 1 0,25 A25,25 0 1 1 0,-25'], filled: false },
-  heart: {
-    strokes: ['M0,24 C-10,15 -28,4 -28,-10 C-28,-21 -19,-27 -11,-27 C-5,-27 -1,-23 0,-18 C1,-23 5,-27 11,-27 C19,-27 28,-21 28,-10 C28,4 10,15 0,24 Z'],
-    filled: true
-  },
-  star: { strokes: [starPath()], filled: true },
-  moon: { strokes: ['M8,-27 A27,27 0 1 0 27,8 A21,21 0 1 1 8,-27 Z'], filled: true },
-  flower: { strokes: [flowerPath()], filled: true }
+/** How each game is played, in a line. */
+export const GAME_HOW: Record<PaperKind, string> = {
+  four: 'Drop a disc in turn. Four in a line - across, down or slanting - wins.',
+  memory: 'Turn over two cards a turn. Find a pair to keep it - and go again.',
+  hhk: 'You both choose at once. Hug holds Heart, Kiss wins Hug, Heart outlasts Kiss. First to three.',
+  snakes: 'Roll and race to 100. Ladders take you up, snakes bring you down. A six rolls again.',
+  ttt: 'Three in a row wins. Take turns - from wherever you both are.',
+  dots: 'Take turns drawing a line. Close a box to claim it - and go again.'
 };
 
-/** A mark in a player's ink: drawn stroke by stroke when new, as it is when not. */
-const MarkGlyph: React.FC<{ mark: Mark; ink: string; x: number; y: number; s?: number; fresh: boolean; width?: number; delay?: number; cls?: string }> = ({
-  mark,
-  ink,
-  x,
-  y,
-  s = 1,
-  fresh,
-  width = 8,
-  delay = 0,
-  cls = ''
-}) => {
-  const look = MARK_PATHS[mark];
-  return (
-    <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <g className={`pg-mark ${cls}`} data-fresh={fresh || undefined}>
-        {look.filled && <path d={look.strokes.join(' ')} fill={ink} className="pg-fill" style={{ animationDelay: `${delay + 260}ms` }} />}
-        {look.strokes.map((d, i) => (
-          <path
-            key={i}
-            d={d}
-            pathLength={1}
-            fill="none"
-            stroke={ink}
-            strokeWidth={width / s}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="pg-ink"
-            style={{ animationDelay: `${delay + i * 180}ms` }}
-          />
-        ))}
-      </g>
-    </g>
-  );
+/** The sounds each game makes, loaded when it opens. */
+const SOUNDS_OF: Record<PaperKind, SoundName[]> = {
+  ttt: ['g-pen'],
+  dots: ['g-chalk', 'g-box'],
+  four: ['g-drop'],
+  memory: ['g-flip', 'g-match', 'g-miss'],
+  hhk: ['g-pick', 'g-reveal', 'g-point', 'g-miss'],
+  snakes: ['g-dice', 'g-hop', 'g-ladder', 'g-snake']
 };
 
-/** A swatch of a mark, for the picker and the score chips. */
-const MarkIcon: React.FC<{ mark: Mark; ink: string; size?: number }> = ({ mark, ink, size = 22 }) => (
-  <svg viewBox="-34 -34 68 68" width={size} height={size} aria-hidden="true" focusable="false">
-    <MarkGlyph mark={mark} ink={ink} x={0} y={0} fresh={false} width={9} />
-  </svg>
-);
+/** A small picture of each game, for its card among the games and its empty board. */
+export const GameIcon: React.FC<{ kind: PaperKind }> = ({ kind }) => {
+  switch (kind) {
+    case 'four':
+      return (
+        <svg viewBox="0 0 64 56" className="g-icon" aria-hidden="true">
+          <rect x={2} y={4} width={60} height={50} rx={9} fill="#3346c8" />
+          {Array.from({ length: 12 }, (_, i) => {
+            const c = i % 4;
+            const r = Math.floor(i / 4);
+            const red = r + c === 3;
+            const gold = r === 2 && c < 2;
+            return <circle key={i} cx={11 + c * 14} cy={15 + r * 14} r={5.6} fill={red ? '#f43f5e' : gold ? '#facc15' : '#1d2a8a'} />;
+          })}
+        </svg>
+      );
+    case 'memory':
+      return (
+        <span className="g-icon g-icon-memory" aria-hidden="true">
+          <i>💖</i>
+          <i />
+        </span>
+      );
+    case 'hhk':
+      return (
+        <span className="g-icon g-icon-emoji" aria-hidden="true">
+          ❤️🤗💋
+        </span>
+      );
+    case 'snakes':
+      return (
+        <span className="g-icon g-icon-emoji" aria-hidden="true">
+          🐍🎲
+        </span>
+      );
+    case 'ttt':
+      return (
+        <svg viewBox="0 0 60 60" className="g-icon" aria-hidden="true">
+          <rect x={0} y={0} width={60} height={60} rx={10} fill="#fbf6ec" />
+          <path d="M21,8 V52 M39,8 V52 M8,21 H52 M8,39 H52" stroke="#3b2723" strokeOpacity={0.7} strokeWidth={2.6} strokeLinecap="round" />
+          <path d="M9,9 L17,17 M17,9 L9,17" stroke="#0ea5e9" strokeWidth={3.2} strokeLinecap="round" />
+          <path d="M30,34 C27,31 24,30 24,27.5 C24,25.5 26,24.5 27.5,24.5 C28.6,24.5 29.5,25.2 30,26 C30.5,25.2 31.4,24.5 32.5,24.5 C34,24.5 36,25.5 36,27.5 C36,30 33,31 30,34 Z" fill="#f43f5e" />
+          <path d="M43,43 L51,51 M51,43 L43,51" stroke="#0ea5e9" strokeWidth={3.2} strokeLinecap="round" />
+        </svg>
+      );
+    case 'dots':
+      return (
+        <svg viewBox="0 0 60 60" className="g-icon" aria-hidden="true">
+          <rect x={0} y={0} width={60} height={60} rx={10} fill="#fbf6ec" />
+          <rect x={12} y={12} width={18} height={18} fill="#f43f5e" opacity={0.25} />
+          <path d="M10,10 H30 M10,10 V30" stroke="#0ea5e9" strokeWidth={3} strokeLinecap="round" />
+          <path d="M30,10 V30 H10" stroke="#f43f5e" strokeWidth={3} strokeLinecap="round" />
+          {Array.from({ length: 9 }, (_, k) => (
+            <circle key={k} cx={10 + (k % 3) * 20} cy={10 + Math.floor(k / 3) * 20} r={3} fill="#3b2723" />
+          ))}
+        </svg>
+      );
+  }
+};
 
-/** The hand-drawn grid: four lines, each a little off true. */
-const TTT_GRID = [
-  'M100,14 C97,90 103,205 99,286',
-  'M201,12 C204,100 198,190 202,288',
-  'M14,101 C90,98 205,104 286,99',
-  'M12,200 C100,203 190,197 288,202'
-];
+const BOARDS: Record<PaperKind, React.FC<BoardProps>> = {
+  ttt: TttBoard,
+  dots: DotsBoard,
+  four: FourBoard,
+  memory: MemoryBoard,
+  hhk: HhkBoard,
+  snakes: SnakesBoard
+};
+
+/** How far into a game it is: moves, or both of your picks. */
+const progressOf = (g?: PaperGame) => (!g ? 0 : g.kind === 'hhk' ? (g.picks?.user.length || 0) + (g.picks?.partner.length || 0) : g.moves.length);
 
 const CONFETTI_COUNT = 36;
 
 /**
- * Tic-tac-toe and Dots and Boxes on Canvas of Us (core/paperGames): the
- * board, whose turn it is, the score between you, and your own ink and
- * mark. Moves travel to the other phone the moment they are made.
+ * One game on Canvas of Us (core/paperGames): the players and the score
+ * between you, whose turn it is, the board (components/GameBoards), and a
+ * new game when this one is done. Moves travel to the other phone the
+ * moment they are made; each lands with its own sound on both phones.
  */
-export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange }) => {
+export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack }) => {
   const tr = useT();
   const me = activeUser;
   const them = other(me);
-  const [size, setSize] = useState<number>(game?.kind === 'dots' ? game.size : DEFAULT_DOTS);
+  const [size, setSize] = useState<number>(game?.size ?? (kind === 'memory' ? DEFAULT_MEMORY : DEFAULT_DOTS));
   const [picking, setPicking] = useState(false);
-  const [party, setParty] = useState<{ key: number; inks: string[] } | null>(null);
+  const [party, setParty] = useState<{ key: number; inks: string[]; sad: boolean } | null>(null);
+  const timers = useRef<number[]>([]);
+  const later = (ms: number, fn: () => void) => {
+    timers.current.push(window.setTimeout(fn, ms));
+  };
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(() => loadSounds([...SOUNDS_OF[kind], 'g-win', 'g-lose', 'g-tie', 'g-start', 'g-turn']), [kind]);
 
-  useEffect(() => loadSounds(['sketch-1', 'sketch-2', 'sketch-3', 'blossom-pop', 'party-pop', 'gentle-chime']), []);
-
-  // What was on the board when it was opened is shown as it is; only moves
-  // made since are drawn in.
-  const seen = useRef<{ id?: string; count: number }>({ id: game?.id, count: game?.moves.length ?? 0 });
+  // What was on the board when it was opened is shown as it is; only what
+  // is played after is drawn in.
+  const seen = useRef<{ id?: string; count: number }>({ id: game?.id, count: progressOf(game) });
   if (game && seen.current.id !== game.id) seen.current = { id: game.id, count: 0 };
 
   const myLook = lookOf(game, me);
@@ -150,57 +171,122 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   const markOf = (seat: Seat) => (seat === me ? myLook.mark : theirLook.mark);
   const nameOf = (seat: Seat) => (seat === me ? tr('You') : partnerName);
 
-  const ttt = useMemo(() => (game?.kind === 'ttt' ? playTtt(game) : null), [game]);
-  const dots = useMemo(() => (game?.kind === 'dots' ? playDots(game) : null), [game]);
-  /** Dots and Boxes: the move that closed each box, so only boxes closed since opening are drawn in. */
-  const closedAt = useMemo(() => {
-    const at: number[] = [];
-    if (game?.kind !== 'dots') return at;
-    for (let k = 0; k < game.moves.length; k++) {
-      for (const b of playDots({ ...game, moves: game.moves.slice(0, k + 1) }).closed) at[b] = k;
-    }
-    return at;
-  }, [game]);
-  const state = game ? standing(game) : null;
+  const st = game ? standing(game) : null;
   const score = game ? totals(game) : { user: 0, partner: 0, draws: 0 };
-  const myTurn = !!state && !state.over && state.turn === me;
+  const canAct = !!st && !st.over && st.toMove.includes(me);
 
-  // Each move as it lands, from either of you: its sound, and at the end
-  // confetti in the winner's ink (or both, for a tie).
-  const last = useRef({ id: game?.id, n: game?.moves.length ?? 0, over: state?.over ?? false });
-  useEffect(() => {
-    if (!game || !state) return;
-    const before = last.current;
-    last.current = { id: game.id, n: game.moves.length, over: state.over };
-    if (before.id !== game.id || game.moves.length <= before.n) return;
-    if (dots && dots.closed.length) playSound('blossom-pop', { gain: 0.8 });
-    else playOneOf(['sketch-1', 'sketch-2', 'sketch-3'], { rate: 0.9 + Math.random() * 0.2 });
-    if (state.over && !before.over) {
-      const inks = state.winner ? [inkOf(state.winner), '#ffd23f', '#ffffff'] : [myLook.ink, theirLook.ink, '#ffd23f'];
-      setTimeout(() => {
-        setParty({ key: Date.now(), inks });
-        playSound(state.winner ? 'party-pop' : 'gentle-chime');
-        haptic('confirm');
-      }, 350);
+  /** The end of a game: a fanfare and confetti for a win, an "aww" for a loss, chimes for a tie. */
+  const celebrated = useRef<string | null>(game && st?.over ? game.id : null);
+  const celebrate = (g: PaperGame) => {
+    if (celebrated.current === g.id) return;
+    celebrated.current = g.id;
+    const s = standing(g);
+    if (s.winner === me) {
+      playSound('g-win');
+      haptic('confirm');
+      setParty({ key: Date.now(), inks: [myLook.ink, '#ffd23f', '#ffffff'], sad: false });
+    } else if (s.winner) {
+      playSound('g-lose');
+      haptic('tick');
+      setParty({ key: Date.now(), inks: [theirLook.ink, '#ffd23f'], sad: true });
+    } else {
+      playSound('g-tie');
+      haptic('tick');
+      setParty({ key: Date.now(), inks: [myLook.ink, theirLook.ink, '#ffd23f'], sad: false });
     }
-    // Only when the game itself changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [game]);
+  };
   useEffect(() => {
     if (!party) return;
     const t = setTimeout(() => setParty(null), 2800);
     return () => clearTimeout(t);
   }, [party]);
 
+  // Snakes & Ladders ends when the winner's counter gets there, not when the die stops.
+  const [settled, setSettled] = useState(game?.moves.length ?? 0);
+  useEffect(() => {
+    if (kind === 'snakes' && game && st?.over && settled >= game.moves.length) celebrate(game);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settled, game]);
+
+  // Each move as it lands, from either of you: its sound, and at the end the celebration.
+  const last = useRef({ id: game?.id, n: progressOf(game), over: st?.over ?? false, mine: 0, theirs: 0, rounds: 0 });
+  useEffect(() => {
+    if (!game || !st) return;
+    const before = last.current;
+    const hhk = game.kind === 'hhk' ? playHhk(game) : null;
+    const now = {
+      id: game.id,
+      n: progressOf(game),
+      over: st.over,
+      mine: game.picks?.[me].length || 0,
+      theirs: game.picks?.[them].length || 0,
+      rounds: hhk?.rounds.length || 0
+    };
+    last.current = now;
+    if (before.id !== game.id) {
+      // A new game, from either of you.
+      if (before.id !== undefined && now.n === 0) playSound('g-start');
+      return;
+    }
+    if (now.n <= before.n) return;
+    let end = 400;
+    switch (game.kind) {
+      case 'ttt':
+        playSound('g-pen', { rate: 0.92 + Math.random() * 0.16 });
+        end = 450;
+        break;
+      case 'dots':
+        playSound(playDots(game).closed.length ? 'g-box' : 'g-chalk', { rate: 0.94 + Math.random() * 0.12 });
+        end = 550;
+        break;
+      case 'four': {
+        const s = playFour(game);
+        const row = s.last !== null ? Math.floor(s.last / FOUR_COLS) : 0;
+        // The clack lands with the disc.
+        later(Math.max(0, fourFallMs(row) - 100), () => playSound('g-drop', { rate: 1.06 - row * 0.03 }));
+        end = fourFallMs(row) + 350;
+        break;
+      }
+      case 'memory': {
+        const s = playMemory(game);
+        playSound('g-flip', { rate: 0.95 + Math.random() * 0.1 });
+        if (s.pending === null && s.result) later(s.result === 'match' ? 380 : 480, () => playSound(s.result === 'match' ? 'g-match' : 'g-miss'));
+        end = 1100;
+        break;
+      }
+      case 'hhk': {
+        if (now.rounds > before.rounds && hhk) {
+          // Both have chosen: the drum roll, the reveal, and who took the round.
+          const round = hhk.rounds[hhk.rounds.length - 1];
+          playSound('g-reveal');
+          later(700, () => playSound(round.winner === me ? 'g-point' : round.winner ? 'g-miss' : 'g-tie'));
+          end = 1500;
+        } else if (now.mine > before.mine) {
+          playSound('g-pick');
+        } else if (now.theirs > before.theirs) {
+          // They have chosen and you have not: a nudge.
+          playSound('g-turn');
+        }
+        break;
+      }
+      case 'snakes':
+        // Its board rolls the die and moves the counters, with their sounds.
+        return;
+    }
+    if (st.over && !before.over) later(end, () => celebrate(game));
+    // Only when the game itself changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game]);
+
   const move = (m: number) => {
     if (!game || !canMove(game, me, m)) return;
     getAudioContext();
     haptic('tick');
-    onChange(withMove(game, m));
+    onChange(withMove(game, m, me));
   };
 
   const start = async () => {
-    if (game && state && !state.over && game.moves.length > 0) {
+    if (game && st && !st.over && progressOf(game) > 0) {
       const sure = await askConfirm({
         title: tr('Start a new game?'),
         body: tr('This one will not count.'),
@@ -211,6 +297,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     getAudioContext();
     haptic('confirm');
     onChange(newGame(kind, game, me, newId('game'), Date.now(), size));
+    if (!game) playSound('g-start');
   };
 
   const pickLook = (look: { ink?: string; mark?: Mark }) => {
@@ -219,171 +306,29 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     onChange(withLook(game, me, look, Date.now()));
   };
 
-  // ------------------------------------------------------------- the board
-
-  const tttBoard = game && ttt && (
-    <div className="pg-board pg-ttt">
-      <svg viewBox="0 0 300 300" className="pg-svg" aria-hidden="true" focusable="false">
-        {TTT_GRID.map((d, i) => (
-          <path
-            key={`${game.id}-${i}`}
-            d={d}
-            pathLength={1}
-            className="pg-ink pg-grid"
-            data-fresh={seen.current.count === 0 || undefined}
-            style={{ animationDelay: `${i * 110}ms` }}
-          />
-        ))}
-        {ttt.board.map((seat, cell) => {
-          if (!seat) return null;
-          const index = game.moves.indexOf(cell);
-          const won = !!ttt.line?.includes(cell);
-          return (
-            <MarkGlyph
-              key={`${game.id}-${cell}`}
-              mark={markOf(seat)}
-              ink={inkOf(seat)}
-              x={(cell % 3) * 100 + 50}
-              y={Math.floor(cell / 3) * 100 + 50}
-              fresh={index >= seen.current.count}
-              cls={`${won ? 'pg-won' : ''} ${index === game.moves.length - 1 && !won ? 'pg-latest' : ''}`}
-            />
-          );
-        })}
-        {ttt.line && ttt.winner && (() => {
-          const a = ttt.line[0];
-          const b = ttt.line[2];
-          const ax = (a % 3) * 100 + 50;
-          const ay = Math.floor(a / 3) * 100 + 50;
-          const bx = (b % 3) * 100 + 50;
-          const by = Math.floor(b / 3) * 100 + 50;
-          // Run a little past the end marks, as a pen stroke would.
-          const dx = (bx - ax) * 0.16;
-          const dy = (by - ay) * 0.16;
-          return (
-            <path
-              d={`M${ax - dx},${ay - dy} L${bx + dx},${by + dy}`}
-              pathLength={1}
-              stroke={inkOf(ttt.winner)}
-              strokeWidth={11}
-              strokeLinecap="round"
-              fill="none"
-              className="pg-ink pg-winline"
-              data-fresh={game.moves.length > seen.current.count || undefined}
-            />
-          );
-        })()}
-      </svg>
-      <div className="pg-cells">
-        {ttt.board.map((seat, cell) => (
-          <button
-            key={cell}
-            type="button"
-            className="pg-cell"
-            disabled={!myTurn || !!seat}
-            onClick={() => move(cell)}
-            style={{ '--ink': myLook.ink } as React.CSSProperties}
-            aria-label={tr('Row {r}, column {c}', { r: Math.floor(cell / 3) + 1, c: (cell % 3) + 1 })}
-          >
-            {!seat && myTurn && (
-              <svg viewBox="-34 -34 68 68" className="pg-ghost" aria-hidden="true" focusable="false">
-                <MarkGlyph mark={myLook.mark} ink={myLook.ink} x={0} y={0} fresh={false} width={8} />
-              </svg>
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-
-  const S = 60;
-  const P = 22;
-  const dotsBoard = game && dots && (() => {
-    const n = game.size;
-    const W = n * S + 2 * P;
-    const lastLine = game.moves[game.moves.length - 1];
-    const ends = (i: number) => {
-      const { row, col, across } = lineAt(n, i);
-      const x1 = P + col * S;
-      const y1 = P + row * S;
-      return { x1, y1, x2: across ? x1 + S : x1, y2: across ? y1 : y1 + S, across, row, col };
-    };
-    return (
-      <div className="pg-board pg-dots">
-        <svg viewBox={`0 0 ${W} ${W}`} className="pg-svg">
-          {dots.boxes.map((seat, b) => {
-            if (!seat) return null;
-            const row = Math.floor(b / n);
-            const col = b % n;
-            const fresh = (closedAt[b] ?? 0) >= seen.current.count;
-            return (
-              <g key={`${game.id}-b${b}`} className="pg-box" data-fresh={fresh || undefined}>
-                <rect x={P + col * S + 5} y={P + row * S + 5} width={S - 10} height={S - 10} rx={9} fill={inkOf(seat)} opacity={0.24} />
-                <MarkGlyph mark={markOf(seat)} ink={inkOf(seat)} x={P + col * S + S / 2} y={P + row * S + S / 2} s={0.5} fresh={fresh} width={4.5} delay={120} />
-              </g>
-            );
-          })}
-          {dots.lines.map((seat, i) => {
-            if (!seat) return null;
-            const e = ends(i);
-            const index = game.moves.indexOf(i);
-            return (
-              <line
-                key={`${game.id}-l${i}`}
-                x1={e.x1}
-                y1={e.y1}
-                x2={e.x2}
-                y2={e.y2}
-                pathLength={1}
-                stroke={inkOf(seat)}
-                strokeWidth={7}
-                strokeLinecap="round"
-                className={`pg-ink pg-line ${i === lastLine && !dots.over ? 'pg-latest-line' : ''}`}
-                data-fresh={index >= seen.current.count || undefined}
-              />
-            );
-          })}
-          {myTurn &&
-            dots.lines.map((seat, i) => {
-              if (seat) return null;
-              const e = ends(i);
-              const hit = e.across
-                ? { x: e.x1 + 8, y: e.y1 - 16, width: S - 16, height: 32 }
-                : { x: e.x1 - 16, y: e.y1 + 8, width: 32, height: S - 16 };
-              return (
-                <g
-                  key={`s${i}`}
-                  className="pg-slot"
-                  data-line={i}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={tr('Draw this line')}
-                  onClick={() => move(i)}
-                  onKeyDown={ev => {
-                    if (ev.key === 'Enter' || ev.key === ' ') {
-                      ev.preventDefault();
-                      move(i);
-                    }
-                  }}
-                >
-                  <line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={myLook.ink} strokeWidth={7} strokeLinecap="round" className="pg-preview" />
-                  <rect {...hit} fill="transparent" />
-                </g>
-              );
-            })}
-          {Array.from({ length: (n + 1) * (n + 1) }, (_, k) => (
-            <circle key={k} cx={P + (k % (n + 1)) * S} cy={P + Math.floor(k / (n + 1)) * S} r={5.5} fill={INK} className="pg-dot" />
-          ))}
-        </svg>
-      </div>
-    );
-  })();
-
   // ---------------------------------------------------------- around it
 
+  const detail = (seat: Seat): string | null => {
+    if (!game || st?.over || progressOf(game) === 0) return null;
+    if (kind === 'dots') {
+      const n = playDots(game).scores[seat];
+      return tr(n === 1 ? '{n} box' : '{n} boxes', { n });
+    }
+    if (kind === 'memory') {
+      const n = playMemory(game).scores[seat];
+      return tr(n === 1 ? '{n} pair' : '{n} pairs', { n });
+    }
+    if (kind === 'snakes') {
+      const n = playSnakes(game).pos[seat];
+      return n ? tr('on {n}', { n }) : tr('at the start');
+    }
+    return null;
+  };
+
   const chip = (seat: Seat) => {
-    const turn = !!state && !state.over && state.turn === seat;
-    const won = !!state?.over && state.winner === seat;
+    const turn = !!st && !st.over && st.toMove.includes(seat) && kind !== 'hhk';
+    const won = !!st?.over && st.winner === seat;
+    const extra = detail(seat);
     return (
       <div className="pg-chip" data-turn={turn || undefined} data-won={won || undefined} style={{ '--ink': inkOf(seat) } as React.CSSProperties}>
         <span className="pg-chip-mark">
@@ -393,58 +338,90 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
         <span className="pg-chip-score" aria-label={tr(score[seat] === 1 ? '{n} win' : '{n} wins', { n: score[seat] })}>
           {score[seat]}
         </span>
-        {kind === 'dots' && dots && !dots.over && game && game.moves.length > 0 && (
-          <span className="pg-chip-boxes">{tr(dots.scores[seat] === 1 ? '{n} box' : '{n} boxes', { n: dots.scores[seat] })}</span>
-        )}
+        {extra && <span className="pg-chip-boxes">{extra}</span>}
       </div>
     );
   };
 
   let status: React.ReactNode = null;
-  if (!game || !state) status = tr('Who will win this one?');
-  else if (state.over) {
-    status = state.winner ? (
+  const mePill = (text: string) => (
+    <span className="pg-status-me" style={{ '--ink': myLook.ink } as React.CSSProperties}>
+      <Sparkles className="h-4 w-4" aria-hidden="true" />
+      {text}
+    </span>
+  );
+  const waiting = (text: string) => (
+    <span className="pg-status-wait">
+      {text}
+      <span className="pg-dots-wait" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </span>
+    </span>
+  );
+  if (!game || !st) status = tr('Who will win this one?');
+  else if (st.over) {
+    status = st.winner ? (
       <span className="pg-status-win">
         <Trophy className="h-4 w-4" aria-hidden="true" />
-        {state.winner === me ? tr('You win!') : tr('{name} wins!', { name: partnerName })}
+        {st.winner === me ? tr('You win!') : tr('{name} wins!', { name: partnerName })}
       </span>
     ) : (
       tr("It's a tie!")
     );
-  } else if (myTurn) {
-    // The last move closed a box and the turn stayed: it was this player's.
-    const again = kind === 'dots' && !!dots && dots.closed.length > 0;
-    status = (
-      <span className="pg-status-me" style={{ '--ink': myLook.ink } as React.CSSProperties}>
-        <Sparkles className="h-4 w-4" aria-hidden="true" />
-        {again ? tr('A box! Go again') : tr('Your turn')}
-      </span>
+  } else if (kind === 'hhk') {
+    const meToo = st.toMove.includes(me);
+    const themToo = st.toMove.includes(them);
+    status =
+      meToo && themToo
+        ? mePill(tr('Choose one!'))
+        : meToo
+          ? mePill(tr('{name} has chosen - your pick!', { name: partnerName }))
+          : waiting(tr('Waiting for {name} to choose', { name: partnerName }));
+  } else if (canAct) {
+    const pending = kind === 'memory' && playMemory(game).pending !== null;
+    status = mePill(
+      st.again
+        ? kind === 'dots'
+          ? tr('A box! Go again')
+          : kind === 'memory'
+            ? tr('A pair! Go again')
+            : tr('A six! Roll again')
+        : pending
+          ? tr('Now find its pair')
+          : kind === 'snakes'
+            ? tr('Your roll')
+            : tr('Your turn')
     );
   } else {
-    status = (
-      <span className="pg-status-wait">
-        {tr("{name}'s turn", { name: partnerName })}
-        <span className="pg-dots-wait" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-      </span>
-    );
+    status = waiting(tr("{name}'s turn", { name: partnerName }));
   }
 
-  const sizes = kind === 'dots' && (!game || state?.over) && (
+  const sizes = sizesOf(kind);
+  const sizePicker = sizes && (!game || st?.over) && (
     <div className="pg-sizes" role="radiogroup" aria-label={tr('Board size')}>
-      {DOT_SIZES.map(n => (
+      {sizes.map(n => (
         <button key={n} type="button" role="radio" aria-checked={size === n} data-on={size === n || undefined} onClick={() => setSize(n)}>
-          {n}×{n}
+          {kind === 'memory' ? tr('{n} cards', { n: n * 2 }) : `${n}×${n}`}
         </button>
       ))}
     </div>
   );
 
+  const Board = BOARDS[kind];
+
   return (
     <section className="pg" data-kind={kind} style={{ '--me': myLook.ink, '--them': theirLook.ink } as React.CSSProperties}>
+      <div className="pg-head">
+        {onBack && (
+          <button type="button" className="pg-back" onClick={onBack} aria-label={tr('All games')}>
+            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          </button>
+        )}
+        <h3 className="pg-title">{tr(GAME_NAMES[kind])}</h3>
+      </div>
+
       <div className="pg-players">
         {chip(me)}
         <span className="pg-vs" aria-hidden="true">
@@ -460,41 +437,28 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
 
       <div className="pg-stage">
         {game ? (
-          kind === 'ttt' ? tttBoard : dotsBoard
+          <Board
+            game={game}
+            me={me}
+            inkOf={inkOf}
+            markOf={markOf}
+            myLook={myLook}
+            canAct={canAct}
+            seen={seen.current.count}
+            onMove={move}
+            partnerName={partnerName}
+            onSettled={setSettled}
+          />
         ) : (
           <div className="pg-empty">
-            <div className="pg-empty-art" aria-hidden="true">
-              {kind === 'ttt' ? (
-                <svg viewBox="0 0 300 300">
-                  {TTT_GRID.map((d, i) => (
-                    <path key={i} d={d} className="pg-ink pg-grid" />
-                  ))}
-                  <MarkGlyph mark={myLook.mark} ink={myLook.ink} x={50} y={50} fresh={false} />
-                  <MarkGlyph mark={theirLook.mark} ink={theirLook.ink} x={150} y={150} fresh={false} />
-                  <MarkGlyph mark={myLook.mark} ink={myLook.ink} x={250} y={250} fresh={false} />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 228 228">
-                  <line x1={22} y1={22} x2={82} y2={22} stroke={myLook.ink} strokeWidth={7} strokeLinecap="round" />
-                  <line x1={22} y1={22} x2={22} y2={82} stroke={theirLook.ink} strokeWidth={7} strokeLinecap="round" />
-                  <line x1={82} y1={22} x2={82} y2={82} stroke={myLook.ink} strokeWidth={7} strokeLinecap="round" />
-                  <line x1={22} y1={82} x2={82} y2={82} stroke={theirLook.ink} strokeWidth={7} strokeLinecap="round" />
-                  <rect x={27} y={27} width={50} height={50} rx={9} fill={theirLook.ink} opacity={0.24} />
-                  {Array.from({ length: 16 }, (_, k) => (
-                    <circle key={k} cx={22 + (k % 4) * 60} cy={22 + Math.floor(k / 4) * 60} r={5.5} fill={INK} />
-                  ))}
-                </svg>
-              )}
+            <div className="pg-empty-art">
+              <GameIcon kind={kind} />
             </div>
-            <p className="pg-empty-text">
-              {kind === 'ttt'
-                ? tr('Three in a row wins. Take turns - from wherever you both are.')
-                : tr('Take turns drawing a line. Close a box to claim it - and go again.')}
-            </p>
+            <p className="pg-empty-text">{tr(GAME_HOW[kind])}</p>
           </div>
         )}
         {party && (
-          <div className="pg-party" key={party.key} aria-hidden="true">
+          <div className="pg-party" data-sad={party.sad || undefined} key={party.key} aria-hidden="true">
             {Array.from({ length: CONFETTI_COUNT }, (_, i) => (
               <i
                 key={i}
@@ -515,8 +479,8 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
       </div>
 
       <div className="pg-actions">
-        {sizes}
-        {!game || state?.over ? (
+        {sizePicker}
+        {!game || st?.over ? (
           <button type="button" className="pg-play" onClick={() => void start()}>
             <Sparkles className="h-4 w-4" aria-hidden="true" />
             {game ? tr('Play again') : tr('Start a game')}
@@ -530,7 +494,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
         {game && (
           <button type="button" className="pg-restart" onClick={() => setPicking(p => !p)} aria-expanded={picking}>
             <Palette className="h-3.5 w-3.5" aria-hidden="true" />
-            {kind === 'ttt' ? tr('Colour & mark') : tr('Colour')}
+            {tr('Colour & mark')}
           </button>
         )}
       </div>
@@ -555,29 +519,25 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
               );
             })}
           </div>
-          {kind === 'ttt' && (
-            <>
-              <p>{tr('Your mark')}</p>
-              <div className="pg-swatches">
-                {MARKS.map(mark => {
-                  const taken = mark === theirLook.mark;
-                  return (
-                    <button
-                      key={mark}
-                      type="button"
-                      className="pg-markpick"
-                      data-on={mark === myLook.mark || undefined}
-                      disabled={taken}
-                      onClick={() => pickLook({ mark })}
-                      aria-label={taken ? tr('{name} has this one', { name: partnerName }) : tr('Use this mark')}
-                    >
-                      <MarkIcon mark={mark} ink={taken ? '#b8aca4' : myLook.ink} size={28} />
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
+          <p>{tr('Your mark')}</p>
+          <div className="pg-swatches">
+            {MARKS.map(mark => {
+              const taken = mark === theirLook.mark;
+              return (
+                <button
+                  key={mark}
+                  type="button"
+                  className="pg-markpick"
+                  data-on={mark === myLook.mark || undefined}
+                  disabled={taken}
+                  onClick={() => pickLook({ mark })}
+                  aria-label={taken ? tr('{name} has this one', { name: partnerName }) : tr('Use this mark')}
+                >
+                  <MarkIcon mark={mark} ink={taken ? '#b8aca4' : myLook.ink} size={28} />
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </section>

@@ -19,8 +19,7 @@ import {
   Image as ImageIcon,
   Check,
   Maximize2,
-  Hash,
-  Grid3x3
+  Gamepad2
 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
@@ -31,8 +30,18 @@ import { useT } from '../core/i18n';
 import { haptic } from '../core/haptics';
 import { shrinkPhoto, type ShrunkPhoto } from '../core/photo';
 import { PHOTO_MAX_CHARS, dataUrlToBlob } from '../core/chatShow';
-import { PaperGames } from '../components/PaperGames';
-import { CANVAS_MODE_KEY, rememberCanvasMode, standing, type PaperGame, type PaperKind } from '../core/paperGames';
+import { GameIcon, PaperGames } from '../components/PaperGames';
+import {
+  CANVAS_MODE_KEY,
+  GAME_NAMES,
+  PAPER_KINDS,
+  rememberCanvasMode,
+  standing,
+  totals,
+  type CanvasMode,
+  type PaperGame,
+  type PaperKind
+} from '../core/paperGames';
 
 interface CanvasOfUsViewProps {
   canvasState: SharedDrawingCanvasState;
@@ -45,19 +54,17 @@ interface CanvasOfUsViewProps {
   onSaveSketch: (sketch: CanvasSavedSketch) => void;
   /** A drawing into the chat, as a photo message. */
   onSendDrawing?: (picture: ShrunkPhoto) => void;
-  /** The paper games (core/paperGames), as this phone has them. */
-  games?: { ttt?: PaperGame; dots?: PaperGame };
+  /** The games (core/paperGames), as this phone has them. */
+  games?: Partial<Record<PaperKind, PaperGame>>;
   /** A move, a new game or a new look: to keep, and to send. */
   onGame?: (game: PaperGame) => void;
 }
 
-type CanvasMode = 'draw' | PaperKind;
-
-/** The tab last open here, so a game you were playing is where you left it. */
+/** Where this was last left - drawing, the games, or one game - so a game you were playing is still there. */
 function savedMode(): CanvasMode {
   try {
     const m = localStorage.getItem(CANVAS_MODE_KEY);
-    return m === 'ttt' || m === 'dots' ? m : 'draw';
+    return m === 'games' || (PAPER_KINDS as string[]).includes(m || '') ? (m as CanvasMode) : 'draw';
   } catch {
     return 'draw';
   }
@@ -196,11 +203,18 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     setMode(m);
     rememberCanvasMode(m);
   };
-  /** A game waiting on you: a dot on its tab. */
-  const yourTurn = (g?: PaperGame) => {
-    if (!g) return false;
+  /** A game waiting on you: a dot on its card, and on the Games tab. */
+  const yourTurn = (g?: PaperGame) => !!g && standing(g).toMove.includes(activeUser);
+  const anyTurn = PAPER_KINDS.some(k => yourTurn(games?.[k]));
+  const them = partnerName && partnerName !== 'Partner' ? partnerName : tr('Partner');
+  /** A game's card among the games: where it stands, and the score. */
+  const shelfLine = (k: PaperKind): { text: string; tone: 'me' | 'wait' | 'done' | 'new' } => {
+    const g = games?.[k];
+    if (!g) return { text: tr('New - tap to play'), tone: 'new' };
     const s = standing(g);
-    return !s.over && s.turn === activeUser;
+    if (s.over) return { text: s.winner === activeUser ? tr('You won!') : s.winner ? tr('{name} won', { name: them }) : tr("It's a tie!"), tone: 'done' };
+    if (s.toMove.includes(activeUser)) return { text: tr('Your turn'), tone: 'me' };
+    return { text: tr("{name}'s turn", { name: them }), tone: 'wait' };
   };
   const [activeTool, setActiveTool] = useState<CanvasTool>('pen');
   const [activeColor, setActiveColor] = useState<string>('#f43f5e');
@@ -552,30 +566,54 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
 
       {onGame && (
         <div className="cv-modes" role="tablist" aria-label={tr('Canvas of Us')}>
-          {(
-            [
-              ['draw', tr('Draw'), Pencil],
-              ['ttt', tr('Tic-tac-toe'), Hash],
-              ['dots', tr('Dots & Boxes'), Grid3x3]
-            ] as const
-          ).map(([m, label, Icon]) => (
-            <button key={m} type="button" role="tab" aria-selected={mode === m} className="cv-mode" data-on={mode === m || undefined} onClick={() => chooseMode(m)}>
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>{label}</span>
-              {m !== 'draw' && yourTurn(games?.[m]) && <span className="cv-mode-dot" aria-label={tr('Your turn')} />}
-            </button>
-          ))}
+          <button type="button" role="tab" aria-selected={mode === 'draw'} className="cv-mode" data-on={mode === 'draw' || undefined} onClick={() => chooseMode('draw')}>
+            <Pencil className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{tr('Draw')}</span>
+          </button>
+          <button type="button" role="tab" aria-selected={mode !== 'draw'} className="cv-mode" data-on={mode !== 'draw' || undefined} onClick={() => chooseMode('games')}>
+            <Gamepad2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{tr('Games')}</span>
+            {anyTurn && <span className="cv-mode-dot" aria-label={tr('Your turn')} />}
+          </button>
         </div>
       )}
 
-      {onGame && mode !== 'draw' && (
+      {onGame && mode === 'games' && (
+        <div className="cv-shelf">
+          {PAPER_KINDS.map(k => {
+            const line = shelfLine(k);
+            const g = games?.[k];
+            const t = g ? totals(g) : null;
+            return (
+              <button key={k} type="button" className="cv-game" data-kind={k} onClick={() => chooseMode(k)}>
+                {line.tone === 'me' && <span className="cv-mode-dot" aria-hidden="true" />}
+                <span className="cv-game-art">
+                  <GameIcon kind={k} />
+                </span>
+                <span className="cv-game-name">{tr(GAME_NAMES[k])}</span>
+                <span className="cv-game-line" data-tone={line.tone}>
+                  {line.text}
+                </span>
+                {t && (t.user || t.partner || t.draws) ? (
+                  <span className="cv-game-score">
+                    {tr('You')} {t[activeUser]} · {t[activeUser === 'user' ? 'partner' : 'user']} {them}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {onGame && mode !== 'draw' && mode !== 'games' && (
         <PaperGames
           key={mode}
           kind={mode}
           game={games?.[mode]}
           activeUser={activeUser}
-          partnerName={partnerName && partnerName !== 'Partner' ? partnerName : tr('Partner')}
+          partnerName={them}
           onChange={onGame}
+          onBack={() => chooseMode('games')}
         />
       )}
 

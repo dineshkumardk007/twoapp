@@ -273,7 +273,7 @@ import {
 } from './core/chatActions';
 import { cleanStickerId } from './core/stickers';
 import { addBoop, boopsFor, chatDay, cleanPlayKind, cleanTheme, withBoopCount, type PlayKind, type SceneTheme } from './core/usTwo';
-import { GAME_DOTS, GAME_TTT, cleanGame, mergeGame, recordTypeOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
+import { GAME_NAMES, cleanGame, kindOfRecord, mergeGame, recordTypeOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
   SURPRISE_PART,
@@ -1892,10 +1892,10 @@ export const App: React.FC = () => {
             const at = Number(parsed?.at) || 0;
             const theme = cleanTheme(parsed?.theme);
             setState(prev => (prev.usTheme && prev.usTheme.at >= at ? prev : { ...prev, usTheme: { theme, at } }));
-          } else if (record.type === GAME_TTT || record.type === GAME_DOTS) {
-            // A paper game on Canvas of Us (core/paperGames): the copy further
-            // on wins, so a move made here is never undone by an older copy.
-            const kind = record.type === GAME_TTT ? 'ttt' : 'dots';
+          } else if (kindOfRecord(record.type)) {
+            // A game on Canvas of Us (core/paperGames): the copy further on
+            // wins, so a move made here is never undone by an older copy.
+            const kind = kindOfRecord(record.type)!;
             const incoming = cleanGame(parsed, kind);
             if (!incoming) return;
             const before = latestRef.current.state.paperGames?.[kind];
@@ -1910,7 +1910,8 @@ export const App: React.FC = () => {
             // and Canvas of Us set to open on that game. Not for the replay of
             // old moves on reconnecting, nor while you are looking at it.
             const me = latestRef.current.state.activeUser;
-            const moved = !before || before.id !== merged.id || merged.moves.length > before.moves.length;
+            const progress = (g?: PaperGame) => (!g ? 0 : g.moves.length + (g.picks?.user.length || 0) + (g.picks?.partner.length || 0));
+            const moved = !before || before.id !== merged.id || progress(merged) > progress(before);
             if (
               moved &&
               record.authorId !== me &&
@@ -1919,14 +1920,14 @@ export const App: React.FC = () => {
               Date.now() - (Number(record.clientTs) || 0) < 2 * 60 * 1000
             ) {
               const s = standing(merged);
-              const game = kind === 'ttt' ? tr('Tic-tac-toe') : tr('Dots & Boxes');
+              const game = tr(GAME_NAMES[kind]);
               const body = s.over
                 ? s.winner === me
                   ? tr('You won at {game}!', { game })
                   : s.winner
                     ? tr('{name} won at {game}', { name: partnerNameRef.current || tr('Partner'), game })
                     : tr('{game}: a tie!', { game })
-                : s.turn === me
+                : s.toMove.includes(me)
                   ? tr('{game}: your turn', { game })
                   : '';
               if (body) {

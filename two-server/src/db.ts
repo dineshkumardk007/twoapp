@@ -67,10 +67,14 @@ export const LATEST_ONLY_TYPES = new Set([
   'SURPRISE_SEEN',
   // The sky picked for "Us two": only the newest pick matters.
   'US_THEME',
-  // A paper game on Canvas of Us, whole - every move so far - on every move.
-  // The newest copy from each of you is the game.
+  // A game on Canvas of Us, whole - every move so far - on every move. The
+  // newest copy from each of you is the game.
   'GAME_TTT',
-  'GAME_DOTS'
+  'GAME_DOTS',
+  'GAME_FOUR',
+  'GAME_MEMORY',
+  'GAME_HHK',
+  'GAME_SNAKES'
 ]);
 
 /**

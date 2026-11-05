@@ -1,7 +1,7 @@
 import type { ComingUpDay } from './comingUp';
 import type { Statuses } from './status';
 import type { Boops, UsTheme } from './usTwo';
-import type { PaperGame } from './paperGames';
+import type { PaperGame, PaperKind } from './paperGames';
 import type { SurpriseBook } from './surprise';
 import {
   EmotionalReport,
@@ -172,8 +172,8 @@ export interface SpaceState {
   usTheme?: UsTheme;
   /** Surprises one of you has planned for the other (core/surprise), theirs kept sealed. */
   surprises?: SurpriseBook;
-  /** The paper games on Canvas of Us (core/paperGames): the current one of each kind. */
-  paperGames?: { ttt?: PaperGame; dots?: PaperGame };
+  /** The games on Canvas of Us (core/paperGames): the current one of each kind. */
+  paperGames?: Partial<Record<PaperKind, PaperGame>>;
   /**
    * Group spaces this device belongs to.
    *
