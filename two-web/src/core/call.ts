@@ -384,6 +384,12 @@ interface CallEngineOptions {
 const ICE_WAIT_MS = 2_500;
 /** Routes gathered ahead while a call rings here, one per kind of network to try. */
 const WARM_POOL = 2;
+/**
+ * The call's route said again this long after it connects. A phone still
+ * switching into call mode can drop the first choice of earpiece, and then
+ * plays the voice nowhere until Speaker is pressed on and off.
+ */
+const ROUTE_AGAIN_MS = [400, 1_500];
 
 /**
  * One call at a time, from ring to hang-up.
@@ -398,6 +404,8 @@ export class CallEngine {
   private pc: RTCPeerConnection | null = null;
   private local: MediaStream | null = null;
   private audioEl: HTMLAudioElement | null = null;
+  /** The other voice, arrived before this side's microphone was open (playRemote). */
+  private heldRemote: MediaStream | null = null;
   private pendingOffer: CallSignal | null = null;
   private pendingIce: RTCIceCandidateInit[] = [];
   private remoteQuality: CallQuality = 'high';
@@ -1013,6 +1021,13 @@ export class CallEngine {
     this.set({ phase: 'active', connectedAt: Date.now() });
     this.applySendParameters();
     routeAudio(true, this.state.speaker, this.state.headset);
+    for (const ms of ROUTE_AGAIN_MS) {
+      this.timers.push(
+        setTimeout(() => {
+          if (this.state.phase === 'active') routeAudio(true, this.state.speaker, this.state.headset);
+        }, ms)
+      );
+    }
     this.startHeadsetPoll();
     this.startStatsPoll();
     this.watchNetwork();
@@ -1143,6 +1158,11 @@ export class CallEngine {
     // From the moment the microphone is the call's: while ringing out counts,
     // since a phone put down to wait for an answer is often locked.
     keepAlive(true);
+    // A voice that arrived first (answering on the connection made while it
+    // rang) starts now, with the phone in call mode (playRemote).
+    const held = this.heldRemote;
+    this.heldRemote = null;
+    if (held) this.playRemote(held);
     return mic.stream;
   }
 
@@ -1296,7 +1316,20 @@ export class CallEngine {
     );
   }
 
+  /**
+   * Plays the other voice - once this side's microphone is open.
+   *
+   * Android's WebView decides as it starts playing whether a sound is call
+   * audio or media, and it counts as a call only once a microphone is open.
+   * Answering on the connection made while it rang, the voice can arrive
+   * before the microphone does; started then, it would play as media, which
+   * a phone in call mode may send nowhere. It waits for adoptMic instead.
+   */
   private playRemote(stream: MediaStream) {
+    if (!this.local) {
+      this.heldRemote = stream;
+      return;
+    }
     if (!this.audioEl) {
       const el = document.createElement('audio');
       el.autoplay = true;
@@ -1400,6 +1433,7 @@ export class CallEngine {
       this.audioEl.remove();
       this.audioEl = null;
     }
+    this.heldRemote = null;
 
     this.pendingOffer = null;
     this.pendingIce = [];

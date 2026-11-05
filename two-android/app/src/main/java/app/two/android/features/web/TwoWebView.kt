@@ -875,7 +875,7 @@ class AndroidWebBridge(
         val voicePath = active && (speaker || !headset)
         try {
             audio.mode = if (voicePath) AudioManager.MODE_IN_COMMUNICATION else AudioManager.MODE_NORMAL
-            routeToSpeaker(audio, voicePath && speaker)
+            routeCall(audio, voicePath, speaker)
         } catch (_: Exception) {
             // A phone that refuses the change keeps its own routing; the call
             // carries on, only perhaps from the other speaker.
@@ -883,30 +883,40 @@ class AndroidWebBridge(
     }
 
     /**
-     * Loudspeaker on or off for call audio.
+     * The call's voice to the loudspeaker or the earpiece - chosen outright.
      *
      * From Android 12 the old speakerphone switch is deprecated, and on many
      * phones it is quietly ignored while in call mode - the Speaker button
      * would light up and the voice would stay at the earpiece. The replacement
      * picks the call's output device directly.
+     *
+     * The earpiece is picked as well, not left to follow from clearing the
+     * loudspeaker: at the start of a call this app has chosen nothing yet, so
+     * clearing changed nothing, and the voice stayed wherever the WebView had
+     * put it when the microphone opened - on some phones, nowhere she could
+     * hear until Speaker was pressed on and off again. Off the voice path
+     * (earphones, or the call over) the choice is handed back.
      */
-    private fun routeToSpeaker(audio: AudioManager, on: Boolean) {
+    private fun routeCall(audio: AudioManager, voicePath: Boolean, speaker: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val loudspeaker = if (on) {
-                audio.availableCommunicationDevices.firstOrNull {
-                    it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
-                }
-            } else {
-                null
+            val wanted = when {
+                !voicePath -> null
+                speaker -> AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+                else -> AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
             }
-            if (loudspeaker != null) {
-                audio.setCommunicationDevice(loudspeaker)
+            // A phone without an earpiece (a tablet) has no such device; it
+            // is left to choose for itself.
+            val device = wanted?.let { type ->
+                audio.availableCommunicationDevices.firstOrNull { it.type == type }
+            }
+            if (device != null) {
+                audio.setCommunicationDevice(device)
             } else {
                 audio.clearCommunicationDevice()
             }
         } else {
             @Suppress("DEPRECATION")
-            audio.isSpeakerphoneOn = on
+            audio.isSpeakerphoneOn = voicePath && speaker
         }
     }
 
