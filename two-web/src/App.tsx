@@ -6459,7 +6459,14 @@ export const App: React.FC = () => {
             onClearCanvas={handleClearCanvas}
             onUndoStroke={handleUndoCanvasStroke}
             onSaveSketch={handleSaveCanvasSketch}
-            onSendToChat={(msg) => handleSendMessage(msg, false)}
+            onSendDrawing={picture =>
+              handleSendMessage('Photo', false, {
+                isPhoto: true,
+                photoDataUrl: picture.dataUrl,
+                photoWidth: picture.width,
+                photoHeight: picture.height
+              })
+            }
           />
         )}
 

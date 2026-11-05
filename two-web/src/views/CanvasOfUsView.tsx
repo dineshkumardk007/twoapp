@@ -13,7 +13,7 @@ import {
   Undo2,
   Trash2,
   Download,
-  Share2,
+  Send,
   Sparkles,
   Heart,
   Image as ImageIcon,
@@ -25,6 +25,10 @@ import { getAudioContext } from '../core/audioAlerts';
 import { playOneOf } from '../core/sounds';
 import { who } from '../core/who';
 import { askConfirm } from '../core/dialog';
+import { useT } from '../core/i18n';
+import { haptic } from '../core/haptics';
+import { shrinkPhoto, type ShrunkPhoto } from '../core/photo';
+import { PHOTO_MAX_CHARS, dataUrlToBlob } from '../core/chatShow';
 
 interface CanvasOfUsViewProps {
   canvasState: SharedDrawingCanvasState;
@@ -35,7 +39,8 @@ interface CanvasOfUsViewProps {
   onClearCanvas: () => void;
   onUndoStroke: () => void;
   onSaveSketch: (sketch: CanvasSavedSketch) => void;
-  onSendToChat?: (text: string) => void;
+  /** A drawing into the chat, as a photo message. */
+  onSendDrawing?: (picture: ShrunkPhoto) => void;
 }
 
 /**
@@ -161,8 +166,9 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   onClearCanvas,
   onUndoStroke,
   onSaveSketch,
-  onSendToChat
+  onSendDrawing
 }) => {
+  const tr = useT();
   const [activeTool, setActiveTool] = useState<CanvasTool>('pen');
   const [activeColor, setActiveColor] = useState<string>('#f43f5e');
   const [brushSize, setBrushSize] = useState<number>(4);
@@ -170,6 +176,9 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     canvasState.background || 'parchment'
   );
   const [savedFeedback, setSavedFeedback] = useState(false);
+  const [sending, setSending] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
+  /** The saved sketch just sent from the gallery, ticked for a moment. */
+  const [sentSketch, setSentSketch] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDrawingRef = useRef(false);
@@ -428,6 +437,44 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     }
   };
 
+  /**
+   * A drawing into the chat, as a photo: the canvas as it looks, paper and
+   * all, shrunk the way any photo is to fit one record (core/photo).
+   */
+  const sendPicture = async (source: Blob): Promise<boolean> => {
+    if (!onSendDrawing) return false;
+    try {
+      onSendDrawing(await shrinkPhoto(source, PHOTO_MAX_CHARS));
+      haptic('confirm');
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleSendDrawing = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || sending === 'sending') return;
+    setSending('sending');
+    canvas.toBlob(async blob => {
+      const ok = !!blob && (await sendPicture(blob));
+      setSending(ok ? 'sent' : 'failed');
+      setTimeout(() => setSending('idle'), 2200);
+    }, 'image/png');
+  };
+
+  const handleSendSketch = async (sketch: CanvasSavedSketch) => {
+    let ok = false;
+    try {
+      ok = await sendPicture(dataUrlToBlob(sketch.dataUrl));
+    } catch {
+      ok = false;
+    }
+    if (!ok) return;
+    setSentSketch(sketch.id);
+    setTimeout(() => setSentSketch(current => (current === sketch.id ? null : current)), 2200);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -457,13 +504,14 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
             <span>{savedFeedback ? 'Saved!' : 'Save drawing'}</span>
           </button>
 
-          {onSendToChat && (
+          {onSendDrawing && (
             <button
-              onClick={() => onSendToChat('🎨 I just drew a sweet doodle on Canvas of Us for you. Come trace it with me.')}
-              className="p-2 rounded-2xl border border-linen-border bg-linen-surface text-linen-secondary hover:text-linen-accent transition-colors cursor-pointer"
-              title="Share canvas link in Chat"
+              onClick={handleSendDrawing}
+              disabled={canvasState.strokes.length === 0 || sending === 'sending'}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl border border-linen-border bg-linen-surface text-xs font-medium text-linen-secondary hover:text-linen-accent transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-default"
             >
-              <Share2 className="w-4 h-4" />
+              {sending === 'sent' ? <Check className="w-4 h-4 text-emerald-500" /> : <Send className="w-4 h-4" />}
+              <span>{sending === 'sent' ? tr('Sent') : sending === 'failed' ? tr('Send again') : tr('Send to chat')}</span>
             </button>
           )}
         </div>
@@ -637,13 +685,26 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                   />
                 </div>
-                <div className="p-3">
-                  <h4 className="font-serif text-xs font-semibold text-linen-primary truncate">
-                    {sketch.title}
-                  </h4>
-                  <p className="text-[10px] text-linen-secondary mt-0.5">
-                    {sketch.date} • {who(sketchSeat(sketch), activeUser, partnerName, sketch.authorName)}
-                  </p>
+                <div className="p-3 flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-serif text-xs font-semibold text-linen-primary truncate">
+                      {sketch.title}
+                    </h4>
+                    <p className="text-[10px] text-linen-secondary mt-0.5">
+                      {sketch.date} • {who(sketchSeat(sketch), activeUser, partnerName, sketch.authorName)}
+                    </p>
+                  </div>
+                  {onSendDrawing && (
+                    <button
+                      type="button"
+                      onClick={() => void handleSendSketch(sketch)}
+                      aria-label={tr('Send to chat')}
+                      title={tr('Send to chat')}
+                      className="shrink-0 -m-1 p-1.5 rounded-xl text-linen-secondary hover:text-linen-accent transition-colors cursor-pointer"
+                    >
+                      {sentSketch === sketch.id ? <Check className="w-4 h-4 text-emerald-500" /> : <Send className="w-4 h-4" />}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
