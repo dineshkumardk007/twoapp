@@ -39,10 +39,12 @@ import {
   type PaperKind
 } from '../core/paperGames';
 import { playCarrom } from '../core/carrom';
+import { markTourSeen, tourSeen } from '../core/gameTours';
 import { MarkIcon } from './gameArt';
 import { DotsBoard, FourBoard, HhkBoard, MemoryBoard, SnakesBoard, TttBoard, fourFallMs, type BoardProps } from './GameBoards';
 import { BalloonBoard } from './BalloonBoard';
 import { CarromBoard } from './CarromBoard';
+import { GameTour } from './GameTour';
 
 interface PaperGamesProps {
   kind: PaperKind;
@@ -197,6 +199,13 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   const them = other(me);
   const [size, setSize] = useState<number>(game?.size ?? (kind === 'memory' ? DEFAULT_MEMORY : DEFAULT_DOTS));
   const [picking, setPicking] = useState(false);
+  // The first time this game is opened on this phone: how it is played.
+  const [touring, setTouring] = useState(() => !tourSeen(kind));
+  const tourDone = () => {
+    markTourSeen(kind);
+    setTouring(false);
+    haptic('tick');
+  };
   const [party, setParty] = useState<{ key: number; inks: string[]; sad: boolean } | null>(null);
   const timers = useRef<number[]>([]);
   const later = (ms: number, fn: () => void) => {
@@ -535,6 +544,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
 
   return (
     <section className="pg" data-kind={kind} style={{ '--me': myLook.ink, '--them': theirLook.ink } as React.CSSProperties}>
+      {touring && <GameTour kind={kind} art={<GameIcon kind={kind} />} onDone={tourDone} />}
       <div className="pg-head">
         {onBack && (
           <button type="button" className="pg-back" onClick={onBack} aria-label={tr('All games')}>

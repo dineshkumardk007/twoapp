@@ -4878,3 +4878,39 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
   color: rgb(var(--c-secondary));
   animation: pg-ask-in 260ms ease both;
 }
+
+/* --- the small box the first time a game is opened (components/GameTour) --- */
+.gt-shade { padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+/* Solid, so nothing of the game shows through the words; "Got it" always stays in view,
+   and if the words ever need more room than the screen has, they scroll above it. */
+.gt-box {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 340px);
+  max-height: 100%;
+  padding: 18px 18px 16px;
+  border-radius: 24px;
+  background: rgb(var(--c-surface));
+  box-shadow: 0 24px 50px -16px rgb(0 0 0 / 0.6);
+}
+.gt-art { display: grid; flex-shrink: 0; place-items: center; height: 58px; }
+.gt-title { flex-shrink: 0; margin-top: 8px; text-align: center; font: 700 1.25rem/1.2 Fraunces, Georgia, serif; }
+.gt-lines { display: flex; flex: 0 1 auto; flex-direction: column; gap: 10px; min-height: 0; margin: 14px 0 16px; padding: 0; overflow-y: auto; list-style: none; }
+.gt-lines li { flex-shrink: 0; }
+@media (max-height: 620px) {
+  .gt-art { display: none; }
+  .gt-title { margin-top: 0; }
+}
+.gt-lines li { display: flex; align-items: flex-start; gap: 10px; font: 600 14.5px/1.35 Manrope, system-ui, sans-serif; }
+.gt-icon { flex: 0 0 24px; text-align: center; font-size: 17px; line-height: 1.2; }
+.gt-ok {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 9999px;
+  font: 800 15px/1 Manrope, system-ui, sans-serif;
+  transition: transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.gt-ok:active { transform: scale(0.97); }
