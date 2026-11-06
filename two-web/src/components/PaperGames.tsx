@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, Palette, RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import { useT } from '../core/i18n';
 import { haptic } from '../core/haptics';
@@ -32,8 +32,11 @@ import {
   type PaperGame,
   type PaperKind
 } from '../core/paperGames';
+import { playCarrom } from '../core/carrom';
 import { MarkIcon } from './gameArt';
 import { DotsBoard, FourBoard, HhkBoard, MemoryBoard, SnakesBoard, TttBoard, fourFallMs, type BoardProps } from './GameBoards';
+import { BalloonBoard } from './BalloonBoard';
+import { CarromBoard } from './CarromBoard';
 
 interface PaperGamesProps {
   kind: PaperKind;
@@ -48,6 +51,8 @@ interface PaperGamesProps {
 
 /** How each game is played, in a line. */
 export const GAME_HOW: Record<PaperKind, string> = {
+  balloon: 'Pull back, let go and allow for the wind. Soak the other one through to win. You each get one giant balloon.',
+  carrom: 'Flick the striker to pot your coins. Win the Queen and cover her with a coin of yours. Clear your coins to win.',
   four: 'Drop a disc in turn. Four in a line - across, down or slanting - wins.',
   memory: 'Turn over two cards a turn. Find a pair to keep it - and go again.',
   hhk: 'You both choose at once. Hug holds Heart, Kiss wins Hug, Heart outlasts Kiss. First to three.',
@@ -58,6 +63,8 @@ export const GAME_HOW: Record<PaperKind, string> = {
 
 /** The sounds each game makes, loaded when it opens. */
 const SOUNDS_OF: Record<PaperKind, SoundName[]> = {
+  balloon: ['g-wb-stretch', 'g-wb-throw', 'g-wb-burst', 'g-wb-giant', 'g-wb-splat', 'g-wb-hedge', 'g-wb-eek', 'g-wb-wind', 'us-shake'],
+  carrom: ['g-cr-strike', 'g-cr-click', 'g-cr-wall', 'g-cr-pocket', 'g-cr-queen', 'g-cr-cover', 'g-cr-foul', 'g-cr-place', 'g-cr-back'],
   ttt: ['g-pen'],
   dots: ['g-chalk', 'g-box'],
   four: ['g-drop'],
@@ -69,6 +76,39 @@ const SOUNDS_OF: Record<PaperKind, SoundName[]> = {
 /** A small picture of each game, for its card among the games and its empty board. */
 export const GameIcon: React.FC<{ kind: PaperKind }> = ({ kind }) => {
   switch (kind) {
+    case 'balloon':
+      return (
+        <svg viewBox="0 0 64 56" className="g-icon" aria-hidden="true">
+          <path d="M6,50 C14,41 16,50 21,44 C27,37 30,47 35,43 C42,38 44,50 52,44 C56,41 58,46 60,50 Z" fill="#7cc8ff" />
+          <g fill="#4da7ee">
+            <circle cx={11} cy={37} r={2.4} />
+            <circle cx={55} cy={33} r={2.8} />
+            <circle cx={46} cy={24} r={1.8} />
+            <circle cx={17} cy={25} r={1.7} />
+          </g>
+          <g transform="translate(31 22) rotate(-16)">
+            <path d="M0,-18 C10,-18 16,-9 16,0 C16,10 7,16 0,16 C-7,16 -16,10 -16,0 C-16,-9 -10,-18 0,-18 Z" fill="#6dbff9" stroke="#3b2723" strokeWidth={2.6} strokeLinejoin="round" />
+            <path d="M-3.5,16 L3.5,16 L0,21 Z" fill="#2b86d9" stroke="#3b2723" strokeWidth={2} strokeLinejoin="round" />
+            <ellipse cx={-6} cy={-7} rx={3} ry={5.4} transform="rotate(20 -6 -7)" fill="#fff" opacity={0.78} />
+          </g>
+        </svg>
+      );
+    case 'carrom':
+      return (
+        <svg viewBox="0 0 60 60" className="g-icon" aria-hidden="true">
+          <rect x={0} y={0} width={60} height={60} rx={8} fill="#4a2410" />
+          <rect x={5} y={5} width={50} height={50} rx={2} fill="#efd8a6" />
+          {[[9, 9], [51, 9], [9, 51], [51, 51]].map(([x, y]) => (
+            <circle key={`${x}${y}`} cx={x} cy={y} r={3.8} fill="#1a0e07" />
+          ))}
+          <circle cx={30} cy={30} r={15} fill="none" stroke="#7a4a20" strokeWidth={1} />
+          <circle cx={30} cy={30} r={4.2} fill="#e8213f" stroke="#ffd98a" strokeWidth={1} />
+          {[[30, 21, 1], [37.8, 25.5, 0], [37.8, 34.5, 1], [30, 39, 0], [22.2, 34.5, 1], [22.2, 25.5, 0]].map(([x, y, w]) => (
+            <circle key={`${x}${y}`} cx={x} cy={y} r={4.2} fill={w ? '#fff8e6' : '#2a2830'} stroke={w ? '#b49a68' : '#000'} strokeWidth={0.8} />
+          ))}
+          <circle cx={30} cy={48} r={5.2} fill="#fff" stroke="#0ea5e9" strokeWidth={1.8} />
+        </svg>
+      );
     case 'four':
       return (
         <svg viewBox="0 0 64 56" className="g-icon" aria-hidden="true">
@@ -127,6 +167,8 @@ export const GameIcon: React.FC<{ kind: PaperKind }> = ({ kind }) => {
 };
 
 const BOARDS: Record<PaperKind, React.FC<BoardProps>> = {
+  balloon: BalloonBoard,
+  carrom: CarromBoard,
   ttt: TttBoard,
   dots: DotsBoard,
   four: FourBoard,
@@ -171,9 +213,16 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   const markOf = (seat: Seat) => (seat === me ? myLook.mark : theirLook.mark);
   const nameOf = (seat: Seat) => (seat === me ? tr('You') : partnerName);
 
-  const st = game ? standing(game) : null;
-  const score = game ? totals(game) : { user: 0, partner: 0, draws: 0 };
-  const canAct = !!st && !st.over && st.toMove.includes(me);
+  // The games with a shot to watch: the words round the board wait for it to land, so
+  // they never tell you how it went before you have seen it.
+  const watches = kind === 'balloon' || kind === 'carrom';
+  const [settled, setSettled] = useState(game?.moves.length ?? 0);
+  const landing = watches && !!game && settled < game.moves.length;
+  const shownGame = useMemo(() => (game && landing ? { ...game, moves: game.moves.slice(0, settled) } : game), [game, landing, settled]);
+
+  const st = shownGame ? standing(shownGame) : null;
+  const score = shownGame ? totals(shownGame) : { user: 0, partner: 0, draws: 0 };
+  const canAct = !!st && !st.over && st.toMove.includes(me) && !landing;
 
   /** The end of a game: a fanfare and confetti for a win, an "aww" for a loss, chimes for a tie. */
   const celebrated = useRef<string | null>(game && st?.over ? game.id : null);
@@ -201,10 +250,10 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     return () => clearTimeout(t);
   }, [party]);
 
-  // Snakes & Ladders ends when the winner's counter gets there, not when the die stops.
-  const [settled, setSettled] = useState(game?.moves.length ?? 0);
+  // Snakes & Ladders ends when the winner's counter gets there, not when the die stops;
+  // Water Balloon War and Carrom when the last of it has landed.
   useEffect(() => {
-    if (kind === 'snakes' && game && st?.over && settled >= game.moves.length) celebrate(game);
+    if ((kind === 'snakes' || watches) && game && st?.over && settled >= game.moves.length) celebrate(game);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settled, game]);
 
@@ -270,7 +319,9 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
         break;
       }
       case 'snakes':
-        // Its board rolls the die and moves the counters, with their sounds.
+      case 'balloon':
+      case 'carrom':
+        // Their boards play it all out, with their sounds, and say when they are done.
         return;
     }
     if (st.over && !before.over) later(end, () => celebrate(game));
@@ -309,6 +360,10 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   // ---------------------------------------------------------- around it
 
   const detail = (seat: Seat): string | null => {
+    if (kind === 'carrom' && shownGame && !st?.over) {
+      const c = playCarrom(shownGame);
+      return `${tr(c.colour[seat] === 'white' ? 'White' : 'Black')} · ${tr('{n} left', { n: c.left[seat] })}`;
+    }
     if (!game || st?.over || progressOf(game) === 0) return null;
     if (kind === 'dots') {
       const n = playDots(game).scores[seat];
@@ -379,6 +434,8 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
         : meToo
           ? mePill(tr('{name} has chosen - your pick!', { name: partnerName }))
           : waiting(tr('Waiting for {name} to choose', { name: partnerName }));
+  } else if (landing) {
+    status = waiting(tr('Here it goes'));
   } else if (canAct) {
     const pending = kind === 'memory' && playMemory(game).pending !== null;
     status = mePill(
@@ -387,12 +444,20 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
           ? tr('A box! Go again')
           : kind === 'memory'
             ? tr('A pair! Go again')
-            : tr('A six! Roll again')
+            : kind === 'carrom'
+              ? playCarrom(game).queen === 'pending'
+                ? tr('Now cover the Queen!')
+                : tr('Go again!')
+              : tr('A six! Roll again')
         : pending
           ? tr('Now find its pair')
           : kind === 'snakes'
             ? tr('Your roll')
-            : tr('Your turn')
+            : kind === 'balloon'
+              ? tr('Your throw')
+              : kind === 'carrom'
+                ? tr('Your shot')
+                : tr('Your turn')
     );
   } else {
     status = waiting(tr("{name}'s turn", { name: partnerName }));

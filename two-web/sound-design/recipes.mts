@@ -1714,6 +1714,305 @@ export const RECIPES: Record<string, Recipe> = {
     master: { loudness: MOMENT - 1, highpass: 150 }
   },
 
+  // ---- Water Balloon War: rubber, air and a lot of water.
+
+  'g-wb-stretch': {
+    use: 'Water Balloon War: the balloon pulled back - a rubbery creak',
+    dry: () => {
+      const b = silence(0.3);
+      voice(b, {
+        start: 0,
+        dur: 0.22,
+        freq: t => 340 + 520 * (t / 0.22) ** 0.7 + 26 * Math.sin(2 * Math.PI * 38 * t),
+        amp: t => 0.2 * Math.min(1, t / 0.02) * Math.max(0, 1 - t / 0.22) ** 0.4,
+        harmonics: [1, 0.5, 0.3, 0.12]
+      });
+      noise(b, { dur: 0.16, gain: 0.08, filter: { type: 'bandpass', f: 1500, q: 2 }, sweepTo: 2600, grain: 0.7, attack: 0.01, decay: 0.08, seed: 3401 });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.05 },
+    master: { loudness: MICRO, highpass: 250 }
+  },
+
+  'g-wb-throw': {
+    use: 'Water Balloon War: thrown - a whoosh with the water wobbling inside',
+    dry: () => {
+      const b = silence(0.55);
+      air(b, { start: 0, dur: 0.34, gain: 0.5, from: 480, to: 2100, attack: 0.04, seed: 3411 });
+      // The water sloshing inside as it leaves your hand.
+      [0.02, 0.09, 0.16].forEach((t, i) => {
+        const f0 = 300 + i * 70;
+        voice(b, { start: t, dur: 0.07, freq: u => f0 * (1 + 0.8 * (u / 0.07)), amp: u => 0.14 * Math.exp(-u / 0.03), harmonics: [1, 0.2] });
+      });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: SOFT, highpass: 200 }
+  },
+
+  'g-wb-burst': {
+    use: 'Water Balloon War: a hit - the skin snaps and the water lets go',
+    dry: () => {
+      const b = silence(1.05);
+      const rand = rng(3421);
+      // The snap of the rubber, right at the front.
+      noise(b, { dur: 0.018, gain: 1, filter: { type: 'bandpass', f: 2400, q: 0.6 }, attack: 0.0004, decay: 0.005, seed: 3422 });
+      mode(b, { freq: 1180, amp: 0.34, decay: 0.012 });
+      thump(b, 0.004, 0.55, 118, 3423);
+      // The sheet of water, and a brighter hiss on top.
+      noise(b, { start: 0.008, dur: 0.46, gain: 0.95, filter: { type: 'lowpass', f: 3000 }, grain: 0.55, attack: 0.003, decay: 0.13, pink: true, seed: 3424 });
+      noise(b, { start: 0.012, dur: 0.3, gain: 0.42, filter: { type: 'bandpass', f: 5600, q: 0.8 }, grain: 0.85, attack: 0.002, decay: 0.08, seed: 3425 });
+      // Bloops.
+      for (let i = 0; i < 7; i++) {
+        const t = 0.03 + i * 0.045 + rand() * 0.02;
+        const f0 = 520 + rand() * 620;
+        voice(b, { start: t, dur: 0.065, freq: u => f0 * (1 + 0.95 * (u / 0.065)), amp: u => (0.25 - i * 0.02) * Math.exp(-u / 0.024), harmonics: [1, 0.14], pan: rand() * 0.8 - 0.4 });
+      }
+      // And it patters back down.
+      for (let i = 0; i < 14; i++) {
+        noise(b, { start: 0.32 + rand() * 0.55, dur: 0.018, gain: 0.05 + rand() * 0.12, filter: { type: 'bandpass', f: 2600 + rand() * 3400, q: 1.1 }, attack: 0.0005, decay: 0.004, pan: rand() * 1.2 - 0.6, seed: 3430 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.45, wet: 0.09 },
+    master: { loudness: MOMENT, highpass: 110, maxSeconds: 1.05, tailFade: 0.25 }
+  },
+
+  'g-wb-giant': {
+    use: 'Water Balloon War: the giant balloon - a deep sploosh and a flood',
+    dry: () => {
+      const b = silence(1.9);
+      const rand = rng(3451);
+      noise(b, { dur: 0.03, gain: 1, filter: { type: 'bandpass', f: 1500, q: 0.5 }, attack: 0.0005, decay: 0.009, seed: 3452 });
+      thump(b, 0, 1, 74, 3453);
+      thump(b, 0.05, 0.6, 104, 3454);
+      noise(b, { start: 0.012, dur: 0.95, gain: 1, filter: { type: 'lowpass', f: 2400 }, grain: 0.42, attack: 0.006, decay: 0.3, pink: true, seed: 3455 });
+      noise(b, { start: 0.03, dur: 0.6, gain: 0.5, filter: { type: 'bandpass', f: 4600, q: 0.7 }, grain: 0.8, attack: 0.004, decay: 0.17, seed: 3456 });
+      for (let i = 0; i < 12; i++) {
+        const t = 0.05 + i * 0.058 + rand() * 0.025;
+        const f0 = 260 + rand() * 520;
+        voice(b, { start: t, dur: 0.11, freq: u => f0 * (1 + 1.05 * (u / 0.11)), amp: u => 0.3 * Math.exp(-u / 0.04), harmonics: [1, 0.18], pan: rand() * 1.1 - 0.55 });
+      }
+      for (let i = 0; i < 34; i++) {
+        noise(b, { start: 0.55 + rand() ** 1.2 * 1.1, dur: 0.02, gain: 0.04 + rand() * 0.14, filter: { type: 'bandpass', f: 2200 + rand() * 3600, q: 1.1 }, attack: 0.0005, decay: 0.005, pan: rand() * 1.4 - 0.7, seed: 3470 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.6, wet: 0.12 },
+    master: { loudness: MOMENT + 1, highpass: 90, maxSeconds: 1.9, tailFade: 0.45 }
+  },
+
+  'g-wb-splat': {
+    use: 'Water Balloon War: a miss - slapped on the grass',
+    dry: () => {
+      const b = silence(0.6);
+      const rand = rng(3511);
+      noise(b, { dur: 0.012, gain: 0.7, filter: { type: 'bandpass', f: 1600, q: 0.6 }, attack: 0.0004, decay: 0.004, seed: 3512 });
+      thump(b, 0, 0.32, 150, 3513);
+      noise(b, { start: 0.006, dur: 0.2, gain: 0.8, filter: { type: 'lowpass', f: 1900 }, grain: 0.55, attack: 0.002, decay: 0.05, pink: true, seed: 3514 });
+      [0.03, 0.08].forEach((t, i) => {
+        const f0 = 460 + i * 160;
+        voice(b, { start: t, dur: 0.05, freq: u => f0 * (1 + 0.8 * (u / 0.05)), amp: u => 0.18 * Math.exp(-u / 0.018), harmonics: [1, 0.12] });
+      });
+      for (let i = 0; i < 6; i++) {
+        noise(b, { start: 0.14 + rand() * 0.28, dur: 0.014, gain: 0.05 + rand() * 0.08, filter: { type: 'bandpass', f: 2800 + rand() * 2200, q: 1.2 }, attack: 0.0005, decay: 0.004, pan: rand() - 0.5, seed: 3520 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.35, wet: 0.06 },
+    master: { loudness: SOFT + 1, highpass: 130 }
+  },
+
+  'g-wb-hedge': {
+    use: 'Water Balloon War: into the hedge - leaves and a wet splat',
+    dry: () => {
+      const b = silence(0.7);
+      const rand = rng(3531);
+      noise(b, { dur: 0.1, gain: 0.55, filter: { type: 'lowpass', f: 1700 }, grain: 0.6, attack: 0.002, decay: 0.03, pink: true, seed: 3532 });
+      thump(b, 0, 0.2, 170, 3533);
+      // The leaves shaking after it.
+      for (let i = 0; i < 12; i++) {
+        noise(b, { start: 0.04 + i * 0.03 + rand() * 0.012, dur: 0.035, gain: 0.3 * (1 - i * 0.065), filter: { type: 'bandpass', f: 3400 + rand() * 2600, q: 1.4 }, grain: 0.9, attack: 0.002, decay: 0.01, pan: rand() * 0.9 - 0.45, seed: 3535 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.35, wet: 0.06 },
+    master: { loudness: SOFT, highpass: 200 }
+  },
+
+  'g-wb-eek': {
+    use: 'Water Balloon War: whoever got hit - a little squeak of surprise',
+    dry: () => {
+      const b = silence(0.42);
+      voice(b, {
+        start: 0,
+        dur: 0.3,
+        freq: t => {
+          const p = t / 0.3;
+          return (680 + 980 * Math.min(1, p * 2.6) - 260 * Math.max(0, p - 0.45)) * (1 + 0.035 * Math.sin(2 * Math.PI * 17 * t));
+        },
+        amp: t => 0.3 * Math.min(1, t / 0.018) * Math.max(0, 1 - t / 0.3) ** 0.55,
+        harmonics: [1, 0.42, 0.2, 0.08]
+      });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: SOFT, highpass: 300 }
+  },
+
+  'g-wb-wind': {
+    use: 'Water Balloon War: the wind changes - a soft gust',
+    dry: () => {
+      const b = silence(1);
+      noise(b, { dur: 0.95, gain: 0.5, filter: { type: 'bandpass', f: 500, q: 0.9 }, sweepTo: 1300, attack: 0.3, decay: 0.32, pink: true, seed: 3551 });
+      noise(b, { start: 0.14, dur: 0.6, gain: 0.14, filter: { type: 'bandpass', f: 2600, q: 1.2 }, sweepTo: 1700, attack: 0.2, decay: 0.2, seed: 3552 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.08 },
+    master: { loudness: MICRO, highpass: 180, tailFade: 0.2 }
+  },
+
+  // ---- Carrom: real wood, real coins. Short and dry, so a break of coins
+  // clicking together stays crisp and never turns to mud.
+
+  'g-cr-strike': {
+    use: 'Carrom: the flick and the striker leaving the finger',
+    dry: () => {
+      const b = silence(0.22);
+      // The fingernail.
+      noise(b, { dur: 0.007, gain: 0.8, filter: { type: 'bandpass', f: 3900, q: 0.9 }, attack: 0.0003, decay: 0.002, seed: 3601 });
+      // The striker's knock, a heavier coin than the others.
+      mode(b, { freq: 1720, amp: 0.34, decay: 0.012, start: 0.002 });
+      mode(b, { freq: 2960, amp: 0.2, decay: 0.008, start: 0.002 });
+      mode(b, { freq: 640, amp: 0.3, decay: 0.022, start: 0.002 });
+      mode(b, { freq: 250, amp: 0.3, decay: 0.03, start: 0.002 });
+      air(b, { start: 0.008, dur: 0.1, gain: 0.08, from: 1400, to: 3000, attack: 0.01, seed: 3602 });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.05 },
+    master: { loudness: SOFT + 2, highpass: 110 }
+  },
+
+  'g-cr-click': {
+    use: 'Carrom: coin against coin - one hard little click (played at many pitches and levels)',
+    dry: () => {
+      const b = silence(0.1);
+      mode(b, { freq: 2750, amp: 0.55, decay: 0.009 });
+      mode(b, { freq: 4300, amp: 0.34, decay: 0.006 });
+      mode(b, { freq: 6400, amp: 0.2, decay: 0.004 });
+      mode(b, { freq: 1180, amp: 0.2, decay: 0.012 });
+      noise(b, { dur: 0.005, gain: 0.5, filter: { type: 'bandpass', f: 5200, q: 0.8 }, attack: 0.0002, decay: 0.0015, seed: 3611 });
+      return b;
+    },
+    room: { rt60: 0.22, wet: 0.04 },
+    master: { loudness: SOFT, highpass: 500 }
+  },
+
+  'g-cr-wall': {
+    use: 'Carrom: a coin off the wooden rim',
+    dry: () => {
+      const b = silence(0.2);
+      mode(b, { freq: 212, amp: 0.55, decay: 0.038 });
+      mode(b, { freq: 430, amp: 0.45, decay: 0.026 });
+      mode(b, { freq: 810, amp: 0.26, decay: 0.016 });
+      mode(b, { freq: 1520, amp: 0.1, decay: 0.008 });
+      noise(b, { dur: 0.009, gain: 0.35, filter: { type: 'lowpass', f: 1900 }, attack: 0.0004, decay: 0.003, seed: 3621 });
+      return b;
+    },
+    room: { rt60: 0.25, wet: 0.05 },
+    master: { loudness: SOFT, highpass: 100 }
+  },
+
+  'g-cr-pocket': {
+    use: 'Carrom: a coin dropping into the pocket and settling in the net',
+    dry: () => {
+      const b = silence(0.5);
+      // Over the lip...
+      mode(b, { freq: 1500, amp: 0.2, decay: 0.008 });
+      // ...down into the net.
+      mode(b, { freq: 300, amp: 0.55, decay: 0.05, start: 0.05, glide: -0.2, glideTime: 0.04 });
+      mode(b, { freq: 620, amp: 0.3, decay: 0.03, start: 0.05 });
+      noise(b, { start: 0.05, dur: 0.07, gain: 0.3, filter: { type: 'lowpass', f: 1300 }, attack: 0.002, decay: 0.02, pink: true, seed: 3631 });
+      // A little rattle against whatever is in there already.
+      [0.13, 0.19, 0.235].forEach((t, i) => {
+        mode(b, { freq: 2300 + i * 310, amp: 0.13 - i * 0.03, decay: 0.008, start: t });
+      });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.05 },
+    master: { loudness: SOFT + 2, highpass: 120 }
+  },
+
+  'g-cr-queen': {
+    use: 'Carrom: the queen in the pocket - a golden shimmer',
+    dry: () => {
+      const b = silence(1.4);
+      mode(b, { freq: 300, amp: 0.5, decay: 0.05 });
+      noise(b, { dur: 0.06, gain: 0.25, filter: { type: 'lowpass', f: 1300 }, attack: 0.002, decay: 0.02, pink: true, seed: 3641 });
+      run(b, ['D6', 'F#6', 'A6', 'D7'], 0.07, { instrument: I.glass, gain: [0.34, 0.36, 0.38, 0.42], start: 0.05, seed: 3642, mallet: 0.1, decayScale: 1.3 });
+      strike(b, { note: hz('D5'), instrument: I.glock, start: 0.05, gain: 0.3, seed: 3647, mallet: 0 });
+      twinkles(b, 0.25, 1, 7, 0.13, 3648);
+      return b;
+    },
+    room: { rt60: 1.2, wet: 0.2 },
+    master: { loudness: MOMENT - 1, tailFade: 0.3 }
+  },
+
+  'g-cr-cover': {
+    use: 'Carrom: the queen covered and won - a proud little fanfare',
+    dry: () => {
+      const b = silence(1.3);
+      run(b, ['A5', 'D6', 'F#6'], 0.08, { instrument: I.kalimba, gain: [0.36, 0.4, 0.48], seed: 3661, mallet: 0.15, decayScale: 1.2 });
+      roll(b, ['D5', 'A5', 'D6', 'A6'], 0.24, 0.26, 3665, 1.5);
+      twinkles(b, 0.32, 1, 5, 0.1, 3670);
+      return b;
+    },
+    room: { rt60: 1.1, wet: 0.18 },
+    master: { loudness: MOMENT - 1, tailFade: 0.3 }
+  },
+
+  'g-cr-foul': {
+    use: 'Carrom: the striker down the pocket - a heavy thunk and two notes down',
+    dry: () => {
+      const b = silence(1);
+      mode(b, { freq: 190, amp: 0.65, decay: 0.07, glide: -0.25, glideTime: 0.05 });
+      mode(b, { freq: 380, amp: 0.35, decay: 0.04 });
+      noise(b, { dur: 0.08, gain: 0.32, filter: { type: 'lowpass', f: 1100 }, attack: 0.002, decay: 0.024, pink: true, seed: 3681 });
+      strike(b, { note: hz('A3'), instrument: I.marimba, start: 0.14, gain: 0.5, seed: 3682, mallet: 0.2 });
+      strike(b, { note: hz('E3'), instrument: I.marimba, start: 0.32, gain: 0.5, seed: 3683, mallet: 0.2 });
+      return b;
+    },
+    room: { rt60: 0.6, wet: 0.1 },
+    master: { loudness: SOFT + 2, highpass: 110 }
+  },
+
+  'g-cr-place': {
+    use: 'Carrom: the striker slid along the line - the smallest wooden tick',
+    dry: () => {
+      const b = silence(0.06);
+      mode(b, { freq: 1600, amp: 0.4, decay: 0.005 });
+      mode(b, { freq: 3100, amp: 0.16, decay: 0.003 });
+      noise(b, { dur: 0.004, gain: 0.2, filter: { type: 'bandpass', f: 4200, q: 1 }, attack: 0.0002, decay: 0.001, seed: 3691 });
+      return b;
+    },
+    room: { rt60: 0.2, wet: 0.03 },
+    master: { loudness: MICRO - 2, highpass: 700 }
+  },
+
+  'g-cr-back': {
+    use: 'Carrom: a coin put back in the middle of the board',
+    dry: () => {
+      const b = silence(0.35);
+      air(b, { start: 0, dur: 0.1, gain: 0.08, from: 2400, to: 1200, attack: 0.02, seed: 3695 });
+      mode(b, { freq: 1500, amp: 0.45, decay: 0.012, start: 0.09 });
+      mode(b, { freq: 720, amp: 0.3, decay: 0.022, start: 0.09 });
+      mode(b, { freq: 1500, amp: 0.14, decay: 0.008, start: 0.145 });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.05 },
+    master: { loudness: SOFT - 1, highpass: 200 }
+  },
+
   'g-win': {
     use: 'Any game: you won - a short fanfare',
     dry: () => {

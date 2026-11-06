@@ -1,6 +1,6 @@
-// Games on Canvas of Us (components/PaperGames): Tic-tac-toe, Dots and
-// Boxes, Four in a Row, Memory Match, Heart Hug Kiss and Snakes & Ladders,
-// played on both phones - live when you are both there, or one move now and
+// Games on Canvas of Us (components/PaperGames): Water Balloon War, Carrom,
+// Tic-tac-toe, Dots and Boxes, Four in a Row, Memory Match, Heart Hug Kiss
+// and Snakes & Ladders, played on both phones - live when you are both there, or one move now and
 // the next whenever the other opens Two.
 //
 // A game travels whole: its moves in order, who went first, and the score
@@ -17,21 +17,27 @@
 // list is merged the same way.
 
 import type { Seat } from './usTwo';
+import { decodeThrow, playBalloon, throwAllowed } from './balloonWar';
+import { decodeShot, playCarrom, shotAllowed } from './carrom';
 
-export type PaperKind = 'ttt' | 'dots' | 'four' | 'memory' | 'hhk' | 'snakes';
-export const PAPER_KINDS: PaperKind[] = ['four', 'memory', 'hhk', 'snakes', 'ttt', 'dots'];
+export type PaperKind = 'ttt' | 'dots' | 'four' | 'memory' | 'hhk' | 'snakes' | 'balloon' | 'carrom';
+export const PAPER_KINDS: PaperKind[] = ['balloon', 'carrom', 'four', 'memory', 'hhk', 'snakes', 'ttt', 'dots'];
 const RECORDS: Record<PaperKind, string> = {
   ttt: 'GAME_TTT',
   dots: 'GAME_DOTS',
   four: 'GAME_FOUR',
   memory: 'GAME_MEMORY',
   hhk: 'GAME_HHK',
-  snakes: 'GAME_SNAKES'
+  snakes: 'GAME_SNAKES',
+  balloon: 'GAME_BALLOON',
+  carrom: 'GAME_CARROM'
 };
 export const GAME_TTT = RECORDS.ttt;
 export const GAME_DOTS = RECORDS.dots;
 /** Each game's name, in English (shown through tr). */
 export const GAME_NAMES: Record<PaperKind, string> = {
+  balloon: 'Water Balloon War',
+  carrom: 'Carrom',
   four: 'Four in a Row',
   memory: 'Memory Match',
   hhk: 'Heart Hug Kiss',
@@ -55,7 +61,7 @@ export const DEFAULT_MEMORY = 8;
 export function sizesOf(kind: PaperKind): readonly number[] | null {
   return kind === 'dots' ? DOT_SIZES : kind === 'memory' ? MEMORY_SIZES : null;
 }
-const FIXED_SIZE: Record<PaperKind, number> = { ttt: 3, dots: DEFAULT_DOTS, four: 7, memory: DEFAULT_MEMORY, hhk: 3, snakes: 10 };
+const FIXED_SIZE: Record<PaperKind, number> = { ttt: 3, dots: DEFAULT_DOTS, four: 7, memory: DEFAULT_MEMORY, hhk: 3, snakes: 10, balloon: 1, carrom: 1 };
 
 /** The inks each of you can play in. */
 export const INKS = ['#f43f5e', '#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899'] as const;
@@ -88,7 +94,8 @@ export interface PaperGame {
   /**
    * In order. Tic-tac-toe: a cell, 0-8. Dots and Boxes: a line (lineCount).
    * Four in a Row: a column, 0-6. Memory Match: a card turned over. Snakes &
-   * Ladders: what the die showed, 1-6.
+   * Ladders: what the die showed, 1-6. Water Balloon War: a throw
+   * (core/balloonWar). Carrom: a shot (core/carrom).
    */
   moves: number[];
   /** Heart Hug Kiss: each of you's picks, round by round (HHK_CHOICES). */
@@ -586,6 +593,14 @@ export function standing(game: PaperGame): Standing {
       const s = playSnakes(game);
       return one(s.turn, s.over, s.winner, false, !!s.last && s.last.roll === 6);
     }
+    case 'balloon': {
+      const s = playBalloon(game);
+      return one(s.turn, s.over, s.winner, false);
+    }
+    case 'carrom': {
+      const s = playCarrom(game);
+      return one(s.turn, s.over, s.winner, false, s.again);
+    }
   }
 }
 
@@ -602,6 +617,10 @@ function playedOf(game: PaperGame): number {
       return playMemory(game).played;
     case 'snakes':
       return playSnakes(game).played;
+    case 'balloon':
+      return playBalloon(game).played;
+    case 'carrom':
+      return playCarrom(game).played;
     case 'hhk':
       return 0;
   }
@@ -631,6 +650,10 @@ export function canMove(game: PaperGame, seat: Seat, move: number): boolean {
     }
     case 'snakes':
       return move >= 1 && move <= 6;
+    case 'balloon':
+      return Number.isSafeInteger(move) && move >= 0 && throwAllowed(decodeThrow(move), playBalloon(game).giantLeft[seat]);
+    case 'carrom':
+      return Number.isSafeInteger(move) && move >= 0 && shotAllowed(playCarrom(game).coins, seat, decodeShot(move));
   }
 }
 
@@ -745,6 +768,9 @@ function maxMoves(kind: PaperKind, size: number): number {
       return lineCount(size);
     case 'four':
       return FOUR_COLS * FOUR_ROWS;
+    case 'balloon':
+    case 'carrom':
+      return 600;
     default:
       return 4000;
   }

@@ -74,7 +74,9 @@ export const LATEST_ONLY_TYPES = new Set([
   'GAME_FOUR',
   'GAME_MEMORY',
   'GAME_HHK',
-  'GAME_SNAKES'
+  'GAME_SNAKES',
+  'GAME_BALLOON',
+  'GAME_CARROM'
 ]);
 
 /**
