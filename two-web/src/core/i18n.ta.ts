@@ -1046,7 +1046,6 @@ export const TA: Readonly<Record<string, string>> = {
   Draw: 'வரை',
   'Tic-tac-toe': 'டிக்-டாக்-டோ',
   'Dots & Boxes': 'புள்ளி & பெட்டி',
-  'Start a new game?': 'புதிய ஆட்டம் தொடங்கவா?',
   'This one will not count.': 'இந்த ஆட்டம் கணக்கில் சேராது.',
   'New game': 'புதிய ஆட்டம்',
   'Row {r}, column {c}': 'வரிசை {r}, நெடுவரிசை {c}',
@@ -1174,5 +1173,17 @@ export const TA: Readonly<Record<string, string>> = {
   'Your shot': 'நீங்கள் அடியுங்கள்',
   White: 'வெள்ளை',
   Black: 'கருப்பு',
-  '{n} left': '{n} மீதம்'
+  '{n} left': '{n} மீதம்',
+
+  // A new game asked for in the middle of one (components/PaperGames).
+  'Ask {name} for a new game?': 'புதிய ஆட்டத்துக்கு {name}-இடம் கேட்கவா?',
+  'This game carries on until {name} says yes.': '{name} சரி சொல்லும் வரை இந்த ஆட்டம் தொடரும்.',
+  Ask: 'கேள்',
+  '{name} wants to start a new game': '{name} புதிய ஆட்டம் தொடங்க விரும்புகிறார்',
+  'Keep playing': 'தொடர்ந்து விளையாடு',
+  'Waiting for {name} to say yes': '{name} சரி சொல்லக் காத்திருக்கிறது',
+  '{name} wants to finish this one': '{name} இந்த ஆட்டத்தை முடிக்க விரும்புகிறார்',
+  'Wants a new game of {game}': '{game}: புதிய ஆட்டம் கேட்கிறார்',
+  'Wants to finish this game of {game}': '{game}: இந்த ஆட்டத்தை முடிக்க விரும்புகிறார்',
+  '{name} wants a new game': '{name} புதிய ஆட்டம் கேட்கிறார்'
 };

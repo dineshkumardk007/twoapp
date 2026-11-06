@@ -14,10 +14,16 @@ import {
   GAME_NAMES,
   INKS,
   MARKS,
+  askRestart,
+  cancelRestart,
   canMove,
+  declineRestart,
   lookOf,
   newGame,
+  openAsk,
   other,
+  progressOf,
+  refusedOf,
   playDots,
   playFour,
   playHhk,
@@ -177,9 +183,6 @@ const BOARDS: Record<PaperKind, React.FC<BoardProps>> = {
   snakes: SnakesBoard
 };
 
-/** How far into a game it is: moves, or both of your picks. */
-const progressOf = (g?: PaperGame) => (!g ? 0 : g.kind === 'hhk' ? (g.picks?.user.length || 0) + (g.picks?.partner.length || 0) : g.moves.length);
-
 const CONFETTI_COUNT = 36;
 
 /**
@@ -200,7 +203,10 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     timers.current.push(window.setTimeout(fn, ms));
   };
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
-  useEffect(() => loadSounds([...SOUNDS_OF[kind], 'g-win', 'g-lose', 'g-tie', 'g-start', 'g-turn']), [kind]);
+  useEffect(() => loadSounds([...SOUNDS_OF[kind], 'g-win', 'g-lose', 'g-tie', 'g-start', 'g-turn', 'g-miss']), [kind]);
+  // The game as it is now, for what happens after a question has been up on screen.
+  const gameRef = useRef(game);
+  gameRef.current = game;
 
   // What was on the board when it was opened is shown as it is; only what
   // is played after is drawn in.
@@ -337,19 +343,69 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   };
 
   const start = async () => {
-    if (game && st && !st.over && progressOf(game) > 0) {
+    const g = gameRef.current;
+    if (g && !standing(g).over && progressOf(g) > 0) {
+      // In the middle of a game it takes both of you: this only asks.
+      if (g.ask?.open) return;
       const sure = await askConfirm({
-        title: tr('Start a new game?'),
-        body: tr('This one will not count.'),
-        confirm: tr('New game')
+        title: tr('Ask {name} for a new game?', { name: partnerName }),
+        body: tr('This game carries on until {name} says yes.', { name: partnerName }),
+        confirm: tr('Ask')
       });
       if (!sure) return;
+      // It may have ended, or they may have asked first, while that was up.
+      const latest = gameRef.current;
+      if (!latest || latest.id !== g.id || standing(latest).over || latest.ask?.open) return;
+      getAudioContext();
+      haptic('tick');
+      onChange(askRestart(latest, me, Date.now()));
+      return;
     }
     getAudioContext();
     haptic('confirm');
-    onChange(newGame(kind, game, me, newId('game'), Date.now(), size));
-    if (!game) playSound('g-start');
+    onChange(newGame(kind, g, me, newId('game'), Date.now(), size));
+    if (!g) playSound('g-start');
   };
+
+  /** Yes: the new game starts, on both phones. */
+  const acceptAsk = () => {
+    const g = gameRef.current;
+    if (!openAsk(g)) return;
+    getAudioContext();
+    haptic('confirm');
+    onChange(newGame(kind, g, me, newId('game'), Date.now(), g!.size));
+  };
+  /** No: this one carries on, and they are told. */
+  const declineAsk = () => {
+    const g = gameRef.current;
+    if (!openAsk(g)) return;
+    haptic('tick');
+    onChange(declineRestart(g!, Date.now()));
+  };
+  /** Taking your own question back. */
+  const cancelAsk = () => {
+    const g = gameRef.current;
+    if (!openAsk(g)) return;
+    haptic('tick');
+    onChange(cancelRestart(g!, Date.now()));
+  };
+
+  // The question as it arrives, and the answer: a nudge, not to be missed.
+  const askHeard = useRef(game?.ask?.at ?? 0);
+  useEffect(() => {
+    const a = game?.ask;
+    if (!a || a.at === askHeard.current) return;
+    askHeard.current = a.at;
+    if (a.open && a.by === them) {
+      playSound('g-turn');
+      haptic('confirm');
+    } else if (a.no && a.by === me) {
+      playSound('g-miss');
+      haptic('tick');
+    }
+    // Only when the asking changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game?.ask]);
 
   const pickLook = (look: { ink?: string; mark?: Mark }) => {
     if (!game) return;
@@ -475,6 +531,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   );
 
   const Board = BOARDS[kind];
+  const ask = openAsk(game);
 
   return (
     <section className="pg" data-kind={kind} style={{ '--me': myLook.ink, '--them': theirLook.ink } as React.CSSProperties}>
@@ -499,6 +556,46 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
       <p className="pg-status" aria-live="polite">
         {status}
       </p>
+
+      {ask && ask.by === them && (
+        <div className="pg-ask" data-theirs="" role="alert">
+          <p className="pg-ask-text">
+            <b>{tr('{name} wants to start a new game', { name: partnerName })}</b>
+            <small>{tr('This one will not count.')}</small>
+          </p>
+          <div className="pg-ask-buttons">
+            <button type="button" className="pg-ask-no" onClick={declineAsk}>
+              {tr('Keep playing')}
+            </button>
+            <button type="button" className="pg-ask-yes" onClick={acceptAsk}>
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+              {tr('New game')}
+            </button>
+          </div>
+        </div>
+      )}
+      {ask && ask.by === me && (
+        <div className="pg-ask" role="status">
+          <p className="pg-ask-text">
+            {tr('Waiting for {name} to say yes', { name: partnerName })}
+            <span className="pg-dots-wait" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+          </p>
+          <div className="pg-ask-buttons">
+            <button type="button" className="pg-ask-no" onClick={cancelAsk}>
+              {tr('Cancel')}
+            </button>
+          </div>
+        </div>
+      )}
+      {!ask && refusedOf(game, me) && (
+        <p className="pg-ask-note" role="status">
+          {tr('{name} wants to finish this one', { name: partnerName })}
+        </p>
+      )}
 
       <div className="pg-stage">
         {game ? (
@@ -550,12 +647,12 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
             <Sparkles className="h-4 w-4" aria-hidden="true" />
             {game ? tr('Play again') : tr('Start a game')}
           </button>
-        ) : (
+        ) : !ask ? (
           <button type="button" className="pg-restart" onClick={() => void start()}>
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
             {tr('New game')}
           </button>
-        )}
+        ) : null}
         {game && (
           <button type="button" className="pg-restart" onClick={() => setPicking(p => !p)} aria-expanded={picking}>
             <Palette className="h-3.5 w-3.5" aria-hidden="true" />

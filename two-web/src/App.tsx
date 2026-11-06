@@ -273,7 +273,7 @@ import {
 } from './core/chatActions';
 import { cleanStickerId } from './core/stickers';
 import { addBoop, boopsFor, chatDay, cleanPlayKind, cleanTheme, withBoopCount, type PlayKind, type SceneTheme } from './core/usTwo';
-import { GAME_NAMES, cleanGame, kindOfRecord, mergeGame, recordTypeOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
+import { GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
   SURPRISE_PART,
@@ -1910,9 +1910,27 @@ export const App: React.FC = () => {
             // and Canvas of Us set to open on that game. Not for the replay of
             // old moves on reconnecting, nor while you are looking at it.
             const me = latestRef.current.state.activeUser;
-            const progress = (g?: PaperGame) => (!g ? 0 : g.moves.length + (g.picks?.user.length || 0) + (g.picks?.partner.length || 0));
-            const moved = !before || before.id !== merged.id || progress(merged) > progress(before);
+            const moved = !before || before.id !== merged.id || progressOf(merged) > progressOf(before);
+            // A new game asked for, or the answer to yours.
+            const askMoved = !!merged.ask && (!before || before.id !== merged.id || before.ask?.at !== merged.ask.at);
             if (
+              askMoved &&
+              (askedOf(merged, me) || refusedOf(merged, me)) &&
+              record.authorId !== me &&
+              currentTabRef.current !== 'canvas' &&
+              !isCamouflagedRef.current &&
+              Date.now() - (Number(record.clientTs) || 0) < 2 * 60 * 1000
+            ) {
+              const game = tr(GAME_NAMES[kind]);
+              rememberCanvasMode(kind);
+              setInAppNotification({
+                id: newId(),
+                title: partnerNameRef.current || tr('Partner'),
+                body: askedOf(merged, me) ? tr('Wants a new game of {game}', { game }) : tr('Wants to finish this game of {game}', { game }),
+                type: 'game',
+                tabId: 'canvas'
+              });
+            } else if (
               moved &&
               record.authorId !== me &&
               currentTabRef.current !== 'canvas' &&

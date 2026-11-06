@@ -103,6 +103,26 @@ export interface PaperGame {
   /** Wins and draws in the games before this one. */
   before: Tally;
   looks: { user?: PlayerLook; partner?: PlayerLook };
+  /** A new game asked for while this one is still being played. */
+  ask?: RestartAsk;
+}
+
+/**
+ * Starting over in the middle of a game takes both of you: one asks, the game
+ * carries on, and the other says yes (which starts the new game) or no. Which
+ * state it is in travels with the game; between two copies the later one
+ * stands, so each answer overrides the question before it.
+ */
+export interface RestartAsk {
+  /** Who asked. */
+  by: Seat;
+  at: number;
+  /** Still waiting for an answer. */
+  open: boolean;
+  /** The other said no. */
+  no?: boolean;
+  /** How far the game had got when they said no: the word stays until the next move. */
+  progress?: number;
 }
 
 export const other = (seat: Seat): Seat => (seat === 'user' ? 'partner' : 'user');
@@ -120,6 +140,10 @@ export function rememberCanvasMode(mode: CanvasMode) {
 }
 
 const ZERO: Tally = { user: 0, partner: 0, draws: 0 };
+
+/** How far into a game it is: its moves, or both of your picks. */
+export const progressOf = (g?: Pick<PaperGame, 'moves' | 'picks'>) =>
+  !g ? 0 : g.moves.length + (g.picks?.user.length || 0) + (g.picks?.partner.length || 0);
 const DEFAULT_LOOK: Record<Seat, Omit<PlayerLook, 'at'>> = {
   user: { ink: '#0ea5e9', mark: 'x' },
   partner: { ink: '#f43f5e', mark: 'heart' }
@@ -686,7 +710,9 @@ export function newGame(kind: PaperKind, prev: PaperGame | undefined, starter: S
   const game: PaperGame = {
     kind,
     id,
-    startedAt: now,
+    // Always after the game it replaces, even if this phone's clock is behind the other's:
+    // between two copies the newer game wins, and this has to be it.
+    startedAt: prev ? Math.max(now, prev.startedAt + 1) : now,
     first: prev ? other(prev.first) : starter,
     size: !sizes ? FIXED_SIZE[kind] : sizes.includes(size ?? 0) ? size! : prev?.size || FIXED_SIZE[kind],
     moves: [],
@@ -697,6 +723,35 @@ export function newGame(kind: PaperKind, prev: PaperGame | undefined, starter: S
   return game;
 }
 
+// Each step after the one before, whatever the two phones' clocks say.
+const askAt = (game: PaperGame, now: number) => Math.max(now, (game.ask?.at ?? 0) + 1);
+
+/** This seat asks to start over; the game carries on meanwhile. */
+export const askRestart = (game: PaperGame, seat: Seat, now: number): PaperGame => ({
+  ...game,
+  ask: { by: seat, at: askAt(game, now), open: true }
+});
+
+/** The one who asked takes it back. */
+export const cancelRestart = (game: PaperGame, now: number): PaperGame =>
+  game.ask ? { ...game, ask: { by: game.ask.by, at: askAt(game, now), open: false } } : game;
+
+/** The other says no: they want to finish this one. */
+export const declineRestart = (game: PaperGame, now: number): PaperGame =>
+  game.ask ? { ...game, ask: { by: game.ask.by, at: askAt(game, now), open: false, no: true, progress: progressOf(game) } } : game;
+
+/** The question still waiting for an answer, if there is one. A game that has ended has none. */
+export function openAsk(game?: PaperGame): RestartAsk | null {
+  return game?.ask?.open && !standing(game).over ? game.ask : null;
+}
+
+/** The other asked, and it is this seat's answer they are waiting for. */
+export const askedOf = (game: PaperGame | undefined, seat: Seat) => openAsk(game)?.by === other(seat);
+
+/** This seat asked and was told no, and the game has not moved on since. */
+export const refusedOf = (game: PaperGame | undefined, seat: Seat) =>
+  !!game?.ask && !game.ask.open && !!game.ask.no && game.ask.by === seat && game.ask.progress === progressOf(game) && !standing(game).over;
+
 export const withLook = (game: PaperGame, seat: Seat, look: Partial<Omit<PlayerLook, 'at'>>, now: number): PaperGame => {
   const current = game.looks[seat] || { ...DEFAULT_LOOK[seat], at: 0 };
   return { ...game, looks: { ...game.looks, [seat]: { ...current, ...look, at: now } } };
@@ -706,6 +761,14 @@ function laterLook(a?: PlayerLook, b?: PlayerLook): PlayerLook | undefined {
   if (!a) return b;
   if (!b) return a;
   return b.at > a.at ? b : a;
+}
+
+/** Of two askings, the later: the same one from either side, even if made in the same moment. */
+function laterAsk(a?: RestartAsk, b?: RestartAsk): RestartAsk | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  if (b.at !== a.at) return b.at > a.at ? b : a;
+  return b.by > a.by ? b : a;
 }
 
 const isPrefix = (short: number[], long: number[]) => short.every((m, i) => long[i] === m);
@@ -742,11 +805,15 @@ export function mergeGame(a: PaperGame | undefined, b: PaperGame): PaperGame {
       if (picks) base.picks = picks;
     }
   }
+  // An asking belongs to its game: a new game starts with none.
+  const ask = a.id === b.id ? laterAsk(a.ask, b.ask) : base.ask;
   const sameLooks = looks.user === base.looks.user && looks.partner === base.looks.partner;
-  if (base === a && sameLooks) return a;
+  if (base === a && sameLooks && ask === a.ask) return a;
   const merged: PaperGame = { ...base, looks: {} };
   if (looks.user) merged.looks.user = looks.user;
   if (looks.partner) merged.looks.partner = looks.partner;
+  if (ask) merged.ask = ask;
+  else delete merged.ask;
   return merged;
 }
 
@@ -757,6 +824,17 @@ function cleanLook(v: unknown): PlayerLook | undefined {
   if (!o || typeof o !== 'object') return undefined;
   if (!(INKS as readonly string[]).includes(String(o.ink)) || !(MARKS as readonly string[]).includes(String(o.mark))) return undefined;
   return { ink: String(o.ink), mark: o.mark as Mark, at: Number.isFinite(o.at) ? Number(o.at) : 0 };
+}
+
+function cleanAsk(v: unknown): RestartAsk | undefined {
+  const o = v as Partial<RestartAsk> | null;
+  if (!o || typeof o !== 'object' || (o.by !== 'user' && o.by !== 'partner') || !Number.isFinite(o.at)) return undefined;
+  const ask: RestartAsk = { by: o.by, at: Number(o.at), open: o.open === true };
+  if (o.no === true && !ask.open) {
+    ask.no = true;
+    ask.progress = count(o.progress);
+  }
+  return ask;
 }
 
 /** The most moves a kind can have; turning cards and rolling dice can go on. */
@@ -804,6 +882,8 @@ export function cleanGame(raw: unknown, kind: PaperKind): PaperGame | null {
   const partner = cleanLook(o.looks?.partner);
   if (user) game.looks.user = user;
   if (partner) game.looks.partner = partner;
+  const ask = cleanAsk(o.ask);
+  if (ask) game.ask = ask;
   if (kind === 'hhk') {
     const list = (v: unknown) => (Array.isArray(v) ? v.slice(0, 200).map(Number) : []);
     game.picks = { user: list(o.picks?.user), partner: list(o.picks?.partner) };

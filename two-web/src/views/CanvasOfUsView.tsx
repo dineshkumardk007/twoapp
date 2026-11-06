@@ -35,6 +35,7 @@ import {
   CANVAS_MODE_KEY,
   GAME_NAMES,
   PAPER_KINDS,
+  askedOf,
   rememberCanvasMode,
   standing,
   totals,
@@ -203,8 +204,19 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     setMode(m);
     rememberCanvasMode(m);
   };
-  /** A game waiting on you: a dot on its card, and on the Games tab. */
-  const yourTurn = (g?: PaperGame) => !!g && standing(g).toMove.includes(activeUser);
+  /** A game gets the screen to itself: its own back button takes the place of the page's title and tabs. */
+  const inGame = !!onGame && mode !== 'draw' && mode !== 'games';
+  // Each starts at the top: a game opened from low down the list opens with its board in view.
+  const firstMode = useRef(true);
+  useEffect(() => {
+    if (firstMode.current) {
+      firstMode.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [mode]);
+  /** A game waiting on you - a move, or an answer: a dot on its card, and on the Games tab. */
+  const yourTurn = (g?: PaperGame) => !!g && (standing(g).toMove.includes(activeUser) || askedOf(g, activeUser));
   const anyTurn = PAPER_KINDS.some(k => yourTurn(games?.[k]));
   const them = partnerName && partnerName !== 'Partner' ? partnerName : tr('Partner');
   /** A game's card among the games: where it stands, and the score. */
@@ -213,6 +225,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     if (!g) return { text: tr('New - tap to play'), tone: 'new' };
     const s = standing(g);
     if (s.over) return { text: s.winner === activeUser ? tr('You won!') : s.winner ? tr('{name} won', { name: them }) : tr("It's a tie!"), tone: 'done' };
+    if (askedOf(g, activeUser)) return { text: tr('{name} wants a new game', { name: them }), tone: 'me' };
     if (s.toMove.includes(activeUser)) return { text: tr('Your turn'), tone: 'me' };
     return { text: tr("{name}'s turn", { name: them }), tone: 'wait' };
   };
@@ -525,6 +538,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
+      {!inGame && (
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
@@ -563,8 +577,9 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           )}
         </div>
       </div>
+      )}
 
-      {onGame && (
+      {onGame && !inGame && (
         <div className="cv-modes" role="tablist" aria-label={tr('Canvas of Us')}>
           <button type="button" role="tab" aria-selected={mode === 'draw'} className="cv-mode" data-on={mode === 'draw' || undefined} onClick={() => chooseMode('draw')}>
             <Pencil className="h-4 w-4 shrink-0" aria-hidden="true" />
