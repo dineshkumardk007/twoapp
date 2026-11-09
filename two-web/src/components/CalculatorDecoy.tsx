@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Delete } from 'lucide-react';
 import { haptic } from '../core/haptics';
+import { swallowLiftClick } from '../core/liftClick';
 import {
   CALC_START,
   endsWithCode,
@@ -83,9 +84,13 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
     setCalc(next);
   };
 
-  const equals = () => {
+  const equals = (byFinger = false) => {
     // The code, typed and then =, opens Two.
     if (endsWithCode(calcRef.current.keys, secretPin || '142.85')) {
+      // = acts as the finger lands, so the calculator is gone before it
+      // lifts; the click it makes on lifting would land on the dock's "All"
+      // in the same corner and open every destination over Two.
+      if (byFinger) swallowLiftClick();
       onUnlock();
       return;
     }
@@ -264,7 +269,8 @@ export const CalculatorDecoy: React.FC<CalculatorDecoyProps> = ({
 };
 
 interface CalcKeyProps {
-  onPress: () => void;
+  /** byFinger: pressed by a finger landing, rather than a keyboard's Enter or Space. */
+  onPress: (byFinger: boolean) => void;
   /** Digits plain; the top row's functions lighter; the operations amber. */
   tone?: 'digit' | 'fn' | 'op';
   /** An operation waiting for its second number. */
@@ -311,12 +317,12 @@ const CalcKey: React.FC<CalcKeyProps> = ({ onPress, tone = 'digit', chosen, labe
         key.dataset.ripple = key.dataset.ripple === 'a' ? 'b' : 'a';
         key.dataset.down = '';
         haptic('key');
-        onPress();
+        onPress(true);
         if (repeat) {
           stop();
           const tick = () => {
             haptic('key');
-            onPress();
+            onPress(true);
             again.current = setTimeout(tick, BACK_EVERY_MS);
           };
           again.current = setTimeout(tick, BACK_HOLD_MS);
@@ -326,7 +332,7 @@ const CalcKey: React.FC<CalcKeyProps> = ({ onPress, tone = 'digit', chosen, labe
       onPointerCancel={up}
       onPointerLeave={up}
       onClick={e => {
-        if (e.detail === 0) onPress();
+        if (e.detail === 0) onPress(false);
       }}
       onContextMenu={e => e.preventDefault()}
       className={`calc-key flex items-center justify-center rounded-2xl ${
