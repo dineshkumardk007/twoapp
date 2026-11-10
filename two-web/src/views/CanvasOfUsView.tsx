@@ -57,6 +57,8 @@ interface CanvasOfUsViewProps {
   onSendDrawing?: (picture: ShrunkPhoto) => void;
   /** Their phone knows Carrom's wider pockets (core/carrom): a new game may use them. */
   widePockets?: boolean;
+  /** Their phone has the newest games too (core/paperGames, CAN_PLAY_MORE). */
+  moreGames?: boolean;
   /** The games (core/paperGames), as this phone has them. */
   games?: Partial<Record<PaperKind, PaperGame>>;
   /** A move, a new game or a new look: to keep, and to send. */
@@ -198,6 +200,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   onSaveSketch,
   onSendDrawing,
   widePockets,
+  moreGames,
   games,
   onGame
 }) => {
@@ -633,6 +636,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           onChange={onGame}
           onBack={() => chooseMode('games')}
           widePockets={widePockets}
+          moreGames={moreGames}
         />
       )}
 

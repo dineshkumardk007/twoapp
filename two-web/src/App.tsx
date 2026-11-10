@@ -275,7 +275,7 @@ import { cleanStickerId } from './core/stickers';
 import { addBoop, boopsFor, chatDay, cleanPlayKind, cleanTheme, withBoopCount, type PlayKind, type SceneTheme } from './core/usTwo';
 import { CAN_WIDE_POCKETS } from './core/carrom';
 import { GAME_AIM_SIGNAL, hearAim, setAimSender } from './core/gameAim';
-import { GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
+import { CAN_PLAY_MORE, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
   SURPRISE_PART,
@@ -383,7 +383,7 @@ const APP_VERSION = 'APP_VERSION';
  * letter for a day closed until then (core/letters), and say when Two leaves
  * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -6555,6 +6555,7 @@ export const App: React.FC = () => {
             games={state.paperGames}
             onGame={handlePaperGame}
             widePockets={!!state.partnerApp?.can?.includes(CAN_WIDE_POCKETS)}
+            moreGames={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_PLAY_MORE)}
             onSendDrawing={picture =>
               handleSendMessage('Photo', false, {
                 isPhoto: true,

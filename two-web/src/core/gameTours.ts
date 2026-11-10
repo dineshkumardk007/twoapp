@@ -10,6 +10,28 @@ export interface TourLine {
 }
 
 export const GAME_TOURS: Record<PaperKind, TourLine[]> = {
+  boxing: [
+    { icon: '🥊', text: 'You both pick a move in secret' },
+    { icon: '⚡', text: 'Big punches cost energy' },
+    { icon: '🛡️', text: 'Block stops a Jab and gives energy' },
+    { icon: '💨', text: 'Dodge makes big punches miss' },
+    { icon: '💥', text: 'Uppercut breaks a Block' },
+    { icon: '🏆', text: 'Knock them out to win' }
+  ],
+  penalty: [
+    { icon: '⚽', text: 'Take turns to shoot and to keep goal' },
+    { icon: '🎯', text: 'Drag the mark to aim your kick' },
+    { icon: '💪', text: 'Tap Kick when the power is right' },
+    { icon: '🧤', text: 'In goal? Tap where you will dive' },
+    { icon: '🏆', text: 'Five kicks each. Most goals wins' }
+  ],
+  puzzle: [
+    { icon: '🧩', text: 'You both get the same puzzle' },
+    { icon: '⏱️', text: 'Tap Start. Your own clock runs' },
+    { icon: '⚡', text: 'The faster one wins the round' },
+    { icon: '❌', text: 'A wrong tap adds time' },
+    { icon: '🏆', text: 'First to 4 rounds wins' }
+  ],
   balloon: [
     { icon: '👆', text: 'Pull back and let go to throw' },
     { icon: '💨', text: 'Watch the wind. It changes every throw' },

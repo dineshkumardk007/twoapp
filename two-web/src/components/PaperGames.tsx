@@ -36,14 +36,24 @@ import {
   withMove,
   type Mark,
   type PaperGame,
-  type PaperKind
+  type PaperKind,
+  atRound,
+  isNewerKind,
+  isPickKind,
+  roundsOf
 } from '../core/paperGames';
 import { carromId, playCarrom } from '../core/carrom';
 import { markTourSeen, tourSeen } from '../core/gameTours';
 import { MarkIcon } from './gameArt';
 import { DotsBoard, FourBoard, HhkBoard, MemoryBoard, SnakesBoard, TttBoard, fourFallMs, type BoardProps } from './GameBoards';
 import { BalloonBoard } from './BalloonBoard';
+import { BoxingBoard } from './BoxingBoard';
 import { CarromBoard } from './CarromBoard';
+import { PenaltyBoard } from './PenaltyBoard';
+import { PuzzleBoard } from './PuzzleBoard';
+import { playBoxing } from '../core/boxing';
+import { playPenalty } from '../core/penalty';
+import { playPuzzle } from '../core/puzzleDuel';
 import { GameTour } from './GameTour';
 
 interface PaperGamesProps {
@@ -57,10 +67,15 @@ interface PaperGamesProps {
   onBack?: () => void;
   /** Their phone knows Carrom's wider pockets too, so a new game may be played on them (core/carrom). */
   widePockets?: boolean;
+  /** Their phone has Boxing, Penalty Shootout and Puzzle Duel (core/paperGames, CAN_PLAY_MORE). */
+  moreGames?: boolean;
 }
 
 /** How each game is played, in a line. */
 export const GAME_HOW: Record<PaperKind, string> = {
+  boxing: 'You both pick a move in secret, then it is fought out. Big punches cost energy. Knock the other one out to win.',
+  penalty: 'Take turns to shoot and to keep goal. Aim and pick your power, or pick your dive - both in secret. Five kicks each.',
+  puzzle: 'The same puzzle for you both, each on your own clock. The faster one takes the round. First to four.',
   balloon: 'Pull back, let go and allow for the wind. Soak the other one through to win. You each get one giant balloon.',
   carrom: 'Flick the striker to pot your coins. Win the Queen and cover her with a coin of yours. Clear your coins to win.',
   four: 'Drop a disc in turn. Four in a line - across, down or slanting - wins.',
@@ -73,6 +88,9 @@ export const GAME_HOW: Record<PaperKind, string> = {
 
 /** The sounds each game makes, loaded when it opens. */
 const SOUNDS_OF: Record<PaperKind, SoundName[]> = {
+  boxing: ['g-bx-bell', 'g-bx-pick', 'g-bx-whoosh', 'g-bx-jab', 'g-bx-hook', 'g-bx-upper', 'g-bx-block', 'g-bx-ko', 'g-bx-crowd'],
+  penalty: ['g-pk-whistle', 'g-pk-pick', 'g-pk-kick', 'g-pk-goal', 'g-pk-save', 'g-pk-post', 'g-pk-miss'],
+  puzzle: ['g-pz-go', 'g-pz-tap', 'g-pz-wrong', 'g-pz-done', 'g-pz-pad', 'g-reveal', 'g-point', 'g-miss'],
   balloon: ['g-wb-stretch', 'g-wb-throw', 'g-wb-burst', 'g-wb-giant', 'g-wb-splat', 'g-wb-hedge', 'g-wb-eek', 'g-wb-wind', 'us-shake'],
   carrom: ['g-cr-strike', 'g-cr-click', 'g-cr-wall', 'g-cr-pocket', 'g-cr-queen', 'g-cr-cover', 'g-cr-foul', 'g-cr-place', 'g-cr-back'],
   ttt: ['g-pen'],
@@ -86,6 +104,40 @@ const SOUNDS_OF: Record<PaperKind, SoundName[]> = {
 /** A small picture of each game, for its card among the games and its empty board. */
 export const GameIcon: React.FC<{ kind: PaperKind }> = ({ kind }) => {
   switch (kind) {
+    case 'boxing':
+      return (
+        <svg viewBox="0 0 64 56" className="g-icon" aria-hidden="true">
+          <path d="M32,3 l3.4,7.4 8,-3 -3,8 7.4,3.4 -7.4,3.4 3,8 -8,-3 -3.4,7.4 -3.4,-7.4 -8,3 3,-8 -7.4,-3.4 7.4,-3.4 -3,-8 8,3 Z" fill="#ffd23f" opacity={0.9} />
+          {[
+            [1, '#e23a55'],
+            [-1, '#2f7fe6']
+          ].map(([dir, ink]) => (
+            <g key={String(ink)} transform={`translate(32 31) scale(${dir} 1)`}>
+              <rect x={-31} y={-7} width={10} height={14} rx={3} fill="#fff7ea" stroke="#3b2723" strokeWidth={2.2} />
+              <path d="M-22,-10 C-13,-15 -1,-13 -1,-1 C-1,9 -8,12 -16,11 C-20,11 -22,9 -22,6 Z" fill={String(ink)} stroke="#3b2723" strokeWidth={2.4} strokeLinejoin="round" />
+              <path d="M-18,4 C-16,10 -9,11 -7,6" fill="none" stroke="#3b2723" strokeWidth={2} strokeLinecap="round" />
+              <path d="M-15,-8 C-10,-10 -5,-8 -4,-4" fill="none" stroke="#fff" strokeOpacity={0.65} strokeWidth={2.2} strokeLinecap="round" />
+            </g>
+          ))}
+        </svg>
+      );
+    case 'penalty':
+      return (
+        <svg viewBox="0 0 64 56" className="g-icon" aria-hidden="true">
+          <rect x={0} y={34} width={64} height={22} rx={5} fill="#2f9e58" />
+          <path d="M10,36 V8 H54 V36" fill="none" stroke="#3b2723" strokeWidth={6} strokeLinejoin="round" strokeLinecap="round" />
+          <path d="M10,36 V8 H54 V36" fill="none" stroke="#fdfdff" strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
+          <path d="M14,12 L50,34 M50,12 L14,34 M23,10 V35 M32,10 V35 M41,10 V35 M12,18 H52 M12,27 H52" stroke="#fff" strokeOpacity={0.55} strokeWidth={0.9} />
+          <circle cx={39} cy={41} r={9} fill="#fff" stroke="#3b2723" strokeWidth={2.2} />
+          <path d="M39,37 L43,40 L41.5,44.5 H36.5 L35,40 Z" fill="#2a2440" />
+        </svg>
+      );
+    case 'puzzle':
+      return (
+        <span className="g-icon g-icon-emoji" aria-hidden="true">
+          🧠⏱️
+        </span>
+      );
     case 'balloon':
       return (
         <svg viewBox="0 0 64 56" className="g-icon" aria-hidden="true">
@@ -177,6 +229,9 @@ export const GameIcon: React.FC<{ kind: PaperKind }> = ({ kind }) => {
 };
 
 const BOARDS: Record<PaperKind, React.FC<BoardProps>> = {
+  boxing: BoxingBoard,
+  penalty: PenaltyBoard,
+  puzzle: PuzzleBoard,
   balloon: BalloonBoard,
   carrom: CarromBoard,
   ttt: TttBoard,
@@ -195,7 +250,7 @@ const CONFETTI_COUNT = 36;
  * new game when this one is done. Moves travel to the other phone the
  * moment they are made; each lands with its own sound on both phones.
  */
-export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack, widePockets = false }) => {
+export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack, widePockets = false, moreGames = true }) => {
   const tr = useT();
   const me = activeUser;
   /** A new game's id. Carrom's says which pockets it is played on. */
@@ -235,9 +290,14 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   // The games with a shot to watch: the words round the board wait for it to land, so
   // they never tell you how it went before you have seen it.
   const watches = kind === 'balloon' || kind === 'carrom';
-  const [settled, setSettled] = useState(game?.moves.length ?? 0);
-  const landing = watches && !!game && settled < game.moves.length;
-  const shownGame = useMemo(() => (game && landing ? { ...game, moves: game.moves.slice(0, settled) } : game), [game, landing, settled]);
+  // And the ones where a round is played out once you have both chosen: the same, round by round.
+  const watchesRounds = kind === 'boxing' || kind === 'penalty' || kind === 'puzzle';
+  const [settled, setSettled] = useState(watchesRounds ? roundsOf(game) : (game?.moves.length ?? 0));
+  const landing = !!game && (watches ? settled < game.moves.length : watchesRounds ? settled < roundsOf(game) : false);
+  const shownGame = useMemo(
+    () => (!game || !landing ? game : watches ? { ...game, moves: game.moves.slice(0, settled) } : atRound(game, settled)),
+    [game, landing, settled, watches]
+  );
 
   const st = shownGame ? standing(shownGame) : null;
   const score = shownGame ? totals(shownGame) : { user: 0, partner: 0, draws: 0 };
@@ -273,6 +333,8 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   // Water Balloon War and Carrom when the last of it has landed.
   useEffect(() => {
     if ((kind === 'snakes' || watches) && game && st?.over && settled >= game.moves.length) celebrate(game);
+    // `st` is the game as far as it has been shown, so over means the last round has been played out.
+    if (watchesRounds && game && st?.over) celebrate(game);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settled, game]);
 
@@ -288,7 +350,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
       over: st.over,
       mine: game.picks?.[me].length || 0,
       theirs: game.picks?.[them].length || 0,
-      rounds: hhk?.rounds.length || 0
+      rounds: roundsOf(game)
     };
     last.current = now;
     if (before.id !== game.id) {
@@ -337,6 +399,12 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
         }
         break;
       }
+      case 'boxing':
+      case 'penalty':
+      case 'puzzle':
+        // They have chosen and you have not: a nudge. The rest is the board's.
+        if (now.rounds === before.rounds && now.theirs > before.theirs && now.mine <= now.rounds) playSound('g-turn');
+        return;
       case 'snakes':
       case 'balloon':
       case 'carrom':
@@ -446,11 +514,20 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
       const n = playSnakes(game).pos[seat];
       return n ? tr('on {n}', { n }) : tr('at the start');
     }
+    if (kind === 'boxing' && shownGame) return tr('{n} health', { n: playBoxing(shownGame).hp[seat] });
+    if (kind === 'penalty' && shownGame) {
+      const n = playPenalty(shownGame).goals[seat];
+      return tr(n === 1 ? '{n} goal' : '{n} goals', { n });
+    }
+    if (kind === 'puzzle' && shownGame) {
+      const n = playPuzzle(shownGame).points[seat];
+      return tr(n === 1 ? '{n} round' : '{n} rounds', { n });
+    }
     return null;
   };
 
   const chip = (seat: Seat) => {
-    const turn = !!st && !st.over && st.toMove.includes(seat) && kind !== 'hhk';
+    const turn = !!st && !st.over && st.toMove.includes(seat) && !isPickKind(kind);
     const won = !!st?.over && st.winner === seat;
     const extra = detail(seat);
     return (
@@ -494,17 +571,27 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     ) : (
       tr("It's a tie!")
     );
-  } else if (kind === 'hhk') {
-    const meToo = st.toMove.includes(me);
-    const themToo = st.toMove.includes(them);
-    status =
-      meToo && themToo
-        ? mePill(tr('Choose one!'))
-        : meToo
-          ? mePill(tr('{name} has chosen - your pick!', { name: partnerName }))
-          : waiting(tr('Waiting for {name} to choose', { name: partnerName }));
   } else if (landing) {
     status = waiting(tr('Here it goes'));
+  } else if (isPickKind(kind)) {
+    const meToo = st.toMove.includes(me);
+    const themToo = st.toMove.includes(them);
+    const first =
+      kind === 'boxing'
+        ? tr('Pick your move!')
+        : kind === 'penalty'
+          ? playPenalty(game).kicker === me
+            ? tr('Take your kick!')
+            : tr('Pick your dive!')
+          : kind === 'puzzle'
+            ? tr('Your puzzle is ready')
+            : tr('Choose one!');
+    status =
+      meToo && themToo
+        ? mePill(first)
+        : meToo
+          ? mePill(kind === 'hhk' ? tr('{name} has chosen - your pick!', { name: partnerName }) : tr('{name} is ready - your go!', { name: partnerName }))
+          : waiting(kind === 'hhk' ? tr('Waiting for {name} to choose', { name: partnerName }) : tr('Waiting for {name}', { name: partnerName }));
   } else if (canAct) {
     const pending = kind === 'memory' && playMemory(game).pending !== null;
     status = mePill(
@@ -604,6 +691,11 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
             </button>
           </div>
         </div>
+      )}
+      {isNewerKind(kind) && !moreGames && (
+        <p className="pg-ask-note" role="status">
+          {tr("{name}'s Two needs the latest update to play this one", { name: partnerName })}
+        </p>
       )}
       {!ask && refusedOf(game, me) && (
         <p className="pg-ask-note" role="status">

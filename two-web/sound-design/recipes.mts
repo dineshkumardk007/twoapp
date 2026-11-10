@@ -2087,5 +2087,353 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 0.9, wet: 0.14 },
     master: { loudness: SOFT }
+  },
+
+  // ------------------------------------------------------------- Boxing
+
+  'g-bx-bell': {
+    use: 'Boxing: the ring bell - two bright strikes of a brass bell',
+    dry: () => {
+      const b = silence(1.9);
+      const ding = (start: number, gain: number) => {
+        // The hammer, then the bell: partials that are not quite in tune with each other, as brass is.
+        noise(b, { start, dur: 0.006, gain: gain * 0.5, filter: { type: 'bandpass', f: 4200, q: 0.8 }, attack: 0.0003, decay: 0.002, seed: 3701 });
+        ([[1, 0.5, 0.75], [2.41, 0.42, 0.55], [3.93, 0.26, 0.36], [5.34, 0.16, 0.24], [6.9, 0.09, 0.16]] as const).forEach(([r, a, d], k) => {
+          mode(b, { freq: 1046 * r, amp: gain * a, decay: d, start, attack: 0.001, beat: 1.6 + k * 0.7, phase: k });
+        });
+      };
+      ding(0, 1);
+      ding(0.2, 0.92);
+      return b;
+    },
+    room: { rt60: 1.3, wet: 0.2 },
+    master: { loudness: MOMENT, maxSeconds: 1.9, tailFade: 0.6 }
+  },
+
+  'g-bx-pick': {
+    use: 'Boxing: a move locked in - two gloves touched together',
+    dry: () => {
+      const b = silence(0.22);
+      noise(b, { dur: 0.05, gain: 0.8, filter: { type: 'lowpass', f: 1500 }, attack: 0.001, decay: 0.014, pink: true, seed: 3711 });
+      mode(b, { freq: 240, amp: 0.5, decay: 0.03, glide: 0.85, glideTime: 0.02 });
+      mode(b, { freq: 480, amp: 0.3, decay: 0.022 });
+      noise(b, { start: 0.002, dur: 0.012, gain: 0.25, filter: { type: 'bandpass', f: 2600, q: 1 }, attack: 0.0005, decay: 0.004, seed: 3712 });
+      return b;
+    },
+    room: { rt60: 0.35, wet: 0.06 },
+    master: { loudness: SOFT, highpass: 110 }
+  },
+
+  'g-bx-whoosh': {
+    use: 'Boxing: a glove through the air, before it lands or misses (played at three pitches)',
+    dry: () => {
+      const b = silence(0.26);
+      noise(b, { dur: 0.17, gain: 1, filter: { type: 'bandpass', f: 620, q: 1.1 }, sweepTo: 2900, attack: 0.05, decay: 0.05, pink: true, seed: 3721 });
+      noise(b, { start: 0.03, dur: 0.12, gain: 0.35, filter: { type: 'bandpass', f: 2200, q: 0.8 }, sweepTo: 5200, attack: 0.04, decay: 0.035, seed: 3722 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: SOFT - 2, highpass: 300 }
+  },
+
+  'g-bx-jab': {
+    use: 'Boxing: a jab landing - leather on the cheek, quick and sharp',
+    dry: () => {
+      const b = silence(0.3);
+      // The slap of the leather, right at the front.
+      noise(b, { dur: 0.014, gain: 1, filter: { type: 'bandpass', f: 2100, q: 0.7 }, attack: 0.0003, decay: 0.004, seed: 3731 });
+      noise(b, { start: 0.001, dur: 0.06, gain: 0.7, filter: { type: 'lowpass', f: 2600 }, attack: 0.0006, decay: 0.016, pink: true, seed: 3732 });
+      thump(b, 0.001, 0.62, 165, 3733);
+      mode(b, { freq: 720, amp: 0.2, decay: 0.02, start: 0.001 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: SOFT + 3, highpass: 100 }
+  },
+
+  'g-bx-hook': {
+    use: 'Boxing: a hook landing - heavier, with the whole body behind it',
+    dry: () => {
+      const b = silence(0.45);
+      noise(b, { dur: 0.016, gain: 1, filter: { type: 'bandpass', f: 1500, q: 0.7 }, attack: 0.0003, decay: 0.005, seed: 3741 });
+      noise(b, { start: 0.001, dur: 0.11, gain: 0.85, filter: { type: 'lowpass', f: 1900 }, attack: 0.0006, decay: 0.03, pink: true, seed: 3742 });
+      thump(b, 0.001, 0.95, 122, 3743);
+      thump(b, 0.012, 0.4, 96, 3744);
+      mode(b, { freq: 540, amp: 0.2, decay: 0.03, start: 0.001 });
+      return b;
+    },
+    room: { rt60: 0.55, wet: 0.11 },
+    master: { loudness: SOFT + 4, highpass: 90 }
+  },
+
+  'g-bx-upper': {
+    use: 'Boxing: an uppercut landing - the biggest punch there is, a crack and a boom',
+    dry: () => {
+      const b = silence(0.75);
+      // The crack...
+      noise(b, { dur: 0.012, gain: 1, filter: { type: 'bandpass', f: 2900, q: 0.6 }, attack: 0.0002, decay: 0.004, seed: 3751 });
+      mode(b, { freq: 1500, amp: 0.3, decay: 0.012 });
+      // ...the boom under it...
+      thump(b, 0.002, 1.1, 98, 3752);
+      thump(b, 0.016, 0.6, 148, 3753);
+      noise(b, { start: 0.002, dur: 0.2, gain: 0.9, filter: { type: 'lowpass', f: 1500 }, attack: 0.001, decay: 0.055, pink: true, seed: 3754 });
+      // ...and the air it pushed, ringing off the hall.
+      noise(b, { start: 0.03, dur: 0.4, gain: 0.22, filter: { type: 'bandpass', f: 900, q: 0.6 }, sweepTo: 420, attack: 0.02, decay: 0.14, pink: true, seed: 3755 });
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.16 },
+    master: { loudness: SOFT + 5, highpass: 80 }
+  },
+
+  'g-bx-block': {
+    use: 'Boxing: a punch stopped on the gloves - a dull pat of leather on leather',
+    dry: () => {
+      const b = silence(0.26);
+      noise(b, { dur: 0.07, gain: 1, filter: { type: 'lowpass', f: 1000 }, attack: 0.0008, decay: 0.02, pink: true, seed: 3761 });
+      mode(b, { freq: 250, amp: 0.55, decay: 0.035, glide: 0.88, glideTime: 0.02 });
+      mode(b, { freq: 510, amp: 0.25, decay: 0.024 });
+      noise(b, { dur: 0.01, gain: 0.3, filter: { type: 'bandpass', f: 1700, q: 0.9 }, attack: 0.0005, decay: 0.003, seed: 3762 });
+      return b;
+    },
+    room: { rt60: 0.45, wet: 0.08 },
+    master: { loudness: SOFT + 1, highpass: 110 }
+  },
+
+  'g-bx-ko': {
+    use: 'Boxing: the knockout - the punch that ends it, and the fall to the canvas',
+    dry: () => {
+      const b = silence(1.3);
+      noise(b, { dur: 0.014, gain: 1, filter: { type: 'bandpass', f: 2600, q: 0.6 }, attack: 0.0002, decay: 0.004, seed: 3771 });
+      thump(b, 0.002, 1.2, 88, 3772);
+      thump(b, 0.018, 0.7, 132, 3773);
+      noise(b, { start: 0.002, dur: 0.34, gain: 1, filter: { type: 'lowpass', f: 1300 }, attack: 0.001, decay: 0.1, pink: true, seed: 3774 });
+      // Going down...
+      voice(b, { start: 0.08, dur: 0.44, freq: t => 330 * Math.pow(0.34, t / 0.44), amp: t => 0.2 * Math.min(1, t / 0.03) * Math.max(0, 1 - t / 0.44), harmonics: [1, 0.4, 0.2, 0.08] });
+      // ...and onto the canvas.
+      thump(b, 0.56, 0.9, 104, 3775);
+      noise(b, { start: 0.56, dur: 0.16, gain: 0.6, filter: { type: 'lowpass', f: 900 }, attack: 0.001, decay: 0.045, pink: true, seed: 3776 });
+      thump(b, 0.7, 0.3, 120, 3777);
+      return b;
+    },
+    room: { rt60: 1.0, wet: 0.18 },
+    master: { loudness: MOMENT + 1, highpass: 80, maxSeconds: 1.3, tailFade: 0.3 }
+  },
+
+  'g-bx-crowd': {
+    use: 'Boxing: the hall on its feet - a roar that swells and settles',
+    dry: () => {
+      const b = silence(2.4);
+      const rand = rng(3781);
+      // Many voices: bands of noise at the pitches a crowd shouts at, each swelling on its own.
+      ([[480, 0.9, -0.5], [760, 1, 0.4], [1150, 0.8, -0.2], [1700, 0.5, 0.5], [2600, 0.28, 0]] as const).forEach(([f, g, pan], i) => {
+        noise(b, { start: i * 0.03, dur: 2.2, gain: g, filter: { type: 'bandpass', f, q: 0.9 }, sweepTo: f * 1.18, attack: 0.3 + i * 0.05, decay: 0.75, pink: true, grain: 0.35, pan, seed: 3782 + i });
+      });
+      // A few whistles and whoops over the top.
+      for (let i = 0; i < 6; i++) {
+        const t = 0.3 + rand() * 1.2;
+        const f0 = 1500 + rand() * 1300;
+        voice(b, { start: t, dur: 0.22, freq: u => f0 * (1 + 0.35 * (u / 0.22)), amp: u => 0.05 * Math.sin((Math.PI * u) / 0.22), harmonics: [1, 0.2], pan: rand() * 1.6 - 0.8 });
+      }
+      return b;
+    },
+    room: { rt60: 1.6, wet: 0.3 },
+    master: { loudness: MOMENT - 1, highpass: 200, maxSeconds: 2.4, tailFade: 0.9 }
+  },
+
+  // ---------------------------------------------------- Penalty Shootout
+
+  'g-pk-whistle': {
+    use: "Penalty Shootout: the referee's whistle - a pea whistle, short and sharp",
+    dry: () => {
+      const b = silence(0.5);
+      // The pea rattles the note: fast flutter in both loudness and pitch.
+      voice(b, {
+        start: 0,
+        dur: 0.34,
+        freq: t => 2380 * (1 + 0.012 * Math.sin(2 * Math.PI * 42 * t)) * (t < 0.03 ? 0.94 + (0.06 * t) / 0.03 : 1),
+        amp: t => 0.5 * Math.min(1, t / 0.012) * Math.min(1, (0.34 - t) / 0.04) * (0.72 + 0.28 * Math.sin(2 * Math.PI * 42 * t)),
+        harmonics: [1, 0.22, 0.1, 0.04]
+      });
+      voice(b, { start: 0, dur: 0.34, freq: () => 2520, amp: t => 0.16 * Math.min(1, t / 0.012) * Math.min(1, (0.34 - t) / 0.04), harmonics: [1, 0.15] });
+      noise(b, { dur: 0.34, gain: 0.18, filter: { type: 'bandpass', f: 2600, q: 2 }, attack: 0.01, decay: 0.1, seed: 3801 });
+      return b;
+    },
+    room: { rt60: 1.2, wet: 0.22 },
+    master: { loudness: SOFT + 2, highpass: 700 }
+  },
+
+  'g-pk-pick': {
+    use: 'Penalty Shootout: your choice locked in - a stud pressed into the turf',
+    dry: () => {
+      const b = silence(0.24);
+      noise(b, { dur: 0.05, gain: 0.8, filter: { type: 'lowpass', f: 1200 }, attack: 0.001, decay: 0.014, pink: true, seed: 3811 });
+      mode(b, { freq: 210, amp: 0.5, decay: 0.03, glide: 0.86, glideTime: 0.02 });
+      noise(b, { start: 0.004, dur: 0.05, gain: 0.3, filter: { type: 'bandpass', f: 3600, q: 0.8 }, grain: 0.8, attack: 0.002, decay: 0.015, seed: 3812 });
+      strike(b, { note: hz('A5'), instrument: I.kalimba, start: 0.02, gain: 0.16, seed: 3813, mallet: 0.1 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: SOFT, highpass: 110 }
+  },
+
+  'g-pk-kick': {
+    use: 'Penalty Shootout: boot through the ball',
+    dry: () => {
+      const b = silence(0.5);
+      // Leather on leather, and the air inside the ball answering.
+      noise(b, { dur: 0.012, gain: 1, filter: { type: 'bandpass', f: 1300, q: 0.7 }, attack: 0.0003, decay: 0.004, seed: 3821 });
+      thump(b, 0.001, 1, 142, 3822);
+      mode(b, { freq: 420, amp: 0.4, decay: 0.045, start: 0.002, glide: 0.8, glideTime: 0.03 });
+      mode(b, { freq: 840, amp: 0.18, decay: 0.03, start: 0.002 });
+      noise(b, { start: 0.002, dur: 0.09, gain: 0.6, filter: { type: 'lowpass', f: 1700 }, attack: 0.001, decay: 0.024, pink: true, seed: 3823 });
+      // And away it goes.
+      noise(b, { start: 0.03, dur: 0.24, gain: 0.3, filter: { type: 'bandpass', f: 700, q: 1 }, sweepTo: 2300, attack: 0.03, decay: 0.08, pink: true, seed: 3824 });
+      return b;
+    },
+    room: { rt60: 0.7, wet: 0.14 },
+    master: { loudness: SOFT + 4, highpass: 90 }
+  },
+
+  'g-pk-goal': {
+    use: 'Penalty Shootout: a goal - the ball in the net, and the whole ground with it',
+    dry: () => {
+      const b = silence(2.6);
+      const rand = rng(3831);
+      // The net taking it.
+      noise(b, { dur: 0.3, gain: 0.8, filter: { type: 'bandpass', f: 4200, q: 0.8 }, sweepTo: 1500, grain: 0.75, attack: 0.004, decay: 0.09, seed: 3832 });
+      thump(b, 0.01, 0.4, 130, 3833);
+      // The ground going up.
+      ([[520, 0.95, -0.5], [820, 1, 0.4], [1250, 0.8, -0.15], [1900, 0.5, 0.5], [2900, 0.26, 0]] as const).forEach(([f, g, pan], i) => {
+        noise(b, { start: 0.06 + i * 0.02, dur: 2.3, gain: g, filter: { type: 'bandpass', f, q: 0.9 }, sweepTo: f * 1.25, attack: 0.16 + i * 0.04, decay: 0.8, pink: true, grain: 0.35, pan, seed: 3834 + i });
+      });
+      for (let i = 0; i < 7; i++) {
+        const t = 0.25 + rand() * 1.2;
+        const f0 = 1500 + rand() * 1400;
+        voice(b, { start: t, dur: 0.24, freq: u => f0 * (1 + 0.4 * (u / 0.24)), amp: u => 0.05 * Math.sin((Math.PI * u) / 0.24), harmonics: [1, 0.2], pan: rand() * 1.6 - 0.8 });
+      }
+      // A bright little flourish over it.
+      run(b, ['D5', 'A5', 'D6', 'F#6'], 0.07, { instrument: I.kalimba, gain: [0.2, 0.22, 0.25, 0.28], start: 0.1, seed: 3845, mallet: 0.12 });
+      run(b, ['D6', 'A6', 'D7'], 0.07, { instrument: I.glock, gain: 0.08, start: 0.17, seed: 3850, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 1.6, wet: 0.28 },
+    master: { loudness: MOMENT, highpass: 160, maxSeconds: 2.6, tailFade: 1 }
+  },
+
+  'g-pk-save': {
+    use: 'Penalty Shootout: saved - both gloves on the ball, and the ground gasps',
+    dry: () => {
+      const b = silence(1.3);
+      // Two gloves, almost together.
+      thump(b, 0, 0.9, 168, 3861);
+      thump(b, 0.022, 0.7, 150, 3862);
+      noise(b, { dur: 0.08, gain: 0.85, filter: { type: 'lowpass', f: 1500 }, attack: 0.0008, decay: 0.022, pink: true, seed: 3863 });
+      noise(b, { dur: 0.012, gain: 0.5, filter: { type: 'bandpass', f: 1900, q: 0.8 }, attack: 0.0004, decay: 0.004, seed: 3864 });
+      // "Ohh!"
+      ([[430, 1, -0.4], [700, 0.9, 0.4], [1050, 0.5, 0]] as const).forEach(([f, g, pan], i) => {
+        noise(b, { start: 0.08, dur: 1, gain: g * 0.7, filter: { type: 'bandpass', f, q: 1.2 }, sweepTo: f * 0.72, attack: 0.06, decay: 0.3, pink: true, grain: 0.3, pan, seed: 3865 + i });
+      });
+      return b;
+    },
+    room: { rt60: 1.3, wet: 0.24 },
+    master: { loudness: MOMENT - 1, highpass: 110, maxSeconds: 1.3, tailFade: 0.5 }
+  },
+
+  'g-pk-post': {
+    use: 'Penalty Shootout: off the post - the frame rings',
+    dry: () => {
+      const b = silence(1.2);
+      noise(b, { dur: 0.008, gain: 1, filter: { type: 'bandpass', f: 3200, q: 0.7 }, attack: 0.0002, decay: 0.003, seed: 3871 });
+      thump(b, 0.001, 0.5, 150, 3872);
+      // A hollow steel tube: partials far apart, the low one the longest.
+      ([[1, 0.6, 0.42], [2.76, 0.45, 0.3], [5.4, 0.28, 0.18], [8.93, 0.14, 0.1]] as const).forEach(([r, a, d], k) => {
+        mode(b, { freq: 560 * r, amp: a, decay: d, start: 0.001, attack: 0.0006, beat: 2.2 + k, phase: k });
+      });
+      // A gasp.
+      noise(b, { start: 0.1, dur: 0.7, gain: 0.4, filter: { type: 'bandpass', f: 800, q: 1 }, sweepTo: 560, attack: 0.07, decay: 0.22, pink: true, grain: 0.3, seed: 3875 });
+      return b;
+    },
+    room: { rt60: 1.2, wet: 0.22 },
+    master: { loudness: MOMENT - 1, highpass: 130, maxSeconds: 1.2, tailFade: 0.4 }
+  },
+
+  'g-pk-miss': {
+    use: 'Penalty Shootout: over the bar, or wide - the ground groans',
+    dry: () => {
+      const b = silence(1.3);
+      ([[520, 1, -0.4], [800, 0.9, 0.4], [1200, 0.45, 0]] as const).forEach(([f, g, pan], i) => {
+        noise(b, { start: i * 0.02, dur: 1.1, gain: g, filter: { type: 'bandpass', f, q: 1.2 }, sweepTo: f * 0.6, attack: 0.09, decay: 0.33, pink: true, grain: 0.3, pan, seed: 3881 + i });
+      });
+      voice(b, { start: 0.05, dur: 0.6, freq: t => hz('A3') * Math.pow(0.82, t / 0.6), amp: t => 0.08 * Math.min(1, t / 0.08) * Math.max(0, 1 - t / 0.6), harmonics: [1, 0.4, 0.15] });
+      return b;
+    },
+    room: { rt60: 1.3, wet: 0.24 },
+    master: { loudness: SOFT + 2, highpass: 150, maxSeconds: 1.3, tailFade: 0.5 }
+  },
+
+  // -------------------------------------------------------- Puzzle Duel
+
+  'g-pz-go': {
+    use: 'Puzzle Duel: the clock is about to start - three quick rising notes',
+    dry: () => {
+      const b = silence(0.8);
+      run(b, ['D5', 'A5', 'D6'], 0.085, { instrument: I.kalimba, gain: [0.34, 0.38, 0.46], seed: 3901, mallet: 0.12 });
+      strike(b, { note: hz('D7'), instrument: I.glock, start: 0.17, gain: 0.12, seed: 3905, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.14 },
+    master: { loudness: SOFT + 1 }
+  },
+
+  'g-pz-tap': {
+    use: 'Puzzle Duel: a right tap - one small glass tick (played higher as you go)',
+    dry: () => {
+      const b = silence(0.3);
+      strike(b, { note: hz('A5'), instrument: I.glock, gain: 0.5, seed: 3911, mallet: 0.05, decayScale: 0.35 });
+      noise(b, { dur: 0.006, gain: 0.2, filter: { type: 'bandpass', f: 3600, q: 1 }, attack: 0.0003, decay: 0.002, seed: 3912 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: MICRO + 2, highpass: 300 }
+  },
+
+  'g-pz-wrong': {
+    use: 'Puzzle Duel: a wrong tap - a soft double buzz, not unkind',
+    dry: () => {
+      const b = silence(0.45);
+      const buzz = (start: number, f: number) =>
+        voice(b, { start, dur: 0.11, freq: () => f, amp: t => 0.3 * Math.min(1, t / 0.006) * Math.min(1, (0.11 - t) / 0.03), harmonics: [1, 0, 0.42, 0, 0.2, 0, 0.1] });
+      buzz(0, hz('F#3'));
+      buzz(0.13, hz('D3'));
+      thump(b, 0, 0.3, 150, 3921);
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: SOFT, highpass: 120 }
+  },
+
+  'g-pz-done': {
+    use: 'Puzzle Duel: solved - the clock stops with a bright run upward',
+    dry: () => {
+      const b = silence(1.3);
+      run(b, ['F#5', 'A5', 'D6', 'F#6'], 0.06, { instrument: I.glass, gain: [0.3, 0.33, 0.38, 0.44], seed: 3931, mallet: 0.1 });
+      strike(b, { note: hz('D5'), instrument: I.felt, start: 0.18, gain: 0.2, seed: 3936, mallet: 0 });
+      twinkles(b, 0.25, 0.8, 4, 0.1, 3940);
+      return b;
+    },
+    room: { rt60: 1.0, wet: 0.18 },
+    master: { loudness: SOFT + 2, maxSeconds: 1.3, tailFade: 0.5 }
+  },
+
+  'g-pz-pad': {
+    use: 'Puzzle Duel: one of the four lights (played at four pitches)',
+    dry: () => {
+      const b = silence(0.6);
+      strike(b, { note: hz('D5'), instrument: I.glass, gain: 0.45, seed: 3951, mallet: 0.08, decayScale: 0.6 });
+      strike(b, { note: hz('D5'), instrument: I.felt, gain: 0.3, seed: 3952, mallet: 0, decayScale: 0.6 });
+      return b;
+    },
+    room: { rt60: 0.6, wet: 0.12 },
+    master: { loudness: SOFT + 1 }
   }
 };

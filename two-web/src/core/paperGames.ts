@@ -1,4 +1,5 @@
-// Games on Canvas of Us (components/PaperGames): Water Balloon War, Carrom,
+// Games on Canvas of Us (components/PaperGames): Boxing, Penalty Shootout,
+// Puzzle Duel, Water Balloon War, Carrom,
 // Tic-tac-toe, Dots and Boxes, Four in a Row, Memory Match, Heart Hug Kiss
 // and Snakes & Ladders, played on both phones - live when you are both there, or one move now and
 // the next whenever the other opens Two.
@@ -12,17 +13,33 @@
 // Each kind is its own record (GAME_TTT and the rest), and the relay keeps
 // only the newest from each of you. In the turn-taking games only the
 // player whose turn it is can move, so two copies differ only by moves one
-// has not had yet; the longer wins (mergeGame). In Heart Hug Kiss you both
-// choose at once, so each of you has a list of your own picks, and each
-// list is merged the same way.
+// has not had yet; the longer wins (mergeGame). In Heart Hug Kiss, Boxing,
+// Penalty Shootout and Puzzle Duel you both choose at once, so each of you
+// has a list of your own picks, and each list is merged the same way.
 
 import type { Seat } from './usTwo';
 import { decodeThrow, playBalloon, throwAllowed } from './balloonWar';
 import { decodeShot, playCarrom, shotAllowed } from './carrom';
+import { boxingAllowed, playBoxing } from './boxing';
+import { penaltyAllowed, playPenalty } from './penalty';
+import { playPuzzle, puzzleAllowed } from './puzzleDuel';
 
-export type PaperKind = 'ttt' | 'dots' | 'four' | 'memory' | 'hhk' | 'snakes' | 'balloon' | 'carrom';
-export const PAPER_KINDS: PaperKind[] = ['balloon', 'carrom', 'four', 'memory', 'hhk', 'snakes', 'ttt', 'dots'];
+export type PaperKind = 'ttt' | 'dots' | 'four' | 'memory' | 'hhk' | 'snakes' | 'balloon' | 'carrom' | 'boxing' | 'penalty' | 'puzzle';
+export const PAPER_KINDS: PaperKind[] = ['boxing', 'penalty', 'puzzle', 'balloon', 'carrom', 'four', 'memory', 'hhk', 'snakes', 'ttt', 'dots'];
+/** The games where you both choose at once: each of you has a list of picks, and no moves. */
+const PICK_KINDS: PaperKind[] = ['hhk', 'boxing', 'penalty', 'puzzle'];
+export const isPickKind = (kind: PaperKind) => PICK_KINDS.includes(kind);
+/**
+ * What a phone says in its APP_VERSION when it has Boxing, Penalty Shootout
+ * and Puzzle Duel. One that does not would never show a move made in them.
+ */
+export const CAN_PLAY_MORE = 'games-3';
+/** The games a phone on the version before does not have. */
+export const isNewerKind = (kind: PaperKind) => kind === 'boxing' || kind === 'penalty' || kind === 'puzzle';
 const RECORDS: Record<PaperKind, string> = {
+  boxing: 'GAME_BOXING',
+  penalty: 'GAME_PENALTY',
+  puzzle: 'GAME_PUZZLE',
   ttt: 'GAME_TTT',
   dots: 'GAME_DOTS',
   four: 'GAME_FOUR',
@@ -36,6 +53,9 @@ export const GAME_TTT = RECORDS.ttt;
 export const GAME_DOTS = RECORDS.dots;
 /** Each game's name, in English (shown through tr). */
 export const GAME_NAMES: Record<PaperKind, string> = {
+  boxing: 'Boxing',
+  penalty: 'Penalty Shootout',
+  puzzle: 'Puzzle Duel',
   balloon: 'Water Balloon War',
   carrom: 'Carrom',
   four: 'Four in a Row',
@@ -61,7 +81,7 @@ export const DEFAULT_MEMORY = 8;
 export function sizesOf(kind: PaperKind): readonly number[] | null {
   return kind === 'dots' ? DOT_SIZES : kind === 'memory' ? MEMORY_SIZES : null;
 }
-const FIXED_SIZE: Record<PaperKind, number> = { ttt: 3, dots: DEFAULT_DOTS, four: 7, memory: DEFAULT_MEMORY, hhk: 3, snakes: 10, balloon: 1, carrom: 1 };
+const FIXED_SIZE: Record<PaperKind, number> = { ttt: 3, dots: DEFAULT_DOTS, four: 7, memory: DEFAULT_MEMORY, hhk: 3, snakes: 10, balloon: 1, carrom: 1, boxing: 1, penalty: 1, puzzle: 1 };
 
 /** The inks each of you can play in. */
 export const INKS = ['#f43f5e', '#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899'] as const;
@@ -98,7 +118,7 @@ export interface PaperGame {
    * (core/balloonWar). Carrom: a shot (core/carrom).
    */
   moves: number[];
-  /** Heart Hug Kiss: each of you's picks, round by round (HHK_CHOICES). */
+  /** The games where you both choose at once (isPickKind): each of you's picks, round by round. */
   picks?: Record<Seat, number[]>;
   /** Wins and draws in the games before this one. */
   before: Tally;
@@ -582,6 +602,41 @@ export interface Standing {
   again: boolean;
 }
 
+/** A game of picks, played through: how many rounds are decided, who has still to choose, how it ended. */
+interface PicksPlayed {
+  rounds: number;
+  toMove: Seat[];
+  over: boolean;
+  winner: Seat | null;
+  draw: boolean;
+  played: Record<Seat, number>;
+}
+function picksOf(game: PaperGame): PicksPlayed {
+  switch (game.kind) {
+    case 'boxing': {
+      const s = playBoxing(game);
+      return { rounds: s.rounds.length, toMove: s.toMove, over: s.over, winner: s.winner, draw: s.draw, played: s.played };
+    }
+    case 'penalty': {
+      const s = playPenalty(game);
+      return { rounds: s.kicks.length, toMove: s.toMove, over: s.over, winner: s.winner, draw: s.draw, played: s.played };
+    }
+    case 'puzzle': {
+      const s = playPuzzle(game);
+      return { rounds: s.rounds.length, toMove: s.toMove, over: s.over, winner: s.winner, draw: s.draw, played: s.played };
+    }
+    default: {
+      const s = playHhk(game);
+      return { rounds: s.rounds.length, toMove: s.toMove, over: s.over, winner: s.winner, draw: false, played: s.played };
+    }
+  }
+}
+/** How many rounds of a game of picks are decided: both of you have chosen, and it has been worked out. */
+export const roundsOf = (game?: PaperGame) => (game && isPickKind(game.kind) ? picksOf(game).rounds : 0);
+/** A game of picks as it stood after its first `n` rounds, with nothing chosen for the next. */
+export const atRound = (game: PaperGame, n: number): PaperGame =>
+  !game.picks ? game : { ...game, picks: { user: game.picks.user.slice(0, n), partner: game.picks.partner.slice(0, n) } };
+
 /** Where a game stands: who is to move, and how it ended if it has. */
 export function standing(game: PaperGame): Standing {
   const one = (turn: Seat, over: boolean, winner: Seat | null, draw: boolean, again = false): Standing => ({
@@ -609,9 +664,12 @@ export function standing(game: PaperGame): Standing {
       const s = playMemory(game);
       return one(s.turn, s.over, s.winner, s.draw, s.result === 'match' && s.pending === null);
     }
-    case 'hhk': {
-      const s = playHhk(game);
-      return { toMove: s.toMove, turn: s.toMove[0] ?? game.first, over: s.over, winner: s.winner, draw: false, again: false };
+    case 'hhk':
+    case 'boxing':
+    case 'penalty':
+    case 'puzzle': {
+      const s = picksOf(game);
+      return { toMove: s.toMove, turn: s.toMove[0] ?? game.first, over: s.over, winner: s.winner, draw: s.draw, again: false };
     }
     case 'snakes': {
       const s = playSnakes(game);
@@ -646,6 +704,9 @@ function playedOf(game: PaperGame): number {
     case 'carrom':
       return playCarrom(game).played;
     case 'hhk':
+    case 'boxing':
+    case 'penalty':
+    case 'puzzle':
       return 0;
   }
 }
@@ -653,11 +714,21 @@ function playedOf(game: PaperGame): number {
 /** Whether `seat` may make `move` now. */
 export function canMove(game: PaperGame, seat: Seat, move: number): boolean {
   if (!Number.isInteger(move)) return false;
-  if (game.kind === 'hhk') {
-    const s = playHhk(game);
+  if (isPickKind(game.kind)) {
+    const s = picksOf(game);
     const lists = game.picks || { user: [], partner: [] };
     if (s.played.user !== lists.user.length || s.played.partner !== lists.partner.length) return false;
-    return s.toMove.includes(seat) && move >= 0 && move < HHK_CHOICES.length;
+    if (!s.toMove.includes(seat)) return false;
+    switch (game.kind) {
+      case 'boxing':
+        return boxingAllowed(move, playBoxing(game).energy[seat]);
+      case 'penalty':
+        return penaltyAllowed(game, seat, move);
+      case 'puzzle':
+        return puzzleAllowed(move);
+      default:
+        return move >= 0 && move < HHK_CHOICES.length;
+    }
   }
   const st = standing(game);
   if (st.over || st.turn !== seat || playedOf(game) !== game.moves.length) return false;
@@ -678,12 +749,14 @@ export function canMove(game: PaperGame, seat: Seat, move: number): boolean {
       return Number.isSafeInteger(move) && move >= 0 && throwAllowed(decodeThrow(move), playBalloon(game).giantLeft[seat]);
     case 'carrom':
       return Number.isSafeInteger(move) && move >= 0 && shotAllowed(playCarrom(game).coins, seat, decodeShot(move));
+    default:
+      return false;
   }
 }
 
 /** The game with `seat`'s move made. */
 export function withMove(game: PaperGame, move: number, seat?: Seat): PaperGame {
-  if (game.kind === 'hhk') {
+  if (isPickKind(game.kind)) {
     const picks = game.picks || { user: [], partner: [] };
     const who = seat ?? 'user';
     return { ...game, picks: { ...picks, [who]: [...picks[who], move] } };
@@ -719,7 +792,7 @@ export function newGame(kind: PaperKind, prev: PaperGame | undefined, starter: S
     before: prev ? totals(prev) : { ...ZERO },
     looks: prev ? { ...prev.looks } : {}
   };
-  if (kind === 'hhk') game.picks = { user: [], partner: [] };
+  if (isPickKind(kind)) game.picks = { user: [], partner: [] };
   return game;
 }
 
@@ -867,7 +940,7 @@ export function cleanGame(raw: unknown, kind: PaperKind): PaperGame | null {
   const sizes = sizesOf(kind);
   const size = !sizes ? FIXED_SIZE[kind] : sizes.includes(Number(o.size)) ? Number(o.size) : null;
   if (!size) return null;
-  const moves = kind !== 'hhk' && Array.isArray(o.moves) ? o.moves.slice(0, maxMoves(kind, size)).map(Number) : [];
+  const moves = !isPickKind(kind) && Array.isArray(o.moves) ? o.moves.slice(0, maxMoves(kind, size)).map(Number) : [];
   const game: PaperGame = {
     kind,
     id: o.id,
@@ -884,10 +957,10 @@ export function cleanGame(raw: unknown, kind: PaperKind): PaperGame | null {
   if (partner) game.looks.partner = partner;
   const ask = cleanAsk(o.ask);
   if (ask) game.ask = ask;
-  if (kind === 'hhk') {
+  if (isPickKind(kind)) {
     const list = (v: unknown) => (Array.isArray(v) ? v.slice(0, 200).map(Number) : []);
     game.picks = { user: list(o.picks?.user), partner: list(o.picks?.partner) };
-    const s = playHhk(game);
+    const s = picksOf(game);
     game.picks = { user: game.picks.user.slice(0, s.played.user), partner: game.picks.partner.slice(0, s.played.partner) };
     return game;
   }

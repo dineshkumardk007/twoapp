@@ -37,7 +37,10 @@ export type SoundName =
   | 'g-pen' | 'g-chalk' | 'g-box' | 'g-drop' | 'g-flip' | 'g-match' | 'g-miss' | 'g-pick' | 'g-reveal' | 'g-point'
   | 'g-dice' | 'g-hop' | 'g-ladder' | 'g-snake' | 'g-win' | 'g-lose' | 'g-tie' | 'g-start' | 'g-turn'
   | 'g-wb-stretch' | 'g-wb-throw' | 'g-wb-burst' | 'g-wb-giant' | 'g-wb-splat' | 'g-wb-hedge' | 'g-wb-eek' | 'g-wb-wind'
-  | 'g-cr-strike' | 'g-cr-click' | 'g-cr-wall' | 'g-cr-pocket' | 'g-cr-queen' | 'g-cr-cover' | 'g-cr-foul' | 'g-cr-place' | 'g-cr-back';
+  | 'g-cr-strike' | 'g-cr-click' | 'g-cr-wall' | 'g-cr-pocket' | 'g-cr-queen' | 'g-cr-cover' | 'g-cr-foul' | 'g-cr-place' | 'g-cr-back'
+  | 'g-bx-bell' | 'g-bx-pick' | 'g-bx-whoosh' | 'g-bx-jab' | 'g-bx-hook' | 'g-bx-upper' | 'g-bx-block' | 'g-bx-ko' | 'g-bx-crowd'
+  | 'g-pk-whistle' | 'g-pk-pick' | 'g-pk-kick' | 'g-pk-goal' | 'g-pk-save' | 'g-pk-post' | 'g-pk-miss'
+  | 'g-pz-go' | 'g-pz-tap' | 'g-pz-wrong' | 'g-pz-done' | 'g-pz-pad';
 
 interface Loaded {
   buffer: AudioBuffer;
