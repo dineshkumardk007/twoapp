@@ -55,6 +55,8 @@ interface CanvasOfUsViewProps {
   onSaveSketch: (sketch: CanvasSavedSketch) => void;
   /** A drawing into the chat, as a photo message. */
   onSendDrawing?: (picture: ShrunkPhoto) => void;
+  /** Their phone knows Carrom's wider pockets (core/carrom): a new game may use them. */
+  widePockets?: boolean;
   /** The games (core/paperGames), as this phone has them. */
   games?: Partial<Record<PaperKind, PaperGame>>;
   /** A move, a new game or a new look: to keep, and to send. */
@@ -195,6 +197,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   onUndoStroke,
   onSaveSketch,
   onSendDrawing,
+  widePockets,
   games,
   onGame
 }) => {
@@ -629,6 +632,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           partnerName={them}
           onChange={onGame}
           onBack={() => chooseMode('games')}
+          widePockets={widePockets}
         />
       )}
 

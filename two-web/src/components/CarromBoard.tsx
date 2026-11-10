@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from '../core/i18n';
 import { haptic } from '../core/haptics';
+import { onAim, sayAim } from '../core/gameAim';
 import { playSound } from '../core/sounds';
 import type { Seat } from '../core/usTwo';
 import {
@@ -19,12 +20,18 @@ import {
   STRIKER_R,
   baselineY,
   carromAfter,
+  coinRoll,
+  coinSpeedFrom,
   encodeShot,
+  firstContact,
   forwardOf,
   nearestFree,
   playCarrom,
+  reachOf,
   recordShot,
   shotAllowed,
+  speedAfter,
+  strikerAfter,
   type CarromState,
   type Coin,
   type Shot,
@@ -52,7 +59,13 @@ const POP_MS = 340;
 /** Their shot: the striker slides over, draws back, and goes. */
 const SLIDE_MS = 240;
 const DRAW_MS = 230;
-const MAX_PARTS = 70;
+const MAX_PARTS = 120;
+/** Their aiming, as it comes in: eased toward the newest, so ten a second looks like one movement. */
+const EASE_MS = 90;
+/** An aim nothing more is heard of (their phone dropped off) is taken down after this long. */
+const THEIR_AIM_MS = 8000;
+/** How fast the striker leaves for this much pull. */
+const speedOfPower = (power: number) => (MIN_SHOT + (MAX_SHOT - MIN_SHOT) * power ** 1.35) * 0.998;
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 const canvasOf = (w: number, h: number) => {
@@ -75,7 +88,7 @@ const grainRandom = (seed: number) => {
 // ------------------------------------------------------------ painting
 
 /** The whole board, frame and all. Painted when it opens or changes size. */
-function paintBoard(c: CanvasRenderingContext2D, size: number, inset: number, scale: number) {
+function paintBoard(c: CanvasRenderingContext2D, size: number, inset: number, scale: number, pocketR: number) {
   const random = grainRandom(7);
   const bx = (v: number) => inset + v * scale;
   const inner = BOARD * scale;
@@ -298,7 +311,7 @@ function paintBoard(c: CanvasRenderingContext2D, size: number, inset: number, sc
 
   // The pockets: deep, dark, with a worn brass rim.
   for (const [px, py] of POCKETS) {
-    const r = POCKET_R * 1.06 * scale;
+    const r = pocketR * 1.06 * scale;
     const hole = c.createRadialGradient(bx(px) - r * 0.2, bx(py) - r * 0.2, r * 0.1, bx(px), bx(py), r);
     hole.addColorStop(0, '#000');
     hole.addColorStop(0.72, '#120a06');
@@ -467,6 +480,31 @@ interface Particle {
   kind: 'dust' | 'gold' | 'ember';
 }
 
+/** The other one's striker, as their phone says it is while they aim. */
+interface Theirs {
+  seat: Seat;
+  /** Where it is drawn, easing toward where it was last said to be. */
+  x: number;
+  toX: number;
+  ux: number;
+  uy: number;
+  toUx: number;
+  toUy: number;
+  power: number;
+  toPower: number;
+  ok: boolean;
+  aiming: boolean;
+  heardAt: number;
+}
+
+interface Flash {
+  x: number;
+  y: number;
+  at: number;
+  ms: number;
+  size: number;
+}
+
 interface Run {
   rec: ShotRecording;
   shot: Shot;
@@ -509,6 +547,12 @@ class CarromTable {
   private coins: Coin[] = [];
   private striker: { x: number; seat: Seat } | null = null;
   private aimAt: Aim | null = null;
+  private theirs: Theirs | null = null;
+  private flashes: Flash[] = [];
+  private pocketR = POCKET_R;
+  private lastBuzz = 0;
+  /** A big moment on the table, for the board round it to answer: the Queen going in. */
+  onBig: ((what: 'queen') => void) | null = null;
   private run: Run | null = null;
   private turn = new Map<number, number>();
   private pops = new Map<number, number>();
@@ -547,9 +591,17 @@ class CarromTable {
       cv.height = size;
     }
     const c = this.boardCv.getContext('2d');
-    if (c) paintBoard(c, size, this.inset, this.scale);
+    if (c) paintBoard(c, size, this.inset, this.scale, this.pocketR);
     this.paintPieces();
     this.wake();
+  }
+
+  /** The pockets this game is played on (core/carrom, pocketROf). */
+  setPocketR(r: number) {
+    if (r === this.pocketR) return;
+    this.pocketR = r;
+    const c = this.boardCv.getContext('2d');
+    if (c && this.size) paintBoard(c, this.size, this.inset, this.scale, r);
   }
 
   private paintPieces() {
@@ -600,7 +652,74 @@ class CarromTable {
     this.fade = null;
     this.pops.clear();
     this.parts.length = 0;
+    this.flashes.length = 0;
     this.aimAt = null;
+    this.theirs = null;
+  }
+
+  /** Their striker, from their phone: where it sits, and how they are aiming (or not). */
+  hear(seat: Seat, x: number, aim: Aim | null) {
+    const now = performance.now();
+    const t = this.theirs;
+    if (!t || t.seat !== seat) {
+      this.theirs = {
+        seat,
+        x,
+        toX: x,
+        ux: aim?.ux ?? 0,
+        uy: aim?.uy ?? forwardOf(seat),
+        toUx: aim?.ux ?? 0,
+        toUy: aim?.uy ?? forwardOf(seat),
+        power: 0,
+        toPower: aim?.power ?? 0,
+        ok: aim?.ok ?? false,
+        aiming: !!aim,
+        heardAt: now
+      };
+    } else {
+      t.toX = x;
+      if (aim) {
+        if (!t.aiming) {
+          // A new pull starts where it is, not swinging round from the last one.
+          t.ux = aim.ux;
+          t.uy = aim.uy;
+          t.power = 0;
+        }
+        t.toUx = aim.ux;
+        t.toUy = aim.uy;
+        t.toPower = aim.power;
+        t.ok = aim.ok;
+      } else {
+        t.toPower = 0;
+      }
+      t.aiming = !!aim;
+      t.heardAt = now;
+    }
+    this.wake();
+  }
+
+  /** Their striker is put away: their shot is here, or it is no longer their turn. */
+  hush() {
+    if (!this.theirs) return;
+    this.theirs = null;
+    this.wake();
+  }
+
+  /** Where their striker is showing, if it is: their shot starts from there. */
+  theirShown(): { x: number; aiming: boolean } | null {
+    return this.theirs ? { x: this.theirs.x, aiming: this.theirs.aiming && this.theirs.power > 0.05 } : null;
+  }
+
+  /** Gold over the whole table: the Queen is won. */
+  celebrate() {
+    const now = performance.now();
+    for (let i = 0; i < 5; i++) {
+      const x = 180 + Math.random() * 640;
+      const y = 180 + Math.random() * 640;
+      this.flashes.push({ x, y, at: now + i * 110, ms: 620, size: 150 });
+      this.sparkle(x, y, 14);
+    }
+    this.wake();
   }
 
   /** Puts these back on the board, popping in as they come. */
@@ -611,7 +730,7 @@ class CarromTable {
   }
 
   /** Plays a recorded shot, then calls `done`. Your own goes at once; theirs slides over and draws back first. */
-  playShot(rec: ShotRecording, shot: Shot, seat: Seat, own: boolean, fromX: number, done: () => void) {
+  playShot(rec: ShotRecording, shot: Shot, seat: Seat, own: boolean, fromX: number, done: () => void, drawn = false) {
     // Which pocket each piece went to: the one nearest its last place.
     const pockets = new Map<number, number>();
     rec.goneAt.forEach((g, i) => {
@@ -630,12 +749,14 @@ class CarromTable {
     });
     this.aimAt = null;
     this.striker = null;
+    this.theirs = null;
     this.fade = null;
     this.run = {
       rec,
       shot,
       seat,
-      phase: own ? 'run' : 'slide',
+      // Theirs, watched being drawn back just now, goes as yours does: at once.
+      phase: own || drawn ? 'run' : 'slide',
       at: performance.now(),
       next: 0,
       fromX,
@@ -646,7 +767,7 @@ class CarromTable {
       lastFrameAt: 0,
       own
     };
-    if (own) this.onStrike(shot, seat, true);
+    if (own || drawn) this.onStrike(shot, seat, own);
     this.wake();
   }
 
@@ -713,6 +834,11 @@ class CarromTable {
         this.lastClick = now;
         playSound('g-cr-click', { gain: gain(e.power, 0.14), rate: 0.86 + Math.random() * 0.34 });
       }
+      // A hard knock is felt as well as heard - but not every click of a break.
+      if (!late && e.power > 1300 && now - this.lastBuzz > 150) {
+        this.lastBuzz = now;
+        haptic('tick');
+      }
       if (e.power > 900) this.puff(e.x, e.y, e.power > 1800 ? 5 : 3, e.power * 0.1);
     } else if (e.type === 'wall') {
       if (!late && now - this.lastWall > 45) {
@@ -724,11 +850,29 @@ class CarromTable {
       const [px, py] = POCKETS[e.pocket ?? 0];
       if (e.kind === 'striker') {
         if (!late) playSound('g-cr-foul');
-        haptic('tick');
+        haptic('reject');
+      } else if (e.kind === 'queen') {
+        // The Queen: gold from the pocket, a ring of light, and the table feels it.
+        if (!late) playSound('g-cr-queen', { rate: 0.95 + Math.random() * 0.1 });
+        haptic('confirm');
+        this.sparkle(px, py, 40);
+        this.flashes.push({ x: px, y: py, at: now, ms: 700, size: 330 }, { x: px, y: py, at: now + 130, ms: 700, size: 240 });
+        if (typeof this.shaker.animate === 'function') {
+          this.shaker.animate(
+            [
+              { transform: 'translate3d(0, 0, 0) scale(1)' },
+              { transform: 'translate3d(0, 0, 0) scale(1.014)' },
+              { transform: 'translate3d(0, 0, 0) scale(1)' }
+            ],
+            { duration: 320, easing: 'ease-out' }
+          );
+        }
+        this.onBig?.('queen');
       } else {
-        if (!late) playSound(e.kind === 'queen' ? 'g-cr-queen' : 'g-cr-pocket', { rate: 0.95 + Math.random() * 0.1 });
-        haptic('tick');
-        this.sparkle(px, py, e.kind === 'queen' ? 26 : 12);
+        if (!late) playSound('g-cr-pocket', { rate: 0.95 + Math.random() * 0.1 });
+        haptic('confirm');
+        this.sparkle(px, py, 12);
+        this.flashes.push({ x: px, y: py, at: now, ms: 380, size: 120 });
       }
     }
   }
@@ -752,7 +896,40 @@ class CarromTable {
       this.drawResting(now);
     }
 
-    if (this.aimAt && this.striker) this.drawAim(this.striker, this.aimAt);
+    if (this.aimAt && this.striker) this.drawAim(this.striker, this.aimAt, false);
+    else if (!run && !this.striker && this.theirs) {
+      const t = this.theirs;
+      if (t.aiming && now - t.heardAt > THEIR_AIM_MS) {
+        t.aiming = false;
+        t.toPower = 0;
+      }
+      if (t.power > 0.02) {
+        const len = Math.sqrt(t.ux * t.ux + t.uy * t.uy) || 1;
+        this.drawAim({ x: t.x, seat: t.seat }, { ux: t.ux / len, uy: t.uy / len, power: t.power, ok: t.ok }, true);
+      }
+      // Still easing toward what was last heard, or waiting to hear more.
+      if (t.aiming || Math.abs(t.toX - t.x) > 0.4 || Math.abs(t.toPower - t.power) > 0.004) more = true;
+    }
+
+    if (this.flashes.length) {
+      let w = 0;
+      for (const f of this.flashes) {
+        const t = (now - f.at) / f.ms;
+        if (t >= 1) continue;
+        this.flashes[w++] = f;
+        if (t < 0) continue;
+        const e = 1 - (1 - t) ** 3;
+        c.globalAlpha = (1 - t) * 0.9;
+        c.strokeStyle = '#ffe08a';
+        c.lineWidth = Math.max(1.5, (1 - t) * 14 * this.scale);
+        c.beginPath();
+        c.arc(this.sx(f.x), this.sy(f.y), Math.max(1, e * f.size * this.scale), 0, Math.PI * 2);
+        c.stroke();
+      }
+      this.flashes.length = w;
+      c.globalAlpha = 1;
+      if (w) more = true;
+    }
 
     if (this.fade) {
       const t = (now - this.fade.at) / FADE_MS;
@@ -869,6 +1046,17 @@ class CarromTable {
       // Drawn back along the line as you pull: it springs forward when you let go.
       const back = aim && aim.ok ? aim.power * 24 : 0;
       this.drawStriker(s.x - (aim ? aim.ux : 0) * back, baselineY(s.seat) - (aim ? aim.uy : 0) * back, s.seat);
+    } else if (this.theirs) {
+      // Theirs, following their finger a moment behind.
+      const t = this.theirs;
+      const k = 1 - Math.exp(-this.dt / EASE_MS);
+      t.x += (t.toX - t.x) * k;
+      t.ux += (t.toUx - t.ux) * k;
+      t.uy += (t.toUy - t.uy) * k;
+      t.power += (t.toPower - t.power) * k;
+      const len = Math.sqrt(t.ux * t.ux + t.uy * t.uy) || 1;
+      const back = t.ok ? t.power * 24 : 0;
+      this.drawStriker(t.x - (t.ux / len) * back, baselineY(t.seat) - (t.uy / len) * back, t.seat);
     }
   }
 
@@ -1022,13 +1210,20 @@ class CarromTable {
     c.globalAlpha = 1;
   }
 
-  /** The aiming line: to whatever it would touch first, and where that would go. */
-  private drawAim(s: { x: number; seat: Seat }, aim: Aim) {
+  /**
+   * The aiming line: to whatever the striker would touch first; the path the
+   * coin it touches would take, all the way to the pocket or the side it is
+   * headed for; how far along that this much power would carry it; and which
+   * way the striker itself goes on. `theirs`: the other one's aim, drawn paler.
+   */
+  private drawAim(s: { x: number; seat: Seat }, aim: Aim, theirs: boolean) {
     const c = this.live;
     const sx0 = s.x;
     const sy0 = baselineY(s.seat);
     const r = STRIKER_R * this.scale;
     const hue = aim.ok ? (aim.power < 0.5 ? '#34d399' : aim.power < 0.8 ? '#f59e0b' : '#ef4444') : '#9ca3af';
+    const see = theirs ? 0.6 : 1;
+    c.globalAlpha = see;
 
     // How hard: a ring round the striker, closing as you pull.
     c.lineCap = 'round';
@@ -1043,31 +1238,37 @@ class CarromTable {
       c.arc(this.sx(sx0), this.sy(sy0), r * 1.32, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.03, aim.power));
       c.stroke();
     }
-    if (!aim.ok) return;
+    if (!aim.ok) {
+      c.globalAlpha = 1;
+      return;
+    }
 
     const hit = firstContact(this.coins, sx0, sy0, aim.ux, aim.uy);
     const ex = sx0 + aim.ux * hit.t;
     const ey = sy0 + aim.uy * hit.t;
+    const DARK = 'rgba(45, 22, 8, 0.6)';
+    const dash = [Math.max(4, 14 * this.scale), Math.max(4, 12 * this.scale)];
+
+    /** A line in board units: dark underneath, so it reads on pale wood and dark coins alike. */
+    const line = (x0: number, y0: number, x1: number, y1: number, colour: string, width: number, dashed: boolean) => {
+      c.beginPath();
+      c.moveTo(this.sx(x0), this.sy(y0));
+      c.lineTo(this.sx(x1), this.sy(y1));
+      c.strokeStyle = DARK;
+      c.lineWidth = Math.max(2.5, (width + 3.5) * this.scale);
+      c.stroke();
+      c.strokeStyle = colour;
+      c.lineWidth = Math.max(1.5, width * this.scale);
+      if (dashed) c.setLineDash(dash);
+      c.stroke();
+      c.setLineDash([]);
+    };
 
     const from = STRIKER_R * 1.4;
-    const line = () => {
-      c.beginPath();
-      c.moveTo(this.sx(sx0 + aim.ux * from), this.sy(sy0 + aim.uy * from));
-      c.lineTo(this.sx(ex), this.sy(ey));
-      c.stroke();
-    };
-    // A dark line with a bright dashed one over it, so it reads on pale wood and dark coins alike.
-    c.strokeStyle = 'rgba(45, 22, 8, 0.6)';
-    c.lineWidth = Math.max(2.5, 7.5 * this.scale);
-    line();
-    c.strokeStyle = '#ffffff';
-    c.lineWidth = Math.max(1.5, 4 * this.scale);
-    c.setLineDash([Math.max(4, 14 * this.scale), Math.max(4, 12 * this.scale)]);
-    line();
-    c.setLineDash([]);
+    if (hit.t > from) line(sx0 + aim.ux * from, sy0 + aim.uy * from, ex, ey, '#ffffff', 4, true);
 
     // Where the striker would be when it touches.
-    c.strokeStyle = 'rgba(45, 22, 8, 0.6)';
+    c.strokeStyle = DARK;
     c.lineWidth = Math.max(2.5, 6.5 * this.scale);
     c.beginPath();
     c.arc(this.sx(ex), this.sy(ey), r, 0, Math.PI * 2);
@@ -1078,90 +1279,54 @@ class CarromTable {
     c.fillStyle = 'rgba(255, 255, 255, 0.22)';
     c.fill();
 
+    const speed = speedAfter(speedOfPower(aim.power), hit.t);
     if (hit.coin) {
-      // And where the coin it touches would go.
-      const nx = (hit.coin.x - ex) / (COIN_R + STRIKER_R);
-      const ny = (hit.coin.y - ey) / (COIN_R + STRIKER_R);
-      const len = 70 + aim.power * 170;
-      const tipX = hit.coin.x + nx * (COIN_R + len);
-      const tipY = hit.coin.y + ny * (COIN_R + len);
-      c.strokeStyle = 'rgba(45, 22, 8, 0.6)';
-      c.lineWidth = Math.max(3, 9 * this.scale);
-      c.beginPath();
-      c.moveTo(this.sx(hit.coin.x + nx * COIN_R), this.sy(hit.coin.y + ny * COIN_R));
-      c.lineTo(this.sx(tipX), this.sy(tipY));
-      c.stroke();
-      c.strokeStyle = hue;
-      c.lineWidth = Math.max(2, 5 * this.scale);
-      c.stroke();
+      const coin = hit.coin;
+      const nx = (coin.x - ex) / (COIN_R + STRIKER_R);
+      const ny = (coin.y - ey) / (COIN_R + STRIKER_R);
+      // The coin's whole path, faint; and as far as this much power sends it, bright.
+      const roll = coinRoll(this.coins, coin, nx, ny, this.pocketR);
+      const far = Math.sqrt((roll.x - coin.x) ** 2 + (roll.y - coin.y) ** 2);
+      const reach = reachOf(coinSpeedFrom(speed * (aim.ux * nx + aim.uy * ny)));
+      const lit = Math.min(far, reach);
+      if (far > COIN_R) line(coin.x + nx * COIN_R, coin.y + ny * COIN_R, coin.x + nx * far, coin.y + ny * far, 'rgba(255, 255, 255, 0.75)', 3, true);
+      if (lit > COIN_R) line(coin.x + nx * COIN_R, coin.y + ny * COIN_R, coin.x + nx * lit, coin.y + ny * lit, hue, 5, false);
+      if (roll.pocket >= 0) {
+        // Headed for a pocket: it lights up, brighter if this is enough to get there.
+        const makes = reach >= far - this.pocketR * 0.5;
+        const [px, py] = POCKETS[roll.pocket];
+        c.beginPath();
+        c.arc(this.sx(px), this.sy(py), this.pocketR * 1.12 * this.scale, 0, Math.PI * 2);
+        c.fillStyle = makes ? 'rgba(52, 211, 153, 0.4)' : 'rgba(255, 255, 255, 0.16)';
+        c.fill();
+        c.strokeStyle = makes ? '#34d399' : 'rgba(255, 255, 255, 0.8)';
+        c.lineWidth = Math.max(2, (makes ? 6.5 : 4) * this.scale);
+        c.stroke();
+      }
+      // And the striker, carrying on.
+      const [ax, ay] = strikerAfter(aim.ux, aim.uy, nx, ny);
+      if (ax || ay) line(ex + ax * STRIKER_R, ey + ay * STRIKER_R, ex + ax * (STRIKER_R + 110), ey + ay * (STRIKER_R + 110), 'rgba(255, 255, 255, 0.85)', 2.6, false);
     } else if (hit.bounce) {
-      const len = 90 + aim.power * 160;
-      c.strokeStyle = 'rgba(45, 22, 8, 0.45)';
-      c.lineWidth = Math.max(2.5, 7 * this.scale);
-      c.beginPath();
-      c.moveTo(this.sx(ex), this.sy(ey));
-      c.lineTo(this.sx(ex + hit.bounce[0] * len), this.sy(ey + hit.bounce[1] * len));
-      c.stroke();
-      c.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-      c.lineWidth = Math.max(1.5, 3.4 * this.scale);
-      c.stroke();
+      const len = Math.min(340, Math.max(120, reachOf(speed * 0.76)));
+      line(ex, ey, ex + hit.bounce[0] * len, ey + hit.bounce[1] * len, 'rgba(255, 255, 255, 0.85)', 3.4, false);
     }
+    c.globalAlpha = 1;
   }
-}
-
-/** The first thing a striker going this way would touch, and how far off it is. */
-function firstContact(coins: Coin[], x: number, y: number, ux: number, uy: number): { t: number; coin: Coin | null; bounce: [number, number] | null } {
-  let t = Infinity;
-  let bounce: [number, number] | null = null;
-  // The walls.
-  if (ux < 0) {
-    const w = (STRIKER_R - x) / ux;
-    if (w < t) {
-      t = w;
-      bounce = [-ux, uy];
-    }
-  } else if (ux > 0) {
-    const w = (BOARD - STRIKER_R - x) / ux;
-    if (w < t) {
-      t = w;
-      bounce = [-ux, uy];
-    }
-  }
-  if (uy < 0) {
-    const w = (STRIKER_R - y) / uy;
-    if (w < t) {
-      t = w;
-      bounce = [ux, -uy];
-    }
-  } else if (uy > 0) {
-    const w = (BOARD - STRIKER_R - y) / uy;
-    if (w < t) {
-      t = w;
-      bounce = [ux, -uy];
-    }
-  }
-  let coin: Coin | null = null;
-  const reach = COIN_R + STRIKER_R;
-  for (const c of coins) {
-    const rx = c.x - x;
-    const ry = c.y - y;
-    const along = rx * ux + ry * uy;
-    if (along <= 0) continue;
-    const off2 = rx * rx + ry * ry - along * along;
-    if (off2 >= reach * reach) continue;
-    const at = along - Math.sqrt(reach * reach - off2);
-    if (at < t) {
-      t = Math.max(0, at);
-      coin = c;
-      bounce = null;
-    }
-  }
-  return { t, coin, bounce };
 }
 
 // ------------------------------------------------------------ the board
 
 const TrayCoin: React.FC<{ kind: 'white' | 'black' | 'queen' }> = ({ kind }) => <i className="cr-coin" data-kind={kind} aria-hidden="true" />;
+
+/** A finger on the board: not yet known which (it began on the striker), aiming, or moving the striker along. */
+interface Touch {
+  x: number;
+  y: number;
+  id: number;
+  mode: 'undecided' | 'aim' | 'move';
+  /** Moving the striker: how far its middle was from the finger when it was picked up. */
+  off: number;
+}
 
 export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, canAct, onMove, onSettled, partnerName }) => {
   const tr = useT();
@@ -1170,13 +1335,15 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
   const wrapRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLCanvasElement>(null);
   const liveRef = useRef<HTMLCanvasElement>(null);
+  const powerRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<CarromTable | null>(null);
 
   const [shown, setShown] = useState<CarromState>(() => playCarrom(game));
   const [wanted, setWanted] = useState(BOARD / 2);
   const [busy, setBusy] = useState(false);
   const [aiming, setAiming] = useState(false);
-  const [note, setNote] = useState<{ key: number; text: string; tone: 'good' | 'bad' | 'gold' } | null>(null);
+  const [replaying, setReplaying] = useState(false);
+  const [note, setNote] = useState<{ key: number; text: string; tone: 'good' | 'bad' | 'gold'; big?: boolean } | null>(null);
 
   const gameRef = useRef(game);
   gameRef.current = game;
@@ -1185,6 +1352,7 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
   const running = useRef(false);
   const ownMove = useRef<number | null>(null);
   const timer = useRef(0);
+  const flashTimer = useRef(0);
   const settledRef = useRef(onSettled);
   settledRef.current = onSettled;
   const nameRef = useRef(partnerName);
@@ -1201,6 +1369,18 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
   const strikerRef = useRef(strikerX);
   strikerRef.current = strikerX;
 
+  /** A wash of gold over the table for a moment (index.css, .cr-table[data-flash]). */
+  const flash = useCallback((what: 'queen' | 'crown') => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    delete wrap.dataset.flash;
+    // Read back, so the same flash twice running starts over.
+    void wrap.offsetWidth;
+    wrap.dataset.flash = what;
+    clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => delete wrap.dataset.flash, 1300);
+  }, []);
+
   const announce = useCallback((after: CarromState) => {
     const last = after.last;
     if (!last) return;
@@ -1209,6 +1389,7 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
     const name = nameRef.current;
     let text = '';
     let tone: 'good' | 'bad' | 'gold' = 'good';
+    let big = false;
     switch (last.note) {
       case 'own':
         text = mine ? t('In! Go again') : t('{name} pots one', { name });
@@ -1222,9 +1403,15 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
         tone = 'gold';
         break;
       case 'covered':
+        // The Queen is won: the biggest moment short of the game itself.
         text = mine ? t('The Queen is yours!') : t('The Queen goes to {name}', { name });
         tone = 'gold';
+        big = true;
         playSound('g-cr-cover');
+        tableRef.current?.celebrate();
+        flash('crown');
+        haptic('confirm');
+        window.setTimeout(() => haptic('confirm'), 160);
         break;
       case 'queen-back':
         text = t('The Queen goes back');
@@ -1241,12 +1428,12 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
       default:
         return;
     }
-    setNote({ key: Date.now(), text, tone });
-  }, [me]);
+    setNote({ key: Date.now(), text, tone, big });
+  }, [me, flash]);
 
   useEffect(() => {
     if (!note) return;
-    const t = setTimeout(() => setNote(null), 1900);
+    const t = setTimeout(() => setNote(null), note.big ? 2600 : 1900);
     return () => clearTimeout(t);
   }, [note]);
 
@@ -1275,25 +1462,35 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
     const { recording, shot } = recordShot(before, move);
     const own = ownMove.current === move;
     if (own) ownMove.current = null;
+    // Their striker, if it was showing as they aimed: the shot goes from where it is.
+    const watched = own ? null : table.theirShown();
     table.show(before.coins, null);
     const seat = before.turn;
-    const fromX = lastX.current[seat];
+    const fromX = watched ? watched.x : lastX.current[seat];
     lastX.current[seat] = shot.x;
-    table.playShot(recording, shot, seat, own, fromX, () => {
-      const after = carromAfter(gameRef.current, k + 1);
-      table.show(after.coins, null);
-      const returned = after.last?.returned.map(c => c.id) ?? [];
-      if (returned.length) {
-        table.popIn(returned);
-        playSound('g-cr-back');
-      }
-      setShown(after);
-      announce(after);
-      shownCount.current = k + 1;
-      running.current = false;
-      const more = gameRef.current.moves.length > k + 1;
-      timer.current = window.setTimeout(pump, more ? 520 : 40);
-    });
+    table.playShot(
+      recording,
+      shot,
+      seat,
+      own,
+      fromX,
+      () => {
+        const after = carromAfter(gameRef.current, k + 1);
+        table.show(after.coins, null);
+        const returned = after.last?.returned.map(c => c.id) ?? [];
+        if (returned.length) {
+          table.popIn(returned);
+          playSound('g-cr-back');
+        }
+        setShown(after);
+        announce(after);
+        shownCount.current = k + 1;
+        running.current = false;
+        const more = gameRef.current.moves.length > k + 1;
+        timer.current = window.setTimeout(pump, more ? 520 : 40);
+      },
+      !!watched?.aiming
+    );
   }, [announce]);
   const pumpRef = useRef(pump);
   pumpRef.current = pump;
@@ -1306,8 +1503,11 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
     if (!wrap || !board || !live) return;
     const table = new CarromTable(board, live, wrap, flip, inksRef.current);
     tableRef.current = table;
+    const start = playCarrom(gameRef.current);
+    table.setPocketR(start.pocketR);
+    table.onBig = () => flash('queen');
     table.resize(wrap.clientWidth);
-    table.show(playCarrom(gameRef.current).coins, null);
+    table.show(start.coins, null);
     const seen = new ResizeObserver(() => table.resize(wrap.clientWidth));
     seen.observe(wrap);
     pumpRef.current();
@@ -1317,12 +1517,14 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
       tableRef.current = null;
       running.current = false;
       clearTimeout(timer.current);
+      clearTimeout(flashTimer.current);
     };
     // Only the once: `flip` follows the seat, which does not change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => tableRef.current?.setInks(inks), [inks]);
+  useEffect(() => tableRef.current?.setPocketR(shown.pocketR), [shown.pocketR]);
 
   useEffect(() => {
     const table = tableRef.current;
@@ -1339,7 +1541,9 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
       setShown(fresh);
       setNote(null);
       setBusy(false);
+      setReplaying(false);
       setWanted(BOARD / 2);
+      table.setPocketR(fresh.pocketR);
       table.show(fresh.coins, null);
       settledRef.current?.(game.moves.length);
       return;
@@ -1352,12 +1556,78 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
     const table = tableRef.current;
     if (!table || running.current || busy) return;
     table.setStriker(canAct ? { x: strikerX, seat: me } : null);
+    if (canAct) table.hush();
   }, [canAct, busy, strikerX, me, shown]);
+
+  // ------------------------------------------------ their aim, as it comes
+
+  const turnRef = useRef<Seat | null>(null);
+  turnRef.current = shown.over ? null : shown.turn;
+  useEffect(
+    () =>
+      onAim(said => {
+        if (said.k !== 'carrom') return;
+        const table = tableRef.current;
+        const g = gameRef.current;
+        // Only for the board as it stands here, while it is theirs to shoot.
+        if (!table || said.g !== g.id || said.n !== g.moves.length || said.n !== shownCount.current || running.current || turnRef.current !== them) return;
+        const a = said.a;
+        if (!a) {
+          table.hush();
+          return;
+        }
+        const x = clamp(a[0], BASE_MIN, BASE_MAX);
+        const ux = (a[1] ?? 0) / 1000;
+        const uy = (a[2] ?? 0) / 1000;
+        const pulling = a.length >= 5 && (ux !== 0 || uy !== 0);
+        table.hear(them, x, pulling ? { ux, uy, power: clamp((a[3] ?? 0) / 1000, 0, 1), ok: a[4] === 1 } : null);
+      }),
+    [them]
+  );
+
+  /** Tells their phone where the striker is and how it is being aimed (core/gameAim). */
+  const say = (x: number, aim: Aim | null) => {
+    const g = gameRef.current;
+    sayAim('carrom', g.id, g.moves.length, aim ? [x, aim.ux * 1000, aim.uy * 1000, aim.power * 1000, aim.ok ? 1 : 0] : [x]);
+  };
+  // Leaving the board, or the turn passing: their phone takes the striker down.
+  useEffect(() => {
+    if (!canAct) return;
+    return () => {
+      const g = gameRef.current;
+      sayAim('carrom', g.id, g.moves.length, null);
+    };
+  }, [canAct]);
 
   // ------------------------------------------------------------- aiming
 
-  const pull = useRef<{ x: number; y: number; id: number } | null>(null);
+  const pull = useRef<Touch | null>(null);
   const aimRef = useRef<Aim | null>(null);
+
+  /** How hard, on the bar at the side: written straight to it, not through React. */
+  const showPower = (aim: Aim | null) => {
+    const bar = powerRef.current;
+    if (!bar) return;
+    if (!aim || !aim.ok) {
+      delete bar.dataset.on;
+      return;
+    }
+    bar.dataset.on = '';
+    bar.dataset.level = aim.power < 0.5 ? 'soft' : aim.power < 0.8 ? 'firm' : 'hard';
+    bar.style.setProperty('--p', aim.power.toFixed(3));
+    const label = bar.lastElementChild;
+    if (label) label.textContent = `${Math.round(aim.power * 100)}`;
+  };
+
+  /** Where on the board a point of the screen is, in board units. */
+  const boardAt = (clientX: number, clientY: number): { x: number; y: number } | null => {
+    const box = liveRef.current?.getBoundingClientRect();
+    if (!box || !box.width) return null;
+    const along = (v: number) => (v - FRAME) / (1 - 2 * FRAME);
+    const x = along((clientX - box.left) / box.width) * BOARD;
+    const y = along((clientY - box.top) / box.height) * BOARD;
+    return flip ? { x: BOARD - x, y: BOARD - y } : { x, y };
+  };
 
   const aimFrom = (clientX: number, clientY: number): Aim | null => {
     const start = pull.current;
@@ -1381,11 +1651,30 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
     return { ux: dx / len, uy: dy / len, power, ok: true };
   };
 
+  const lastTick = useRef(0);
+  /** The striker, put at `x` along its line (or as near as the coins allow). */
+  const place = (x: number) => {
+    const at = clamp(x, BASE_MIN, BASE_MAX);
+    setWanted(at);
+    const free = nearestFree(shown.coins, me, at);
+    tableRef.current?.setStriker({ x: free, seat: me });
+    say(free, null);
+    if (Math.abs(at - lastTick.current) >= 34) {
+      lastTick.current = at;
+      playSound('g-cr-place', { rate: 0.9 + ((flip ? BOARD - at : at) / BOARD) * 0.3 });
+      haptic('tick');
+    }
+  };
+
   const onDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!canAct || busy || e.button > 0) return;
-    pull.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    // A finger landing on the striker may be picking it up to move it along
+    // its line, or pulling it back to shoot: which way it first goes says.
+    const at = boardAt(e.clientX, e.clientY);
+    const onStriker = !!at && Math.hypot(at.x - strikerX, at.y - baselineY(me)) < STRIKER_R * 2.3;
+    pull.current = { x: e.clientX, y: e.clientY, id: e.pointerId, mode: onStriker ? 'undecided' : 'aim', off: at ? strikerX - at.x : 0 };
     aimRef.current = null;
-    setAiming(true);
+    if (!onStriker) setAiming(true);
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
@@ -1393,43 +1682,88 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
     }
   };
   const onMoveAim = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!pull.current || pull.current.id !== e.pointerId) return;
+    const touch = pull.current;
+    if (!touch || touch.id !== e.pointerId) return;
+    if (touch.mode === 'undecided') {
+      const dx = Math.abs(e.clientX - touch.x);
+      const dy = Math.abs(e.clientY - touch.y);
+      if (dx < 9 && dy < 9) return;
+      touch.mode = dx > dy * 1.25 ? 'move' : 'aim';
+      if (touch.mode === 'aim') setAiming(true);
+    }
+    if (touch.mode === 'move') {
+      const at = boardAt(e.clientX, e.clientY);
+      if (at) place(at.x + touch.off);
+      return;
+    }
     const aim = aimFrom(e.clientX, e.clientY);
     aimRef.current = aim;
     tableRef.current?.aim(aim);
+    showPower(aim);
+    say(strikerX, aim);
   };
   const onEnd = (e: React.PointerEvent<HTMLCanvasElement>, cancelled: boolean) => {
-    if (!pull.current || pull.current.id !== e.pointerId) return;
-    const aim = cancelled ? null : aimFrom(e.clientX, e.clientY);
+    const touch = pull.current;
+    if (!touch || touch.id !== e.pointerId) return;
+    const aim = cancelled || touch.mode !== 'aim' ? null : aimFrom(e.clientX, e.clientY);
     pull.current = null;
     aimRef.current = null;
     setAiming(false);
     tableRef.current?.aim(null);
-    if (!aim || !aim.ok || !canAct || busy) return;
-    const speed = (MIN_SHOT + (MAX_SHOT - MIN_SHOT) * aim.power ** 1.35) * 0.998;
-    const shot: Shot = { x: strikerX, dx: Math.round(aim.ux * speed), dy: Math.round(aim.uy * speed) };
-    if (!shotAllowed(playCarrom(gameRef.current).coins, me, shot)) return;
+    showPower(null);
+    const shot: Shot | null =
+      aim && aim.ok && canAct && !busy
+        ? (() => {
+            const speed = speedOfPower(aim.power);
+            return { x: strikerX, dx: Math.round(aim.ux * speed), dy: Math.round(aim.uy * speed) };
+          })()
+        : null;
+    if (!shot || !shotAllowed(playCarrom(gameRef.current).coins, me, shot)) {
+      // Let go without a shot: their phone sees the striker at rest again.
+      if (touch.mode === 'aim') say(strikerX, null);
+      return;
+    }
     const move = encodeShot(shot);
     ownMove.current = move;
     lastX.current[me] = strikerX;
-    // Heard the instant the finger lifts.
-    playSound('g-cr-strike', { gain: 0.55 + aim.power * 0.45 });
+    // Heard, and felt, the instant the finger lifts.
+    playSound('g-cr-strike', { gain: 0.55 + aim!.power * 0.45 });
+    haptic(aim!.power > 0.6 ? 'confirm' : 'tick');
     onMove(move);
   };
 
   // The slider, left to right as you see it.
   const sliderValue = flip ? BOARD - strikerX : strikerX;
-  const lastTick = useRef(0);
   const onSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value);
-    const x = flip ? BOARD - v : v;
-    setWanted(x);
-    tableRef.current?.setStriker({ x: nearestFree(shown.coins, me, x), seat: me });
-    if (Math.abs(v - lastTick.current) >= 34) {
-      lastTick.current = v;
-      playSound('g-cr-place', { rate: 0.9 + (v / BOARD) * 0.3 });
-      haptic('tick');
-    }
+    place(flip ? BOARD - v : v);
+  };
+
+  // ------------------------------------------------- the last shot, again
+
+  const canReplay = !busy && !aiming && shown.played > 0 && shown.played === game.moves.length;
+  const replay = () => {
+    const table = tableRef.current;
+    const g = gameRef.current;
+    const k = shownCount.current;
+    if (!table || running.current || busy || k < 1 || k !== g.moves.length) return;
+    const before = carromAfter(g, k - 1);
+    if (before.played !== k - 1) return;
+    running.current = true;
+    setBusy(true);
+    setReplaying(true);
+    setNote(null);
+    haptic('tick');
+    const { recording, shot } = recordShot(before, g.moves[k - 1]);
+    table.hush();
+    table.show(before.coins, null);
+    table.playShot(recording, shot, before.turn, false, shot.x, () => {
+      table.show(carromAfter(gameRef.current, k).coins, null);
+      running.current = false;
+      setReplaying(false);
+      // Back to the game: anything that came in meanwhile plays now.
+      timer.current = window.setTimeout(() => pumpRef.current(), 60);
+    });
   };
 
   const tray = (seat: Seat) => {
@@ -1437,16 +1771,29 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
     const inCount = COINS_EACH - shown.left[seat];
     const hasQueen = shown.queen === seat;
     const pending = shown.queen === 'pending' && shown.turn === seat;
+    const turn = !shown.over && shown.turn === seat;
+    const who = seat === me ? tr('You') : partnerName;
     return (
-      <div className="cr-tray" data-seat={seat === me ? 'me' : 'them'} aria-label={tr('{n} of 9 in', { n: inCount })}>
-        <span className="cr-tray-slots">
+      <div
+        className="cr-tray"
+        data-seat={seat === me ? 'me' : 'them'}
+        data-turn={turn || undefined}
+        aria-label={`${who}: ${tr('{n} of 9 in', { n: inCount })}${hasQueen ? `, ${tr('has the Queen')}` : ''}${turn ? `, ${tr('to play')}` : ''}`}
+      >
+        <span className="cr-who" aria-hidden="true">
+          <i className="cr-coin cr-who-coin" data-kind={colour} />
+          <b>{who}</b>
+          {hasQueen && <span className="cr-crown">👑</span>}
+          <em>{tr('{n} left', { n: shown.left[seat] })}</em>
+        </span>
+        <span className="cr-tray-slots" aria-hidden="true">
           {Array.from({ length: COINS_EACH }, (_, i) => (
             <span key={i} className="cr-slot">
               {i < inCount && <TrayCoin kind={colour} />}
             </span>
           ))}
         </span>
-        <span className="cr-slot cr-slot-queen" data-pending={pending || undefined}>
+        <span className="cr-slot cr-slot-queen" data-pending={pending || undefined} data-won={hasQueen || undefined} aria-hidden="true">
           {(hasQueen || pending) && <TrayCoin kind="queen" />}
         </span>
       </div>
@@ -1472,26 +1819,39 @@ export const CarromBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, 
           onPointerCancel={e => onEnd(e, true)}
         />
         {canAct && !busy && !aiming && <span className="cr-ring" style={{ left: ringLeft, top: ringTop }} aria-hidden="true" />}
+        <div className="cr-power" ref={powerRef} aria-hidden="true">
+          <i />
+          <b />
+        </div>
+        {replaying && <div className="cr-replaying">{tr('Last shot')}</div>}
         {note && (
-          <div className="cr-note" key={note.key} data-tone={note.tone} aria-live="polite">
+          <div className="cr-note" key={note.key} data-tone={note.tone} data-big={note.big || undefined} aria-live="polite">
+            {note.big && <span aria-hidden="true">👑 </span>}
             {note.text}
           </div>
         )}
       </div>
-      <div className="cr-slider" data-off={!canAct || busy || undefined}>
-        <input
-          type="range"
-          min={BASE_MIN}
-          max={BASE_MAX}
-          step={1}
-          value={sliderValue}
-          disabled={!canAct || busy}
-          onChange={onSlide}
-          aria-label={tr('Move the striker along its line')}
-        />
+      <div className="cr-controls">
+        <div className="cr-slider" data-off={!canAct || busy || undefined}>
+          <input
+            type="range"
+            min={BASE_MIN}
+            max={BASE_MAX}
+            step={1}
+            value={sliderValue}
+            disabled={!canAct || busy}
+            onChange={onSlide}
+            aria-label={tr('Move the striker along its line')}
+          />
+        </div>
+        <button type="button" className="cr-again" onClick={replay} disabled={!canReplay} aria-label={tr('Watch the last shot again')} title={tr('Watch the last shot again')}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v5h5" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
       {tray(me)}
-      <p className="cr-hint">{canAct && !busy ? (aiming ? tr('Let go to shoot') : tr('Slide the striker, then pull back on the board and let go')) : ' '}</p>
+      <p className="cr-hint">{canAct && !busy ? (aiming ? tr('Let go to shoot') : tr('Drag the striker along its line, then pull back and let go')) : ' '}</p>
     </div>
   );
 });

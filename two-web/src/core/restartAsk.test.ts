@@ -226,3 +226,31 @@ describe('between the two phones', () => {
     expect(both.ask?.no).toBeUndefined();
   });
 });
+
+describe('a move made here joins what is held, it does not replace it', () => {
+  it('a pick of theirs that arrived a moment before yours is kept', () => {
+    const start = newGame('hhk', undefined, 'user', 'h1', 1);
+    const drawn = { ...start, picks: { user: [1], partner: [0] } };
+    // Theirs lands first; yours was made from the board as it was drawn.
+    const held = mergeGame(drawn, { ...drawn, picks: { user: [1, 2], partner: [0] } });
+    const mine = { ...drawn, picks: { user: [1], partner: [0, 1] } };
+    expect(mergeGame(held, mine).picks).toEqual({ user: [1, 2], partner: [0, 1] });
+  });
+
+  it('everything else done here comes through the join as it was', () => {
+    const g = { ...newGame('ttt', undefined, 'user', 'g1', 1000), moves: [4] };
+    for (const next of [
+      { ...g, moves: [4, 0] },
+      askRestart(g, 'user', 2000),
+      cancelRestart(askRestart(g, 'user', 2000), 3000),
+      declineRestart(askRestart(g, 'user', 2000), 3000),
+      newGame('ttt', g, 'user', 'g2', 4000)
+    ]) {
+      expect(mergeGame(g.ask ? g : next.id === g.id && next.ask && !g.ask ? g : g, next)).toEqual(next);
+    }
+    const asked = askRestart(g, 'user', 2000);
+    expect(mergeGame(asked, cancelRestart(asked, 3000))).toEqual(cancelRestart(asked, 3000));
+    expect(mergeGame(asked, declineRestart(asked, 3000))).toEqual(declineRestart(asked, 3000));
+    expect(mergeGame(asked, newGame('ttt', asked, 'user', 'g2', 4000))).toEqual(newGame('ttt', asked, 'user', 'g2', 4000));
+  });
+});

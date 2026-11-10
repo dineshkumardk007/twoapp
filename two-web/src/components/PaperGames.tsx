@@ -38,7 +38,7 @@ import {
   type PaperGame,
   type PaperKind
 } from '../core/paperGames';
-import { playCarrom } from '../core/carrom';
+import { carromId, playCarrom } from '../core/carrom';
 import { markTourSeen, tourSeen } from '../core/gameTours';
 import { MarkIcon } from './gameArt';
 import { DotsBoard, FourBoard, HhkBoard, MemoryBoard, SnakesBoard, TttBoard, fourFallMs, type BoardProps } from './GameBoards';
@@ -55,6 +55,8 @@ interface PaperGamesProps {
   onChange: (game: PaperGame) => void;
   /** Back to all the games. */
   onBack?: () => void;
+  /** Their phone knows Carrom's wider pockets too, so a new game may be played on them (core/carrom). */
+  widePockets?: boolean;
 }
 
 /** How each game is played, in a line. */
@@ -193,9 +195,11 @@ const CONFETTI_COUNT = 36;
  * new game when this one is done. Moves travel to the other phone the
  * moment they are made; each lands with its own sound on both phones.
  */
-export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack }) => {
+export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack, widePockets = false }) => {
   const tr = useT();
   const me = activeUser;
+  /** A new game's id. Carrom's says which pockets it is played on. */
+  const freshId = () => (kind === 'carrom' ? carromId(newId('game'), widePockets) : newId('game'));
   const them = other(me);
   const [size, setSize] = useState<number>(game?.size ?? (kind === 'memory' ? DEFAULT_MEMORY : DEFAULT_DOTS));
   const [picking, setPicking] = useState(false);
@@ -372,7 +376,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     }
     getAudioContext();
     haptic('confirm');
-    onChange(newGame(kind, g, me, newId('game'), Date.now(), size));
+    onChange(newGame(kind, g, me, freshId(), Date.now(), size));
     if (!g) playSound('g-start');
   };
 
@@ -382,7 +386,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     if (!openAsk(g)) return;
     getAudioContext();
     haptic('confirm');
-    onChange(newGame(kind, g, me, newId('game'), Date.now(), g!.size));
+    onChange(newGame(kind, g, me, freshId(), Date.now(), g!.size));
   };
   /** No: this one carries on, and they are told. */
   const declineAsk = () => {

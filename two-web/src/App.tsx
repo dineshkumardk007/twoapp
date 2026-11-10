@@ -273,6 +273,8 @@ import {
 } from './core/chatActions';
 import { cleanStickerId } from './core/stickers';
 import { addBoop, boopsFor, chatDay, cleanPlayKind, cleanTheme, withBoopCount, type PlayKind, type SceneTheme } from './core/usTwo';
+import { CAN_WIDE_POCKETS } from './core/carrom';
+import { GAME_AIM_SIGNAL, hearAim, setAimSender } from './core/gameAim';
 import { GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
@@ -381,7 +383,7 @@ const APP_VERSION = 'APP_VERSION';
  * letter for a day closed until then (core/letters), and say when Two leaves
  * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -1309,6 +1311,18 @@ export const App: React.FC = () => {
           device: String(said?.device || '').slice(0, 64)
         };
         setPartnerTypingAt(Date.now());
+        return;
+      }
+
+      if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === GAME_AIM_SIGNAL) {
+        // Their aim in a game on Canvas of Us, as they take it: straight to
+        // the board (core/gameAim), not through this screen's state.
+        if (msg.signal.authorId === state.activeUser) return;
+        try {
+          hearAim(JSON.parse(msg.signal.payload));
+        } catch {
+          /* not something a board said */
+        }
         return;
       }
 
@@ -3079,6 +3093,13 @@ export const App: React.FC = () => {
     };
   }, [shareLastSeen, relayStatus, isLocked]);
 
+  // Aiming in a game on Canvas of Us goes out as it happens, kept nowhere
+  // (core/gameAim): the boards say it, and this is their way to the relay.
+  useEffect(() => {
+    setAimSender(said => wsRelay.sendSignal(GAME_AIM_SIGNAL, said));
+    return () => setAimSender(null);
+  }, []);
+
   /**
    * Tells the partner's phone whether Two is on this screen (HERE_SIGNAL): as
    * it comes and goes, every half minute while it stays, and away just before
@@ -3818,8 +3839,12 @@ export const App: React.FC = () => {
 
   /** A paper game on Canvas of Us - a move, a new game, a new ink: here at once, and on their phone. */
   const handlePaperGame = (game: PaperGame) => {
-    setState(prev => ({ ...prev, paperGames: { ...prev.paperGames, [game.kind]: game } }));
-    wsRelay.broadcastUpdate(recordTypeOf(game.kind), game);
+    // Joined to what is held, not put over it: `game` was made from the board
+    // as it was last drawn, and a move of theirs may have arrived in the
+    // moment since. Put over it, that move was lost on this phone - in Heart
+    // Hug Kiss, where you both choose at once, one of you waited for ever.
+    setState(prev => ({ ...prev, paperGames: { ...prev.paperGames, [game.kind]: mergeGame(prev.paperGames?.[game.kind], game) } }));
+    wsRelay.broadcastUpdate(recordTypeOf(game.kind), mergeGame(latestRef.current.state.paperGames?.[game.kind], game));
   };
 
   /** A sky picked for "Us two": here at once, and on their phone too. */
@@ -6529,6 +6554,7 @@ export const App: React.FC = () => {
             onSaveSketch={handleSaveCanvasSketch}
             games={state.paperGames}
             onGame={handlePaperGame}
+            widePockets={!!state.partnerApp?.can?.includes(CAN_WIDE_POCKETS)}
             onSendDrawing={picture =>
               handleSendMessage('Photo', false, {
                 isPhoto: true,

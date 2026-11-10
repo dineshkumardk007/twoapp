@@ -19,6 +19,24 @@ export const STRIKER_R = 35;
 /** A pocket's middle, this far along each side from its corner, and how near a piece's middle must come to fall in. */
 export const POCKET_AT = 46;
 export const POCKET_R = 46;
+/**
+ * The wider pockets of games begun since they were widened. A game says which
+ * it has in its id (CARROM_WIDE_MARK), which every phone keeps as it is: both
+ * phones must work a shot out with the same pockets or their boards part, and
+ * a game begun on the pockets before has to finish on them.
+ */
+export const POCKET_R_WIDE = 56;
+export const CARROM_WIDE_MARK = '~2';
+/**
+ * What a phone says in its APP_VERSION when it knows the wider pockets. A game
+ * is only begun on them once the other phone has said so: one still on the
+ * version before would work every shot out on the old ones, and the two
+ * boards would part.
+ */
+export const CAN_WIDE_POCKETS = 'carrom-wide';
+/** The id for a new game of Carrom: marked, if both phones know the wider pockets. */
+export const carromId = (id: string, wide: boolean) => (wide && !id.endsWith(CARROM_WIDE_MARK) ? id + CARROM_WIDE_MARK : id);
+export const pocketROf = (gameId: string) => (gameId.endsWith(CARROM_WIDE_MARK) ? POCKET_R_WIDE : POCKET_R);
 /** The striker's line: this far from your edge, and how far along it the striker may sit. */
 export const BASE_Y = 148;
 export const BASE_MIN = 190;
@@ -192,7 +210,8 @@ interface ShotOutcome {
 }
 
 /** Plays one shot through. The same numbers always come out the same. */
-export function simulateShot(coins: Coin[], seat: Seat, s: Shot, record = false): ShotOutcome {
+export function simulateShot(coins: Coin[], seat: Seat, s: Shot, record = false, pocketR = POCKET_R): ShotOutcome {
+  const pocket2 = pocketR * pocketR;
   const bodies: Body[] = coins.map(c => ({ id: c.id, kind: c.kind, x: c.x, y: c.y, vx: 0, vy: 0, r: COIN_R, m: 1, gone: false }));
   bodies.push({ id: -1, kind: 'striker', x: s.x, y: baselineY(seat), vx: s.dx, vy: s.dy, r: STRIKER_R, m: STRIKER_MASS, gone: false });
   const n = bodies.length;
@@ -243,7 +262,7 @@ export function simulateShot(coins: Coin[], seat: Seat, s: Shot, record = false)
       for (let p = 0; p < 4; p++) {
         const ax = b.x - POCKETS[p][0];
         const ay = b.y - POCKETS[p][1];
-        if (ax * ax + ay * ay < POCKET_R * POCKET_R) {
+        if (ax * ax + ay * ay < pocket2) {
           pocket = p;
           break;
         }
@@ -372,6 +391,8 @@ export interface CarromState {
   winner: Seat | null;
   played: number;
   last: CarromStep | null;
+  /** How near a pocket's middle a piece must come to fall in, in this game. */
+  pocketR: number;
 }
 
 const otherSeat = (seat: Seat): Seat => (seat === 'user' ? 'partner' : 'user');
@@ -406,8 +427,9 @@ function placeBack(coins: Coin[], kind: CoinKind): Coin {
   return coin;
 }
 
-export function freshCarrom(first: Seat): CarromState {
+export function freshCarrom(first: Seat, pocketR = POCKET_R): CarromState {
   return {
+    pocketR,
     coins: theBreak(),
     colour: first === 'user' ? { user: 'white', partner: 'black' } : { user: 'black', partner: 'white' },
     left: { user: COINS_EACH, partner: COINS_EACH },
@@ -524,7 +546,8 @@ export function afterShot(state: CarromState, outcome: Pick<ShotOutcome, 'coins'
     over: !!finished,
     winner: finished,
     played: state.played + 1,
-    last: { seat: me, note, returned, fell }
+    last: { seat: me, note, returned, fell },
+    pocketR: state.pocketR
   };
 }
 
@@ -552,14 +575,14 @@ function statesOf(game: { id: string; first: Seat; moves: number[] }): CarromSta
     while (keep < limit && run!.moves[keep] === game.moves[keep]) keep++;
   }
   // Keep what still agrees; anything after that is worked out afresh.
-  const states = same ? run!.states.slice(0, keep + 1) : [freshCarrom(game.first)];
+  const states = same ? run!.states.slice(0, keep + 1) : [freshCarrom(game.first, pocketROf(game.id))];
   for (let k = states.length - 1; k < game.moves.length; k++) {
     const state = states[k];
     const move = game.moves[k];
     if (state.over || !Number.isSafeInteger(move) || move < 0) break;
     const shot = decodeShot(move);
     if (!shotAllowed(state.coins, state.turn, shot)) break;
-    states.push(afterShot(state, simulateShot(state.coins, state.turn, shot)));
+    states.push(afterShot(state, simulateShot(state.coins, state.turn, shot, false, state.pocketR)));
   }
   run = { id: game.id, first: game.first, moves: game.moves.slice(), states };
   return states;
@@ -580,5 +603,126 @@ export function carromAfter(game: { id: string; first: Seat; moves: number[] }, 
 /** A shot from where a state stands, recorded for showing. The rules' verdict comes from the same numbers. */
 export function recordShot(state: CarromState, move: number): { recording: ShotRecording; shot: Shot } {
   const shot = decodeShot(move);
-  return { recording: simulateShot(state.coins, state.turn, shot, true).recording!, shot };
+  return { recording: simulateShot(state.coins, state.turn, shot, true, state.pocketR).recording!, shot };
+}
+
+// ------------------------------------------------------- the aiming guide
+
+/** The first thing a striker going this way would touch, and how far off it is. */
+export function firstContact(coins: Coin[], x: number, y: number, ux: number, uy: number): { t: number; coin: Coin | null; bounce: [number, number] | null } {
+  let t = Infinity;
+  let bounce: [number, number] | null = null;
+  // The walls.
+  if (ux < 0) {
+    const w = (STRIKER_R - x) / ux;
+    if (w < t) {
+      t = w;
+      bounce = [-ux, uy];
+    }
+  } else if (ux > 0) {
+    const w = (BOARD - STRIKER_R - x) / ux;
+    if (w < t) {
+      t = w;
+      bounce = [-ux, uy];
+    }
+  }
+  if (uy < 0) {
+    const w = (STRIKER_R - y) / uy;
+    if (w < t) {
+      t = w;
+      bounce = [ux, -uy];
+    }
+  } else if (uy > 0) {
+    const w = (BOARD - STRIKER_R - y) / uy;
+    if (w < t) {
+      t = w;
+      bounce = [ux, -uy];
+    }
+  }
+  let coin: Coin | null = null;
+  const reach = COIN_R + STRIKER_R;
+  for (const c of coins) {
+    const rx = c.x - x;
+    const ry = c.y - y;
+    const along = rx * ux + ry * uy;
+    if (along <= 0) continue;
+    const off2 = rx * rx + ry * ry - along * along;
+    if (off2 >= reach * reach) continue;
+    const at = along - Math.sqrt(reach * reach - off2);
+    if (at < t) {
+      t = Math.max(0, at);
+      coin = c;
+      bounce = null;
+    }
+  }
+  return { t, coin, bounce };
+}
+
+/**
+ * Where a coin sent off this way would get to, if it had the speed: the
+ * pocket it would fall in, or the side or the coin that would stop it first.
+ * For the aiming line only - a real shot is worked out by simulateShot.
+ */
+export function coinRoll(
+  coins: Coin[],
+  coin: Coin,
+  ux: number,
+  uy: number,
+  pocketR = POCKET_R
+): { x: number; y: number; pocket: number } {
+  const STEP = 6;
+  const touch = (2 * COIN_R) * (2 * COIN_R);
+  let x = coin.x;
+  let y = coin.y;
+  for (let gone = 0; gone < BOARD * 1.5; gone += STEP) {
+    x += ux * STEP;
+    y += uy * STEP;
+    for (let p = 0; p < 4; p++) {
+      const ax = x - POCKETS[p][0];
+      const ay = y - POCKETS[p][1];
+      if (ax * ax + ay * ay < pocketR * pocketR) return { x: POCKETS[p][0], y: POCKETS[p][1], pocket: p };
+    }
+    if (x < COIN_R || x > BOARD - COIN_R || y < COIN_R || y > BOARD - COIN_R) return { x, y, pocket: -1 };
+    for (const c of coins) {
+      if (c.id === coin.id) continue;
+      if ((c.x - x) * (c.x - x) + (c.y - y) * (c.y - y) < touch) return { x, y, pocket: -1 };
+    }
+  }
+  return { x, y, pocket: -1 };
+}
+
+/** How fast a piece is still going, having slid this far from this speed: 0 if it stops first. */
+export function speedAfter(speed: number, dist: number): number {
+  let v = speed;
+  let d = 0;
+  while (d < dist) {
+    if (v <= FRICTION) return 0;
+    d += v * DT;
+    v = (v - FRICTION) * DRAG;
+  }
+  return v;
+}
+
+/** How far a piece slides from this speed before the board stops it. */
+export function reachOf(speed: number): number {
+  let v = speed;
+  let d = 0;
+  while (v > FRICTION) {
+    d += v * DT;
+    v = (v - FRICTION) * DRAG;
+  }
+  return d;
+}
+
+/** How fast a coin leaves, touched by the striker closing on it at this speed along the line between them. */
+export const coinSpeedFrom = (closing: number) => ((1 + COIN_BOUNCE) * closing * STRIKER_MASS) / (STRIKER_MASS + 1);
+
+/** Which way the striker itself goes on, having touched a coin along the line (nx, ny) between them. */
+export function strikerAfter(ux: number, uy: number, nx: number, ny: number): [number, number] {
+  const closing = ux * nx + uy * ny;
+  const k = ((1 + COIN_BOUNCE) * closing) / (STRIKER_MASS + 1);
+  const vx = ux - k * nx;
+  const vy = uy - k * ny;
+  const len = Math.sqrt(vx * vx + vy * vy);
+  return len < 0.02 ? [0, 0] : [vx / len, vy / len];
 }

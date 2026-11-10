@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from '../core/i18n';
 import { haptic } from '../core/haptics';
+import { onAim, sayAim } from '../core/gameAim';
 import { playSound } from '../core/sounds';
 import type { Seat } from '../core/usTwo';
 import {
@@ -49,6 +50,11 @@ const AIM_SHOW_S = 0.5;
 const AIM_DOTS = 15;
 /** Their throw: they wind up this long before it goes. */
 const WIND_UP_MS = 520;
+/** Watched drawing it back just now, they let go almost at once. */
+const WATCHED_WIND_UP_MS = 150;
+/** Their aiming, as it comes in: eased toward the newest. And taken down if nothing more is heard. */
+const EASE_MS = 90;
+const THEIR_AIM_MS = 8000;
 /** After it lands, before the next. */
 const REST_HIT_MS = 1350;
 const REST_MISS_MS = 800;
@@ -180,6 +186,10 @@ class WaterFx {
   private rings: Ring[] = [];
   private flying: Flying | null = null;
   private aiming: Aiming | null = null;
+  /** The other one's balloon as their phone says it is drawn back, easing toward `to`. */
+  private theirs: { now: Aiming; to: Aiming; heardAt: number; off: boolean } | null = null;
+  /** Their drawn-back balloon comes on to the canvas, or leaves it: the still one in their hand hides meanwhile. */
+  onTheirs: ((on: boolean) => void) | null = null;
   private raf = 0;
   private last = 0;
   private dead = false;
@@ -219,8 +229,47 @@ class WaterFx {
     this.wake();
   }
 
+  /** Their aim, from their phone; null when they have let go of it. */
+  hear(a: Aiming | null) {
+    const t = this.theirs;
+    if (!a) {
+      if (t) {
+        t.off = true;
+        t.to = { ...t.to, pullX: 0, pullY: 0, power: 0 };
+        this.wake();
+      }
+      return;
+    }
+    if (!t) {
+      this.theirs = { now: { ...a, pullX: 0, pullY: 0, power: 0 }, to: a, heardAt: performance.now(), off: false };
+      this.onTheirs?.(true);
+    } else {
+      t.to = a;
+      t.off = false;
+      t.heardAt = performance.now();
+    }
+    this.wake();
+  }
+
+  /** Their drawn-back balloon is put away: the throw is here, or it is not their turn. */
+  hush() {
+    if (!this.theirs) return;
+    this.theirs = null;
+    this.onTheirs?.(false);
+    this.wake();
+  }
+
+  /** Whether they are being watched drawing it back right now. */
+  watching(): boolean {
+    return !!this.theirs && !this.theirs.off && this.theirs.now.power > 0.08;
+  }
+
   throwNow(f: Omit<Flying, 'at' | 'didStart'>) {
     this.aiming = null;
+    if (this.theirs) {
+      this.theirs = null;
+      this.onTheirs?.(false);
+    }
     this.flying = { ...f, at: 0, didStart: false };
     this.frames = 0;
     this.slow = 0;
@@ -230,6 +279,10 @@ class WaterFx {
   cancel() {
     this.flying = null;
     this.aiming = null;
+    if (this.theirs) {
+      this.theirs = null;
+      this.onTheirs?.(false);
+    }
     this.parts.length = 0;
     this.rings.length = 0;
     this.wake();
@@ -312,7 +365,32 @@ class WaterFx {
 
     if (this.aiming) {
       more = true;
-      this.drawAim(this.aiming);
+      this.drawAim(this.aiming, false);
+    }
+
+    const t = this.theirs;
+    if (t && !this.flying) {
+      if (!t.off && now - t.heardAt > THEIR_AIM_MS) {
+        t.off = true;
+        t.to = { ...t.to, pullX: 0, pullY: 0, power: 0 };
+      }
+      const e = 1 - Math.exp(-dt / EASE_MS);
+      const a = t.now;
+      a.vx += (t.to.vx - a.vx) * e;
+      a.vy += (t.to.vy - a.vy) * e;
+      a.pullX += (t.to.pullX - a.pullX) * e;
+      a.pullY += (t.to.pullY - a.pullY) * e;
+      a.power += (t.to.power - a.power) * e;
+      a.ok = t.to.ok;
+      a.giant = t.to.giant;
+      if (t.off && Math.abs(a.pullX) + Math.abs(a.pullY) < 3) {
+        // Let go of: back in their hand.
+        this.theirs = null;
+        this.onTheirs?.(false);
+      } else {
+        more = true;
+        this.drawAim(a, true);
+      }
     }
 
     const f = this.flying;
@@ -456,12 +534,14 @@ class WaterFx {
     return more;
   }
 
-  private drawAim(a: Aiming) {
+  /** The balloon drawn back, and the start of its arc. `theirs`: the other one's, from the right, its arc paler. */
+  private drawAim(a: Aiming, theirs: boolean) {
     const c = this.c;
     const k = this.k;
-    const hx = WB_HAND_X;
+    const d = theirs ? -1 : 1;
+    const hx = theirs ? WB_W - WB_HAND_X : WB_HAND_X;
     const hy = WB_HAND_Y;
-    const bx = hx - a.pullX;
+    const bx = hx - a.pullX * d;
     const by = hy + a.pullY;
     // The rubber band, from the hand to where it is pulled to.
     c.lineCap = 'round';
@@ -478,11 +558,11 @@ class WaterFx {
       // Where it would go at first - but not all the way, and not the wind.
       for (let i = 1; i <= AIM_DOTS; i++) {
         const t = (i / AIM_DOTS) * AIM_SHOW_S;
-        const x = hx + a.vx * t;
+        const x = hx + a.vx * t * d;
         const y = hy - a.vy * t + 0.5 * WB_GRAVITY * t * t;
         if (y > WB_GROUND) break;
         const fade = 1 - i / (AIM_DOTS + 1);
-        c.fillStyle = `rgba(255, 255, 255, ${0.95 * fade})`;
+        c.fillStyle = `rgba(255, 255, 255, ${(theirs ? 0.6 : 0.95) * fade})`;
         c.beginPath();
         c.arc(x * k, y * k, Math.max(1, (a.giant ? 7.5 : 6) * k * (0.45 + fade * 0.55)), 0, Math.PI * 2);
         c.fill();
@@ -492,7 +572,7 @@ class WaterFx {
     const img = a.giant ? this.big : this.small;
     if (img) {
       const st = a.power * 0.26;
-      const ang = Math.atan2(a.pullY, -a.pullX) - Math.PI / 2;
+      const ang = Math.atan2(a.pullY, -a.pullX * d) - Math.PI / 2;
       const cos = Math.cos(ang);
       const sin = Math.sin(ang);
       const sx = 1 + st * 0.6;
@@ -779,7 +859,10 @@ export const BalloonBoard: React.FC<BoardProps> = React.memo(({ game, me, canAct
     const thrower = iThrew ? myRig.current : theirRig.current;
     const hit = iThrew ? theirRig.current : myRig.current;
     const dThrow = iThrew ? 1 : -1;
-    const windUp = own ? 110 : WIND_UP_MS;
+    // Watched drawing it back, they let go at once: no winding up a second time.
+    const watched = !own && fx.watching();
+    const wait = own ? 0 : watched ? WATCHED_WIND_UP_MS : WIND_UP_MS;
+    const windUp = own ? 110 : wait;
     throwMoves(thrower, dThrow, windUp);
     setHolding(false);
     setMoods(m => ({ ...m, [iThrew ? 'me' : 'them']: 'tight' }));
@@ -787,7 +870,7 @@ export const BalloonBoard: React.FC<BoardProps> = React.memo(({ game, me, canAct
       flight,
       mirror: !iThrew,
       giant,
-      waitUntil: performance.now() + (own ? 0 : WIND_UP_MS),
+      waitUntil: performance.now() + wait,
       // Your own was heard the moment your finger lifted.
       started: () => {
         if (!own) playSound('g-wb-throw', { rate: giant ? 0.78 : 1 });
@@ -873,6 +956,10 @@ export const BalloonBoard: React.FC<BoardProps> = React.memo(({ game, me, canAct
     if (!scene || !cv) return;
     const fx = new WaterFx(cv);
     engine.current = fx;
+    fx.onTheirs = on => {
+      if (on) scene.dataset.theirAim = '';
+      else delete scene.dataset.theirAim;
+    };
     const size = () => fx.resize(scene.clientWidth, scene.clientHeight);
     size();
     const seen = new ResizeObserver(size);
@@ -926,6 +1013,53 @@ export const BalloonBoard: React.FC<BoardProps> = React.memo(({ game, me, canAct
       anim.playbackRate = rate;
     });
   }, [windHere]);
+
+  // ------------------------------------------- their aim, as it comes
+
+  const turnRef = useRef<Seat | null>(null);
+  turnRef.current = shown.over ? null : shown.turn;
+  useEffect(
+    () =>
+      onAim(said => {
+        if (said.k !== 'balloon') return;
+        const fx = engine.current;
+        const g = gameRef.current;
+        // Only for the garden as it stands here, while it is theirs to throw.
+        if (!fx || said.g !== g.id || said.n !== g.moves.length || said.n !== shownCount.current || running.current || turnRef.current !== them) return;
+        const a = said.a;
+        if (!a || a.length < 7) {
+          fx.hear(null);
+          return;
+        }
+        fx.hear({
+          vx: clamp(a[0], 0, WB_MAX_V),
+          vy: clamp(a[1], 0, WB_MAX_V),
+          pullX: clamp(a[2], -160, 160),
+          pullY: clamp(a[3], -160, 160),
+          power: clamp(a[4] / 1000, 0, 1),
+          ok: a[5] === 1,
+          giant: a[6] === 1
+        });
+      }),
+    [them]
+  );
+  // Your turn: nothing of theirs is left drawn back.
+  useEffect(() => {
+    if (canAct) engine.current?.hush();
+  }, [canAct]);
+  /** Tells their phone how the balloon is drawn back (core/gameAim); null when it is let go of. */
+  const say = (a: Aiming | null) => {
+    const g = gameRef.current;
+    sayAim('balloon', g.id, g.moves.length, a ? [a.vx, a.vy, a.pullX, a.pullY, a.power * 1000, a.ok ? 1 : 0, a.giant ? 1 : 0] : null);
+  };
+  // Leaving the garden, or the turn passing: their phone puts it back in your hand.
+  useEffect(() => {
+    if (!canAct) return;
+    return () => {
+      const g = gameRef.current;
+      sayAim('balloon', g.id, g.moves.length, null);
+    };
+  }, [canAct]);
 
   // ---------------------------------------------------------- aiming
 
@@ -983,6 +1117,7 @@ export const BalloonBoard: React.FC<BoardProps> = React.memo(({ game, me, canAct
       haptic('tick');
     }
     engine.current?.aim(a);
+    say(a);
   };
   const onEnd = (e: React.PointerEvent<HTMLDivElement>, cancelled: boolean) => {
     if (!pull.current || pull.current.id !== e.pointerId) return;
@@ -990,9 +1125,12 @@ export const BalloonBoard: React.FC<BoardProps> = React.memo(({ game, me, canAct
     pull.current = null;
     setAiming(false);
     engine.current?.aim(null);
-    if (!a || !a.ok || !canAct || busy) return;
-    const input = { vx: a.vx, vy: a.vy, giant: a.giant };
-    if (!throwAllowed(input, playBalloon(gameRef.current).giantLeft[me])) return;
+    const input = a && a.ok && canAct && !busy ? { vx: a.vx, vy: a.vy, giant: a.giant } : null;
+    if (!a || !input || !throwAllowed(input, playBalloon(gameRef.current).giantLeft[me])) {
+      // Let go without a throw: their phone sees it back in your hand.
+      say(null);
+      return;
+    }
     const move = encodeThrow(input);
     ownMove.current = move;
     // Heard the instant the finger lifts.
@@ -1078,8 +1216,8 @@ export const BalloonBoard: React.FC<BoardProps> = React.memo(({ game, me, canAct
               </Rig>
               {shown.over && shown.winner === me && <RainCloud />}
             </div>
-            {myTurnHolding && <HeldBalloon giant={giantOn} left={WB_HAND_X} />}
-            {theyHold && <HeldBalloon giant={false} left={WB_W - WB_HAND_X} />}
+            {myTurnHolding && <HeldBalloon giant={giantOn} left={WB_HAND_X} side="me" />}
+            {theyHold && <HeldBalloon giant={false} left={WB_W - WB_HAND_X} side="them" />}
             <canvas ref={fxRef} className="wb-fx" aria-hidden="true" />
           </div>
           <div className="wb-hud">
@@ -1129,8 +1267,8 @@ export const BalloonBoard: React.FC<BoardProps> = React.memo(({ game, me, canAct
 BalloonBoard.displayName = 'BalloonBoard';
 
 /** The balloon held up, gently bobbing. */
-const HeldBalloon: React.FC<{ giant: boolean; left: number }> = ({ giant, left }) => (
-  <span className="wb-held" data-giant={giant || undefined} style={{ left: percentX(left), top: percentY(WB_HAND_Y) }} aria-hidden="true">
+const HeldBalloon: React.FC<{ giant: boolean; left: number; side: 'me' | 'them' }> = ({ giant, left, side }) => (
+  <span className="wb-held" data-giant={giant || undefined} data-side={side} style={{ left: percentX(left), top: percentY(WB_HAND_Y) }} aria-hidden="true">
     <svg viewBox="-14 -15 28 32">
       <path d={BALLOON_PATH} fill={giant ? '#ff7fb0' : '#7cc8ff'} stroke="#3b2723" strokeWidth="2" strokeLinejoin="round" />
       <path d={KNOT_PATH} fill={giant ? '#d83c80' : '#2b86d9'} stroke="#3b2723" strokeWidth="1.4" strokeLinejoin="round" />
