@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { GAME_TOURS, forgetToursForTest, markTourSeen, tourSeen } from './gameTours';
+import { GAME_TOURS, HOMES_TOUR, HOMES_TOUR_KEY, forgetToursForTest, markTourSeen, tourSeen } from './gameTours';
 import { TA } from './i18n.ta';
 import { GAME_NAMES, PAPER_KINDS } from './paperGames';
 
@@ -24,6 +24,22 @@ describe('the first-time box for each game', () => {
       for (const line of GAME_TOURS[kind]) expect(TA[line.text], line.text).toBeTruthy();
     }
     expect(TA['Got it']).toBeTruthy();
+  });
+
+  it('Cosy Homes, the puzzle for one, has one too: as short, and in Tamil', () => {
+    expect(HOMES_TOUR.length).toBeGreaterThanOrEqual(2);
+    expect(HOMES_TOUR.length).toBeLessThanOrEqual(6);
+    for (const line of HOMES_TOUR) {
+      expect(line.icon.length).toBeGreaterThan(0);
+      expect(line.text.split(' ').length).toBeLessThanOrEqual(9);
+      expect(TA[line.text], line.text).toBeTruthy();
+    }
+    expect(TA['Cosy Homes']).toBeTruthy();
+    // Remembered on its own, apart from the games for two.
+    expect(tourSeen(HOMES_TOUR_KEY)).toBe(false);
+    markTourSeen(HOMES_TOUR_KEY);
+    expect(tourSeen(HOMES_TOUR_KEY)).toBe(true);
+    expect(tourSeen('puzzle')).toBe(false);
   });
 
   it('shows the first time only', () => {

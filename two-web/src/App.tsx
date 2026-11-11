@@ -275,6 +275,7 @@ import { cleanStickerId } from './core/stickers';
 import { addBoop, boopsFor, chatDay, cleanPlayKind, cleanTheme, withBoopCount, type PlayKind, type SceneTheme } from './core/usTwo';
 import { CAN_WIDE_POCKETS } from './core/carrom';
 import { GAME_AIM_SIGNAL, hearAim, setAimSender } from './core/gameAim';
+import { HOMES_RECORD, cleanHomes, mergeHomes, withStars } from './core/cosyHomes';
 import { CAN_PLAY_MORE, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
@@ -1906,6 +1907,18 @@ export const App: React.FC = () => {
             const at = Number(parsed?.at) || 0;
             const theme = cleanTheme(parsed?.theme);
             setState(prev => (prev.usTheme && prev.usTheme.at >= at ? prev : { ...prev, usTheme: { theme, at } }));
+          } else if (record.type === HOMES_RECORD) {
+            // Cosy Homes (core/cosyHomes): the stars on each level. Theirs is
+            // what shows as their progress; this phone's own, coming back on
+            // a restore, brings back the levels already done.
+            const book = cleanHomes(parsed);
+            if (!book) return;
+            const whose = record.authorId === latestRef.current.state.activeUser ? 'mine' : 'theirs';
+            setState(prev => {
+              const held = prev.homes?.[whose];
+              const next = mergeHomes(held, book);
+              return next === held ? prev : { ...prev, homes: { ...prev.homes, [whose]: next } };
+            });
           } else if (kindOfRecord(record.type)) {
             // A game on Canvas of Us (core/paperGames): the copy further on
             // wins, so a move made here is never undone by an older copy.
@@ -3845,6 +3858,18 @@ export const App: React.FC = () => {
     // Hug Kiss, where you both choose at once, one of you waited for ever.
     setState(prev => ({ ...prev, paperGames: { ...prev.paperGames, [game.kind]: mergeGame(prev.paperGames?.[game.kind], game) } }));
     wsRelay.broadcastUpdate(recordTypeOf(game.kind), mergeGame(latestRef.current.state.paperGames?.[game.kind], game));
+  };
+
+  /** A level of Cosy Homes finished (core/cosyHomes): its stars kept here if they are the best yet, and shown on their phone. */
+  const handleHomesFinish = (level: number, stars: number) => {
+    const held = latestRef.current.state.homes?.mine;
+    const next = withStars(held, level, stars, Date.now());
+    if (next === held) return;
+    setState(prev => {
+      const mine = mergeHomes(prev.homes?.mine, next);
+      return mine === prev.homes?.mine ? prev : { ...prev, homes: { ...prev.homes, mine } };
+    });
+    wsRelay.broadcastUpdate(HOMES_RECORD, next);
   };
 
   /** A sky picked for "Us two": here at once, and on their phone too. */
@@ -6554,6 +6579,8 @@ export const App: React.FC = () => {
             onSaveSketch={handleSaveCanvasSketch}
             games={state.paperGames}
             onGame={handlePaperGame}
+            homes={state.homes}
+            onHomes={handleHomesFinish}
             widePockets={!!state.partnerApp?.can?.includes(CAN_WIDE_POCKETS)}
             moreGames={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_PLAY_MORE)}
             onSendDrawing={picture =>

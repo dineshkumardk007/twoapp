@@ -81,6 +81,17 @@ export const GAME_TOURS: Record<PaperKind, TourLine[]> = {
   ]
 };
 
+/** The same box for Cosy Homes, the one-player puzzle (components/CosyHomes). It is not one of the games for two. */
+export const HOMES_TOUR_KEY = 'homes';
+export const HOMES_TOUR: TourLine[] = [
+  { icon: '👆', text: 'Tap once for ✕. Tap again for a friend' },
+  { icon: '↔️', text: 'One friend in every row and column' },
+  { icon: '🎨', text: 'One friend in every colour' },
+  { icon: '🚫', text: 'Friends cannot touch, even at the corners' },
+  { icon: '💡', text: 'Stuck? Tap Hint' },
+  { icon: '⭐', text: 'Be quick and use no hints for 3 stars' }
+];
+
 const KEY = 'two_game_tours_seen';
 /** Also held here, so a phone that cannot save still only shows each one once until Two is closed. */
 const thisTime = new Set<string>();
@@ -95,9 +106,9 @@ function saved(): string[] {
 }
 
 /** Whether this phone has already shown the box for this game. */
-export const tourSeen = (kind: PaperKind) => thisTime.has(kind) || saved().includes(kind);
+export const tourSeen = (kind: PaperKind | typeof HOMES_TOUR_KEY) => thisTime.has(kind) || saved().includes(kind);
 
-export function markTourSeen(kind: PaperKind) {
+export function markTourSeen(kind: PaperKind | typeof HOMES_TOUR_KEY) {
   thisTime.add(kind);
   try {
     const list = saved();

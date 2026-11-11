@@ -59,6 +59,8 @@ export const LATEST_ONLY_TYPES = new Set([
   'COMFORT_BOX',
   // Today's boop count from each of you, on Home: the newest says it all.
   'BOOP',
+  // Cosy Homes, the puzzle for one: the stars on every level, whole each time.
+  'GAME_HOMES',
   // A surprise one of you has planned for the other: the whole plan each
   // time it is saved, one at a time each - and the other phone's word that
   // it has all of it, and has opened it.

@@ -149,7 +149,8 @@ export const other = (seat: Seat): Seat => (seat === 'user' ? 'partner' : 'user'
 
 /** The tab Canvas of Us opens on (views/CanvasOfUsView): drawing, the games, or one game. */
 export const CANVAS_MODE_KEY = 'two_canvas_mode';
-export type CanvasMode = 'draw' | 'games' | PaperKind;
+/** `homes` is Cosy Homes, the puzzle for one (core/cosyHomes): on the shelf with the games, but not one of them. */
+export type CanvasMode = 'draw' | 'games' | 'homes' | PaperKind;
 /** Opens Canvas of Us here next time - on a game with a move waiting, say. */
 export function rememberCanvasMode(mode: CanvasMode) {
   try {

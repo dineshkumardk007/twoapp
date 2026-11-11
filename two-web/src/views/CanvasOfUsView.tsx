@@ -31,6 +31,8 @@ import { haptic } from '../core/haptics';
 import { shrinkPhoto, type ShrunkPhoto } from '../core/photo';
 import { PHOTO_MAX_CHARS, dataUrlToBlob } from '../core/chatShow';
 import { GameIcon, PaperGames } from '../components/PaperGames';
+import { CosyHomes, HOMES_NAME, HomesIcon } from '../components/CosyHomes';
+import { allDone, levelOn, totalStars, type HomesBook } from '../core/cosyHomes';
 import {
   CANVAS_MODE_KEY,
   GAME_NAMES,
@@ -63,13 +65,17 @@ interface CanvasOfUsViewProps {
   games?: Partial<Record<PaperKind, PaperGame>>;
   /** A move, a new game or a new look: to keep, and to send. */
   onGame?: (game: PaperGame) => void;
+  /** Cosy Homes, the puzzle for one (core/cosyHomes): the stars each of you has. */
+  homes?: { mine?: HomesBook; theirs?: HomesBook };
+  /** A level of it finished, with its stars. */
+  onHomes?: (level: number, stars: number) => void;
 }
 
 /** Where this was last left - drawing, the games, or one game - so a game you were playing is still there. */
 function savedMode(): CanvasMode {
   try {
     const m = localStorage.getItem(CANVAS_MODE_KEY);
-    return m === 'games' || (PAPER_KINDS as string[]).includes(m || '') ? (m as CanvasMode) : 'draw';
+    return m === 'games' || m === 'homes' || (PAPER_KINDS as string[]).includes(m || '') ? (m as CanvasMode) : 'draw';
   } catch {
     return 'draw';
   }
@@ -202,7 +208,9 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   widePockets,
   moreGames,
   games,
-  onGame
+  onGame,
+  homes,
+  onHomes
 }) => {
   const tr = useT();
   const [mode, setMode] = useState<CanvasMode>(() => (onGame ? savedMode() : 'draw'));
@@ -601,6 +609,19 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
 
       {onGame && mode === 'games' && (
         <div className="cv-shelf">
+          {onHomes && (
+            <button type="button" className="cv-game" data-kind="homes" onClick={() => chooseMode('homes')}>
+              <span className="cv-game-tag">{tr('1 player')}</span>
+              <span className="cv-game-art">
+                <HomesIcon />
+              </span>
+              <span className="cv-game-name">{tr(HOMES_NAME)}</span>
+              <span className="cv-game-line" data-tone={homes?.mine ? 'wait' : 'new'}>
+                {!homes?.mine ? tr('New - tap to play') : allDone(homes.mine) ? tr('Every level done!') : tr('Level {n}', { n: levelOn(homes.mine) })}
+              </span>
+              {homes?.mine ? <span className="cv-game-score">⭐ {totalStars(homes.mine)}</span> : null}
+            </button>
+          )}
           {PAPER_KINDS.map(k => {
             const line = shelfLine(k);
             const g = games?.[k];
@@ -626,7 +647,18 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
         </div>
       )}
 
-      {onGame && mode !== 'draw' && mode !== 'games' && (
+      {onHomes && mode === 'homes' && (
+        <CosyHomes
+          mine={homes?.mine}
+          theirs={homes?.theirs}
+          partnerName={them}
+          me={activeUser}
+          onFinish={onHomes}
+          onBack={() => chooseMode('games')}
+        />
+      )}
+
+      {onGame && mode !== 'draw' && mode !== 'games' && mode !== 'homes' && (
         <PaperGames
           key={mode}
           kind={mode}

@@ -2,6 +2,7 @@ import type { ComingUpDay } from './comingUp';
 import type { Statuses } from './status';
 import type { Boops, UsTheme } from './usTwo';
 import type { PaperGame, PaperKind } from './paperGames';
+import type { HomesBook } from './cosyHomes';
 import type { SurpriseBook } from './surprise';
 import {
   EmotionalReport,
@@ -174,6 +175,8 @@ export interface SpaceState {
   surprises?: SurpriseBook;
   /** The games on Canvas of Us (core/paperGames): the current one of each kind. */
   paperGames?: Partial<Record<PaperKind, PaperGame>>;
+  /** Cosy Homes, the puzzle for one (core/cosyHomes): the stars on each level, yours and the other person's. */
+  homes?: { mine?: HomesBook; theirs?: HomesBook };
   /**
    * Group spaces this device belongs to.
    *
