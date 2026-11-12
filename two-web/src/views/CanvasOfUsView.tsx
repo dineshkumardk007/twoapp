@@ -35,6 +35,7 @@ import { CosyHomes, HOMES_NAME, HomesIcon } from '../components/CosyHomes';
 import { allDone, levelOn, totalStars, type HomesBook } from '../core/cosyHomes';
 import { HEARTS_NAME, HeartsIcon, TwoHearts } from '../components/TwoHearts';
 import { heartsIn, levelOfPair, mergeBooks, type MazeHalf } from '../core/twoHearts';
+import { OPEN_GAME_EVENT, isGameRoom } from '../core/gameEmotes';
 import {
   CANVAS_MODE_KEY,
   GAME_NAMES,
@@ -77,6 +78,8 @@ interface CanvasOfUsViewProps {
   onMaze?: (half: MazeHalf) => void;
   /** Their phone has the maze too, with its levels made the same way. */
   mazeReady?: boolean;
+  /** Their phone has emotes in the games (core/gameEmotes). */
+  emotesReady?: boolean;
 }
 
 /** Where this was last left - drawing, the games, or one game - so a game you were playing is still there. */
@@ -221,7 +224,8 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   onHomes,
   maze,
   onMaze,
-  mazeReady = true
+  mazeReady = true,
+  emotesReady = true
 }) => {
   const tr = useT();
   const [mode, setMode] = useState<CanvasMode>(() => (onGame ? savedMode() : 'draw'));
@@ -229,6 +233,20 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     setMode(m);
     rememberCanvasMode(m);
   };
+  // A pop-up about a game, tapped while this page is already open: straight to that game.
+  useEffect(() => {
+    if (!onGame) return;
+    const open = (e: Event) => {
+      const room = (e as CustomEvent).detail;
+      if (!isGameRoom(room) || (room === 'maze' && !onMaze)) return;
+      setMode(room);
+      rememberCanvasMode(room);
+    };
+    window.addEventListener(OPEN_GAME_EVENT, open);
+    return () => window.removeEventListener(OPEN_GAME_EVENT, open);
+    // Whether there are games at all does not change while the page is open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   /** A game gets the screen to itself: its own back button takes the place of the page's title and tabs. */
   const inGame = !!onGame && mode !== 'draw' && mode !== 'games';
   // Each starts at the top: a game opened from low down the list opens with its board in view.
@@ -691,6 +709,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           me={activeUser}
           partnerName={them}
           canPlay={mazeReady}
+          emotes={emotesReady}
           onHalf={onMaze}
           onBack={() => chooseMode('games')}
         />
@@ -707,6 +726,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           onBack={() => chooseMode('games')}
           widePockets={widePockets}
           moreGames={moreGames}
+          emotes={emotesReady}
         />
       )}
 

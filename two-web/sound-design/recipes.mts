@@ -2435,5 +2435,238 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 0.6, wet: 0.12 },
     master: { loudness: SOFT + 1 }
+  },
+
+  // ------------------------------------------------------------------------
+  // Emotes in the games (core/gameEmotes, components/Emotes): one little voice
+  // each, so you know which it was without looking.
+  // ------------------------------------------------------------------------
+  'e-laugh': {
+    use: 'Emote: laughing - six quick "ha"s tumbling down',
+    dry: () => {
+      const b = silence(1.1);
+      const notes = [640, 600, 560, 530, 490, 450];
+      notes.forEach((f, i) => {
+        const start = i * 0.115;
+        voice(b, {
+          start,
+          dur: 0.09,
+          freq: t => f * (1 + 0.1 * Math.sin((Math.PI * t) / 0.09)),
+          amp: t => (0.55 - i * 0.04) * Math.sin((Math.PI * t) / 0.09) ** 0.6,
+          harmonics: [1, 0.55, 0.3, 0.14],
+          pan: i % 2 ? 0.12 : -0.12
+        });
+        noise(b, { start, dur: 0.05, gain: 0.1, filter: { type: 'bandpass', f: 2600, q: 0.9 }, attack: 0.008, decay: 0.02, seed: 4101 + i });
+      });
+      return b;
+    },
+    room: { rt60: 0.35, wet: 0.07 },
+    master: { loudness: MOMENT, highpass: 200 }
+  },
+
+  'e-cry': {
+    use: 'Emote: crying - a wobbling "waaah" that sinks, and two sniffs',
+    dry: () => {
+      const b = silence(1.6);
+      voice(b, {
+        start: 0,
+        dur: 0.95,
+        freq: t => (560 - 210 * (t / 0.95)) * (1 + 0.05 * Math.sin(2 * Math.PI * 7 * t) * Math.min(1, t / 0.2)),
+        amp: t => 0.5 * Math.min(1, t / 0.05) * (0.7 + 0.3 * Math.sin(2 * Math.PI * 5.5 * t)) * Math.min(1, (0.95 - t) / 0.2),
+        harmonics: [1, 0.7, 0.45, 0.25, 0.12]
+      });
+      for (const [i, start] of [1.05, 1.27].entries()) {
+        voice(b, {
+          start,
+          dur: 0.11,
+          freq: t => 380 * (1 + 0.5 * (t / 0.11)),
+          amp: t => 0.3 * Math.sin((Math.PI * t) / 0.11),
+          harmonics: [1, 0.5, 0.25]
+        });
+        noise(b, { start, dur: 0.1, gain: 0.16, filter: { type: 'bandpass', f: 1800, q: 0.8 }, sweepTo: 3200, attack: 0.02, pink: true, seed: 4111 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: MOMENT, highpass: 180 }
+  },
+
+  'e-angry': {
+    use: 'Emote: angry - a rising growl, then steam let off',
+    dry: () => {
+      const b = silence(1.3);
+      voice(b, {
+        start: 0,
+        dur: 0.6,
+        freq: t => 125 * (1 + 0.35 * (t / 0.6)),
+        amp: t => 0.5 * Math.min(1, t / 0.04) * (0.55 + 0.45 * Math.sin(2 * Math.PI * 38 * t)) * Math.min(1, (0.6 - t) / 0.08),
+        harmonics: [1, 0.9, 0.8, 0.7, 0.55, 0.4, 0.3, 0.2]
+      });
+      noise(b, { dur: 0.6, gain: 0.18, filter: { type: 'lowpass', f: 900 }, grain: 0.9, attack: 0.03, pink: true, seed: 4121 });
+      // Steam out of the ears.
+      noise(b, { start: 0.62, dur: 0.5, gain: 0.5, filter: { type: 'bandpass', f: 3800, q: 1.2 }, sweepTo: 7200, attack: 0.01, decay: 0.2, seed: 4122 });
+      thump(b, 0.62, 0.4, 140, 4123);
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: MOMENT, highpass: 110 }
+  },
+
+  'e-thumb': {
+    use: 'Emote: thumbs up - a pop and a bright "ding-ding"',
+    dry: () => {
+      const b = silence(1.1);
+      noise(b, { dur: 0.03, gain: 0.5, filter: { type: 'bandpass', f: 1100, q: 1.4 }, attack: 0.0008, decay: 0.008, seed: 4131 });
+      mode(b, { freq: 520, amp: 0.35, decay: 0.03, glide: -0.35, glideTime: 0.02 });
+      run(b, ['A5', 'D6'], 0.1, { instrument: I.glass, gain: [0.45, 0.55], start: 0.06, seed: 4132, mallet: 0.15 });
+      strike(b, { note: hz('D5'), instrument: I.felt, start: 0.16, gain: 0.22, seed: 4135, mallet: 0 });
+      twinkles(b, 0.25, 0.6, 3, 0.09, 4136);
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.15 },
+    master: { loudness: MOMENT, maxSeconds: 1.1, tailFade: 0.4 }
+  },
+
+  'e-kiss': {
+    use: 'Emote: a blown kiss - two quick pecks and a heart floating up',
+    dry: () => {
+      const b = silence(1.2);
+      for (const [i, start] of [0, 0.16].entries()) {
+        noise(b, { start, dur: 0.03, gain: 0.8, filter: { type: 'bandpass', f: 1700 + i * 300, q: 1.2 }, attack: 0.0008, decay: 0.007, seed: 4141 + i });
+        voice(b, {
+          start: start + 0.012,
+          dur: 0.1,
+          freq: t => (520 + i * 80) * (1 + 0.3 * Math.min(1, t / 0.04)),
+          amp: t => 0.3 * Math.min(1, t / 0.015) * Math.exp(-t / 0.05),
+          harmonics: [1, 0.5, 0.25]
+        });
+      }
+      // The heart, rising.
+      run(b, ['F#6', 'A6', 'D7'], 0.085, { instrument: I.glock, gain: [0.2, 0.24, 0.3], start: 0.36, seed: 4145, mallet: 0 });
+      air(b, { start: 0.34, dur: 0.4, gain: 0.08, from: 2500, to: 6000, attack: 0.1, seed: 4149 });
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.16 },
+    master: { loudness: MOMENT, highpass: 250, maxSeconds: 1.2, tailFade: 0.4 }
+  },
+
+  'e-shock': {
+    use: 'Emote: shocked - a sharp gasp and a "huh?!" that jumps up',
+    dry: () => {
+      const b = silence(1.0);
+      noise(b, { dur: 0.2, gain: 0.5, filter: { type: 'bandpass', f: 900, q: 0.9 }, sweepTo: 3800, attack: 0.05, pink: true, seed: 4151 });
+      voice(b, {
+        start: 0.2,
+        dur: 0.3,
+        freq: t => 310 * 2.2 ** Math.min(1, t / 0.09) * (1 + 0.03 * Math.sin(2 * Math.PI * 9 * t)),
+        amp: t => 0.5 * Math.min(1, t / 0.012) * Math.min(1, (0.3 - t) / 0.12),
+        harmonics: [1, 0.6, 0.35, 0.18]
+      });
+      boing(b, 0.34, hz('D4'), 0.3);
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: MOMENT, highpass: 160 }
+  },
+
+  'e-tease': {
+    use: 'Emote: teasing - the playground "nyeh nyeh, nyeh-nyeh nyeh"',
+    dry: () => {
+      const b = silence(1.25);
+      const tune: Array<[string, number, number]> = [
+        ['A4', 0, 0.17],
+        ['F#4', 0.2, 0.17],
+        ['B4', 0.4, 0.1],
+        ['A4', 0.52, 0.17],
+        ['F#4', 0.72, 0.3]
+      ];
+      for (const [note, start, dur] of tune) {
+        const f = hz(note);
+        voice(b, {
+          start,
+          dur,
+          // A nasal little voice: mostly the odd overtones, with a scoop into each note.
+          freq: t => f * (1 - 0.06 * Math.exp(-t / 0.02)) * (1 + 0.012 * Math.sin(2 * Math.PI * 6 * t)),
+          amp: t => 0.42 * Math.min(1, t / 0.01) * Math.min(1, (dur - t) / 0.04),
+          harmonics: [1, 0.15, 0.6, 0.1, 0.4, 0.05, 0.25]
+        });
+      }
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: MOMENT - 1, highpass: 200 }
+  },
+
+  'e-yawn': {
+    use: 'Emote: a yawn - up, a long way up, and all the way down again',
+    dry: () => {
+      const b = silence(1.6);
+      const dur = 1.35;
+      voice(b, {
+        start: 0,
+        dur,
+        freq: t => (t < 0.5 ? 210 + 170 * Math.sin((Math.PI * t) / 1) : 380 - 220 * ((t - 0.5) / (dur - 0.5)) ** 0.8),
+        amp: t => 0.5 * Math.min(1, t / 0.25) * Math.min(1, (dur - t) / 0.45),
+        harmonics: [1, 0.6, 0.3, 0.15, 0.06]
+      });
+      air(b, { start: 0.05, dur: 0.5, gain: 0.14, from: 500, to: 1500, attack: 0.25, seed: 4171 });
+      air(b, { start: 0.75, dur: 0.75, gain: 0.2, from: 1800, to: 500, attack: 0.1, seed: 4172 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: MOMENT - 1, highpass: 140 }
+  },
+
+  'e-cool': {
+    use: 'Emote: too cool - shades sliding down, a finger snap, and a gleam',
+    dry: () => {
+      const b = silence(1.2);
+      voice(b, {
+        start: 0,
+        dur: 0.2,
+        freq: t => 980 * 0.5 ** (t / 0.2),
+        amp: t => 0.3 * Math.min(1, t / 0.01) * Math.min(1, (0.2 - t) / 0.05),
+        harmonics: [1, 0.2, 0.05]
+      });
+      // The snap as they land.
+      noise(b, { start: 0.24, dur: 0.035, gain: 0.9, filter: { type: 'bandpass', f: 2400, q: 1.6 }, attack: 0.0006, decay: 0.008, seed: 4181 });
+      mode(b, { freq: 1500, amp: 0.25, decay: 0.012, start: 0.24 });
+      // And the gleam off the glass.
+      strike(b, { note: hz('A6'), instrument: I.bell, start: 0.42, gain: 0.3, seed: 4183, mallet: 0, decayScale: 0.6 });
+      strike(b, { note: hz('D7'), instrument: I.glock, start: 0.47, gain: 0.18, seed: 4184, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.7, wet: 0.14 },
+    master: { loudness: MOMENT, highpass: 250, maxSeconds: 1.2, tailFade: 0.4 }
+  },
+
+  'e-evil': {
+    use: 'Emote: an evil laugh - a low "mmm" and a "mwa-ha-ha-ha" stepping down',
+    dry: () => {
+      const b = silence(1.4);
+      voice(b, {
+        start: 0,
+        dur: 0.24,
+        freq: t => 150 * (1 + 0.3 * (t / 0.24)),
+        amp: t => 0.4 * Math.min(1, t / 0.05) * Math.min(1, (0.24 - t) / 0.04),
+        harmonics: [1, 0.7, 0.5, 0.3, 0.2]
+      });
+      const steps = ['B3', 'A3', 'F#3', 'E3', 'D3'];
+      steps.forEach((note, i) => {
+        const f = hz(note);
+        const start = 0.3 + i * 0.16;
+        voice(b, {
+          start,
+          dur: 0.12,
+          freq: t => f * (1 + 0.08 * Math.exp(-t / 0.02)),
+          amp: t => 0.55 * Math.min(1, t / 0.008) * (0.75 + 0.25 * Math.sin(2 * Math.PI * 30 * t)) * Math.min(1, (0.12 - t) / 0.04),
+          harmonics: [1, 0.85, 0.7, 0.5, 0.35, 0.25, 0.15]
+        });
+      });
+      strike(b, { note: hz('D3'), instrument: I.felt, start: 0.3, gain: 0.3, seed: 4191, mallet: 0, decayScale: 1.6 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.12 },
+    master: { loudness: MOMENT, highpass: 110 }
   }
 };

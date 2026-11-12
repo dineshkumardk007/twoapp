@@ -55,6 +55,7 @@ import { playBoxing } from '../core/boxing';
 import { playPenalty } from '../core/penalty';
 import { playPuzzle } from '../core/puzzleDuel';
 import { GameTour } from './GameTour';
+import { EmoteBubble, EmoteKey, HereMark, useGameEmotes } from './Emotes';
 
 interface PaperGamesProps {
   kind: PaperKind;
@@ -69,6 +70,8 @@ interface PaperGamesProps {
   widePockets?: boolean;
   /** Their phone has Boxing, Penalty Shootout and Puzzle Duel (core/paperGames, CAN_PLAY_MORE). */
   moreGames?: boolean;
+  /** Their phone has emotes, and says which game it is on (core/gameEmotes, CAN_EMOTE). */
+  emotes?: boolean;
 }
 
 /** How each game is played, in a line. */
@@ -250,12 +253,14 @@ const CONFETTI_COUNT = 36;
  * new game when this one is done. Moves travel to the other phone the
  * moment they are made; each lands with its own sound on both phones.
  */
-export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack, widePockets = false, moreGames = true }) => {
+export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack, widePockets = false, moreGames = true, emotes = true }) => {
   const tr = useT();
   const me = activeUser;
   /** A new game's id. Carrom's says which pockets it is played on. */
   const freshId = () => (kind === 'carrom' ? carromId(newId('game'), widePockets) : newId('game'));
   const them = other(me);
+  // The faces you pull at each other, and whether they are looking at this game too.
+  const em = useGameEmotes(kind);
   const [size, setSize] = useState<number>(game?.size ?? (kind === 'memory' ? DEFAULT_MEMORY : DEFAULT_DOTS));
   const [picking, setPicking] = useState(false);
   // The first time this game is opened on this phone: how it is played.
@@ -531,7 +536,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     const won = !!st?.over && st.winner === seat;
     const extra = detail(seat);
     return (
-      <div className="pg-chip" data-turn={turn || undefined} data-won={won || undefined} style={{ '--ink': inkOf(seat) } as React.CSSProperties}>
+      <div className="pg-chip" data-turn={turn || undefined} data-won={won || undefined} data-them={seat === them || undefined} style={{ '--ink': inkOf(seat) } as React.CSSProperties}>
         <span className="pg-chip-mark">
           <MarkIcon mark={markOf(seat)} ink={inkOf(seat)} size={26} />
         </span>
@@ -540,6 +545,8 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
           {score[seat]}
         </span>
         {extra && <span className="pg-chip-boxes">{extra}</span>}
+        {emotes && seat === them && <HereMark here={em.theirHere} />}
+        {emotes && <EmoteBubble shown={seat === me ? em.mine : em.theirs} seat={seat} side={seat === me ? 'left' : 'right'} />}
       </div>
     );
   };
@@ -643,6 +650,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
           </button>
         )}
         <h3 className="pg-title">{tr(GAME_NAMES[kind])}</h3>
+        {emotes && <EmoteKey emotes={em} seat={me} partnerName={partnerName} />}
       </div>
 
       <div className="pg-players">

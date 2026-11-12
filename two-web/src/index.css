@@ -6062,3 +6062,192 @@ html.dark .ch-say[data-hint='wrong'] { color: #f43f5e; }
 .th-hearts { display: inline-flex; gap: 8px; color: rgb(var(--c-secondary) / 0.4); }
 .th-hearts svg[data-on] { animation: ch-star 440ms cubic-bezier(0.3, 0.7, 0.3, 1.6) both; }
 .cv-game[data-kind='maze']::before { background: linear-gradient(140deg, rgb(244 63 94 / 0.22), rgb(59 130 246 / 0.16)); }
+
+/* ==========================================================================
+   Emotes in the games (components/Emotes): the bear or the bunny pulling a
+   face in a bubble by a name, the tray they are picked from, and the mark
+   that says whether the other one is on this game's screen. Each face is one
+   small picture; what moves in it moves by transform or opacity.
+   ========================================================================== */
+.em-face { display: block; width: 100%; height: 100%; overflow: visible; }
+.em-head,
+.em-tear,
+.em-steam,
+.em-thumb,
+.em-spark,
+.em-heart,
+.em-bang,
+.em-tongue,
+.em-yawn,
+.em-z,
+.em-shades,
+.em-brows { transform-box: fill-box; transform-origin: center; }
+.em-head { transform-origin: 50% 85%; }
+.em-head[data-move='bounce'] { animation: em-bounce 150ms ease-in-out infinite alternate; }
+.em-head[data-move='wobble'] { animation: em-wobble 480ms ease-in-out infinite alternate; }
+.em-head[data-move='shake'] { animation: em-shake 70ms linear infinite alternate; }
+.em-head[data-move='pop'] { animation: em-pop 260ms ease-in-out infinite alternate; }
+.em-head[data-move='tilt'] { animation: em-tilt 440ms ease-in-out infinite alternate; }
+.em-head[data-move='breathe'] { animation: em-breathe 1500ms ease-in-out infinite; }
+.em-head[data-move='nod'] { animation: em-nod 800ms ease-in-out infinite alternate; }
+.em-head[data-move='chuckle'] { animation: em-bounce 210ms ease-in-out infinite alternate; }
+@keyframes em-bounce { to { transform: translateY(-2.4px); } }
+@keyframes em-wobble { from { transform: rotate(-3.5deg); } to { transform: rotate(3.5deg); } }
+@keyframes em-shake { from { transform: translateX(-1.3px); } to { transform: translateX(1.3px); } }
+@keyframes em-pop { to { transform: scale(1.07); } }
+@keyframes em-tilt { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes em-breathe { 35%, 70% { transform: scale(1.05); } }
+@keyframes em-nod { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+.em-tear { animation: em-tear 740ms linear infinite; }
+@keyframes em-tear { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(13px); } }
+.em-flush { opacity: 0.3; animation: em-flush 420ms ease-in-out infinite alternate; }
+@keyframes em-flush { from { opacity: 0.12; } to { opacity: 0.45; } }
+.em-steam { animation: em-steam 900ms ease-out infinite; }
+@keyframes em-steam {
+  0% { opacity: 0; transform: translateY(3px) scale(0.6); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-9px) scale(1.25); }
+}
+.em-thumb { transform-origin: 50% 100%; animation: em-thumb-in 380ms cubic-bezier(0.3, 0.7, 0.3, 1.6) both, em-thumb-bob 480ms ease-in-out 380ms infinite alternate; }
+@keyframes em-thumb-in { from { opacity: 0; transform: translateY(14px) scale(0.5); } }
+@keyframes em-thumb-bob { to { transform: translateY(-2px) rotate(-6deg); } }
+.em-spark { animation: em-spark 520ms ease-in-out infinite alternate both; }
+@keyframes em-spark { from { opacity: 0.2; transform: scale(0.35) rotate(-20deg); } to { opacity: 1; transform: scale(1.15) rotate(20deg); } }
+.em-heart { animation: em-heart 1250ms ease-out infinite; }
+@keyframes em-heart {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(9px, -20px) scale(1.6); }
+}
+.em-bang { transform-origin: 50% 100%; animation: em-bang 200ms ease-in-out infinite alternate; }
+@keyframes em-bang { from { transform: rotate(-9deg) scale(0.95); } to { transform: rotate(9deg) scale(1.1); } }
+.em-tongue { transform-origin: 50% 0; animation: em-wag 150ms ease-in-out infinite alternate; }
+@keyframes em-wag { from { transform: rotate(-17deg); } to { transform: rotate(17deg); } }
+.em-yawn { animation: em-yawn 1500ms ease-in-out infinite; }
+@keyframes em-yawn { 0%, 100% { transform: scale(0.7, 0.3); } 35%, 70% { transform: scale(1, 1); } }
+.em-z { animation: em-z 1500ms linear infinite both; }
+@keyframes em-z {
+  0% { opacity: 0; transform: translate(0, 4px); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(4px, -8px); }
+}
+.em-shades { animation: em-shades 520ms cubic-bezier(0.3, 0.7, 0.3, 1.4) 150ms both; }
+@keyframes em-shades { from { opacity: 0; transform: translateY(-17px) rotate(-8deg); } }
+.em-brows { animation: em-brows 260ms ease-in-out infinite alternate; }
+@keyframes em-brows { to { transform: translateY(-1.2px); } }
+/* Held still for its key in the tray: each part where it ends up. */
+.em-face[data-still] * { animation: none !important; }
+
+.em-bubble {
+  position: absolute;
+  top: calc(100% + 9px);
+  z-index: 30;
+  width: 104px;
+  height: 104px;
+  padding: 6px;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 16px 30px -12px rgb(0 0 0 / 0.6), 0 0 0 2px rgb(59 39 35 / 0.14);
+  pointer-events: none;
+  animation: em-in 260ms cubic-bezier(0.3, 0.7, 0.3, 1.5) both, em-out 240ms ease-in 2740ms forwards;
+}
+.em-bubble[data-side='left'] { left: 4px; transform-origin: 22% 0; }
+.em-bubble[data-side='right'] { right: 4px; transform-origin: 78% 0; }
+.em-bubble::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: -2px -2px 0 0 rgb(59 39 35 / 0.14);
+  transform: rotate(45deg);
+}
+.em-bubble[data-side='left']::before { left: 20px; }
+.em-bubble[data-side='right']::before { right: 20px; }
+@keyframes em-in { from { opacity: 0; transform: translateY(-8px) scale(0.3); } }
+@keyframes em-out { to { opacity: 0; transform: scale(0.8); } }
+
+.em-here {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  font: 800 9.5px/1 Manrope, system-ui, sans-serif;
+  color: rgb(var(--c-secondary));
+}
+.em-here::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--c-secondary) / 0.5); }
+.em-here[data-here] { color: #16a34a; }
+.em-here[data-here]::before { background: #22c55e; }
+.pg-chip > .em-here { position: absolute; top: 7px; right: 9px; }
+.pg-chip[data-them] .pg-chip-name { padding-right: 38px; }
+/* The row of names sits over the board, so a bubble hanging from it is not drawn under it; the top row over both, for its tray. */
+.pg-players,
+.th-two { position: relative; z-index: 20; }
+.pg-head,
+.ch-top { position: relative; z-index: 30; }
+.th-chip { position: relative; }
+
+.em-key { position: relative; flex-shrink: 0; margin-left: auto; }
+.ch-top .em-key { margin-left: 0; }
+.em-open {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  color: rgb(var(--c-primary));
+  background: rgb(var(--c-variant) / 0.7);
+  transition: transform 120ms ease;
+}
+.ch-top .em-open { width: 40px; height: 40px; background: rgb(var(--c-variant) / 0.85); }
+.em-open:active { transform: scale(0.92); }
+.em-open[data-on] { color: rgb(var(--c-accent)); background: rgb(var(--c-accent) / 0.18); }
+.em-tray {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  width: min(86vw, 316px);
+  padding: 10px;
+  border: 1px solid rgb(var(--c-border));
+  border-radius: 22px;
+  background: rgb(var(--c-surface));
+  box-shadow: 0 22px 46px -14px rgb(0 0 0 / 0.65);
+  transform-origin: 92% 0;
+  animation: em-tray 180ms ease-out both;
+}
+@keyframes em-tray { from { opacity: 0; transform: scale(0.85); } }
+.em-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.em-pick {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 2px;
+  border-radius: 14px;
+  background: rgb(var(--c-variant) / 0.65);
+  transition: transform 100ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.em-pick:active { transform: scale(0.88); }
+.em-mute {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 38px;
+  margin-top: 8px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: rgb(var(--c-variant) / 0.5);
+  color: rgb(var(--c-secondary));
+  font: 700 12px/1.2 Manrope, system-ui, sans-serif;
+}
+.em-mute[data-on] { color: #e11d48; }
+@media (prefers-reduced-motion: reduce) {
+  .em-face *,
+  .em-bubble,
+  .em-tray { animation-duration: 1ms !important; animation-iteration-count: 1 !important; animation-delay: 0ms !important; }
+  .em-bubble { animation: none; }
+}

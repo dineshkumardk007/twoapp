@@ -277,6 +277,7 @@ import { CAN_WIDE_POCKETS } from './core/carrom';
 import { GAME_AIM_SIGNAL, hearAim, setAimSender } from './core/gameAim';
 import { HOMES_RECORD, cleanHomes, mergeHomes, withStars } from './core/cosyHomes';
 import { CAN_MAZE, MAZE_RECORD, MAZE_SIGNAL, cleanHalf, hearMaze, latestHalf, setMazeSender, type MazeHalf } from './core/twoHearts';
+import { CAN_EMOTE, GAME_SAY_SIGNAL, OPEN_GAME_EVENT, hearGameSaid, roomOnScreen, setSaySender, type GameRoom } from './core/gameEmotes';
 import { CAN_PLAY_MORE, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
@@ -385,7 +386,7 @@ const APP_VERSION = 'APP_VERSION';
  * letter for a day closed until then (core/letters), and say when Two leaves
  * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -732,8 +733,22 @@ export const App: React.FC = () => {
   const [decoyCode, setDecoyCode] = useState(() => localStorage.getItem('two_decoy_code') || '142.85');
   const [autoCamouflageOnBlur, setAutoCamouflageOnBlur] = useState(() => localStorage.getItem('two_auto_camo') === 'true');
 
-  /** When this phone last said they were in the Two Hearts maze: not again for a few minutes. */
-  const mazeToldAtRef = useRef(0);
+  /** The game the pop-up on screen is about: a tap on it goes straight there. */
+  const gameNoticeRef = useRef<{ id: string; room: GameRoom } | null>(null);
+  /** A pop-up about a game on Canvas of Us: tapped, it opens that game. */
+  const tellGame = (room: GameRoom, body: string) => {
+    const id = newId();
+    gameNoticeRef.current = { id, room };
+    rememberCanvasMode(room);
+    setInAppNotification({ id, title: partnerNameRef.current || tr('Partner'), body, type: 'game', tabId: 'canvas' });
+  };
+  /** A pop-up tapped: when it was about a game, that game is what opens - even with Canvas of Us already on screen. */
+  const openNoticedGame = (tabId: string) => {
+    const about = gameNoticeRef.current;
+    if (tabId !== 'canvas' || !about || about.id !== inAppNotification?.id) return;
+    rememberCanvasMode(about.room);
+    window.dispatchEvent(new CustomEvent(OPEN_GAME_EVENT, { detail: about.room }));
+  };
   const currentTabRef = useRef(currentTab);
   currentTabRef.current = currentTab;
   const partnerNameRef = useRef(state.partnerName);
@@ -1326,6 +1341,23 @@ export const App: React.FC = () => {
           hearAim(JSON.parse(msg.signal.payload));
         } catch {
           /* not something a board said */
+        }
+        return;
+      }
+
+      if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === GAME_SAY_SIGNAL) {
+        // An emote in a game, or which game they have on screen
+        // (core/gameEmotes). The game on this screen is told directly; when
+        // this phone is anywhere else, a small pop-up that opens that game.
+        if (msg.signal.authorId === state.activeUser) return;
+        try {
+          const pop = hearGameSaid(JSON.parse(msg.signal.payload));
+          if (pop && !isCamouflagedRef.current) {
+            const game = tr(pop.room === 'maze' ? 'Two Hearts' : GAME_NAMES[pop.room]);
+            tellGame(pop.room, pop.kind === 'emote' ? tr('Sent you {emote} in {game}', { emote: pop.emote.emoji, game }) : tr('Is playing {game}. Tap to join', { game }));
+          }
+        } catch {
+          /* not something a game said */
         }
         return;
       }
@@ -1937,27 +1969,6 @@ export const App: React.FC = () => {
               const next = latestHalf(held, half);
               return next === held ? prev : { ...prev, maze: { ...prev.maze, [whose]: next } };
             });
-            // In the maze just now, while you are somewhere else in Two: a
-            // word, not more than once in a few minutes, and Canvas of Us set
-            // to open on it.
-            if (
-              !own &&
-              !msg.restoring &&
-              currentTabRef.current !== 'canvas' &&
-              !isCamouflagedRef.current &&
-              Date.now() - (Number(record.clientTs) || 0) < 2 * 60 * 1000 &&
-              Date.now() - mazeToldAtRef.current > 5 * 60 * 1000
-            ) {
-              mazeToldAtRef.current = Date.now();
-              rememberCanvasMode('maze');
-              setInAppNotification({
-                id: newId(),
-                title: partnerNameRef.current || tr('Partner'),
-                body: tr('Is in the Two Hearts maze. Come and help!'),
-                type: 'game',
-                tabId: 'canvas'
-              });
-            }
           } else if (record.type === HOMES_RECORD) {
             // Cosy Homes (core/cosyHomes): the stars on each level. Theirs is
             // what shows as their progress; this phone's own, coming back on
@@ -1995,23 +2006,16 @@ export const App: React.FC = () => {
               askMoved &&
               (askedOf(merged, me) || refusedOf(merged, me)) &&
               record.authorId !== me &&
-              currentTabRef.current !== 'canvas' &&
+              (currentTabRef.current !== 'canvas' || roomOnScreen() !== kind) &&
               !isCamouflagedRef.current &&
               Date.now() - (Number(record.clientTs) || 0) < 2 * 60 * 1000
             ) {
               const game = tr(GAME_NAMES[kind]);
-              rememberCanvasMode(kind);
-              setInAppNotification({
-                id: newId(),
-                title: partnerNameRef.current || tr('Partner'),
-                body: askedOf(merged, me) ? tr('Wants a new game of {game}', { game }) : tr('Wants to finish this game of {game}', { game }),
-                type: 'game',
-                tabId: 'canvas'
-              });
+              tellGame(kind, askedOf(merged, me) ? tr('Wants a new game of {game}', { game }) : tr('Wants to finish this game of {game}', { game }));
             } else if (
               moved &&
               record.authorId !== me &&
-              currentTabRef.current !== 'canvas' &&
+              (currentTabRef.current !== 'canvas' || roomOnScreen() !== kind) &&
               !isCamouflagedRef.current &&
               Date.now() - (Number(record.clientTs) || 0) < 2 * 60 * 1000
             ) {
@@ -2026,10 +2030,7 @@ export const App: React.FC = () => {
                 : s.toMove.includes(me)
                   ? tr('{game}: your turn', { game })
                   : '';
-              if (body) {
-                rememberCanvasMode(kind);
-                setInAppNotification({ id: newId(), title: partnerNameRef.current || tr('Partner'), body, type: 'game', tabId: 'canvas' });
-              }
+              if (body) tellGame(kind, body);
             }
           } else if (record.type === BOOP) {
             // How many boops a phone has sent today (UsScene): only ever up.
@@ -3162,6 +3163,11 @@ export const App: React.FC = () => {
   useEffect(() => {
     setAimSender(said => wsRelay.sendSignal(GAME_AIM_SIGNAL, said));
     return () => setAimSender(null);
+  }, []);
+  // And for emotes, and which game is on this screen (core/gameEmotes).
+  useEffect(() => {
+    setSaySender(said => wsRelay.sendSignal(GAME_SAY_SIGNAL, said));
+    return () => setSaySender(null);
   }, []);
   // The same for Two Hearts: each step and each sign as it is made (core/twoHearts).
   useEffect(() => {
@@ -6294,6 +6300,7 @@ export const App: React.FC = () => {
             }
             setActiveGroupId(null);
             handleSelectTab(tabId);
+            openNoticedGame(tabId);
           }}
         />
 
@@ -6649,6 +6656,7 @@ export const App: React.FC = () => {
             maze={state.maze}
             onMaze={handleMazeHalf}
             mazeReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_MAZE)}
+            emotesReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_EMOTE)}
             widePockets={!!state.partnerApp?.can?.includes(CAN_WIDE_POCKETS)}
             moreGames={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_PLAY_MORE)}
             onSendDrawing={picture =>
@@ -6946,6 +6954,7 @@ export const App: React.FC = () => {
             return;
           }
           handleSelectTab(tabId);
+          openNoticedGame(tabId);
         }}
       />
 

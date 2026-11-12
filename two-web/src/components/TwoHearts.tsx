@@ -33,6 +33,7 @@ import {
 import type { Seat } from '../core/usTwo';
 import { BearFace, BunnyFace } from './CosyHomes';
 import { GameTour } from './GameTour';
+import { EmoteBubble, EmoteKey, useGameEmotes } from './Emotes';
 
 /** What the game is called, on its card and at its top. */
 export const HEARTS_NAME = 'Two Hearts';
@@ -47,6 +48,8 @@ interface TwoHeartsProps {
   partnerName: string;
   /** Their Two has this game too, with its levels made the same way. */
   canPlay: boolean;
+  /** Their phone has emotes (core/gameEmotes, CAN_EMOTE). */
+  emotes?: boolean;
   /** This phone's own one has moved: to keep, and to send. */
   onHalf: (half: MazeHalf) => void;
   /** Back to all the games. */
@@ -238,10 +241,12 @@ export const HeartsIcon: React.FC = () => (
  * (core/twoHearts). You each move your own one; a door opens only while the
  * other stands on its button; the level is done when both are home.
  */
-export const TwoHearts: React.FC<TwoHeartsProps> = ({ mine, theirs, me, partnerName, canPlay, onHalf, onBack }) => {
+export const TwoHearts: React.FC<TwoHeartsProps> = ({ mine, theirs, me, partnerName, canPlay, emotes = true, onHalf, onBack }) => {
   const tr = useT();
   const meIs = whoIs(me);
   const themIs: 0 | 1 = meIs === 0 ? 1 : 0;
+  // The faces you pull at each other, as in every game for two.
+  const em = useGameEmotes('maze');
 
   const [touring, setTouring] = useState(() => !tourSeen(MAZE_TOUR_KEY));
   const tourDone = () => {
@@ -657,6 +662,7 @@ export const TwoHearts: React.FC<TwoHeartsProps> = ({ mine, theirs, me, partnerN
             <Heart width={15} height={15} data-on="" aria-hidden="true" />
             {heartsIn(book)}
           </span>
+          {emotes && <EmoteKey emotes={em} seat={me} partnerName={partnerName} />}
           <button type="button" className="ch-round" onClick={() => setTouring(true)} aria-label={tr('How to play')}>
             <CircleHelp className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -668,6 +674,7 @@ export const TwoHearts: React.FC<TwoHeartsProps> = ({ mine, theirs, me, partnerN
               {meIs === 0 ? <BearFace /> : <BunnyFace />}
             </span>
             {tr('You')}
+            {emotes && <EmoteBubble shown={em.mine} seat={me} side="left" />}
           </span>
           <span className="th-chip" data-who={themIs} data-here={hereNow || undefined}>
             <span className="th-chip-face" aria-hidden="true">
@@ -675,6 +682,7 @@ export const TwoHearts: React.FC<TwoHeartsProps> = ({ mine, theirs, me, partnerN
             </span>
             <span className="th-chip-name">{partnerName}</span>
             <small>{hereNow ? tr('here now') : tr('not here now')}</small>
+            {emotes && <EmoteBubble shown={em.theirs} seat={me === 'user' ? 'partner' : 'user'} side="left" />}
           </span>
         </div>
 

@@ -1382,7 +1382,6 @@ export const TA: Readonly<Record<string, string>> = {
   'Making your board…': 'உங்கள் பலகை தயாராகிறது…',
   // Two Hearts, the maze for two (components/TwoHearts).
   'Two Hearts': 'இரு இதயங்கள்',
-  'Is in the Two Hearts maze. Come and help!': 'இரு இதயங்கள் புதிர்ப்பாதையில் இருக்கிறார். வந்து உதவுங்கள்!',
   'Tap a square or use the arrows to walk': 'நடக்க ஒரு கட்டத்தைத் தட்டுங்கள் அல்லது அம்புக்குறிகளைப் பயன்படுத்துங்கள்',
   'Stand on a button to open its door': 'பொத்தானின் மேல் நின்றால் அதன் கதவு திறக்கும்',
   'It stays open only while you stand there': 'நீங்கள் அங்கே நிற்கும் வரை மட்டுமே அது திறந்திருக்கும்',
@@ -1410,5 +1409,21 @@ export const TA: Readonly<Record<string, string>> = {
   'Right': 'வலது',
   'Down': 'கீழே',
   'Signs for {name}': '{name}-க்கான சைகைகள்',
-  'You both got home, together.': 'இருவரும் சேர்ந்து வீடு சேர்ந்தீர்கள்.'
+  'You both got home, together.': 'இருவரும் சேர்ந்து வீடு சேர்ந்தீர்கள்.',
+  // Emotes in the games (components/Emotes), and the pop-ups about a game.
+  'Emotes': 'முகபாவங்கள்',
+  'Laugh': 'சிரிப்பு',
+  'Cry': 'அழுகை',
+  'Angry': 'கோபம்',
+  'Thumbs up': 'சபாஷ்',
+  'Shocked': 'அதிர்ச்சி',
+  'Yawn': 'கொட்டாவி',
+  'Too cool': 'கெத்து',
+  'Evil laugh': 'வில்லன் சிரிப்பு',
+  '{name}\'s emotes are off': '{name} அனுப்பும் முகபாவங்கள் நிறுத்தப்பட்டுள்ளன',
+  'Turn off {name}\'s emotes': '{name} அனுப்பும் முகபாவங்களை நிறுத்து',
+  'here': 'இங்கே',
+  'away': 'இங்கே இல்லை',
+  'Sent you {emote} in {game}': '{game}-இல் உங்களுக்கு {emote} அனுப்பினார்',
+  'Is playing {game}. Tap to join': '{game} விளையாடுகிறார். சேர தட்டுங்கள்'
 };
