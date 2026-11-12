@@ -59,7 +59,7 @@ import { who } from '../core/who';
 import { activeLocale, tr, useT } from '../core/i18n';
 import { focusForTyping } from '../core/softKeyboard';
 import { haptic } from '../core/haptics';
-import { isSecret } from '../core/secretMessage';
+import { isSecret, secretOpened, wrappedSecret } from '../core/secretMessage';
 import { SecretScratch } from '../components/SecretScratch';
 import {
   Send, Sparkles, Heart, EyeOff, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
@@ -364,7 +364,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   /** The "Send later" times are open, for what is in the box. */
   const [laterOpen, setLaterOpen] = useState(false);
   /** The words in the box go under a foil, for her to rub away (core/secretMessage). */
-  const [secretOn, setSecretOn] = useState(false);
   // Drawn again the moment a message of yours set for later comes due, and
   // when your partner's status runs out. What shows is decided by the clock
   // as it is then (core/sendLater, core/status).
@@ -766,7 +765,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   useEffect(() => (flush ? rideKeyboard() : undefined), [flush]);
 
   const handleSendText = () => {
-    const text = inputText.trim();
+    // !!like this!! goes as a secret, without the marks (core/secretMessage).
+    const hidden = canSecret && !editing ? wrappedSecret(inputText) : null;
+    const text = hidden ?? inputText.trim();
     if (!text) return;
     if (editing) {
       const target = messages.find(m => m.id === editing.id);
@@ -778,12 +779,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
       }
       setEditing(null);
     } else {
-      const extra = { ...(replyTo ? { replyTo } : {}), ...(secretOn && canSecret ? { secret: true as const } : {}) };
+      const extra = { ...(replyTo ? { replyTo } : {}), ...(hidden ? { secret: true as const } : {}) };
       onSendMessage(text, false, Object.keys(extra).length ? extra : undefined);
       typing.sent();
       setReplyTo(null);
     }
-    setSecretOn(false);
     setInputText('');
     if (savedDraftRef.current !== draftKey(null)) {
       savedDraftRef.current = draftKey(null);
@@ -1689,7 +1689,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     if (!menuWaiting) {
       menuActions.push({ key: 'reply', label: tr('Reply'), icon: CornerUpLeft, onSelect: () => { close(); answer(m.id); } });
     }
-    if (!m.isVoiceMemo && !m.isPhoto && !m.sticker && m.text) {
+    if (!m.isVoiceMemo && !m.isPhoto && !m.sticker && m.text && !(isSecret(m) && m.authorId !== activeUser && !secretOpened(m.id))) {
       menuActions.push({
         key: 'copy',
         label: tr('Copy'),
@@ -2007,21 +2007,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {/* What the next message answers, or which message is being changed -
           with the way out of either. */}
-      {canSecret && !editing && !!inputText.trim() && !rec.active && (
+      {canSecret && !editing && !rec.active && !!wrappedSecret(inputText) && (
         <div className="sc-pick">
-          <button
-            type="button"
-            className="sc-toggle"
-            data-on={secretOn || undefined}
-            aria-pressed={secretOn}
-            onClick={() => {
-              haptic('tick');
-              setSecretOn(on => !on);
-            }}
-          >
+          <span className="sc-toggle" data-on>
             <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
-            {secretOn ? tr('Secret: rubbed open to read') : tr('Send as a secret')}
-          </button>
+            {tr('Secret: rubbed open to read')}
+          </span>
         </div>
       )}
       {(replyTo || editing) && (

@@ -92,3 +92,14 @@ export class RubGrid {
     return this.count / this.done.length;
   }
 }
+
+/**
+ * Words typed as !!like this!! go as a secret: the marks come off and what is
+ * between them is what is sent. Null when the words are not wrapped so.
+ */
+export function wrappedSecret(text: string): string | null {
+  const t = text.trim();
+  if (t.length < 5 || !t.startsWith('!!') || !t.endsWith('!!')) return null;
+  const inner = t.slice(2, -2).trim();
+  return inner && !/^!*$/.test(inner) ? inner : null;
+}

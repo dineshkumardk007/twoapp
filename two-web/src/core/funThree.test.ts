@@ -249,3 +249,16 @@ describe('the puppy', () => {
     expect(latestPetHalf(undefined, older)).toBe(older);
   });
 });
+
+import { wrappedSecret as wrapped } from './secretMessage';
+describe('a secret typed as !!words!!', () => {
+  it('takes the marks off, and leaves other words alone', () => {
+    expect(wrapped('!!I miss you!!')).toBe('I miss you');
+    expect(wrapped('  !! hi !! ')).toBe('hi');
+    expect(wrapped('!wow!')).toBeNull();
+    expect(wrapped('!!!!')).toBeNull();
+    expect(wrapped('!!!!!!')).toBeNull();
+    expect(wrapped('!!hi')).toBeNull();
+    expect(wrapped('hello')).toBeNull();
+  });
+});
