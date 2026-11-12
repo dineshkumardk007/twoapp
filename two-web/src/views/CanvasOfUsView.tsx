@@ -33,6 +33,8 @@ import { PHOTO_MAX_CHARS, dataUrlToBlob } from '../core/chatShow';
 import { GameIcon, PaperGames } from '../components/PaperGames';
 import { CosyHomes, HOMES_NAME, HomesIcon } from '../components/CosyHomes';
 import { allDone, levelOn, totalStars, type HomesBook } from '../core/cosyHomes';
+import { HEARTS_NAME, HeartsIcon, TwoHearts } from '../components/TwoHearts';
+import { heartsIn, levelOfPair, mergeBooks, type MazeHalf } from '../core/twoHearts';
 import {
   CANVAS_MODE_KEY,
   GAME_NAMES,
@@ -69,13 +71,19 @@ interface CanvasOfUsViewProps {
   homes?: { mine?: HomesBook; theirs?: HomesBook };
   /** A level of it finished, with its stars. */
   onHomes?: (level: number, stars: number) => void;
+  /** Two Hearts, the maze for two (core/twoHearts): where each of you is. */
+  maze?: { mine?: MazeHalf; theirs?: MazeHalf };
+  /** This phone's own one has moved: to keep, and to send. */
+  onMaze?: (half: MazeHalf) => void;
+  /** Their phone has the maze too, with its levels made the same way. */
+  mazeReady?: boolean;
 }
 
 /** Where this was last left - drawing, the games, or one game - so a game you were playing is still there. */
 function savedMode(): CanvasMode {
   try {
     const m = localStorage.getItem(CANVAS_MODE_KEY);
-    return m === 'games' || m === 'homes' || (PAPER_KINDS as string[]).includes(m || '') ? (m as CanvasMode) : 'draw';
+    return m === 'games' || m === 'homes' || m === 'maze' || (PAPER_KINDS as string[]).includes(m || '') ? (m as CanvasMode) : 'draw';
   } catch {
     return 'draw';
   }
@@ -210,7 +218,10 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   games,
   onGame,
   homes,
-  onHomes
+  onHomes,
+  maze,
+  onMaze,
+  mazeReady = true
 }) => {
   const tr = useT();
   const [mode, setMode] = useState<CanvasMode>(() => (onGame ? savedMode() : 'draw'));
@@ -622,6 +633,21 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
               {homes?.mine ? <span className="cv-game-score">⭐ {totalStars(homes.mine)}</span> : null}
             </button>
           )}
+          {onMaze && (
+            <button type="button" className="cv-game" data-kind="maze" onClick={() => chooseMode('maze')}>
+              <span className="cv-game-tag">{tr('Together')}</span>
+              <span className="cv-game-art">
+                <HeartsIcon />
+              </span>
+              <span className="cv-game-name">{tr(HEARTS_NAME)}</span>
+              <span className="cv-game-line" data-tone={maze?.mine || maze?.theirs ? 'wait' : 'new'}>
+                {maze?.mine || maze?.theirs ? tr('Level {n}', { n: levelOfPair(maze?.mine, maze?.theirs) }) : tr('New - tap to play')}
+              </span>
+              {maze?.mine || maze?.theirs ? (
+                <span className="cv-game-score">💖 {heartsIn(mergeBooks(maze?.mine?.book ?? '', maze?.theirs?.book ?? ''))}</span>
+              ) : null}
+            </button>
+          )}
           {PAPER_KINDS.map(k => {
             const line = shelfLine(k);
             const g = games?.[k];
@@ -658,7 +684,19 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
         />
       )}
 
-      {onGame && mode !== 'draw' && mode !== 'games' && mode !== 'homes' && (
+      {onMaze && mode === 'maze' && (
+        <TwoHearts
+          mine={maze?.mine}
+          theirs={maze?.theirs}
+          me={activeUser}
+          partnerName={them}
+          canPlay={mazeReady}
+          onHalf={onMaze}
+          onBack={() => chooseMode('games')}
+        />
+      )}
+
+      {onGame && mode !== 'draw' && mode !== 'games' && mode !== 'homes' && mode !== 'maze' && (
         <PaperGames
           key={mode}
           kind={mode}

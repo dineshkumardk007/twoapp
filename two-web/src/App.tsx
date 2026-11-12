@@ -276,6 +276,7 @@ import { addBoop, boopsFor, chatDay, cleanPlayKind, cleanTheme, withBoopCount, t
 import { CAN_WIDE_POCKETS } from './core/carrom';
 import { GAME_AIM_SIGNAL, hearAim, setAimSender } from './core/gameAim';
 import { HOMES_RECORD, cleanHomes, mergeHomes, withStars } from './core/cosyHomes';
+import { CAN_MAZE, MAZE_RECORD, MAZE_SIGNAL, cleanHalf, hearMaze, latestHalf, setMazeSender, type MazeHalf } from './core/twoHearts';
 import { CAN_PLAY_MORE, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
@@ -384,7 +385,7 @@ const APP_VERSION = 'APP_VERSION';
  * letter for a day closed until then (core/letters), and say when Two leaves
  * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -731,6 +732,8 @@ export const App: React.FC = () => {
   const [decoyCode, setDecoyCode] = useState(() => localStorage.getItem('two_decoy_code') || '142.85');
   const [autoCamouflageOnBlur, setAutoCamouflageOnBlur] = useState(() => localStorage.getItem('two_auto_camo') === 'true');
 
+  /** When this phone last said they were in the Two Hearts maze: not again for a few minutes. */
+  const mazeToldAtRef = useRef(0);
   const currentTabRef = useRef(currentTab);
   currentTabRef.current = currentTab;
   const partnerNameRef = useRef(state.partnerName);
@@ -1327,6 +1330,18 @@ export const App: React.FC = () => {
         return;
       }
 
+      if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === MAZE_SIGNAL) {
+        // Two Hearts as it happens (core/twoHearts): where their one is this
+        // instant, or a sign held up. Straight to the maze, kept nowhere.
+        if (msg.signal.authorId === state.activeUser) return;
+        try {
+          hearMaze(JSON.parse(msg.signal.payload));
+        } catch {
+          /* not something a maze said */
+        }
+        return;
+      }
+
       if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === HERE_SIGNAL) {
         // Ours, from another of our own devices: nothing about her.
         if (msg.signal.authorId === state.activeUser) return;
@@ -1907,6 +1922,42 @@ export const App: React.FC = () => {
             const at = Number(parsed?.at) || 0;
             const theme = cleanTheme(parsed?.theme);
             setState(prev => (prev.usTheme && prev.usTheme.at >= at ? prev : { ...prev, usTheme: { theme, at } }));
+          } else if (record.type === MAZE_RECORD) {
+            // Two Hearts (core/twoHearts): where one of you is in the maze.
+            // The later word from a phone is the one kept; this phone's own,
+            // coming back on a restore, puts its one back where it was.
+            const half = cleanHalf(parsed);
+            if (!half) return;
+            const own = record.authorId === latestRef.current.state.activeUser;
+            const whose = own ? 'mine' : 'theirs';
+            const before = latestRef.current.state.maze?.[whose];
+            if (latestHalf(before, half) === before) return;
+            setState(prev => {
+              const held = prev.maze?.[whose];
+              const next = latestHalf(held, half);
+              return next === held ? prev : { ...prev, maze: { ...prev.maze, [whose]: next } };
+            });
+            // In the maze just now, while you are somewhere else in Two: a
+            // word, not more than once in a few minutes, and Canvas of Us set
+            // to open on it.
+            if (
+              !own &&
+              !msg.restoring &&
+              currentTabRef.current !== 'canvas' &&
+              !isCamouflagedRef.current &&
+              Date.now() - (Number(record.clientTs) || 0) < 2 * 60 * 1000 &&
+              Date.now() - mazeToldAtRef.current > 5 * 60 * 1000
+            ) {
+              mazeToldAtRef.current = Date.now();
+              rememberCanvasMode('maze');
+              setInAppNotification({
+                id: newId(),
+                title: partnerNameRef.current || tr('Partner'),
+                body: tr('Is in the Two Hearts maze. Come and help!'),
+                type: 'game',
+                tabId: 'canvas'
+              });
+            }
           } else if (record.type === HOMES_RECORD) {
             // Cosy Homes (core/cosyHomes): the stars on each level. Theirs is
             // what shows as their progress; this phone's own, coming back on
@@ -3112,6 +3163,11 @@ export const App: React.FC = () => {
     setAimSender(said => wsRelay.sendSignal(GAME_AIM_SIGNAL, said));
     return () => setAimSender(null);
   }, []);
+  // The same for Two Hearts: each step and each sign as it is made (core/twoHearts).
+  useEffect(() => {
+    setMazeSender(said => wsRelay.sendSignal(MAZE_SIGNAL, said));
+    return () => setMazeSender(null);
+  }, []);
 
   /**
    * Tells the partner's phone whether Two is on this screen (HERE_SIGNAL): as
@@ -3858,6 +3914,15 @@ export const App: React.FC = () => {
     // Hug Kiss, where you both choose at once, one of you waited for ever.
     setState(prev => ({ ...prev, paperGames: { ...prev.paperGames, [game.kind]: mergeGame(prev.paperGames?.[game.kind], game) } }));
     wsRelay.broadcastUpdate(recordTypeOf(game.kind), mergeGame(latestRef.current.state.paperGames?.[game.kind], game));
+  };
+
+  /** This phone's own one has moved in Two Hearts (core/twoHearts): kept here, and said to their phone. */
+  const handleMazeHalf = (half: MazeHalf) => {
+    setState(prev => {
+      const mine = latestHalf(prev.maze?.mine, half);
+      return mine === prev.maze?.mine ? prev : { ...prev, maze: { ...prev.maze, mine } };
+    });
+    wsRelay.broadcastUpdate(MAZE_RECORD, half);
   };
 
   /** A level of Cosy Homes finished (core/cosyHomes): its stars kept here if they are the best yet, and shown on their phone. */
@@ -6581,6 +6646,9 @@ export const App: React.FC = () => {
             onGame={handlePaperGame}
             homes={state.homes}
             onHomes={handleHomesFinish}
+            maze={state.maze}
+            onMaze={handleMazeHalf}
+            mazeReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_MAZE)}
             widePockets={!!state.partnerApp?.can?.includes(CAN_WIDE_POCKETS)}
             moreGames={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_PLAY_MORE)}
             onSendDrawing={picture =>

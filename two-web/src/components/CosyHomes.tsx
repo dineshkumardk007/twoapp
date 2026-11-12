@@ -63,7 +63,7 @@ interface CosyHomesProps {
 /** What is being played: a numbered level, or a Free play board of a size, made from a seed. */
 type Playing = { level: number } | { free: number; seed: number };
 
-const BearFace: React.FC = () => (
+export const BearFace: React.FC = () => (
   <svg viewBox="0 0 48 48" className="ch-face" aria-hidden="true">
     <circle cx={11.5} cy={13} r={7} fill="#c98a55" stroke="#3b2723" strokeWidth={2} />
     <circle cx={11.5} cy={13} r={3.2} fill="#a66c3d" />
@@ -82,7 +82,7 @@ const BearFace: React.FC = () => (
   </svg>
 );
 
-const BunnyFace: React.FC = () => (
+export const BunnyFace: React.FC = () => (
   <svg viewBox="0 0 48 48" className="ch-face" aria-hidden="true">
     <path d="M12.5,22 C8.5,10 10.5,2.5 15.5,2.5 C20.5,2.5 21,11 20,21 Z" fill="#fbf5ee" stroke="#3b2723" strokeWidth={2} strokeLinejoin="round" />
     <path d="M14.4,19 C12.4,11.5 13.2,6.5 15.5,6.5 C17.8,6.5 17.9,12 17.4,18.5 Z" fill="#f9a8c0" />

@@ -5924,3 +5924,141 @@ html.dark .ch-say[data-hint='wrong'] { color: #f43f5e; }
   .ch *::before,
   .ch *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* ==========================================================================
+   Two Hearts, the maze for two (components/TwoHearts). It shares the frame
+   of Cosy Homes above (.ch): the whole screen, a top row, a line of words.
+   The board is one picture; the two of you are moved over it by transform.
+   ========================================================================== */
+.th svg[data-on] { fill: #f43f5e; color: #be123c; }
+.th-two { display: flex; flex-shrink: 0; gap: 8px; padding: 0 12px 8px; }
+.th-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 12px 4px 5px;
+  border: 1px solid rgb(var(--c-border));
+  border-radius: 9999px;
+  background: rgb(var(--c-surface));
+  font: 800 13px/1 Manrope, system-ui, sans-serif;
+}
+.th-chip-face { flex-shrink: 0; width: 26px; height: 26px; }
+.th-chip-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.th-chip small { flex-shrink: 0; font: 700 11px/1 Manrope, system-ui, sans-serif; color: rgb(var(--c-secondary)); }
+.th-chip[data-here] small { color: #16a34a; }
+.th-chip[data-here] small::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+.th-stage { display: grid; flex: 1; place-items: center; min-height: 0; padding: 4px 12px; container-type: size; }
+.th-board {
+  position: relative;
+  width: min(92vw, calc(46vh * var(--w) / var(--h)));
+  aspect-ratio: var(--w) / var(--h);
+  touch-action: manipulation;
+}
+@supports (width: 1cqw) {
+  .th-board { width: min(100cqw, calc(100cqh * var(--w) / var(--h))); }
+}
+.th-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.th-floor { fill: #fff7ea; filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.25)); }
+.th-walls { fill: none; stroke: #3b2723; stroke-width: 4; stroke-linecap: round; }
+.th-home-mat { fill: #c98a55; fill-opacity: 0.2; stroke: #c98a55; stroke-width: 1.6; stroke-dasharray: 4 3; }
+.th-home-house { fill: #c98a55; stroke: #3b2723; stroke-width: 1.6; stroke-linejoin: round; }
+.th-home[data-who='1'] .th-home-mat { fill: #f47a9b; stroke: #f47a9b; }
+.th-home[data-who='1'] .th-home-house { fill: #f9a8c0; }
+.th-home-door { fill: #fff7ea; stroke: #3b2723; stroke-width: 1.4; stroke-linejoin: round; }
+.th-home[data-in] .th-home-mat { fill-opacity: 0.5; stroke-dasharray: none; }
+.th-plate-pad { fill: currentColor; fill-opacity: 0.2; stroke: currentColor; stroke-width: 2.4; transition: fill-opacity 140ms ease; }
+.th-plate[data-down] .th-plate-pad { fill-opacity: 0.6; }
+.th-heart { fill: #f43f5e; stroke: #fff; stroke-width: 1; }
+.th-door-bar { fill: none; stroke: currentColor; stroke-width: 7; stroke-linecap: round; transition: opacity 160ms ease; }
+.th-door-ends { fill: none; stroke: currentColor; stroke-width: 7; stroke-linecap: round; }
+.th-door-disc { fill: #fff; stroke: currentColor; stroke-width: 1.6; }
+.th-door-sign { transition: opacity 160ms ease; }
+.th-door[data-open] .th-door-bar { opacity: 0; }
+.th-door[data-open] .th-door-sign { opacity: 0.35; }
+.th-door[data-shut] .th-door-bar { animation: th-shut 300ms ease 2; }
+@keyframes th-shut { 50% { stroke-width: 12; } }
+.th-who {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: calc(100% / var(--w));
+  height: calc(100% / var(--h));
+  pointer-events: none;
+  transition: transform 135ms linear;
+}
+.th-who[data-who='1'] { z-index: 3; }
+.th-who-in { position: absolute; inset: 8%; filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.22)); transition: transform 160ms ease; }
+.th-who-in[data-side='0'] { transform: translateX(-21%) scale(0.76); }
+.th-who-in[data-side='1'] { transform: translateX(21%) scale(0.76); }
+.th-who-in[data-stuck] { animation: th-stuck 320ms ease; }
+@keyframes th-stuck {
+  25% { translate: -9% 0; }
+  60% { translate: 8% 0; }
+  85% { translate: -4% 0; }
+}
+.th-sign {
+  position: absolute;
+  bottom: 84%;
+  left: 50%;
+  z-index: 4;
+  padding: 4px 7px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 6px 12px -5px rgb(0 0 0 / 0.55);
+  font-size: 26px;
+  line-height: 1;
+  translate: -50% 0;
+  animation: th-sign-in 240ms cubic-bezier(0.3, 0.7, 0.3, 1.5) both;
+}
+@keyframes th-sign-in { from { opacity: 0; transform: translateY(8px) scale(0.5); } }
+.th-say[data-warn] { color: #e11d48; }
+.th-hands { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px 6px; }
+.th-pad {
+  display: grid;
+  grid-template: 'a up b' 48px 'left mid right' 48px 'c down d' 48px / 54px 54px 54px;
+  gap: 4px;
+}
+.th-arrow {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(var(--c-border));
+  border-radius: 16px;
+  background: rgb(var(--c-surface));
+  color: rgb(var(--c-primary));
+  touch-action: none;
+  transition: transform 100ms ease;
+}
+.th-arrow[data-at='up'] { grid-area: up; }
+.th-arrow[data-at='down'] { grid-area: down; }
+.th-arrow[data-at='left'] { grid-area: left; }
+.th-arrow[data-at='right'] { grid-area: right; }
+.th-arrow[data-at='mid'] { grid-area: mid; }
+.th-arrow:active { transform: scale(0.9); background: rgb(var(--c-variant)); }
+.th-arrow-home { border-color: transparent; background: rgb(var(--c-variant)); color: rgb(var(--c-secondary)); }
+.th-signs { display: grid; grid-template-columns: repeat(3, 50px); gap: 8px; justify-content: end; }
+.th-sign-key {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: 1px solid rgb(var(--c-border));
+  border-radius: 50%;
+  background: rgb(var(--c-surface));
+  font-size: 24px;
+  line-height: 1;
+  transition: transform 100ms ease;
+}
+.th-sign-key:active { transform: scale(0.88); }
+.th-hearts { display: inline-flex; gap: 8px; color: rgb(var(--c-secondary) / 0.4); }
+.th-hearts svg[data-on] { animation: ch-star 440ms cubic-bezier(0.3, 0.7, 0.3, 1.6) both; }
+.cv-game[data-kind='maze']::before { background: linear-gradient(140deg, rgb(244 63 94 / 0.22), rgb(59 130 246 / 0.16)); }

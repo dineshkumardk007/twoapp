@@ -92,6 +92,17 @@ export const HOMES_TOUR: TourLine[] = [
   { icon: '⭐', text: 'Be quick and use no hints for 3 stars' }
 ];
 
+/** And for Two Hearts, the maze the two of you do together (components/TwoHearts). */
+export const MAZE_TOUR_KEY = 'maze';
+export const MAZE_TOUR: TourLine[] = [
+  { icon: '👆', text: 'Tap a square or use the arrows to walk' },
+  { icon: '🔘', text: 'Stand on a button to open its door' },
+  { icon: '🚪', text: 'It stays open only while you stand there' },
+  { icon: '🏠', text: 'Get both of you home to finish' },
+  { icon: '💖', text: 'Pick up the hearts on the way' },
+  { icon: '👋', text: 'Tap a sign to tell the other one' }
+];
+
 const KEY = 'two_game_tours_seen';
 /** Also held here, so a phone that cannot save still only shows each one once until Two is closed. */
 const thisTime = new Set<string>();
@@ -106,9 +117,9 @@ function saved(): string[] {
 }
 
 /** Whether this phone has already shown the box for this game. */
-export const tourSeen = (kind: PaperKind | typeof HOMES_TOUR_KEY) => thisTime.has(kind) || saved().includes(kind);
+export const tourSeen = (kind: PaperKind | typeof HOMES_TOUR_KEY | typeof MAZE_TOUR_KEY) => thisTime.has(kind) || saved().includes(kind);
 
-export function markTourSeen(kind: PaperKind | typeof HOMES_TOUR_KEY) {
+export function markTourSeen(kind: PaperKind | typeof HOMES_TOUR_KEY | typeof MAZE_TOUR_KEY) {
   thisTime.add(kind);
   try {
     const list = saved();

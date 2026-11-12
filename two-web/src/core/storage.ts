@@ -3,6 +3,7 @@ import type { Statuses } from './status';
 import type { Boops, UsTheme } from './usTwo';
 import type { PaperGame, PaperKind } from './paperGames';
 import type { HomesBook } from './cosyHomes';
+import type { MazeHalf } from './twoHearts';
 import type { SurpriseBook } from './surprise';
 import {
   EmotionalReport,
@@ -177,6 +178,8 @@ export interface SpaceState {
   paperGames?: Partial<Record<PaperKind, PaperGame>>;
   /** Cosy Homes, the puzzle for one (core/cosyHomes): the stars on each level, yours and the other person's. */
   homes?: { mine?: HomesBook; theirs?: HomesBook };
+  /** Two Hearts, the maze for two (core/twoHearts): where each of you is, as each phone last said. */
+  maze?: { mine?: MazeHalf; theirs?: MazeHalf };
   /**
    * Group spaces this device belongs to.
    *

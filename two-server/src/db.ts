@@ -61,6 +61,8 @@ export const LATEST_ONLY_TYPES = new Set([
   'BOOP',
   // Cosy Homes, the puzzle for one: the stars on every level, whole each time.
   'GAME_HOMES',
+  // Two Hearts, the maze for two: where each of you is, whole each time.
+  'GAME_MAZE',
   // A surprise one of you has planned for the other: the whole plan each
   // time it is saved, one at a time each - and the other phone's word that
   // it has all of it, and has opened it.
