@@ -210,6 +210,33 @@ export function headsetConnected(): boolean {
 }
 
 /**
+ * Whether the earphones are a Bluetooth headset with a microphone of its own
+ * (a neckband, earbuds). False on an older app, which cannot say.
+ */
+export function bluetoothHeadsetConnected(): boolean {
+  try {
+    const bridge = (window as any).AndroidBridge;
+    if (typeof bridge?.isBluetoothCallHeadset === 'function') return !!bridge.isBluetoothCallHeadset();
+  } catch {
+    /* no bridge */
+  }
+  return false;
+}
+
+/**
+ * Whether the microphone should be opened with echo cancellation.
+ *
+ * Off only with wired earphones, where nothing leaks and the voice sounds
+ * most natural. On for the loudspeaker and the earpiece - and for a Bluetooth
+ * headset, whose call goes through the phone's voice path: that is what has
+ * the headset's own microphone used, by your mouth, and not the phone's in a
+ * pocket.
+ */
+export function wantsEchoCancelling(speaker: boolean, headset: boolean, bluetooth: boolean): boolean {
+  return speaker || !headset || bluetooth;
+}
+
+/**
  * Tells Android where the call's audio should go.
  *
  * With earphones the call stays off the phone's voice-call path, which many
@@ -1115,7 +1142,7 @@ export class CallEngine {
    */
   private async openMic(): Promise<OpenedMic> {
     const headset = headsetConnected();
-    const echoCancellation = this.state.speaker || !headset;
+    const echoCancellation = wantsEchoCancelling(this.state.speaker, headset, headset && bluetoothHeadsetConnected());
     const noiseSuppression = noiseReductionOn(this.noiseChoice, this.state.speaker);
     this.noiseCancelling = noiseSuppression;
     if (noiseSuppression !== this.state.noiseReduction) this.set({ noiseReduction: noiseSuppression });
@@ -1174,7 +1201,7 @@ export class CallEngine {
    * on the same sender - the other side hears no gap and no renegotiation.
    */
   private async reconcileEcho() {
-    const want = this.state.speaker || !this.state.headset;
+    const want = wantsEchoCancelling(this.state.speaker, this.state.headset, this.state.headset && bluetoothHeadsetConnected());
     const quiet = noiseReductionOn(this.noiseChoice, this.state.speaker);
     const pc = this.pc;
     if (!pc || (want === this.echoCancelling && quiet === this.noiseCancelling)) return;

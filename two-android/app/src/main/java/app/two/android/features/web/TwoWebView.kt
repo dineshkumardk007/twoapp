@@ -849,6 +849,44 @@ class AndroidWebBridge(
     }
 
     /**
+     * Whether a Bluetooth headset with its own microphone is connected - a
+     * neckband, earbuds - as against Bluetooth that only plays (a speaker).
+     *
+     * The page asks so that it keeps echo cancellation on for such a call:
+     * that is also what has the WebView record from the call's own device,
+     * the headset's microphone, and not the phone's.
+     */
+    @JavascriptInterface
+    fun isBluetoothCallHeadset(): Boolean = try {
+        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        audio != null && hasBluetoothCall(audio)
+    } catch (_: Exception) {
+        false
+    }
+
+    /** The Bluetooth headset a call can go both ways through, from Android 12; null when there is none. */
+    private fun bluetoothCallDevice(audio: AudioManager): AudioDeviceInfo? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
+        return try {
+            audio.availableCommunicationDevices.firstOrNull {
+                it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO || it.type == AudioDeviceInfo.TYPE_BLE_HEADSET
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun hasBluetoothCall(audio: AudioManager): Boolean = try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            bluetoothCallDevice(audio) != null
+        } else {
+            audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO }
+        }
+    } catch (_: Exception) {
+        false
+    }
+
+    /**
      * Puts the phone into call mode, and picks earpiece or speaker.
      *
      * Without call mode a WebView plays the other voice as media - through the
@@ -866,16 +904,23 @@ class AndroidWebBridge(
      * which on many phones is processed and band-limited the way a cellular
      * call is - the sound this app is trying to get away from. That mode is
      * only needed for the earpiece, and for the phone's own echo cancellation
-     * on speaker. With earphones there is neither, so the call stays on the
-     * media path and plays at full fidelity.
+     * on speaker. With wired earphones there is neither, so the call stays on
+     * the media path and plays at full fidelity.
+     *
+     * A Bluetooth headset is the other exception. On the media path it only
+     * plays: the voice sent is picked up by the phone's own microphone, in a
+     * pocket or on a table, far from the mouth - muffled and unclear. Its
+     * microphone works only on the voice path, as the call's chosen device,
+     * so that is where a Bluetooth call goes.
      */
     @JavascriptInterface
     fun setCallAudioRoute(active: Boolean, speaker: Boolean, headset: Boolean) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-        val voicePath = active && (speaker || !headset)
+        val bluetooth = active && headset && !speaker && hasBluetoothCall(audio)
+        val voicePath = active && (speaker || !headset || bluetooth)
         try {
             audio.mode = if (voicePath) AudioManager.MODE_IN_COMMUNICATION else AudioManager.MODE_NORMAL
-            routeCall(audio, voicePath, speaker)
+            routeCall(audio, voicePath, speaker, bluetooth)
         } catch (_: Exception) {
             // A phone that refuses the change keeps its own routing; the call
             // carries on, only perhaps from the other speaker.
@@ -895,19 +940,22 @@ class AndroidWebBridge(
      * clearing changed nothing, and the voice stayed wherever the WebView had
      * put it when the microphone opened - on some phones, nowhere she could
      * hear until Speaker was pressed on and off again. Off the voice path
-     * (earphones, or the call over) the choice is handed back.
+     * (wired earphones, or the call over) the choice is handed back.
+     *
+     * [bluetooth]: the call goes through the Bluetooth headset, both ways.
      */
-    private fun routeCall(audio: AudioManager, voicePath: Boolean, speaker: Boolean) {
+    @Suppress("DEPRECATION")
+    private fun routeCall(audio: AudioManager, voicePath: Boolean, speaker: Boolean, bluetooth: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val wanted = when {
+            val device = when {
                 !voicePath -> null
-                speaker -> AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
-                else -> AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
-            }
-            // A phone without an earpiece (a tablet) has no such device; it
-            // is left to choose for itself.
-            val device = wanted?.let { type ->
-                audio.availableCommunicationDevices.firstOrNull { it.type == type }
+                bluetooth -> bluetoothCallDevice(audio)
+                else -> {
+                    val wanted = if (speaker) AudioDeviceInfo.TYPE_BUILTIN_SPEAKER else AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
+                    // A phone without an earpiece (a tablet) has no such device; it
+                    // is left to choose for itself.
+                    audio.availableCommunicationDevices.firstOrNull { it.type == wanted }
+                }
             }
             if (device != null) {
                 audio.setCommunicationDevice(device)
@@ -915,8 +963,16 @@ class AndroidWebBridge(
                 audio.clearCommunicationDevice()
             }
         } else {
-            @Suppress("DEPRECATION")
             audio.isSpeakerphoneOn = voicePath && speaker
+            // Before Android 12 the headset's call link is asked for by name,
+            // and given back when the call leaves it.
+            if (bluetooth) {
+                audio.startBluetoothSco()
+                audio.isBluetoothScoOn = true
+            } else if (audio.isBluetoothScoOn) {
+                audio.isBluetoothScoOn = false
+                audio.stopBluetoothSco()
+            }
         }
     }
 
