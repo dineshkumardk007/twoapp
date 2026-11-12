@@ -1,12 +1,10 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { fed } from '../core/pet';
 import { openSecret } from '../core/secretMessage';
 import { GLASSES, HATS, NECKS, showWear } from '../core/wear';
 import { BearFace, BunnyFace } from './CosyHomes';
 import { EmoteFace } from './Emotes';
-import { PetArt, PetCard } from './PetCard';
 import { SecretScratch } from './SecretScratch';
 import { WearTile, WornGlasses, WornHat, WornNeck, WornOnFace } from './WearArt';
 
@@ -72,40 +70,5 @@ describe('a secret message can be drawn', () => {
     );
     expect(open).not.toContain('sc-foil');
     expect(open).toContain('hello');
-  });
-});
-
-describe('the puppy can be drawn', () => {
-  it('in every mood, and doing everything it does', () => {
-    const seen = new Set<string>();
-    for (const mood of ['new', 'happy', 'fine', 'hungry', 'bored', 'sulking', 'asleep'] as const) {
-      for (const doing of [null, 'eat', 'play', 'stroke', 'full'] as const) {
-        const html = renderToString(<PetArt mood={mood} doing={doing} level={mood === 'happy' ? 4 : 1} />);
-        expect(html).toContain(`data-mood="${mood}"`);
-        expect(html).not.toContain('NaN');
-        seen.add(html);
-      }
-    }
-    // Asleep, sulking and hungry each look their own way.
-    expect(renderToString(<PetArt mood="asleep" doing={null} level={1} />)).toContain('pt-z');
-    expect(renderToString(<PetArt mood="sulking" doing={null} level={1} />)).toContain('pt-cloud');
-    expect(renderToString(<PetArt mood="hungry" doing={null} level={1} />)).toContain('pt-want');
-    expect(renderToString(<PetArt mood="happy" doing="eat" level={1} />)).toContain('pt-bowl');
-    expect(renderToString(<PetArt mood="happy" doing="play" level={1} />)).toContain('pt-ball');
-    expect(renderToString(<PetArt mood="fine" doing="stroke" level={1} />)).toContain('pt-heart');
-    expect(seen.size).toBeGreaterThan(20);
-  });
-
-  it('its card: a name, a level, and the two things to do for it', () => {
-    const fresh = renderToString(<PetCard partnerName="Priya" onHalf={() => {}} />);
-    expect(fresh).toContain('Mochi');
-    expect(fresh).toContain('Say hello');
-    expect(fresh).toContain('Level 1');
-    expect(fresh).toContain('Feed');
-    expect(fresh).toContain('Play');
-    const loved = renderToString(<PetCard mine={{ ...fed(undefined, Date.now()), fed: 5, name: 'Laddu', nameAt: 1 }} theirs={{ ...fed(undefined, Date.now()), fed: 4 }} partnerName="Priya" onHalf={() => {}} />);
-    expect(loved).toContain('Laddu');
-    // Nine meals: eighteen points, the start of level 3.
-    expect(loved).toContain('Level 3');
   });
 });

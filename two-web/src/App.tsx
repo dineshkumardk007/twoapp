@@ -279,7 +279,6 @@ import { HOMES_RECORD, cleanHomes, mergeHomes, withStars } from './core/cosyHome
 import { CAN_MAZE, MAZE_RECORD, MAZE_SIGNAL, cleanHalf, hearMaze, latestHalf, setMazeSender, type MazeHalf } from './core/twoHearts';
 import { CAN_SECRET, SECRET_WORDS } from './core/secretMessage';
 import { CAN_WEAR, WEAR_RECORD, cleanWear, latestWear, showWear, type Wear } from './core/wear';
-import { CAN_PET, PET_RECORD, cleanPetHalf, latestPetHalf, type PetHalf } from './core/pet';
 import { CAN_EMOTE, GAME_SAY_SIGNAL, OPEN_GAME_EVENT, hearGameSaid, roomOnScreen, setSaySender, type GameRoom } from './core/gameEmotes';
 import { CAN_PLAY_MORE, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
@@ -389,7 +388,7 @@ const APP_VERSION = 'APP_VERSION';
  * letter for a day closed until then (core/letters), and say when Two leaves
  * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE, CAN_SECRET, CAN_WEAR, CAN_PET];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE, CAN_SECRET, CAN_WEAR];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -1968,16 +1967,6 @@ export const App: React.FC = () => {
               const held = prev.usWear?.[seat];
               const next = latestWear(held, worn);
               return next === held ? prev : { ...prev, usWear: { ...prev.usWear, [seat]: next } };
-            });
-          } else if (record.type === PET_RECORD) {
-            // What one phone has done for the puppy (core/pet): the later word from it is kept.
-            const half = cleanPetHalf(parsed);
-            if (!half) return;
-            const whose = record.authorId === latestRef.current.state.activeUser ? 'mine' : 'theirs';
-            setState(prev => {
-              const held = prev.pet?.[whose];
-              const next = latestPetHalf(held, half);
-              return next === held ? prev : { ...prev, pet: { ...prev.pet, [whose]: next } };
             });
           } else if (record.type === MAZE_RECORD) {
             // Two Hearts (core/twoHearts): where one of you is in the maze.
@@ -3953,15 +3942,6 @@ export const App: React.FC = () => {
   const handleWear = (wear: Wear) => {
     setState(prev => ({ ...prev, usWear: { ...prev.usWear, [prev.activeUser]: wear } }));
     wsRelay.broadcastUpdate(WEAR_RECORD, wear);
-  };
-
-  /** This phone has fed, played with, stroked or named the puppy (core/pet). */
-  const handlePetHalf = (half: PetHalf) => {
-    setState(prev => {
-      const mine = latestPetHalf(prev.pet?.mine, half);
-      return mine === prev.pet?.mine ? prev : { ...prev, pet: { ...prev.pet, mine } };
-    });
-    wsRelay.broadcastUpdate(PET_RECORD, half);
   };
 
   /** This phone's own one has moved in Two Hearts (core/twoHearts): kept here, and said to their phone. */
@@ -6448,7 +6428,6 @@ export const App: React.FC = () => {
             // card has to mark the destination read, or the line you just
             // followed would still be sitting there when you came back.
             onNavigate={stable('selectTab', handleSelectTab)}
-            onPet={stable('pet', handlePetHalf)}
             // An ordinary message, not a need card: it is a question to
             // talk over, and arrived as "I need: Daily Question [DEEP]".
             onSendQuestion={stable('sendQuestion', (text: string) => handleSendMessage(text, false))}
@@ -6466,10 +6445,6 @@ export const App: React.FC = () => {
             onAddMilestone={stable('addMilestone', handleAddMilestone)}
             onSaveComfortBox={stable('saveComfortBox', handleSaveComfortBox)}
             onSetStatus={stable('setStatus', handleSetStatus)}
-            partnerOnline={partnerShownOnline}
-            partnerTyping={partnerTypingAt > 0}
-            onPlay={stable('play', handlePlay)}
-            party={partySeat}
             partnerNews={partnerNews}
             partnerUpdate={partnerUpdate}
           />

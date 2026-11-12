@@ -1426,7 +1426,7 @@ export const TA: Readonly<Record<string, string>> = {
   'away': 'இங்கே இல்லை',
   'Sent you {emote} in {game}': '{game}-இல் உங்களுக்கு {emote} அனுப்பினார்',
   'Is playing {game}. Tap to join': '{game} விளையாடுகிறார். சேர தட்டுங்கள்',
-  // A secret message, dressing up, and the puppy on Home.
+  // A secret message, and dressing up.
   'Rub to read': 'படிக்கத் தேயுங்கள்',
   'Secret - rubbed open to read': 'ரகசியம் - தேய்த்தால் தான் படிக்க முடியும்',
   'Secret: rubbed open to read': 'ரகசியம்: தேய்த்தால் தான் படிக்க முடியும்',
@@ -1448,20 +1448,5 @@ export const TA: Readonly<Record<string, string>> = {
   'Star glasses': 'நட்சத்திரக் கண்ணாடி',
   'Bow tie': 'போ டை',
   'Scarf': 'ஸ்கார்ஃப்',
-  'Pearls': 'முத்து மாலை',
-  '{who} named it {name}': '{who} இதற்கு {name} என்று பெயர் வைத்தார்',
-  '{who} fed {name}': '{who} {name}-க்கு உணவு கொடுத்தார்',
-  '{who} is playing with {name}': '{who} {name}-உடன் விளையாடுகிறார்',
-  '{who} stroked {name}': '{who} {name}-ஐத் தடவிக் கொடுத்தார்',
-  '{name} is full for now': '{name}-க்கு இப்போது வயிறு நிறைந்திருக்கிறது',
-  'This is {name}. Say hello!': 'இது {name}. வணக்கம் சொல்லுங்கள்!',
-  '{name} is happy': '{name} மகிழ்ச்சியாக இருக்கிறது',
-  '{name} is hungry': '{name}-க்குப் பசிக்கிறது',
-  '{name} wants to play': '{name} விளையாட விரும்புகிறது',
-  '{name} is sulking. Cheer it up!': '{name} கோபித்துக்கொண்டிருக்கிறது. சமாதானப்படுத்துங்கள்!',
-  '{name} is asleep': '{name} தூங்குகிறது',
-  '{name} is fine': '{name} நலமாக இருக்கிறது',
-  'Change its name': 'பெயரை மாற்று',
-  'Its name': 'அதன் பெயர்',
-  'Stroke {name}': '{name}-ஐத் தடவிக் கொடுங்கள்'
+  'Pearls': 'முத்து மாலை'
 };

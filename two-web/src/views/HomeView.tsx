@@ -25,11 +25,7 @@ import { ArrangeHomeSheet } from '../components/ArrangeHomeSheet';
 import { StatusStrip } from '../components/StatusStrip';
 import { HomeCardId, HomeLayout, readHomeLayout, writeHomeLayout } from '../core/homeLayout';
 import { useT } from '../core/i18n';
-import { UsScene } from '../components/UsScene';
-import { PetCard } from '../components/PetCard';
-import type { PetHalf } from '../core/pet';
 import { FunnyNumbersCard } from '../components/FunnyNumbersCard';
-import type { PlayKind, Seat } from '../core/usTwo';
 
 interface HomeViewProps {
   state: SpaceState;
@@ -53,15 +49,6 @@ interface HomeViewProps {
   partnerNews?: ActivityEvent[];
   /** Set while the partner's phone runs an older version than this one. */
   partnerUpdate?: { version: string; onDismiss: () => void };
-  /** For the "Us two" scene: whether they are here, and typing. */
-  partnerOnline?: boolean;
-  partnerTyping?: boolean;
-  /** A boop, tickle, pinch, pat or pillow for them (UsScene), counted on both phones. */
-  onPlay?: (kind: PlayKind, quiet: boolean, variant?: number) => void;
-  /** This phone has fed, played with, stroked or named the puppy (core/pet). */
-  onPet?: (half: PetHalf) => void;
-  /** Whose birthday it is today, if anyone's: a party in Us two. */
-  party?: Seat | null;
 }
 
 /**
@@ -118,11 +105,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onSetStatus,
   partnerNews = [],
   partnerUpdate,
-  partnerOnline = false,
-  partnerTyping = false,
-  onPlay,
-  onPet,
-  party = null
 }) => {
   const tr = useT();
   const [showComfortBox, setShowComfortBox] = useState(false);
@@ -174,33 +156,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const hidden = (id: HomeCardId) => layout.hidden.includes(id);
   const homeCard = (id: HomeCardId): React.ReactNode => {
     switch (id) {
-      case 'us':
-        return hidden('us') ? null : (
-          // The two of you, as you are right now - and the puppy you look after together.
-          <div className="space-y-6">
-          <div className="rounded-3xl border border-linen-border bg-linen-surface p-4 sm:p-5 shadow-xs">
-            <UsScene
-              size="preview"
-              onOpen={() => onNavigate('us')}
-              activeUser={state.activeUser}
-              partnerName={partnerName}
-              partnerOnline={partnerOnline}
-              partnerTyping={partnerTyping}
-              partnerLastSeen={state.partnerLastSeen}
-              myWeather={myReport.weather}
-              theirWeather={theirReport.weather}
-              messages={state.messages}
-              boops={state.boops}
-              onPlay={(kind, quiet, variant) => onPlay?.(kind, quiet, variant)}
-              party={party}
-              theme={state.usTheme?.theme}
-              wear={state.usWear}
-              onSendHeart={() => triggerGlobalPulse('Thinking of you')}
-            />
-          </div>
-          {onPet && <PetCard mine={state.pet?.mine} theirs={state.pet?.theirs} partnerName={partnerName} onHalf={onPet} />}
-          </div>
-        );
       case 'numbers':
         return hidden('numbers') ? null : (
           <FunnyNumbersCard messages={state.messages} activeUser={state.activeUser} partnerName={partnerName} />
