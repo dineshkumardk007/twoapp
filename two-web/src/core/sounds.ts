@@ -42,7 +42,9 @@ export type SoundName =
   | 'g-pk-whistle' | 'g-pk-pick' | 'g-pk-kick' | 'g-pk-goal' | 'g-pk-save' | 'g-pk-post' | 'g-pk-miss'
   | 'g-pz-go' | 'g-pz-tap' | 'g-pz-wrong' | 'g-pz-done' | 'g-pz-pad'
   | 'e-laugh' | 'e-cry' | 'e-angry' | 'e-thumb' | 'e-kiss' | 'e-shock' | 'e-tease' | 'e-yawn' | 'e-cool' | 'e-evil'
-  | 'secret-open' | 'wear-on' | 'wear-off';
+  | 'secret-open' | 'wear-on' | 'wear-off'
+  | 'vx-heart' | 'vx-fire' | 'vx-laugh' | 'vx-party' | 'vx-kiss' | 'vx-broken' | 'vx-rose' | 'vx-ghost'
+  | 'vx-adore' | 'vx-rage' | 'vx-sparkle' | 'vx-diamond' | 'vx-butterfly' | 'vx-rocket' | 'vx-bolt' | 'vx-balloon';
 
 interface Loaded {
   buffer: AudioBuffer;

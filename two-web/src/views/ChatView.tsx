@@ -60,6 +60,8 @@ import { activeLocale, tr, useT } from '../core/i18n';
 import { focusForTyping } from '../core/softKeyboard';
 import { haptic } from '../core/haptics';
 import { isSecret, secretOpened, wrappedSecret } from '../core/secretMessage';
+import { VFX_FRESH_MS, vfxOf } from '../core/chatVfx';
+import { VfxEmoji, useChatVfx } from '../components/ChatVfx';
 import { SecretScratch } from '../components/SecretScratch';
 import {
   Send, Sparkles, Heart, EyeOff, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
@@ -532,6 +534,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  // Effects over the conversation (core/chatVfx): the angry one shakes it.
+  const vfx = useChatVfx(messagesRef);
   const contentRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   /** The day at the top while you scroll (components/FloatingDayChip), from each row's data-day. */
@@ -682,6 +686,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, newestId]);
+
+  // One that has just arrived - or just been sent - plays by itself, once,
+  // while the chat is open (core/chatVfx). Not the ones already here when the
+  // chat opened, and not one that has waited on the relay since this morning.
+  const vfxSeenRef = useRef<string | null>(null);
+  const playVfx = vfx.play;
+  useEffect(() => {
+    const before = vfxSeenRef.current;
+    vfxSeenRef.current = newestId;
+    if (before === null || before === newestId || !newest || document.hidden) return;
+    if (newest.unsent || newest.sticker || newest.isPhoto || newest.isVoiceMemo || newest.file || newest.viewOnce || isSecret(newest)) return;
+    const fx = vfxOf(newest.text);
+    if (!fx || Math.abs(Date.now() - (newest.sentAt ?? 0)) > VFX_FRESH_MS) return;
+    playVfx(fx, newest.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newestId]);
 
   // The composer grows with what is written, up to about five lines, so a
   // long message wraps where it can be read instead of scrolling sideways out
@@ -1224,6 +1244,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
         // A sticker stands on its own, with no bubble round it. One from a
         // newer pack than this phone has shows as its words, "Sticker".
         const sticker = !unsent && hasStickerArt(msg.sticker) ? msg.sticker : null;
+        // Nothing but an emoji that has an effect: drawn large, with no bubble,
+        // and tapped it plays over the conversation (core/chatVfx).
+        const fx = !unsent && !once && !photo && !sharedFile && !sticker && !msg.isVoiceMemo && !isSecret(msg) ? vfxOf(msg.text) : null;
+        const alone = !!sticker || !!fx;
 
         // One rounded shape per run: the corners on the sender's side tuck in
         // where bubbles meet, and the last one keeps a small tail.
@@ -1319,13 +1343,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   // breathing room, than around words - and a little more of
                   // the width, so its 200px fits a 320px phone. A photo gets a
                   // thin frame of the bubble's own colour.
-                  sticker ? '' : sharedFile ? 'max-w-[90%] p-2' : photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : once ? 'max-w-[85%] py-2 pl-2.5 pr-4' : 'max-w-[85%] px-4 py-2.5'
+                  alone ? '' : sharedFile ? 'max-w-[90%] p-2' : photo ? 'p-1' : msg.isVoiceMemo ? 'max-w-[90%] px-3 py-2' : once ? 'max-w-[85%] py-2 pl-2.5 pr-4' : 'max-w-[85%] px-4 py-2.5'
                 } text-sm leading-relaxed ${shape} ${
                   // Plain on both sides (index.css): yours grey, theirs outlined.
                   // A request looks like any other message from its side.
                   unsent || opened
                     ? 'bubble-edge border border-dashed text-linen-secondary'
-                    : sticker
+                    : alone
                     ? 'text-linen-primary'
                     : mine
                     ? 'bubble-mine text-linen-primary'
@@ -1352,7 +1376,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {quote && (
                   // What this answers. Tapped, the conversation goes back to it.
                   // Over a sticker, in a small bubble of its own.
-                  <div className={sticker ? `mb-1 rounded-2xl px-2.5 py-2 ${mine ? 'bubble-mine' : 'bubble-edge border'}` : 'contents'}>
+                  <div className={alone ? `mb-1 rounded-2xl px-2.5 py-2 ${mine ? 'bubble-mine' : 'bubble-edge border'}` : 'contents'}>
                   <ReplyQuote
                     who={whoShown(quote.authorId, activeUser, partnerName)}
                     text={
@@ -1387,6 +1411,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     size={STICKER_SIZE}
                     onTapLabel={tr('Sticker: {name}', { name: tr(stickerInfo(sticker)?.label || STICKER_TEXT) })}
                   />
+                ) : fx ? (
+                  <VfxEmoji vfx={fx} id={msg.id} label={tr('{name}: tap to play', { name: tr(fx.name) })} onPlay={() => vfx.tap(fx, msg.id)} />
                 ) : msg.isVoiceMemo ? (
                   // The player stands for the note; its label ("Voice note ·
                   // 0:12") is for notifications and older phones, not here.
@@ -2224,9 +2250,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
             onClose={() => setShowEmojiPicker(false)}
             // Not while one of your messages is being changed: that is words only.
             onSticker={editing ? undefined : sendSticker}
+            // The ones that play an effect, sent by themselves, lead the list.
+            vfx={!editing}
           />
         </KeyboardPanel>
       )}
+
+      {vfx.stage}
 
       {toast && (
         <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-4" aria-live="polite">

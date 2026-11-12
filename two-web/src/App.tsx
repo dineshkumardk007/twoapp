@@ -278,6 +278,7 @@ import { GAME_AIM_SIGNAL, hearAim, setAimSender } from './core/gameAim';
 import { HOMES_RECORD, cleanHomes, mergeHomes, withStars } from './core/cosyHomes';
 import { CAN_MAZE, MAZE_RECORD, MAZE_SIGNAL, cleanHalf, hearMaze, latestHalf, setMazeSender, type MazeHalf } from './core/twoHearts';
 import { CAN_SECRET, SECRET_WORDS } from './core/secretMessage';
+import { VFX_SIGNAL, hearVfx, setVfxSender } from './core/chatVfx';
 import { CAN_WEAR, WEAR_RECORD, cleanWear, latestWear, showWear, type Wear } from './core/wear';
 import { CAN_EMOTE, GAME_SAY_SIGNAL, OPEN_GAME_EVENT, hearGameSaid, roomOnScreen, setSaySender, type GameRoom } from './core/gameEmotes';
 import { CAN_PLAY_MORE, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
@@ -1362,6 +1363,18 @@ export const App: React.FC = () => {
           }
         } catch {
           /* not something a game said */
+        }
+        return;
+      }
+
+      if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === VFX_SIGNAL) {
+        // Their finger on an emoji that plays an effect (core/chatVfx): the
+        // chat plays it too if it is the screen in front, and nothing is kept.
+        if (msg.signal.authorId === state.activeUser || isCamouflagedRef.current) return;
+        try {
+          hearVfx(JSON.parse(msg.signal.payload));
+        } catch {
+          /* not something a tap said */
         }
         return;
       }
@@ -3184,6 +3197,11 @@ export const App: React.FC = () => {
   useEffect(() => {
     setSaySender(said => wsRelay.sendSignal(GAME_SAY_SIGNAL, said));
     return () => setSaySender(null);
+  }, []);
+  // And for a tap on an emoji that plays an effect in the chat (core/chatVfx).
+  useEffect(() => {
+    setVfxSender(said => wsRelay.sendSignal(VFX_SIGNAL, said));
+    return () => setVfxSender(null);
   }, []);
   // The same for Two Hearts: each step and each sign as it is made (core/twoHearts).
   useEffect(() => {

@@ -4,6 +4,7 @@ import { useT } from '../core/i18n';
 import { STICKERS, recentStickers, rememberSticker, stickerInfo, type StickerSet } from '../core/stickers';
 import { StickerArt } from './StickerArt';
 import { isPartyToday } from '../core/surprise';
+import { VFX } from '../core/chatVfx';
 
 /**
  * One list, used by both conversations.
@@ -77,6 +78,11 @@ interface EmojiPickerProps {
   onSticker?: (id: string) => void;
   /** Fills the height it is given (KeyboardPanel) rather than keeping to its own. */
   fill?: boolean;
+  /**
+   * Leads with the emoji that play an effect over the chat when one is sent
+   * by itself (core/chatVfx). Only where they do: the couple's chat.
+   */
+  vfx?: boolean;
 }
 
 /** The tab last used, so the picker opens where you left it. */
@@ -93,7 +99,7 @@ const SETS: { set: StickerSet; title: string }[] = [
  * stays in view, and is capped in height so the conversation never disappears
  * behind it.
  */
-export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only, title, pickWord = 'Add', onSticker, fill }) => {
+export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only, title, pickWord = 'Add', onSticker, fill, vfx }) => {
   const tr = useT();
   const [tab, setTab] = useState<'emoji' | 'stickers'>(onSticker ? lastTab : 'emoji');
   const [recent, setRecent] = useState(recentStickers);
@@ -166,6 +172,29 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onPick, onClose, only,
       </div>
     ) : (
     <div className={`${fill ? 'min-h-0 flex-1' : 'max-h-44'} overflow-y-auto scroll-contain px-3 pb-2`}>
+      {vfx && (
+        // Each of these, sent with nothing else, plays its own effect.
+        <div className="vx-pick mb-2">
+          <p className="px-1 pb-0.5 text-[10px] uppercase tracking-wider">
+            <span className="vx-pick-title">VFX</span>
+            <span className="ml-1.5 font-medium normal-case tracking-normal text-linen-secondary/80">{tr('Send one by itself to play it')}</span>
+          </p>
+          <div className="grid grid-cols-8 gap-0.5">
+            {VFX.map(v => (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => onPick(v.emoji)}
+                aria-label={tr(`${pickWord} {emoji}`, { emoji: v.emoji })}
+                title={tr(v.name)}
+                className="flex h-9 items-center justify-center rounded-xl text-xl leading-none hover:bg-linen-variant active:scale-90 transition-all cursor-pointer"
+              >
+                {v.emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {EMOJI_GROUPS.map(group => (
         <div key={group.title} className="mb-1.5">
           <p className="px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-linen-secondary/70">

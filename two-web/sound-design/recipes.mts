@@ -2712,5 +2712,408 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 0.3, wet: 0.06 },
     master: { loudness: SOFT, highpass: 180 }
+  },
+
+  // ------------------------------------------------------------------------
+  // Effects in the chat (core/chatVfx): one for each emoji that plays one,
+  // timed to what it does on the screen.
+  // ------------------------------------------------------------------------
+
+  'vx-heart': {
+    use: 'Chat effect, hearts: soft pops as they burst out, a warm chime, and little ones popping after',
+    dry: () => {
+      const b = silence(2.6);
+      const rand = rng(5101);
+      for (let i = 0; i < 9; i++) {
+        const t = i * 0.035 + rand() * 0.02;
+        const f = 520 + rand() * 520;
+        mode(b, { freq: f, amp: 0.42 - i * 0.025, decay: 0.035, start: t, glide: -0.35, glideTime: 0.03, pan: rand() * 1.2 - 0.6 });
+        noise(b, { start: t, dur: 0.02, gain: 0.16, filter: { type: 'bandpass', f: 1800, q: 1 }, attack: 0.0008, decay: 0.006, seed: 5102 + i });
+      }
+      run(b, ['D5', 'F#5', 'A5', 'D6'], 0.085, { instrument: I.glass, gain: [0.3, 0.32, 0.34, 0.4], start: 0.16, seed: 5120, mallet: 0, decayScale: 1.3 });
+      strike(b, { note: hz('A4'), instrument: I.felt, start: 0.16, gain: 0.3, seed: 5126, mallet: 0, decayScale: 1.4 });
+      for (let i = 0; i < 6; i++) {
+        const t = 0.95 + i * 0.16 + rand() * 0.08;
+        mode(b, { freq: 900 + rand() * 700, amp: 0.2, decay: 0.03, start: t, glide: -0.3, glideTime: 0.02, pan: rand() * 1.4 - 0.7 });
+      }
+      twinkles(b, 0.9, 2.1, 6, 0.1, 5140);
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.16 },
+    master: { loudness: MOMENT, highpass: 200, maxSeconds: 2.6, tailFade: 0.5 }
+  },
+
+  'vx-fire': {
+    use: 'Chat effect, fire: a whoosh as it bursts, flames crackling where the pieces land, and sparks at the end',
+    dry: () => {
+      const b = silence(3.0);
+      const rand = rng(5201);
+      air(b, { start: 0, dur: 0.5, gain: 0.5, from: 300, to: 2800, attack: 0.05, seed: 5202 });
+      thump(b, 0.02, 0.5, 110, 5203);
+      // The flames: a low roar that swells and dies, and the crackle on top.
+      noise(b, { start: 0.4, dur: 1.5, gain: 0.3, filter: { type: 'bandpass', f: 520, q: 0.6 }, sweepTo: 380, attack: 0.25, grain: 0.7, pink: true, seed: 5204 });
+      noise(b, { start: 0.45, dur: 1.6, gain: 0.12, filter: { type: 'bandpass', f: 2600, q: 0.7 }, attack: 0.2, grain: 0.9, seed: 5205 });
+      for (let i = 0; i < 70; i++) {
+        const t = 0.45 + rand() * 1.45;
+        noise(b, { start: t, dur: 0.012, gain: 0.12 + rand() * 0.32, filter: { type: 'bandpass', f: 1500 + rand() * 4200, q: 1.4 }, attack: 0.0004, decay: 0.003, pan: rand() * 1.6 - 0.8, seed: 5210 + i });
+      }
+      // They go out: a puff, and sparks.
+      air(b, { start: 1.85, dur: 0.3, gain: 0.22, from: 2400, to: 700, attack: 0.02, seed: 5290 });
+      for (let i = 0; i < 22; i++) {
+        const t = 1.9 + rand() ** 1.5 * 0.6;
+        noise(b, { start: t, dur: 0.01, gain: 0.1 + rand() * 0.16, filter: { type: 'bandpass', f: 4000 + rand() * 4000, q: 1.5 }, attack: 0.0004, decay: 0.002, pan: rand() * 1.6 - 0.8, seed: 5300 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.08 },
+    master: { loudness: MOMENT, highpass: 160, maxSeconds: 3.0, tailFade: 0.3 }
+  },
+
+  'vx-laugh': {
+    use: 'Chat effect, laughing: giggles tumbling down, and a boing each time one bounces',
+    dry: () => {
+      const b = silence(2.5);
+      const rand = rng(5401);
+      const peals: Array<[number, number, number]> = [
+        [0, 780, 6],
+        [0.62, 880, 5],
+        [1.2, 700, 6]
+      ];
+      for (const [start, top, count] of peals) {
+        for (let i = 0; i < count; i++) {
+          hee(b, start + i * 0.085, top * (1 - i * 0.045), 0.42 - i * 0.03, rand() * 0.8 - 0.4, 5410 + i);
+        }
+      }
+      boing(b, 1.05, 240, 0.3);
+      boing(b, 1.5, 300, 0.22);
+      boing(b, 1.82, 360, 0.14);
+      return b;
+    },
+    room: { rt60: 0.35, wet: 0.07 },
+    master: { loudness: MOMENT, highpass: 200, maxSeconds: 2.5, tailFade: 0.3 }
+  },
+
+  'vx-party': {
+    use: 'Chat effect, confetti: two cannons go off, a little fanfare, and the paper coming down',
+    dry: () => {
+      const b = silence(2.9);
+      const rand = rng(5501);
+      for (const [t, pan] of [[0, -0.6], [0.09, 0.6]] as Array<[number, number]>) {
+        thump(b, t, 0.75, 130, 5502);
+        noise(b, { start: t, dur: 0.05, gain: 0.8, filter: { type: 'bandpass', f: 1700, q: 0.5 }, attack: 0.0005, decay: 0.012, pan, seed: 5503 });
+        air(b, { start: t + 0.01, dur: 0.3, gain: 0.3, from: 3000, to: 900, attack: 0.01, seed: 5504 });
+      }
+      // Ta-da!
+      for (const [note, t, g] of [['D5', 0.2, 0.3], ['D5', 0.32, 0.26], ['F#5', 0.44, 0.3], ['A5', 0.56, 0.42]] as Array<[string, number, number]>) {
+        strike(b, { note: hz(note), instrument: I.marimba, start: t, gain: g, seed: 5510, mallet: 0.2 });
+        strike(b, { note: hz(note) * 2, instrument: I.glock, start: t, gain: g * 0.5, seed: 5511, mallet: 0 });
+      }
+      for (const note of ['D5', 'F#5', 'A5', 'D6']) strike(b, { note: hz(note), instrument: I.bell, start: 0.72, gain: 0.16, seed: 5520, mallet: 0, decayScale: 0.8 });
+      // Paper, fluttering down.
+      for (let i = 0; i < 46; i++) {
+        const t = 0.3 + rand() * 2.0;
+        noise(b, { start: t, dur: 0.02 + rand() * 0.03, gain: 0.04 + rand() * 0.07, filter: { type: 'bandpass', f: 3500 + rand() * 4000, q: 1 }, attack: 0.004, decay: 0.01, grain: 0.8, pan: rand() * 1.6 - 0.8, seed: 5530 + i });
+      }
+      twinkles(b, 0.9, 2.3, 7, 0.1, 5590);
+      return b;
+    },
+    room: { rt60: 0.7, wet: 0.12 },
+    master: { loudness: MOMENT, highpass: 170, maxSeconds: 2.9, tailFade: 0.5 }
+  },
+
+  'vx-kiss': {
+    use: 'Chat effect, kisses: one big "mwah", then little pecks as the lip prints land',
+    dry: () => {
+      const b = silence(2.1);
+      const peck = (start: number, gain: number, pan: number, seed: number) => {
+        voice(b, { start, dur: 0.07, freq: t => 700 + 1500 * (t / 0.07) ** 2, amp: t => gain * 0.5 * Math.sin((Math.PI * t) / 0.07), harmonics: [1, 0.3], pan });
+        noise(b, { start, dur: 0.06, gain: gain * 0.6, filter: { type: 'bandpass', f: 2600, q: 1.2 }, sweepTo: 4600, attack: 0.012, decay: 0.012, pan, seed });
+      };
+      // "Mm" - the lips drawn in - then the smack, and "ah".
+      voice(b, { start: 0, dur: 0.24, freq: t => 300 + 60 * (t / 0.24), amp: t => 0.26 * Math.sin((Math.PI * t) / 0.24) ** 0.6, harmonics: [1, 0.4, 0.12] });
+      peck(0.26, 1, 0, 5601);
+      thump(b, 0.3, 0.3, 150, 5602);
+      voice(b, { start: 0.36, dur: 0.34, freq: t => 560 - 110 * (t / 0.34), amp: t => 0.3 * Math.exp(-t / 0.14), harmonics: [1, 0.5, 0.22, 0.1] });
+      for (let i = 0; i < 6; i++) peck(0.62 + i * 0.13, 0.5 - i * 0.04, i % 2 ? 0.5 : -0.5, 5610 + i);
+      run(b, ['A5', 'D6', 'F#6'], 0.07, { instrument: I.glock, gain: 0.18, start: 0.4, seed: 5630, mallet: 0 });
+      twinkles(b, 0.9, 1.7, 4, 0.08, 5640);
+      return b;
+    },
+    room: { rt60: 0.45, wet: 0.09 },
+    master: { loudness: MOMENT, highpass: 220, maxSeconds: 2.1, tailFade: 0.4 }
+  },
+
+  'vx-broken': {
+    use: 'Chat effect, broken heart: it trembles, cracks in two, and a sad slide down as the halves fall',
+    dry: () => {
+      const b = silence(2.9);
+      const rand = rng(5701);
+      // The tremble.
+      for (let i = 0; i < 7; i++) thump(b, 0.44 + i * 0.062, 0.14 + i * 0.03, 150, 5702 + i);
+      // The crack: a snap, and the splinters after it.
+      noise(b, { start: 0.86, dur: 0.03, gain: 1, filter: { type: 'highpass', f: 1800 }, attack: 0.0004, decay: 0.007, seed: 5710 });
+      mode(b, { freq: 2100, amp: 0.4, decay: 0.03, start: 0.86, glide: 0.4, glideTime: 0.02 });
+      mode(b, { freq: 1300, amp: 0.3, decay: 0.05, start: 0.865, glide: 0.3, glideTime: 0.03 });
+      for (let i = 0; i < 12; i++) {
+        const t = 0.9 + rand() * 0.5;
+        strike(b, { note: 1400 + rand() * 2600, instrument: I.glass, start: t, gain: 0.07 + rand() * 0.1, pan: rand() * 1.4 - 0.7, seed: 5720 + i, mallet: 0.4, decayScale: 0.25 });
+      }
+      // The halves fall: a voice sliding down, three steps, each lower and sadder.
+      const steps: Array<[string, string, number, number]> = [
+        ['B4', 'A4', 1.2, 0.36],
+        ['A4', 'F#4', 1.6, 0.4],
+        ['F#4', 'D4', 2.05, 0.7]
+      ];
+      for (const [from, to, start, dur] of steps) {
+        const f0 = hz(from);
+        const f1 = hz(to);
+        voice(b, {
+          start,
+          dur,
+          freq: t => (f0 + (f1 - f0) * Math.min(1, t / (dur * 0.7)) ** 1.6) * (1 + 0.01 * Math.sin(2 * Math.PI * 5.5 * t)),
+          amp: t => 0.3 * Math.min(1, t / 0.03) * Math.min(1, (dur - t) / (dur * 0.5)),
+          harmonics: [1, 0.3, 0.2, 0.06]
+        });
+      }
+      return b;
+    },
+    room: { rt60: 1.0, wet: 0.16 },
+    master: { loudness: MOMENT, highpass: 170, maxSeconds: 2.9, tailFade: 0.4 }
+  },
+
+  'vx-rose': {
+    use: 'Chat effect, rose petals: a soft bloom and a slow shimmer as they drift down',
+    dry: () => {
+      const b = silence(4.2);
+      air(b, { start: 0, dur: 0.9, gain: 0.14, from: 900, to: 4200, attack: 0.3, seed: 5801 });
+      for (const [note, t, g] of [['D4', 0.1, 0.34], ['A4', 0.22, 0.3], ['F#5', 0.34, 0.26], ['B5', 0.5, 0.2]] as Array<[string, number, number]>) {
+        strike(b, { note: hz(note), instrument: I.bowl, start: t, gain: g, seed: 5810, mallet: 0, decayScale: 1.2 });
+      }
+      run(b, ['A5', 'F#5', 'E5', 'D5', 'B4', 'A4'], 0.42, { instrument: I.glass, gain: 0.16, start: 0.9, seed: 5820, mallet: 0, decayScale: 1.5 });
+      twinkles(b, 0.8, 3.6, 9, 0.07, 5840);
+      return b;
+    },
+    room: { rt60: 1.6, wet: 0.26 },
+    master: { loudness: MOMENT - 1, highpass: 180, maxSeconds: 4.2, tailFade: 0.9 }
+  },
+
+  'vx-ghost': {
+    use: 'Chat effect, ghost: a wavering "oooOOooo" as it drifts in, "BOO!" as it rushes up, and a whoosh away',
+    dry: () => {
+      const b = silence(3.1);
+      voice(b, {
+        start: 0.05,
+        dur: 1.5,
+        freq: t => (330 + 210 * Math.sin((Math.PI * t) / 1.5) ** 2) * (1 + 0.035 * Math.sin(2 * Math.PI * 6.5 * t)),
+        amp: t => 0.3 * Math.sin((Math.PI * t) / 1.5) ** 0.8,
+        harmonics: [1, 0.12, 0.2, 0.04]
+      });
+      air(b, { start: 0, dur: 1.5, gain: 0.1, from: 500, to: 1600, attack: 0.5, seed: 5901 });
+      // BOO!
+      thump(b, 1.6, 0.9, 110, 5902);
+      voice(b, {
+        start: 1.6,
+        dur: 0.5,
+        freq: t => 250 * (1 - 0.42 * Math.min(1, t / 0.4)),
+        amp: t => 0.6 * Math.min(1, t / 0.012) * Math.exp(-t / 0.22),
+        harmonics: [1, 0.7, 0.45, 0.3, 0.18, 0.1]
+      });
+      noise(b, { start: 1.6, dur: 0.07, gain: 0.5, filter: { type: 'bandpass', f: 700, q: 0.6 }, attack: 0.001, decay: 0.02, seed: 5903 });
+      // And away.
+      air(b, { start: 2.05, dur: 0.8, gain: 0.3, from: 700, to: 4200, attack: 0.2, seed: 5904 });
+      voice(b, { start: 2.1, dur: 0.75, freq: t => 380 + 700 * (t / 0.75) ** 2, amp: t => 0.14 * Math.sin((Math.PI * t) / 0.75), harmonics: [1, 0.1] });
+      return b;
+    },
+    room: { rt60: 1.3, wet: 0.22 },
+    master: { loudness: MOMENT, highpass: 170, maxSeconds: 3.1, tailFade: 0.4 }
+  },
+
+  'vx-adore': {
+    use: 'Chat effect, adoring: a harp running up as the hearts spiral out, and bubbles rising',
+    dry: () => {
+      const b = silence(3.0);
+      const rand = rng(6001);
+      run(b, ['D4', 'F#4', 'A4', 'B4', 'D5', 'F#5', 'A5', 'B5', 'D6', 'F#6'], 0.075, {
+        instrument: I.kalimba,
+        gain: [0.3, 0.3, 0.32, 0.32, 0.34, 0.34, 0.36, 0.36, 0.38, 0.42],
+        start: 0.02,
+        seed: 6002,
+        decayScale: 1.6
+      });
+      strike(b, { note: hz('D4'), instrument: I.felt, start: 0.02, gain: 0.3, seed: 6020, mallet: 0, decayScale: 1.6 });
+      for (const note of ['D5', 'F#5', 'A5']) strike(b, { note: hz(note), instrument: I.glass, start: 0.82, gain: 0.2, seed: 6024, mallet: 0, decayScale: 1.4 });
+      // Bubbles.
+      for (let i = 0; i < 12; i++) {
+        const t = 0.7 + rand() * 1.6;
+        const f0 = 380 + rand() * 500;
+        voice(b, { start: t, dur: 0.07, freq: u => f0 * (1 + 0.9 * (u / 0.07)), amp: u => 0.16 * Math.exp(-u / 0.026), harmonics: [1, 0.12], pan: rand() * 1.4 - 0.7 });
+      }
+      twinkles(b, 0.9, 2.4, 7, 0.09, 6060);
+      return b;
+    },
+    room: { rt60: 1.1, wet: 0.2 },
+    master: { loudness: MOMENT, highpass: 190, maxSeconds: 3.0, tailFade: 0.6 }
+  },
+
+  'vx-rage': {
+    use: 'Chat effect, angry: a growl, the ground stamped, and steam hissing out',
+    dry: () => {
+      const b = silence(2.3);
+      // The growl: low and rough, shaking as it goes.
+      voice(b, {
+        start: 0,
+        dur: 1.1,
+        freq: t => 112 * (1 + 0.1 * Math.sin((Math.PI * t) / 1.1)) * (1 + 0.03 * Math.sin(2 * Math.PI * 31 * t)),
+        amp: t => 0.42 * Math.sin((Math.PI * t) / 1.1) ** 0.5 * (0.6 + 0.4 * Math.sin(2 * Math.PI * 27 * t) ** 2),
+        harmonics: [1, 0.9, 0.75, 0.6, 0.45, 0.35, 0.25, 0.18, 0.1]
+      });
+      noise(b, { start: 0, dur: 1.1, gain: 0.16, filter: { type: 'bandpass', f: 800, q: 0.7 }, attack: 0.1, grain: 0.9, seed: 6101 });
+      for (const t of [0.08, 0.34, 0.6]) thump(b, t, 0.75, 96, 6110);
+      // Steam, twice, from both ears.
+      for (const [t, pan] of [[0.12, -0.7], [0.2, 0.7], [0.7, -0.6], [0.78, 0.6]] as Array<[number, number]>) {
+        noise(b, { start: t, dur: 0.6, gain: 0.34, filter: { type: 'highpass', f: 3800 }, attack: 0.02, decay: 0.2, pan, seed: 6120 });
+        noise(b, { start: t, dur: 0.5, gain: 0.14, filter: { type: 'bandpass', f: 2400, q: 2 }, sweepTo: 3600, attack: 0.02, decay: 0.16, pan, seed: 6121 });
+      }
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.07 },
+    master: { loudness: MOMENT, highpass: 150, maxSeconds: 2.3, tailFade: 0.3 }
+  },
+
+  'vx-sparkle': {
+    use: 'Chat effect, sparkles: a sweep of light, a quick run of bells, and twinkles all over',
+    dry: () => {
+      const b = silence(3.1);
+      air(b, { start: 0, dur: 1.1, gain: 0.22, from: 1800, to: 9000, attack: 0.3, seed: 6201 });
+      run(b, ['D6', 'E6', 'F#6', 'A6', 'B6', 'D7', 'E7', 'F#7'], 0.045, { instrument: I.glock, gain: [0.16, 0.18, 0.2, 0.22, 0.24, 0.26, 0.28, 0.32], start: 0.1, seed: 6202, mallet: 0 });
+      strike(b, { note: hz('D5'), instrument: I.bell, start: 0.5, gain: 0.2, seed: 6220, mallet: 0, decayScale: 1.2 });
+      twinkles(b, 0.3, 2.6, 22, 0.14, 6230);
+      return b;
+    },
+    room: { rt60: 1.4, wet: 0.24 },
+    master: { loudness: MOMENT, highpass: 300, maxSeconds: 3.1, tailFade: 0.7 }
+  },
+
+  'vx-diamond': {
+    use: 'Chat effect, diamonds: light breaking into colours, then crystal "tings" as each one lands',
+    dry: () => {
+      const b = silence(2.9);
+      const rand = rng(6301);
+      for (const [note, t] of [['D6', 0], ['A6', 0.03], ['F#7', 0.06]] as Array<[string, number]>) {
+        strike(b, { note: hz(note), instrument: I.glass, start: t, gain: 0.26, seed: 6302, mallet: 0.1, decayScale: 1.6 });
+      }
+      air(b, { start: 0, dur: 0.5, gain: 0.16, from: 4000, to: 9500, attack: 0.05, seed: 6306 });
+      const notes = ['A6', 'D7', 'F#7', 'B6', 'E7', 'A7'];
+      for (let i = 0; i < 12; i++) {
+        const t = 0.85 + (i / 12) * 1.0 + rand() * 0.07;
+        const f = hz(notes[i % notes.length]);
+        // The knock of it on the floor, and the ring.
+        noise(b, { start: t, dur: 0.012, gain: 0.22, filter: { type: 'bandpass', f: 5200, q: 1.5 }, attack: 0.0004, decay: 0.003, seed: 6310 + i });
+        strike(b, { note: f, instrument: I.glass, start: t, gain: 0.2 + rand() * 0.12, pan: rand() * 1.4 - 0.7, seed: 6330 + i, mallet: 0.3, decayScale: 0.9 });
+        // Its little bounce after.
+        strike(b, { note: f * 1.5, instrument: I.glock, start: t + 0.17, gain: 0.08, pan: rand() * 1.4 - 0.7, seed: 6350 + i, mallet: 0.2, decayScale: 0.5 });
+      }
+      return b;
+    },
+    room: { rt60: 1.5, wet: 0.24 },
+    master: { loudness: MOMENT, highpass: 400, maxSeconds: 2.9, tailFade: 0.6 }
+  },
+
+  'vx-butterfly': {
+    use: 'Chat effect, butterflies: wings fluttering off every way, over a light wandering tune',
+    dry: () => {
+      const b = silence(3.9);
+      const rand = rng(6401);
+      // Wings: quick soft beats of air, each butterfly its own pace and place.
+      for (let k = 0; k < 6; k++) {
+        const start = k * 0.12;
+        const pace = 0.05 + rand() * 0.025;
+        const pan = rand() * 1.6 - 0.8;
+        for (let i = 0; i < 26; i++) {
+          const t = start + i * pace;
+          const fade = Math.min(1, i / 4) * Math.max(0, 1 - i / 26);
+          noise(b, { start: t, dur: pace * 0.7, gain: 0.2 * fade, filter: { type: 'bandpass', f: 1500 + k * 260, q: 1.1 }, attack: 0.008, decay: 0.012, pink: true, pan, seed: 6410 + k * 40 + i });
+        }
+      }
+      const tune = ['A5', 'B5', 'D6', 'B5', 'F#6', 'E6', 'A6', 'F#6', 'D6', 'A6', 'B6', 'D7'];
+      tune.forEach((note, i) => strike(b, { note: hz(note), instrument: I.kalimba, start: 0.15 + i * 0.21, gain: 0.2, pan: Math.sin(i * 1.3) * 0.5, seed: 6700 + i, decayScale: 1.2 }));
+      twinkles(b, 1.6, 3.3, 5, 0.07, 6720);
+      return b;
+    },
+    room: { rt60: 1.0, wet: 0.18 },
+    master: { loudness: MOMENT - 1, highpass: 260, maxSeconds: 3.9, tailFade: 0.8 }
+  },
+
+  'vx-rocket': {
+    use: 'Chat effect, rocket: a rumble on the pad, the engines roaring up and away, and stars going by',
+    dry: () => {
+      const b = silence(3.1);
+      // On the pad.
+      noise(b, { start: 0.1, dur: 0.6, gain: 0.5, filter: { type: 'bandpass', f: 420, q: 0.7 }, attack: 0.2, grain: 0.95, pink: true, seed: 6801 });
+      for (let i = 0; i < 9; i++) thump(b, 0.14 + i * 0.058, 0.2 + i * 0.045, 100, 6802 + i);
+      // Lift-off: the roar, rising and thinning as it goes.
+      noise(b, { start: 0.64, dur: 1.7, gain: 0.8, filter: { type: 'bandpass', f: 520, q: 0.6 }, sweepTo: 5200, attack: 0.05, decay: 0.75, grain: 0.7, pink: true, seed: 6820 });
+      noise(b, { start: 0.64, dur: 1.2, gain: 0.3, filter: { type: 'highpass', f: 3000 }, attack: 0.03, decay: 0.4, seed: 6821 });
+      voice(b, {
+        start: 0.64,
+        dur: 1.6,
+        freq: t => 170 + 1300 * (t / 1.6) ** 2,
+        amp: t => 0.22 * Math.min(1, t / 0.05) * Math.exp(-t / 0.7),
+        harmonics: [1, 0.5, 0.3, 0.15]
+      });
+      thump(b, 0.64, 0.8, 104, 6830);
+      twinkles(b, 1.7, 2.8, 7, 0.09, 6840);
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.14 },
+    master: { loudness: MOMENT, highpass: 150, maxSeconds: 3.1, tailFade: 0.5 }
+  },
+
+  'vx-bolt': {
+    use: 'Chat effect, lightning: the crack of the strike, thunder rolling off, and it fizzing where it hit',
+    dry: () => {
+      const b = silence(2.4);
+      const rand = rng(6901);
+      for (const [t, g] of [[0.03, 1], [0.14, 0.6]] as Array<[number, number]>) {
+        noise(b, { start: t, dur: 0.05, gain: g, filter: { type: 'highpass', f: 900 }, attack: 0.0003, decay: 0.01, seed: 6902 });
+        thump(b, t, g * 0.9, 120, 6903);
+      }
+      // Thunder: it rolls, in lumps, and goes off into the distance.
+      noise(b, { start: 0.05, dur: 1.9, gain: 0.85, filter: { type: 'bandpass', f: 520, q: 0.5 }, sweepTo: 260, attack: 0.01, decay: 0.55, grain: 0.9, pink: true, seed: 6904 });
+      for (let i = 0; i < 6; i++) thump(b, 0.3 + i * 0.17 + rand() * 0.06, 0.4 - i * 0.05, 92, 6910 + i);
+      // Fizzing where it struck.
+      for (let i = 0; i < 16; i++) {
+        const t = 0.22 + rand() * 0.6;
+        const dur = 0.02 + rand() * 0.035;
+        voice(b, { start: t, dur, freq: () => 110 * (rand() < 0.5 ? 1 : 2), amp: () => 0.14, harmonics: [1, 0, 0.6, 0, 0.45, 0, 0.35, 0, 0.28, 0, 0.2], pan: rand() * 1.4 - 0.7 });
+        noise(b, { start: t, dur, gain: 0.16, filter: { type: 'highpass', f: 5000 }, attack: 0.0005, grain: 1, pan: rand() * 1.4 - 0.7, seed: 6930 + i });
+      }
+      return b;
+    },
+    room: { rt60: 1.4, wet: 0.2 },
+    master: { loudness: MOMENT, highpass: 150, maxSeconds: 2.4, tailFade: 0.5 }
+  },
+
+  'vx-balloon': {
+    use: 'Chat effect, balloons: a rubbery squeak, a bouncy little tune as they rise, and a few going pop',
+    dry: () => {
+      const b = silence(3.9);
+      // Rubber, rubbed.
+      for (const [t, f] of [[0, 620], [0.16, 760]] as Array<[number, number]>) {
+        voice(b, { start: t, dur: 0.13, freq: u => f * (1 + 0.5 * (u / 0.13)) * (1 + 0.02 * Math.sin(2 * Math.PI * 40 * u)), amp: u => 0.22 * Math.sin((Math.PI * u) / 0.13), harmonics: [1, 0.5, 0.3, 0.15] });
+      }
+      const tune: Array<[string, number]> = [['D5', 0.35], ['F#5', 0.55], ['A5', 0.75], ['F#5', 0.95], ['B5', 1.15], ['A5', 1.45], ['D6', 1.75], ['B5', 2.05], ['A5', 2.35], ['D6', 2.75]];
+      for (const [note, t] of tune) strike(b, { note: hz(note), instrument: I.marimba, start: t, gain: 0.26, seed: 7001, mallet: 0.15 });
+      // Pop!
+      for (const [t, pan] of [[1.3, -0.5], [1.9, 0.4], [2.5, -0.2], [2.95, 0.6]] as Array<[number, number]>) {
+        noise(b, { start: t, dur: 0.03, gain: 0.95, filter: { type: 'bandpass', f: 2200, q: 0.5 }, attack: 0.0003, decay: 0.007, pan, seed: 7010 });
+        thump(b, t, 0.6, 170, 7011);
+        mode(b, { freq: 1500, amp: 0.25, decay: 0.012, start: t, pan });
+        air(b, { start: t + 0.01, dur: 0.16, gain: 0.14, from: 5000, to: 1500, attack: 0.005, seed: 7012 });
+      }
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: MOMENT, highpass: 180, maxSeconds: 3.9, tailFade: 0.5 }
   }
 };

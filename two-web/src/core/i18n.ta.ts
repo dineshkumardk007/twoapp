@@ -1448,5 +1448,22 @@ export const TA: Readonly<Record<string, string>> = {
   'Star glasses': 'நட்சத்திரக் கண்ணாடி',
   'Bow tie': 'போ டை',
   'Scarf': 'ஸ்கார்ஃப்',
-  'Pearls': 'முத்து மாலை'
+  'Pearls': 'முத்து மாலை',
+  // Effects in the chat: an emoji sent by itself that plays over the conversation.
+  'Send one by itself to play it': 'தனியாக அனுப்பினால் விளைவு ஓடும்',
+  '{name}: tap to play': '{name}: தட்டினால் ஓடும்',
+  'Fire': 'நெருப்பு',
+  'Laughing': 'சிரிப்பு',
+  'Confetti': 'வண்ணக் காகிதங்கள்',
+  'Kisses': 'முத்தங்கள்',
+  'Broken heart': 'உடைந்த இதயம்',
+  'Rose petals': 'ரோஜா இதழ்கள்',
+  'Ghost': 'பேய்',
+  'Adoring': 'அன்பு பொங்குகிறது',
+  'Sparkles': 'மின்னல்கள்',
+  'Diamonds': 'வைரங்கள்',
+  'Butterflies': 'வண்ணத்துப்பூச்சிகள்',
+  'Rocket': 'ராக்கெட்',
+  'Lightning': 'இடி மின்னல்',
+  'Balloons': 'பலூன்கள்'
 };
