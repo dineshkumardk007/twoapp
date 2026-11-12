@@ -1,5 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, Palette, Volume2, VolumeX } from 'lucide-react';
+import { ChevronRight, Palette, Shirt, Volume2, VolumeX } from 'lucide-react';
+import { WEAR_NAMES, WEAR_SLOTS, withWear, type Wear, type WearBook, type WearSlot } from '../core/wear';
+import { WearTile } from './WearArt';
 import type { ChatMessage, WeatherState } from '../types';
 import { Heart, Sparkle, Zzz, Drop, Flower, Vein, type Mood } from './StickerArt';
 import {
@@ -99,6 +101,10 @@ interface UsSceneProps {
   theme?: SceneTheme;
   /** Picks one, for both phones - on the tab, by its button. */
   onTheme?: (theme: SceneTheme) => void;
+  /** What each of you is dressed in (core/wear). */
+  wear?: WearBook;
+  /** This phone's own one dressed differently - on the tab, by its button. */
+  onWear?: (wear: Wear) => void;
 }
 
 const MISS_WORDS = ['All good 😌', 'A little 🙂', 'Missing you 🥺', 'A lot 😭', 'Dangerously high 🚨'];
@@ -617,7 +623,9 @@ export const UsScene: React.FC<UsSceneProps> = ({
   onOpen,
   party = null,
   theme = 'auto',
-  onTheme
+  onTheme,
+  wear,
+  onWear
 }) => {
   const tr = useT();
   const [now, setNow] = useState(Date.now());
@@ -650,6 +658,17 @@ export const UsScene: React.FC<UsSceneProps> = ({
   // are asleep goes by the real time of day all the same.
   const look: Look = theme === 'auto' ? part : theme;
   const [picking, setPicking] = useState(false);
+  /** The wardrobe is open. */
+  const [dressing, setDressing] = useState(false);
+  useEffect(() => (dressing ? loadSounds(['wear-on', 'wear-off']) : undefined), [dressing]);
+  /** One thing put on this phone's own one, or taken off if it is what it has on. */
+  const dress = (slot: WearSlot, item: string) => {
+    if (!onWear) return;
+    const next = withWear(wear?.[activeUser], slot, item, Date.now());
+    haptic('tick');
+    playSound(next[slot] ? 'wear-on' : 'wear-off');
+    onWear(next);
+  };
   const asleep =
     !partnerOnline && (part === 'night' || (!!partnerLastSeen && now - partnerLastSeen > 10 * 60 * 60 * 1000));
 
@@ -2001,6 +2020,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
           phase={who === 'me' ? 0 : 2.3}
           layers={rigOf(who)}
           hat={!!partyWho}
+          wear={wear?.[who === 'me' ? activeUser : activeUser === 'user' ? 'partner' : 'user']}
           facing={who === 'me' ? dirTo('them') : (-dirTo('them') as 1 | -1)}
         >
           {play && partsFor(play, who)}
@@ -2216,6 +2236,7 @@ export const UsScene: React.FC<UsSceneProps> = ({
             aria-label={tr('Background')}
             onClick={() => {
               haptic('tick');
+              setDressing(false);
               setPicking(open => !open);
             }}
           >
@@ -2240,6 +2261,48 @@ export const UsScene: React.FC<UsSceneProps> = ({
                   <span aria-hidden="true">{choice.emoji}</span>
                   {tr(choice.label)}
                 </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+      {/* The wardrobe: each of you dresses your own one. */}
+      {size === 'tab' && onWear && (
+        <>
+          <button
+            type="button"
+            className="us-sound us-wear"
+            aria-expanded={dressing}
+            aria-label={tr('Dress up')}
+            onClick={() => {
+              haptic('tick');
+              setPicking(false);
+              setDressing(open => !open);
+            }}
+          >
+            <Shirt className="h-4 w-4" aria-hidden="true" />
+          </button>
+          {dressing && (
+            <div className="us-theme-menu us-wear-menu" role="group" aria-label={tr('Dress up')}>
+              {WEAR_SLOTS.map(row => (
+                <div key={row.slot} className="us-wear-row">
+                  <p>{tr(row.name)}</p>
+                  <div className="us-wear-items">
+                    {row.items.map(item => (
+                      <button
+                        key={item}
+                        type="button"
+                        className="us-wear-item"
+                        data-on={wear?.[activeUser]?.[row.slot] === item || undefined}
+                        aria-pressed={wear?.[activeUser]?.[row.slot] === item}
+                        aria-label={tr(WEAR_NAMES[item as keyof typeof WEAR_NAMES])}
+                        onClick={() => dress(row.slot, item)}
+                      >
+                        <WearTile slot={row.slot} item={item} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           )}

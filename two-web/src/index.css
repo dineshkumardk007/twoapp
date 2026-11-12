@@ -6251,3 +6251,220 @@ html.dark .ch-say[data-hint='wrong'] { color: #f43f5e; }
   .em-tray { animation-duration: 1ms !important; animation-iteration-count: 1 !important; animation-delay: 0ms !important; }
   .em-bubble { animation: none; }
 }
+
+/* ==========================================================================
+   A secret message under its foil (components/SecretScratch), what the bear
+   and bunny wear (components/WearArt) and the puppy on Home
+   (components/PetCard). Everything that moves moves by transform or opacity.
+   ========================================================================== */
+
+/* --- a secret message --- */
+.sc { position: relative; display: block; min-width: 150px; min-height: 44px; border-radius: 12px; }
+.sc-open { min-width: 0; min-height: 0; animation: sc-shown 420ms ease-out both; }
+@keyframes sc-shown { from { opacity: 0.4; transform: scale(0.97); } }
+.sc-words { display: block; padding: 2px 0; }
+.sc-foil {
+  position: absolute;
+  inset: -3px -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 6px);
+  border-radius: 12px;
+  touch-action: none;
+  cursor: grab;
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+.sc[data-leaving] .sc-foil { opacity: 0; transform: scale(1.06); pointer-events: none; }
+.sc-sparks { position: absolute; inset: -6px; pointer-events: none; }
+.sc-sparks i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: #fff;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: sc-spark 520ms ease-out both;
+}
+@keyframes sc-spark {
+  0% { opacity: 0; transform: scale(0.2) rotate(0deg); }
+  40% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.7) rotate(70deg); }
+}
+.sc-tag { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; font: 800 10px/1.2 Manrope, system-ui, sans-serif; letter-spacing: 0.03em; opacity: 0.75; }
+.sc-pick { display: flex; justify-content: flex-end; padding: 0 4px 6px; }
+.sc-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgb(var(--c-border));
+  border-radius: 9999px;
+  background: rgb(var(--c-surface));
+  color: rgb(var(--c-secondary));
+  font: 700 11.5px/1 Manrope, system-ui, sans-serif;
+  transition: transform 120ms ease;
+}
+.sc-toggle:active { transform: scale(0.95); }
+.sc-toggle[data-on] { border-color: transparent; background: linear-gradient(120deg, #8b5cf6, #ec4899 70%, #f59e0b); color: #fff; }
+
+/* --- what they wear --- */
+.wr-in { transform-box: fill-box; transform-origin: 50% 100%; }
+.wr-in[data-how='drop'] { animation: wr-drop 480ms cubic-bezier(0.3, 0.7, 0.3, 1.5) both; }
+.wr-in[data-how='slide'] { transform-origin: 50% 50%; animation: wr-slide 420ms cubic-bezier(0.3, 0.7, 0.3, 1.4) both; }
+.wr-in[data-how='pop'] { transform-origin: 50% 50%; animation: wr-pop 380ms cubic-bezier(0.3, 0.7, 0.3, 1.6) both; }
+@keyframes wr-drop { from { opacity: 0; transform: translateY(-26px) rotate(-14deg); } 70% { transform: translateY(1.5px) scale(1.08, 0.9); } }
+@keyframes wr-slide { from { opacity: 0; transform: translateY(-12px) scale(1.25); } }
+@keyframes wr-pop { from { opacity: 0; transform: scale(0.2) rotate(-25deg); } }
+.wr-tile { display: block; width: 100%; height: 100%; overflow: visible; }
+.us-wear { left: 84px; }
+.us-wear[aria-expanded='true'] { background: #fff; }
+.us-wear-menu { flex-direction: column; flex-wrap: nowrap; gap: 8px; max-height: 70%; overflow-y: auto; }
+.us-wear-row p { margin: 0 0 4px 2px; font: 800 10.5px/1 Manrope, system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: #6b5f8a; }
+.us-wear-items { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.us-wear-item {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 5px;
+  border-radius: 12px;
+  background: #f3effa;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 140ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.us-wear-item:active { transform: scale(0.88); }
+.us-wear-item[data-on] { background: #e4dcff; box-shadow: inset 0 0 0 2px #7c6cff; }
+/* The small faces in the games wear a hat taller than their own square. */
+.ch-face { overflow: visible; }
+
+/* --- the puppy --- */
+.pt-card { display: flex; flex-direction: column; gap: 8px; }
+.pt-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pt-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font: 700 1.15rem/1.2 Fraunces, Georgia, serif; color: rgb(var(--c-primary)); }
+.pt-name span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pt-name svg { flex-shrink: 0; color: rgb(var(--c-secondary)); }
+.pt-naming { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.pt-naming input {
+  width: 150px;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgb(var(--c-border));
+  border-radius: 12px;
+  background: rgb(var(--c-bg));
+  color: rgb(var(--c-primary));
+  font: 700 15px/1 Manrope, system-ui, sans-serif;
+}
+.pt-naming button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: rgb(var(--c-primary)); color: rgb(var(--c-surface)); }
+.pt-level { display: flex; flex-shrink: 0; flex-direction: column; align-items: flex-end; gap: 4px; font: 800 11.5px/1 Manrope, system-ui, sans-serif; color: rgb(var(--c-secondary)); }
+.pt-bar { display: block; width: 84px; height: 6px; border-radius: 9999px; background: rgb(var(--c-variant)); overflow: hidden; }
+.pt-bar i { display: block; height: 100%; border-radius: inherit; background: var(--grad-primary); transition: width 400ms ease; }
+.pt-stage {
+  display: block;
+  width: 100%;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #cfe9ff 0%, #e9f6ff 58%, #b9e4a8 58%, #a6d995 100%);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+html.dark .pt-stage { background: linear-gradient(180deg, #2b2a5c 0%, #3b3a78 58%, #2f5d3a 58%, #274f31 100%); }
+.pt { display: block; width: min(100%, 300px); height: auto; margin: 0 auto; overflow: visible; }
+.pt-all,
+.pt-body,
+.pt-head,
+.pt-tail,
+.pt-ear,
+.pt-eye,
+.pt-chew,
+.pt-tongue,
+.pt-bowl,
+.pt-ball,
+.pt-heart,
+.pt-z,
+.pt-cloud,
+.pt-want { transform-box: fill-box; transform-origin: center; }
+.pt-body { transform-origin: 50% 100%; animation: pt-breathe 2600ms ease-in-out infinite; }
+@keyframes pt-breathe { 50% { transform: scale(1.025, 0.975); } }
+.pt-tail { transform-origin: 0 100%; animation: pt-wag 420ms ease-in-out infinite alternate; }
+@keyframes pt-wag { from { transform: rotate(-14deg); } to { transform: rotate(18deg); } }
+.pt[data-mood='happy'] .pt-tail,
+.pt[data-doing] .pt-tail { animation-duration: 170ms; }
+.pt[data-mood='hungry'] .pt-tail,
+.pt[data-mood='bored'] .pt-tail { animation-duration: 1100ms; }
+.pt[data-mood='sulking']:not([data-doing]) .pt-tail,
+.pt[data-mood='asleep']:not([data-doing]) .pt-tail { animation: none; transform: rotate(40deg); }
+.pt-head { transform-origin: 50% 90%; animation: pt-look 5200ms ease-in-out infinite; }
+@keyframes pt-look { 0%, 60%, 100% { transform: rotate(0deg); } 70%, 85% { transform: rotate(-5deg); } }
+.pt-ear { transform-origin: 50% 0; animation: pt-flop 5200ms ease-in-out infinite; }
+.pt-ear[data-side='r'] { animation-delay: 300ms; }
+@keyframes pt-flop { 0%, 62%, 100% { transform: rotate(0deg); } 72% { transform: rotate(9deg); } 82% { transform: rotate(-4deg); } }
+.pt-eye { animation: pt-blink 4300ms linear infinite; }
+@keyframes pt-blink { 0%, 95%, 100% { transform: scaleY(1); } 97.5% { transform: scaleY(0.1); } }
+.pt-tongue { transform-origin: 50% 0; animation: pt-pant 360ms ease-in-out infinite alternate; }
+@keyframes pt-pant { to { transform: scaleY(1.25); } }
+.pt[data-mood='asleep']:not([data-doing]) .pt-head { animation: pt-doze 3200ms ease-in-out infinite; }
+@keyframes pt-doze { 50% { transform: translateY(3px) rotate(4deg); } }
+.pt[data-mood='sulking']:not([data-doing]) .pt-head { animation: none; transform: rotate(-9deg) translateY(3px); }
+.pt-z { animation: pt-z 1800ms linear infinite both; }
+@keyframes pt-z { 0% { opacity: 0; transform: translate(0, 6px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -12px); } }
+.pt-cloud { animation: pt-cloud 2400ms ease-in-out infinite alternate; }
+@keyframes pt-cloud { to { transform: translateX(-7px); } }
+.pt-want { transform-origin: 20% 100%; animation: pt-want 1200ms ease-in-out infinite alternate; }
+@keyframes pt-want { from { transform: scale(0.92); } to { transform: scale(1.04); } }
+/* Eating: the bowl arrives, the head goes down to it and munches. */
+.pt-bowl { transform-origin: 50% 100%; animation: pt-arrive 260ms cubic-bezier(0.3, 0.7, 0.3, 1.5) both; }
+@keyframes pt-arrive { from { opacity: 0; transform: translateY(14px) scale(0.6); } }
+.pt[data-doing='eat'] .pt-head { animation: pt-munch 200ms ease-in-out 240ms 6 alternate both; }
+@keyframes pt-munch { from { transform: translateY(20px) rotate(3deg); } to { transform: translateY(28px) rotate(-3deg); } }
+.pt-chew { animation: pt-chew 200ms ease-in-out infinite alternate; }
+@keyframes pt-chew { to { transform: scaleY(0.35); } }
+/* Playing: the ball bounces across, and it jumps for it. */
+.pt-ball { animation: pt-ball 1400ms linear both; }
+@keyframes pt-ball {
+  0% { transform: translate(-40px, -70px); animation-timing-function: ease-in; }
+  20% { transform: translate(8px, 0); animation-timing-function: ease-out; }
+  38% { transform: translate(48px, -46px); animation-timing-function: ease-in; }
+  56% { transform: translate(88px, 0); animation-timing-function: ease-out; }
+  70% { transform: translate(112px, -22px); animation-timing-function: ease-in; }
+  84% { transform: translate(134px, 0); }
+  100% { transform: translate(150px, 0); }
+}
+.pt[data-doing='play'] .pt-all { transform-origin: 50% 100%; animation: pt-jump 1400ms ease-in-out both; }
+@keyframes pt-jump {
+  0%, 22%, 62%, 100% { transform: translateY(0) scale(1); }
+  28% { transform: translateY(0) scale(1.06, 0.9); }
+  42% { transform: translateY(-30px) scale(0.96, 1.06) rotate(-4deg); }
+  56% { transform: translateY(0) scale(1.05, 0.93); }
+  76% { transform: translateY(-12px); }
+  88% { transform: translateY(0); }
+}
+/* Stroked: hearts, and a happy wriggle. */
+.pt-heart { animation: pt-heart 1000ms ease-out both; }
+@keyframes pt-heart { 0% { opacity: 0; transform: translateY(14px) scale(0.3); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-16px) scale(1.5); } }
+.pt[data-doing='stroke'] .pt-head { animation: pt-wriggle 220ms ease-in-out 4 alternate both; }
+@keyframes pt-wriggle { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+/* Full: no, thank you. */
+.pt[data-doing='full'] .pt-head { animation: pt-no 150ms ease-in-out 4 alternate both; }
+@keyframes pt-no { from { transform: translateX(-5px) rotate(-4deg); } to { transform: translateX(5px) rotate(4deg); } }
+.pt-says { min-height: 20px; margin: 0; text-align: center; font: 700 13.5px/1.35 Manrope, system-ui, sans-serif; color: rgb(var(--c-secondary)); }
+.pt-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pt-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border-radius: 16px;
+  background: rgb(var(--c-variant));
+  color: rgb(var(--c-primary));
+  font: 800 14px/1 Manrope, system-ui, sans-serif;
+  transition: transform 120ms ease, opacity 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pt-key span { font-size: 18px; }
+.pt-key:not(:disabled):active { transform: scale(0.95); }
+.pt-key:disabled { opacity: 0.5; }
+@media (prefers-reduced-motion: reduce) {
+  .pt *,
+  .wr-in,
+  .sc-open,
+  .sc-sparks i { animation-duration: 1ms !important; animation-iteration-count: 1 !important; animation-delay: 0ms !important; }
+}

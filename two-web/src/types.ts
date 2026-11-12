@@ -124,6 +124,11 @@ export interface ChatMessage {
    * photo, are gone from this phone; the bubble says it was unsent.
    */
   unsent?: boolean;
+  /**
+   * Words under a foil until the one they were sent to rubs it away
+   * (core/secretMessage). Whether it has been rubbed open is that phone's own.
+   */
+  secret?: boolean;
   /** At most one reaction from each of you, by seat (CHAT_REACTION). */
   reactions?: Partial<Record<'user' | 'partner', string>>;
   /**

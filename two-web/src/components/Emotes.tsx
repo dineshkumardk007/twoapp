@@ -21,6 +21,8 @@ import { haptic } from '../core/haptics';
 import { useT } from '../core/i18n';
 import { loadSounds, playSound } from '../core/sounds';
 import type { Seat } from '../core/usTwo';
+import { wearOf } from '../core/wear';
+import { WornOnFace } from './WearArt';
 
 // Emotes in the games (core/gameEmotes): each of you as your own one - the
 // bear in the first seat, the bunny in the second - pulling a face, with a
@@ -350,6 +352,8 @@ export const EmoteFace: React.FC<FaceProps> = ({ emote, seat, still }) => {
       <g className="em-head" data-move={move}>
         <Head animal={animal} />
         {face}
+        {/* Its hat, if it wears one - not its glasses, which would hide the face it is pulling. */}
+        <WornOnFace kind={animal} wear={wearOf(seat)} glasses={false} />
       </g>
       {around}
     </svg>

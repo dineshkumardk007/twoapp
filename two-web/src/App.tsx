@@ -277,6 +277,9 @@ import { CAN_WIDE_POCKETS } from './core/carrom';
 import { GAME_AIM_SIGNAL, hearAim, setAimSender } from './core/gameAim';
 import { HOMES_RECORD, cleanHomes, mergeHomes, withStars } from './core/cosyHomes';
 import { CAN_MAZE, MAZE_RECORD, MAZE_SIGNAL, cleanHalf, hearMaze, latestHalf, setMazeSender, type MazeHalf } from './core/twoHearts';
+import { CAN_SECRET, SECRET_WORDS } from './core/secretMessage';
+import { CAN_WEAR, WEAR_RECORD, cleanWear, latestWear, showWear, type Wear } from './core/wear';
+import { CAN_PET, PET_RECORD, cleanPetHalf, latestPetHalf, type PetHalf } from './core/pet';
 import { CAN_EMOTE, GAME_SAY_SIGNAL, OPEN_GAME_EVENT, hearGameSaid, roomOnScreen, setSaySender, type GameRoom } from './core/gameEmotes';
 import { CAN_PLAY_MORE, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
@@ -386,7 +389,7 @@ const APP_VERSION = 'APP_VERSION';
  * letter for a day closed until then (core/letters), and say when Two leaves
  * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE, CAN_SECRET, CAN_WEAR, CAN_PET];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -432,7 +435,7 @@ function chatFromWire(parsed: any): ChatMessage {
   const {
     isVoiceMemo, audioDataUrl, audioDurationSeconds, audioPeaks, heard,
     isPhoto, photoDataUrl, photoWidth, photoHeight, replyTo, sticker, photoHd, photoHdRef, file,
-    editedAt, unsent, reactions, viewOnce, viewedAt,
+    editedAt, unsent, reactions, viewOnce, viewedAt, secret,
     // Never a message's to claim: a call's line is made here from a CALL_LOG,
     // and when a message arrived is this phone's own record.
     call, receivedAt,
@@ -461,6 +464,8 @@ function chatFromWire(parsed: any): ChatMessage {
     ...rest,
     ...(voice || photo || {}),
     ...(photo && viewOnce === true ? { viewOnce: true } : {}),
+    // Only plain words go under a foil (core/secretMessage).
+    ...(secret === true && !voice && !photo && !stickerId && !sharedFile ? { secret: true } : {}),
     ...(stickerId ? { sticker: stickerId } : {}),
     ...(hd ? { photoHd: hd } : {}),
     ...(sharedFile ? { file: sharedFile } : {}),
@@ -1710,7 +1715,7 @@ export const App: React.FC = () => {
               };
             });
             if (!held) {
-              if (record.authorId !== state.activeUser && !msg.replay) announceMessage(parsed.text);
+              if (record.authorId !== state.activeUser && !msg.replay) announceMessage(parsed.secret === true ? tr(SECRET_WORDS) : parsed.text);
             }
           } else if (record.type === COMING_UP) {
             setState(prev => {
@@ -1954,6 +1959,26 @@ export const App: React.FC = () => {
             const at = Number(parsed?.at) || 0;
             const theme = cleanTheme(parsed?.theme);
             setState(prev => (prev.usTheme && prev.usTheme.at >= at ? prev : { ...prev, usTheme: { theme, at } }));
+          } else if (record.type === WEAR_RECORD) {
+            // What one of you has dressed your own bear or bunny in (core/wear).
+            const worn = cleanWear(parsed);
+            const seat: 'user' | 'partner' | null = record.authorId === 'user' ? 'user' : record.authorId === 'partner' ? 'partner' : null;
+            if (!worn || !seat) return;
+            setState(prev => {
+              const held = prev.usWear?.[seat];
+              const next = latestWear(held, worn);
+              return next === held ? prev : { ...prev, usWear: { ...prev.usWear, [seat]: next } };
+            });
+          } else if (record.type === PET_RECORD) {
+            // What one phone has done for the puppy (core/pet): the later word from it is kept.
+            const half = cleanPetHalf(parsed);
+            if (!half) return;
+            const whose = record.authorId === latestRef.current.state.activeUser ? 'mine' : 'theirs';
+            setState(prev => {
+              const held = prev.pet?.[whose];
+              const next = latestPetHalf(held, half);
+              return next === held ? prev : { ...prev, pet: { ...prev.pet, [whose]: next } };
+            });
           } else if (record.type === MAZE_RECORD) {
             // Two Hearts (core/twoHearts): where one of you is in the maze.
             // The later word from a phone is the one kept; this phone's own,
@@ -2591,6 +2616,8 @@ export const App: React.FC = () => {
   /** The latest state and session, for a save that cannot wait for the next render. */
   const latestRef = useRef({ state, session, vaultKey });
   latestRef.current = { state, session, vaultKey };
+  // What the two of you wear, where the games can look it up as they draw (core/wear).
+  showWear(state.usWear);
 
   useEffect(() => {
     if (isLocked) return; // nothing meaningful to persist before unlock
@@ -3920,6 +3947,21 @@ export const App: React.FC = () => {
     // Hug Kiss, where you both choose at once, one of you waited for ever.
     setState(prev => ({ ...prev, paperGames: { ...prev.paperGames, [game.kind]: mergeGame(prev.paperGames?.[game.kind], game) } }));
     wsRelay.broadcastUpdate(recordTypeOf(game.kind), mergeGame(latestRef.current.state.paperGames?.[game.kind], game));
+  };
+
+  /** This phone's own bear or bunny dressed differently (core/wear): here at once, and on their phone. */
+  const handleWear = (wear: Wear) => {
+    setState(prev => ({ ...prev, usWear: { ...prev.usWear, [prev.activeUser]: wear } }));
+    wsRelay.broadcastUpdate(WEAR_RECORD, wear);
+  };
+
+  /** This phone has fed, played with, stroked or named the puppy (core/pet). */
+  const handlePetHalf = (half: PetHalf) => {
+    setState(prev => {
+      const mine = latestPetHalf(prev.pet?.mine, half);
+      return mine === prev.pet?.mine ? prev : { ...prev, pet: { ...prev.pet, mine } };
+    });
+    wsRelay.broadcastUpdate(PET_RECORD, half);
   };
 
   /** This phone's own one has moved in Two Hearts (core/twoHearts): kept here, and said to their phone. */
@@ -6406,6 +6448,7 @@ export const App: React.FC = () => {
             // card has to mark the destination read, or the line you just
             // followed would still be sitting there when you came back.
             onNavigate={stable('selectTab', handleSelectTab)}
+            onPet={stable('pet', handlePetHalf)}
             // An ordinary message, not a need card: it is a question to
             // talk over, and arrived as "I need: Daily Question [DEEP]".
             onSendQuestion={stable('sendQuestion', (text: string) => handleSendMessage(text, false))}
@@ -6439,6 +6482,7 @@ export const App: React.FC = () => {
             partnerTyping={partnerTypingAt > 0}
             onPlay={stable('play', handlePlay)}
             onTheme={stable('usTheme', handleUsTheme)}
+            onWear={stable('usWear', handleWear)}
             party={partySeat}
             surpriseWaitingId={dueOne && surpriseLater.includes(dueOne.id) ? dueOne.id : null}
             onOpenSurprise={stable('openSurprise', (id: string) => {
@@ -6484,6 +6528,7 @@ export const App: React.FC = () => {
             // Only once their phone has said it can hold a message back:
             // an older one would show it straight away (core/sendLater).
             canSendLater={!!state.partnerApp?.can?.includes(CAN_SHOW_LATER)}
+            canSecret={!!state.partnerApp?.can?.includes(CAN_SECRET)}
             readAt={chatEntryRef.current.readAt}
             openKey={chatEntryRef.current.key}
             draft={state.chatDrafts?.couple}

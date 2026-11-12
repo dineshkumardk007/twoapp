@@ -26,6 +26,8 @@ import { StatusStrip } from '../components/StatusStrip';
 import { HomeCardId, HomeLayout, readHomeLayout, writeHomeLayout } from '../core/homeLayout';
 import { useT } from '../core/i18n';
 import { UsScene } from '../components/UsScene';
+import { PetCard } from '../components/PetCard';
+import type { PetHalf } from '../core/pet';
 import { FunnyNumbersCard } from '../components/FunnyNumbersCard';
 import type { PlayKind, Seat } from '../core/usTwo';
 
@@ -56,6 +58,8 @@ interface HomeViewProps {
   partnerTyping?: boolean;
   /** A boop, tickle, pinch, pat or pillow for them (UsScene), counted on both phones. */
   onPlay?: (kind: PlayKind, quiet: boolean, variant?: number) => void;
+  /** This phone has fed, played with, stroked or named the puppy (core/pet). */
+  onPet?: (half: PetHalf) => void;
   /** Whose birthday it is today, if anyone's: a party in Us two. */
   party?: Seat | null;
 }
@@ -117,6 +121,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   partnerOnline = false,
   partnerTyping = false,
   onPlay,
+  onPet,
   party = null
 }) => {
   const tr = useT();
@@ -171,7 +176,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
     switch (id) {
       case 'us':
         return hidden('us') ? null : (
-          // The two of you, as you are right now - and a few silly scores.
+          // The two of you, as you are right now - and the puppy you look after together.
+          <div className="space-y-6">
           <div className="rounded-3xl border border-linen-border bg-linen-surface p-4 sm:p-5 shadow-xs">
             <UsScene
               size="preview"
@@ -188,8 +194,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onPlay={(kind, quiet, variant) => onPlay?.(kind, quiet, variant)}
               party={party}
               theme={state.usTheme?.theme}
+              wear={state.usWear}
               onSendHeart={() => triggerGlobalPulse('Thinking of you')}
             />
+          </div>
+          {onPet && <PetCard mine={state.pet?.mine} theirs={state.pet?.theirs} partnerName={partnerName} onHalf={onPet} />}
           </div>
         );
       case 'numbers':

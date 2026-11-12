@@ -2668,5 +2668,149 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 0.5, wet: 0.12 },
     master: { loudness: MOMENT, highpass: 110 }
+  },
+
+  // ------------------------------------------------------------------------
+  // A secret message rubbed open (components/SecretScratch), dressing up
+  // (components/Wardrobe) and the puppy on Home (components/PetCard).
+  // ------------------------------------------------------------------------
+  'secret-open': {
+    use: 'Secret message: the last of the foil goes - a shimmer upward and a soft chime',
+    dry: () => {
+      const b = silence(1.4);
+      air(b, { start: 0, dur: 0.45, gain: 0.16, from: 1800, to: 7000, attack: 0.12, seed: 4201 });
+      run(b, ['A5', 'D6', 'F#6', 'A6', 'D7'], 0.055, { instrument: I.glock, gain: [0.2, 0.24, 0.28, 0.32, 0.36], start: 0.08, seed: 4202, mallet: 0 });
+      strike(b, { note: hz('D5'), instrument: I.glass, start: 0.36, gain: 0.3, seed: 4208, mallet: 0, decayScale: 1.3 });
+      twinkles(b, 0.4, 1.0, 5, 0.1, 4210);
+      return b;
+    },
+    room: { rt60: 1.1, wet: 0.2 },
+    master: { loudness: MOMENT, highpass: 250, maxSeconds: 1.4, tailFade: 0.5 }
+  },
+
+  'wear-on': {
+    use: 'Dress-up: something put on - a cloth swish, a pop into place, a little ting',
+    dry: () => {
+      const b = silence(0.8);
+      air(b, { start: 0, dur: 0.14, gain: 0.3, from: 900, to: 3200, attack: 0.03, seed: 4221 });
+      mode(b, { freq: 430, amp: 0.5, decay: 0.035, start: 0.13, glide: -0.4, glideTime: 0.025 });
+      noise(b, { start: 0.13, dur: 0.03, gain: 0.45, filter: { type: 'bandpass', f: 1300, q: 1.3 }, attack: 0.0008, decay: 0.008, seed: 4222 });
+      strike(b, { note: hz('F#6'), instrument: I.glock, start: 0.2, gain: 0.22, seed: 4223, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: SOFT + 1, highpass: 200, maxSeconds: 0.8, tailFade: 0.3 }
+  },
+
+  'wear-off': {
+    use: 'Dress-up: something taken off - a pop the other way and a swish',
+    dry: () => {
+      const b = silence(0.5);
+      mode(b, { freq: 300, amp: 0.45, decay: 0.03, glide: 0.5, glideTime: 0.03 });
+      air(b, { start: 0.04, dur: 0.16, gain: 0.26, from: 3000, to: 800, attack: 0.02, seed: 4231 });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: SOFT, highpass: 180 }
+  },
+
+  'pet-eat': {
+    use: 'Puppy: eating - kibble rattling in the bowl and five quick munches',
+    dry: () => {
+      const b = silence(1.5);
+      for (let i = 0; i < 4; i++) {
+        noise(b, { start: i * 0.035, dur: 0.03, gain: 0.3, filter: { type: 'bandpass', f: 2600 + i * 300, q: 2 }, attack: 0.0008, decay: 0.008, seed: 4241 + i, pan: i % 2 ? 0.2 : -0.2 });
+      }
+      for (let i = 0; i < 5; i++) {
+        const start = 0.24 + i * 0.2;
+        // Each bite: a soft crunch, and a tiny "nom" under it.
+        noise(b, { start, dur: 0.07, gain: 0.55, filter: { type: 'bandpass', f: 1500, q: 0.9 }, grain: 0.8, attack: 0.002, decay: 0.03, seed: 4250 + i });
+        voice(b, {
+          start: start + 0.02,
+          dur: 0.1,
+          freq: t => 300 * (1 - 0.2 * (t / 0.1)),
+          amp: t => 0.22 * Math.sin((Math.PI * t) / 0.1),
+          harmonics: [1, 0.5, 0.2]
+        });
+      }
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: MOMENT - 1, highpass: 160 }
+  },
+
+  'pet-bark': {
+    use: 'Puppy: two happy little yips',
+    dry: () => {
+      const b = silence(0.75);
+      for (const [i, start] of [0, 0.21].entries()) {
+        const f = 620 + i * 90;
+        voice(b, {
+          start,
+          dur: 0.13,
+          // A yip: up sharply, then falling away.
+          freq: t => f * (1 + 0.5 * Math.exp(-t / 0.012)) * (1 - 0.25 * (t / 0.13)),
+          amp: t => 0.55 * Math.min(1, t / 0.006) * Math.exp(-t / 0.06),
+          harmonics: [1, 0.8, 0.6, 0.4, 0.25, 0.12]
+        });
+        noise(b, { start, dur: 0.05, gain: 0.25, filter: { type: 'bandpass', f: 2200, q: 0.8 }, attack: 0.002, decay: 0.02, seed: 4261 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.35, wet: 0.08 },
+    master: { loudness: MOMENT, highpass: 250 }
+  },
+
+  'pet-squeak': {
+    use: 'Puppy: stroked - a pleased little squeak and a pant',
+    dry: () => {
+      const b = silence(0.9);
+      voice(b, {
+        start: 0,
+        dur: 0.24,
+        freq: t => 760 * (1 + 0.28 * Math.sin((Math.PI * t) / 0.24)) * (1 + 0.02 * Math.sin(2 * Math.PI * 22 * t)),
+        amp: t => 0.4 * Math.sin((Math.PI * t) / 0.24) ** 0.7,
+        harmonics: [1, 0.45, 0.2, 0.08]
+      });
+      for (let i = 0; i < 3; i++) {
+        air(b, { start: 0.32 + i * 0.14, dur: 0.09, gain: 0.16, from: 1200, to: 2400, attack: 0.02, seed: 4271 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.35, wet: 0.08 },
+    master: { loudness: SOFT + 2, highpass: 300 }
+  },
+
+  'pet-whine': {
+    use: 'Puppy: hungry or left alone - a small whine that droops',
+    dry: () => {
+      const b = silence(1.1);
+      voice(b, {
+        start: 0,
+        dur: 0.8,
+        freq: t => (880 - 260 * (t / 0.8) ** 1.4) * (1 + 0.025 * Math.sin(2 * Math.PI * 8 * t)),
+        amp: t => 0.4 * Math.min(1, t / 0.08) * Math.min(1, (0.8 - t) / 0.3),
+        harmonics: [1, 0.35, 0.15, 0.05]
+      });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: SOFT + 1, highpass: 300 }
+  },
+
+  'pet-ball': {
+    use: 'Puppy: a ball thrown - it bounces three times, lower each time',
+    dry: () => {
+      const b = silence(1.0);
+      for (const [i, start] of [0, 0.3, 0.52, 0.67].entries()) {
+        const gain = 0.8 * 0.62 ** i;
+        mode(b, { freq: 190 + i * 14, amp: gain, decay: 0.05, start, glide: 0.7, glideTime: 0.02 });
+        mode(b, { freq: 400 + i * 20, amp: gain * 0.5, decay: 0.03, start, glide: 0.5, glideTime: 0.015 });
+        noise(b, { start, dur: 0.03, gain: gain * 0.3, filter: { type: 'bandpass', f: 900, q: 1 }, attack: 0.001, decay: 0.008, seed: 4281 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.09 },
+    master: { loudness: MOMENT - 1, highpass: 140 }
   }
 };

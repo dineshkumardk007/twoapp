@@ -41,6 +41,8 @@ import { haptic } from '../core/haptics';
 import { useT } from '../core/i18n';
 import { loadSounds, playSound } from '../core/sounds';
 import type { Seat } from '../core/usTwo';
+import type { Wear } from '../core/wear';
+import { WornOnFace } from './WearArt';
 import { GameTour } from './GameTour';
 
 /** What the game is called, on its card and at its top. */
@@ -63,7 +65,7 @@ interface CosyHomesProps {
 /** What is being played: a numbered level, or a Free play board of a size, made from a seed. */
 type Playing = { level: number } | { free: number; seed: number };
 
-export const BearFace: React.FC = () => (
+export const BearFace: React.FC<{ wear?: Wear }> = ({ wear }) => (
   <svg viewBox="0 0 48 48" className="ch-face" aria-hidden="true">
     <circle cx={11.5} cy={13} r={7} fill="#c98a55" stroke="#3b2723" strokeWidth={2} />
     <circle cx={11.5} cy={13} r={3.2} fill="#a66c3d" />
@@ -79,10 +81,11 @@ export const BearFace: React.FC = () => (
     <circle cx={32.1} cy={23.5} r={0.7} fill="#fff" />
     <ellipse cx={12.4} cy={30.6} rx={2.8} ry={1.9} fill="#f58aa0" opacity={0.6} />
     <ellipse cx={35.6} cy={30.6} rx={2.8} ry={1.9} fill="#f58aa0" opacity={0.6} />
+    <WornOnFace kind="bear" wear={wear} />
   </svg>
 );
 
-export const BunnyFace: React.FC = () => (
+export const BunnyFace: React.FC<{ wear?: Wear }> = ({ wear }) => (
   <svg viewBox="0 0 48 48" className="ch-face" aria-hidden="true">
     <path d="M12.5,22 C8.5,10 10.5,2.5 15.5,2.5 C20.5,2.5 21,11 20,21 Z" fill="#fbf5ee" stroke="#3b2723" strokeWidth={2} strokeLinejoin="round" />
     <path d="M14.4,19 C12.4,11.5 13.2,6.5 15.5,6.5 C17.8,6.5 17.9,12 17.4,18.5 Z" fill="#f9a8c0" />
@@ -97,6 +100,7 @@ export const BunnyFace: React.FC = () => (
     <path d="M24,34.4 V36 M20.8,37 Q22.4,38.6 24,36.6 Q25.6,38.6 27.2,37" fill="none" stroke="#3b2723" strokeWidth={1.5} strokeLinecap="round" />
     <ellipse cx={12.6} cy={34} rx={2.8} ry={1.9} fill="#f58aa0" opacity={0.6} />
     <ellipse cx={35.4} cy={34} rx={2.8} ry={1.9} fill="#f58aa0" opacity={0.6} />
+    <WornOnFace kind="bunny" wear={wear} />
   </svg>
 );
 

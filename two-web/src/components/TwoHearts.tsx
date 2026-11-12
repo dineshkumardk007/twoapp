@@ -31,6 +31,7 @@ import {
   type MazeLevel
 } from '../core/twoHearts';
 import type { Seat } from '../core/usTwo';
+import { wearOf } from '../core/wear';
 import { BearFace, BunnyFace } from './CosyHomes';
 import { GameTour } from './GameTour';
 import { EmoteBubble, EmoteKey, useGameEmotes } from './Emotes';
@@ -196,7 +197,7 @@ export const MazeBoard: React.FC<BoardProps> = ({ maze, pos, got, signs, shut, s
           style={{ transform: `translate(${(pos[who] % w) * 100}%, ${Math.floor(pos[who] / w) * 100}%)` }}
         >
           <span className="th-who-in" data-side={together ? who : undefined} data-stuck={stuck === who || undefined}>
-            {who === 0 ? <BearFace /> : <BunnyFace />}
+            {who === 0 ? <BearFace wear={wearOf('user')} /> : <BunnyFace wear={wearOf('partner')} />}
           </span>
           {signs[who] !== null && (
             <span className="th-sign" key={`s${signs[who]}`}>
@@ -671,14 +672,14 @@ export const TwoHearts: React.FC<TwoHeartsProps> = ({ mine, theirs, me, partnerN
         <div className="th-two">
           <span className="th-chip" data-who={meIs}>
             <span className="th-chip-face" aria-hidden="true">
-              {meIs === 0 ? <BearFace /> : <BunnyFace />}
+              {meIs === 0 ? <BearFace wear={wearOf('user')} /> : <BunnyFace wear={wearOf('partner')} />}
             </span>
             {tr('You')}
             {emotes && <EmoteBubble shown={em.mine} seat={me} side="left" />}
           </span>
           <span className="th-chip" data-who={themIs} data-here={hereNow || undefined}>
             <span className="th-chip-face" aria-hidden="true">
-              {themIs === 0 ? <BearFace /> : <BunnyFace />}
+              {themIs === 0 ? <BearFace wear={wearOf('user')} /> : <BunnyFace wear={wearOf('partner')} />}
             </span>
             <span className="th-chip-name">{partnerName}</span>
             <small>{hereNow ? tr('here now') : tr('not here now')}</small>

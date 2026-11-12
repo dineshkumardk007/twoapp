@@ -6,6 +6,7 @@ import { triggerGlobalPulse } from '../components/SensoryPulseOverlay';
 import { useT } from '../core/i18n';
 import { bookOf } from '../core/surprise';
 import type { PlayKind, SceneTheme, Seat } from '../core/usTwo';
+import type { Wear } from '../core/wear';
 
 interface UsTwoViewProps {
   state: SpaceState;
@@ -14,6 +15,8 @@ interface UsTwoViewProps {
   onPlay: (kind: PlayKind, quiet: boolean, variant?: number) => void;
   /** Picks the sky over the scene, for both phones. */
   onTheme: (theme: SceneTheme) => void;
+  /** This phone's own bear or bunny dressed differently (core/wear). */
+  onWear?: (wear: Wear) => void;
   /** Whose birthday it is today, if anyone's: a party in the scene. */
   party?: Seat | null;
   /** A surprise of theirs, due and closed before its card: waiting here. */
@@ -33,6 +36,7 @@ export const UsTwoView: React.FC<UsTwoViewProps> = ({
   partnerTyping,
   onPlay,
   onTheme,
+  onWear,
   party = null,
   surpriseWaitingId = null,
   onOpenSurprise
@@ -66,6 +70,8 @@ export const UsTwoView: React.FC<UsTwoViewProps> = ({
         party={party}
         theme={state.usTheme?.theme}
         onTheme={onTheme}
+        wear={state.usWear}
+        onWear={onWear}
       />
 
       {(surpriseWaitingId || opened) && (

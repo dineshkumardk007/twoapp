@@ -63,6 +63,10 @@ export const LATEST_ONLY_TYPES = new Set([
   'GAME_HOMES',
   // Two Hearts, the maze for two: where each of you is, whole each time.
   'GAME_MAZE',
+  // What each of you has dressed your bear or bunny in, and what each phone
+  // has done for the puppy: whole each time.
+  'US_WEAR',
+  'US_PET',
   // A surprise one of you has planned for the other: the whole plan each
   // time it is saved, one at a time each - and the other phone's word that
   // it has all of it, and has opened it.

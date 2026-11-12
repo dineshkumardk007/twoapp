@@ -1,5 +1,7 @@
 import React from 'react';
 import { Face, PartyHat, type Mood } from './StickerArt';
+import type { Wear } from '../core/wear';
+import { WornGlasses, WornHat, WornNeck } from './WearArt';
 
 const INK = '#3b2723';
 export const FUR = { bear: '#c4895a', bunny: '#fffaf3' } as const;
@@ -201,6 +203,8 @@ interface RigProps {
   layers: React.MutableRefObject<RigLayers>;
   /** A party hat, on a birthday. */
   hat?: boolean;
+  /** What it has been dressed in (core/wear): a hat, glasses, something round the neck. */
+  wear?: Wear;
   /** Which way the other one is - what its face from the side looks toward: 1 right, -1 left. */
   facing?: 1 | -1;
   /** Drawn in front of it and moving with it: an arm reaching out, a pillow held up. */
@@ -214,7 +218,7 @@ interface RigProps {
  * breathes, sways, blinks and twitches an ear by itself; everything else is
  * done to it by a play.
  */
-export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, layers, hat, facing = 1, children }) => {
+export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, layers, hat, wear, facing = 1, children }) => {
   const j = JOINTS[kind];
   const fur = FUR[kind];
   const set = (name: RigLayer) => (el: HTMLDivElement | null) => {
@@ -258,6 +262,8 @@ export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, l
                         ) : (
                           <PartyHat x={-1} y={-24} rot={-6} s={0.74} />
                         ))}
+                      {/* Its own hat, on any day that is not a birthday. */}
+                      {!hat && <WornHat kind={kind} wear={wear} />}
                     </Art>
                     <Layer ref={set('face')} origin={[0, 0]}>
                       <Art>
@@ -290,12 +296,23 @@ export const Rig: React.FC<RigProps> = ({ kind, mood, arms, asleep, phase = 0, l
                           </Art>
                         </Layer>
                       )}
+                      {/* Glasses go on over the eyelids, so a blink does not wipe them away. */}
+                      {wear?.eyes && (
+                        <Art>
+                          <WornGlasses kind={kind} wear={wear} />
+                        </Art>
+                      )}
                     </Layer>
                     <Layer ref={set('side')} className="rig-side" origin={[0, 0]} style={{ transform: `scaleX(${facing})` }}>
                       <Art>{profile(kind, mood)}</Art>
                     </Layer>
                   </Layer>
                 </Layer>
+                {wear?.neck && (
+                  <Art>
+                    <WornNeck kind={kind} wear={wear} />
+                  </Art>
+                )}
                 <Layer ref={set('armL')} className="rig-arm rig-arm-l" origin={[-j.shoulder[0], j.shoulder[1]]}>
                   <Art>{limb(-1, fur)}</Art>
                 </Layer>

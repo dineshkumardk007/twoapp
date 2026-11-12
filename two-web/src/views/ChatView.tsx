@@ -59,6 +59,8 @@ import { who } from '../core/who';
 import { activeLocale, tr, useT } from '../core/i18n';
 import { focusForTyping } from '../core/softKeyboard';
 import { haptic } from '../core/haptics';
+import { isSecret } from '../core/secretMessage';
+import { SecretScratch } from '../components/SecretScratch';
 import {
   Send, Sparkles, Heart, EyeOff, Check, CheckCheck, Clock, Smile, RotateCw, Trash2, Phone,
   Search, X, ChevronUp, ChevronDown, CornerUpLeft, Copy, Pencil, Undo2, Image as ImageIcon, Download,
@@ -162,6 +164,8 @@ interface ChatViewProps {
   partnerStatus?: StatusNote;
   /** "Send later" is offered: the partner's phone can hold a message back (core/sendLater). */
   canSendLater?: boolean;
+  /** A message can be sent under a foil: the partner's phone shows one (core/secretMessage). */
+  canSecret?: boolean;
   /** False when this device has switched read receipts and typing off. */
   shareReceipts?: boolean;
   /** Writing started (true) or stopped (false); when each is said is decided in core/typing. */
@@ -184,6 +188,34 @@ function timeOf(at: number): string {
 }
 
 /** who(), as this phone says it: "You" (and the stand-in "Partner") in its own language. */
+/**
+ * A message's words: as they are, or - a secret one - under its foil for the
+ * one it was sent to, and marked as a secret for the one who sent it.
+ */
+const SecretOrPlain: React.FC<{ secret: boolean; mine: boolean; id: string; label: string; tag: string; children: React.ReactNode }> = ({
+  secret,
+  mine,
+  id,
+  label,
+  tag,
+  children
+}) =>
+  !secret ? (
+    <>{children}</>
+  ) : mine ? (
+    <>
+      <span className="sc-tag">
+        <EyeOff className="w-3 h-3" aria-hidden="true" />
+        {tag}
+      </span>
+      {children}
+    </>
+  ) : (
+    <SecretScratch id={id} label={label}>
+      {children}
+    </SecretScratch>
+  );
+
 function whoShown(author: string | undefined | null, activeUser: string, partnerName: string): string {
   const name = who(author, activeUser, partnerName);
   return name === 'You' ? tr('You') : name === 'Partner' ? tr('Partner') : name;
@@ -305,6 +337,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   partnerTyping = false,
   partnerStatus,
   canSendLater = false,
+  canSecret = false,
   shareReceipts = true,
   onTyping,
   onStartCall,
@@ -330,6 +363,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   /** The "Send later" times are open, for what is in the box. */
   const [laterOpen, setLaterOpen] = useState(false);
+  /** The words in the box go under a foil, for her to rub away (core/secretMessage). */
+  const [secretOn, setSecretOn] = useState(false);
   // Drawn again the moment a message of yours set for later comes due, and
   // when your partner's status runs out. What shows is decided by the clock
   // as it is then (core/sendLater, core/status).
@@ -743,10 +778,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
       }
       setEditing(null);
     } else {
-      onSendMessage(text, false, replyTo ? { replyTo } : undefined);
+      const extra = { ...(replyTo ? { replyTo } : {}), ...(secretOn && canSecret ? { secret: true as const } : {}) };
+      onSendMessage(text, false, Object.keys(extra).length ? extra : undefined);
       typing.sent();
       setReplyTo(null);
     }
+    setSecretOn(false);
     setInputText('');
     if (savedDraftRef.current !== draftKey(null)) {
       savedDraftRef.current = draftKey(null);
@@ -1409,6 +1446,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   // Copied from the message's menu rather than selected: a
                   // long press here opens the menu, so it cannot also start
                   // selecting words.
+                  <SecretOrPlain secret={isSecret(msg)} mine={mine} id={msg.id} label={tr('Rub to read')} tag={tr('Secret - rubbed open to read')}>
                   <p className="whitespace-pre-wrap break-words">
                     {highlight && matchSet.has(msg.id)
                       ? highlightParts(msg.text, highlight).map((part, k) =>
@@ -1442,6 +1480,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           )
                         )}
                   </p>
+                  </SecretOrPlain>
                 )}
                 </>
                 )}
@@ -1968,6 +2007,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {/* What the next message answers, or which message is being changed -
           with the way out of either. */}
+      {canSecret && !editing && !!inputText.trim() && !rec.active && (
+        <div className="sc-pick">
+          <button
+            type="button"
+            className="sc-toggle"
+            data-on={secretOn || undefined}
+            aria-pressed={secretOn}
+            onClick={() => {
+              haptic('tick');
+              setSecretOn(on => !on);
+            }}
+          >
+            <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
+            {secretOn ? tr('Secret: rubbed open to read') : tr('Send as a secret')}
+          </button>
+        </div>
+      )}
       {(replyTo || editing) && (
         <ComposeBanner
           mode={editing ? 'edit' : 'reply'}

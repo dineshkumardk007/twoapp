@@ -123,6 +123,8 @@ export function snippetOf(m: ChatMessage): string {
   if (m.isVoiceMemo) return 'Voice note';
   if (m.isPhoto) return m.viewOnce ? 'View-once photo' : 'Photo';
   if (m.sticker) return 'Sticker';
+  // A secret stays one in the quote above an answer to it.
+  if (m.secret) return 'Secret message';
   const text = (m.text || '').replace(/\s+/g, ' ').trim();
   return text.length > SNIPPET_CHARS ? text.slice(0, SNIPPET_CHARS - 1).trimEnd() + '…' : text;
 }
@@ -146,7 +148,7 @@ export function cleanReplyRef(raw: unknown): ChatReplyRef | undefined {
  * be view-once), the message it answers, or when it is to show (core/sendLater).
  */
 export type MessageExtras = Partial<VoiceFields> &
-  Partial<PhotoFields> & { replyTo?: ChatReplyRef; viewOnce?: true; showAt?: number; sticker?: string; photoHd?: HdInfo; file?: FileInfo };
+  Partial<PhotoFields> & { replyTo?: ChatReplyRef; viewOnce?: true; showAt?: number; sticker?: string; photoHd?: HdInfo; file?: FileInfo; secret?: true };
 
 export interface PhotoFields {
   isPhoto: true;
