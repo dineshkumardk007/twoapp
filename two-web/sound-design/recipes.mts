@@ -3115,5 +3115,160 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 0.5, wet: 0.1 },
     master: { loudness: MOMENT, highpass: 180, maxSeconds: 3.9, tailFade: 0.5 }
+  },
+
+  // ------------------------------------------------------------------------
+  // The games for two at once (core/duo): Bomb Squad, Catch Together, and
+  // Light and Shadow.
+  // ------------------------------------------------------------------------
+
+  'g-bm-tick': {
+    use: 'Bomb Squad: the clock, each second of the last fifteen - a hard little beep',
+    dry: () => {
+      const b = silence(0.2);
+      voice(b, { start: 0, dur: 0.07, freq: () => 1760, amp: t => 0.5 * Math.min(1, t / 0.002) * Math.min(1, (0.07 - t) / 0.01), harmonics: [1, 0, 0.3, 0, 0.12] });
+      return b;
+    },
+    master: { loudness: SOFT, highpass: 400 }
+  },
+
+  'g-bm-cut': {
+    use: 'Bomb Squad: a wire cut, or a button pressed right - a snip and a small good beep',
+    dry: () => {
+      const b = silence(0.5);
+      noise(b, { dur: 0.016, gain: 0.9, filter: { type: 'highpass', f: 3200 }, attack: 0.0004, decay: 0.004, seed: 7101 });
+      mode(b, { freq: 2600, amp: 0.3, decay: 0.012, start: 0.001 });
+      noise(b, { start: 0.035, dur: 0.012, gain: 0.5, filter: { type: 'bandpass', f: 4200, q: 1.2 }, attack: 0.0004, decay: 0.003, seed: 7102 });
+      strike(b, { note: hz('A5'), instrument: I.glock, start: 0.07, gain: 0.26, seed: 7103, mallet: 0 });
+      strike(b, { note: hz('D6'), instrument: I.glock, start: 0.14, gain: 0.3, seed: 7104, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: MOMENT - 1, highpass: 300 }
+  },
+
+  'g-bm-wrong': {
+    use: 'Bomb Squad: a mistake - a spark and a low buzzer',
+    dry: () => {
+      const b = silence(0.7);
+      noise(b, { dur: 0.05, gain: 0.8, filter: { type: 'highpass', f: 2500 }, attack: 0.0004, decay: 0.012, grain: 1, seed: 7111 });
+      for (const [start, dur] of [[0.05, 0.16], [0.26, 0.24]] as Array<[number, number]>) {
+        voice(b, {
+          start,
+          dur,
+          freq: () => 146,
+          amp: t => 0.4 * Math.min(1, t / 0.004) * Math.min(1, (dur - t) / 0.02),
+          harmonics: [1, 0, 0.6, 0, 0.45, 0, 0.35, 0, 0.28, 0, 0.2, 0, 0.15]
+        });
+      }
+      return b;
+    },
+    room: { rt60: 0.25, wet: 0.05 },
+    master: { loudness: MOMENT, highpass: 140 }
+  },
+
+  'g-bm-boom': {
+    use: 'Bomb Squad: it goes off - a crack, the blast, and bits coming down',
+    dry: () => {
+      const b = silence(2.2);
+      const rand = rng(7121);
+      noise(b, { dur: 0.05, gain: 1, filter: { type: 'highpass', f: 800 }, attack: 0.0003, decay: 0.012, seed: 7122 });
+      thump(b, 0.005, 1, 96, 7123);
+      thump(b, 0.07, 0.8, 78, 7124);
+      noise(b, { start: 0.01, dur: 1.5, gain: 0.95, filter: { type: 'bandpass', f: 600, q: 0.5 }, sweepTo: 220, attack: 0.004, decay: 0.42, grain: 0.85, pink: true, seed: 7125 });
+      noise(b, { start: 0.01, dur: 0.5, gain: 0.4, filter: { type: 'highpass', f: 3000 }, attack: 0.002, decay: 0.14, seed: 7126 });
+      for (let i = 0; i < 26; i++) {
+        const t = 0.35 + rand() ** 1.3 * 1.4;
+        noise(b, { start: t, dur: 0.02, gain: 0.08 + rand() * 0.16, filter: { type: 'bandpass', f: 900 + rand() * 3000, q: 1.6 }, attack: 0.0005, decay: 0.006, pan: rand() * 1.6 - 0.8, seed: 7130 + i });
+      }
+      return b;
+    },
+    room: { rt60: 1.2, wet: 0.2 },
+    master: { loudness: MOMENT + 1, highpass: 130, maxSeconds: 2.2, tailFade: 0.4 }
+  },
+
+  'g-bm-safe': {
+    use: 'Bomb Squad: made safe - the hum winds down, a click, and a relieved little fanfare',
+    dry: () => {
+      const b = silence(1.9);
+      voice(b, { start: 0, dur: 0.45, freq: t => 520 * (1 - 0.75 * (t / 0.45)), amp: t => 0.26 * (1 - t / 0.45), harmonics: [1, 0.4, 0.2] });
+      noise(b, { start: 0.44, dur: 0.02, gain: 0.7, filter: { type: 'bandpass', f: 2400, q: 1 }, attack: 0.0005, decay: 0.005, seed: 7141 });
+      run(b, ['D5', 'F#5', 'A5', 'D6'], 0.1, { instrument: I.marimba, gain: [0.3, 0.32, 0.34, 0.42], start: 0.55, seed: 7142, mallet: 0.15 });
+      for (const note of ['D5', 'A5', 'F#6']) strike(b, { note: hz(note), instrument: I.glass, start: 0.95, gain: 0.2, seed: 7150, mallet: 0, decayScale: 1.3 });
+      twinkles(b, 1.0, 1.6, 4, 0.09, 7160);
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.14 },
+    master: { loudness: MOMENT, highpass: 200, maxSeconds: 1.9, tailFade: 0.4 }
+  },
+
+  'g-ct-star': {
+    use: 'Catch Together: a star in the net - a soft catch and a bright ting',
+    dry: () => {
+      const b = silence(0.6);
+      noise(b, { dur: 0.04, gain: 0.3, filter: { type: 'bandpass', f: 900, q: 0.8 }, attack: 0.002, decay: 0.012, pink: true, seed: 7201 });
+      strike(b, { note: hz('A5'), instrument: I.glock, start: 0.01, gain: 0.3, seed: 7202, mallet: 0 });
+      strike(b, { note: hz('D6'), instrument: I.glass, start: 0.06, gain: 0.3, seed: 7203, mallet: 0, decayScale: 0.7 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: SOFT + 1, highpass: 300 }
+  },
+
+  'g-ct-heart': {
+    use: 'Catch Together: a heart in the net - three notes up, warmer than a star',
+    dry: () => {
+      const b = silence(0.9);
+      noise(b, { dur: 0.04, gain: 0.3, filter: { type: 'bandpass', f: 800, q: 0.8 }, attack: 0.002, decay: 0.012, pink: true, seed: 7211 });
+      run(b, ['F#5', 'A5', 'D6'], 0.07, { instrument: I.kalimba, gain: [0.3, 0.32, 0.4], start: 0.01, seed: 7212, decayScale: 1.3 });
+      strike(b, { note: hz('D5'), instrument: I.felt, start: 0.01, gain: 0.25, seed: 7216, mallet: 0 });
+      twinkles(b, 0.2, 0.6, 3, 0.08, 7218);
+      return b;
+    },
+    room: { rt60: 0.6, wet: 0.12 },
+    master: { loudness: MOMENT - 1, highpass: 260 }
+  },
+
+  'g-ct-bomb': {
+    use: 'Catch Together: a bomb in the net - a short, dull bang',
+    dry: () => {
+      const b = silence(0.9);
+      noise(b, { dur: 0.03, gain: 0.9, filter: { type: 'highpass', f: 1200 }, attack: 0.0004, decay: 0.008, seed: 7221 });
+      thump(b, 0.004, 0.95, 104, 7222);
+      noise(b, { start: 0.01, dur: 0.6, gain: 0.7, filter: { type: 'bandpass', f: 520, q: 0.6 }, sweepTo: 240, attack: 0.003, decay: 0.16, grain: 0.8, pink: true, seed: 7223 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: MOMENT, highpass: 140 }
+  },
+
+  'g-lm-key': {
+    use: 'Light and Shadow: the shadow picks up a key - a jingle of metal',
+    dry: () => {
+      const b = silence(0.7);
+      const rand = rng(7301);
+      for (let i = 0; i < 5; i++) {
+        strike(b, { note: 2300 + rand() * 1900, instrument: I.bell, start: i * 0.045 + rand() * 0.015, gain: 0.2 + rand() * 0.1, pan: rand() * 0.8 - 0.4, seed: 7302 + i, mallet: 0.5, decayScale: 0.35 });
+      }
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: MOMENT - 1, highpass: 500 }
+  },
+
+  'g-lm-gate': {
+    use: 'Light and Shadow: a gate unlocks - the key turns, a clunk, and it swings',
+    dry: () => {
+      const b = silence(1.0);
+      noise(b, { dur: 0.05, gain: 0.5, filter: { type: 'bandpass', f: 3000, q: 1.5 }, attack: 0.002, decay: 0.014, grain: 0.9, seed: 7311 });
+      noise(b, { start: 0.1, dur: 0.03, gain: 0.8, filter: { type: 'bandpass', f: 1400, q: 0.8 }, attack: 0.0005, decay: 0.008, seed: 7312 });
+      thump(b, 0.1, 0.6, 140, 7313);
+      // The hinge.
+      voice(b, { start: 0.18, dur: 0.42, freq: t => 300 + 260 * (t / 0.42) + 18 * Math.sin(2 * Math.PI * 23 * t), amp: t => 0.13 * Math.sin((Math.PI * t) / 0.42), harmonics: [1, 0.5, 0.35, 0.2] });
+      strike(b, { note: hz('D5'), instrument: I.glass, start: 0.6, gain: 0.22, seed: 7314, mallet: 0, decayScale: 0.9 });
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.16 },
+    master: { loudness: MOMENT - 1, highpass: 170 }
   }
 };

@@ -14,14 +14,15 @@
 import type { PaperKind } from './paperGames';
 import { PAPER_KINDS } from './paperGames';
 import type { SoundName } from './sounds';
+import { DUO_GAMES, type DuoGame } from './duo';
 
 export const GAME_SAY_SIGNAL = 'GAME_SAY';
 /** A phone that has emotes (said with its version, App's CAN_DO). */
 export const CAN_EMOTE = 'emotes-1';
 
 /** A game with a screen of its own that the two of you can both be on. */
-export type GameRoom = PaperKind | 'maze';
-const ROOMS: string[] = [...PAPER_KINDS, 'maze'];
+export type GameRoom = PaperKind | 'maze' | DuoGame;
+const ROOMS: string[] = [...PAPER_KINDS, 'maze', ...DUO_GAMES];
 export const isGameRoom = (value: unknown): value is GameRoom => typeof value === 'string' && ROOMS.includes(value);
 
 export interface Emote {

@@ -44,7 +44,8 @@ export type SoundName =
   | 'e-laugh' | 'e-cry' | 'e-angry' | 'e-thumb' | 'e-kiss' | 'e-shock' | 'e-tease' | 'e-yawn' | 'e-cool' | 'e-evil'
   | 'secret-open' | 'wear-on' | 'wear-off'
   | 'vx-heart' | 'vx-fire' | 'vx-laugh' | 'vx-party' | 'vx-kiss' | 'vx-broken' | 'vx-rose' | 'vx-ghost'
-  | 'vx-adore' | 'vx-rage' | 'vx-sparkle' | 'vx-diamond' | 'vx-butterfly' | 'vx-rocket' | 'vx-bolt' | 'vx-balloon';
+  | 'vx-adore' | 'vx-rage' | 'vx-sparkle' | 'vx-diamond' | 'vx-butterfly' | 'vx-rocket' | 'vx-bolt' | 'vx-balloon'
+  | 'g-bm-tick' | 'g-bm-cut' | 'g-bm-wrong' | 'g-bm-boom' | 'g-bm-safe' | 'g-ct-star' | 'g-ct-heart' | 'g-ct-bomb' | 'g-lm-key' | 'g-lm-gate';
 
 interface Loaded {
   buffer: AudioBuffer;

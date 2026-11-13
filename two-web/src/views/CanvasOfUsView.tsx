@@ -36,6 +36,10 @@ import { allDone, levelOn, totalStars, type HomesBook } from '../core/cosyHomes'
 import { HEARTS_NAME, HeartsIcon, TwoHearts } from '../components/TwoHearts';
 import { heartsIn, levelOfPair, mergeBooks, type MazeHalf } from '../core/twoHearts';
 import { OPEN_GAME_EVENT, isGameRoom } from '../core/gameEmotes';
+import { DUO_GAMES, DUO_NAMES, duoOf, isDuoGame, type DuoGame, type DuoHalf } from '../core/duo';
+import { BombIcon, BombSquad } from '../components/BombSquad';
+import { CatchIcon, CatchTogether } from '../components/CatchTogether';
+import { LampIcon, LampMaze } from '../components/LampMaze';
 import {
   CANVAS_MODE_KEY,
   GAME_NAMES,
@@ -80,13 +84,22 @@ interface CanvasOfUsViewProps {
   mazeReady?: boolean;
   /** Their phone has emotes in the games (core/gameEmotes). */
   emotesReady?: boolean;
+  /** The games for two at once (core/duo): how far each phone has seen the two of you get. */
+  duo?: { mine?: DuoHalf; theirs?: DuoHalf };
+  /** This phone has seen the two of you get further in one of them. */
+  onDuo?: (half: DuoHalf) => void;
+  /** Their phone has those games too. */
+  duoReady?: boolean;
 }
+
+/** The picture of each game for two at once, for its card. */
+const DUO_ICONS: Record<DuoGame, React.FC> = { bomb: BombIcon, catch: CatchIcon, lamp: LampIcon };
 
 /** Where this was last left - drawing, the games, or one game - so a game you were playing is still there. */
 function savedMode(): CanvasMode {
   try {
     const m = localStorage.getItem(CANVAS_MODE_KEY);
-    return m === 'games' || m === 'homes' || m === 'maze' || (PAPER_KINDS as string[]).includes(m || '') ? (m as CanvasMode) : 'draw';
+    return m === 'games' || m === 'homes' || m === 'maze' || isDuoGame(m) || (PAPER_KINDS as string[]).includes(m || '') ? (m as CanvasMode) : 'draw';
   } catch {
     return 'draw';
   }
@@ -225,7 +238,10 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   maze,
   onMaze,
   mazeReady = true,
-  emotesReady = true
+  emotesReady = true,
+  duo,
+  onDuo,
+  duoReady = true
 }) => {
   const tr = useT();
   const [mode, setMode] = useState<CanvasMode>(() => (onGame ? savedMode() : 'draw'));
@@ -238,7 +254,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     if (!onGame) return;
     const open = (e: Event) => {
       const room = (e as CustomEvent).detail;
-      if (!isGameRoom(room) || (room === 'maze' && !onMaze)) return;
+      if (!isGameRoom(room) || (room === 'maze' && !onMaze) || (isDuoGame(room) && !onDuo)) return;
       setMode(room);
       rememberCanvasMode(room);
     };
@@ -666,6 +682,23 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
               ) : null}
             </button>
           )}
+          {onDuo &&
+            DUO_GAMES.map(g => {
+              const Icon = DUO_ICONS[g];
+              const got = duoOf(duo?.mine, duo?.theirs)[g];
+              return (
+                <button key={g} type="button" className="cv-game" data-kind={g} onClick={() => chooseMode(g)}>
+                  <span className="cv-game-tag">{tr('Together')}</span>
+                  <span className="cv-game-art">
+                    <Icon />
+                  </span>
+                  <span className="cv-game-name">{tr(DUO_NAMES[g])}</span>
+                  <span className="cv-game-line" data-tone={got ? 'wait' : 'new'}>
+                    {!got ? tr('New - tap to play') : g === 'catch' ? tr('Best {n}', { n: got }) : tr('Level {n}', { n: got + 1 })}
+                  </span>
+                </button>
+              );
+            })}
           {PAPER_KINDS.map(k => {
             const line = shelfLine(k);
             const g = games?.[k];
@@ -715,7 +748,26 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
         />
       )}
 
-      {onGame && mode !== 'draw' && mode !== 'games' && mode !== 'homes' && mode !== 'maze' && (
+      {onDuo && isDuoGame(mode) && (
+        (() => {
+          const Game = mode === 'bomb' ? BombSquad : mode === 'catch' ? CatchTogether : LampMaze;
+          return (
+            <Game
+              key={mode}
+              mine={duo?.mine}
+              theirs={duo?.theirs}
+              me={activeUser}
+              partnerName={them}
+              canPlay={duoReady}
+              emotes={emotesReady}
+              onHalf={onDuo}
+              onBack={() => chooseMode('games')}
+            />
+          );
+        })()
+      )}
+
+      {onGame && mode !== 'draw' && mode !== 'games' && mode !== 'homes' && mode !== 'maze' && !isDuoGame(mode) && (
         <PaperGames
           key={mode}
           kind={mode}

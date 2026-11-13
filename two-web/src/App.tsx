@@ -279,6 +279,7 @@ import { HOMES_RECORD, cleanHomes, mergeHomes, withStars } from './core/cosyHome
 import { CAN_MAZE, MAZE_RECORD, MAZE_SIGNAL, cleanHalf, hearMaze, latestHalf, setMazeSender, type MazeHalf } from './core/twoHearts';
 import { CAN_SECRET, SECRET_WORDS } from './core/secretMessage';
 import { VFX_SIGNAL, hearVfx, setVfxSender } from './core/chatVfx';
+import { CAN_DUO, DUO_NAMES, DUO_RECORD, DUO_SIGNAL, cleanDuoHalf, hearDuo, isDuoGame, mergeDuo, setDuoSender, type DuoHalf } from './core/duo';
 import { CAN_WEAR, WEAR_RECORD, cleanWear, latestWear, showWear, type Wear } from './core/wear';
 import { CAN_EMOTE, GAME_SAY_SIGNAL, OPEN_GAME_EVENT, hearGameSaid, roomOnScreen, setSaySender, type GameRoom } from './core/gameEmotes';
 import { CAN_PLAY_MORE, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
@@ -389,7 +390,7 @@ const APP_VERSION = 'APP_VERSION';
  * letter for a day closed until then (core/letters), and say when Two leaves
  * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE, CAN_SECRET, CAN_WEAR];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE, CAN_SECRET, CAN_WEAR, CAN_DUO];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -1358,9 +1359,21 @@ export const App: React.FC = () => {
         try {
           const pop = hearGameSaid(JSON.parse(msg.signal.payload));
           if (pop && !isCamouflagedRef.current) {
-            const game = tr(pop.room === 'maze' ? 'Two Hearts' : GAME_NAMES[pop.room]);
+            const game = tr(pop.room === 'maze' ? 'Two Hearts' : isDuoGame(pop.room) ? DUO_NAMES[pop.room] : GAME_NAMES[pop.room]);
             tellGame(pop.room, pop.kind === 'emote' ? tr('Sent you {emote} in {game}', { emote: pop.emote.emoji, game }) : tr('Is playing {game}. Tap to join', { game }));
           }
+        } catch {
+          /* not something a game said */
+        }
+        return;
+      }
+
+      if (msg.type === 'REMOTE_SIGNAL' && msg.signal?.type === DUO_SIGNAL) {
+        // A game for two at once, as it is played (core/duo): straight to the
+        // game on screen, kept nowhere.
+        if (msg.signal.authorId === state.activeUser) return;
+        try {
+          hearDuo(JSON.parse(msg.signal.payload));
         } catch {
           /* not something a game said */
         }
@@ -1980,6 +1993,17 @@ export const App: React.FC = () => {
               const held = prev.usWear?.[seat];
               const next = latestWear(held, worn);
               return next === held ? prev : { ...prev, usWear: { ...prev.usWear, [seat]: next } };
+            });
+          } else if (record.type === DUO_RECORD) {
+            // The games for two at once (core/duo): how far one phone has seen
+            // the two of you get. Nothing it has counted is ever taken back.
+            const half = cleanDuoHalf(parsed);
+            if (!half) return;
+            const whose = record.authorId === latestRef.current.state.activeUser ? 'mine' : 'theirs';
+            setState(prev => {
+              const held = prev.duo?.[whose];
+              const next = mergeDuo(held, half);
+              return next === held ? prev : { ...prev, duo: { ...prev.duo, [whose]: next } };
             });
           } else if (record.type === MAZE_RECORD) {
             // Two Hearts (core/twoHearts): where one of you is in the maze.
@@ -3198,6 +3222,11 @@ export const App: React.FC = () => {
     setSaySender(said => wsRelay.sendSignal(GAME_SAY_SIGNAL, said));
     return () => setSaySender(null);
   }, []);
+  // And for the games the two of you play at the same moment (core/duo).
+  useEffect(() => {
+    setDuoSender(said => wsRelay.sendSignal(DUO_SIGNAL, said));
+    return () => setDuoSender(null);
+  }, []);
   // And for a tap on an emoji that plays an effect in the chat (core/chatVfx).
   useEffect(() => {
     setVfxSender(said => wsRelay.sendSignal(VFX_SIGNAL, said));
@@ -3960,6 +3989,17 @@ export const App: React.FC = () => {
   const handleWear = (wear: Wear) => {
     setState(prev => ({ ...prev, usWear: { ...prev.usWear, [prev.activeUser]: wear } }));
     wsRelay.broadcastUpdate(WEAR_RECORD, wear);
+  };
+
+  /** This phone has seen the two of you get further in a game for two at once (core/duo): kept here, and said to their phone. */
+  const handleDuoHalf = (half: DuoHalf) => {
+    const merged = mergeDuo(latestRef.current.state.duo?.mine, half);
+    if (!merged || merged === latestRef.current.state.duo?.mine) return;
+    setState(prev => {
+      const mine = mergeDuo(prev.duo?.mine, half);
+      return mine === prev.duo?.mine ? prev : { ...prev, duo: { ...prev.duo, mine } };
+    });
+    wsRelay.broadcastUpdate(DUO_RECORD, merged);
   };
 
   /** This phone's own one has moved in Two Hearts (core/twoHearts): kept here, and said to their phone. */
@@ -6693,6 +6733,9 @@ export const App: React.FC = () => {
             onHomes={handleHomesFinish}
             maze={state.maze}
             onMaze={handleMazeHalf}
+            duo={state.duo}
+            onDuo={handleDuoHalf}
+            duoReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_DUO)}
             mazeReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_MAZE)}
             emotesReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_EMOTE)}
             widePockets={!!state.partnerApp?.can?.includes(CAN_WIDE_POCKETS)}

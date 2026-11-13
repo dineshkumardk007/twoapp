@@ -103,6 +103,33 @@ export const MAZE_TOUR: TourLine[] = [
   { icon: '👋', text: 'Tap a sign to tell the other one' }
 ];
 
+/** And for the games the two of you play at the same moment (core/duo). */
+export const DUO_TOURS: Record<'bomb' | 'catch' | 'lamp', TourLine[]> = {
+  bomb: [
+    { icon: '💣', text: 'One of you has the bomb, the other has the book' },
+    { icon: '🏷️', text: 'Bomb: sign the shapes on its label' },
+    { icon: '📖', text: 'Book: find the page with that label' },
+    { icon: '✂️', text: 'Book signs the wires. Bomb cuts them, in order' },
+    { icon: '❌', text: 'Three mistakes, or no time left, and it goes off' },
+    { icon: '🔁', text: 'You swap every level' }
+  ],
+  catch: [
+    { icon: '🤝', text: 'You each hold one end of the net' },
+    { icon: '👆', text: 'Slide your finger to move your end' },
+    { icon: '⭐', text: 'Catch stars and hearts between you' },
+    { icon: '💣', text: 'Keep bombs out: close up or step aside' },
+    { icon: '❤️', text: 'Three bombs in the net ends the round' }
+  ],
+  lamp: [
+    { icon: '🏮', text: 'One carries the lamp. Walls stop them' },
+    { icon: '👤', text: 'The other is a shadow, and walks through walls' },
+    { icon: '💡', text: 'The shadow can only step where the light falls' },
+    { icon: '🔑', text: 'Shadow: fetch the key to open a gate' },
+    { icon: '🚪', text: 'Get both of you to the door' },
+    { icon: '🔁', text: 'You swap every level' }
+  ]
+};
+
 const KEY = 'two_game_tours_seen';
 /** Also held here, so a phone that cannot save still only shows each one once until Two is closed. */
 const thisTime = new Set<string>();
@@ -117,9 +144,10 @@ function saved(): string[] {
 }
 
 /** Whether this phone has already shown the box for this game. */
-export const tourSeen = (kind: PaperKind | typeof HOMES_TOUR_KEY | typeof MAZE_TOUR_KEY) => thisTime.has(kind) || saved().includes(kind);
+type TourKey = PaperKind | typeof HOMES_TOUR_KEY | typeof MAZE_TOUR_KEY | keyof typeof DUO_TOURS;
+export const tourSeen = (kind: TourKey) => thisTime.has(kind) || saved().includes(kind);
 
-export function markTourSeen(kind: PaperKind | typeof HOMES_TOUR_KEY | typeof MAZE_TOUR_KEY) {
+export function markTourSeen(kind: TourKey) {
   thisTime.add(kind);
   try {
     const list = saved();
