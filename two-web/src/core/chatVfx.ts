@@ -36,7 +36,7 @@ export const VFX: readonly Vfx[] = [
   { id: 'rose', emoji: '🌹', name: 'Rose petals', sound: 'vx-rose', ms: 4600 },
   { id: 'ghost', emoji: '👻', name: 'Ghost', sound: 'vx-ghost', ms: 3200 },
   { id: 'adore', emoji: '🥰', name: 'Adoring', sound: 'vx-adore', ms: 3400 },
-  { id: 'rage', emoji: '😡', name: 'Angry', sound: 'vx-rage', ms: 2600 },
+  { id: 'rage', emoji: '😡', name: 'Angry', sound: 'vx-rage', ms: 2900 },
   { id: 'sparkle', emoji: '✨', name: 'Sparkles', sound: 'vx-sparkle', ms: 3400 },
   { id: 'diamond', emoji: '💎', name: 'Diamonds', sound: 'vx-diamond', ms: 3200 },
   { id: 'butterfly', emoji: '🦋', name: 'Butterflies', sound: 'vx-butterfly', ms: 4200 },

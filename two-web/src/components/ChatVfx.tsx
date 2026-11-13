@@ -308,40 +308,89 @@ const DRAW: Record<VfxId, Draw> = {
   ),
 
   // The chat shakes, the screen goes red at the edges, and steam shoots out of it.
-  rage: (p, r) => (
-    <>
-      <i className="vx-redden" />
-      {range(16).map(i => {
-        const side = i % 2 ? 1 : -1;
-        return (
-          <i
-            key={i}
-            className="vx-steam"
-            style={vars({
-              '--x': px(p.ox + side * 18),
-              '--y': px(p.oy - 6),
-              '--fx': px(side * (40 + r() * 120)),
-              '--fy': px(-(50 + r() * 150)),
-              '--s': 0.8 + r() * 1.6,
-              '--d': sec(Math.floor(i / 2) * 0.07 + r() * 0.05)
-            })}
-          />
-        );
-      })}
-      {range(6).map(i => {
-        const a = (i / 6) * Math.PI * 2 + r();
-        return (
-          <i
-            key={`m${i}`}
-            className="vx-mark"
-            style={vars({ '--x': px(p.ox + Math.cos(a) * (70 + r() * 50)), '--y': px(p.oy + Math.sin(a) * (60 + r() * 40)), '--s': 0.8 + r() * 0.9, '--d': sec(0.15 + i * 0.16) })}
-          >
-            💢
-          </i>
-        );
-      })}
-    </>
-  ),
+  // The face itself comes up big, goes red and shakes harder and harder, steam
+  // puffing from its head - and then it blows its top: a bang, a burst of
+  // steam, and little angry faces flying everywhere.
+  rage: (p, r) => {
+    const cx = p.w / 2;
+    const cy = p.h * 0.42;
+    const at = { '--x': px(cx), '--y': px(cy) };
+    return (
+      <>
+        <i className="vx-rg-vign" />
+        <i className="vx-rg-flush" style={vars(at)} />
+        {/* Steam from the top of its head, in three puffs, each bigger than the last. */}
+        {range(3).map(wave =>
+          range(4).map(k => {
+            const side = k % 2 ? 1 : -1;
+            return (
+              <i
+                key={`s${wave}-${k}`}
+                className="vx-rg-puff"
+                style={vars({
+                  '--x': px(cx + side * (34 + r() * 10)),
+                  '--y': px(cy - 52 - r() * 8),
+                  '--fx': px(side * (20 + r() * 50 + wave * 18)),
+                  '--fy': px(-(60 + r() * 60 + wave * 30)),
+                  '--s': 0.7 + wave * 0.35 + r() * 0.4,
+                  '--d': sec(0.5 + wave * 0.3 + (k >> 1) * 0.06)
+                })}
+              />
+            );
+          })
+        )}
+        {range(4).map(i => {
+          const a = -Math.PI / 2 + (i % 2 ? 1 : -1) * (0.7 + r() * 0.5);
+          return (
+            <i
+              key={`m${i}`}
+              className="vx-rg-mark"
+              style={vars({ '--x': px(cx + Math.cos(a) * (88 + r() * 20)), '--y': px(cy + Math.sin(a) * (78 + r() * 20)), '--s': 0.8 + r() * 0.5, '--d': sec(0.35 + i * 0.27) })}
+            >
+              💢
+            </i>
+          );
+        })}
+        <i className="vx-rg-face" style={vars({ ...at, '--fx': px(p.ox - cx), '--fy': px(p.oy - cy) })}>
+          <b>😡</b>
+        </i>
+        {/* It blows its top. */}
+        <i className="vx-ring vx-rg-ring" style={vars({ ...at, '--d': '1.45s' })} />
+        {range(12).map(i => {
+          const a = (i / 12) * Math.PI * 2 + r() * 0.3;
+          const far = 90 + r() * 90;
+          return (
+            <i
+              key={`b${i}`}
+              className="vx-rg-blast"
+              style={vars({ ...at, '--fx': px(Math.cos(a) * far), '--fy': px(Math.sin(a) * far * 0.8), '--s': 1 + r() * 1.2, '--d': sec(1.45 + r() * 0.06) })}
+            />
+          );
+        })}
+        {range(14).map(i => {
+          const a = (i / 14) * Math.PI * 2 + r() * 0.4;
+          const far = Math.min(p.w, p.h) * (0.32 + r() * 0.28);
+          return (
+            <i
+              key={`f${i}`}
+              className="vx-rg-bit"
+              style={vars({
+                ...at,
+                '--fx': px(Math.cos(a) * far),
+                '--fy': px(Math.sin(a) * far),
+                '--fall': px(120 + r() * 160),
+                '--r': `${Math.round(r() * 720 - 360)}deg`,
+                '--s': 0.5 + r() * 0.6,
+                '--d': sec(1.47 + r() * 0.08)
+              })}
+            >
+              {i % 3 ? '😡' : '🤬'}
+            </i>
+          );
+        })}
+      </>
+    );
+  },
 
   // A band of light sweeps across, and gold stars come out and go in all over the screen.
   sparkle: (p, r) => (
@@ -566,7 +615,7 @@ export const VfxEmoji: React.FC<{ vfx: Vfx; id: string; label: string; onPlay: (
 
 /** Shakes the conversation for a moment (the angry one, a rocket leaving, a bolt landing). */
 const SHAKES: Partial<Record<VfxId, [how: string, delay: number, ms: number]>> = {
-  rage: ['hard', 0, 900],
+  rage: ['hard', 1450, 520],
   rocket: ['soft', 250, 700],
   bolt: ['soft', 100, 400]
 };

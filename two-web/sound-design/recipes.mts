@@ -2956,28 +2956,61 @@ export const RECIPES: Record<string, Recipe> = {
   },
 
   'vx-rage': {
-    use: 'Chat effect, angry: a growl, the ground stamped, and steam hissing out',
+    use: 'Chat effect, angry: a huff, a growl that boils up into a kettle whistle as it shakes, then it blows - a bang and a blast of steam - and a last grumble',
     dry: () => {
-      const b = silence(2.3);
-      // The growl: low and rough, shaking as it goes.
+      const b = silence(2.9);
+      const rand = rng(6101);
+      // "Hmph!" - a short angry huff through the nose as the face comes up.
+      noise(b, { start: 0.04, dur: 0.16, gain: 0.5, filter: { type: 'bandpass', f: 1300, q: 1.2 }, attack: 0.01, decay: 0.05, pink: true, seed: 6102 });
+      voice(b, { start: 0.04, dur: 0.16, freq: t => 190 - 60 * (t / 0.16), amp: t => 0.32 * Math.sin((Math.PI * t) / 0.16), harmonics: [1, 0.7, 0.4, 0.2] });
+      // The growl, rising and roughening up to the bang.
+      const grow = 1.2;
       voice(b, {
-        start: 0,
-        dur: 1.1,
-        freq: t => 112 * (1 + 0.1 * Math.sin((Math.PI * t) / 1.1)) * (1 + 0.03 * Math.sin(2 * Math.PI * 31 * t)),
-        amp: t => 0.42 * Math.sin((Math.PI * t) / 1.1) ** 0.5 * (0.6 + 0.4 * Math.sin(2 * Math.PI * 27 * t) ** 2),
-        harmonics: [1, 0.9, 0.75, 0.6, 0.45, 0.35, 0.25, 0.18, 0.1]
+        start: 0.25,
+        dur: grow,
+        freq: t => (95 + 85 * (t / grow) ** 1.6) * (1 + 0.04 * Math.sin(2 * Math.PI * (9 + 20 * (t / grow)) * t)),
+        amp: t => (0.18 + 0.32 * (t / grow)) * Math.min(1, t / 0.08) * (0.65 + 0.35 * Math.sin(2 * Math.PI * (14 + 18 * (t / grow)) * t) ** 2),
+        harmonics: [1, 0.9, 0.8, 0.6, 0.5, 0.38, 0.28, 0.2, 0.12]
       });
-      noise(b, { start: 0, dur: 1.1, gain: 0.16, filter: { type: 'bandpass', f: 800, q: 0.7 }, attack: 0.1, grain: 0.9, seed: 6101 });
-      for (const t of [0.08, 0.34, 0.6]) thump(b, t, 0.75, 96, 6110);
-      // Steam, twice, from both ears.
-      for (const [t, pan] of [[0.12, -0.7], [0.2, 0.7], [0.7, -0.6], [0.78, 0.6]] as Array<[number, number]>) {
-        noise(b, { start: t, dur: 0.6, gain: 0.34, filter: { type: 'highpass', f: 3800 }, attack: 0.02, decay: 0.2, pan, seed: 6120 });
-        noise(b, { start: t, dur: 0.5, gain: 0.14, filter: { type: 'bandpass', f: 2400, q: 2 }, sweepTo: 3600, attack: 0.02, decay: 0.16, pan, seed: 6121 });
+      noise(b, { start: 0.25, dur: grow, gain: 0.14, filter: { type: 'bandpass', f: 700, q: 0.8 }, sweepTo: 1400, attack: 0.3, grain: 1, seed: 6103 });
+      // The kettle: a whistle that comes up out of the growl and climbs.
+      voice(b, {
+        start: 0.7,
+        dur: 0.76,
+        freq: t => (950 + 1500 * (t / 0.76) ** 1.4) * (1 + 0.012 * Math.sin(2 * Math.PI * 7 * t)),
+        amp: t => 0.2 * (t / 0.76) ** 1.3,
+        harmonics: [1, 0.08]
+      });
+      // Steam, puffing from one side then the other, three times, each bigger.
+      [0.5, 0.8, 1.1].forEach((t, wave) => {
+        for (const pan of [-0.6, 0.6]) {
+          noise(b, { start: t + (pan > 0 ? 0.06 : 0), dur: 0.35, gain: 0.16 + wave * 0.08, filter: { type: 'highpass', f: 3400 }, attack: 0.01, decay: 0.12, pan, seed: 6110 + wave });
+        }
+      });
+      // It blows its top.
+      const bang = 1.45;
+      noise(b, { start: bang, dur: 0.05, gain: 1, filter: { type: 'bandpass', f: 1600, q: 0.5 }, attack: 0.0004, decay: 0.012, seed: 6130 });
+      thump(b, bang, 1, 88, 6131);
+      thump(b, bang + 0.06, 0.6, 70, 6132);
+      noise(b, { start: bang, dur: 0.9, gain: 0.8, filter: { type: 'highpass', f: 2200 }, attack: 0.004, decay: 0.3, seed: 6133 });
+      noise(b, { start: bang, dur: 0.7, gain: 0.5, filter: { type: 'bandpass', f: 500, q: 0.6 }, sweepTo: 220, attack: 0.003, decay: 0.2, grain: 0.8, pink: true, seed: 6134 });
+      // The little faces popping out all over.
+      for (let i = 0; i < 10; i++) {
+        const t = bang + 0.08 + rand() * 0.55;
+        mode(b, { freq: 500 + rand() * 600, amp: 0.2, decay: 0.03, start: t, glide: -0.4, glideTime: 0.02, pan: rand() * 1.4 - 0.7 });
       }
+      // And one last grumble as it settles.
+      voice(b, {
+        start: 2.25,
+        dur: 0.4,
+        freq: t => 150 - 40 * (t / 0.4) + 8 * Math.sin(2 * Math.PI * 22 * t),
+        amp: t => 0.22 * Math.sin((Math.PI * t) / 0.4),
+        harmonics: [1, 0.8, 0.5, 0.3, 0.15]
+      });
       return b;
     },
-    room: { rt60: 0.4, wet: 0.07 },
-    master: { loudness: MOMENT, highpass: 150, maxSeconds: 2.3, tailFade: 0.3 }
+    room: { rt60: 0.45, wet: 0.08 },
+    master: { loudness: MOMENT, highpass: 140, maxSeconds: 2.9, tailFade: 0.3 }
   },
 
   'vx-sparkle': {
