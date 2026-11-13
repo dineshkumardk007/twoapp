@@ -154,7 +154,7 @@ export const CANVAS_MODE_KEY = 'two_canvas_mode';
  * Hearts, the maze you do together (core/twoHearts): on the shelf with the
  * games, but neither is one of them.
  */
-export type CanvasMode = 'draw' | 'games' | 'homes' | 'maze' | 'bomb' | 'catch' | 'lamp' | PaperKind;
+export type CanvasMode = 'draw' | 'games' | 'homes' | 'maze' | 'bomb' | 'catch' | 'lamp' | 'dive' | 'space' | PaperKind;
 /** Opens Canvas of Us here next time - on a game with a move waiting, say. */
 export function rememberCanvasMode(mode: CanvasMode) {
   try {

@@ -3270,5 +3270,154 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 0.9, wet: 0.16 },
     master: { loudness: MOMENT - 1, highpass: 170 }
+  },
+
+  // ------------------------------------------------------------------------
+  // Treasure Divers and Space Crew (core/treasureDive, core/spaceCrew).
+  // ------------------------------------------------------------------------
+
+  'g-dv-swim': {
+    use: 'Treasure Divers: one stroke - a soft push of water and a couple of bubbles',
+    dry: () => {
+      const b = silence(0.5);
+      noise(b, { dur: 0.16, gain: 0.3, filter: { type: 'bandpass', f: 520, q: 0.8 }, sweepTo: 300, attack: 0.03, decay: 0.06, pink: true, seed: 7401 });
+      for (const [t, f] of [[0.07, 620], [0.14, 880]] as Array<[number, number]>) {
+        voice(b, { start: t, dur: 0.05, freq: u => f * (1 + 0.8 * (u / 0.05)), amp: u => 0.16 * Math.exp(-u / 0.02), harmonics: [1, 0.1] });
+      }
+      return b;
+    },
+    master: { loudness: MICRO + 1, highpass: 180 }
+  },
+
+  'g-dv-chest': {
+    use: 'Treasure Divers: a chest found - the lid creaks, coins, and a bright chime',
+    dry: () => {
+      const b = silence(1.2);
+      const rand = rng(7411);
+      voice(b, { start: 0, dur: 0.16, freq: t => 240 + 200 * (t / 0.16) + 14 * Math.sin(2 * Math.PI * 30 * t), amp: t => 0.14 * Math.sin((Math.PI * t) / 0.16), harmonics: [1, 0.5, 0.3] });
+      for (let i = 0; i < 7; i++) {
+        strike(b, { note: 2400 + rand() * 2200, instrument: I.bell, start: 0.14 + i * 0.04 + rand() * 0.02, gain: 0.14 + rand() * 0.1, pan: rand() - 0.5, seed: 7412 + i, mallet: 0.5, decayScale: 0.3 });
+      }
+      run(b, ['A5', 'D6', 'F#6'], 0.08, { instrument: I.glock, gain: [0.24, 0.28, 0.34], start: 0.42, seed: 7430, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.2 },
+    master: { loudness: MOMENT - 1, highpass: 220 }
+  },
+
+  'g-dv-current': {
+    use: 'Treasure Divers: swum into a current - a rush of water that drags, and air escaping',
+    dry: () => {
+      const b = silence(1.1);
+      const rand = rng(7441);
+      noise(b, { dur: 0.7, gain: 0.7, filter: { type: 'bandpass', f: 900, q: 0.6 }, sweepTo: 280, attack: 0.03, decay: 0.24, grain: 0.6, pink: true, seed: 7442 });
+      noise(b, { dur: 0.4, gain: 0.3, filter: { type: 'highpass', f: 2600 }, attack: 0.02, decay: 0.12, seed: 7443 });
+      for (let i = 0; i < 9; i++) {
+        const t = 0.08 + rand() * 0.5;
+        const f = 500 + rand() * 700;
+        voice(b, { start: t, dur: 0.05, freq: u => f * (1 + 0.9 * (u / 0.05)), amp: u => 0.18 * Math.exp(-u / 0.02), harmonics: [1, 0.12], pan: rand() - 0.5 });
+      }
+      return b;
+    },
+    room: { rt60: 0.7, wet: 0.14 },
+    master: { loudness: MOMENT, highpass: 160 }
+  },
+
+  'g-dv-air': {
+    use: 'Treasure Divers: air sent down from the boat - a hiss down the line and a stream of bubbles',
+    dry: () => {
+      const b = silence(1.1);
+      const rand = rng(7451);
+      noise(b, { dur: 0.35, gain: 0.4, filter: { type: 'highpass', f: 3200 }, attack: 0.03, decay: 0.12, seed: 7452 });
+      for (let i = 0; i < 12; i++) {
+        const t = 0.15 + i * 0.05 + rand() * 0.02;
+        const f = 420 + i * 55 + rand() * 120;
+        voice(b, { start: t, dur: 0.055, freq: u => f * (1 + 0.85 * (u / 0.055)), amp: u => 0.2 * Math.exp(-u / 0.022), harmonics: [1, 0.12], pan: rand() * 0.8 - 0.4 });
+      }
+      strike(b, { note: hz('D6'), instrument: I.glass, start: 0.7, gain: 0.2, seed: 7460, mallet: 0, decayScale: 0.8 });
+      return b;
+    },
+    room: { rt60: 0.6, wet: 0.14 },
+    master: { loudness: MOMENT - 1, highpass: 220 }
+  },
+
+  'g-sp-shot': {
+    use: 'Space Crew: the guns fire - a short laser "pew"',
+    dry: () => {
+      const b = silence(0.3);
+      voice(b, { start: 0, dur: 0.14, freq: t => 2300 * Math.exp(-t / 0.045) + 260, amp: t => 0.42 * Math.min(1, t / 0.003) * Math.exp(-t / 0.05), harmonics: [1, 0.5, 0.25, 0.12] });
+      noise(b, { dur: 0.03, gain: 0.25, filter: { type: 'highpass', f: 4000 }, attack: 0.0005, decay: 0.008, seed: 7501 });
+      return b;
+    },
+    master: { loudness: SOFT, highpass: 240 }
+  },
+
+  'g-sp-boom': {
+    use: 'Space Crew: a rock shot to bits - a crunchy pop and the bits scattering',
+    dry: () => {
+      const b = silence(0.8);
+      const rand = rng(7511);
+      noise(b, { dur: 0.03, gain: 0.9, filter: { type: 'bandpass', f: 1500, q: 0.5 }, attack: 0.0004, decay: 0.008, seed: 7512 });
+      thump(b, 0.004, 0.7, 120, 7513);
+      noise(b, { start: 0.01, dur: 0.35, gain: 0.5, filter: { type: 'bandpass', f: 800, q: 0.7 }, sweepTo: 320, attack: 0.003, decay: 0.1, grain: 0.9, seed: 7514 });
+      for (let i = 0; i < 9; i++) {
+        noise(b, { start: 0.05 + rand() * 0.4, dur: 0.015, gain: 0.1 + rand() * 0.15, filter: { type: 'bandpass', f: 1200 + rand() * 2600, q: 1.6 }, attack: 0.0005, decay: 0.004, pan: rand() * 1.4 - 0.7, seed: 7520 + i });
+      }
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: MOMENT - 1, highpass: 150 }
+  },
+
+  'g-sp-crack': {
+    use: 'Space Crew: a big rock hit once - it cracks but holds',
+    dry: () => {
+      const b = silence(0.4);
+      noise(b, { dur: 0.025, gain: 0.8, filter: { type: 'highpass', f: 1800 }, attack: 0.0004, decay: 0.006, seed: 7531 });
+      mode(b, { freq: 640, amp: 0.4, decay: 0.04, glide: 0.5, glideTime: 0.02 });
+      mode(b, { freq: 1500, amp: 0.2, decay: 0.02, start: 0.012 });
+      return b;
+    },
+    master: { loudness: SOFT + 1, highpass: 200 }
+  },
+
+  'g-sp-hit': {
+    use: 'Space Crew: a rock into the ship - a heavy bang, the hull ringing, and an alarm blip',
+    dry: () => {
+      const b = silence(1.2);
+      noise(b, { dur: 0.04, gain: 1, filter: { type: 'bandpass', f: 1100, q: 0.5 }, attack: 0.0004, decay: 0.01, seed: 7541 });
+      thump(b, 0.004, 1, 92, 7542);
+      strike(b, { note: 196, instrument: I.bell, start: 0.01, gain: 0.4, seed: 7543, mallet: 0.6, decayScale: 0.6 });
+      noise(b, { start: 0.01, dur: 0.5, gain: 0.5, filter: { type: 'bandpass', f: 500, q: 0.6 }, sweepTo: 220, attack: 0.003, decay: 0.14, grain: 0.8, pink: true, seed: 7544 });
+      for (const t of [0.34, 0.52]) voice(b, { start: t, dur: 0.1, freq: () => 880, amp: u => 0.22 * Math.min(1, u / 0.004) * Math.min(1, (0.1 - u) / 0.015), harmonics: [1, 0, 0.4, 0, 0.2] });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: MOMENT, highpass: 140 }
+  },
+
+  'g-sp-star': {
+    use: 'Space Crew: the ship picks up a star - a quick sparkle up',
+    dry: () => {
+      const b = silence(0.7);
+      run(b, ['A5', 'D6', 'F#6', 'A6'], 0.045, { instrument: I.glock, gain: [0.2, 0.24, 0.28, 0.34], seed: 7551, mallet: 0 });
+      twinkles(b, 0.15, 0.5, 3, 0.08, 7556);
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.12 },
+    master: { loudness: SOFT + 1, highpass: 400 }
+  },
+
+  'g-sp-kit': {
+    use: 'Space Crew: a repair kit picked up - a ratchet turn and a shield powering back on',
+    dry: () => {
+      const b = silence(0.9);
+      for (let i = 0; i < 5; i++) noise(b, { start: i * 0.035, dur: 0.012, gain: 0.5, filter: { type: 'bandpass', f: 2600, q: 1.4 }, attack: 0.0005, decay: 0.003, seed: 7561 + i });
+      voice(b, { start: 0.2, dur: 0.4, freq: t => 220 + 560 * (t / 0.4) ** 1.5, amp: t => 0.22 * Math.sin((Math.PI * t) / 0.4) ** 0.6, harmonics: [1, 0.4, 0.2] });
+      strike(b, { note: hz('D6'), instrument: I.glass, start: 0.58, gain: 0.3, seed: 7570, mallet: 0, decayScale: 0.9 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: MOMENT - 1, highpass: 200 }
   }
 };

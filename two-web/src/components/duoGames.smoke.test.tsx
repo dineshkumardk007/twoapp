@@ -81,3 +81,55 @@ describe('Light and Shadow can be drawn', () => {
     expect(renderToString(<LampIcon />)).toContain('g-icon');
   });
 });
+
+import { diveOf as seaOf } from '../core/treasureDive';
+import { placeOf, reachesAt, thingsOf } from '../core/spaceCrew';
+import { DiveBoard, DiveIcon } from './TreasureDive';
+import { SpaceField, SpaceIcon } from './SpaceCrew';
+
+describe('Treasure Divers can be drawn', () => {
+  it('the whole chart for the boat; for the diver, only what is beside them', () => {
+    for (const level of [1, 8, 25, 60]) {
+      const sea = seaOf(level);
+      const rocks = sea.rock.filter(Boolean).length;
+      const currents = sea.current.filter(Boolean).length;
+      const boat = renderToString(<DiveBoard sea={sea} view="boat" diver={sea.start} who="user" got={0} seen={new Set()} jolt={null} />);
+      expect(boat.match(/class="dv-rock"/g)?.length).toBe(rocks);
+      expect(boat.match(/class="dv-current"/g)?.length).toBe(currents);
+      expect(boat.match(/class="dv-chest"/g)?.length).toBe(sea.chests.length);
+      expect(boat).not.toContain('NaN');
+      const diver = renderToString(<DiveBoard sea={sea} view="diver" diver={sea.start} who="partner" got={0} seen={new Set()} jolt="current" />);
+      // No current is ever shown in the water, and nothing far off.
+      expect(diver).not.toContain('dv-current');
+      expect((diver.match(/class="dv-rock"/g) ?? []).length).toBeLessThan(rocks);
+      expect(diver.match(/class="dv-clear"/g)?.length).toBeLessThanOrEqual(9);
+      expect(diver).toContain('data-jolt="current"');
+      // A chest brought up is gone from the chart.
+      const got = renderToString(<DiveBoard sea={sea} view="boat" diver={sea.start} who="user" got={1} seen={new Set()} jolt={null} />);
+      expect(got.match(/class="dv-chest"/g)?.length).toBe(sea.chests.length - 1);
+    }
+    expect(renderToString(<DiveIcon />)).toContain('g-icon');
+  });
+});
+
+describe('Space Crew can be drawn', () => {
+  it('a moment of a round: what is coming down, a burst, a beam, and the ship', () => {
+    const things = thingsOf(77);
+    const t = reachesAt(things[4]) - 0.5;
+    const html = renderToString(
+      <SpaceField things={things} t={t} fates={new Map([[things[2].id, 1], [things[4].id, 4]])} fateAt={new Map([[things[2].id, t - 0.1]])} ship={0.4} beams={[{ id: 1, x: 0.5, y: 0.3 }]} />
+    );
+    expect(html).toContain('sp-ship');
+    expect(html).toContain('sp-beam');
+    expect(html.match(/class="sp-burst"/g)?.length).toBe(1);
+    expect(html).toContain('data-cracked');
+    expect(html).not.toContain('NaN');
+    expect(placeOf(things[4], t).y).toBeLessThan(1);
+    // Before the round there is only the ship; a burst long over is gone.
+    const idle = renderToString(<SpaceField things={things} t={0} fates={new Map()} fateAt={new Map()} ship={0.5} beams={[]} />);
+    expect(idle).not.toContain('sp-thing');
+    const later = renderToString(<SpaceField things={things} t={t} fates={new Map([[things[2].id, 1]])} fateAt={new Map([[things[2].id, t - 2]])} ship={0.4} beams={[]} />);
+    expect(later).not.toContain('sp-burst');
+    expect(renderToString(<SpaceIcon />)).toContain('g-icon');
+  });
+});

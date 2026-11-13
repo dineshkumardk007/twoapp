@@ -55,20 +55,22 @@ describe('the games for two at once: what is kept', () => {
   it('each phone counts only what it has seen, and nothing is ever taken back', () => {
     expect(DUO_RECORD).toBe('GAME_DUO');
     expect(CAN_DUO).toBe('duo-1');
-    expect(cleanDuoHalf({ bomb: 3, lamp: 2, catch: 41, at: 5 })).toEqual({ bomb: 3, lamp: 2, catch: 41, at: 5 });
-    expect(cleanDuoHalf({ bomb: -3, lamp: 'x', catch: 2.9, at: 5 })).toEqual({ bomb: 0, lamp: 0, catch: 2, at: 5 });
+    const zero = { bomb: 0, catch: 0, lamp: 0, dive: 0, space: 0 };
+    expect(cleanDuoHalf({ bomb: 3, lamp: 2, catch: 41, dive: 6, space: 77, at: 5 })).toEqual({ bomb: 3, lamp: 2, catch: 41, dive: 6, space: 77, at: 5 });
+    // A phone from before the later games says nothing of them: none done.
+    expect(cleanDuoHalf({ bomb: -3, lamp: 'x', catch: 2.9, at: 5 })).toEqual({ ...zero, catch: 2, at: 5 });
     expect(cleanDuoHalf({ bomb: 1, at: 0 })).toBeNull();
     expect(cleanDuoHalf('duo')).toBeNull();
-    const a = { bomb: 3, lamp: 1, catch: 10, at: 5 };
-    const b = { bomb: 2, lamp: 4, catch: 10, at: 9 };
-    expect(mergeDuo(a, b)).toEqual({ bomb: 3, lamp: 4, catch: 10, at: 9 });
-    expect(mergeDuo(a, { bomb: 1, lamp: 1, catch: 2, at: 99 })).toBe(a);
+    const a = { ...zero, bomb: 3, lamp: 1, catch: 10, at: 5 };
+    const b = { ...zero, bomb: 2, lamp: 4, catch: 10, space: 9, at: 9 };
+    expect(mergeDuo(a, b)).toEqual({ ...zero, bomb: 3, lamp: 4, catch: 10, space: 9, at: 9 });
+    expect(mergeDuo(a, { ...zero, bomb: 1, lamp: 1, catch: 2, at: 99 })).toBe(a);
     expect(mergeDuo(undefined, b)).toBe(b);
-    expect(duoOf(a, b)).toEqual({ bomb: 3, lamp: 4, catch: 10 });
-    expect(duoOf(undefined, undefined)).toEqual({ bomb: 0, lamp: 0, catch: 0 });
+    expect(duoOf(a, b)).toEqual({ ...zero, bomb: 3, lamp: 4, catch: 10, space: 9 });
+    expect(duoOf(undefined, undefined)).toEqual(zero);
     expect(withDuo(a, 'bomb', 2, 20)).toBe(a);
     expect(withDuo(a, 'bomb', 4, 20)).toEqual({ ...a, bomb: 4, at: 20 });
-    expect(withDuo(undefined, 'catch', 7, 20)).toEqual({ bomb: 0, lamp: 0, catch: 7, at: 20 });
+    expect(withDuo(undefined, 'dive', 7, 20)).toEqual({ ...zero, dive: 7, at: 20 });
   });
 
   it('each is a game the other one can be on, with a name, a how-to-play, and Tamil for both', () => {

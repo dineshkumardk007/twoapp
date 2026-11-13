@@ -7086,3 +7086,85 @@ html.dark .ch-say[data-hint='wrong'] { color: #f43f5e; }
 .lm-keyring { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; border: 2px dashed currentColor; font-size: 20px; line-height: 1; opacity: 0.35; filter: grayscale(1); transition: opacity 200ms ease, filter 200ms ease, transform 300ms cubic-bezier(0.3, 1.6, 0.5, 1); }
 .lm-keyring[data-got] { opacity: 1; filter: none; border-style: solid; transform: scale(1.08); }
 .dg .ch-go:disabled { opacity: 0.5; }
+
+/* --- Treasure Divers (components/TreasureDive) --- */
+.dv-hud { display: flex; flex-shrink: 0; align-items: center; gap: 10px; padding: 0 14px 6px; font: 800 16px/1 Manrope, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.dv-air { padding: 6px 10px; border-radius: 12px; background: #0c4a6e; color: #e0f2fe; }
+.dv-air[data-low] { animation: dv-low 1s steps(2, jump-none) infinite; }
+@keyframes dv-low {
+  from { background: #0c4a6e; }
+  to { background: #dc2626; }
+}
+.dv-chests { display: inline-flex; flex: 1; gap: 3px; font-size: 17px; }
+.dv-chests b { opacity: 0.25; filter: grayscale(1); transition: opacity 200ms ease, transform 300ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+.dv-chests b[data-got] { opacity: 1; filter: none; transform: scale(1.15); }
+.dv-gift { padding: 8px 12px; border: 0; border-radius: 12px; background: linear-gradient(#38bdf8, #0284c7); color: #fff; font: 800 13px/1 Manrope, system-ui, sans-serif; box-shadow: 0 3px 0 #075985; transition: transform 90ms ease, opacity 200ms ease; }
+.dv-gift:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 #075985; }
+.dv-gift:disabled { opacity: 0.5; }
+.dv-stage { position: relative; }
+.dv-sea { filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.3)); }
+.dv-clear { fill: #67e8f9; fill-opacity: 0.28; }
+.dv-grid { fill: none; stroke: #e0f2fe; stroke-opacity: 0.16; stroke-width: 1; }
+.dv-anchor-ring { fill: #fde68a; fill-opacity: 0.22; stroke: #fde68a; stroke-width: 1.6; stroke-dasharray: 4 3; }
+.dv-rock { fill: #475569; stroke: #0f172a; stroke-width: 2; stroke-linejoin: round; }
+.dv-rock[data-dim] { fill: #1e3a4a; stroke: #0b2530; }
+.dv-current path { fill: none; stroke: #f0abfc; stroke-width: 2.6; stroke-linecap: round; }
+.dv-current path { animation: dv-spin 3s linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes dv-spin {
+  to { transform: rotate(360deg); }
+}
+.dv-chest-box { fill: #b45309; stroke: #451a03; stroke-width: 1.8; }
+.dv-chest-band { fill: none; stroke: #fde68a; stroke-width: 2; stroke-linecap: round; }
+.dv-chest-lid { fill: #d97706; stroke: #451a03; stroke-width: 1.8; stroke-linejoin: round; }
+.dv-chest { animation: dv-glint 1.8s ease-in-out infinite; }
+@keyframes dv-glint {
+  0%, 100% { filter: none; }
+  50% { filter: drop-shadow(0 0 5px #fde68a); }
+}
+.dv-who { z-index: 3; transition: transform 170ms ease-out; }
+.dv-who .th-who-in[data-jolt='rock'] { animation: bm-wrong 380ms ease both; }
+.dv-who .th-who-in[data-jolt='current'] { animation: dv-swirl 500ms ease both; }
+@keyframes dv-swirl {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(200deg) scale(0.8); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.dv-mask { position: absolute; right: -4%; bottom: -8%; font-size: clamp(11px, 3.2vw, 18px); line-height: 1; }
+.dv-hands { align-items: center; }
+.dv-signs { display: grid; grid-template-columns: repeat(4, 46px); gap: 6px; justify-content: end; }
+.dv-signs .th-sign-key { width: 46px; height: 46px; font-size: 21px; }
+.dv-signs[data-wide] { flex: 1; grid-template-columns: repeat(8, 1fr); justify-content: stretch; }
+.dv-signs[data-wide] .th-sign-key { width: auto; height: auto; aspect-ratio: 1; max-height: 52px; }
+
+/* --- Space Crew (components/SpaceCrew). The top row and the stage are Catch Together's. --- */
+.sp-stage[data-aim] { cursor: crosshair; }
+.sp-field {
+  position: relative; flex: 1; overflow: hidden; border-radius: 20px;
+  background: radial-gradient(circle at 12% 18%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 78% 12%, #fff 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 44% 40%, rgb(255 255 255 / 0.7) 0 1px, transparent 1.6px), radial-gradient(circle at 88% 58%, rgb(255 255 255 / 0.8) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 24% 72%, rgb(255 255 255 / 0.6) 0 1px, transparent 1.6px), radial-gradient(circle at 62% 86%, rgb(255 255 255 / 0.7) 0 1.1px, transparent 1.7px),
+    radial-gradient(ellipse at 70% 30%, rgb(124 58 237 / 0.35), transparent 55%), linear-gradient(#020617, #0b1026 60%, #1e1b4b);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.08);
+}
+.sp-field[data-shake] { animation: ct-shake 400ms linear both; }
+.sp-beams { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.sp-beam { stroke: #f472b6; stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 4px #f472b6); }
+.sp-thing { position: absolute; font-size: 30px; line-height: 1; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.5)); }
+.sp-thing[data-kind='big'] { font-size: 46px; }
+.sp-thing[data-cracked] { filter: brightness(1.6) drop-shadow(0 0 6px #f97316); }
+.sp-thing[data-kind='star'] { animation: sp-twirl 1.4s linear infinite; }
+@keyframes sp-twirl {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+.sp-burst { position: absolute; font-size: 34px; line-height: 1; pointer-events: none; animation: sp-burst 400ms ease-out both; }
+@keyframes sp-burst {
+  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+  40% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+.sp-ship { position: absolute; transform: translate(-50%, -50%); pointer-events: none; }
+.sp-ship i { display: block; font-size: 40px; font-style: normal; line-height: 1; transform: rotate(-45deg); filter: drop-shadow(0 6px 6px rgb(249 115 22 / 0.7)); }
+.sp-gun { position: absolute; left: 50%; bottom: 8px; display: flex; gap: 5px; transform: translateX(-50%); pointer-events: none; }
+.sp-gun i { width: 16px; height: 7px; border-radius: 4px; background: rgb(255 255 255 / 0.18); transition: background 120ms ease; }
+.sp-gun i[data-on] { background: #f472b6; box-shadow: 0 0 6px #f472b6; }

@@ -9,7 +9,7 @@
 // its own count, so neither can undo the other: the further of the two is
 // where you are.
 
-export const DUO_GAMES = ['bomb', 'catch', 'lamp'] as const;
+export const DUO_GAMES = ['bomb', 'catch', 'lamp', 'dive', 'space'] as const;
 export type DuoGame = (typeof DUO_GAMES)[number];
 export const isDuoGame = (value: unknown): value is DuoGame => typeof value === 'string' && (DUO_GAMES as readonly string[]).includes(value);
 
@@ -24,52 +24,55 @@ export const CAN_DUO = 'duo-1';
 export const DUO_NAMES: Record<DuoGame, string> = {
   bomb: 'Bomb Squad',
   catch: 'Catch Together',
-  lamp: 'Light and Shadow'
+  lamp: 'Light and Shadow',
+  dive: 'Treasure Divers',
+  space: 'Space Crew'
 };
 
-/** What one phone has seen the two of you do. */
-export interface DuoHalf {
-  /** Bombs made safe: the levels finished. */
-  bomb: number;
-  /** Levels of Light and Shadow finished. */
-  lamp: number;
-  /** The most caught in one round of Catch Together. */
-  catch: number;
-  at: number;
-}
+/** The ones counted by their best score in a round; the rest by the levels finished. */
+export const DUO_BY_SCORE: readonly DuoGame[] = ['catch', 'space'];
+
+/**
+ * What one phone has seen the two of you do: for each game, the levels
+ * finished - or, for the ones played in rounds, the most scored in one.
+ */
+export type DuoHalf = Record<DuoGame, number> & { at: number };
 
 const whole = (value: unknown, max: number) => {
   const n = Math.floor(Number(value));
   return Number.isFinite(n) && n > 0 ? Math.min(max, n) : 0;
 };
+const none = (at: number): DuoHalf => ({ bomb: 0, catch: 0, lamp: 0, dive: 0, space: 0, at });
 
 export function cleanDuoHalf(raw: unknown): DuoHalf | null {
   const r = raw as Partial<Record<keyof DuoHalf, unknown>> | null;
   if (!r || typeof r !== 'object') return null;
   const at = Number(r.at);
   if (!Number.isFinite(at) || at <= 0) return null;
-  return { bomb: whole(r.bomb, 100_000), lamp: whole(r.lamp, 100_000), catch: whole(r.catch, 100_000), at };
+  const half = none(at);
+  for (const game of DUO_GAMES) half[game] = whole(r[game], 100_000);
+  return half;
 }
 
 /** Two words from the same phone, put together: nothing it has counted is ever taken back. */
 export function mergeDuo(a: DuoHalf | undefined, b: DuoHalf | undefined): DuoHalf | undefined {
   if (!a || !b) return a ?? b;
-  if (b.bomb <= a.bomb && b.lamp <= a.lamp && b.catch <= a.catch) return a;
-  return { bomb: Math.max(a.bomb, b.bomb), lamp: Math.max(a.lamp, b.lamp), catch: Math.max(a.catch, b.catch), at: Math.max(a.at, b.at) };
+  if (DUO_GAMES.every(game => b[game] <= a[game])) return a;
+  const half = none(Math.max(a.at, b.at));
+  for (const game of DUO_GAMES) half[game] = Math.max(a[game], b[game]);
+  return half;
 }
 
 /** Where the two of you are: the further of the two phones in each game. */
 export function duoOf(mine: DuoHalf | undefined, theirs: DuoHalf | undefined): Record<DuoGame, number> {
-  return {
-    bomb: Math.max(mine?.bomb ?? 0, theirs?.bomb ?? 0),
-    lamp: Math.max(mine?.lamp ?? 0, theirs?.lamp ?? 0),
-    catch: Math.max(mine?.catch ?? 0, theirs?.catch ?? 0)
-  };
+  const { at: _at, ...both } = none(0);
+  for (const game of DUO_GAMES) both[game] = Math.max(mine?.[game] ?? 0, theirs?.[game] ?? 0);
+  return both;
 }
 
 /** This phone's half with one count raised. The same half when it was already that high. */
 export function withDuo(half: DuoHalf | undefined, game: DuoGame, value: number, at: number): DuoHalf {
-  const base = half ?? { bomb: 0, lamp: 0, catch: 0, at };
+  const base = half ?? none(at);
   const next = whole(value, 100_000);
   return next <= base[game] && half ? half : { ...base, [game]: Math.max(base[game], next), at };
 }

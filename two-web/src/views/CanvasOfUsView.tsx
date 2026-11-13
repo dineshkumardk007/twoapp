@@ -36,10 +36,13 @@ import { allDone, levelOn, totalStars, type HomesBook } from '../core/cosyHomes'
 import { HEARTS_NAME, HeartsIcon, TwoHearts } from '../components/TwoHearts';
 import { heartsIn, levelOfPair, mergeBooks, type MazeHalf } from '../core/twoHearts';
 import { OPEN_GAME_EVENT, isGameRoom } from '../core/gameEmotes';
-import { DUO_GAMES, DUO_NAMES, duoOf, isDuoGame, type DuoGame, type DuoHalf } from '../core/duo';
+import { DUO_BY_SCORE, DUO_GAMES, DUO_NAMES, duoOf, isDuoGame, type DuoGame, type DuoHalf } from '../core/duo';
 import { BombIcon, BombSquad } from '../components/BombSquad';
 import { CatchIcon, CatchTogether } from '../components/CatchTogether';
 import { LampIcon, LampMaze } from '../components/LampMaze';
+import { DiveIcon, TreasureDive } from '../components/TreasureDive';
+import { SpaceCrew, SpaceIcon } from '../components/SpaceCrew';
+import type { DuoGameProps } from '../components/BombSquad';
 import {
   CANVAS_MODE_KEY,
   GAME_NAMES,
@@ -93,7 +96,9 @@ interface CanvasOfUsViewProps {
 }
 
 /** The picture of each game for two at once, for its card. */
-const DUO_ICONS: Record<DuoGame, React.FC> = { bomb: BombIcon, catch: CatchIcon, lamp: LampIcon };
+const DUO_ICONS: Record<DuoGame, React.FC> = { bomb: BombIcon, catch: CatchIcon, lamp: LampIcon, dive: DiveIcon, space: SpaceIcon };
+/** And the game itself. */
+const DUO_SCREENS: Record<DuoGame, React.FC<DuoGameProps>> = { bomb: BombSquad, catch: CatchTogether, lamp: LampMaze, dive: TreasureDive, space: SpaceCrew };
 
 /** Where this was last left - drawing, the games, or one game - so a game you were playing is still there. */
 function savedMode(): CanvasMode {
@@ -694,7 +699,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
                   </span>
                   <span className="cv-game-name">{tr(DUO_NAMES[g])}</span>
                   <span className="cv-game-line" data-tone={got ? 'wait' : 'new'}>
-                    {!got ? tr('New - tap to play') : g === 'catch' ? tr('Best {n}', { n: got }) : tr('Level {n}', { n: got + 1 })}
+                    {!got ? tr('New - tap to play') : DUO_BY_SCORE.includes(g) ? tr('Best {n}', { n: got }) : tr('Level {n}', { n: got + 1 })}
                   </span>
                 </button>
               );
@@ -750,7 +755,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
 
       {onDuo && isDuoGame(mode) && (
         (() => {
-          const Game = mode === 'bomb' ? BombSquad : mode === 'catch' ? CatchTogether : LampMaze;
+          const Game = DUO_SCREENS[mode];
           return (
             <Game
               key={mode}

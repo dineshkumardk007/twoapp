@@ -104,7 +104,7 @@ export const MAZE_TOUR: TourLine[] = [
 ];
 
 /** And for the games the two of you play at the same moment (core/duo). */
-export const DUO_TOURS: Record<'bomb' | 'catch' | 'lamp', TourLine[]> = {
+export const DUO_TOURS: Record<'bomb' | 'catch' | 'lamp' | 'dive' | 'space', TourLine[]> = {
   bomb: [
     { icon: '💣', text: 'One of you has the bomb, the other has the book' },
     { icon: '🏷️', text: 'Bomb: sign the shapes on its label' },
@@ -127,6 +127,22 @@ export const DUO_TOURS: Record<'bomb' | 'catch' | 'lamp', TourLine[]> = {
     { icon: '🔑', text: 'Shadow: fetch the key to open a gate' },
     { icon: '🚪', text: 'Get both of you to the door' },
     { icon: '🔁', text: 'You swap every level' }
+  ],
+  dive: [
+    { icon: '🤿', text: 'One of you dives, the other stays on the boat' },
+    { icon: '🌫️', text: 'Diver: the water is murky. You see only beside you' },
+    { icon: '🗺️', text: 'Boat: you have the chart. Sign arrows to guide' },
+    { icon: '🌀', text: 'Only the boat sees the currents. They cost air' },
+    { icon: '💰', text: 'Get every chest, then back up to the anchor' },
+    { icon: '🫧', text: 'Boat: send more air down when it runs low' }
+  ],
+  space: [
+    { icon: '🚀', text: 'One of you flies, the other is on the guns' },
+    { icon: '👆', text: 'Pilot: slide your finger to steer' },
+    { icon: '☄️', text: 'Guns: tap a rock to shoot it. Big ones take two' },
+    { icon: '⭐', text: 'Pilot: fly under the stars and the repair kits' },
+    { icon: '🛡️', text: 'Three rocks into the ship ends the round' },
+    { icon: '🔁', text: 'You swap seats every round' }
   ]
 };
 
