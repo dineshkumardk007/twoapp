@@ -106,8 +106,8 @@ describe('asking for a new game', () => {
 
   it('progress counts moves, and both of your picks', () => {
     expect(progressOf(midGame())).toBe(3);
-    const hhk = newGame('hhk', undefined, 'user', 'h', 1);
-    expect(progressOf(withMove(withMove(hhk, 0, 'user'), 1, 'partner'))).toBe(2);
+    const rps = newGame('rps', undefined, 'user', 'h', 1);
+    expect(progressOf(withMove(withMove(rps, 0, 'user'), 1, 'partner'))).toBe(2);
     expect(progressOf(undefined)).toBe(0);
   });
 });
@@ -200,10 +200,10 @@ describe('between the two phones', () => {
   });
 
   it('survives in the game where you both choose at once', () => {
-    let g = newGame('hhk', undefined, 'user', 'h', 1);
+    let g = newGame('rps', undefined, 'user', 'h', 1);
     g = withMove(g, 0, 'user');
     const asked = askRestart(g, 'partner', 5);
-    const back = cleanGame(JSON.parse(JSON.stringify(asked)), 'hhk')!;
+    const back = cleanGame(JSON.parse(JSON.stringify(asked)), 'rps')!;
     expect(askedOf(back, 'user')).toBe(true);
     expect(back.picks).toEqual(asked.picks);
   });
@@ -229,7 +229,7 @@ describe('between the two phones', () => {
 
 describe('a move made here joins what is held, it does not replace it', () => {
   it('a pick of theirs that arrived a moment before yours is kept', () => {
-    const start = newGame('hhk', undefined, 'user', 'h1', 1);
+    const start = newGame('rps', undefined, 'user', 'h1', 1);
     const drawn = { ...start, picks: { user: [1], partner: [0] } };
     // Theirs lands first; yours was made from the board as it was drawn.
     const held = mergeGame(drawn, { ...drawn, picks: { user: [1, 2], partner: [0] } });

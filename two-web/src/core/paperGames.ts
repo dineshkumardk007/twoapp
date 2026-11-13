@@ -1,6 +1,6 @@
 // Games on Canvas of Us (components/PaperGames): Boxing, Penalty Shootout,
 // Puzzle Duel, Water Balloon War, Carrom,
-// Tic-tac-toe, Dots and Boxes, Four in a Row, Memory Match, Heart Hug Kiss
+// Tic-tac-toe, Dots and Boxes, Four in a Row, Memory Match, Rock Paper Scissors
 // and Snakes & Ladders, played on both phones - live when you are both there, or one move now and
 // the next whenever the other opens Two.
 //
@@ -13,7 +13,7 @@
 // Each kind is its own record (GAME_TTT and the rest), and the relay keeps
 // only the newest from each of you. In the turn-taking games only the
 // player whose turn it is can move, so two copies differ only by moves one
-// has not had yet; the longer wins (mergeGame). In Heart Hug Kiss, Boxing,
+// has not had yet; the longer wins (mergeGame). In Rock Paper Scissors, Boxing,
 // Penalty Shootout and Puzzle Duel you both choose at once, so each of you
 // has a list of your own picks, and each list is merged the same way.
 
@@ -24,16 +24,18 @@ import { boxingAllowed, playBoxing } from './boxing';
 import { penaltyAllowed, playPenalty } from './penalty';
 import { playPuzzle, puzzleAllowed } from './puzzleDuel';
 
-export type PaperKind = 'ttt' | 'dots' | 'four' | 'memory' | 'hhk' | 'snakes' | 'balloon' | 'carrom' | 'boxing' | 'penalty' | 'puzzle';
-export const PAPER_KINDS: PaperKind[] = ['boxing', 'penalty', 'puzzle', 'balloon', 'carrom', 'four', 'memory', 'hhk', 'snakes', 'ttt', 'dots'];
+export type PaperKind = 'ttt' | 'dots' | 'four' | 'memory' | 'rps' | 'snakes' | 'balloon' | 'carrom' | 'boxing' | 'penalty' | 'puzzle';
+export const PAPER_KINDS: PaperKind[] = ['boxing', 'penalty', 'puzzle', 'balloon', 'carrom', 'four', 'memory', 'rps', 'snakes', 'ttt', 'dots'];
 /** The games where you both choose at once: each of you has a list of picks, and no moves. */
-const PICK_KINDS: PaperKind[] = ['hhk', 'boxing', 'penalty', 'puzzle'];
+const PICK_KINDS: PaperKind[] = ['rps', 'boxing', 'penalty', 'puzzle'];
 export const isPickKind = (kind: PaperKind) => PICK_KINDS.includes(kind);
 /**
  * What a phone says in its APP_VERSION when it has Boxing, Penalty Shootout
  * and Puzzle Duel. One that does not would never show a move made in them.
  */
 export const CAN_PLAY_MORE = 'games-3';
+/** What a phone says when it has Rock Paper Scissors, which took Heart Hug Kiss's place. */
+export const CAN_RPS = 'rps-1';
 /** The games a phone on the version before does not have. */
 export const isNewerKind = (kind: PaperKind) => kind === 'boxing' || kind === 'penalty' || kind === 'puzzle';
 const RECORDS: Record<PaperKind, string> = {
@@ -44,7 +46,7 @@ const RECORDS: Record<PaperKind, string> = {
   dots: 'GAME_DOTS',
   four: 'GAME_FOUR',
   memory: 'GAME_MEMORY',
-  hhk: 'GAME_HHK',
+  rps: 'GAME_RPS',
   snakes: 'GAME_SNAKES',
   balloon: 'GAME_BALLOON',
   carrom: 'GAME_CARROM'
@@ -60,7 +62,7 @@ export const GAME_NAMES: Record<PaperKind, string> = {
   carrom: 'Carrom',
   four: 'Four in a Row',
   memory: 'Memory Match',
-  hhk: 'Heart Hug Kiss',
+  rps: 'Rock Paper Scissors',
   snakes: 'Snakes & Ladders',
   ttt: 'Tic-tac-toe',
   dots: 'Dots & Boxes'
@@ -81,7 +83,7 @@ export const DEFAULT_MEMORY = 8;
 export function sizesOf(kind: PaperKind): readonly number[] | null {
   return kind === 'dots' ? DOT_SIZES : kind === 'memory' ? MEMORY_SIZES : null;
 }
-const FIXED_SIZE: Record<PaperKind, number> = { ttt: 3, dots: DEFAULT_DOTS, four: 7, memory: DEFAULT_MEMORY, hhk: 3, snakes: 10, balloon: 1, carrom: 1, boxing: 1, penalty: 1, puzzle: 1 };
+const FIXED_SIZE: Record<PaperKind, number> = { ttt: 3, dots: DEFAULT_DOTS, four: 7, memory: DEFAULT_MEMORY, rps: 3, snakes: 10, balloon: 1, carrom: 1, boxing: 1, penalty: 1, puzzle: 1 };
 
 /** The inks each of you can play in. */
 export const INKS = ['#f43f5e', '#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899'] as const;
@@ -482,27 +484,27 @@ export function playMemory(game: Pick<PaperGame, 'id' | 'size' | 'first' | 'move
   };
 }
 
-// --------------------------------------------------------- Heart Hug Kiss
+// --------------------------------------------------------- Rock Paper Scissors
 //
-// Rock, paper, scissors, for two: a hug holds a heart, a kiss wins a hug, a
-// heart outlasts a kiss. You both choose, neither seeing the other's until
-// both have; the first to three rounds wins.
+// Paper wraps rock, scissors cut paper, rock smashes scissors. You both
+// choose, neither seeing the other's until both have; the first to three
+// rounds wins (components/RpsBoard plays each round out).
 
-export const HHK_CHOICES = ['heart', 'hug', 'kiss'] as const;
-export type HhkChoice = (typeof HHK_CHOICES)[number];
-export const HHK_TO_WIN = 3;
+export const RPS_CHOICES = ['rock', 'paper', 'scissors'] as const;
+export type RpsChoice = (typeof RPS_CHOICES)[number];
+export const RPS_TO_WIN = 3;
 /** Whether choice a wins over choice b. */
-export const hhkBeats = (a: number, b: number) => (a - b + 3) % 3 === 1;
+export const rpsBeats = (a: number, b: number) => (a - b + 3) % 3 === 1;
 
-export interface HhkRound {
+export interface RpsRound {
   user: number;
   partner: number;
   /** Null when you both chose the same. */
   winner: Seat | null;
 }
 
-export interface HhkState {
-  rounds: HhkRound[];
+export interface RpsState {
+  rounds: RpsRound[];
   points: Record<Seat, number>;
   /** Who still has to choose this round. */
   toMove: Seat[];
@@ -512,7 +514,7 @@ export interface HhkState {
   played: Record<Seat, number>;
 }
 
-export function playHhk(game: Pick<PaperGame, 'picks'>): HhkState {
+export function playRps(game: Pick<PaperGame, 'picks'>): RpsState {
   const valid = (list: number[] | undefined) => {
     const out: number[] = [];
     for (const c of list || []) {
@@ -523,13 +525,13 @@ export function playHhk(game: Pick<PaperGame, 'picks'>): HhkState {
   };
   const u = valid(game.picks?.user);
   const p = valid(game.picks?.partner);
-  const rounds: HhkRound[] = [];
+  const rounds: RpsRound[] = [];
   const points: Record<Seat, number> = { user: 0, partner: 0 };
   let winner: Seat | null = null;
   for (let r = 0; r < Math.min(u.length, p.length) && !winner; r++) {
-    const round: HhkRound = { user: u[r], partner: p[r], winner: hhkBeats(u[r], p[r]) ? 'user' : hhkBeats(p[r], u[r]) ? 'partner' : null };
+    const round: RpsRound = { user: u[r], partner: p[r], winner: rpsBeats(u[r], p[r]) ? 'user' : rpsBeats(p[r], u[r]) ? 'partner' : null };
     rounds.push(round);
-    if (round.winner && ++points[round.winner] >= HHK_TO_WIN) winner = round.winner;
+    if (round.winner && ++points[round.winner] >= RPS_TO_WIN) winner = round.winner;
   }
   const done = rounds.length;
   // One pick ahead of the rounds is the most anyone can have made; none once it is won.
@@ -597,7 +599,7 @@ export function playSnakes(game: Pick<PaperGame, 'first' | 'moves'>): SnakesStat
 // --------------------------------------------------------------- all games
 
 export interface Standing {
-  /** Who may move now: one of you, or in Heart Hug Kiss either or both. */
+  /** Who may move now: one of you, or in Rock Paper Scissors either or both. */
   toMove: Seat[];
   turn: Seat;
   over: boolean;
@@ -631,7 +633,7 @@ function picksOf(game: PaperGame): PicksPlayed {
       return { rounds: s.rounds.length, toMove: s.toMove, over: s.over, winner: s.winner, draw: s.draw, played: s.played };
     }
     default: {
-      const s = playHhk(game);
+      const s = playRps(game);
       return { rounds: s.rounds.length, toMove: s.toMove, over: s.over, winner: s.winner, draw: false, played: s.played };
     }
   }
@@ -669,7 +671,7 @@ export function standing(game: PaperGame): Standing {
       const s = playMemory(game);
       return one(s.turn, s.over, s.winner, s.draw, s.result === 'match' && s.pending === null);
     }
-    case 'hhk':
+    case 'rps':
     case 'boxing':
     case 'penalty':
     case 'puzzle': {
@@ -708,7 +710,7 @@ function playedOf(game: PaperGame): number {
       return playBalloon(game).played;
     case 'carrom':
       return playCarrom(game).played;
-    case 'hhk':
+    case 'rps':
     case 'boxing':
     case 'penalty':
     case 'puzzle':
@@ -732,7 +734,7 @@ export function canMove(game: PaperGame, seat: Seat, move: number): boolean {
       case 'puzzle':
         return puzzleAllowed(move);
       default:
-        return move >= 0 && move < HHK_CHOICES.length;
+        return move >= 0 && move < RPS_CHOICES.length;
     }
   }
   const st = standing(game);

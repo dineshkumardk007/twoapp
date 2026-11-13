@@ -5,7 +5,7 @@
 // puzzle appears to the moment it is solved - so how long anything takes to
 // travel between you makes no difference, and neither of you has to be there
 // at the same moment. A pick is that time, in thousandths of a second; as in
-// Heart Hug Kiss each of you has a list of your own.
+// Rock Paper Scissors each of you has a list of your own.
 //
 // The puzzles are made from the game's id and the round's number, so both
 // phones make the same one without it ever being sent.

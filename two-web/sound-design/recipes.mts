@@ -3452,5 +3452,142 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 0.5, wet: 0.1 },
     master: { loudness: MOMENT - 1, highpass: 200 }
+  },
+
+  // ------------------------------------------------------------------------
+  // Rock Paper Scissors (components/RpsBoard).
+  // ------------------------------------------------------------------------
+
+  'g-rps-beat': {
+    use: 'Rock Paper Scissors: one pump of the paws on the count - a whoosh down and a soft thump',
+    dry: () => {
+      const b = silence(0.4);
+      air(b, { start: 0, dur: 0.14, gain: 0.3, from: 700, to: 2400, attack: 0.04, seed: 7601 });
+      thump(b, 0.12, 0.55, 120, 7602);
+      strike(b, { note: hz('D5'), instrument: I.marimba, start: 0.12, gain: 0.18, seed: 7603, mallet: 0.2 });
+      return b;
+    },
+    master: { loudness: SOFT, highpass: 140 }
+  },
+
+  'g-rps-shoot': {
+    use: 'Rock Paper Scissors: "shoot!" - the shapes snap out, a pop and a bright chord',
+    dry: () => {
+      const b = silence(0.8);
+      noise(b, { dur: 0.03, gain: 0.8, filter: { type: 'bandpass', f: 1800, q: 0.6 }, attack: 0.0005, decay: 0.008, seed: 7611 });
+      thump(b, 0.004, 0.6, 140, 7612);
+      for (const note of ['D5', 'F#5', 'A5', 'D6']) strike(b, { note: hz(note), instrument: I.glock, start: 0.02, gain: 0.2, seed: 7613, mallet: 0 });
+      air(b, { start: 0.01, dur: 0.25, gain: 0.16, from: 3000, to: 8000, attack: 0.01, seed: 7614 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: MOMENT - 1, highpass: 180 }
+  },
+
+  'g-rps-rock': {
+    use: 'Rock Paper Scissors: the rock comes down - a whistle as it falls, a heavy bonk, metal bits, and a dizzy boing',
+    dry: () => {
+      const b = silence(1.6);
+      const rand = rng(7621);
+      voice(b, { start: 0, dur: 0.16, freq: t => 1500 - 900 * (t / 0.16), amp: t => 0.12 * (t / 0.16), harmonics: [1, 0.1] });
+      const hit = 0.16;
+      noise(b, { start: hit, dur: 0.04, gain: 1, filter: { type: 'bandpass', f: 1200, q: 0.5 }, attack: 0.0004, decay: 0.01, seed: 7622 });
+      thump(b, hit, 1, 90, 7623);
+      mode(b, { freq: 330, amp: 0.5, decay: 0.08, start: hit, glide: 0.4, glideTime: 0.03 });
+      for (let i = 0; i < 6; i++) {
+        strike(b, { note: 2200 + rand() * 2400, instrument: I.bell, start: hit + 0.03 + rand() * 0.25, gain: 0.1 + rand() * 0.08, pan: rand() * 1.4 - 0.7, seed: 7630 + i, mallet: 0.6, decayScale: 0.25 });
+      }
+      boing(b, hit + 0.3, 200, 0.26);
+      twinkles(b, hit + 0.45, hit + 1.2, 5, 0.08, 7640);
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: MOMENT, highpass: 130, maxSeconds: 1.6, tailFade: 0.3 }
+  },
+
+  'g-rps-paper': {
+    use: 'Rock Paper Scissors: the paper flies over and wraps the other one up - a swoosh, a flap, and crinkling',
+    dry: () => {
+      const b = silence(1.7);
+      air(b, { start: 0, dur: 0.4, gain: 0.32, from: 600, to: 3200, attack: 0.06, seed: 7651 });
+      paper(b, 0.35, 0.18, 0.6, 1800, 4200, 7652, 0.3);
+      // The crinkle, as it wraps round and the one inside wriggles.
+      for (let i = 0; i < 6; i++) paper(b, 0.5 + i * 0.16, 0.12, 0.42 - i * 0.03, 2400 + (i % 2) * 900, 5200, 7660 + i, (i % 2 ? 0.3 : -0.3));
+      // Pop! out of it.
+      noise(b, { start: 1.42, dur: 0.03, gain: 0.5, filter: { type: 'bandpass', f: 2000, q: 0.7 }, attack: 0.0005, decay: 0.008, seed: 7670 });
+      mode(b, { freq: 800, amp: 0.25, decay: 0.03, start: 1.42, glide: -0.5, glideTime: 0.03 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: MOMENT - 1, highpass: 200, maxSeconds: 1.7, tailFade: 0.3 }
+  },
+
+  'g-rps-scissors': {
+    use: 'Rock Paper Scissors: scissors snip-snip-snip through paper, and a little rip',
+    dry: () => {
+      const b = silence(1.0);
+      const snip = (t: number, seed: number) => {
+        noise(b, { start: t, dur: 0.05, gain: 0.55, filter: { type: 'highpass', f: 3500 }, sweepTo: 7000, attack: 0.003, decay: 0.014, seed });
+        strike(b, { note: 3100, instrument: I.bell, start: t + 0.035, gain: 0.16, seed: seed + 1, mallet: 0.7, decayScale: 0.18 });
+        noise(b, { start: t + 0.035, dur: 0.012, gain: 0.5, filter: { type: 'bandpass', f: 4200, q: 1.5 }, attack: 0.0004, decay: 0.003, seed: seed + 2 });
+      };
+      snip(0, 7681);
+      snip(0.12, 7684);
+      snip(0.24, 7687);
+      paper(b, 0.28, 0.22, 0.5, 1400, 5200, 7690, 0);
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.06 },
+    master: { loudness: MOMENT - 1, highpass: 300 }
+  },
+
+  'g-rps-tie': {
+    use: 'Rock Paper Scissors: the same shape - the paws clash with a ting, and a puzzled little "huh?"',
+    dry: () => {
+      const b = silence(1.0);
+      noise(b, { dur: 0.03, gain: 0.7, filter: { type: 'bandpass', f: 2600, q: 0.8 }, attack: 0.0005, decay: 0.008, seed: 7701 });
+      strike(b, { note: hz('A5'), instrument: I.bell, start: 0.005, gain: 0.3, seed: 7702, mallet: 0.4, decayScale: 0.6 });
+      strike(b, { note: hz('E6'), instrument: I.glass, start: 0.01, gain: 0.2, seed: 7703, mallet: 0.2, decayScale: 0.6 });
+      voice(b, { start: 0.35, dur: 0.2, freq: t => 300 + 160 * (t / 0.2) ** 1.6, amp: t => 0.22 * Math.sin((Math.PI * t) / 0.2), harmonics: [1, 0.4, 0.15] });
+      return b;
+    },
+    room: { rt60: 0.6, wet: 0.12 },
+    master: { loudness: MOMENT - 1, highpass: 220 }
+  },
+
+  'g-rps-win': {
+    use: 'Rock Paper Scissors: your round - a quick bright "ta-da"',
+    dry: () => {
+      const b = silence(1.2);
+      for (const [note, t, g] of [['A5', 0, 0.26], ['D6', 0.1, 0.3], ['F#6', 0.2, 0.36]] as Array<[string, number, number]>) {
+        strike(b, { note: hz(note), instrument: I.marimba, start: t, gain: g, seed: 7711, mallet: 0.15 });
+        strike(b, { note: hz(note) * 2, instrument: I.glock, start: t, gain: g * 0.4, seed: 7712, mallet: 0 });
+      }
+      twinkles(b, 0.25, 0.8, 4, 0.1, 7715);
+      return b;
+    },
+    room: { rt60: 0.7, wet: 0.14 },
+    master: { loudness: MOMENT - 1, highpass: 250 }
+  },
+
+  'g-rps-lose': {
+    use: 'Rock Paper Scissors: their round - a short droopy "wah-wah"',
+    dry: () => {
+      const b = silence(1.2);
+      const notes: Array<[string, number, number]> = [['A4', 0, 0.26], ['F4', 0.28, 0.5]];
+      for (const [note, start, dur] of notes) {
+        const f = hz(note);
+        voice(b, {
+          start,
+          dur,
+          freq: t => f * (1 - 0.05 * (t / dur)) * (1 + 0.012 * Math.sin(2 * Math.PI * 5.5 * t)),
+          amp: t => 0.3 * Math.min(1, t / 0.03) * Math.min(1, (dur - t) / 0.12),
+          harmonics: [1, 0.6, 0.45, 0.3, 0.2, 0.12]
+        });
+      }
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: SOFT + 1, highpass: 160 }
   }
 };

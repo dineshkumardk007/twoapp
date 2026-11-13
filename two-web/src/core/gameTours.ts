@@ -56,11 +56,11 @@ export const GAME_TOURS: Record<PaperKind, TourLine[]> = {
     { icon: '💞', text: 'They match? Keep them and go again' },
     { icon: '🏆', text: 'The most pairs wins' }
   ],
-  hhk: [
+  rps: [
     { icon: '🤫', text: 'You both choose in secret' },
-    { icon: '🤗', text: 'Hug beats Heart' },
-    { icon: '💋', text: 'Kiss beats Hug' },
-    { icon: '❤️', text: 'Heart beats Kiss' },
+    { icon: '📄', text: 'Paper wraps Rock' },
+    { icon: '✂️', text: 'Scissors cut Paper' },
+    { icon: '🪨', text: 'Rock smashes Scissors' },
     { icon: '🏆', text: 'First to 3 wins' }
   ],
   snakes: [

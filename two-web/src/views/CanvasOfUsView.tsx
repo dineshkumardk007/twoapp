@@ -19,7 +19,8 @@ import {
   Image as ImageIcon,
   Check,
   Maximize2,
-  Gamepad2
+  Gamepad2,
+  SlidersHorizontal
 } from 'lucide-react';
 import { newId } from '../core/ids';
 import { getAudioContext } from '../core/audioAlerts';
@@ -40,6 +41,8 @@ import { DUO_BY_SCORE, DUO_GAMES, DUO_NAMES, duoOf, isDuoGame, type DuoGame, typ
 import { BombIcon, BombSquad } from '../components/BombSquad';
 import { CatchIcon, CatchTogether } from '../components/CatchTogether';
 import { LampIcon, LampMaze } from '../components/LampMaze';
+import { ArrangeGamesSheet } from '../components/ArrangeGamesSheet';
+import { readMyShelf, shownShelf, writeMyShelf, type MyShelf, type ShelfLayout } from '../core/gameShelf';
 import { DiveIcon, TreasureDive } from '../components/TreasureDive';
 import { SpaceCrew, SpaceIcon } from '../components/SpaceCrew';
 import type { DuoGameProps } from '../components/BombSquad';
@@ -93,6 +96,12 @@ interface CanvasOfUsViewProps {
   onDuo?: (half: DuoHalf) => void;
   /** Their phone has those games too. */
   duoReady?: boolean;
+  /** Their phone has Rock Paper Scissors (core/paperGames, CAN_RPS). */
+  rpsReady?: boolean;
+  /** The order of the games, as last arranged on either phone with "same order on both phones" on (core/gameShelf). */
+  shelf?: ShelfLayout;
+  /** This phone has arranged the games, kept in step: to send to the other phone. */
+  onShelf?: (layout: ShelfLayout) => void;
 }
 
 /** The picture of each game for two at once, for its card. */
@@ -246,7 +255,10 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   emotesReady = true,
   duo,
   onDuo,
-  duoReady = true
+  duoReady = true,
+  rpsReady = true,
+  shelf,
+  onShelf
 }) => {
   const tr = useT();
   const [mode, setMode] = useState<CanvasMode>(() => (onGame ? savedMode() : 'draw'));
@@ -599,6 +611,118 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
     setTimeout(() => setSentSketch(current => (current === sketch.id ? null : current)), 2200);
   };
 
+  // ------------------------------------------------- the games, in their order
+  const [myShelf, setMyShelf] = useState<MyShelf>(readMyShelf);
+  const [arrangingGames, setArrangingGames] = useState(false);
+  const shelfShown = shownShelf(myShelf, shelf);
+  /** The games this phone has, of all that could be on the shelf. */
+  const shelfGames: string[] = [
+    ...(onHomes ? ['homes'] : []),
+    ...(onMaze ? ['maze'] : []),
+    ...(onDuo ? [...DUO_GAMES] : []),
+    ...PAPER_KINDS
+  ];
+  const keepShelf = (next: MyShelf) => {
+    setMyShelf(next);
+    writeMyShelf(next);
+  };
+  const arrangeShelf = (layout: ShelfLayout) => {
+    keepShelf({ ...myShelf, layout });
+    if (myShelf.sync) onShelf?.(layout);
+  };
+  const syncShelf = (on: boolean) => {
+    if (on) {
+      // Switched back on: this phone's own order becomes the one both show.
+      const layout = { ...myShelf.layout, at: Date.now() };
+      keepShelf({ layout, sync: true });
+      onShelf?.(layout);
+    } else {
+      // Switched off: what is showing now stays, as this phone's own.
+      keepShelf({ layout: shelfShown, sync: false });
+    }
+  };
+  const shelfName = (id: string) =>
+    tr(id === 'homes' ? HOMES_NAME : id === 'maze' ? HEARTS_NAME : isDuoGame(id) ? DUO_NAMES[id] : GAME_NAMES[id as PaperKind]);
+  const shelfIcon = (id: string): React.ReactNode => {
+    if (id === 'homes') return <HomesIcon />;
+    if (id === 'maze') return <HeartsIcon />;
+    if (isDuoGame(id)) {
+      const Icon = DUO_ICONS[id];
+      return <Icon />;
+    }
+    return <GameIcon kind={id as PaperKind} />;
+  };
+  /** One game's card on the shelf. */
+  const shelfCard = (id: string): React.ReactNode => {
+    if (id === 'homes') {
+      return (
+        <button key={id} type="button" className="cv-game" data-kind="homes" onClick={() => chooseMode('homes')}>
+          <span className="cv-game-tag">{tr('1 player')}</span>
+          <span className="cv-game-art">
+            <HomesIcon />
+          </span>
+          <span className="cv-game-name">{tr(HOMES_NAME)}</span>
+          <span className="cv-game-line" data-tone={homes?.mine ? 'wait' : 'new'}>
+            {!homes?.mine ? tr('New - tap to play') : allDone(homes.mine) ? tr('Every level done!') : tr('Level {n}', { n: levelOn(homes.mine) })}
+          </span>
+          {homes?.mine ? <span className="cv-game-score">⭐ {totalStars(homes.mine)}</span> : null}
+        </button>
+      );
+    }
+    if (id === 'maze') {
+      return (
+        <button key={id} type="button" className="cv-game" data-kind="maze" onClick={() => chooseMode('maze')}>
+          <span className="cv-game-tag">{tr('Together')}</span>
+          <span className="cv-game-art">
+            <HeartsIcon />
+          </span>
+          <span className="cv-game-name">{tr(HEARTS_NAME)}</span>
+          <span className="cv-game-line" data-tone={maze?.mine || maze?.theirs ? 'wait' : 'new'}>
+            {maze?.mine || maze?.theirs ? tr('Level {n}', { n: levelOfPair(maze?.mine, maze?.theirs) }) : tr('New - tap to play')}
+          </span>
+          {maze?.mine || maze?.theirs ? <span className="cv-game-score">💖 {heartsIn(mergeBooks(maze?.mine?.book ?? '', maze?.theirs?.book ?? ''))}</span> : null}
+        </button>
+      );
+    }
+    if (isDuoGame(id)) {
+      const Icon = DUO_ICONS[id];
+      const got = duoOf(duo?.mine, duo?.theirs)[id];
+      return (
+        <button key={id} type="button" className="cv-game" data-kind={id} onClick={() => chooseMode(id)}>
+          <span className="cv-game-tag">{tr('Together')}</span>
+          <span className="cv-game-art">
+            <Icon />
+          </span>
+          <span className="cv-game-name">{tr(DUO_NAMES[id])}</span>
+          <span className="cv-game-line" data-tone={got ? 'wait' : 'new'}>
+            {!got ? tr('New - tap to play') : DUO_BY_SCORE.includes(id) ? tr('Best {n}', { n: got }) : tr('Level {n}', { n: got + 1 })}
+          </span>
+        </button>
+      );
+    }
+    const k = id as PaperKind;
+    const line = shelfLine(k);
+    const g = games?.[k];
+    const t = g ? totals(g) : null;
+    return (
+      <button key={k} type="button" className="cv-game" data-kind={k} onClick={() => chooseMode(k)}>
+        {line.tone === 'me' && <span className="cv-mode-dot" aria-hidden="true" />}
+        <span className="cv-game-art">
+          <GameIcon kind={k} />
+        </span>
+        <span className="cv-game-name">{tr(GAME_NAMES[k])}</span>
+        <span className="cv-game-line" data-tone={line.tone}>
+          {line.text}
+        </span>
+        {t && (t.user || t.partner || t.draws) ? (
+          <span className="cv-game-score">
+            {tr('You')} {t[activeUser]} · {t[activeUser === 'user' ? 'partner' : 'user']} {them}
+          </span>
+        ) : null}
+      </button>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -658,75 +782,35 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
       )}
 
       {onGame && mode === 'games' && (
-        <div className="cv-shelf">
-          {onHomes && (
-            <button type="button" className="cv-game" data-kind="homes" onClick={() => chooseMode('homes')}>
-              <span className="cv-game-tag">{tr('1 player')}</span>
-              <span className="cv-game-art">
-                <HomesIcon />
-              </span>
-              <span className="cv-game-name">{tr(HOMES_NAME)}</span>
-              <span className="cv-game-line" data-tone={homes?.mine ? 'wait' : 'new'}>
-                {!homes?.mine ? tr('New - tap to play') : allDone(homes.mine) ? tr('Every level done!') : tr('Level {n}', { n: levelOn(homes.mine) })}
-              </span>
-              {homes?.mine ? <span className="cv-game-score">⭐ {totalStars(homes.mine)}</span> : null}
+        <>
+          <div className="cv-shelf">
+            {shelfShown.order.filter(id => shelfGames.includes(id) && !shelfShown.hidden.includes(id)).map(shelfCard)}
+          </div>
+          {/* The order of the games, and which are shown - on both phones while kept in step. */}
+          <div className="flex justify-center pt-1">
+            <button
+              type="button"
+              onClick={() => setArrangingGames(true)}
+              className="inline-flex items-center gap-2 rounded-[14px] border border-linen-border bg-linen-surface px-4 py-2.5 text-[13px] font-semibold text-linen-primary shadow-xs hover:bg-linen-variant/60 transition-colors cursor-pointer"
+            >
+              <SlidersHorizontal className="h-4 w-4 text-linen-accent" />
+              {tr('Arrange the games')}
             </button>
+          </div>
+          {arrangingGames && (
+            <ArrangeGamesSheet
+              layout={shelfShown}
+              games={shelfGames}
+              nameOf={shelfName}
+              iconOf={shelfIcon}
+              sync={myShelf.sync}
+              partnerName={them}
+              onChange={arrangeShelf}
+              onSync={syncShelf}
+              onClose={() => setArrangingGames(false)}
+            />
           )}
-          {onMaze && (
-            <button type="button" className="cv-game" data-kind="maze" onClick={() => chooseMode('maze')}>
-              <span className="cv-game-tag">{tr('Together')}</span>
-              <span className="cv-game-art">
-                <HeartsIcon />
-              </span>
-              <span className="cv-game-name">{tr(HEARTS_NAME)}</span>
-              <span className="cv-game-line" data-tone={maze?.mine || maze?.theirs ? 'wait' : 'new'}>
-                {maze?.mine || maze?.theirs ? tr('Level {n}', { n: levelOfPair(maze?.mine, maze?.theirs) }) : tr('New - tap to play')}
-              </span>
-              {maze?.mine || maze?.theirs ? (
-                <span className="cv-game-score">💖 {heartsIn(mergeBooks(maze?.mine?.book ?? '', maze?.theirs?.book ?? ''))}</span>
-              ) : null}
-            </button>
-          )}
-          {onDuo &&
-            DUO_GAMES.map(g => {
-              const Icon = DUO_ICONS[g];
-              const got = duoOf(duo?.mine, duo?.theirs)[g];
-              return (
-                <button key={g} type="button" className="cv-game" data-kind={g} onClick={() => chooseMode(g)}>
-                  <span className="cv-game-tag">{tr('Together')}</span>
-                  <span className="cv-game-art">
-                    <Icon />
-                  </span>
-                  <span className="cv-game-name">{tr(DUO_NAMES[g])}</span>
-                  <span className="cv-game-line" data-tone={got ? 'wait' : 'new'}>
-                    {!got ? tr('New - tap to play') : DUO_BY_SCORE.includes(g) ? tr('Best {n}', { n: got }) : tr('Level {n}', { n: got + 1 })}
-                  </span>
-                </button>
-              );
-            })}
-          {PAPER_KINDS.map(k => {
-            const line = shelfLine(k);
-            const g = games?.[k];
-            const t = g ? totals(g) : null;
-            return (
-              <button key={k} type="button" className="cv-game" data-kind={k} onClick={() => chooseMode(k)}>
-                {line.tone === 'me' && <span className="cv-mode-dot" aria-hidden="true" />}
-                <span className="cv-game-art">
-                  <GameIcon kind={k} />
-                </span>
-                <span className="cv-game-name">{tr(GAME_NAMES[k])}</span>
-                <span className="cv-game-line" data-tone={line.tone}>
-                  {line.text}
-                </span>
-                {t && (t.user || t.partner || t.draws) ? (
-                  <span className="cv-game-score">
-                    {tr('You')} {t[activeUser]} · {t[activeUser === 'user' ? 'partner' : 'user']} {them}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
+        </>
       )}
 
       {onHomes && mode === 'homes' && (
@@ -783,6 +867,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           onBack={() => chooseMode('games')}
           widePockets={widePockets}
           moreGames={moreGames}
+          rpsReady={rpsReady}
           emotes={emotesReady}
         />
       )}

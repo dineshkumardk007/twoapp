@@ -5,17 +5,17 @@ import type { Seat } from '../core/usTwo';
 import {
   FOUR_COLS,
   FOUR_ROWS,
-  HHK_CHOICES,
+  RPS_CHOICES,
   LADDERS,
   MEMORY_FACES,
   SNAKES,
-  hhkBeats,
+  rpsBeats,
   landingRow,
   lineAt,
   other,
   playDots,
   playFour,
-  playHhk,
+  playRps,
   playMemory,
   playSnakes,
   playTtt,
@@ -348,109 +348,6 @@ export const MemoryBoard: React.FC<BoardProps> = React.memo(({ game, inkOf, mark
           </button>
         );
       })}
-    </div>
-  );
-});
-
-// --------------------------------------------------------- Heart Hug Kiss
-
-export const HHK_EMOJI = ['❤️', '🤗', '💋'];
-const HHK_NAMES = ['Heart', 'Hug', 'Kiss'];
-/** What happened in a round, in words: "Hug holds Heart". */
-export function hhkWhy(a: number, b: number): string {
-  const win = hhkBeats(a, b) ? a : b;
-  return win === 1 ? 'Hug holds Heart' : win === 2 ? 'Kiss wins Hug' : 'Heart outlasts Kiss';
-}
-
-export const HhkBoard: React.FC<BoardProps> = React.memo(({ game, me, inkOf, markOf, canAct, seen, onMove, partnerName }) => {
-  const tr = useT();
-  const s = useMemo(() => playHhk(game), [game]);
-  const them = other(me);
-  const done = s.rounds.length;
-  const mine = game.picks?.[me] || [];
-  const theirs = game.picks?.[them] || [];
-  const myPick = mine.length > done ? mine[done] : null;
-  const theyPicked = theirs.length > done;
-  const last = s.rounds[done - 1];
-  // A round decided since the board opened is revealed with a flourish.
-  const roundsSeen = useRef(done);
-  const [revealing, setRevealing] = useState<number | null>(null);
-  useEffect(() => {
-    if (done > roundsSeen.current) {
-      setRevealing(done);
-      const t = setTimeout(() => setRevealing(null), 2400);
-      roundsSeen.current = done;
-      return () => clearTimeout(t);
-    }
-    roundsSeen.current = done;
-  }, [done]);
-  void seen;
-  const pips = (seat: Seat) => (
-    <span className="gh-pips" style={{ '--ink': inkOf(seat) } as React.CSSProperties}>
-      {Array.from({ length: 3 }, (_, i) => (
-        <i key={i} data-on={s.points[seat] > i || undefined} />
-      ))}
-    </span>
-  );
-  const verdict = (round: NonNullable<typeof last>) =>
-    round.winner === null
-      ? tr('Same pick - nobody scores')
-      : `${tr(hhkWhy(round.user, round.partner))} - ${round.winner === me ? tr('your round!') : tr("{name}'s round", { name: partnerName })}`;
-  return (
-    <div className="gh">
-      <div className="gh-score">
-        <span className="gh-side">
-          <MarkIcon mark={markOf(me)} ink={inkOf(me)} size={18} />
-          {pips(me)}
-        </span>
-        <span className="gh-round">{s.over ? tr('Game over') : tr('Round {n}', { n: done + 1 })}</span>
-        <span className="gh-side">
-          {pips(them)}
-          <MarkIcon mark={markOf(them)} ink={inkOf(them)} size={18} />
-        </span>
-      </div>
-
-      <div className="gh-arena">
-        {revealing && last ? (
-          <div className="gh-reveal" key={revealing}>
-            <div className="gh-cards">
-              <span className="gh-card" data-win={last.winner === me || undefined} data-lose={last.winner === them || undefined} style={{ '--ink': inkOf(me) } as React.CSSProperties}>
-                <span className="gh-emoji">{HHK_EMOJI[last[me]]}</span>
-                <small>{tr('You')}</small>
-              </span>
-              <span className="gh-vs">vs</span>
-              <span className="gh-card" data-win={last.winner === them || undefined} data-lose={last.winner === me || undefined} style={{ '--ink': inkOf(them) } as React.CSSProperties}>
-                <span className="gh-emoji">{HHK_EMOJI[last[them]]}</span>
-                <small>{partnerName}</small>
-              </span>
-            </div>
-            <p className="gh-verdict">{verdict(last)}</p>
-          </div>
-        ) : (
-          <div className="gh-cards">
-            <span className="gh-card" data-picked={myPick !== null || undefined} style={{ '--ink': inkOf(me) } as React.CSSProperties}>
-              <span className="gh-emoji">{myPick !== null ? HHK_EMOJI[myPick] : '?'}</span>
-              <small>{myPick !== null ? tr('Locked in') : tr('You')}</small>
-            </span>
-            <span className="gh-vs">vs</span>
-            <span className="gh-card gh-card-back" data-picked={theyPicked || undefined} style={{ '--ink': inkOf(them) } as React.CSSProperties}>
-              <span className="gh-emoji">{theyPicked ? '✓' : '…'}</span>
-              <small>{theyPicked ? tr('Chosen') : partnerName}</small>
-            </span>
-          </div>
-        )}
-        {!revealing && last && <p className="gh-last">{verdict(last)}</p>}
-      </div>
-
-      <div className="gh-picks" role="group" aria-label={tr('Your pick')}>
-        {HHK_CHOICES.map((_, i) => (
-          <button key={i} type="button" className="gh-pick" data-on={myPick === i || undefined} disabled={!canAct} onClick={() => onMove(i)} aria-label={tr(HHK_NAMES[i])}>
-            <span className="gh-emoji">{HHK_EMOJI[i]}</span>
-            <small>{tr(HHK_NAMES[i])}</small>
-          </button>
-        ))}
-      </div>
-      <p className="gh-rules">{tr('Hug holds Heart · Kiss wins Hug · Heart outlasts Kiss')}</p>
     </div>
   );
 });

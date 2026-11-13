@@ -26,7 +26,6 @@ import {
   refusedOf,
   playDots,
   playFour,
-  playHhk,
   playMemory,
   playSnakes,
   sizesOf,
@@ -45,7 +44,8 @@ import {
 import { carromId, playCarrom } from '../core/carrom';
 import { markTourSeen, tourSeen } from '../core/gameTours';
 import { MarkIcon } from './gameArt';
-import { DotsBoard, FourBoard, HhkBoard, MemoryBoard, SnakesBoard, TttBoard, fourFallMs, type BoardProps } from './GameBoards';
+import { DotsBoard, FourBoard, MemoryBoard, SnakesBoard, TttBoard, fourFallMs, type BoardProps } from './GameBoards';
+import { RpsBoard, RpsIcon } from './RpsBoard';
 import { BalloonBoard } from './BalloonBoard';
 import { BoxingBoard } from './BoxingBoard';
 import { CarromBoard } from './CarromBoard';
@@ -70,6 +70,8 @@ interface PaperGamesProps {
   widePockets?: boolean;
   /** Their phone has Boxing, Penalty Shootout and Puzzle Duel (core/paperGames, CAN_PLAY_MORE). */
   moreGames?: boolean;
+  /** Their phone has Rock Paper Scissors (core/paperGames, CAN_RPS). */
+  rpsReady?: boolean;
   /** Their phone has emotes, and says which game it is on (core/gameEmotes, CAN_EMOTE). */
   emotes?: boolean;
 }
@@ -83,7 +85,7 @@ export const GAME_HOW: Record<PaperKind, string> = {
   carrom: 'Flick the striker to pot your coins. Win the Queen and cover her with a coin of yours. Clear your coins to win.',
   four: 'Drop a disc in turn. Four in a line - across, down or slanting - wins.',
   memory: 'Turn over two cards a turn. Find a pair to keep it - and go again.',
-  hhk: 'You both choose at once. Hug holds Heart, Kiss wins Hug, Heart outlasts Kiss. First to three.',
+  rps: 'You both choose at once. Paper wraps Rock, Scissors cut Paper, Rock smashes Scissors. First to three.',
   snakes: 'Roll and race to 100. Ladders take you up, snakes bring you down. A six rolls again.',
   ttt: 'Three in a row wins. Take turns - from wherever you both are.',
   dots: 'Take turns drawing a line. Close a box to claim it - and go again.'
@@ -100,7 +102,7 @@ const SOUNDS_OF: Record<PaperKind, SoundName[]> = {
   dots: ['g-chalk', 'g-box'],
   four: ['g-drop'],
   memory: ['g-flip', 'g-match', 'g-miss'],
-  hhk: ['g-pick', 'g-reveal', 'g-point', 'g-miss'],
+  rps: ['g-rps-beat', 'g-rps-shoot', 'g-rps-rock', 'g-rps-paper', 'g-rps-scissors', 'g-rps-tie', 'g-rps-win', 'g-rps-lose', 'g-pick', 'g-turn'],
   snakes: ['g-dice', 'g-hop', 'g-ladder', 'g-snake']
 };
 
@@ -194,12 +196,8 @@ export const GameIcon: React.FC<{ kind: PaperKind }> = ({ kind }) => {
           <i />
         </span>
       );
-    case 'hhk':
-      return (
-        <span className="g-icon g-icon-emoji" aria-hidden="true">
-          ❤️🤗💋
-        </span>
-      );
+    case 'rps':
+      return <RpsIcon />;
     case 'snakes':
       return (
         <span className="g-icon g-icon-emoji" aria-hidden="true">
@@ -241,7 +239,7 @@ const BOARDS: Record<PaperKind, React.FC<BoardProps>> = {
   dots: DotsBoard,
   four: FourBoard,
   memory: MemoryBoard,
-  hhk: HhkBoard,
+  rps: RpsBoard,
   snakes: SnakesBoard
 };
 
@@ -253,7 +251,7 @@ const CONFETTI_COUNT = 36;
  * new game when this one is done. Moves travel to the other phone the
  * moment they are made; each lands with its own sound on both phones.
  */
-export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack, widePockets = false, moreGames = true, emotes = true }) => {
+export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack, widePockets = false, moreGames = true, rpsReady = true, emotes = true }) => {
   const tr = useT();
   const me = activeUser;
   /** A new game's id. Carrom's says which pockets it is played on. */
@@ -296,7 +294,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   // they never tell you how it went before you have seen it.
   const watches = kind === 'balloon' || kind === 'carrom';
   // And the ones where a round is played out once you have both chosen: the same, round by round.
-  const watchesRounds = kind === 'boxing' || kind === 'penalty' || kind === 'puzzle';
+  const watchesRounds = kind === 'boxing' || kind === 'penalty' || kind === 'puzzle' || kind === 'rps';
   const [settled, setSettled] = useState(watchesRounds ? roundsOf(game) : (game?.moves.length ?? 0));
   const landing = !!game && (watches ? settled < game.moves.length : watchesRounds ? settled < roundsOf(game) : false);
   const shownGame = useMemo(
@@ -348,7 +346,6 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   useEffect(() => {
     if (!game || !st) return;
     const before = last.current;
-    const hhk = game.kind === 'hhk' ? playHhk(game) : null;
     const now = {
       id: game.id,
       n: progressOf(game),
@@ -389,21 +386,11 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
         end = 1100;
         break;
       }
-      case 'hhk': {
-        if (now.rounds > before.rounds && hhk) {
-          // Both have chosen: the drum roll, the reveal, and who took the round.
-          const round = hhk.rounds[hhk.rounds.length - 1];
-          playSound('g-reveal');
-          later(700, () => playSound(round.winner === me ? 'g-point' : round.winner ? 'g-miss' : 'g-tie'));
-          end = 1500;
-        } else if (now.mine > before.mine) {
-          playSound('g-pick');
-        } else if (now.theirs > before.theirs) {
-          // They have chosen and you have not: a nudge.
-          playSound('g-turn');
-        }
-        break;
-      }
+      case 'rps':
+        // Your pick, a click; theirs, while you still have to choose, a nudge. The round itself is the board's.
+        if (now.rounds === before.rounds && now.mine > before.mine) playSound('g-pick');
+        else if (now.rounds === before.rounds && now.theirs > before.theirs && now.mine <= now.rounds) playSound('g-turn');
+        return;
       case 'boxing':
       case 'penalty':
       case 'puzzle':
@@ -597,8 +584,8 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
       meToo && themToo
         ? mePill(first)
         : meToo
-          ? mePill(kind === 'hhk' ? tr('{name} has chosen - your pick!', { name: partnerName }) : tr('{name} is ready - your go!', { name: partnerName }))
-          : waiting(kind === 'hhk' ? tr('Waiting for {name} to choose', { name: partnerName }) : tr('Waiting for {name}', { name: partnerName }));
+          ? mePill(kind === 'rps' ? tr('{name} has chosen - your pick!', { name: partnerName }) : tr('{name} is ready - your go!', { name: partnerName }))
+          : waiting(kind === 'rps' ? tr('Waiting for {name} to choose', { name: partnerName }) : tr('Waiting for {name}', { name: partnerName }));
   } else if (canAct) {
     const pending = kind === 'memory' && playMemory(game).pending !== null;
     status = mePill(
@@ -700,7 +687,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
           </div>
         </div>
       )}
-      {isNewerKind(kind) && !moreGames && (
+      {((isNewerKind(kind) && !moreGames) || (kind === 'rps' && !rpsReady)) && (
         <p className="pg-ask-note" role="status">
           {tr("{name}'s Two needs the latest update to play this one", { name: partnerName })}
         </p>

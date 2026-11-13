@@ -279,10 +279,11 @@ import { HOMES_RECORD, cleanHomes, mergeHomes, withStars } from './core/cosyHome
 import { CAN_MAZE, MAZE_RECORD, MAZE_SIGNAL, cleanHalf, hearMaze, latestHalf, setMazeSender, type MazeHalf } from './core/twoHearts';
 import { CAN_SECRET, SECRET_WORDS } from './core/secretMessage';
 import { VFX_SIGNAL, hearVfx, setVfxSender } from './core/chatVfx';
+import { SHELF_RECORD, cleanShelf, laterShelf, type ShelfLayout } from './core/gameShelf';
 import { CAN_DUO, DUO_NAMES, DUO_RECORD, DUO_SIGNAL, cleanDuoHalf, hearDuo, isDuoGame, mergeDuo, setDuoSender, type DuoHalf } from './core/duo';
 import { CAN_WEAR, WEAR_RECORD, cleanWear, latestWear, showWear, type Wear } from './core/wear';
 import { CAN_EMOTE, GAME_SAY_SIGNAL, OPEN_GAME_EVENT, hearGameSaid, roomOnScreen, setSaySender, type GameRoom } from './core/gameEmotes';
-import { CAN_PLAY_MORE, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
+import { CAN_PLAY_MORE, CAN_RPS, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
   SURPRISE_PART,
@@ -390,7 +391,7 @@ const APP_VERSION = 'APP_VERSION';
  * letter for a day closed until then (core/letters), and say when Two leaves
  * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE, CAN_SECRET, CAN_WEAR, CAN_DUO];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE, CAN_SECRET, CAN_WEAR, CAN_DUO, CAN_RPS];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -1993,6 +1994,14 @@ export const App: React.FC = () => {
               const held = prev.usWear?.[seat];
               const next = latestWear(held, worn);
               return next === held ? prev : { ...prev, usWear: { ...prev.usWear, [seat]: next } };
+            });
+          } else if (record.type === SHELF_RECORD) {
+            // The order of the games, from either phone (core/gameShelf): the latest is kept.
+            const layout = cleanShelf(parsed);
+            if (!layout || !layout.at) return;
+            setState(prev => {
+              const next = laterShelf(prev.gameShelf, layout);
+              return next === prev.gameShelf ? prev : { ...prev, gameShelf: next };
             });
           } else if (record.type === DUO_RECORD) {
             // The games for two at once (core/duo): how far one phone has seen
@@ -3989,6 +3998,12 @@ export const App: React.FC = () => {
   const handleWear = (wear: Wear) => {
     setState(prev => ({ ...prev, usWear: { ...prev.usWear, [prev.activeUser]: wear } }));
     wsRelay.broadcastUpdate(WEAR_RECORD, wear);
+  };
+
+  /** The games arranged on this phone, kept in step (core/gameShelf): kept here, and sent to their phone. */
+  const handleShelf = (layout: ShelfLayout) => {
+    setState(prev => ({ ...prev, gameShelf: laterShelf(prev.gameShelf, layout) }));
+    wsRelay.broadcastUpdate(SHELF_RECORD, layout);
   };
 
   /** This phone has seen the two of you get further in a game for two at once (core/duo): kept here, and said to their phone. */
@@ -6736,6 +6751,9 @@ export const App: React.FC = () => {
             duo={state.duo}
             onDuo={handleDuoHalf}
             duoReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_DUO)}
+            rpsReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_RPS)}
+            shelf={state.gameShelf}
+            onShelf={handleShelf}
             mazeReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_MAZE)}
             emotesReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_EMOTE)}
             widePockets={!!state.partnerApp?.can?.includes(CAN_WIDE_POCKETS)}

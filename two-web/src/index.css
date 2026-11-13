@@ -4054,7 +4054,7 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
 
 /* ---------------------------------------------------------------------------
    The games on Canvas of Us, beyond pen and paper (components/GameBoards):
-   the shelf of games, Four in a Row, Memory Match, Heart Hug Kiss and
+   the shelf of games, Four in a Row, Memory Match, Rock Paper Scissors and
    Snakes & Ladders. Everything that moves moves by transform or opacity.
    --------------------------------------------------------------------------- */
 .pg-head { display: flex; align-items: center; gap: 8px; min-height: 36px; }
@@ -4089,7 +4089,7 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
 .cv-game::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
 .cv-game[data-kind='four']::before { background: linear-gradient(140deg, rgb(51 70 200 / 0.2), rgb(244 63 94 / 0.12)); }
 .cv-game[data-kind='memory']::before { background: linear-gradient(140deg, rgb(236 72 153 / 0.18), rgb(139 92 246 / 0.16)); }
-.cv-game[data-kind='hhk']::before { background: linear-gradient(140deg, rgb(244 63 94 / 0.2), rgb(250 204 21 / 0.14)); }
+.cv-game[data-kind='rps']::before { background: linear-gradient(140deg, rgb(244 63 94 / 0.2), rgb(250 204 21 / 0.14)); }
 .cv-game[data-kind='snakes']::before { background: linear-gradient(140deg, rgb(16 185 129 / 0.2), rgb(234 88 12 / 0.14)); }
 .cv-game[data-kind='ttt']::before { background: linear-gradient(140deg, rgb(14 165 233 / 0.18), rgb(244 63 94 / 0.1)); }
 .cv-game[data-kind='dots']::before { background: linear-gradient(140deg, rgb(245 158 11 / 0.18), rgb(14 165 233 / 0.12)); }
@@ -4233,7 +4233,7 @@ html.app-away .us-scene * { animation-play-state: paused !important; }
   75% { transform: rotateY(180deg) translateX(-6%); }
 }
 
-/* Heart Hug Kiss: two cards face down until you have both chosen. */
+/* Rock Paper Scissors: two cards face down until you have both chosen. */
 .gh {
   display: flex;
   flex-direction: column;
@@ -7247,3 +7247,176 @@ html.dark .ch-say[data-hint='wrong'] { color: #f43f5e; }
   .vf-chip { padding: 6px 8px; font-size: 11px; }
 }
 .vf-mark { font-size: 13px; line-height: 1; }
+
+/* ==========================================================================
+   Rock Paper Scissors (components/RpsBoard): the bear and the bunny of Us two
+   face each other on a little stage; everything that moves is moved by the
+   browser's own animations, on parts drawn once.
+   ========================================================================== */
+.rps { width: min(100%, 520px); display: flex; flex-direction: column; gap: 10px; }
+.rps-top { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; }
+.rps-side { display: flex; align-items: center; gap: 7px; min-width: 0; font: 800 12px/1.1 Manrope, system-ui, sans-serif; color: rgb(var(--c-primary)); }
+.rps-side b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; }
+.rps-side[data-right] { justify-content: flex-end; }
+.rps-round { font: 800 11px/1 Manrope, system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(var(--c-secondary)); }
+.rps-pips { display: inline-flex; gap: 4px; }
+.rps-pips i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--ink); background: transparent; transition: background 260ms ease, transform 360ms cubic-bezier(0.3, 1.8, 0.5, 1); }
+.rps-pips i[data-on] { background: var(--ink); transform: scale(1.15); box-shadow: 0 0 8px var(--ink); }
+
+.rps-stage {
+  position: relative; width: 100%; aspect-ratio: 360 / 240; border-radius: 22px; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 0%, #fff4d6 0%, #ffd6c4 45%, #f3a9b9 100%);
+  box-shadow: 0 16px 30px -16px rgb(80 20 50 / 0.55), inset 0 0 0 2px rgb(255 255 255 / 0.5);
+  user-select: none; -webkit-user-select: none;
+}
+html.dark .rps-stage { background: radial-gradient(ellipse at 50% 0%, #4b3a6b 0%, #2c2147 50%, #1a1430 100%); }
+.rps-backdrop { position: absolute; inset: 0; pointer-events: none; }
+.rps-floor { position: absolute; left: 0; right: 0; bottom: 0; height: 13%; background: linear-gradient(#e9b48f, #d4936c); box-shadow: inset 0 3px 0 rgb(255 255 255 / 0.35); }
+html.dark .rps-floor { background: linear-gradient(#5a4380, #3d2c5c); }
+.rps-spot { position: absolute; top: -20%; width: 44%; height: 125%; background: radial-gradient(ellipse at 50% 100%, rgb(255 255 255 / 0.55), transparent 62%); opacity: 0.8; animation: rps-spot 4s ease-in-out infinite alternate; }
+.rps-spot[data-side='left'] { left: 6%; transform-origin: 50% 0; }
+.rps-spot[data-side='right'] { right: 6%; transform-origin: 50% 0; animation-delay: -2s; }
+@keyframes rps-spot {
+  from { transform: rotate(-4deg); }
+  to { transform: rotate(4deg); }
+}
+.rps-who { position: absolute; }
+.rps-who .rig-l { will-change: transform; }
+/* The arm that throws takes the place of the one drawn on that side. */
+.rps-who:not([data-cheer])[data-side='left'] .rig-arm-r,
+.rps-who:not([data-cheer])[data-side='right'] .rig-arm-l { visibility: hidden; }
+.rps-arm { z-index: 2; }
+.rps-wrapped { position: absolute; left: 4%; top: 24%; width: 92%; height: 72%; overflow: visible; animation: rps-wrap 1.08s ease both; filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.25)); }
+@keyframes rps-wrap {
+  0% { transform: scale(0.3) rotate(-30deg); opacity: 0; }
+  12% { transform: scale(1.12) rotate(4deg); opacity: 1; }
+  20% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(1.04, 0.96) rotate(-2deg); }
+  45% { transform: scale(0.97, 1.03) rotate(2deg); }
+  60% { transform: scale(1.04, 0.96) rotate(-2deg); }
+  75% { transform: scale(1) rotate(1deg); opacity: 1; }
+  88% { transform: scale(1.25) rotate(6deg); opacity: 0.9; }
+  100% { transform: scale(1.5) rotate(10deg); opacity: 0; }
+}
+.rps-badge {
+  position: absolute; left: 50%; top: -6%; display: grid; place-items: center; width: 34px; height: 34px; margin-left: -17px;
+  border-radius: 50%; background: #fff; font-size: 19px; line-height: 1; box-shadow: 0 4px 10px -4px rgb(0 0 0 / 0.45), 0 0 0 2px rgb(255 255 255 / 0.8);
+  animation: rps-badge 420ms cubic-bezier(0.3, 1.8, 0.5, 1) both;
+}
+@keyframes rps-badge {
+  from { transform: translateY(16px) scale(0.2); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.rps-word, .rps-verdict {
+  position: absolute; left: 50%; top: 13%; z-index: 4; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
+  font: 900 26px/1 Fraunces, Georgia, serif; color: #fff; letter-spacing: 0.01em;
+  text-shadow: 0 3px 0 #b4234a, 0 0 18px rgb(244 63 94 / 0.55), 0 6px 14px rgb(0 0 0 / 0.25);
+  animation: rps-word 420ms cubic-bezier(0.3, 1.8, 0.5, 1) both;
+}
+.rps-word[data-big] { font-size: 40px; text-shadow: 0 4px 0 #b45309, 0 0 24px rgb(251 191 36 / 0.8), 0 8px 18px rgb(0 0 0 / 0.3); animation-name: rps-shoot; animation-duration: 520ms; }
+@keyframes rps-word {
+  0% { transform: translateX(-50%) scale(0.4) rotate(-8deg); opacity: 0; }
+  60% { transform: translateX(-50%) scale(1.15) rotate(2deg); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes rps-shoot {
+  0% { transform: translateX(-50%) scale(2.4); opacity: 0; }
+  40% { transform: translateX(-50%) scale(0.9); opacity: 1; }
+  70% { transform: translateX(-50%) scale(1.08); }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+.rps-verdict { top: 9%; font-size: 21px; animation-duration: 480ms; }
+.rps-verdict[data-tone='lose'] { text-shadow: 0 3px 0 #475569, 0 0 14px rgb(100 116 139 / 0.6); }
+.rps-verdict[data-tone='tie'] { text-shadow: 0 3px 0 #7c3aed, 0 0 14px rgb(167 139 250 / 0.6); }
+.rps-ready { position: absolute; left: 50%; bottom: 3%; z-index: 4; transform: translateX(-50%); padding: 4px 10px; border-radius: 9999px; white-space: nowrap; background: rgb(60 30 50 / 0.7); color: #fff; font: 700 11px/1.2 Manrope, system-ui, sans-serif; }
+.rps-ready[data-on] { background: rgb(22 120 70 / 0.9); box-shadow: 0 0 0 1.5px rgb(170 255 200 / 0.7); }
+
+/* What the shapes do (RpsBoard's Fx): each placed at a point, everything inside moving from there. */
+.rps-fx { position: absolute; z-index: 3; width: 0; height: 0; pointer-events: none; }
+.rps-fx > * { position: absolute; left: 0; top: 0; }
+.rps-boom { font-size: 58px; line-height: 1; transform: translate(-50%, -50%); animation: rps-boom 560ms cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+@keyframes rps-boom {
+  0% { transform: translate(-50%, -50%) scale(0.2) rotate(-20deg); opacity: 0; }
+  25% { transform: translate(-50%, -50%) scale(1.4) rotate(6deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.8) rotate(10deg); opacity: 0; }
+}
+.rps-spark { width: 20px; height: 3px; margin-top: -1.5px; border-radius: 2px; background: linear-gradient(90deg, #fff, #fbbf24); transform-origin: 0 50%; animation: rps-spark 480ms ease-out both; }
+@keyframes rps-spark {
+  from { transform: rotate(var(--a)) translateX(4px) scaleX(0.3); opacity: 1; }
+  to { transform: rotate(var(--a)) translateX(40px) scaleX(1.2); opacity: 0; }
+}
+.rps-dizzy { width: 0; height: 0; animation: rps-spin 900ms linear infinite; }
+.rps-dizzy i { position: absolute; left: 0; top: 0; font-size: 15px; font-style: normal; transform: rotate(var(--a)) translateX(26px) rotate(calc(var(--a) * -1)) translate(-50%, -50%) scaleY(0.6); }
+@keyframes rps-spin {
+  to { transform: rotate(360deg); }
+}
+.rps-fx[data-kind='stars'] { animation: rps-fade-out 1.9s ease-in both; }
+@keyframes rps-fade-out {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.rps-twinkle { font-size: 16px; font-style: normal; color: #fbbf24; text-shadow: 0 0 6px #fde68a; animation: rps-twinkle 900ms ease-out both; }
+@keyframes rps-twinkle {
+  0% { transform: rotate(var(--a)) translateX(4px) rotate(calc(var(--a) * -1)) translate(-50%, -50%) scale(0); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: rotate(var(--a)) translateX(42px) rotate(calc(var(--a) * -1)) translate(-50%, -50%) scale(1.2); opacity: 0; }
+}
+/* The scissors' blades, broken by a rock. */
+.rps-bit { width: 12px; height: 5px; border-radius: 2px; background: #94a3b8; border: 1.5px solid #3b2723; animation: rps-bit 900ms cubic-bezier(0.2, 0.6, 0.4, 1) both; }
+@keyframes rps-bit {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(calc(var(--d) * (14px + var(--k) * 9px)), calc(-30px + var(--k) * 22px)) rotate(calc(var(--k) * 140deg + 90deg)); opacity: 0; }
+}
+/* Fur, snipped or ruffled, floating down. */
+.rps-tuft { width: 8px; height: 8px; border-radius: 50% 50% 50% 0; background: #e7c9a6; border: 1.5px solid #3b2723; animation: rps-tuft 1.1s ease-in both; animation-delay: calc(var(--k) * 90ms); }
+@keyframes rps-tuft {
+  0% { transform: translate(calc(var(--k) * 8px - 12px), 0) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  50% { transform: translate(calc(var(--k) * 8px - 2px), 28px) rotate(120deg); }
+  100% { transform: translate(calc(var(--k) * 8px - 16px), 70px) rotate(260deg); opacity: 0; }
+}
+.rps-snip { font-size: 34px; line-height: 1; transform: translate(-50%, -50%); animation: rps-boom 520ms ease-out both; }
+/* Paper, cut in two, each half falling its own way. */
+.rps-half { width: 14px; height: 22px; margin: -11px 0 0 -14px; background: #fffdf6; border: 1.8px solid #3b2723; border-radius: 3px; animation: rps-half 1.3s cubic-bezier(0.4, 0, 0.8, 0.6) both; }
+.rps-half[data-h='2'] { margin-left: 0; animation-name: rps-half-2; }
+@keyframes rps-half {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(calc(var(--d) * 10px - 10px), 60px) rotate(-60deg); opacity: 0; }
+}
+@keyframes rps-half-2 {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(calc(var(--d) * 10px + 14px), 54px) rotate(70deg); opacity: 0; }
+}
+/* A sheet of paper, thrown from one paw to wrap up the other one. */
+.rps-sheet { width: 44px; height: 44px; margin: -22px 0 0 -22px; overflow: visible; animation: rps-sheet 460ms cubic-bezier(0.4, 0, 0.6, 1) both; filter: drop-shadow(0 4px 4px rgb(0 0 0 / 0.25)); }
+@keyframes rps-sheet {
+  0% { transform: translate(0, 0) rotate(0deg) scale(0.4); opacity: 0; }
+  15% { opacity: 1; }
+  50% { transform: translate(calc(var(--d) * 40px), -40px) rotate(calc(var(--d) * 220deg)) scale(1.3); }
+  100% { transform: translate(calc(var(--d) * 92px), -10px) rotate(calc(var(--d) * 400deg)) scale(2.4); opacity: 0.9; }
+}
+
+.rps-picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.rps-pick {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 4px 8px;
+  border: 1.5px solid rgb(var(--c-border)); border-radius: 18px; background: rgb(var(--c-surface)); color: rgb(var(--c-primary));
+  font: 800 12px/1.1 Manrope, system-ui, sans-serif; box-shadow: 0 4px 0 rgb(var(--c-border));
+  transition: transform 120ms ease, box-shadow 120ms ease, background 200ms ease;
+}
+.rps-pick:not(:disabled):active { transform: translateY(3px); box-shadow: 0 1px 0 rgb(var(--c-border)); }
+.rps-pick[data-on] { border-color: var(--me); background: color-mix(in srgb, var(--me) 14%, rgb(var(--c-surface))); box-shadow: 0 4px 0 var(--me); animation: rps-locked 420ms cubic-bezier(0.3, 1.8, 0.5, 1); }
+.rps-pick:disabled:not([data-on]) { opacity: 0.55; }
+@keyframes rps-locked {
+  0% { transform: scale(0.9); }
+  60% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.rps-rules { margin: 0; text-align: center; font: 600 11.5px/1.3 Manrope, system-ui, sans-serif; color: rgb(var(--c-secondary)); }
+@media (prefers-reduced-motion: reduce) {
+  .rps-spot, .rps-dizzy { animation: none; }
+}
+
+/* The games' pictures in the arrange sheet (components/ArrangeGamesSheet). */
+.ag-icon { display: grid; place-items: center; width: 34px; height: 34px; overflow: hidden; border-radius: 9px; }
+.ag-icon > .g-icon, .ag-icon > svg { width: 100%; height: 100%; }
+.ag-icon > .g-icon-emoji { font-size: 13px; }

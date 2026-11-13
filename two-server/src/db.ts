@@ -65,6 +65,8 @@ export const LATEST_ONLY_TYPES = new Set([
   'GAME_MAZE',
   // The games for two at once: how far each phone has seen the two of you get.
   'GAME_DUO',
+  // The order of the games, as last arranged on each phone.
+  'GAME_SHELF',
   // What each of you has dressed your bear or bunny in, and what each phone
   // has done for the puppy: whole each time.
   'US_WEAR',

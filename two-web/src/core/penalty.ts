@@ -3,7 +3,7 @@
 // Kick by kick you take turns to shoot and to keep goal, and for each kick
 // you both choose at once: the kicker where to put it and how hard, the
 // keeper which way to dive. Neither sees the other's until both have. As in
-// Heart Hug Kiss each of you has a list of your own picks - here a pick is a
+// Rock Paper Scissors each of you has a list of your own picks - here a pick is a
 // shot when it is your kick and a dive when it is theirs - and both phones
 // work every kick out from the two lists alone.
 

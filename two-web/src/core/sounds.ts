@@ -46,7 +46,8 @@ export type SoundName =
   | 'vx-heart' | 'vx-fire' | 'vx-laugh' | 'vx-party' | 'vx-kiss' | 'vx-broken' | 'vx-rose' | 'vx-ghost'
   | 'vx-adore' | 'vx-rage' | 'vx-sparkle' | 'vx-diamond' | 'vx-butterfly' | 'vx-rocket' | 'vx-bolt' | 'vx-balloon'
   | 'g-bm-tick' | 'g-bm-cut' | 'g-bm-wrong' | 'g-bm-boom' | 'g-bm-safe' | 'g-ct-star' | 'g-ct-heart' | 'g-ct-bomb' | 'g-lm-key' | 'g-lm-gate'
-  | 'g-dv-swim' | 'g-dv-chest' | 'g-dv-current' | 'g-dv-air' | 'g-sp-shot' | 'g-sp-boom' | 'g-sp-crack' | 'g-sp-hit' | 'g-sp-star' | 'g-sp-kit';
+  | 'g-dv-swim' | 'g-dv-chest' | 'g-dv-current' | 'g-dv-air' | 'g-sp-shot' | 'g-sp-boom' | 'g-sp-crack' | 'g-sp-hit' | 'g-sp-star' | 'g-sp-kit'
+  | 'g-rps-beat' | 'g-rps-shoot' | 'g-rps-rock' | 'g-rps-paper' | 'g-rps-scissors' | 'g-rps-tie' | 'g-rps-win' | 'g-rps-lose';
 
 interface Loaded {
   buffer: AudioBuffer;

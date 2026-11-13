@@ -1,18 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   FOUR_COLS,
-  HHK_TO_WIN,
+  RPS_CHOICES,
+  RPS_TO_WIN,
   LADDERS,
   SNAKES,
   canMove,
   cleanGame,
   deckOf,
-  hhkBeats,
+  rpsBeats,
   kindOfRecord,
   mergeGame,
   newGame,
   playFour,
-  playHhk,
+  playRps,
   playMemory,
   playSnakes,
   recordTypeOf,
@@ -21,7 +22,7 @@ import {
   type PaperGame
 } from './paperGames';
 
-// Four in a Row, Memory Match, Heart Hug Kiss and Snakes & Ladders
+// Four in a Row, Memory Match, Rock Paper Scissors and Snakes & Ladders
 // (core/paperGames; Tic-tac-toe and Dots and Boxes are in paperGames.test).
 
 const base = (kind: PaperGame['kind'], moves: number[], size: number, first: 'user' | 'partner' = 'user'): PaperGame => ({
@@ -37,7 +38,7 @@ const base = (kind: PaperGame['kind'], moves: number[], size: number, first: 'us
 
 describe('records', () => {
   it('each game has its own record type, and finds its way back', () => {
-    for (const k of ['ttt', 'dots', 'four', 'memory', 'hhk', 'snakes'] as const) expect(kindOfRecord(recordTypeOf(k))).toBe(k);
+    for (const k of ['ttt', 'dots', 'four', 'memory', 'rps', 'snakes'] as const) expect(kindOfRecord(recordTypeOf(k))).toBe(k);
     expect(kindOfRecord('CHAT')).toBeNull();
   });
 });
@@ -154,53 +155,56 @@ describe('Memory Match', () => {
   });
 });
 
-describe('Heart Hug Kiss', () => {
-  const hhk = (user: number[], partner: number[]): PaperGame => ({ ...base('hhk', [], 3), picks: { user, partner } });
+describe('Rock Paper Scissors', () => {
+  const rps = (user: number[], partner: number[]): PaperGame => ({ ...base('rps', [], 3), picks: { user, partner } });
 
-  it('a hug holds a heart, a kiss wins a hug, a heart outlasts a kiss', () => {
-    expect(hhkBeats(1, 0)).toBe(true);
-    expect(hhkBeats(2, 1)).toBe(true);
-    expect(hhkBeats(0, 2)).toBe(true);
-    expect(hhkBeats(0, 1)).toBe(false);
-    expect(hhkBeats(1, 1)).toBe(false);
+  it('paper wraps rock, scissors cut paper, rock smashes scissors - and it starts afresh, not as Heart Hug Kiss', () => {
+    expect(RPS_CHOICES).toEqual(['rock', 'paper', 'scissors']);
+    expect(recordTypeOf('rps')).toBe('GAME_RPS');
+    expect(kindOfRecord('GAME_HHK')).toBeNull();
+    expect(rpsBeats(1, 0)).toBe(true);
+    expect(rpsBeats(2, 1)).toBe(true);
+    expect(rpsBeats(0, 2)).toBe(true);
+    expect(rpsBeats(0, 1)).toBe(false);
+    expect(rpsBeats(1, 1)).toBe(false);
   });
 
   it('both choose, each once a round, and a round counts once both have', () => {
-    let g = hhk([], []);
+    let g = rps([], []);
     expect(standing(g).toMove).toEqual(['user', 'partner']);
     g = withMove(g, 1, 'user');
     expect(standing(g).toMove).toEqual(['partner']);
     expect(canMove(g, 'user', 0)).toBe(false);
     expect(canMove(g, 'partner', 2)).toBe(true);
-    expect(playHhk(g).rounds).toHaveLength(0);
+    expect(playRps(g).rounds).toHaveLength(0);
     g = withMove(g, 0, 'partner');
-    const s = playHhk(g);
+    const s = playRps(g);
     expect(s.rounds).toEqual([{ user: 1, partner: 0, winner: 'user' }]);
     expect(s.points.user).toBe(1);
     expect(standing(g).toMove).toEqual(['user', 'partner']);
   });
 
   it("the same choice is nobody's round; three rounds win the game", () => {
-    const g = hhk([0, 1, 1, 1], [0, 0, 0, 0]);
-    const s = playHhk(g);
+    const g = rps([0, 1, 1, 1], [0, 0, 0, 0]);
+    const s = playRps(g);
     expect(s.rounds[0].winner).toBeNull();
-    expect(s.points.user).toBe(HHK_TO_WIN);
+    expect(s.points.user).toBe(RPS_TO_WIN);
     expect(s.winner).toBe('user');
     expect(s.over).toBe(true);
     expect(standing(g).toMove).toEqual([]);
   });
 
   it('picks past the end, two ahead, or not a choice, do not count', () => {
-    expect(cleanGame(hhk([1, 1, 1, 1, 2], [0, 0, 0, 0, 0]), 'hhk')!.picks).toEqual({ user: [1, 1, 1], partner: [0, 0, 0] });
-    expect(cleanGame(hhk([1, 2, 0], []), 'hhk')!.picks).toEqual({ user: [1], partner: [] });
-    expect(cleanGame(hhk([7], []), 'hhk')!.picks).toEqual({ user: [], partner: [] });
+    expect(cleanGame(rps([1, 1, 1, 1, 2], [0, 0, 0, 0, 0]), 'rps')!.picks).toEqual({ user: [1, 1, 1], partner: [0, 0, 0] });
+    expect(cleanGame(rps([1, 2, 0], []), 'rps')!.picks).toEqual({ user: [1], partner: [] });
+    expect(cleanGame(rps([7], []), 'rps')!.picks).toEqual({ user: [], partner: [] });
   });
 
   it("merges each of you's picks on its own, so choosing in the same moment loses nothing", () => {
-    const m = mergeGame(hhk([1], []), hhk([], [2]));
+    const m = mergeGame(rps([1], []), rps([], [2]));
     expect(m.picks).toEqual({ user: [1], partner: [2] });
-    expect(mergeGame(m, hhk([1], []))).toBe(m);
-    expect(mergeGame(m, hhk([1], [2]))).toBe(m);
+    expect(mergeGame(m, rps([1], []))).toBe(m);
+    expect(mergeGame(m, rps([1], [2]))).toBe(m);
   });
 });
 
@@ -261,16 +265,16 @@ describe('Snakes & Ladders', () => {
 });
 
 describe('new games of each kind', () => {
-  it('fixed boards keep their size; memory keeps its pairs; Heart Hug Kiss starts with no picks', () => {
+  it('fixed boards keep their size; memory keeps its pairs; Rock Paper Scissors starts with no picks', () => {
     expect(newGame('four', undefined, 'user', 'a', 1).size).toBe(7);
     expect(newGame('snakes', undefined, 'user', 'a', 1).size).toBe(10);
     expect(newGame('memory', undefined, 'user', 'a', 1, 10).size).toBe(10);
     expect(newGame('memory', undefined, 'user', 'a', 1).size).toBe(8);
-    expect(newGame('hhk', undefined, 'user', 'a', 1).picks).toEqual({ user: [], partner: [] });
+    expect(newGame('rps', undefined, 'user', 'a', 1).picks).toEqual({ user: [], partner: [] });
   });
 
-  it('a won Heart Hug Kiss counts for the winner in the next game', () => {
-    const won: PaperGame = { ...base('hhk', [], 3), picks: { user: [1, 1, 1], partner: [0, 0, 0] } };
-    expect(newGame('hhk', won, 'partner', 'b', 2).before).toEqual({ user: 1, partner: 0, draws: 0 });
+  it('a won Rock Paper Scissors counts for the winner in the next game', () => {
+    const won: PaperGame = { ...base('rps', [], 3), picks: { user: [1, 1, 1], partner: [0, 0, 0] } };
+    expect(newGame('rps', won, 'partner', 'b', 2).before).toEqual({ user: 1, partner: 0, draws: 0 });
   });
 });

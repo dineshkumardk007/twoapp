@@ -1,7 +1,7 @@
 // Boxing on Canvas of Us (components/BoxingBoard).
 //
 // You both choose a move at once, neither seeing the other's until both have
-// (as in Heart Hug Kiss: each of you has a list of your own picks), and the
+// (as in Rock Paper Scissors: each of you has a list of your own picks), and the
 // round is fought out from the two of them. Everything that follows - who
 // was hit, how hard, who is left standing - comes from the picks alone, so
 // both phones fight the same fight.

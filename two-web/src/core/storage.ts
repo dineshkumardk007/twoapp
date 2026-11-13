@@ -5,6 +5,7 @@ import type { PaperGame, PaperKind } from './paperGames';
 import type { HomesBook } from './cosyHomes';
 import type { MazeHalf } from './twoHearts';
 import type { DuoHalf } from './duo';
+import type { ShelfLayout } from './gameShelf';
 import type { WearBook } from './wear';
 import type { SurpriseBook } from './surprise';
 import {
@@ -182,6 +183,8 @@ export interface SpaceState {
   homes?: { mine?: HomesBook; theirs?: HomesBook };
   /** What the bear and the bunny of "Us two" are dressed in (core/wear), each by its own phone. */
   usWear?: WearBook;
+  /** The order of the games on Canvas of Us, as last arranged on either phone in step (core/gameShelf). */
+  gameShelf?: ShelfLayout;
   /** The games for two at once (core/duo): how far each phone has seen the two of you get. */
   duo?: { mine?: DuoHalf; theirs?: DuoHalf };
   /** Two Hearts, the maze for two (core/twoHearts): where each of you is, as each phone last said. */
