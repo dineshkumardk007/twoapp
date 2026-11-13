@@ -17,6 +17,7 @@ import { haptic } from '../core/haptics';
 import { pushBackLayer } from '../core/backStack';
 import { tr, useT } from '../core/i18n';
 import { VoiceNotePlayer } from './VoiceNotePlayer';
+import { VOICE_FX, type VoiceFxId } from '../core/voiceFx';
 
 // Hold-to-talk, for a composer.
 //
@@ -50,6 +51,8 @@ export interface UseVoiceRecorderOptions {
   disabled?: boolean;
   /** A note has begun or ended - the composer closes its emoji picker and the like. */
   onActiveChange?: (active: boolean) => void;
+  /** A funny voice can be picked for a note (core/voiceFx): where the other phone plays it in one. */
+  voices?: boolean;
 }
 
 /** How far up the finger goes to lock the recording. */
@@ -147,6 +150,8 @@ class RecorderEngine {
   /** A recording is being stopped and turned into a note. */
   busy = false;
   draft: VoiceNote | null = null;
+  /** The funny voice picked for the note under way, if any. Each note starts in the plain one. */
+  fx: VoiceFxId | null = null;
   recording: VoiceRecording | null = null;
   session = 0;
   readonly live = new LiveState();
@@ -197,9 +202,23 @@ class RecorderEngine {
     this.publish();
   }
 
+  /** Whether a voice can be picked at all, here. */
+  get voices(): boolean {
+    return !!this.options().voices;
+  }
+
+  /** A voice picked for this note - or, picked again, put back to the plain one. */
+  pickFx = (id: VoiceFxId) => {
+    this.fx = this.fx === id ? null : id;
+    haptic('tick');
+    this.publish();
+    this.live.bump();
+  };
+
   private toIdle() {
     this.recording = null;
     this.draft = null;
+    this.fx = null;
     this.busy = false;
     this.live.dx = 0;
     this.live.dy = 0;
@@ -408,8 +427,9 @@ class RecorderEngine {
       note = null;
     }
     if (this.session !== session) return;
+    const fx = this.fx;
     this.toIdle();
-    if (note) this.deliver(note);
+    if (note) this.deliver(fx ? { ...note, fx } : note);
     else this.hint(recording.elapsedMs() < VOICE_MIN_MS ? tr('Too short to send') : tr("Couldn't keep that recording"));
   };
 
@@ -417,8 +437,9 @@ class RecorderEngine {
   sendDraft = () => {
     const draft = this.draft;
     if (this.state !== 'review' || !draft) return;
+    const fx = this.fx;
     this.toIdle();
-    this.deliver(draft);
+    this.deliver(fx ? { ...draft, fx } : draft);
   };
 
   /** Throws away the note listened back to. */
@@ -992,7 +1013,9 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
         </StripButton>
         <div className="min-w-0 flex-1">
           <VoiceNotePlayer
-            key={engine.session}
+            // Drawn afresh for each voice tried on, so it is heard in that one.
+            key={`${engine.session}-${engine.fx ?? 'plain'}`}
+            fx={engine.fx ?? undefined}
             id={`voice-draft-${engine.session}`}
             audioDataUrl={draft.dataUrl}
             durationSeconds={draft.durationSeconds}
@@ -1017,6 +1040,17 @@ export const VoiceRecordingStrip: React.FC<{ rec: VoiceRecorderControls; classNa
         )}
         {status && <span className="sr-only">{status}</span>}
       </div>
+      {engine.voices && (state === 'locked' || state === 'review') && !busy && (
+        // The voices: one picked here is the one the note is played in, on both phones.
+        <div className="vf-row" role="group" aria-label={tr('Voice')} onPointerDown={keepFocus} onMouseDown={keepFocus}>
+          {VOICE_FX.map(fx => (
+            <button key={fx.id} type="button" className="vf-chip" data-on={engine.fx === fx.id || undefined} aria-pressed={engine.fx === fx.id} onClick={() => engine.pickFx(fx.id)}>
+              <span aria-hidden="true">{fx.emoji}</span>
+              {tr(fx.name)}
+            </button>
+          ))}
+        </div>
+      )}
       {visible && (
         <div
           ref={rootRef}

@@ -452,7 +452,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
     disabled: callInProgress,
     onActiveChange: active => {
       if (active) setShowEmojiPicker(false);
-    }
+    },
+    // A funny voice can be picked for a note once it is locked or stopped (core/voiceFx).
+    voices: true
   });
   const showMic = rec.supported && (!inputText.trim() || rec.active);
   /** Photos are offered while nothing is written - not mid-sentence, mid-edit, or mid-note. */
@@ -1424,6 +1426,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     audioDataUrl={msg.audioDataUrl}
                     durationSeconds={msg.audioDurationSeconds}
                     peaks={msg.audioPeaks}
+                    fx={msg.audioFx}
                     tone={mine ? 'mine' : 'theirs'}
                     heard={!!msg.heard}
                     showHeard={mine ? shareReceipts : true}

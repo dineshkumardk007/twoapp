@@ -71,6 +71,8 @@ export interface ChatMessage {
   isVoiceMemo?: boolean;
   audioDataUrl?: string;
   audioDurationSeconds?: number;
+  /** The funny voice a voice note is played in (core/voiceFx), if it was sent in one. */
+  audioFx?: string;
   /**
    * A voice note's waveform: a few dozen levels, 0-100, sampled while it was
    * recorded. Absent on notes from before notes kept their shape.

@@ -14,6 +14,7 @@
 // that the bubble draws as its waveform.
 
 import { liveRadio } from './liveRadio';
+import { cleanVoiceFx, type VoiceFxId } from './voiceFx';
 
 /** The longest note: three minutes. */
 export const VOICE_MAX_SECONDS = 180;
@@ -48,6 +49,8 @@ export interface VoiceNote {
   durationSeconds: number;
   /** VOICE_PEAK_COUNT levels, each 0-100. */
   peaks: number[];
+  /** The funny voice it is to be played in, if one was picked (core/voiceFx). */
+  fx?: VoiceFxId;
 }
 
 /** The voice-note fields a chat message carries (couple's and group's alike). */
@@ -56,6 +59,8 @@ export interface VoiceFields {
   audioDataUrl: string;
   audioDurationSeconds: number;
   audioPeaks?: number[];
+  /** The funny voice it is played in (core/voiceFx): put on by the phone that plays it. */
+  audioFx?: VoiceFxId;
 }
 
 /**
@@ -129,7 +134,8 @@ export function voiceFieldsOf(note: VoiceNote): VoiceFields {
     isVoiceMemo: true,
     audioDataUrl: note.dataUrl,
     audioDurationSeconds: note.durationSeconds,
-    audioPeaks: note.peaks
+    audioPeaks: note.peaks,
+    ...(note.fx ? { audioFx: note.fx } : {})
   };
 }
 
@@ -164,6 +170,8 @@ export function cleanVoiceFields(payload: any): VoiceFields | null {
       return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : 0;
     });
   }
+  const fx = cleanVoiceFx(payload.audioFx);
+  if (fx) fields.audioFx = fx;
   return fields;
 }
 

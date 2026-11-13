@@ -7168,3 +7168,19 @@ html.dark .ch-say[data-hint='wrong'] { color: #f43f5e; }
 .sp-gun { position: absolute; left: 50%; bottom: 8px; display: flex; gap: 5px; transform: translateX(-50%); pointer-events: none; }
 .sp-gun i { width: 16px; height: 7px; border-radius: 4px; background: rgb(255 255 255 / 0.18); transition: background 120ms ease; }
 .sp-gun i[data-on] { background: #f472b6; box-shadow: 0 0 6px #f472b6; }
+
+/* --- A voice note in a funny voice (core/voiceFx): the chips over the recording strip, and the mark on a note --- */
+.vf-row { position: absolute; left: 0; right: 0; bottom: calc(100% + 34px); z-index: 20; display: flex; justify-content: center; gap: 6px; padding: 0 8px; pointer-events: none; }
+.vf-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; pointer-events: auto;
+  border: 1px solid rgb(var(--c-border)); border-radius: 9999px; background: rgb(var(--c-surface)); color: rgb(var(--c-primary));
+  font: 700 12px/1 Manrope, system-ui, sans-serif; white-space: nowrap; box-shadow: 0 4px 10px -6px rgb(0 0 0 / 0.5);
+  transition: transform 140ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.vf-chip > span { font-size: 15px; }
+.vf-chip:active { transform: scale(0.92); }
+.vf-chip[data-on] { border-color: transparent; background: linear-gradient(120deg, #8b5cf6, #ec4899 70%, #f59e0b); color: #fff; transform: scale(1.06); }
+@media (max-width: 380px) {
+  .vf-chip { padding: 6px 8px; font-size: 11px; }
+}
+.vf-mark { font-size: 13px; line-height: 1; }

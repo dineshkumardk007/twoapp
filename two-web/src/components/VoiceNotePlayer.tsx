@@ -12,6 +12,7 @@ import {
 } from '../core/voice';
 import { armEar, disarmEar, earIsNear, stopEar, EarNote } from '../core/earpiece';
 import { useT } from '../core/i18n';
+import { setVoiceSpeed, voiceFx, voiceNeedsGraph, wakeVoiceGraph, wireVoice } from '../core/voiceFx';
 
 /**
  * One voice note, as a bubble shows it: a play button, the shape of the voice
@@ -44,6 +45,8 @@ export interface VoiceNotePlayerProps {
   onEnded?: () => void;
   /** A new non-zero value plays it from the start. */
   playSignal?: number;
+  /** The funny voice it is played in (core/voiceFx), if it was sent in one. */
+  fx?: string;
 }
 
 type Tone = VoiceNotePlayerProps['tone'];
@@ -113,7 +116,8 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
   showHeard = false,
   onFirstPlay,
   onEnded,
-  playSignal
+  playSignal,
+  fx
 }) => {
   const tr = useT();
   const t = TONES[tone];
@@ -143,6 +147,11 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
   const [failed, setFailed] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  /** Takes the voice's graph apart again (core/voiceFx). */
+  const unwireRef = useRef<(() => void) | null>(null);
+  const funny = voiceFx(fx);
+  const fxRef = useRef(fx);
+  fxRef.current = fx;
   /** Takes the element's listeners off again. */
   const detachRef = useRef<(() => void) | null>(null);
   /** makeSeekable, run once per element and shared by whoever needs it first. */
@@ -242,6 +251,8 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
     letGo();
     detachRef.current?.();
     detachRef.current = null;
+    unwireRef.current?.();
+    unwireRef.current = null;
     const audio = audioRef.current;
     audioRef.current = null;
     preparedRef.current = null;
@@ -266,8 +277,7 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
     const dataUrl = audioDataUrl;
     const audio = new Audio();
     audio.preload = 'auto';
-    audio.defaultPlaybackRate = rateRef.current;
-    audio.playbackRate = rateRef.current;
+    setVoiceSpeed(audio, rateRef.current, fxRef.current);
 
     const onTime = () => {
       if (!preparingRef.current) setPosition(audio.currentTime);
@@ -295,7 +305,8 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
       }
       startFrames();
       // Sounding on the loudspeaker: raise the phone and it moves to the ear.
-      armEar(earNote());
+      // Not a note in a funny voice: the earpiece's own player has no voices.
+      if (!voiceFx(fxRef.current)) armEar(earNote());
     };
     const onPause = () => {
       setPlaying(false);
@@ -405,6 +416,7 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
     };
     audio.src = audioDataUrl;
     audioRef.current = audio;
+    unwireRef.current = wireVoice(audio, fxRef.current);
     return audio;
   };
 
@@ -477,9 +489,9 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
       }
       setPosition(0);
     }
-    audio.defaultPlaybackRate = rateRef.current;
-    audio.playbackRate = rateRef.current;
-    if (earIsNear() && earNoteRef.current) {
+    setVoiceSpeed(audio, rateRef.current, fxRef.current);
+    wakeVoiceGraph(fxRef.current);
+    if (earIsNear() && earNoteRef.current && !voiceFx(fxRef.current)) {
       armEar(earNoteRef.current());
       if (earRef.current) return;
     }
@@ -530,10 +542,7 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
     setRate(next);
     saveVoiceRate(next);
     const audio = audioRef.current;
-    if (audio) {
-      audio.defaultPlaybackRate = next;
-      audio.playbackRate = next;
-    }
+    if (audio) setVoiceSpeed(audio, next, fxRef.current);
   };
 
   // Mounted / gone. Written to survive React's development double-mount,
@@ -768,6 +777,12 @@ export const VoiceNotePlayer: React.FC<VoiceNotePlayerProps> = ({
           {playable ? (
             <span className="inline-flex min-w-0 items-center gap-1.5">
               <span className="tabular-nums">{timeText}</span>
+              {funny && (
+                <span className="vf-mark" title={tr(funny.name)}>
+                  <span aria-hidden="true">{funny.emoji}</span>
+                  <span className="sr-only">{tr('In a {name} voice', { name: tr(funny.name) })}</span>
+                </span>
+              )}
               {showHeard && tone === 'mine' && (
                 // Blue once heard and grey till then, as the read ticks are.
                 <>

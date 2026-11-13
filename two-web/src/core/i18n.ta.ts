@@ -1584,5 +1584,12 @@ export const TA: Readonly<Record<string, string>> = {
   'Guns: tap a rock to shoot it. Big ones take two': 'துப்பாக்கி: பாறையைத் தட்டிச் சுடுங்கள். பெரியவற்றுக்கு இரண்டு முறை',
   'Pilot: fly under the stars and the repair kits': 'விமானி: நட்சத்திரங்களையும் பழுது பெட்டிகளையும் பிடியுங்கள்',
   'Three rocks into the ship ends the round': 'மூன்று பாறைகள் மோதினால் சுற்று முடியும்',
-  'You swap seats every round': 'ஒவ்வொரு சுற்றிலும் இடம் மாறுவீர்கள்'
+  'You swap seats every round': 'ஒவ்வொரு சுற்றிலும் இடம் மாறுவீர்கள்',
+  // A voice note in a funny voice.
+  'Chipmunk': 'அணில் குரல்',
+  'Robot': 'ரோபோ',
+  'Giant': 'ராட்சதன்',
+  'Echo': 'எதிரொலி',
+  'Voice': 'குரல்',
+  'In a {name} voice': '{name} குரலில்'
 };
