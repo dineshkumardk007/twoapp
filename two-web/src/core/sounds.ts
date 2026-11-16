@@ -47,7 +47,8 @@ export type SoundName =
   | 'vx-adore' | 'vx-rage' | 'vx-sparkle' | 'vx-diamond' | 'vx-butterfly' | 'vx-rocket' | 'vx-bolt' | 'vx-balloon'
   | 'g-bm-tick' | 'g-bm-cut' | 'g-bm-wrong' | 'g-bm-boom' | 'g-bm-safe' | 'g-ct-star' | 'g-ct-heart' | 'g-ct-bomb' | 'g-lm-key' | 'g-lm-gate'
   | 'g-dv-swim' | 'g-dv-chest' | 'g-dv-current' | 'g-dv-air' | 'g-sp-shot' | 'g-sp-boom' | 'g-sp-crack' | 'g-sp-hit' | 'g-sp-star' | 'g-sp-kit'
-  | 'g-rps-beat' | 'g-rps-shoot' | 'g-rps-rock' | 'g-rps-paper' | 'g-rps-scissors' | 'g-rps-tie' | 'g-rps-win' | 'g-rps-lose';
+  | 'g-rps-beat' | 'g-rps-shoot' | 'g-rps-rock' | 'g-rps-paper' | 'g-rps-scissors' | 'g-rps-tie' | 'g-rps-win' | 'g-rps-lose'
+  | 'g-lu-out' | 'g-lu-capture' | 'g-lu-home' | 'g-lu-six' | 'g-ch-move' | 'g-ch-capture' | 'g-ch-castle' | 'g-ch-check' | 'g-ch-promote';
 
 interface Loaded {
   buffer: AudioBuffer;

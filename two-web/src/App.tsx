@@ -283,7 +283,7 @@ import { SHELF_RECORD, cleanShelf, laterShelf, type ShelfLayout } from './core/g
 import { CAN_DUO, DUO_NAMES, DUO_RECORD, DUO_SIGNAL, cleanDuoHalf, hearDuo, isDuoGame, mergeDuo, setDuoSender, type DuoHalf } from './core/duo';
 import { CAN_WEAR, WEAR_RECORD, cleanWear, latestWear, showWear, type Wear } from './core/wear';
 import { CAN_EMOTE, GAME_SAY_SIGNAL, OPEN_GAME_EVENT, hearGameSaid, roomOnScreen, setSaySender, type GameRoom } from './core/gameEmotes';
-import { CAN_PLAY_MORE, CAN_RPS, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
+import { CAN_BOARDS, CAN_PLAY_MORE, CAN_RPS, GAME_NAMES, askedOf, cleanGame, kindOfRecord, mergeGame, progressOf, recordTypeOf, refusedOf, rememberCanvasMode, standing, type PaperGame } from './core/paperGames';
 import {
   SURPRISE,
   SURPRISE_PART,
@@ -391,7 +391,7 @@ const APP_VERSION = 'APP_VERSION';
  * letter for a day closed until then (core/letters), and say when Two leaves
  * its screen, so its silence means away (core/lastSeen).
  */
-const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE, CAN_SECRET, CAN_WEAR, CAN_DUO, CAN_RPS];
+const CAN_DO = [CAN_SHOW_LATER, CAN_DATE_LETTERS, CAN_SAY_AWAY, CAN_WIDE_POCKETS, CAN_PLAY_MORE, CAN_MAZE, CAN_EMOTE, CAN_SECRET, CAN_WEAR, CAN_DUO, CAN_RPS, CAN_BOARDS];
 
 /** What a letter's toast says: its title, and its day when it waits for one. */
 function letterNotice(letter: LoveLetter, fallback: string): string {
@@ -6752,6 +6752,7 @@ export const App: React.FC = () => {
             onDuo={handleDuoHalf}
             duoReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_DUO)}
             rpsReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_RPS)}
+            boardsReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_BOARDS)}
             shelf={state.gameShelf}
             onShelf={handleShelf}
             mazeReady={!state.partnerApp || !!state.partnerApp.can?.includes(CAN_MAZE)}

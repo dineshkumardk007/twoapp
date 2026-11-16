@@ -440,7 +440,7 @@ const SnakesArt: React.FC = React.memo(() => (
   </>
 ));
 
-const randomRoll = () => {
+export const randomRoll = () => {
   try {
     const a = new Uint8Array(1);
     // 252 is the largest multiple of 6 under 256: anything above is rolled again, so every face is as likely.

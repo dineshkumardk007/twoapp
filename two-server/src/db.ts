@@ -91,7 +91,10 @@ export const LATEST_ONLY_TYPES = new Set([
   'GAME_CARROM',
   'GAME_BOXING',
   'GAME_PENALTY',
-  'GAME_PUZZLE'
+  'GAME_PUZZLE',
+  'GAME_RPS',
+  'GAME_LUDO',
+  'GAME_CHESS'
 ]);
 
 /**

@@ -10,6 +10,20 @@ export interface TourLine {
 }
 
 export const GAME_TOURS: Record<PaperKind, TourLine[]> = {
+  ludo: [
+    { icon: '🎲', text: 'Tap the die to roll' },
+    { icon: '6️⃣', text: 'A 6 brings a token out, and rolls again' },
+    { icon: '💥', text: 'Land on theirs to send it home' },
+    { icon: '⭐', text: 'Stars and start squares are safe' },
+    { icon: '🏠', text: 'Get all your tokens home to win' }
+  ],
+  chess: [
+    { icon: '👆', text: 'Tap a piece to see where it can go' },
+    { icon: '♟️', text: 'All the usual rules, castling and en passant too' },
+    { icon: '👑', text: 'Checkmate the other king to win' },
+    { icon: '🔄', text: 'You swap who has white each game' },
+    { icon: '🎬', text: 'Watch the whole game again at the end' }
+  ],
   boxing: [
     { icon: '🥊', text: 'You both pick a move in secret' },
     { icon: '⚡', text: 'Big punches cost energy' },

@@ -3589,5 +3589,133 @@ export const RECIPES: Record<string, Recipe> = {
     },
     room: { rt60: 0.5, wet: 0.1 },
     master: { loudness: SOFT + 1, highpass: 160 }
+  },
+
+  // ------------------------------------------------------------------------
+  // Ludo and Chess (components/LudoBoard, components/ChessBoard).
+  // ------------------------------------------------------------------------
+
+  'g-lu-out': {
+    use: 'Ludo: a token comes out of its corner on to the board - a pop and a little rising ting',
+    dry: () => {
+      const b = silence(0.6);
+      mode(b, { freq: 520, amp: 0.5, decay: 0.04, glide: -0.5, glideTime: 0.04 });
+      noise(b, { dur: 0.02, gain: 0.4, filter: { type: 'bandpass', f: 1800, q: 1 }, attack: 0.0005, decay: 0.006, seed: 7801 });
+      run(b, ['D6', 'A6'], 0.07, { instrument: I.glock, gain: [0.22, 0.28], start: 0.05, seed: 7802, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.08 },
+    master: { loudness: SOFT + 1, highpass: 250 }
+  },
+
+  'g-lu-capture': {
+    use: 'Ludo: a token sent home - a bonk, and a whistle as it flies back to its corner',
+    dry: () => {
+      const b = silence(1.0);
+      thump(b, 0, 0.9, 130, 7811);
+      noise(b, { dur: 0.03, gain: 0.7, filter: { type: 'bandpass', f: 1300, q: 0.6 }, attack: 0.0005, decay: 0.008, seed: 7812 });
+      mode(b, { freq: 400, amp: 0.35, decay: 0.06, glide: 0.4, glideTime: 0.03 });
+      voice(b, { start: 0.08, dur: 0.5, freq: t => 1800 - 1300 * (t / 0.5), amp: t => 0.16 * Math.sin((Math.PI * t) / 0.5), harmonics: [1, 0.15] });
+      air(b, { start: 0.08, dur: 0.45, gain: 0.18, from: 3000, to: 900, attack: 0.04, seed: 7813 });
+      return b;
+    },
+    room: { rt60: 0.5, wet: 0.1 },
+    master: { loudness: MOMENT, highpass: 140 }
+  },
+
+  'g-lu-home': {
+    use: 'Ludo: a token reaches home - a bright little three-note chime',
+    dry: () => {
+      const b = silence(1.1);
+      run(b, ['D6', 'F#6', 'A6'], 0.08, { instrument: I.glass, gain: [0.26, 0.3, 0.36], seed: 7821, mallet: 0, decayScale: 1.2 });
+      strike(b, { note: hz('D5'), instrument: I.felt, start: 0.0, gain: 0.22, seed: 7824, mallet: 0 });
+      twinkles(b, 0.2, 0.8, 4, 0.08, 7826);
+      return b;
+    },
+    room: { rt60: 0.8, wet: 0.16 },
+    master: { loudness: MOMENT - 1, highpass: 260 }
+  },
+
+  'g-lu-six': {
+    use: 'Ludo: another roll - a quick sparkle up',
+    dry: () => {
+      const b = silence(0.6);
+      run(b, ['A5', 'D6', 'F#6', 'A6'], 0.04, { instrument: I.glock, gain: [0.14, 0.17, 0.2, 0.24], seed: 7831, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.4, wet: 0.1 },
+    master: { loudness: SOFT, highpass: 400 }
+  },
+
+  'g-ch-move': {
+    use: 'Chess: a piece put down on its square - a soft wooden tock',
+    dry: () => {
+      const b = silence(0.35);
+      mode(b, { freq: 640, amp: 0.55, decay: 0.022 });
+      mode(b, { freq: 1380, amp: 0.25, decay: 0.012 });
+      mode(b, { freq: 230, amp: 0.4, decay: 0.03 });
+      noise(b, { dur: 0.018, gain: 0.35, filter: { type: 'bandpass', f: 2200, q: 1 }, attack: 0.0004, decay: 0.005, seed: 7841 });
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.08 },
+    master: { loudness: SOFT, highpass: 150 }
+  },
+
+  'g-ch-capture': {
+    use: 'Chess: a piece taken - a heavier double clack, the one knocked off and the one put down',
+    dry: () => {
+      const b = silence(0.5);
+      for (const [t, g, f] of [[0, 0.5, 520], [0.07, 0.7, 610]] as Array<[number, number, number]>) {
+        mode(b, { freq: f, amp: g, decay: 0.03, start: t });
+        mode(b, { freq: f * 2.15, amp: g * 0.4, decay: 0.015, start: t });
+        mode(b, { freq: 200, amp: g * 0.6, decay: 0.04, start: t });
+        noise(b, { start: t, dur: 0.02, gain: g * 0.6, filter: { type: 'bandpass', f: 2000, q: 0.9 }, attack: 0.0004, decay: 0.006, seed: 7851 + t * 100 });
+      }
+      return b;
+    },
+    room: { rt60: 0.35, wet: 0.08 },
+    master: { loudness: SOFT + 2, highpass: 140 }
+  },
+
+  'g-ch-castle': {
+    use: 'Chess: castling - the king and the rook, tock-tock, one after the other',
+    dry: () => {
+      const b = silence(0.5);
+      for (const t of [0, 0.13]) {
+        mode(b, { freq: 640, amp: 0.5, decay: 0.022, start: t });
+        mode(b, { freq: 1380, amp: 0.22, decay: 0.012, start: t });
+        mode(b, { freq: 230, amp: 0.36, decay: 0.03, start: t });
+      }
+      return b;
+    },
+    room: { rt60: 0.3, wet: 0.08 },
+    master: { loudness: SOFT + 1, highpass: 150 }
+  },
+
+  'g-ch-check': {
+    use: 'Chess: check - the move, and a warning two-note ring',
+    dry: () => {
+      const b = silence(1.0);
+      mode(b, { freq: 640, amp: 0.5, decay: 0.022 });
+      mode(b, { freq: 230, amp: 0.36, decay: 0.03 });
+      strike(b, { note: hz('B5'), instrument: I.bell, start: 0.08, gain: 0.26, seed: 7861, mallet: 0.2, decayScale: 0.7 });
+      strike(b, { note: hz('F#5'), instrument: I.bell, start: 0.22, gain: 0.3, seed: 7862, mallet: 0.2, decayScale: 0.8 });
+      return b;
+    },
+    room: { rt60: 0.7, wet: 0.14 },
+    master: { loudness: MOMENT - 1, highpass: 200 }
+  },
+
+  'g-ch-promote': {
+    use: 'Chess: a pawn promoted - the move, and a shimmer as it becomes something grander',
+    dry: () => {
+      const b = silence(1.2);
+      mode(b, { freq: 640, amp: 0.5, decay: 0.022 });
+      air(b, { start: 0.05, dur: 0.5, gain: 0.18, from: 1500, to: 7000, attack: 0.15, seed: 7871 });
+      run(b, ['D6', 'F#6', 'A6', 'D7'], 0.06, { instrument: I.glock, gain: [0.18, 0.2, 0.24, 0.3], start: 0.1, seed: 7872, mallet: 0 });
+      return b;
+    },
+    room: { rt60: 0.9, wet: 0.18 },
+    master: { loudness: MOMENT - 1, highpass: 220 }
   }
 };

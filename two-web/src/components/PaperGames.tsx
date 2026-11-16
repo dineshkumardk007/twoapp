@@ -38,6 +38,7 @@ import {
   type PaperKind,
   atRound,
   isNewerKind,
+  isBoardKind,
   isPickKind,
   roundsOf
 } from '../core/paperGames';
@@ -46,6 +47,10 @@ import { markTourSeen, tourSeen } from '../core/gameTours';
 import { MarkIcon } from './gameArt';
 import { DotsBoard, FourBoard, MemoryBoard, SnakesBoard, TttBoard, fourFallMs, type BoardProps } from './GameBoards';
 import { RpsBoard, RpsIcon } from './RpsBoard';
+import { LudoBoard, LudoIcon } from './LudoBoard';
+import { ChessBoard, ChessIcon } from './ChessBoard';
+import { playLudo } from '../core/ludo';
+import { playChess } from '../core/chess';
 import { BalloonBoard } from './BalloonBoard';
 import { BoxingBoard } from './BoxingBoard';
 import { CarromBoard } from './CarromBoard';
@@ -72,12 +77,16 @@ interface PaperGamesProps {
   moreGames?: boolean;
   /** Their phone has Rock Paper Scissors (core/paperGames, CAN_RPS). */
   rpsReady?: boolean;
+  /** Their phone has Ludo and Chess (core/paperGames, CAN_BOARDS). */
+  boardsReady?: boolean;
   /** Their phone has emotes, and says which game it is on (core/gameEmotes, CAN_EMOTE). */
   emotes?: boolean;
 }
 
 /** How each game is played, in a line. */
 export const GAME_HOW: Record<PaperKind, string> = {
+  ludo: 'Roll a 6 to bring a token out, go once round the board and up your own column home. Land on theirs to send it back. All your tokens home wins.',
+  chess: 'The whole of chess. Tap a piece to see where it can go. Checkmate wins; you swap who has white each game.',
   boxing: 'You both pick a move in secret, then it is fought out. Big punches cost energy. Knock the other one out to win.',
   penalty: 'Take turns to shoot and to keep goal. Aim and pick your power, or pick your dive - both in secret. Five kicks each.',
   puzzle: 'The same puzzle for you both, each on your own clock. The faster one takes the round. First to four.',
@@ -93,6 +102,8 @@ export const GAME_HOW: Record<PaperKind, string> = {
 
 /** The sounds each game makes, loaded when it opens. */
 const SOUNDS_OF: Record<PaperKind, SoundName[]> = {
+  ludo: ['g-dice', 'g-hop', 'g-lu-out', 'g-lu-capture', 'g-lu-home', 'g-lu-six', 'g-turn'],
+  chess: ['g-ch-move', 'g-ch-capture', 'g-ch-castle', 'g-ch-check', 'g-ch-promote'],
   boxing: ['g-bx-bell', 'g-bx-pick', 'g-bx-whoosh', 'g-bx-jab', 'g-bx-hook', 'g-bx-upper', 'g-bx-block', 'g-bx-ko', 'g-bx-crowd'],
   penalty: ['g-pk-whistle', 'g-pk-pick', 'g-pk-kick', 'g-pk-goal', 'g-pk-save', 'g-pk-post', 'g-pk-miss'],
   puzzle: ['g-pz-go', 'g-pz-tap', 'g-pz-wrong', 'g-pz-done', 'g-pz-pad', 'g-reveal', 'g-point', 'g-miss'],
@@ -198,6 +209,10 @@ export const GameIcon: React.FC<{ kind: PaperKind }> = ({ kind }) => {
       );
     case 'rps':
       return <RpsIcon />;
+    case 'ludo':
+      return <LudoIcon />;
+    case 'chess':
+      return <ChessIcon />;
     case 'snakes':
       return (
         <span className="g-icon g-icon-emoji" aria-hidden="true">
@@ -230,6 +245,8 @@ export const GameIcon: React.FC<{ kind: PaperKind }> = ({ kind }) => {
 };
 
 const BOARDS: Record<PaperKind, React.FC<BoardProps>> = {
+  ludo: LudoBoard,
+  chess: ChessBoard,
   boxing: BoxingBoard,
   penalty: PenaltyBoard,
   puzzle: PuzzleBoard,
@@ -251,7 +268,7 @@ const CONFETTI_COUNT = 36;
  * new game when this one is done. Moves travel to the other phone the
  * moment they are made; each lands with its own sound on both phones.
  */
-export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack, widePockets = false, moreGames = true, rpsReady = true, emotes = true }) => {
+export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, partnerName, onChange, onBack, widePockets = false, moreGames = true, rpsReady = true, boardsReady = true, emotes = true }) => {
   const tr = useT();
   const me = activeUser;
   /** A new game's id. Carrom's says which pockets it is played on. */
@@ -335,7 +352,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
   // Snakes & Ladders ends when the winner's counter gets there, not when the die stops;
   // Water Balloon War and Carrom when the last of it has landed.
   useEffect(() => {
-    if ((kind === 'snakes' || watches) && game && st?.over && settled >= game.moves.length) celebrate(game);
+    if ((kind === 'snakes' || kind === 'ludo' || watches) && game && st?.over && settled >= game.moves.length) celebrate(game);
     // `st` is the game as far as it has been shown, so over means the last round has been played out.
     if (watchesRounds && game && st?.over) celebrate(game);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -397,7 +414,12 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
         // They have chosen and you have not: a nudge. The rest is the board's.
         if (now.rounds === before.rounds && now.theirs > before.theirs && now.mine <= now.rounds) playSound('g-turn');
         return;
+      case 'chess':
+        // The board says each move with its own sound.
+        end = 450;
+        break;
       case 'snakes':
+      case 'ludo':
       case 'balloon':
       case 'carrom':
         // Their boards play it all out, with their sounds, and say when they are done.
@@ -505,6 +527,11 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     if (kind === 'snakes') {
       const n = playSnakes(game).pos[seat];
       return n ? tr('on {n}', { n }) : tr('at the start');
+    }
+    if (kind === 'ludo') return tr('{n} home', { n: playLudo(game).home[seat] });
+    if (kind === 'chess') {
+      const c = playChess(game);
+      return c.lead[seat] > 0 ? `+${c.lead[seat]}` : null;
     }
     if (kind === 'boxing' && shownGame) return tr('{n} health', { n: playBoxing(shownGame).hp[seat] });
     if (kind === 'penalty' && shownGame) {
@@ -618,7 +645,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
     <div className="pg-sizes" role="radiogroup" aria-label={tr('Board size')}>
       {sizes.map(n => (
         <button key={n} type="button" role="radio" aria-checked={size === n} data-on={size === n || undefined} onClick={() => setSize(n)}>
-          {kind === 'memory' ? tr('{n} cards', { n: n * 2 }) : `${n}×${n}`}
+          {kind === 'memory' ? tr('{n} cards', { n: n * 2 }) : kind === 'ludo' ? (n === 2 ? tr('Quick · 2 tokens') : tr('Classic · 4 tokens')) : `${n}×${n}`}
         </button>
       ))}
     </div>
@@ -687,7 +714,7 @@ export const PaperGames: React.FC<PaperGamesProps> = ({ kind, game, activeUser, 
           </div>
         </div>
       )}
-      {((isNewerKind(kind) && !moreGames) || (kind === 'rps' && !rpsReady)) && (
+      {((isNewerKind(kind) && !moreGames) || (kind === 'rps' && !rpsReady) || (isBoardKind(kind) && !boardsReady)) && (
         <p className="pg-ask-note" role="status">
           {tr("{name}'s Two needs the latest update to play this one", { name: partnerName })}
         </p>

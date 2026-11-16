@@ -17,6 +17,8 @@
 // Penalty Shootout and Puzzle Duel you both choose at once, so each of you
 // has a list of your own picks, and each list is merged the same way.
 
+import { DEFAULT_LUDO, LUDO_SIZES, ludoAllowed, playLudo } from './ludo';
+import { chessAllowed, playChess } from './chess';
 import type { Seat } from './usTwo';
 import { decodeThrow, playBalloon, throwAllowed } from './balloonWar';
 import { decodeShot, playCarrom, shotAllowed } from './carrom';
@@ -24,8 +26,8 @@ import { boxingAllowed, playBoxing } from './boxing';
 import { penaltyAllowed, playPenalty } from './penalty';
 import { playPuzzle, puzzleAllowed } from './puzzleDuel';
 
-export type PaperKind = 'ttt' | 'dots' | 'four' | 'memory' | 'rps' | 'snakes' | 'balloon' | 'carrom' | 'boxing' | 'penalty' | 'puzzle';
-export const PAPER_KINDS: PaperKind[] = ['boxing', 'penalty', 'puzzle', 'balloon', 'carrom', 'four', 'memory', 'rps', 'snakes', 'ttt', 'dots'];
+export type PaperKind = 'ttt' | 'dots' | 'four' | 'memory' | 'rps' | 'snakes' | 'balloon' | 'carrom' | 'boxing' | 'penalty' | 'puzzle' | 'ludo' | 'chess';
+export const PAPER_KINDS: PaperKind[] = ['ludo', 'chess', 'boxing', 'penalty', 'puzzle', 'balloon', 'carrom', 'four', 'memory', 'rps', 'snakes', 'ttt', 'dots'];
 /** The games where you both choose at once: each of you has a list of picks, and no moves. */
 const PICK_KINDS: PaperKind[] = ['rps', 'boxing', 'penalty', 'puzzle'];
 export const isPickKind = (kind: PaperKind) => PICK_KINDS.includes(kind);
@@ -36,6 +38,10 @@ export const isPickKind = (kind: PaperKind) => PICK_KINDS.includes(kind);
 export const CAN_PLAY_MORE = 'games-3';
 /** What a phone says when it has Rock Paper Scissors, which took Heart Hug Kiss's place. */
 export const CAN_RPS = 'rps-1';
+/** What a phone says when it has Ludo and Chess. */
+export const CAN_BOARDS = 'boards-1';
+/** The games a phone needs that word to play. */
+export const isBoardKind = (kind: PaperKind) => kind === 'ludo' || kind === 'chess';
 /** The games a phone on the version before does not have. */
 export const isNewerKind = (kind: PaperKind) => kind === 'boxing' || kind === 'penalty' || kind === 'puzzle';
 const RECORDS: Record<PaperKind, string> = {
@@ -47,6 +53,8 @@ const RECORDS: Record<PaperKind, string> = {
   four: 'GAME_FOUR',
   memory: 'GAME_MEMORY',
   rps: 'GAME_RPS',
+  ludo: 'GAME_LUDO',
+  chess: 'GAME_CHESS',
   snakes: 'GAME_SNAKES',
   balloon: 'GAME_BALLOON',
   carrom: 'GAME_CARROM'
@@ -63,6 +71,8 @@ export const GAME_NAMES: Record<PaperKind, string> = {
   four: 'Four in a Row',
   memory: 'Memory Match',
   rps: 'Rock Paper Scissors',
+  ludo: 'Ludo',
+  chess: 'Chess',
   snakes: 'Snakes & Ladders',
   ttt: 'Tic-tac-toe',
   dots: 'Dots & Boxes'
@@ -81,9 +91,9 @@ export const MEMORY_SIZES = [6, 8, 10] as const;
 export const DEFAULT_MEMORY = 8;
 /** The board sizes a kind can be played at, or null when it has one. */
 export function sizesOf(kind: PaperKind): readonly number[] | null {
-  return kind === 'dots' ? DOT_SIZES : kind === 'memory' ? MEMORY_SIZES : null;
+  return kind === 'dots' ? DOT_SIZES : kind === 'memory' ? MEMORY_SIZES : kind === 'ludo' ? LUDO_SIZES : null;
 }
-const FIXED_SIZE: Record<PaperKind, number> = { ttt: 3, dots: DEFAULT_DOTS, four: 7, memory: DEFAULT_MEMORY, rps: 3, snakes: 10, balloon: 1, carrom: 1, boxing: 1, penalty: 1, puzzle: 1 };
+const FIXED_SIZE: Record<PaperKind, number> = { ttt: 3, dots: DEFAULT_DOTS, four: 7, memory: DEFAULT_MEMORY, rps: 3, snakes: 10, balloon: 1, carrom: 1, boxing: 1, penalty: 1, puzzle: 1, ludo: DEFAULT_LUDO, chess: 8 };
 
 /** The inks each of you can play in. */
 export const INKS = ['#f43f5e', '#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899'] as const;
@@ -690,6 +700,14 @@ export function standing(game: PaperGame): Standing {
       const s = playCarrom(game);
       return one(s.turn, s.over, s.winner, false, s.again);
     }
+    case 'ludo': {
+      const s = playLudo(game);
+      return one(s.turn, s.over, s.winner, false, !!s.last?.again);
+    }
+    case 'chess': {
+      const s = playChess(game);
+      return one(s.turn, s.over, s.winner, s.draw);
+    }
   }
 }
 
@@ -710,6 +728,10 @@ function playedOf(game: PaperGame): number {
       return playBalloon(game).played;
     case 'carrom':
       return playCarrom(game).played;
+    case 'ludo':
+      return playLudo(game).played;
+    case 'chess':
+      return playChess(game).played;
     case 'rps':
     case 'boxing':
     case 'penalty':
@@ -756,6 +778,10 @@ export function canMove(game: PaperGame, seat: Seat, move: number): boolean {
       return Number.isSafeInteger(move) && move >= 0 && throwAllowed(decodeThrow(move), playBalloon(game).giantLeft[seat]);
     case 'carrom':
       return Number.isSafeInteger(move) && move >= 0 && shotAllowed(playCarrom(game).coins, seat, decodeShot(move));
+    case 'ludo':
+      return ludoAllowed(playLudo(game), move);
+    case 'chess':
+      return chessAllowed(playChess(game), move);
     default:
       return false;
   }

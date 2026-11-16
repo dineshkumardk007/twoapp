@@ -61,7 +61,7 @@ describe('what a phone says', () => {
     expect(cleanSaid({ k: 'maze', h: 1 })).toEqual({ k: 'maze', h: 1 });
     expect(cleanSaid({ k: 'ttt', h: 0 })).toEqual({ k: 'ttt', h: 0 });
     expect(cleanSaid({ k: 'ttt', e: 0, h: 1, junk: 'x' })).toEqual({ k: 'ttt', e: 0, h: 1 });
-    expect(cleanSaid({ k: 'ludo', e: 1 })).toBeNull();
+    expect(cleanSaid({ k: 'poker', e: 1 })).toBeNull();
     expect(cleanSaid({ k: 'carrom', e: 10 })).toBeNull();
     expect(cleanSaid({ k: 'carrom', e: -1 })).toBeNull();
     expect(cleanSaid({ k: 'carrom', e: 1.5 })).toBeNull();

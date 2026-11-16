@@ -98,6 +98,8 @@ interface CanvasOfUsViewProps {
   duoReady?: boolean;
   /** Their phone has Rock Paper Scissors (core/paperGames, CAN_RPS). */
   rpsReady?: boolean;
+  /** Their phone has Ludo and Chess (core/paperGames, CAN_BOARDS). */
+  boardsReady?: boolean;
   /** The order of the games, as last arranged on either phone with "same order on both phones" on (core/gameShelf). */
   shelf?: ShelfLayout;
   /** This phone has arranged the games, kept in step: to send to the other phone. */
@@ -257,6 +259,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
   onDuo,
   duoReady = true,
   rpsReady = true,
+  boardsReady = true,
   shelf,
   onShelf
 }) => {
@@ -868,6 +871,7 @@ export const CanvasOfUsView: React.FC<CanvasOfUsViewProps> = ({
           widePockets={widePockets}
           moreGames={moreGames}
           rpsReady={rpsReady}
+          boardsReady={boardsReady}
           emotes={emotesReady}
         />
       )}
